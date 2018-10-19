@@ -21,6 +21,7 @@ spec:
         metadata:
           type: object
         spec:
+<<<<<<< HEAD
           properties:
             args:
               items:
@@ -54,6 +55,10 @@ spec:
               type: array
             sinkUri:
               type: string
+=======
+          type: object
+        status:
+>>>>>>> master
           type: object
   version: v1alpha1
 status:
