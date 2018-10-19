@@ -1,4 +1,5 @@
 required = [
+    "github.com/knative/test-infra",
     "github.com/emicklei/go-restful",
     "github.com/onsi/ginkgo", # for test framework
     "github.com/onsi/gomega", # for test matchers
@@ -18,6 +19,30 @@ required = [
 [prune]
   go-tests = true
 
+[[override]]
+  name = "github.com/knative/pkg"
+  # HEAD as of 2018-10-09
+  revision = "ba1a828cd571f605684f9a4506e85bc13cb65b8d"
+
+[[override]]
+  name = "github.com/knative/test-infra"
+  revision = "c21d3a832727d5d4334e734c0878eac3a5a07ae7"
+
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "k8s.io/code-generator"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.11.3"
 
 # STANZAS BELOW ARE GENERATED AND MAY BE WRITTEN - DO NOT MODIFY BELOW THIS LINE.
 
@@ -31,7 +56,13 @@ required = [
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]
-name = "gopkg.in/fsnotify.v1"
-source = "https://github.com/fsnotify/fsnotify.git"
-version="v1.4.7"
+  name = "gopkg.in/fsnotify.v1"
+  source = "https://github.com/fsnotify/fsnotify.git"
+  version="v1.4.7"
+
+[[override]]
+  name = "github.com/json-iterator/go"
+  # This is the commit at which k8s depends on this in 1.11
+  # It seems to be broken at HEAD.
+  revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
