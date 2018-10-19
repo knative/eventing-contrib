@@ -50,13 +50,15 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
+	p := &sdk.Provider{
+		AgentName: controllerAgentName,
+		Parent:    &v1alpha1.ContainerSource{},
+		Owns:      []runtime.Object{&appsv1.Deployment{}},
+		Reconciler: &reconciler{
+			recorder: mgr.GetRecorder(controllerAgentName),
+			scheme:   mgr.GetScheme(),
+		},
+	}
 
-	// TODO: The tests needs this to run...
-	return nil
-	//return &reconciler{
-	//	client:   mgr.GetClient(),
-	//	recorder: mgr.GetRecorder(controllerAgentName),
-	//	scheme:   mgr.GetScheme(),
-	//}
-	//return &ReconcileContainerSource{Client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return p.NewReconciler(mgr)
 }

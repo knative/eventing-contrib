@@ -24,13 +24,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func MakeDeployment(org *appsv1.Deployment, sink string, args *ContainerArguments) (*appsv1.Deployment, error) {
+func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) (*appsv1.Deployment, error) {
 	containerArgs := []string(nil)
 	if args != nil {
 		containerArgs = args.Args
 	}
-	remote := fmt.Sprintf("--sink=%s", sink)
-	containerArgs = append(containerArgs, remote)
+	if !args.SinkInArgs {
+		remote := fmt.Sprintf("--sink=%s", args.Sink)
+		containerArgs = append(containerArgs, remote)
+	}
 
 	deploy := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{

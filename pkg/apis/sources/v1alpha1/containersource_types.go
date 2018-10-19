@@ -53,9 +53,14 @@ const (
 
 	// ContainerConditionSinkProvided has status True when the ContainerSource has been configured with a sink target.
 	ContainerConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+
+	// ContainerConditionDeployed has status True when the ContainerSource has had it's deployment created.
+	ContainerConditionDeployed duckv1alpha1.ConditionType = "Deployed"
 )
 
-var containerCondSet = duckv1alpha1.NewLivingConditionSet(ContainerConditionSinkProvided)
+var containerCondSet = duckv1alpha1.NewLivingConditionSet(
+	ContainerConditionSinkProvided,
+	ContainerConditionDeployed)
 
 // ContainerSourceStatus defines the observed state of ContainerSource
 type ContainerSourceStatus struct {
@@ -92,13 +97,28 @@ func (s *ContainerSourceStatus) MarkSink(uri string) {
 	if len(uri) > 0 {
 		containerCondSet.Manage(s).MarkTrue(ContainerConditionSinkProvided)
 	} else {
-		containerCondSet.Manage(s).MarkUnknown(ContainerConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.")
+		containerCondSet.Manage(s).MarkUnknown(ContainerConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
 	}
 }
 
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *ContainerSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	containerCondSet.Manage(s).MarkFalse(ContainerConditionSinkProvided, reason, messageFormat, messageA)
+	containerCondSet.Manage(s).MarkFalse(ContainerConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
+// MarkDeployed sets the condition that the source has been deployed.
+func (s *ContainerSourceStatus) MarkDeployed() {
+	containerCondSet.Manage(s).MarkTrue(ContainerConditionDeployed)
+}
+
+// MarkDeploying sets the condition that the source is deploying.
+func (s *ContainerSourceStatus) MarkDeploying(reason, messageFormat string, messageA ...interface{}) {
+	containerCondSet.Manage(s).MarkUnknown(ContainerConditionDeployed, reason, messageFormat, messageA...)
+}
+
+// MarkNotDeployed sets the condition that the source has not been deployed.
+func (s *ContainerSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
+	containerCondSet.Manage(s).MarkFalse(ContainerConditionDeployed, reason, messageFormat, messageA...)
 }
 
 // +genclient

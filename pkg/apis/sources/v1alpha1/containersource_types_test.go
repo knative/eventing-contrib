@@ -17,42 +17,307 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"testing"
 
-	"github.com/onsi/gomega"
-	"golang.org/x/net/context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/google/go-cmp/cmp"
+	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 )
 
-func TestStorageContainerSource(t *testing.T) {
-	key := types.NamespacedName{
-		Name:      "foo",
-		Namespace: "default",
+func TestContainerSourceStatusIsReady(t *testing.T) {
+	tests := []struct {
+		name string
+		s    *ContainerSourceStatus
+		want bool
+	}{{
+		name: "uninitialized",
+		s:    &ContainerSourceStatus{},
+		want: false,
+	}, {
+		name: "initialized",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkDeployed()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink and deployed then no sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkNoSink("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and deployed then deploying",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkDeploying("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and deployed then not deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkNotDeployed("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and not deployed then deploying then deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkNotDeployed("MarkNotDeployed", "")
+			s.MarkDeploying("MarkDeploying", "")
+			s.MarkDeployed()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink empty and deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkDeployed()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink empty and deployed then sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkDeployed()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: true,
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.s.IsReady()
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("%s: unexpected condition (-want, +got) = %v", test.name, diff)
+			}
+		})
 	}
-	created := &ContainerSource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "default",
-		}}
-	g := gomega.NewGomegaWithT(t)
+}
 
-	// Test Create
-	fetched := &ContainerSource{}
-	g.Expect(c.Create(context.TODO(), created)).NotTo(gomega.HaveOccurred())
+func TestContainerSourceStatusGetCondition(t *testing.T) {
+	tests := []struct {
+		name      string
+		s         *ContainerSourceStatus
+		condQuery duckv1alpha1.ConditionType
+		want      *duckv1alpha1.Condition
+	}{{
+		name:      "uninitialized",
+		s:         &ContainerSourceStatus{},
+		condQuery: ContainerConditionReady,
+		want:      nil,
+	}, {
+		name: "initialized",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   ContainerConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkDeployed()
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   ContainerConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   ContainerConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink and deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   ContainerConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}, {
+		name: "mark sink and deployed then no sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkNoSink("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    ContainerConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink and deployed then deploying",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkDeploying("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    ContainerConditionReady,
+			Status:  corev1.ConditionUnknown,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink and deployed then not deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkNotDeployed("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    ContainerConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink and not deployed then deploying then deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkNotDeployed("MarkNotDeployed", "%s", "")
+			s.MarkDeploying("MarkDeploying", "%s", "")
+			s.MarkDeployed()
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   ContainerConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}, {
+		name: "mark sink empty and deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkDeployed()
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    ContainerConditionReady,
+			Status:  corev1.ConditionUnknown,
+			Reason:  "SinkEmpty",
+			Message: "Sink has resolved to empty.",
+		},
+	}, {
+		name: "mark sink empty and deployed then sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkDeployed()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		condQuery: ContainerConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   ContainerConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}}
 
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(created))
-
-	// Test Updating the Labels
-	updated := fetched.DeepCopy()
-	updated.Labels = map[string]string{"hello": "world"}
-	g.Expect(c.Update(context.TODO(), updated)).NotTo(gomega.HaveOccurred())
-
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(updated))
-
-	// Test Delete
-	g.Expect(c.Delete(context.TODO(), fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(c.Get(context.TODO(), key, fetched)).To(gomega.HaveOccurred())
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.s.GetCondition(test.condQuery)
+			ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{}, "LastTransitionTime")
+			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
+				t.Errorf("unexpected condition (-want, +got) = %v", diff)
+			}
+		})
+	}
 }

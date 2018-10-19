@@ -49,8 +49,7 @@ func TestReconcile(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	c = mgr.GetClient()
 
-	recFn, requests := SetupTestReconcile(newReconciler(mgr))
-	g.Expect(add(mgr, recFn)).NotTo(gomega.HaveOccurred())
+	_, requests := SetupTestReconcile(newReconciler(mgr))
 	defer close(StartTestManager(mgr, g))
 
 	// Create the ContainerSource object and expect the Reconcile and Deployment to be created

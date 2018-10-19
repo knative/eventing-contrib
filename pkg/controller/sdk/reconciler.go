@@ -34,6 +34,7 @@ type Reconciler struct {
 	restConfig    *rest.Config
 	dynamicClient dynamic.Interface
 	recorder      record.EventRecorder
+	scheme        *runtime.Scheme
 
 	provider Provider
 }

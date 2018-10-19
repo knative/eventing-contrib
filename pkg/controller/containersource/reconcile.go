@@ -18,7 +18,6 @@ package containersource
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -39,7 +38,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -88,34 +86,30 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	if uri, ok := sinkArg(source); ok {
 		args.SinkInArgs = true
-		source.Status.MarkSink(uri) // TODO
+		source.Status.MarkSink(uri)
 	} else {
-		sink, err := r.getSink(ctx, source)
+		uri, err := r.getSinkUri(ctx, source)
 		if err != nil {
 			source.Status.MarkNoSink("NotFound", "")
 			return source, err
 		}
+		source.Status.MarkSink(uri)
+		args.Sink = uri
 	}
-
-	args.Sink = sink
 
 	deploy, err := r.getDeployment(ctx, source)
 	if err != nil {
-		fqn := "Deployment.apps/v1"
 		if errors.IsNotFound(err) {
-			deploy, err = r.createDeployment(ctx, source, nil, channel, args)
+			deploy, err = r.createDeployment(ctx, source, nil, args)
 			if err != nil {
-				r.recorder.Eventf(source, corev1.EventTypeNormal, "Blocked", "waiting for %v", err)
-				source.Status.SetProvisionedObjectState(args.Name, fqn, "Blocked", "waiting for %v", args.Name, err)
+				r.recorder.Eventf(source, corev1.EventTypeNormal, "DeploymentBlocked", "waiting for %v", err)
 				return object, err
 			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "Provisioned", "Created deployment %q", deploy.Name)
-			source.Status.SetProvisionedObjectState(deploy.Name, fqn, "Created", "Created deployment %q", deploy.Name)
-			source.Status.MarkDeprovisioned("Provisioning", "Provisioning deployment %s", args.Name)
+			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
+			source.Status.MarkDeploying("Deploying", "Created deployment %s", args.Name)
 		} else {
 			if deploy.Status.ReadyReplicas > 0 {
-				source.Status.SetProvisionedObjectState(deploy.Name, fqn, "Ready", "")
-				source.Status.MarkProvisioned()
+				source.Status.MarkDeployed()
 			}
 		}
 	}
@@ -132,7 +126,7 @@ func sinkArg(source *v1alpha1.ContainerSource) (string, bool) {
 	return "", false
 }
 
-func (r *reconciler) getSink(ctx context.Context, source *v1alpha1.ContainerSource) (string, error) {
+func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerSource) (string, error) {
 	logger := logging.FromContext(ctx)
 
 	// check to see if the source has provided a sink ref in the spec. Lets look for it.
@@ -147,8 +141,8 @@ func (r *reconciler) getSink(ctx context.Context, source *v1alpha1.ContainerSour
 		&client.ListOptions{
 			Namespace:     source.Namespace,
 			LabelSelector: labels.Everything(),
-			// TODO this is here because the fake client needs it. Remove this when it's no longer
-			// needed.
+			// TODO this is here because the fake client needs it.
+			// Remove this when it's no longer needed.
 			Raw: &metav1.ListOptions{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: source.Spec.Sink.APIVersion,
@@ -181,8 +175,8 @@ func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Contain
 		&client.ListOptions{
 			Namespace:     source.Namespace,
 			LabelSelector: labels.Everything(),
-			// TODO this is here because the fake client needs it. Remove this when it's no longer
-			// needed.
+			// TODO this is here because the fake client needs it.
+			// Remove this when it's no longer needed.
 			Raw: &metav1.ListOptions{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: appsv1.SchemeGroupVersion.String(),
@@ -204,13 +198,13 @@ func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Contain
 }
 
 func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.ContainerSource, org *appsv1.Deployment, args *resources.ContainerArguments) (*appsv1.Deployment, error) {
-	deployment, err := resources.MakeDeployment(source, org, channel, args)
+	deployment, err := resources.MakeDeployment(org, args)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := controllerutil.SetControllerReference(source, deploy, r.scheme); err != nil {
-		return reconcile.Result{}, err
+	if err := controllerutil.SetControllerReference(source, deployment, r.scheme); err != nil {
+		return nil, err
 	}
 
 	if err := r.client.Create(ctx, deployment); err != nil {
