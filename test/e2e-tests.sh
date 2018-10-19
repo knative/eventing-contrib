@@ -31,6 +31,6 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.s
 
 initialize $@
 
-# TODO: implement this.
+# TODO(#8): Write E2E tests.
 
 success
