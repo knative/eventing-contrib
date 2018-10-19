@@ -40,10 +40,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-const (
-	provisionerName = "container"
-)
-
 type reconciler struct {
 	client        client.Client
 	scheme        *runtime.Scheme

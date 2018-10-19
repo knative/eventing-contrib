@@ -179,7 +179,6 @@ func (b *WebhookBuilder) Build() (*admission.Webhook, error) {
 	w := &admission.Webhook{
 		Name:              b.name,
 		Type:              *b.t,
-		Path:              b.path,
 		FailurePolicy:     b.failurePolicy,
 		NamespaceSelector: b.namespaceSelector,
 		Handlers:          b.handlers,

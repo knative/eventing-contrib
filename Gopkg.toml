@@ -25,6 +25,12 @@ required = [
   revision = "ba1a828cd571f605684f9a4506e85bc13cb65b8d"
 
 [[override]]
+  name = "github.com/knative/eventing"
+  # HEAD as of 2018-10-19
+  revision = "e6b0bd99f7c3807d03342b9bf0cbc789cb424912"
+
+
+[[override]]
   name = "github.com/knative/test-infra"
   revision = "c21d3a832727d5d4334e734c0878eac3a5a07ae7"
 
@@ -48,7 +54,8 @@ required = [
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
-  version="v0.1.1"
+  revision = "5373e8e1f3188ff4266902a6fc86372bc14b3815"
+  # version="v0.1.1"
 
 [[constraint]]
   name="sigs.k8s.io/controller-tools"
