@@ -22,7 +22,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -46,19 +45,4 @@ func Add(mgr manager.Manager) error {
 	}
 
 	return p.Add(mgr)
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	p := &sdk.Provider{
-		AgentName: controllerAgentName,
-		Parent:    &v1alpha1.ContainerSource{},
-		Owns:      []runtime.Object{&appsv1.Deployment{}},
-		Reconciler: &reconciler{
-			recorder: mgr.GetRecorder(controllerAgentName),
-			scheme:   mgr.GetScheme(),
-		},
-	}
-
-	return p.NewReconciler(mgr)
 }
