@@ -5,12 +5,7 @@ metadata:
     controller-tools.k8s.io: "1.0"
   name: containersources-sample
 spec:
-<<<<<<< HEAD
   image: github.com/knative/eventing-sources/cmd/heartbeats/
   args:
    - '--label="<3"'
    - '--period=2'
-=======
-  # Add fields here
-  foo: bar
->>>>>>> master

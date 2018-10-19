@@ -17,24 +17,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-<<<<<<< HEAD
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Important: Run "make" to regenerate code after modifying this file
-=======
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
->>>>>>> master
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // ContainerSourcesSpec defines the desired state of ContainerSources
 type ContainerSourcesSpec struct {
-<<<<<<< HEAD
 	// Image is the image to run inside of the container.
 	// +kubebuilder:validation:MinLength=1
 	Image string `json:"image,omitempty"`
@@ -99,16 +91,6 @@ func (s *ContainerSourcesStatus) MarkSink(uri string) {
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *ContainerSourcesStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	containerCondSet.Manage(s).MarkFalse(ContainerConditionSinkProvided, reason, messageFormat, messageA)
-=======
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
-
-// ContainerSourcesStatus defines the observed state of ContainerSources
-type ContainerSourcesStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
->>>>>>> master
 }
 
 // +genclient
