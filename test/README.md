@@ -56,7 +56,7 @@ There's couple of things you need to install before running e2e tests locally.
 2. [A running `Knative Serving` cluster.]
 3. A docker repo containing [the test images](#test-images)
 
-Simply run the `./test/e2e-tests.sh` script. It will create a GKE cluster, install Knative Serving stack with Istio, upload test images to your Docker repo and run the end-to-end tests against the Knative Eventing built from source.
+Simply run the `./test/e2e-tests.sh` script. It will create a GKE cluster, install Knative Serving stack with Istio, upload test images to your Docker repo and run the end-to-end tests against the Knative Eventing Sources built from source.
 
 If you already have the `*_OVERRIDE` environment variables set, call the script with the `--run-tests` argument and it will use the cluster and run the tests. Note that this requires you to have Serving and Istio installed and configured to your particular configuration setup. Knative Eventing Sources will still built and deployed from source.
 
