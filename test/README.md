@@ -1,6 +1,6 @@
 # Test
 
-This directory contains tests and testing docs for `Knative Eventing`.
+This directory contains tests and testing docs for `Knative Eventing Sources`.
 
 * [Unit tests](#running-unit-tests) reside in the codebase alongside the code they test
 * [End-to-end tests](#running-end-to-end-tests) reside in [`/test/e2e`](./e2e)
