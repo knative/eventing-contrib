@@ -19,8 +19,12 @@ package containersource
 import (
 	"context"
 	"encoding/json"
-	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"github.com/knative/eventing/pkg/provisioners/container/controller/resources"
+	"fmt"
+	"strings"
+
+	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
+	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/logging"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -52,19 +56,13 @@ type reconciler struct {
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
-
 func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
 	logger := logging.FromContext(ctx)
 
-	source, ok := object.(*v1alpha1.Source)
+	source, ok := object.(*v1alpha1.ContainerSource)
 	if !ok {
-		logger.Errorf("could not find source %v\n", object)
+		logger.Errorf("could not find container source %v\n", object)
 		return object, nil
-	}
-
-	if source.Spec.Provisioner.Ref.Name != provisionerName {
-		logger.Errorf("skipping source %s, provisioned by %s\n", source.Name, source.Spec.Provisioner.Ref.Name)
-		return source, nil
 	}
 
 	// See if the source has been deleted
@@ -81,38 +79,25 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	source.Status.InitializeConditions()
 
-	args := &resources.ContainerArguments{}
-	if source.Spec.Arguments != nil {
-		if err := json.Unmarshal(source.Spec.Arguments.Raw, args); err != nil {
-			logger.Infof("Error: %s failed to unmarshal arguments, %v", source.Name, err)
+	args := &resources.ContainerArguments{
+		Name:      source.Name,
+		Namespace: source.Namespace,
+		Image:     source.Spec.Image,
+		Args:      source.Spec.Args,
+	}
+
+	if uri, ok := sinkArg(source); ok {
+		args.SinkInArgs = true
+		source.Status.MarkSink(uri) // TODO
+	} else {
+		sink, err := r.getSink(ctx, source)
+		if err != nil {
+			source.Status.MarkNoSink("NotFound", "")
+			return source, err
 		}
 	}
-	args.Name = source.Name
-	args.Namespace = source.Namespace
 
-	channel, err := r.getChannel(ctx, source)
-	if err != nil {
-		fqn := "Channel.eventing.knative.dev/v1alpha1"
-		if errors.IsNotFound(err) {
-			channel, err = r.createChannel(ctx, source, nil, args)
-			if err != nil {
-				return object, err
-			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "Provisioned", "Created channel %q", channel.Name)
-			source.Status.SetProvisionedObjectState(channel.Name, fqn, "Created", "Created channel %q", channel.Name)
-			source.Status.MarkDeprovisioned("Provisioning", "Provisioning Channel %s", args.Name)
-		} else {
-			if channel.Status.IsReady() {
-				source.Status.SetProvisionedObjectState(channel.Name, fqn, "Ready", "")
-			}
-		}
-
-		source.Status.Subscribable.Channelable.Namespace = channel.Namespace
-		source.Status.Subscribable.Channelable.Name = channel.Name
-		source.Status.Subscribable.Channelable.APIVersion = "eventing.knative.dev/v1alpha1"
-		source.Status.Subscribable.Channelable.Kind = "Channel"
-
-	}
+	args.Sink = sink
 
 	deploy, err := r.getDeployment(ctx, source)
 	if err != nil {
@@ -138,10 +123,25 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	return source, nil
 }
 
-func (r *reconciler) getChannel(ctx context.Context, source *v1alpha1.Source) (*v1alpha1.Channel, error) {
+func sinkArg(source *v1alpha1.ContainerSource) (string, bool) {
+	for _, a := range source.Spec.Args {
+		if strings.HasPrefix(a, "--sink=") {
+			return strings.Replace(a, "--sink=", "", -1), true
+		}
+	}
+	return "", false
+}
+
+func (r *reconciler) getSink(ctx context.Context, source *v1alpha1.ContainerSource) (string, error) {
 	logger := logging.FromContext(ctx)
 
-	list := &v1alpha1.ChannelList{}
+	// check to see if the source has provided a sink ref in the spec. Lets look for it.
+
+	if source.Spec.Sink == nil {
+		return "", fmt.Errorf("sink ref is nil")
+	}
+
+	list := &duckv1alpha1.SinkList{}
 	err := r.client.List(
 		ctx,
 		&client.ListOptions{
@@ -151,37 +151,28 @@ func (r *reconciler) getChannel(ctx context.Context, source *v1alpha1.Source) (*
 			// needed.
 			Raw: &metav1.ListOptions{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: v1alpha1.SchemeGroupVersion.String(),
-					Kind:       "Channel",
+					APIVersion: source.Spec.Sink.APIVersion,
+					Kind:       source.Spec.Sink.Kind,
 				},
 			},
 		},
 		list)
 	if err != nil {
-		logger.Errorf("Unable to list channels: %v", err)
-		return nil, err
+		logger.Errorf("Unable to list sinks: %v", err)
+		return "", err
 	}
-	for _, c := range list.Items {
-		if metav1.IsControlledBy(&c, source) {
-			return &c, nil
+	for _, s := range list.Items {
+		if s.Name == source.Spec.Sink.Name {
+			if s.Status.Sinkable != nil && len(s.Status.Sinkable.DomainInternal) > 0 {
+				return s.Status.Sinkable.DomainInternal, nil
+			}
+			return "", fmt.Errorf("sink not ready")
 		}
 	}
-	return nil, errors.NewNotFound(schema.GroupResource{}, "")
+	return "", errors.NewNotFound(schema.GroupResource{}, "")
 }
 
-func (r *reconciler) createChannel(ctx context.Context, source *v1alpha1.Source, org *v1alpha1.Channel, args *resources.ContainerArguments) (*v1alpha1.Channel, error) {
-	channel, err := resources.MakeChannel(source, org, args)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := r.client.Create(ctx, channel); err != nil {
-		return nil, err
-	}
-	return channel, nil
-}
-
-func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Source) (*appsv1.Deployment, error) {
+func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.ContainerSource) (*appsv1.Deployment, error) {
 	logger := logging.FromContext(ctx)
 
 	list := &appsv1.DeploymentList{}
@@ -212,7 +203,7 @@ func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Source)
 	return nil, errors.NewNotFound(schema.GroupResource{}, "")
 }
 
-func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.Source, org *appsv1.Deployment, channel *v1alpha1.Channel, args *resources.ContainerArguments) (*appsv1.Deployment, error) {
+func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.ContainerSource, org *appsv1.Deployment, args *resources.ContainerArguments) (*appsv1.Deployment, error) {
 	deployment, err := resources.MakeDeployment(source, org, channel, args)
 	if err != nil {
 		return nil, err

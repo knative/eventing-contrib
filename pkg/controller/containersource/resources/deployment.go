@@ -18,26 +18,18 @@ package resources
 
 import (
 	"fmt"
-	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func MakeDeployment(source *v1alpha1.Source, org *appsv1.Deployment, channel *v1alpha1.Channel, args *ContainerArguments) (*appsv1.Deployment, error) {
-
-	if channel == nil || channel.Status.Sinkable.DomainInternal == "" {
-		return nil, fmt.Errorf("channel not ready")
-	}
-
+func MakeDeployment(org *appsv1.Deployment, sink string, args *ContainerArguments) (*appsv1.Deployment, error) {
 	containerArgs := []string(nil)
 	if args != nil {
-		containerArgs = make([]string, 0, len(args.Args)+1)
-		for k, v := range args.Args {
-			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%q", k, v))
-		}
+		containerArgs = args.Args
 	}
-	remote := fmt.Sprintf("--remote=http://%s", channel.Status.Sinkable.DomainInternal)
+	remote := fmt.Sprintf("--sink=%s", sink)
 	containerArgs = append(containerArgs, remote)
 
 	deploy := &appsv1.Deployment{
@@ -48,9 +40,6 @@ func MakeDeployment(source *v1alpha1.Source, org *appsv1.Deployment, channel *v1
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: args.Name + "-",
 			Namespace:    args.Namespace,
-			//OwnerReferences: []metav1.OwnerReference{
-			//	*controller.NewControllerRef(source, false),
-			//},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: func() *int32 { var i int32 = 1; return &i }(),

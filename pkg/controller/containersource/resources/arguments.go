@@ -17,8 +17,10 @@ limitations under the License.
 package resources
 
 type ContainerArguments struct {
-	Name      string   `json:"-"`
-	Namespace string   `json:"-"`
-	Image     string   `json:"image"`
-	Args      []string `json:"args"`
+	Name       string
+	Namespace  string
+	Image      string
+	Args       []string
+	SinkInArgs bool
+	Sink       string
 }

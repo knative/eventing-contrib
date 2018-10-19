@@ -51,6 +51,8 @@ func Add(mgr manager.Manager) error {
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 
+	// TODO: The tests needs this to run...
+	return nil
 	//return &reconciler{
 	//	client:   mgr.GetClient(),
 	//	recorder: mgr.GetRecorder(controllerAgentName),
