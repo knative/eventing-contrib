@@ -22,7 +22,7 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 readonly EVENTING_SOURCES_RELEASE_GCS
 readonly EVENTING_SOURCES_RELEASE_GCR
 
-# TODO(n3wscott): finalize the release pacakges when we have something to release.
+# TODO(n3wscott): finalize the release packages when we have something to release.
 
 # Yaml files to generate, and the source config dir for them.
 declare -A RELEASES
