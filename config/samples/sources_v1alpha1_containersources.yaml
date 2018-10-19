@@ -1,9 +1,9 @@
 apiVersion: sources.eventing.knative.dev/v1alpha1
-kind: Containers
+kind: ContainerSources
 metadata:
   labels:
     controller-tools.k8s.io: "1.0"
-  name: containers-sample
+  name: containersources-sample
 spec:
   # Add fields here
   foo: bar
