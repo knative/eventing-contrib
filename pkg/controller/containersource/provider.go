@@ -18,11 +18,11 @@ package containersource
 
 import (
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing/pkg/controller/sdk"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -31,16 +31,30 @@ const (
 	controllerAgentName = "container-source-controller"
 )
 
-// ProvideController returns a Subscription controller.
-func ProvideController(mgr manager.Manager) (controller.Controller, error) {
+// Add creates a new ContainerSource Controller and adds it to the Manager with
+// default RBAC. The Manager will set fields on the Controller and Start it when
+// the Manager is Started.
+func Add(mgr manager.Manager) error {
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.ContainerSource{},
 		Owns:      []runtime.Object{&appsv1.Deployment{}},
 		Reconciler: &reconciler{
 			recorder: mgr.GetRecorder(controllerAgentName),
+			scheme:   mgr.GetScheme(),
 		},
 	}
 
-	return p.ProvideController(mgr)
+	return p.Add(mgr)
+}
+
+// newReconciler returns a new reconcile.Reconciler
+func newReconciler(mgr manager.Manager) reconcile.Reconciler {
+
+	//return &reconciler{
+	//	client:   mgr.GetClient(),
+	//	recorder: mgr.GetRecorder(controllerAgentName),
+	//	scheme:   mgr.GetScheme(),
+	//}
+	//return &ReconcileContainerSource{Client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }

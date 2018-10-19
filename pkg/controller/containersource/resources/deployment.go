@@ -19,8 +19,6 @@ package resources
 import (
 	"fmt"
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"github.com/knative/eventing/pkg/controller"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,9 +48,9 @@ func MakeDeployment(source *v1alpha1.Source, org *appsv1.Deployment, channel *v1
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: args.Name + "-",
 			Namespace:    args.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*controller.NewControllerRef(source, false),
-			},
+			//OwnerReferences: []metav1.OwnerReference{
+			//	*controller.NewControllerRef(source, false),
+			//},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: func() *int32 { var i int32 = 1; return &i }(),
@@ -80,5 +78,6 @@ func MakeDeployment(source *v1alpha1.Source, org *appsv1.Deployment, channel *v1
 			},
 		},
 	}
+
 	return deploy, nil
 }

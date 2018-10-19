@@ -34,6 +34,8 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -42,6 +44,7 @@ const (
 
 type reconciler struct {
 	client        client.Client
+	scheme        *runtime.Scheme
 	restConfig    *rest.Config
 	dynamicClient dynamic.Interface
 	recorder      record.EventRecorder
@@ -213,6 +216,10 @@ func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.Sour
 	deployment, err := resources.MakeDeployment(source, org, channel, args)
 	if err != nil {
 		return nil, err
+	}
+
+	if err := controllerutil.SetControllerReference(source, deploy, r.scheme); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	if err := r.client.Create(ctx, deployment); err != nil {

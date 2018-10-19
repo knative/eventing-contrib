@@ -46,7 +46,7 @@ type Provider struct {
 }
 
 // ProvideController returns a controller for controller-runtime.
-func (p *Provider) ProvideController(mgr manager.Manager) (controller.Controller, error) {
+func (p *Provider) Add(mgr manager.Manager) error {
 	// Setup a new controller to Reconcile Subscriptions.
 	c, err := controller.New(p.AgentName, mgr, controller.Options{
 		Reconciler: &Reconciler{
@@ -55,21 +55,21 @@ func (p *Provider) ProvideController(mgr manager.Manager) (controller.Controller
 		},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Watch Parent events and enqueue Parent object key.
 	if err := c.Watch(&source.Kind{Type: p.Parent}, &handler.EnqueueRequestForObject{}); err != nil {
-		return nil, err
+		return err
 	}
 
 	// Watch and enqueue for owning obj key.
 	for _, t := range p.Owns {
 		if err := c.Watch(&source.Kind{Type: t},
 			&handler.EnqueueRequestForOwner{OwnerType: p.Parent, IsController: true}); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return c, nil
+	return nil
 }
