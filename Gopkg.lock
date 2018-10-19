@@ -219,13 +219,6 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  digest = "1:06a05385ee7bd647d3cbacf65a7a7db7d7104ab7d6664253d37faf7cb75abb94"
-  name = "github.com/knative/eventing"
-  packages = ["pkg/controller/testing"]
-  pruneopts = "T"
-  revision = "e6b0bd99f7c3807d03342b9bf0cbc789cb424912"
-
-[[projects]]
   digest = "1:09d23ea51491208bc07a01a1fc06c62de90d5d352592a4e0f3b773cc96aed199"
   name = "github.com/knative/pkg"
   packages = [
@@ -683,6 +676,7 @@
   name = "k8s.io/client-go"
   packages = [
     "discovery",
+    "discovery/fake",
     "dynamic",
     "dynamic/fake",
     "kubernetes",
@@ -859,7 +853,7 @@
     "github.com/emicklei/go-restful",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
-    "github.com/knative/eventing/pkg/controller/testing",
+    "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
     "github.com/knative/pkg/logging",
@@ -876,14 +870,24 @@
     "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
+    "k8s.io/apimachinery/pkg/runtime/serializer",
+    "k8s.io/apimachinery/pkg/types",
+    "k8s.io/apimachinery/pkg/watch",
+    "k8s.io/client-go/discovery",
+    "k8s.io/client-go/discovery/fake",
     "k8s.io/client-go/dynamic",
+    "k8s.io/client-go/dynamic/fake",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
+    "k8s.io/client-go/testing",
+    "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/record",
+    "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
+    "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
     "sigs.k8s.io/controller-runtime/pkg/handler",
