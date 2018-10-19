@@ -17,16 +17,24 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Important: Run "make" to regenerate code after modifying this file
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ContainerSourcesSpec defines the desired state of ContainerSources
-type ContainerSourcesSpec struct {
+// Check that ContainerSource can be validated and can be defaulted.
+var _ runtime.Object = (*ContainerSource)(nil)
+
+// Check that ContainerSource implements the Conditions duck type.
+var _ = duck.VerifyType(&ContainerSource{}, &duckv1alpha1.Conditions{})
+
+// ContainerSourceSpec defines the desired state of ContainerSource
+type ContainerSourceSpec struct {
 	// Image is the image to run inside of the container.
 	// +kubebuilder:validation:MinLength=1
 	Image string `json:"image,omitempty"`
@@ -49,8 +57,8 @@ const (
 
 var containerCondSet = duckv1alpha1.NewLivingConditionSet(ContainerConditionSinkProvided)
 
-// ContainerSourcesStatus defines the observed state of ContainerSources
-type ContainerSourcesStatus struct {
+// ContainerSourceStatus defines the observed state of ContainerSource
+type ContainerSourceStatus struct {
 	// Conditions holds the state of a source at a point in time.
 	// +optional
 	// +patchMergeKey=type
@@ -64,22 +72,22 @@ type ContainerSourcesStatus struct {
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (s *ContainerSourcesStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+func (s *ContainerSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
 	return containerCondSet.Manage(s).GetCondition(t)
 }
 
 // IsReady returns true if the resource is ready overall.
-func (s *ContainerSourcesStatus) IsReady() bool {
+func (s *ContainerSourceStatus) IsReady() bool {
 	return containerCondSet.Manage(s).IsHappy()
 }
 
 // InitializeConditions sets relevant unset conditions to Unknown state.
-func (s *ContainerSourcesStatus) InitializeConditions() {
+func (s *ContainerSourceStatus) InitializeConditions() {
 	containerCondSet.Manage(s).InitializeConditions()
 }
 
 // MarSink sets the condition that the source has a sink configured.
-func (s *ContainerSourcesStatus) MarkSink(uri string) {
+func (s *ContainerSourceStatus) MarkSink(uri string) {
 	s.SinkURI = uri
 	if len(uri) > 0 {
 		containerCondSet.Manage(s).MarkTrue(ContainerConditionSinkProvided)
@@ -89,32 +97,32 @@ func (s *ContainerSourcesStatus) MarkSink(uri string) {
 }
 
 // MarkNoSink sets the condition that the source does not have a sink configured.
-func (s *ContainerSourcesStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+func (s *ContainerSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	containerCondSet.Manage(s).MarkFalse(ContainerConditionSinkProvided, reason, messageFormat, messageA)
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ContainerSources is the Schema for the containersources API
+// ContainerSource is the Schema for the containersources API
 // +k8s:openapi-gen=true
-type ContainerSources struct {
+type ContainerSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ContainerSourcesSpec   `json:"spec,omitempty"`
-	Status ContainerSourcesStatus `json:"status,omitempty"`
+	Spec   ContainerSourceSpec   `json:"spec,omitempty"`
+	Status ContainerSourceStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ContainerSourcesList contains a list of ContainerSources
-type ContainerSourcesList struct {
+// ContainerSourceList contains a list of ContainerSource
+type ContainerSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ContainerSources `json:"items"`
+	Items           []ContainerSource `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&ContainerSources{}, &ContainerSourcesList{})
+	SchemeBuilder.Register(&ContainerSource{}, &ContainerSourceList{})
 }

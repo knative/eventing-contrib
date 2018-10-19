@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package containersources
+package containersource
 
 import (
 	"context"
@@ -42,7 +42,7 @@ import (
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new ContainerSources Controller and adds it to the Manager with default RBAC. The Manager will set fields on the Controller
+// Add creates a new ContainerSource Controller and adds it to the Manager with default RBAC. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 // USER ACTION REQUIRED: update cmd/manager/main.go to call this sources.Add(mgr) to install this Controller
 func Add(mgr manager.Manager) error {
@@ -51,28 +51,28 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileContainerSources{Client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileContainerSource{Client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("containersources-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("containersource-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to ContainerSources
-	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.ContainerSources{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to ContainerSource
+	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.ContainerSource{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
 	// TODO(user): Modify this to be the types you create
-	// Uncomment watch a Deployment created by ContainerSources - change this for objects you create
+	// Uncomment watch a Deployment created by ContainerSource - change this for objects you create
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &sourcesv1alpha1.ContainerSources{},
+		OwnerType:    &sourcesv1alpha1.ContainerSource{},
 	})
 	if err != nil {
 		return err
@@ -81,24 +81,24 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileContainerSources{}
+var _ reconcile.Reconciler = &ReconcileContainerSource{}
 
-// ReconcileContainerSources reconciles a ContainerSources object
-type ReconcileContainerSources struct {
+// ReconcileContainerSource reconciles a ContainerSource object
+type ReconcileContainerSource struct {
 	client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a ContainerSources object and makes changes based on the state read
-// and what is in the ContainerSources.Spec
+// Reconcile reads that state of the cluster for a ContainerSource object and makes changes based on the state read
+// and what is in the ContainerSource.Spec
 // TODO(user): Modify this Reconcile function to implement your Controller logic.  The scaffolding writes
 // a Deployment as an example
 // Automatically generate RBAC rules to allow the Controller to read and write Deployments
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=containersources,verbs=get;list;watch;create;update;patch;delete
-func (r *ReconcileContainerSources) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// Fetch the ContainerSources instance
-	instance := &sourcesv1alpha1.ContainerSources{}
+// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=containersource,verbs=get;list;watch;create;update;patch;delete
+func (r *ReconcileContainerSource) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	// Fetch the ContainerSource instance
+	instance := &sourcesv1alpha1.ContainerSource{}
 	err := r.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
