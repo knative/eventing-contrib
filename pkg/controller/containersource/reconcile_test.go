@@ -18,6 +18,8 @@ package containersource
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	//"fmt"
 	"testing"
 
@@ -55,9 +57,13 @@ const (
 	testNS              = "testnamespace"
 	k8sServiceName      = "testk8sservice"
 
-	sinkName       = "testsink"
-	sinkKind       = "Sink"
-	sinkAPIVersion = "duck.knative.dev/v1alpha1"
+	sinkableName       = "testsink"
+	sinkableKind       = "Sink"
+	sinkableAPIVersion = "duck.knative.dev/v1alpha1"
+
+	unsinkableName       = "testunsinkable"
+	unsinkableKind       = "KResource"
+	unsinkableAPIVersion = "duck.knative.dev/v1alpha1"
 )
 
 // Adds the list of known types to Scheme.
@@ -84,47 +90,35 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: "non-existent-test-ns/non-existent-test-key",
 		WantErr:      false,
 	}, {
-		Name:       "valid containersource but sink does not exist",
+		Name:       "valid containersource, but sink does not exist",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		WantErrMsg:   `sinks.duck.knative.dev "testsink" not found`,
+	}, {
+		Name:       "valid containersource, but sink is not sinkable",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource_unsinkable(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// Source channel
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": unsinkableAPIVersion,
+					"kind":       unsinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      unsinkableName,
+					},
+				}},
+		},
+		WantErrMsg: "sink does not contain sinkable",
 	},
-	//}, {
-	//	Name:       "subscription, but From is not subscribable",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscription(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	WantErrMsg:   "from is not subscribable Channel testnamespace/fromchannel",
-	//	Scheme:       scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"notsubscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//	},
 	//}, {
 	//	Name:       "Valid from, call does not exist",
 	//	Reconciles: &eventingv1alpha1.Subscription{},
@@ -628,9 +622,28 @@ func getContainerSource() *sourcesv1alpha1.ContainerSource {
 			Image: image,
 			Args:  []string{},
 			Sink: &corev1.ObjectReference{
-				Name:       sinkName,
-				Kind:       sinkKind,
-				APIVersion: sinkAPIVersion,
+				Name:       sinkableName,
+				Kind:       sinkableKind,
+				APIVersion: sinkableAPIVersion,
+			},
+		},
+	}
+	// selflink is not filled in when we create the object, so clear it
+	obj.ObjectMeta.SelfLink = ""
+	return obj
+}
+
+func getContainerSource_unsinkable() *sourcesv1alpha1.ContainerSource {
+	obj := &sourcesv1alpha1.ContainerSource{
+		TypeMeta:   containerSourceType(),
+		ObjectMeta: om(testNS, containerSourceName),
+		Spec: sourcesv1alpha1.ContainerSourceSpec{
+			Image: image,
+			Args:  []string{},
+			Sink: &corev1.ObjectReference{
+				Name:       unsinkableName,
+				Kind:       unsinkableKind,
+				APIVersion: unsinkableAPIVersion,
 			},
 		},
 	}
@@ -752,3 +765,27 @@ func om(namespace, name string) metav1.ObjectMeta {
 //		BlockOwnerDeletion: &blockOwnerDeletion,
 //	}
 //}
+
+func getTestResources() []runtime.Object {
+	return []runtime.Object{
+		&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": unsinkableAPIVersion,
+				"kind":       unsinkableKind,
+				"metadata": map[string]interface{}{
+					"namespace": testNS,
+					"name":      unsinkableName,
+				},
+			},
+		}, &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": sinkableAPIVersion,
+				"kind":       sinkableKind,
+				"metadata": map[string]interface{}{
+					"namespace": testNS,
+					"name":      sinkableName,
+				},
+			},
+		},
+	}
+}
