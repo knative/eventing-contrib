@@ -19,10 +19,12 @@ package containersource
 import (
 	"context"
 	"fmt"
+	"github.com/knative/pkg/apis/duck"
 	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
+	duckapis "github.com/knative/pkg/apis"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/logging"
 	appsv1 "k8s.io/api/apps/v1"
@@ -131,35 +133,43 @@ func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerS
 		return "", fmt.Errorf("sink ref is nil")
 	}
 
-	list := &duckv1alpha1.SinkList{}
-	err := r.client.List(
-		ctx,
-		&client.ListOptions{
-			Namespace:     source.Namespace,
-			LabelSelector: labels.Everything(),
-			// TODO this is here because the fake client needs it.
-			// Remove this when it's no longer needed.
-			Raw: &metav1.ListOptions{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: source.Spec.Sink.APIVersion,
-					Kind:       source.Spec.Sink.Kind,
-				},
-			},
-		},
-		list)
+	obj, err := r.fetchObjectReference(source.Namespace, source.Spec.Sink)
 	if err != nil {
-		logger.Errorf("Unable to list sinks: %v", err)
+		logger.Warnf("Failed to fetch sink target %+v: %s", source.Spec.Sink, err)
 		return "", err
 	}
-	for _, s := range list.Items {
-		if s.Name == source.Spec.Sink.Name {
-			if s.Status.Sinkable != nil && len(s.Status.Sinkable.DomainInternal) > 0 {
-				return s.Status.Sinkable.DomainInternal, nil
-			}
-			return "", fmt.Errorf("sink not ready")
-		}
+	t := duckv1alpha1.Sink{}
+	err = duck.FromUnstructured(obj, &t)
+	if err != nil {
+		logger.Warnf("Failed to deserialize sink: %s", err)
+		return "", err
 	}
-	return "", errors.NewNotFound(schema.GroupResource{}, "")
+
+	if t.Status.Sinkable != nil {
+		return t.Status.Sinkable.DomainInternal, nil
+	}
+	return "", fmt.Errorf("sink does not contain sinkable")
+}
+
+// fetchObjectReference fetches an object based on ObjectReference.
+func (r *reconciler) fetchObjectReference(namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
+	resourceClient, err := r.CreateResourceInterface(namespace, ref)
+	if err != nil {
+		//glog.Warningf("failed to create dynamic client resource: %v", err)
+		return nil, err
+	}
+
+	return resourceClient.Get(ref.Name, metav1.GetOptions{})
+}
+
+func (r *reconciler) CreateResourceInterface(namespace string, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
+	rc := r.dynamicClient.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
+
+	if rc == nil {
+		return nil, fmt.Errorf("failed to create dynamic client resource")
+	}
+	return rc.Namespace(namespace), nil
+
 }
 
 func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.ContainerSource) (*appsv1.Deployment, error) {

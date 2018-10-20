@@ -17,6 +17,7 @@ limitations under the License.
 package containersource
 
 import (
+	"fmt"
 	//"fmt"
 	"testing"
 
@@ -24,9 +25,9 @@ import (
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	//"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	//"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
@@ -39,25 +40,41 @@ var (
 )
 
 const (
-	fromChannelName   = "fromchannel"
-	resultChannelName = "resultchannel"
-	sourceName        = "source"
-	routeName         = "callroute"
-	channelKind       = "Channel"
-	routeKind         = "Route"
-	sourceKind        = "Source"
-	targetDNS         = "myfunction.mynamespace.svc.cluster.local"
-	sinkableDNS       = "myresultchannel.mynamespace.svc.cluster.local"
-	eventType         = "myeventtype"
-	subscriptionName  = "testsubscription"
-	testNS            = "testnamespace"
-	k8sServiceName    = "testk8sservice"
+	image               = "github.com/knative/test/image"
+	fromChannelName     = "fromchannel"
+	resultChannelName   = "resultchannel"
+	sourceName          = "source"
+	routeName           = "callroute"
+	channelKind         = "Channel"
+	routeKind           = "Route"
+	sourceKind          = "Source"
+	targetDNS           = "myfunction.mynamespace.svc.cluster.local"
+	sinkableDNS         = "myresultchannel.mynamespace.svc.cluster.local"
+	eventType           = "myeventtype"
+	containerSourceName = "testcontainersource"
+	testNS              = "testnamespace"
+	k8sServiceName      = "testk8sservice"
+
+	sinkName       = "testsink"
+	sinkKind       = "Sink"
+	sinkAPIVersion = "duck.knative.dev/v1alpha1"
 )
+
+// Adds the list of known types to Scheme.
+func duckAddKnownTypes(scheme *runtime.Scheme) error {
+	scheme.AddKnownTypes(
+		duckv1alpha1.SchemeGroupVersion,
+		&duckv1alpha1.SinkList{},
+	)
+	metav1.AddToGroupVersion(scheme, duckv1alpha1.SchemeGroupVersion)
+	return nil
+}
 
 func init() {
 	// Add types to scheme
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
+	duckAddKnownTypes(scheme.Scheme)
 }
 
 var testCases = []controllertesting.TestCase{
@@ -66,15 +83,15 @@ var testCases = []controllertesting.TestCase{
 		Reconciles:   &sourcesv1alpha1.ContainerSource{},
 		ReconcileKey: "non-existent-test-ns/non-existent-test-key",
 		WantErr:      false,
+	}, {
+		Name:       "valid containersource but sink does not exist",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		WantErrMsg:   `sinks.duck.knative.dev "testsink" not found`,
 	},
-	//}, {
-	//	Name:       "subscription but From channel does not exist",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscription(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	WantErrMsg:   `channels.eventing.knative.dev "fromchannel" not found`,
 	//}, {
 	//	Name:       "subscription, but From is not subscribable",
 	//	Reconciles: &eventingv1alpha1.Subscription{},
@@ -603,38 +620,25 @@ func TestAllCases(t *testing.T) {
 //	return channel
 //}
 //
-//func getNewSubscription() *eventingv1alpha1.Subscription {
-//	subscription := &eventingv1alpha1.Subscription{
-//		TypeMeta:   subscriptionType(),
-//		ObjectMeta: om(testNS, subscriptionName),
-//		Spec: eventingv1alpha1.SubscriptionSpec{
-//			From: corev1.ObjectReference{
-//				Name:       fromChannelName,
-//				Kind:       channelKind,
-//				APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//			},
-//			Call: &eventingv1alpha1.Callable{
-//				Target: &corev1.ObjectReference{
-//					Name:       routeName,
-//					Kind:       routeKind,
-//					APIVersion: "serving.knative.dev/v1alpha1",
-//				},
-//			},
-//			Result: &eventingv1alpha1.ResultStrategy{
-//				Target: &corev1.ObjectReference{
-//					Name:       resultChannelName,
-//					Kind:       channelKind,
-//					APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//				},
-//			},
-//		},
-//	}
-//	subscription.ObjectMeta.OwnerReferences = append(subscription.ObjectMeta.OwnerReferences, getOwnerReference(false))
-//
-//	// selflink is not filled in when we create the object, so clear it
-//	subscription.ObjectMeta.SelfLink = ""
-//	return subscription
-//}
+func getContainerSource() *sourcesv1alpha1.ContainerSource {
+	obj := &sourcesv1alpha1.ContainerSource{
+		TypeMeta:   containerSourceType(),
+		ObjectMeta: om(testNS, containerSourceName),
+		Spec: sourcesv1alpha1.ContainerSourceSpec{
+			Image: image,
+			Args:  []string{},
+			Sink: &corev1.ObjectReference{
+				Name:       sinkName,
+				Kind:       sinkKind,
+				APIVersion: sinkAPIVersion,
+			},
+		},
+	}
+	// selflink is not filled in when we create the object, so clear it
+	obj.ObjectMeta.SelfLink = ""
+	return obj
+}
+
 //
 //func getNewSubscriptionToK8sService() *eventingv1alpha1.Subscription {
 //	sub := getNewSubscription()
@@ -700,12 +704,13 @@ func TestAllCases(t *testing.T) {
 //	}
 //}
 //
-//func subscriptionType() metav1.TypeMeta {
-//	return metav1.TypeMeta{
-//		APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//		Kind:       "Subscription",
-//	}
-//}
+func containerSourceType() metav1.TypeMeta {
+	return metav1.TypeMeta{
+		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+		Kind:       "ContainerSource",
+	}
+}
+
 //
 //func getK8sService() *corev1.Service {
 //	return &corev1.Service{
@@ -719,14 +724,15 @@ func TestAllCases(t *testing.T) {
 //		},
 //	}
 //}
-//
-//func om(namespace, name string) metav1.ObjectMeta {
-//	return metav1.ObjectMeta{
-//		Namespace: namespace,
-//		Name:      name,
-//		SelfLink:  fmt.Sprintf("/apis/eventing/v1alpha1/namespaces/%s/object/%s", namespace, name),
-//	}
-//}
+
+func om(namespace, name string) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Namespace: namespace,
+		Name:      name,
+		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
+	}
+}
+
 //func feedObjectMeta(namespace, generateName string) metav1.ObjectMeta {
 //	return metav1.ObjectMeta{
 //		Namespace:    namespace,
