@@ -20,9 +20,6 @@ limitations under the License.
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen=package,register
 // +k8s:conversion-gen=github.com/knative/eventing-sources/pkg/apis/sources
-// +genclient
-// +genclient:noStatus
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:defaulter-gen=TypeMeta
 // +groupName=sources.eventing.knative.dev
 package v1alpha1
