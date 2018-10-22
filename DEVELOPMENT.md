@@ -111,6 +111,9 @@ You can delete `Knative Sources` with:
 ko delete -f config/
 ```
 
+<!-- 
+TODO(#15): Add default telemetry.
 ## Telemetry
 
 See [telemetry documentation](./docs/telemetry.md).
+-->
