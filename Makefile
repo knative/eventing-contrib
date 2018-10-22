@@ -44,6 +44,7 @@ vet:
 # Generate code
 generate:
 	go generate ./pkg/... ./cmd/...
+	/usr/local/bin/bash  ./hack/update-codegen.sh
 
 # Build the docker image
 docker-build: test
