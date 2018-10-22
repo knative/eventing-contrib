@@ -42,20 +42,22 @@ var (
 )
 
 const (
-	image               = "github.com/knative/test/image"
-	fromChannelName     = "fromchannel"
-	resultChannelName   = "resultchannel"
-	sourceName          = "source"
-	routeName           = "callroute"
-	channelKind         = "Channel"
-	routeKind           = "Route"
-	sourceKind          = "Source"
-	targetDNS           = "myfunction.mynamespace.svc.cluster.local"
-	sinkableDNS         = "myresultchannel.mynamespace.svc.cluster.local"
+	image             = "github.com/knative/test/image"
+	fromChannelName   = "fromchannel"
+	resultChannelName = "resultchannel"
+	sourceName        = "source"
+	routeName         = "callroute"
+	channelKind       = "Channel"
+	routeKind         = "Route"
+	sourceKind        = "Source"
+	targetDNS         = "myfunction.mynamespace.svc.cluster.local"
+
 	eventType           = "myeventtype"
 	containerSourceName = "testcontainersource"
 	testNS              = "testnamespace"
 	k8sServiceName      = "testk8sservice"
+
+	sinkableDNS = "sinkable.sink.svc.cluster.local"
 
 	sinkableName       = "testsink"
 	sinkableKind       = "Sink"
@@ -64,6 +66,10 @@ const (
 	unsinkableName       = "testunsinkable"
 	unsinkableKind       = "KResource"
 	unsinkableAPIVersion = "duck.knative.dev/v1alpha1"
+
+	sinkServiceName       = "testsinkservice"
+	sinkServiceKind       = "Service"
+	sinkServiceAPIVersion = "v1"
 )
 
 // Adds the list of known types to Scheme.
@@ -106,7 +112,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// Source channel
+			// An unsinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": unsinkableAPIVersion,
@@ -115,464 +121,57 @@ var testCases = []controllertesting.TestCase{
 						"namespace": testNS,
 						"name":      unsinkableName,
 					},
-				}},
+				},
+			},
 		},
 		WantErrMsg: "sink does not contain sinkable",
-	},
-	//}, {
-	//	Name:       "Valid from, call does not exist",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscription(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	WantErrMsg:   `routes.serving.knative.dev "callroute" not found`,
-	//	Scheme:       scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//	},
-	//}, {
-	//	Name:       "Valid from, call is not targetable",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscription(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	WantErrMsg:   "status does not contain targetable",
-	//	Scheme:       scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//		// Call (using knative route)
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": "serving.knative.dev/v1alpha1",
-	//				"kind":       routeKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      routeName,
-	//				},
-	//				"status": map[string]interface{}{
-	//					"someotherstuff": targetDNS,
-	//				},
-	//			}},
-	//	},
-	//}, {
-	//	Name:       "Valid from and call, result does not exist",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscription(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	WantErrMsg:   `channels.eventing.knative.dev "resultchannel" not found`,
-	//	Scheme:       scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//		// Call (using knative route)
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": "serving.knative.dev/v1alpha1",
-	//				"kind":       routeKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      routeName,
-	//				},
-	//				"status": map[string]interface{}{
-	//					"targetable": map[string]interface{}{
-	//						"domainInternal": targetDNS,
-	//					},
-	//				},
-	//			}},
-	//	},
-	//}, {
-	//	Name:       "valid from, call, result is not sinkable",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscription(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	WantErrMsg:   "status does not contain sinkable",
-	//	WantPresent: []runtime.Object{
-	//		// TODO: Again this works on gke cluster, but I need to set
-	//		// something else up here. later...
-	//		// getNewSubscriptionWithReferencesResolvedStatus(),
-	//		getNewSubscriptionWithUnknownConditions(),
-	//	},
-	//	IgnoreTimes: true,
-	//	Scheme:      scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//		// Call (using knative route)
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": "serving.knative.dev/v1alpha1",
-	//				"kind":       routeKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      routeName,
-	//				},
-	//				"status": map[string]interface{}{
-	//					"targetable": map[string]interface{}{
-	//						"domainInternal": targetDNS,
-	//					},
-	//				},
-	//			}},
-	//		// Result channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      resultChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//	},
-	//}, {
-	//	Name:       "new subscription: adds status, all targets resolved, subscribers modified",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscription(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	// TODO: JSON patch is not working on the fake, see
-	//	// https://github.com/kubernetes/client-go/issues/478. Marking this as expecting a specific
-	//	// failure for now, until upstream is fixed.
-	//	WantResult: reconcile.Result{},
-	//	WantErrMsg: "invalid JSON document",
-	//	Scheme:     scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//		// Call (using knative route)
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": "serving.knative.dev/v1alpha1",
-	//				"kind":       routeKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      routeName,
-	//				},
-	//				"status": map[string]interface{}{
-	//					"targetable": map[string]interface{}{
-	//						"domainInternal": targetDNS,
-	//					},
-	//				},
-	//			}},
-	//		// Result channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      resultChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//					"sinkable": map[string]interface{}{
-	//						"domainInternal": sinkableDNS,
-	//					},
-	//				},
-	//			}},
-	//	},
-	//}, {
-	//	Name:       "new subscription to K8s Service: adds status, all targets resolved, subscribers modified",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscriptionToK8sService(),
-	//		getK8sService(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	// TODO: JSON patch is not working on the fake, see
-	//	// https://github.com/kubernetes/client-go/issues/478. Marking this as expecting a specific
-	//	// failure for now, until upstream is fixed.
-	//	WantResult: reconcile.Result{},
-	//	WantErrMsg: "invalid JSON document",
-	//	Scheme:     scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//		// Call (using K8s Service)
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": "v1",
-	//				"kind":       "Service",
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      k8sServiceName,
-	//				},
-	//			}},
-	//		// Result channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      resultChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//					"sinkable": map[string]interface{}{
-	//						"domainInternal": sinkableDNS,
-	//					},
-	//				},
-	//			}},
-	//	},
-	//}, {
-	//	Name:       "new subscription with source: adds status, all targets resolved, subscribers modified",
-	//	Reconciles: &eventingv1alpha1.Subscription{},
-	//	InitialState: []runtime.Object{
-	//		getNewSubscriptionWithSource(),
-	//	},
-	//	ReconcileKey: fmt.Sprintf("%s/%s", testNS, subscriptionName),
-	//	// TODO: JSON patch is not working on the fake, see
-	//	// https://github.com/kubernetes/client-go/issues/478. Marking this as expecting a specific
-	//	// failure for now, until upstream is fixed.
-	//	WantResult: reconcile.Result{},
-	//	WantErrMsg: "invalid JSON document",
-	//	Scheme:     scheme.Scheme,
-	//	Objects: []runtime.Object{
-	//		// Source with a reference to the From Channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       sourceKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      sourceName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//		// Source channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      fromChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//				},
-	//			}},
-	//		// Call (using knative route)
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": "serving.knative.dev/v1alpha1",
-	//				"kind":       routeKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      routeName,
-	//				},
-	//				"status": map[string]interface{}{
-	//					"targetable": map[string]interface{}{
-	//						"domainInternal": targetDNS,
-	//					},
-	//				},
-	//			}},
-	//		// Result channel
-	//		&unstructured.Unstructured{
-	//			Object: map[string]interface{}{
-	//				"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//				"kind":       channelKind,
-	//				"metadata": map[string]interface{}{
-	//					"namespace": testNS,
-	//					"name":      resultChannelName,
-	//				},
-	//				"spec": map[string]interface{}{
-	//					"channelable": map[string]interface{}{},
-	//				},
-	//				"status": map[string]interface{}{
-	//					"subscribable": map[string]interface{}{
-	//						"channelable": map[string]interface{}{
-	//							"kind":       channelKind,
-	//							"name":       fromChannelName,
-	//							"apiVersion": eventingv1alpha1.SchemeGroupVersion.String(),
-	//						},
-	//					},
-	//					"sinkable": map[string]interface{}{
-	//						"domainInternal": sinkableDNS,
-	//					},
-	//				},
-	//			}},
-	//	},
-	//},
+	}, {
+		Name:       "valid containersource, sink is sinkable",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// k8s Service
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+	}, /* TODO: support k8s service {
+		Name:       "valid containersource, sink is a k8s service",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource_sinkService(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkServiceAPIVersion,
+					"kind":       sinkServiceKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkServiceName,
+					},
+				}},
+		},
+	},*/
 }
 
 func TestAllCases(t *testing.T) {
@@ -585,6 +184,7 @@ func TestAllCases(t *testing.T) {
 		r := &reconciler{
 			client:        c,
 			dynamicClient: dc,
+			scheme:        tc.Scheme,
 			restConfig:    &rest.Config{},
 			recorder:      recorder,
 		}
@@ -625,6 +225,25 @@ func getContainerSource() *sourcesv1alpha1.ContainerSource {
 				Name:       sinkableName,
 				Kind:       sinkableKind,
 				APIVersion: sinkableAPIVersion,
+			},
+		},
+	}
+	// selflink is not filled in when we create the object, so clear it
+	obj.ObjectMeta.SelfLink = ""
+	return obj
+}
+
+func getContainerSource_sinkService() *sourcesv1alpha1.ContainerSource {
+	obj := &sourcesv1alpha1.ContainerSource{
+		TypeMeta:   containerSourceType(),
+		ObjectMeta: om(testNS, containerSourceName),
+		Spec: sourcesv1alpha1.ContainerSourceSpec{
+			Image: image,
+			Args:  []string{},
+			Sink: &corev1.ObjectReference{
+				Name:       sinkServiceName,
+				Kind:       sinkServiceKind,
+				APIVersion: sinkServiceAPIVersion,
 			},
 		},
 	}
