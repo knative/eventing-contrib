@@ -6,7 +6,7 @@ all: test manager
 
 # Dep ensure
 dep:
-	/usr/local/bin/bash  ./hack/update-deps.sh
+	./hack/update-deps.sh
 
 # Run tests
 test: generate fmt vet manifests
@@ -44,6 +44,7 @@ vet:
 # Generate code
 generate:
 	go generate ./pkg/... ./cmd/...
+	./hack/update-codegen.sh
 
 # Build the docker image
 docker-build: test
