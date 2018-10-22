@@ -1,16 +1,9 @@
 # Adds namespace to all resources.
-namespace: eventing-sources-system
-
-# Value of this field is prepended to the
-# names of all resources, e.g. a deployment named
-# "wordpress" becomes "alices-wordpress".
-# Note that it should also match with the prefix (text before '-') of the namespace
-# field above.
-namePrefix: eventing-sources-
+namespace: knative-sources
 
 # Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
+commonLabels:
+  knative/eventing: "sources"
 
 # Each entry in this list must resolve to an existing
 # resource definition in YAML.  These are the resource
@@ -18,6 +11,7 @@ namePrefix: eventing-sources-
 # YAML string, with resources separated by document
 # markers ("---").
 resources:
+- ../crds/sources_v1alpha1_containersource.yaml
 - ../rbac/rbac_role.yaml
 - ../rbac/rbac_role_binding.yaml
 - ../manager/manager.yaml

@@ -3,13 +3,12 @@ kind: Namespace
 metadata:
   labels:
     controller-tools.k8s.io: "1.0"
-  name: system
+  name: knative-sources
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: controller-manager-service
-  namespace: system
   labels:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
@@ -24,7 +23,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: controller-manager
-  namespace: system
   labels:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
