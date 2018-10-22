@@ -11,7 +11,7 @@ docs](./test/README.md).
 1. Setup [Knative Eventing](http://github.com/knative/eventing)
 1. [Create and checkout a repo fork](#checkout-your-fork)
 
-Once you meet these requirements, you can [start the eventing-controller](#starting-eventing-controller)!
+Once you meet these requirements, you can [install a source](#installing-a-source)!
 
 Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -30,7 +30,7 @@ You must have
 ### Checkout your fork
 
 The Go tools require that you clone the repository to the
-`src/github.com/knative/eventing` directory in your
+`src/github.com/knative/eventing-sources` directory in your
 [`GOPATH`](https://github.com/golang/go/wiki/SettingGOPATH).
 
 To check out this repository:
@@ -40,9 +40,9 @@ To check out this repository:
   ```shell
   mkdir -p ${GOPATH}/src/github.com/knative
   cd ${GOPATH}/src/github.com/knative
-  git clone git@github.com:${YOUR_GITHUB_USERNAME}/eventing.git
+  git clone git@github.com:${YOUR_GITHUB_USERNAME}/eventing-sources.git
   cd eventing
-  git remote add upstream git@github.com:knative/eventing.git
+  git remote add upstream git@github.com:knative/eventing-sources.git
   git remote set-url --push upstream no_push
   ```
 
@@ -51,10 +51,12 @@ fork](https://help.github.com/articles/syncing-a-fork/)._
 
 Once you reach this point you are ready to do a full build and deploy as follows.
 
-## Starting Eventing Controller
+## Installing a Source
 
-Once you've [setup your development environment](#getting-started), stand up
-`Knative Eventing` with:
+Once you've [setup your development environment](#getting-started), install a
+source with:
+
+<!-- TODO(n3wscott): Update to show how to install a single source. -->
 
 ```shell
 ko apply -f config/
@@ -63,15 +65,15 @@ ko apply -f config/
 You can see things running with:
 
 ```shell
-$ kubectl -n knative-eventing get pods
-NAME                                   READY     STATUS    RESTARTS   AGE
-eventing-controller-59f7969778-4dt7l   1/1       Running   0          2h
+$ kubectl -n knative-sources get pods
+NAME                       READY     STATUS    RESTARTS   AGE
+manager-59f7969778-4dt7l   1/1       Running   0          2h
 ```
 
-You can access the Eventing Controller's logs with:
+You can access the Eventing Manager's logs with:
 
 ```shell
-kubectl -n knative-eventing logs $(kubectl -n knative-eventing get pods -l app=eventing-controller -o name)
+kubectl -n knative-source logs $(kubectl -n knative-souce get pods -l control-plane=controller-manager -o name)
 ```
 
 ## Iterating
@@ -103,7 +105,7 @@ test docs](./test/README.md).
 
 ## Clean up
 
-You can delete `Knative Eventing` with:
+You can delete `Knative Sources` with:
 
 ```shell
 ko delete -f config/
