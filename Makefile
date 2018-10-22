@@ -4,6 +4,10 @@ IMG ?= controller:latest
 
 all: test manager
 
+# Dep ensure
+dep:
+	/usr/local/bin/bash  ./hack/update-deps.sh
+
 # Run tests
 test: generate fmt vet manifests
 	go test ./pkg/... ./cmd/... -coverprofile cover.out

@@ -17,10 +17,10 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/knative/eventing-sources/pkg/controller/containersources"
+	"github.com/knative/eventing-sources/pkg/controller/containersource"
 )
 
 func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, containersources.Add)
+	AddToManagerFuncs = append(AddToManagerFuncs, containersource.Add)
 }

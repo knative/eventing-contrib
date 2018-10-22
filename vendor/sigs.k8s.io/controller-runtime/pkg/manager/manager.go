@@ -106,12 +106,6 @@ type Options struct {
 	// will use for holding the leader lock.
 	LeaderElectionID string
 
-	// Namespace if specified restricts the manager's cache to watch objects in the desired namespace
-	// Defaults to all namespaces
-	// Note: If a namespace is specified then controllers can still Watch for a cluster-scoped resource e.g Node
-	// For namespaced resources the cache will only hold objects from the desired namespace.
-	Namespace string
-
 	// Dependency injection for testing
 	newCache            func(config *rest.Config, opts cache.Options) (cache.Cache, error)
 	newClient           func(config *rest.Config, options client.Options) (client.Client, error)
@@ -159,7 +153,7 @@ func New(config *rest.Config, options Options) (Manager, error) {
 	}
 
 	// Create the cache for the cached read client and registering informers
-	cache, err := options.newCache(config, cache.Options{Scheme: options.Scheme, Mapper: mapper, Resync: options.SyncPeriod, Namespace: options.Namespace})
+	cache, err := options.newCache(config, cache.Options{Scheme: options.Scheme, Mapper: mapper, Resync: options.SyncPeriod})
 	if err != nil {
 		return nil, err
 	}
@@ -193,14 +187,7 @@ func New(config *rest.Config, options Options) (Manager, error) {
 		errChan:          make(chan error),
 		cache:            cache,
 		fieldIndexes:     cache,
-		client: client.DelegatingClient{
-			Reader: &client.DelegatingReader{
-				CacheReader:  cache,
-				ClientReader: writeObj,
-			},
-			Writer:       writeObj,
-			StatusClient: writeObj,
-		},
+		client:           client.DelegatingClient{Reader: cache, Writer: writeObj, StatusClient: writeObj},
 		recorderProvider: recorderProvider,
 		resourceLock:     resourceLock,
 		mapper:           mapper,
