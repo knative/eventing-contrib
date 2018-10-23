@@ -33,7 +33,6 @@ import (
 	//"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	//"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -321,7 +320,6 @@ func TestAllCases(t *testing.T) {
 			client:        c,
 			dynamicClient: dc,
 			scheme:        tc.Scheme,
-			restConfig:    &rest.Config{},
 			recorder:      recorder,
 		}
 		t.Run(tc.Name, tc.RunnerSDK(t, r, c))

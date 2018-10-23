@@ -37,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -46,7 +45,6 @@ import (
 type reconciler struct {
 	client        client.Client
 	scheme        *runtime.Scheme
-	restConfig    *rest.Config
 	dynamicClient dynamic.Interface
 	recorder      record.EventRecorder
 }
@@ -236,4 +234,15 @@ func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.Cont
 		return nil, err
 	}
 	return deployment, nil
+}
+
+func (r *reconciler) InjectClient(c client.Client) error {
+	r.client = c
+	return nil
+}
+
+func (r *reconciler) InjectConfig(c *rest.Config) error {
+	var err error
+	r.dynamicClient, err = dynamic.NewForConfig(c)
+	return err
 }
