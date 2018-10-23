@@ -88,24 +88,6 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	return reconcile.Result{}, err
 }
 
-func (r *Reconciler) InjectClient(c client.Client) error {
-	r.client = c
-	if r.provider.Reconciler != nil {
-		r.provider.Reconciler.InjectClient(c)
-	}
-	return nil
-}
-
-func (r *Reconciler) InjectConfig(c *rest.Config) error {
-	r.restConfig = c
-	var err error
-	r.dynamicClient, err = dynamic.NewForConfig(c)
-	if r.provider.Reconciler != nil {
-		r.provider.Reconciler.InjectConfig(c)
-	}
-	return err
-}
-
 func (r *Reconciler) statusHasChanged(ctx context.Context, old, new runtime.Object) (bool, error) {
 	if old == nil {
 		return true, nil

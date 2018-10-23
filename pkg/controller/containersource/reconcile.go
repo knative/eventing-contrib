@@ -237,15 +237,3 @@ func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.Cont
 	}
 	return deployment, nil
 }
-
-func (r *reconciler) InjectClient(c client.Client) error {
-	r.client = c
-	return nil
-}
-
-func (r *reconciler) InjectConfig(c *rest.Config) error {
-	r.restConfig = c
-	var err error
-	r.dynamicClient, err = dynamic.NewForConfig(c)
-	return err
-}
