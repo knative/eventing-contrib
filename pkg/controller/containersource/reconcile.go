@@ -222,10 +222,7 @@ func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Contain
 }
 
 func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.ContainerSource, org *appsv1.Deployment, args *resources.ContainerArguments) (*appsv1.Deployment, error) {
-	deployment, err := resources.MakeDeployment(org, args)
-	if err != nil {
-		return nil, err
-	}
+	deployment := resources.MakeDeployment(org, args)
 
 	if err := controllerutil.SetControllerReference(source, deployment, r.scheme); err != nil {
 		return nil, err
