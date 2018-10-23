@@ -41,7 +41,7 @@ To check out this repository:
   mkdir -p ${GOPATH}/src/github.com/knative
   cd ${GOPATH}/src/github.com/knative
   git clone git@github.com:${YOUR_GITHUB_USERNAME}/eventing-sources.git
-  cd eventing
+  cd eventing-sources
   git remote add upstream git@github.com:knative/eventing-sources.git
   git remote set-url --push upstream no_push
   ```
