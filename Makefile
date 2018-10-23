@@ -26,12 +26,14 @@ install: manifests
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-	kubectl apply -f config/crds
-	kustomize build config/default | kubectl apply -f -
+	kustomize build config/default | ko apply -f /dev/stdin/
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests:
 	go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
+
+kustomize_default: manifests
+	kustomize build config/default/ > config/default.yaml
 
 # Run go fmt against code
 fmt:
@@ -45,9 +47,6 @@ vet:
 generate: kustomize_default
 	go generate ./pkg/... ./cmd/...
 	./hack/update-codegen.sh
-
-kustomize_default:
-	kustomize build config/default/ > config/default.yaml
 
 # Build the docker image
 docker-build: test

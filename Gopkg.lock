@@ -609,15 +609,15 @@
   version = "kubernetes-1.11.3"
 
 [[projects]]
-  digest = "1:3fe3cb0c5e5a140f0b40c18796b884d3432efbd690b0bda8cbd838d38a3ea585"
+  digest = "1:93787b85c4d0e2ee4ebd1ea1eeb97a4c074536928c045d94333e0654eb3f4428"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
     "pkg/apis/apiextensions/v1beta1",
   ]
   pruneopts = "T"
-  revision = "408db4a50408e2149acbd657bceb2480c13cb0a4"
-  version = "kubernetes-1.11.2"
+  revision = "4347b330d0ff094db860f2f75fa725b4f4b53618"
+  version = "kubernetes-1.10.1"
 
 [[projects]]
   digest = "1:c1c893100f8b33c5165c06041a972b62e45fe6ab12e671a5a27c2705b044f0c2"
@@ -820,7 +820,7 @@
   revision = "5373e8e1f3188ff4266902a6fc86372bc14b3815"
 
 [[projects]]
-  digest = "1:92290e452e328ffe6bd62f969e51d3aadd57a30a68b5fcf31ccdeda62068bb5d"
+  digest = "1:d8482b9f89aeb111022021400dc0cdd07e007394d48b443ddcf790364dfd9579"
   name = "sigs.k8s.io/controller-tools"
   packages = [
     "cmd/controller-gen",
@@ -832,8 +832,9 @@
     "pkg/util",
   ]
   pruneopts = "T"
-  revision = "38b2f3f497ed6b8ea5d2844ecf00c28ac4b5c2c4"
-  version = "v0.1.6"
+  revision = "36b20e89ba038585af8dd267e018d5fa2a0ed73b"
+  source = "https://github.com/n3wscott/controller-tools.git"
+  version = "v0.1.1-assume_exe"
 
 [[projects]]
   branch = "master"

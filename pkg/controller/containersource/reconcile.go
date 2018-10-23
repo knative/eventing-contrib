@@ -50,6 +50,8 @@ type reconciler struct {
 	recorder      record.EventRecorder
 }
 
+const tryTargetable = true
+
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
 func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
@@ -146,8 +148,23 @@ func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerS
 	}
 
 	if t.Status.Sinkable != nil {
-		return t.Status.Sinkable.DomainInternal, nil
+		return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
 	}
+
+	// for now we will try again as a targetable.
+	if tryTargetable {
+		t := duckv1alpha1.Target{}
+		err = duck.FromUnstructured(obj, &t)
+		if err != nil {
+			logger.Warnf("Failed to deserialize targetable: %s", err)
+			return "", err
+		}
+
+		if t.Status.Targetable != nil {
+			return fmt.Sprintf("http://%s/", t.Status.Targetable.DomainInternal), nil
+		}
+	}
+
 	return "", fmt.Errorf("sink does not contain sinkable")
 }
 

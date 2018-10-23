@@ -8,6 +8,11 @@ metadata:
 spec:
   group: sources.eventing.knative.dev
   names:
+    categories:
+    - all
+    - knative
+    - eventing
+    - sources
     kind: ContainerSource
     plural: containersources
   scope: Namespaced
@@ -55,10 +60,10 @@ spec:
             sinkUri:
               type: string
           type: object
+      type: object
   version: v1alpha1
 status:
   acceptedNames:
     kind: ""
     plural: ""
-  conditions: []
-  storedVersions: []
+  conditions: null

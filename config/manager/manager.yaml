@@ -39,9 +39,7 @@ spec:
         controller-tools.k8s.io: "1.0"
     spec:
       containers:
-      - command:
-        - /root/manager
-        image: controller:latest
+      - image: controller:latest
         name: manager
         resources:
           limits:

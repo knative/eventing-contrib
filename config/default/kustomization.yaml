@@ -14,3 +14,4 @@ resources:
 
 patches:
 - manager_image_patch.yaml
+- containersource_conditions_patch.yaml
