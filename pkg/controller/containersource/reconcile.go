@@ -73,7 +73,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// No need to reconcile if the source has been marked for deletion.
 	deletionTimestamp := accessor.GetDeletionTimestamp()
 	if deletionTimestamp != nil {
-		return object, err
+		return object, nil
 	}
 
 	source.Status.InitializeConditions()

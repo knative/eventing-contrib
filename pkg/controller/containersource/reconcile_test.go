@@ -17,7 +17,9 @@ limitations under the License.
 package containersource
 
 import (
+	"context"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	//"fmt"
@@ -324,26 +326,40 @@ func om(namespace, name string) metav1.ObjectMeta {
 	}
 }
 
-func getTestResources() []runtime.Object {
-	return []runtime.Object{
-		&unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": unsinkableAPIVersion,
-				"kind":       unsinkableKind,
-				"metadata": map[string]interface{}{
-					"namespace": testNS,
-					"name":      unsinkableName,
-				},
-			},
-		}, &unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": sinkableAPIVersion,
-				"kind":       sinkableKind,
-				"metadata": map[string]interface{}{
-					"namespace": testNS,
-					"name":      sinkableName,
-				},
-			},
-		},
+// Direct Unit tests.
+
+func TestObjectNotContainerSource(t *testing.T) {
+	r := reconciler{}
+	obj := &corev1.ObjectReference{
+		Name:       unsinkableName,
+		Kind:       unsinkableKind,
+		APIVersion: unsinkableAPIVersion,
+	}
+
+	got, gotErr := r.Reconcile(context.TODO(), obj)
+	var want runtime.Object = obj
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected returned object (-want, +got) = %v", diff)
+	}
+	var wantErr error = nil
+	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
+		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	}
+}
+
+func TestObjectHasDeleteTimestamp(t *testing.T) {
+	r := reconciler{}
+	obj := getContainerSource()
+
+	now := metav1.Now()
+	obj.DeletionTimestamp = &now
+	got, gotErr := r.Reconcile(context.TODO(), obj)
+	var want runtime.Object = obj
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected returned object (-want, +got) = %v", diff)
+	}
+	var wantErr error = nil
+	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
+		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
 	}
 }
