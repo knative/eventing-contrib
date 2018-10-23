@@ -9,3 +9,8 @@ spec:
   args:
    - '--label="<3"'
    - '--period=2'
+# Fill this out:
+#  sink:
+#    apiVersion: <apiverion>
+#    kind: <kind>
+#    name: <name>
