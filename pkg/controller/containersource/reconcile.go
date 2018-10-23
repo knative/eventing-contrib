@@ -111,9 +111,11 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
 			source.Status.MarkDeploying("Deploying", "Created deployment %s", args.Name)
 		} else {
-			if deploy.Status.ReadyReplicas > 0 {
-				source.Status.MarkDeployed()
-			}
+			return source, err
+		}
+	} else {
+		if deploy.Status.ReadyReplicas > 0 {
+			source.Status.MarkDeployed()
 		}
 	}
 

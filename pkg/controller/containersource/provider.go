@@ -39,7 +39,6 @@ func Add(mgr manager.Manager) error {
 		Parent:    &v1alpha1.ContainerSource{},
 		Owns:      []runtime.Object{&appsv1.Deployment{}},
 		Reconciler: &reconciler{
-			client:   mgr.GetClient(),
 			recorder: mgr.GetRecorder(controllerAgentName),
 			scheme:   mgr.GetScheme(),
 		},

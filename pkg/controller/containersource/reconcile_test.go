@@ -39,6 +39,7 @@ import (
 )
 
 var (
+	trueVal   = true
 	targetURI = "http://sinkable.sink.svc.cluster.local/"
 )
 
@@ -46,6 +47,7 @@ const (
 	image               = "github.com/knative/test/image"
 	containerSourceName = "testcontainersource"
 	testNS              = "testnamespace"
+	containerSourceUID  = "2a2208d1-ce67-11e8-b3a3-42010a8a00af"
 
 	sinkableDNS = "sinkable.sink.svc.cluster.local"
 
@@ -102,7 +104,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// An unsinkable resource
+			// unsinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": unsinkableAPIVersion,
@@ -124,7 +126,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// k8s Service
+			// sinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -144,7 +146,6 @@ var testCases = []controllertesting.TestCase{
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
-				s.Status.SinkURI = targetURI
 				s.Status.InitializeConditions()
 				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
 				s.Status.MarkSink(targetURI)
@@ -161,7 +162,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// k8s Service
+			// sinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -199,7 +200,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// k8s Service
+			// sinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -231,6 +232,7 @@ var testCases = []controllertesting.TestCase{
 		InitialState: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
+				s.Spec.Sink = nil
 				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
 				return s
 			}(),
@@ -241,8 +243,8 @@ var testCases = []controllertesting.TestCase{
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
+				s.Spec.Sink = nil
 				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
-				s.Status.SinkURI = targetURI
 				s.Status.InitializeConditions()
 				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
 				s.Status.MarkSink(targetURI)
@@ -259,7 +261,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// k8s Service
+			// sinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -276,18 +278,67 @@ var testCases = []controllertesting.TestCase{
 				},
 			},
 		},
-		WantPresent: []runtime.Object{
-			func() runtime.Object {
-				s := getContainerSource()
-				s.Status.SinkURI = targetURI
-				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
-				s.Status.MarkSink(targetURI)
-				return s
-			}(),
+	},
+	/*
+		TODO(n3wscott): this is not working yet, the owner ref is not linking.
+		{
+			Name:       "valid containersource, sink, and deployment",
+			Reconciles: &sourcesv1alpha1.ContainerSource{},
+			InitialState: []runtime.Object{
+				getContainerSource(),
+			},
+			ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+			Scheme:       scheme.Scheme,
+			Objects: []runtime.Object{
+				// sinkable
+				&unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"apiVersion": sinkableAPIVersion,
+						"kind":       sinkableKind,
+						"metadata": map[string]interface{}{
+							"namespace": testNS,
+							"name":      sinkableName,
+							"uid":       containerSourceUID,
+						},
+						"status": map[string]interface{}{
+							"sinkable": map[string]interface{}{
+								"domainInternal": sinkableDNS,
+							},
+						},
+					},
+				},
+				// deployment resource
+				func() runtime.Object {
+					u := &unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": "extensions/v1beta1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"namespace": testNS,
+								"name":      containerSourceName + "-abc",
+							},
+							"status": map[string]interface{}{
+								"readyReplicas": "1",
+							},
+						},
+					}
+					u.SetOwnerReferences(getOwnerReferences())
+					return u
+				}(),
+			},
+			WantPresent: []runtime.Object{
+				func() runtime.Object {
+					s := getContainerSource()
+					s.Status.InitializeConditions()
+					s.Status.MarkDeployed()
+					s.Status.MarkSink(targetURI)
+					return s
+				}(),
+			},
+			IgnoreTimes: true,
 		},
-		IgnoreTimes: true,
-	}, /* TODO: support k8s service {
+	*/
+	/* TODO: support k8s service {
 		Name:       "valid containersource, sink is a k8s service",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 	    InitialState: []runtime.Object{
@@ -396,6 +447,16 @@ func om(namespace, name string) metav1.ObjectMeta {
 		Name:      name,
 		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
 	}
+}
+
+func getOwnerReferences() []metav1.OwnerReference {
+	return []metav1.OwnerReference{{
+		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+		Kind:       "ContainerSource",
+		Name:       containerSourceName,
+		Controller: &trueVal,
+		UID:        containerSourceUID,
+	}}
 }
 
 // Direct Unit tests.
