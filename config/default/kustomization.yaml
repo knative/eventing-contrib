@@ -1,10 +1,6 @@
 # Adds namespace to all resources.
 namespace: knative-sources
 
-# Labels to add to all resources and selectors.
-commonLabels:
-  knative/eventing: "sources"
-
 # Each entry in this list must resolve to an existing
 # resource definition in YAML.  These are the resource
 # files that kustomize reads, modifies and emits as a

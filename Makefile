@@ -42,9 +42,12 @@ vet:
 	go vet ./pkg/... ./cmd/...
 
 # Generate code
-generate:
+generate: kustomize_default
 	go generate ./pkg/... ./cmd/...
 	./hack/update-codegen.sh
+
+kustomize_default:
+	kustomize build config/default/ > config/default.yaml
 
 # Build the docker image
 docker-build: test
