@@ -19,6 +19,8 @@ package sdk
 import (
 	"context"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -27,6 +29,8 @@ import (
 
 type KnativeReconciler interface {
 	Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error)
+	InjectClient(c client.Client) error
+	InjectConfig(c *rest.Config) error
 }
 
 type Provider struct {

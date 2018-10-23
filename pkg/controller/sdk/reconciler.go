@@ -121,7 +121,7 @@ func (r *Reconciler) statusHasChanged(ctx context.Context, old, new runtime.Obje
 	return true, nil
 }
 
-func (r *Reconciler) updateStatus(ctx context.Context, request reconcile.Request, object runtime.Object) (runtime.Object, error) {
+func (r *Reconciler) updateStatus(ctx context.Context, request reconcilKnativeReconcilere.Request, object runtime.Object) (runtime.Object, error) {
 	freshObj := r.provider.Parent.DeepCopyObject()
 	if err := r.client.Get(ctx, request.NamespacedName, freshObj); err != nil {
 		return nil, err
