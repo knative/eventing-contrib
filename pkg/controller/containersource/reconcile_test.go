@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/client-go/rest"
 
 	//"fmt"
 	"testing"
@@ -432,5 +433,15 @@ func TestObjectHasDeleteTimestamp(t *testing.T) {
 	var wantErr error = nil
 	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
 		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	}
+}
+
+func TestInjectConfig(t *testing.T) {
+	r := reconciler{}
+
+	r.InjectConfig(&rest.Config{})
+
+	if r.dynamicClient == nil {
+		t.Errorf("dynamicClient was nil but expected non nil")
 	}
 }
