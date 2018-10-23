@@ -70,13 +70,12 @@ type ContainerSourceStatus struct {
 	// +patchStrategy=merge
 	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	// TODO(n3wscott): there was talk of adding sink to the status. revisit this later.
-
 	// SinkURI is the current active sink URI that has been configured for the ContainerSource.
+	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
 }
 
-// GetCondition returns the condition currently associWantPresentated with the given type, or nil.
+// GetCondition returns the condition currently associated with the given type, or nil.
 func (s *ContainerSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
 	return containerCondSet.Manage(s).GetCondition(t)
 }

@@ -215,7 +215,7 @@ var testCases = []controllertesting.TestCase{
 	}, /* TODO: support k8s service {
 		Name:       "valid containersource, sink is a k8s service",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
-		InitialState: []runtime.Object{
+	    InitialState: []runtime.Object{
 			getContainerSource_sinkService(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
