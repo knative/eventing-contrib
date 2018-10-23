@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/knative/pkg/apis/duck"
 	"go.uber.org/zap"
+	"k8s.io/client-go/rest"
 	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
