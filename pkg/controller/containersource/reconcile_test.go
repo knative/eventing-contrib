@@ -153,6 +153,40 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 	}, {
+		Name:       "valid containersource, sink is sinkable but sink is nil",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// k8s Service
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}(nil),
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSink("NotFound", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `sink does not contain sinkable`,
+	}, {
 		Name:       "valid containersource, sink is provided",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
