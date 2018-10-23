@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/knative/pkg/apis/duck"
+	"go.uber.org/zap"
 	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
@@ -66,7 +67,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// See if the source has been deleted
 	accessor, err := meta.Accessor(source)
 	if err != nil {
-		logger.Warnf("Failed to get metadata accessor: %s", err)
+		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
 		return object, err
 	}
 	// No need to reconcile if the source has been marked for deletion.
@@ -135,15 +136,15 @@ func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerS
 		return "", fmt.Errorf("sink ref is nil")
 	}
 
-	obj, err := r.fetchObjectReference(source.Namespace, source.Spec.Sink)
+	obj, err := r.fetchObjectReference(ctx, source.Namespace, source.Spec.Sink)
 	if err != nil {
-		logger.Warnf("Failed to fetch sink target %+v: %s", source.Spec.Sink, err)
+		logger.Warnf("Failed to fetch sink target %+v: %s", source.Spec.Sink, zap.Error(err))
 		return "", err
 	}
 	t := duckv1alpha1.Sink{}
 	err = duck.FromUnstructured(obj, &t)
 	if err != nil {
-		logger.Warnf("Failed to deserialize sink: %s", err)
+		logger.Warnf("Failed to deserialize sink: %s", zap.Error(err))
 		return "", err
 	}
 
@@ -156,7 +157,7 @@ func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerS
 		t := duckv1alpha1.Target{}
 		err = duck.FromUnstructured(obj, &t)
 		if err != nil {
-			logger.Warnf("Failed to deserialize targetable: %s", err)
+			logger.Warnf("Failed to deserialize targetable: %s", zap.Error(err))
 			return "", err
 		}
 
@@ -169,10 +170,12 @@ func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerS
 }
 
 // fetchObjectReference fetches an object based on ObjectReference.
-func (r *reconciler) fetchObjectReference(namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
+func (r *reconciler) fetchObjectReference(ctx context.Context, namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
+	logger := logging.FromContext(ctx)
+
 	resourceClient, err := r.CreateResourceInterface(namespace, ref)
 	if err != nil {
-		//glog.Warningf("failed to create dynamic client resource: %v", err)
+		logger.Warnf("failed to create dynamic client resource: %v", zap.Error(err))
 		return nil, err
 	}
 
@@ -181,7 +184,6 @@ func (r *reconciler) fetchObjectReference(namespace string, ref *corev1.ObjectRe
 
 func (r *reconciler) CreateResourceInterface(namespace string, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
 	rc := r.dynamicClient.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
-
 	if rc == nil {
 		return nil, fmt.Errorf("failed to create dynamic client resource")
 	}
@@ -209,7 +211,7 @@ func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Contain
 		},
 		list)
 	if err != nil {
-		logger.Errorf("Unable to list deployments: %v", err)
+		logger.Errorf("Unable to list deployments: %v", zap.Error(err))
 		return nil, err
 	}
 	for _, c := range list.Items {

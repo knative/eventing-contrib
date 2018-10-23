@@ -37,25 +37,13 @@ import (
 )
 
 var (
-	trueVal   = true
-	targetURI = "http://target.example.com"
+	targetURI = "http://sinkable.sink.svc.cluster.local/"
 )
 
 const (
-	image             = "github.com/knative/test/image"
-	fromChannelName   = "fromchannel"
-	resultChannelName = "resultchannel"
-	sourceName        = "source"
-	routeName         = "callroute"
-	channelKind       = "Channel"
-	routeKind         = "Route"
-	sourceKind        = "Source"
-	targetDNS         = "myfunction.mynamespace.svc.cluster.local"
-
-	eventType           = "myeventtype"
+	image               = "github.com/knative/test/image"
 	containerSourceName = "testcontainersource"
 	testNS              = "testnamespace"
-	k8sServiceName      = "testk8sservice"
 
 	sinkableDNS = "sinkable.sink.svc.cluster.local"
 
@@ -151,6 +139,79 @@ var testCases = []controllertesting.TestCase{
 				},
 			},
 		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Status.SinkURI = targetURI
+				s.Status.InitializeConditions()
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
+				s.Status.MarkSink(targetURI)
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid containersource, sink is provided",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects:      []runtime.Object{},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
+				s.Status.SinkURI = targetURI
+				s.Status.InitializeConditions()
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
+				s.Status.MarkSink(targetURI)
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid containersource, sink is targetable",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// k8s Service
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"targetable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Status.SinkURI = targetURI
+				s.Status.InitializeConditions()
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
+				s.Status.MarkSink(targetURI)
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
 	}, /* TODO: support k8s service {
 		Name:       "valid containersource, sink is a k8s service",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
@@ -192,35 +253,13 @@ func TestAllCases(t *testing.T) {
 	}
 }
 
-//
-//func getNewFromChannel() *eventingv1alpha1.Channel {
-//	return getNewChannel(fromChannelName)
-//}
-//
-//func getNewResultChannel() *eventingv1alpha1.Channel {
-//	return getNewChannel(resultChannelName)
-//}
-//
-//func getNewChannel(name string) *eventingv1alpha1.Channel {
-//	channel := &eventingv1alpha1.Channel{
-//		TypeMeta:   channelType(),
-//		ObjectMeta: om("test", name),
-//		Spec:       eventingv1alpha1.ChannelSpec{},
-//	}
-//	channel.ObjectMeta.OwnerReferences = append(channel.ObjectMeta.OwnerReferences, getOwnerReference(false))
-//
-//	// selflink is not filled in when we create the object, so clear it
-//	channel.ObjectMeta.SelfLink = ""
-//	return channel
-//}
-//
 func getContainerSource() *sourcesv1alpha1.ContainerSource {
 	obj := &sourcesv1alpha1.ContainerSource{
 		TypeMeta:   containerSourceType(),
 		ObjectMeta: om(testNS, containerSourceName),
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
 			Image: image,
-			Args:  []string{},
+			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
 				Name:       sinkableName,
 				Kind:       sinkableKind,
@@ -239,7 +278,7 @@ func getContainerSource_sinkService() *sourcesv1alpha1.ContainerSource {
 		ObjectMeta: om(testNS, containerSourceName),
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
 			Image: image,
-			Args:  []string{},
+			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
 				Name:       sinkServiceName,
 				Kind:       sinkServiceKind,
@@ -270,92 +309,12 @@ func getContainerSource_unsinkable() *sourcesv1alpha1.ContainerSource {
 	obj.ObjectMeta.SelfLink = ""
 	return obj
 }
-
-//
-//func getNewSubscriptionToK8sService() *eventingv1alpha1.Subscription {
-//	sub := getNewSubscription()
-//	sub.Spec.Call = &eventingv1alpha1.Callable{
-//		Target: &corev1.ObjectReference{
-//			Name:       k8sServiceName,
-//			Kind:       "Service",
-//			APIVersion: "v1",
-//		},
-//	}
-//	return sub
-//}
-//
-//func getNewSubscriptionWithSource() *eventingv1alpha1.Subscription {
-//	subscription := &eventingv1alpha1.Subscription{
-//		TypeMeta:   subscriptionType(),
-//		ObjectMeta: om(testNS, subscriptionName),
-//		Spec: eventingv1alpha1.SubscriptionSpec{
-//			From: corev1.ObjectReference{
-//				Name:       sourceName,
-//				Kind:       sourceKind,
-//				APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//			},
-//			Call: &eventingv1alpha1.Callable{
-//				Target: &corev1.ObjectReference{
-//					Name:       routeName,
-//					Kind:       routeKind,
-//					APIVersion: "serving.knative.dev/v1alpha1",
-//				},
-//			},
-//			Result: &eventingv1alpha1.ResultStrategy{
-//				Target: &corev1.ObjectReference{
-//					Name:       resultChannelName,
-//					Kind:       channelKind,
-//					APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//				},
-//			},
-//		},
-//	}
-//	subscription.ObjectMeta.OwnerReferences = append(subscription.ObjectMeta.OwnerReferences, getOwnerReference(false))
-//
-//	// selflink is not filled in when we create the object, so clear it
-//	subscription.ObjectMeta.SelfLink = ""
-//	return subscription
-//}
-//
-//func getNewSubscriptionWithUnknownConditions() *eventingv1alpha1.Subscription {
-//	s := getNewSubscription()
-//	s.Status.InitializeConditions()
-//	return s
-//}
-//
-//func getNewSubscriptionWithReferencesResolvedStatus() *eventingv1alpha1.Subscription {
-//	s := getNewSubscriptionWithUnknownConditions()
-//	s.Status.MarkReferencesResolved()
-//	return s
-//}
-//
-//func channelType() metav1.TypeMeta {
-//	return metav1.TypeMeta{
-//		APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//		Kind:       "Channel",
-//	}
-//}
-//
 func containerSourceType() metav1.TypeMeta {
 	return metav1.TypeMeta{
 		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 		Kind:       "ContainerSource",
 	}
 }
-
-//
-//func getK8sService() *corev1.Service {
-//	return &corev1.Service{
-//		TypeMeta: metav1.TypeMeta{
-//			APIVersion: "v1",
-//			Kind:       "Service",
-//		},
-//		ObjectMeta: metav1.ObjectMeta{
-//			Namespace: testNS,
-//			Name:      k8sServiceName,
-//		},
-//	}
-//}
 
 func om(namespace, name string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
@@ -364,26 +323,6 @@ func om(namespace, name string) metav1.ObjectMeta {
 		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
 	}
 }
-
-//func feedObjectMeta(namespace, generateName string) metav1.ObjectMeta {
-//	return metav1.ObjectMeta{
-//		Namespace:    namespace,
-//		GenerateName: generateName,
-//		OwnerReferences: []metav1.OwnerReference{
-//			getOwnerReference(true),
-//		},
-//	}
-//}
-//
-//func getOwnerReference(blockOwnerDeletion bool) metav1.OwnerReference {
-//	return metav1.OwnerReference{
-//		APIVersion:         eventingv1alpha1.SchemeGroupVersion.String(),
-//		Kind:               "Subscription",
-//		Name:               subscriptionName,
-//		Controller:         &trueVal,
-//		BlockOwnerDeletion: &blockOwnerDeletion,
-//	}
-//}
 
 func getTestResources() []runtime.Object {
 	return []runtime.Object{

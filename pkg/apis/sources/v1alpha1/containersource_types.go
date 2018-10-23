@@ -76,7 +76,7 @@ type ContainerSourceStatus struct {
 	SinkURI string `json:"sinkUri,omitempty"`
 }
 
-// GetCondition returns the condition currently associated with the given type, or nil.
+// GetCondition returns the condition currently associWantPresentated with the given type, or nil.
 func (s *ContainerSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
 	return containerCondSet.Manage(s).GetCondition(t)
 }
