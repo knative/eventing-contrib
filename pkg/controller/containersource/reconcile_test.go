@@ -317,12 +317,12 @@ func TestAllCases(t *testing.T) {
 		dc := tc.GetDynamicClient()
 
 		r := &reconciler{
-			client:        c,
 			dynamicClient: dc,
 			scheme:        tc.Scheme,
 			recorder:      recorder,
 		}
-		t.Run(tc.Name, tc.RunnerSDK(t, r, c))
+		r.InjectClient(c)
+		t.Run(tc.Name, tc.Runner(t, r, c))
 	}
 }
 
