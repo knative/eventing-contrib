@@ -50,6 +50,9 @@ type reconciler struct {
 	recorder      record.EventRecorder
 }
 
+// TODO(n3wscott): To show the source is working, and while knative eventing is
+// defining the ducktypes, tryTargetable allows us to point to a Service.service
+// to validate the source is working.
 const tryTargetable = true
 
 // Reconcile compares the actual state with the desired, and attempts to
