@@ -17,22 +17,80 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/knative/pkg/apis/duck"
+	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// Check that KubernetesEventSource can be validated and can be defaulted.
+var _ runtime.Object = (*KubernetesEventSource)(nil)
 
-// KubernetesEventSourceSpec defines the desired state of KubernetesEventSource
+// Check that KubernetesEventSource implements the Conditions duck type.
+var _ = duck.VerifyType(&KubernetesEventSource{}, &duckv1alpha1.Conditions{})
+
+// KubernetesEventSourceSpec defines the desired state of the source.
 type KubernetesEventSourceSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Sink is a reference to an object that will resolve to a domain name to use
+	// as the sink.
+	// +optional
+	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 }
 
-// KubernetesEventSourceStatus defines the observed state of KubernetesEventSource
+const (
+	// KubernetesEventSourceConditionReady has status True when the
+	// source is ready to send events.
+	KubernetesEventSourceConditionReady = duckv1alpha1.ConditionReady
+
+	// KubernetesEventSourceConditionSinkProvided has status True when the source
+	// has been configured with a sink target.
+	KubernetesEventSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+)
+
+var kubernetesEventSourceCondSet = duckv1alpha1.NewLivingConditionSet()
+
+// KubernetesEventSourceStatus defines the observed state of the source.
 type KubernetesEventSourceStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Conditions holds the state of a source at a point in time.
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// SinkURI is the current active sink URI that has been configured for the source.
+	// +optional
+	SinkURI string `json:"sinkUri,omitempty"`
+}
+
+// GetCondition returns the condition currently associated with the given type, or nil.
+func (s *KubernetesEventSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+	return kubernetesEventSourceCondSet.Manage(s).GetCondition(t)
+}
+
+// IsReady returns true if the resource is ready overall.
+func (s *KubernetesEventSourceStatus) IsReady() bool {
+	return kubernetesEventSourceCondSet.Manage(s).IsHappy()
+}
+
+// InitializeConditions sets relevant unset conditions to Unknown state.
+func (s *KubernetesEventSourceStatus) InitializeConditions() {
+	kubernetesEventSourceCondSet.Manage(s).InitializeConditions()
+}
+
+// MarSink sets the condition that the source has a sink configured.
+func (s *KubernetesEventSourceStatus) MarkSink(uri string) {
+	s.SinkURI = uri
+	if len(uri) > 0 {
+		kubernetesEventSourceCondSet.Manage(s).MarkTrue(KubernetesEventSourceConditionSinkProvided)
+	} else {
+		kubernetesEventSourceCondSet.Manage(s).MarkUnknown(KubernetesEventSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.")
+	}
+}
+
+// MarkNoSink sets the condition that the source does not have a sink configured.
+func (s *KubernetesEventSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+	kubernetesEventSourceCondSet.Manage(s).MarkFalse(KubernetesEventSourceConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
 // +genclient

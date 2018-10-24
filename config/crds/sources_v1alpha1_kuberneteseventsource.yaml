@@ -21,8 +21,32 @@ spec:
         metadata:
           type: object
         spec:
+          properties:
+            sink:
+              type: object
           type: object
         status:
+          properties:
+            conditions:
+              items:
+                properties:
+                  lastTransitionTime:
+                    type: object
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - type
+                - status
+                type: object
+              type: array
+            sinkUri:
+              type: string
           type: object
       type: object
   version: v1alpha1
