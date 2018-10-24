@@ -18,18 +18,13 @@ package kuberneteseventsource
 
 import (
 	"context"
-	"log"
-	"reflect"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -38,70 +33,82 @@ import (
 // KubernetesEventSource.Spec.
 func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
+	// TODO use controller-runtime logf to get a scoped logger for this controller
 	logger := logging.FromContext(ctx)
 	logger.Debug("Reconciling", zap.Any("key", request.NamespacedName))
 
-	// Fetch the KubernetesEventSource instance
+	// Fetch the KubernetesEventSource resource
 	instance := &sourcesv1alpha1.KubernetesEventSource{}
 	err := r.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
+		// If the resource cannot be found, it was probably deleted since being
+		// added to the workqueue. Return a successful result without retrying.
 		if errors.IsNotFound(err) {
+			logger.Warn("Could not find KubernetesEventSource", zap.Any("key", request.NamespacedName))
 			return reconcile.Result{}, nil
 		}
+		// If the resource exists but cannot be retrieved, then retry.
 		return reconcile.Result{}, err
 	}
 
-	// TODO(user): Change this to be the object type created by your controller
-	// Define the desired Deployment object
-	deploy := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-deployment",
-			Namespace: instance.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"deployment": instance.Name + "-deployment"},
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"deployment": instance.Name + "-deployment"}},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "nginx",
-							Image: "nginx",
-						},
-					},
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(instance, deploy, r.scheme); err != nil {
-		return reconcile.Result{}, err
+	// The resource exists, so we can reconcile it. An error returned
+	// here means the reconcile did not complete and the resource should be
+	// requeued for another attempt.
+	// A successful reconcile does not mean the resource is in the desired state,
+	// it means no more can be done for now. The resource will not be reconciled
+	// again until the resync period expires or a watched resource changes.
+	var reconcileErr error
+	if reconcileErr = r.reconcile(ctx, instance); reconcileErr != nil {
+		logger.Error("Reconcile error", zap.Error(reconcileErr))
 	}
 
-	// TODO(user): Change this for the object type created by your controller
-	// Check if the Deployment already exists
-	found := &appsv1.Deployment{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		log.Printf("Creating Deployment %s/%s\n", deploy.Namespace, deploy.Name)
-		err = r.Create(context.TODO(), deploy)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else if err != nil {
-		return reconcile.Result{}, err
+	// Since the reconcile is a sequence of steps, earlier steps may complete
+	// successfully while later steps fail. The resource is updated on failure to
+	// preserve any useful status or metadata mutations made before the failure
+	// occurred.
+	if updateErr := r.update(ctx, instance); updateErr != nil {
+		// An error here means the instance should be reconciled again, regardless
+		// of whether the reconcile was successful or not.
+		return reconcile.Result{}, updateErr
 	}
 
-	// TODO(user): Change this for the object type created by your controller
-	// Update the found object and write the result back if there are any changes
-	if !reflect.DeepEqual(deploy.Spec, found.Spec) {
-		found.Spec = deploy.Spec
-		log.Printf("Updating Deployment %s/%s\n", deploy.Namespace, deploy.Name)
-		err = r.Update(context.TODO(), found)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	return reconcile.Result{}, reconcileErr
+}
+
+func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) error {
+	return nil
+}
+
+func (r *reconciler) update(ctx context.Context, u *sourcesv1alpha1.KubernetesEventSource) error {
+	current := &sourcesv1alpha1.KubernetesEventSource{}
+	err := r.Get(ctx, client.ObjectKey{Namespace: u.Namespace, Name: u.Name}, current)
+
+	if err != nil {
+		return err
 	}
-	return reconcile.Result{}, nil
+
+	updated := false
+	if !equality.Semantic.DeepEqual(current.OwnerReferences, u.OwnerReferences) {
+		current.OwnerReferences = u.OwnerReferences
+		updated = true
+	}
+
+	if !equality.Semantic.DeepEqual(current.Finalizers, u.Finalizers) {
+		current.Finalizers = u.Finalizers
+		updated = true
+	}
+
+	if !equality.Semantic.DeepEqual(current.Status, u.Status) {
+		current.Status = u.Status
+		updated = true
+	}
+
+	if updated == false {
+		return nil
+	}
+	// Until #38113 is merged, we must use Update instead of UpdateStatus to
+	// update the Status block of the Feed resource. UpdateStatus will not
+	// allow changes to the Spec of the resource, which is ideal for ensuring
+	// nothing other than resource status has been updated.
+	return r.Update(ctx, current)
 }
