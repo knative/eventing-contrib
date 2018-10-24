@@ -44,6 +44,10 @@ required = [
   name = "k8s.io/client-go"
   version = "kubernetes-1.11.3"
 
+[[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.11.3"
+
 [[constraint]]
   name = "sigs.k8s.io/controller-tools"
   # TODO(n3wscott): this is forked because controller-tools assumed the docker
