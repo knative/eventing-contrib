@@ -22,6 +22,8 @@ import (
 	"reflect"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/pkg/logging"
+	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -35,8 +37,9 @@ import (
 // and makes changes based on the state read and what is in the
 // KubernetesEventSource.Spec.
 func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	//TODO create logging context
-	ctx := context.TODO()
+	ctx := context.Background()
+	logger := logging.FromContext(ctx)
+	logger.Debug("Reconciling", zap.Any("key", request.NamespacedName))
 
 	// Fetch the KubernetesEventSource instance
 	instance := &sourcesv1alpha1.KubernetesEventSource{}
