@@ -17,14 +17,13 @@ limitations under the License.
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
-	"io"
+	"github.com/google/uuid"
+	"github.com/knative/eventing/pkg/event"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -37,9 +36,6 @@ var (
 	sink      string
 	label     string
 	periodStr string
-	period    int
-	sequence  int
-	hb        *Heartbeat
 )
 
 func init() {
@@ -50,39 +46,57 @@ func init() {
 
 func main() {
 	flag.Parse()
+	var period time.Duration
+	if p, err := strconv.Atoi(periodStr); err != nil {
+		period = time.Duration(5) * time.Second
+	} else {
+		period = time.Duration(p) * time.Second
+	}
 
-	hb = &Heartbeat{
+	hb := &Heartbeat{
 		Sequence: 0,
 		Label:    label,
 	}
 
-	period, err := strconv.Atoi(periodStr)
-	if err != nil {
-		period = 5
-	}
-
 	for {
-		send()
-		time.Sleep(time.Duration(period) * time.Second)
+		hb.Sequence++
+		postMessage(sink, hb)
+		time.Sleep(period)
 	}
 }
 
-func send() {
-	hb.Sequence++
-	resp, err := http.Post(sink, "application/json", body())
+// Creates a CloudEvent Context for a given heartbeat.
+func cloudEventsContext(hb *Heartbeat) *event.EventContext {
+	return &event.EventContext{
+		CloudEventsVersion: event.CloudEventsVersion,
+		EventType:          "dev.knative.source.heartbeats",
+		EventID:            uuid.New().String(),
+		Source:             "heartbeats-demo",
+		EventTime:          time.Now(),
+	}
+}
+
+func postMessage(target string, hb *Heartbeat) error {
+	ctx := cloudEventsContext(hb)
+
+	log.Printf("posting to %q", target)
+	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
+	// event metadata.
+	req, err := event.Binary.NewRequest(target, hb, *ctx)
 	if err != nil {
-		log.Printf("Unable to make request: %+v, %v", hb, err)
-		return
-	} else {
-		log.Printf("[%d]: %+v", resp.StatusCode, hb)
+		log.Printf("failed to create http request: %s", err)
+		return err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Failed to do POST: %v", err)
+		return err
 	}
 	defer resp.Body.Close()
-}
-
-func body() io.Reader {
-	b, err := json.Marshal(hb)
-	if err != nil {
-		return strings.NewReader("{\"error\":\"true\"}")
-	}
-	return bytes.NewBuffer(b)
+	log.Printf("response Status: %s", resp.Status)
+	body, _ := ioutil.ReadAll(resp.Body)
+	log.Printf("response Body: %s", string(body))
+	return nil
 }

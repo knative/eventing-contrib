@@ -219,6 +219,14 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
+  branch = "master"
+  digest = "1:18ba4464748bd618d2c7b5e7fb1d072425e3149120293f6dfb61ae5369614524"
+  name = "github.com/knative/eventing"
+  packages = ["pkg/event"]
+  pruneopts = "T"
+  revision = "80860baecb7b86a31b20b02a558c76f223aaa8a1"
+
+[[projects]]
   digest = "1:09d23ea51491208bc07a01a1fc06c62de90d5d352592a4e0f3b773cc96aed199"
   name = "github.com/knative/pkg"
   packages = [
@@ -854,6 +862,8 @@
     "github.com/emicklei/go-restful",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
+    "github.com/google/uuid",
+    "github.com/knative/eventing/pkg/event",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
