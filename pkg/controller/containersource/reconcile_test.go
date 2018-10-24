@@ -278,14 +278,18 @@ var testCases = []controllertesting.TestCase{
 				},
 			},
 		},
-	},
-	/*
-		TODO(n3wscott): this is not working yet, the owner ref is not linking.
+	}, /*
+		TODO(n3wscott): This does not work yet because we are only mocking the dynamic client
+		response and not the client list response. Fix this and the test will work.
 		{
 			Name:       "valid containersource, sink, and deployment",
 			Reconciles: &sourcesv1alpha1.ContainerSource{},
 			InitialState: []runtime.Object{
-				getContainerSource(),
+				func() runtime.Object {
+					s := getContainerSource()
+					s.UID = containerSourceUID
+					return s
+				}(),
 			},
 			ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 			Scheme:       scheme.Scheme,
@@ -329,6 +333,7 @@ var testCases = []controllertesting.TestCase{
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
 					s := getContainerSource()
+					s.UID = containerSourceUID
 					s.Status.InitializeConditions()
 					s.Status.MarkDeployed()
 					s.Status.MarkSink(targetURI)
