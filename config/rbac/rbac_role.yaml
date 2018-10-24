@@ -28,3 +28,11 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch

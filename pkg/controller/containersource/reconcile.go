@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/knative/pkg/apis/duck"
+	"go.uber.org/zap"
+	"k8s.io/client-go/rest"
 	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
@@ -36,7 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -45,10 +46,14 @@ import (
 type reconciler struct {
 	client        client.Client
 	scheme        *runtime.Scheme
-	restConfig    *rest.Config
 	dynamicClient dynamic.Interface
 	recorder      record.EventRecorder
 }
+
+// TODO(n3wscott): To show the source is working, and while knative eventing is
+// defining the ducktypes, tryTargetable allows us to point to a Service.service
+// to validate the source is working.
+const tryTargetable = true
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
@@ -64,13 +69,13 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// See if the source has been deleted
 	accessor, err := meta.Accessor(source)
 	if err != nil {
-		logger.Warnf("Failed to get metadata accessor: %s", err)
+		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
 		return object, err
 	}
 	// No need to reconcile if the source has been marked for deletion.
 	deletionTimestamp := accessor.GetDeletionTimestamp()
 	if deletionTimestamp != nil {
-		return object, err
+		return object, nil
 	}
 
 	source.Status.InitializeConditions()
@@ -106,9 +111,11 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
 			source.Status.MarkDeploying("Deploying", "Created deployment %s", args.Name)
 		} else {
-			if deploy.Status.ReadyReplicas > 0 {
-				source.Status.MarkDeployed()
-			}
+			return source, err
+		}
+	} else {
+		if deploy.Status.ReadyReplicas > 0 {
+			source.Status.MarkDeployed()
 		}
 	}
 
@@ -133,29 +140,46 @@ func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerS
 		return "", fmt.Errorf("sink ref is nil")
 	}
 
-	obj, err := r.fetchObjectReference(source.Namespace, source.Spec.Sink)
+	obj, err := r.fetchObjectReference(ctx, source.Namespace, source.Spec.Sink)
 	if err != nil {
-		logger.Warnf("Failed to fetch sink target %+v: %s", source.Spec.Sink, err)
+		logger.Warnf("Failed to fetch sink target %+v: %s", source.Spec.Sink, zap.Error(err))
 		return "", err
 	}
 	t := duckv1alpha1.Sink{}
 	err = duck.FromUnstructured(obj, &t)
 	if err != nil {
-		logger.Warnf("Failed to deserialize sink: %s", err)
+		logger.Warnf("Failed to deserialize sink: %s", zap.Error(err))
 		return "", err
 	}
 
 	if t.Status.Sinkable != nil {
-		return t.Status.Sinkable.DomainInternal, nil
+		return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
 	}
+
+	// for now we will try again as a targetable.
+	if tryTargetable {
+		t := duckv1alpha1.Target{}
+		err = duck.FromUnstructured(obj, &t)
+		if err != nil {
+			logger.Warnf("Failed to deserialize targetable: %s", zap.Error(err))
+			return "", err
+		}
+
+		if t.Status.Targetable != nil {
+			return fmt.Sprintf("http://%s/", t.Status.Targetable.DomainInternal), nil
+		}
+	}
+
 	return "", fmt.Errorf("sink does not contain sinkable")
 }
 
 // fetchObjectReference fetches an object based on ObjectReference.
-func (r *reconciler) fetchObjectReference(namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
+func (r *reconciler) fetchObjectReference(ctx context.Context, namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
+	logger := logging.FromContext(ctx)
+
 	resourceClient, err := r.CreateResourceInterface(namespace, ref)
 	if err != nil {
-		//glog.Warningf("failed to create dynamic client resource: %v", err)
+		logger.Warnf("failed to create dynamic client resource: %v", zap.Error(err))
 		return nil, err
 	}
 
@@ -164,7 +188,6 @@ func (r *reconciler) fetchObjectReference(namespace string, ref *corev1.ObjectRe
 
 func (r *reconciler) CreateResourceInterface(namespace string, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
 	rc := r.dynamicClient.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
-
 	if rc == nil {
 		return nil, fmt.Errorf("failed to create dynamic client resource")
 	}
@@ -192,7 +215,7 @@ func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Contain
 		},
 		list)
 	if err != nil {
-		logger.Errorf("Unable to list deployments: %v", err)
+		logger.Errorf("Unable to list deployments: %v", zap.Error(err))
 		return nil, err
 	}
 	for _, c := range list.Items {
@@ -204,10 +227,7 @@ func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.Contain
 }
 
 func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.ContainerSource, org *appsv1.Deployment, args *resources.ContainerArguments) (*appsv1.Deployment, error) {
-	deployment, err := resources.MakeDeployment(org, args)
-	if err != nil {
-		return nil, err
-	}
+	deployment := resources.MakeDeployment(org, args)
 
 	if err := controllerutil.SetControllerReference(source, deployment, r.scheme); err != nil {
 		return nil, err
@@ -225,7 +245,6 @@ func (r *reconciler) InjectClient(c client.Client) error {
 }
 
 func (r *reconciler) InjectConfig(c *rest.Config) error {
-	r.restConfig = c
 	var err error
 	r.dynamicClient, err = dynamic.NewForConfig(c)
 	return err

@@ -30,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -91,35 +90,9 @@ type TestCase struct {
 }
 
 // Runner returns a testing func that can be passed to t.Run.
-func (tc *TestCase) Runner(t *testing.T, r reconcile.Reconciler, c *MockClient) func(t *testing.T) {
+func (tc *TestCase) Runner(t *testing.T, r sdk.KnativeReconciler, c *MockClient) func(t *testing.T) {
 	return func(t *testing.T) {
-		result, recErr := tc.Reconcile(r)
-
-		if err := tc.VerifyErr(recErr); err != nil {
-			t.Error(err)
-		}
-
-		if err := tc.VerifyResult(result); err != nil {
-			t.Error(err)
-		}
-
-		// Verifying should be done against the innerClient, never against mocks.
-		c.stopMocking()
-
-		if err := tc.VerifyWantPresent(c); err != nil {
-			t.Error(err)
-		}
-
-		if err := tc.VerifyWantAbsent(c); err != nil {
-			t.Error(err)
-		}
-	}
-}
-
-// Runner returns a testing func that can be passed to t.Run.
-func (tc *TestCase) RunnerSDK(t *testing.T, r sdk.KnativeReconciler, c *MockClient) func(t *testing.T) {
-	return func(t *testing.T) {
-		result, recErr := tc.ReconcileSDK(c, r)
+		result, recErr := tc.Reconcile(c, r)
 
 		if err := tc.VerifyErr(recErr); err != nil {
 			t.Error(err)
@@ -159,23 +132,7 @@ func (tc *TestCase) GetClient() *MockClient {
 
 // Reconcile calls the given reconciler's Reconcile() function with the test
 // case's reconcile request.
-func (tc *TestCase) Reconcile(r reconcile.Reconciler) (reconcile.Result, error) {
-	if tc.ReconcileKey == "" {
-		return reconcile.Result{}, fmt.Errorf("test did not set ReconcileKey")
-	}
-	ns, n, err := cache.SplitMetaNamespaceKey(tc.ReconcileKey)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	return r.Reconcile(reconcile.Request{
-		NamespacedName: types.NamespacedName{
-			Namespace: ns,
-			Name:      n,
-		},
-	})
-}
-
-func (tc *TestCase) ReconcileSDK(c client.Client, r sdk.KnativeReconciler) (runtime.Object, error) {
+func (tc *TestCase) Reconcile(c client.Client, r sdk.KnativeReconciler) (runtime.Object, error) {
 	if tc.ReconcileKey == "" {
 		return nil, fmt.Errorf("test did not set ReconcileKey")
 	}

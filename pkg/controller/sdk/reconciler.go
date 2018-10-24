@@ -31,7 +31,6 @@ import (
 
 type Reconciler struct {
 	client        client.Client
-	restConfig    *rest.Config
 	dynamicClient dynamic.Interface
 	recorder      record.EventRecorder
 	scheme        *runtime.Scheme
@@ -97,7 +96,6 @@ func (r *Reconciler) InjectClient(c client.Client) error {
 }
 
 func (r *Reconciler) InjectConfig(c *rest.Config) error {
-	r.restConfig = c
 	var err error
 	r.dynamicClient, err = dynamic.NewForConfig(c)
 	if r.provider.Reconciler != nil {

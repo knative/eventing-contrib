@@ -17,8 +17,11 @@ limitations under the License.
 package containersource
 
 import (
+	"context"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/client-go/rest"
 
 	//"fmt"
 	"testing"
@@ -31,31 +34,20 @@ import (
 	//"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	//"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 var (
 	trueVal   = true
-	targetURI = "http://target.example.com"
+	targetURI = "http://sinkable.sink.svc.cluster.local/"
 )
 
 const (
-	image             = "github.com/knative/test/image"
-	fromChannelName   = "fromchannel"
-	resultChannelName = "resultchannel"
-	sourceName        = "source"
-	routeName         = "callroute"
-	channelKind       = "Channel"
-	routeKind         = "Route"
-	sourceKind        = "Source"
-	targetDNS         = "myfunction.mynamespace.svc.cluster.local"
-
-	eventType           = "myeventtype"
+	image               = "github.com/knative/test/image"
 	containerSourceName = "testcontainersource"
 	testNS              = "testnamespace"
-	k8sServiceName      = "testk8sservice"
+	containerSourceUID  = "2a2208d1-ce67-11e8-b3a3-42010a8a00af"
 
 	sinkableDNS = "sinkable.sink.svc.cluster.local"
 
@@ -112,7 +104,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// An unsinkable resource
+			// unsinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": unsinkableAPIVersion,
@@ -134,7 +126,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// k8s Service
+			// sinkable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -151,10 +143,210 @@ var testCases = []controllertesting.TestCase{
 				},
 			},
 		},
-	}, /* TODO: support k8s service {
-		Name:       "valid containersource, sink is a k8s service",
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Status.InitializeConditions()
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
+				s.Status.MarkSink(targetURI)
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid containersource, sink is sinkable but sink is nil",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
+			getContainerSource(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}(nil),
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSink("NotFound", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `sink does not contain sinkable`,
+	}, {
+		Name:       "invalid containersource, sink is nil",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Sink = nil
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}(nil),
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Sink = nil
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSink("NotFound", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `sink ref is nil`,
+	}, {
+		Name:       "valid containersource, sink is provided",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Sink = nil
+				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects:      []runtime.Object{},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Sink = nil
+				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
+				s.Status.InitializeConditions()
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
+				s.Status.MarkSink(targetURI)
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid containersource, sink is targetable",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"targetable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+	}, /*
+		TODO(n3wscott): This does not work yet because we are only mocking the dynamic client
+		response and not the client list response. Fix this and the test will work.
+		{
+			Name:       "valid containersource, sink, and deployment",
+			Reconciles: &sourcesv1alpha1.ContainerSource{},
+			InitialState: []runtime.Object{
+				func() runtime.Object {
+					s := getContainerSource()
+					s.UID = containerSourceUID
+					return s
+				}(),
+			},
+			ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+			Scheme:       scheme.Scheme,
+			Objects: []runtime.Object{
+				// sinkable
+				&unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"apiVersion": sinkableAPIVersion,
+						"kind":       sinkableKind,
+						"metadata": map[string]interface{}{
+							"namespace": testNS,
+							"name":      sinkableName,
+							"uid":       containerSourceUID,
+						},
+						"status": map[string]interface{}{
+							"sinkable": map[string]interface{}{
+								"domainInternal": sinkableDNS,
+							},
+						},
+					},
+				},
+				// deployment resource
+				func() runtime.Object {
+					u := &unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": "extensions/v1beta1",
+							"kind":       "Deployment",
+							"metadata": map[string]interface{}{
+								"namespace": testNS,
+								"name":      containerSourceName + "-abc",
+							},
+							"status": map[string]interface{}{
+								"readyReplicas": "1",
+							},
+						},
+					}
+					u.SetOwnerReferences(getOwnerReferences())
+					return u
+				}(),
+			},
+			WantPresent: []runtime.Object{
+				func() runtime.Object {
+					s := getContainerSource()
+					s.UID = containerSourceUID
+					s.Status.InitializeConditions()
+					s.Status.MarkDeployed()
+					s.Status.MarkSink(targetURI)
+					return s
+				}(),
+			},
+			IgnoreTimes: true,
+		},
+	*/
+	/* TODO: support k8s service {
+		Name:       "valid containersource, sink is a k8s service",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+	    InitialState: []runtime.Object{
 			getContainerSource_sinkService(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
@@ -182,45 +374,22 @@ func TestAllCases(t *testing.T) {
 		dc := tc.GetDynamicClient()
 
 		r := &reconciler{
-			client:        c,
 			dynamicClient: dc,
 			scheme:        tc.Scheme,
-			restConfig:    &rest.Config{},
 			recorder:      recorder,
 		}
-		t.Run(tc.Name, tc.RunnerSDK(t, r, c))
+		r.InjectClient(c)
+		t.Run(tc.Name, tc.Runner(t, r, c))
 	}
 }
 
-//
-//func getNewFromChannel() *eventingv1alpha1.Channel {
-//	return getNewChannel(fromChannelName)
-//}
-//
-//func getNewResultChannel() *eventingv1alpha1.Channel {
-//	return getNewChannel(resultChannelName)
-//}
-//
-//func getNewChannel(name string) *eventingv1alpha1.Channel {
-//	channel := &eventingv1alpha1.Channel{
-//		TypeMeta:   channelType(),
-//		ObjectMeta: om("test", name),
-//		Spec:       eventingv1alpha1.ChannelSpec{},
-//	}
-//	channel.ObjectMeta.OwnerReferences = append(channel.ObjectMeta.OwnerReferences, getOwnerReference(false))
-//
-//	// selflink is not filled in when we create the object, so clear it
-//	channel.ObjectMeta.SelfLink = ""
-//	return channel
-//}
-//
 func getContainerSource() *sourcesv1alpha1.ContainerSource {
 	obj := &sourcesv1alpha1.ContainerSource{
 		TypeMeta:   containerSourceType(),
 		ObjectMeta: om(testNS, containerSourceName),
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
 			Image: image,
-			Args:  []string{},
+			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
 				Name:       sinkableName,
 				Kind:       sinkableKind,
@@ -239,7 +408,7 @@ func getContainerSource_sinkService() *sourcesv1alpha1.ContainerSource {
 		ObjectMeta: om(testNS, containerSourceName),
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
 			Image: image,
-			Args:  []string{},
+			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
 				Name:       sinkServiceName,
 				Kind:       sinkServiceKind,
@@ -270,92 +439,12 @@ func getContainerSource_unsinkable() *sourcesv1alpha1.ContainerSource {
 	obj.ObjectMeta.SelfLink = ""
 	return obj
 }
-
-//
-//func getNewSubscriptionToK8sService() *eventingv1alpha1.Subscription {
-//	sub := getNewSubscription()
-//	sub.Spec.Call = &eventingv1alpha1.Callable{
-//		Target: &corev1.ObjectReference{
-//			Name:       k8sServiceName,
-//			Kind:       "Service",
-//			APIVersion: "v1",
-//		},
-//	}
-//	return sub
-//}
-//
-//func getNewSubscriptionWithSource() *eventingv1alpha1.Subscription {
-//	subscription := &eventingv1alpha1.Subscription{
-//		TypeMeta:   subscriptionType(),
-//		ObjectMeta: om(testNS, subscriptionName),
-//		Spec: eventingv1alpha1.SubscriptionSpec{
-//			From: corev1.ObjectReference{
-//				Name:       sourceName,
-//				Kind:       sourceKind,
-//				APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//			},
-//			Call: &eventingv1alpha1.Callable{
-//				Target: &corev1.ObjectReference{
-//					Name:       routeName,
-//					Kind:       routeKind,
-//					APIVersion: "serving.knative.dev/v1alpha1",
-//				},
-//			},
-//			Result: &eventingv1alpha1.ResultStrategy{
-//				Target: &corev1.ObjectReference{
-//					Name:       resultChannelName,
-//					Kind:       channelKind,
-//					APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//				},
-//			},
-//		},
-//	}
-//	subscription.ObjectMeta.OwnerReferences = append(subscription.ObjectMeta.OwnerReferences, getOwnerReference(false))
-//
-//	// selflink is not filled in when we create the object, so clear it
-//	subscription.ObjectMeta.SelfLink = ""
-//	return subscription
-//}
-//
-//func getNewSubscriptionWithUnknownConditions() *eventingv1alpha1.Subscription {
-//	s := getNewSubscription()
-//	s.Status.InitializeConditions()
-//	return s
-//}
-//
-//func getNewSubscriptionWithReferencesResolvedStatus() *eventingv1alpha1.Subscription {
-//	s := getNewSubscriptionWithUnknownConditions()
-//	s.Status.MarkReferencesResolved()
-//	return s
-//}
-//
-//func channelType() metav1.TypeMeta {
-//	return metav1.TypeMeta{
-//		APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-//		Kind:       "Channel",
-//	}
-//}
-//
 func containerSourceType() metav1.TypeMeta {
 	return metav1.TypeMeta{
 		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 		Kind:       "ContainerSource",
 	}
 }
-
-//
-//func getK8sService() *corev1.Service {
-//	return &corev1.Service{
-//		TypeMeta: metav1.TypeMeta{
-//			APIVersion: "v1",
-//			Kind:       "Service",
-//		},
-//		ObjectMeta: metav1.ObjectMeta{
-//			Namespace: testNS,
-//			Name:      k8sServiceName,
-//		},
-//	}
-//}
 
 func om(namespace, name string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
@@ -365,46 +454,60 @@ func om(namespace, name string) metav1.ObjectMeta {
 	}
 }
 
-//func feedObjectMeta(namespace, generateName string) metav1.ObjectMeta {
-//	return metav1.ObjectMeta{
-//		Namespace:    namespace,
-//		GenerateName: generateName,
-//		OwnerReferences: []metav1.OwnerReference{
-//			getOwnerReference(true),
-//		},
-//	}
-//}
-//
-//func getOwnerReference(blockOwnerDeletion bool) metav1.OwnerReference {
-//	return metav1.OwnerReference{
-//		APIVersion:         eventingv1alpha1.SchemeGroupVersion.String(),
-//		Kind:               "Subscription",
-//		Name:               subscriptionName,
-//		Controller:         &trueVal,
-//		BlockOwnerDeletion: &blockOwnerDeletion,
-//	}
-//}
+func getOwnerReferences() []metav1.OwnerReference {
+	return []metav1.OwnerReference{{
+		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+		Kind:       "ContainerSource",
+		Name:       containerSourceName,
+		Controller: &trueVal,
+		UID:        containerSourceUID,
+	}}
+}
 
-func getTestResources() []runtime.Object {
-	return []runtime.Object{
-		&unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": unsinkableAPIVersion,
-				"kind":       unsinkableKind,
-				"metadata": map[string]interface{}{
-					"namespace": testNS,
-					"name":      unsinkableName,
-				},
-			},
-		}, &unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": sinkableAPIVersion,
-				"kind":       sinkableKind,
-				"metadata": map[string]interface{}{
-					"namespace": testNS,
-					"name":      sinkableName,
-				},
-			},
-		},
+// Direct Unit tests.
+
+func TestObjectNotContainerSource(t *testing.T) {
+	r := reconciler{}
+	obj := &corev1.ObjectReference{
+		Name:       unsinkableName,
+		Kind:       unsinkableKind,
+		APIVersion: unsinkableAPIVersion,
+	}
+
+	got, gotErr := r.Reconcile(context.TODO(), obj)
+	var want runtime.Object = obj
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected returned object (-want, +got) = %v", diff)
+	}
+	var wantErr error = nil
+	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
+		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	}
+}
+
+func TestObjectHasDeleteTimestamp(t *testing.T) {
+	r := reconciler{}
+	obj := getContainerSource()
+
+	now := metav1.Now()
+	obj.DeletionTimestamp = &now
+	got, gotErr := r.Reconcile(context.TODO(), obj)
+	var want runtime.Object = obj
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected returned object (-want, +got) = %v", diff)
+	}
+	var wantErr error = nil
+	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
+		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	}
+}
+
+func TestInjectConfig(t *testing.T) {
+	r := reconciler{}
+
+	r.InjectConfig(&rest.Config{})
+
+	if r.dynamicClient == nil {
+		t.Errorf("dynamicClient was nil but expected non nil")
 	}
 }

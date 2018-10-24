@@ -24,11 +24,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) (*appsv1.Deployment, error) {
+func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.Deployment {
 	containerArgs := []string(nil)
 	if args != nil {
 		containerArgs = args.Args
 	}
+	// if sink is already in the provided args.Args, don't attempt to add
 	if !args.SinkInArgs {
 		remote := fmt.Sprintf("--sink=%s", args.Sink)
 		containerArgs = append(containerArgs, remote)
@@ -70,5 +71,5 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) (*appsv1.D
 		},
 	}
 
-	return deploy, nil
+	return deploy
 }

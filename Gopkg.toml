@@ -44,16 +44,26 @@ required = [
   name = "k8s.io/client-go"
   version = "kubernetes-1.11.3"
 
+[[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.11.3"
+
+[[constraint]]
+  name = "sigs.k8s.io/controller-tools"
+  # TODO(n3wscott): this is forked because controller-tools assumed the docker
+  # file did not define the executable. This breaks how ko sets up what will be
+  # run in the container. I had to remove the string that defined the target.
+  # Kubebuilder is currently refactoring this into the kubebuilder area, unknown
+  # if it will be better.
+  source = "https://github.com/n3wscott/controller-tools.git"
+  version = "v0.1.1-assume_exe"
+
 # STANZAS BELOW ARE GENERATED AND MAY BE WRITTEN - DO NOT MODIFY BELOW THIS LINE.
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
   revision = "5373e8e1f3188ff4266902a6fc86372bc14b3815"
   # version="v0.1.1"
-
-[[constraint]]
-  name="sigs.k8s.io/controller-tools"
-  version="v0.1.1"
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]

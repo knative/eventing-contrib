@@ -1,0 +1,16 @@
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: ContainerSource
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: containersource-sample
+spec:
+  image: github.com/knative/eventing-sources/cmd/heartbeats/
+  args:
+   - '--label="<3"'
+   - '--period=2'
+# Fill this out:
+#  sink:
+#    apiVersion: <apiverion>
+#    kind: <kind>
+#    name: <name>

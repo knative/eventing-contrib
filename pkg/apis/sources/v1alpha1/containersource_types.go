@@ -70,9 +70,8 @@ type ContainerSourceStatus struct {
 	// +patchStrategy=merge
 	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	// TODO(n3wscott): there was talk of adding sink to the status. revisit this later.
-
 	// SinkURI is the current active sink URI that has been configured for the ContainerSource.
+	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
 }
 
@@ -126,6 +125,7 @@ func (s *ContainerSourceStatus) MarkNotDeployed(reason, messageFormat string, me
 
 // ContainerSource is the Schema for the containersources API
 // +k8s:openapi-gen=true
+// +kubebuilder:categories=all,knative,eventing,sources
 type ContainerSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
