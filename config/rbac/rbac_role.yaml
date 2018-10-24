@@ -19,7 +19,7 @@ rules:
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
-  - containersources
+  - kuberneteseventsources
   verbs:
   - get
   - list
@@ -28,11 +28,3 @@ rules:
   - update
   - patch
   - delete
-- apiGroups:
-  - serving.knative.dev
-  resources:
-  - services
-  verbs:
-  - get
-  - list
-  - watch
