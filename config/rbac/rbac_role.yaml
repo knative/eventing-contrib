@@ -5,6 +5,38 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - containersources
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - sources.eventing.knative.dev
   resources:
   - kuberneteseventsources
