@@ -19,6 +19,9 @@ package kuberneteseventsource
 import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -30,7 +33,9 @@ import (
 // reconciler reconciles a KubernetesEventSource object
 type reconciler struct {
 	client.Client
-	scheme *runtime.Scheme
+	dynamicClient dynamic.Interface
+	recorder      record.EventRecorder
+	scheme        *runtime.Scheme
 }
 
 var _ reconcile.Reconciler = &reconciler{}
@@ -43,13 +48,17 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &reconciler{Client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &reconciler{
+		Client:   mgr.GetClient(),
+		scheme:   mgr.GetScheme(),
+		recorder: mgr.GetRecorder(controllerAgentName),
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("kuberneteseventsource-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New(controllerAgentName, mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
@@ -61,4 +70,10 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	return nil
+}
+
+func (r *reconciler) InjectConfig(c *rest.Config) error {
+	var err error
+	r.dynamicClient, err = dynamic.NewForConfig(c)
+	return err
 }

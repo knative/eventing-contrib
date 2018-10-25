@@ -18,18 +18,13 @@ package kuberneteseventsource
 
 import (
 	"context"
-	"fmt"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/pkg/apis/duck"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -87,11 +82,11 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) error {
-	logger := logging.FromContext(ctx)
+	//logger := logging.FromContext(ctx)
 
 	source.Status.InitializeConditions()
 
-	uri, err := r.getSinkURI(ctx, source)
+	uri, err := sdk.GetSinkUri(ctx, r.dynamicClient, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return err
@@ -99,67 +94,6 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 	source.Status.MarkSink(uri)
 
 	return nil
-}
-
-func (r *reconciler) getSinkURI(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) (string, error) {
-	// check to see if the source has provided a sink ref in the spec. Lets look for it.
-	if source.Spec.Sink == nil {
-		return "", fmt.Errorf("sink ref is nil")
-	}
-
-	obj, err := r.fetchObjectReference(ctx, source.Namespace, source.Spec.Sink)
-	if err != nil {
-		return "", err
-	}
-	t := duckv1alpha1.Sink{}
-	err = duck.FromUnstructured(obj, &t)
-	if err != nil {
-		// logger.Warnf("Failed to deserialize sink: %s", zap.Error(err))
-		return "", err
-	}
-
-	if t.Status.Sinkable != nil {
-		return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
-	}
-
-	// for now we will try again as a targetable.
-	if tryTargetable {
-		t := duckv1alpha1.Target{}
-		err = duck.FromUnstructured(obj, &t)
-		if err != nil {
-			// logger.Warnf("Failed to deserialize targetable: %s", zap.Error(err))
-			return "", err
-		}
-
-		if t.Status.Targetable != nil {
-			return fmt.Sprintf("http://%s/", t.Status.Targetable.DomainInternal), nil
-		}
-	}
-
-	return "", fmt.Errorf("sink does not contain sinkable")
-}
-
-// fetchObjectReference fetches an object based on ObjectReference.
-//TODO(grantr) use controller-runtime unstructured client
-func (r *reconciler) fetchObjectReference(ctx context.Context, namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
-	logger := logging.FromContext(ctx)
-
-	resourceClient, err := r.CreateResourceInterface(namespace, ref)
-	if err != nil {
-		logger.Warnf("failed to create dynamic client resource: %v", zap.Error(err))
-		return nil, err
-	}
-
-	return resourceClient.Get(ref.Name, metav1.GetOptions{})
-}
-
-func (r *reconciler) CreateResourceInterface(namespace string, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
-	rc := r.dynamicClient.Resource(duck.KindToResource(ref.GroupVersionKind()))
-	if rc == nil {
-		return nil, fmt.Errorf("failed to create dynamic client resource")
-	}
-	return rc.Namespace(namespace), nil
-
 }
 
 func (r *reconciler) update(ctx context.Context, u *sourcesv1alpha1.KubernetesEventSource) error {
