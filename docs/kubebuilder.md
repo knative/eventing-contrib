@@ -269,6 +269,10 @@ index 8073e340..b2d68be7 100644
 For most cases, the sdk wrapper around controller runtime's reconciler
 expectations handles a lot of the work around posting updates to status
 and watching for dependent resources. So I switch it out by copying an existing
-integration with 
+integration with and making edits...
+
+Remember to update the package name.
+
+see the [PR]() for these details.
 
 
