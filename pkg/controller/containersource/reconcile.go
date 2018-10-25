@@ -18,16 +18,13 @@ package containersource
 
 import (
 	"context"
-	"fmt"
-	"github.com/knative/pkg/apis/duck"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"go.uber.org/zap"
 	"k8s.io/client-go/rest"
 	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
-	duckapis "github.com/knative/pkg/apis"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/logging"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -49,11 +46,6 @@ type reconciler struct {
 	dynamicClient dynamic.Interface
 	recorder      record.EventRecorder
 }
-
-// TODO(n3wscott): To show the source is working, and while knative eventing is
-// defining the ducktypes, tryTargetable allows us to point to a Service.service
-// to validate the source is working.
-const tryTargetable = true
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
@@ -91,7 +83,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		args.SinkInArgs = true
 		source.Status.MarkSink(uri)
 	} else {
-		uri, err := r.getSinkUri(ctx, source)
+		uri, err := sdk.GetSinkUri(ctx, r.dynamicClient, source.Spec.Sink, source.Namespace)
 		if err != nil {
 			source.Status.MarkNoSink("NotFound", "")
 			return source, err
@@ -129,70 +121,6 @@ func sinkArg(source *v1alpha1.ContainerSource) (string, bool) {
 		}
 	}
 	return "", false
-}
-
-func (r *reconciler) getSinkUri(ctx context.Context, source *v1alpha1.ContainerSource) (string, error) {
-	logger := logging.FromContext(ctx)
-
-	// check to see if the source has provided a sink ref in the spec. Lets look for it.
-
-	if source.Spec.Sink == nil {
-		return "", fmt.Errorf("sink ref is nil")
-	}
-
-	obj, err := r.fetchObjectReference(ctx, source.Namespace, source.Spec.Sink)
-	if err != nil {
-		logger.Warnf("Failed to fetch sink target %+v: %s", source.Spec.Sink, zap.Error(err))
-		return "", err
-	}
-	t := duckv1alpha1.Sink{}
-	err = duck.FromUnstructured(obj, &t)
-	if err != nil {
-		logger.Warnf("Failed to deserialize sink: %s", zap.Error(err))
-		return "", err
-	}
-
-	if t.Status.Sinkable != nil {
-		return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
-	}
-
-	// for now we will try again as a targetable.
-	if tryTargetable {
-		t := duckv1alpha1.Target{}
-		err = duck.FromUnstructured(obj, &t)
-		if err != nil {
-			logger.Warnf("Failed to deserialize targetable: %s", zap.Error(err))
-			return "", err
-		}
-
-		if t.Status.Targetable != nil {
-			return fmt.Sprintf("http://%s/", t.Status.Targetable.DomainInternal), nil
-		}
-	}
-
-	return "", fmt.Errorf("sink does not contain sinkable")
-}
-
-// fetchObjectReference fetches an object based on ObjectReference.
-func (r *reconciler) fetchObjectReference(ctx context.Context, namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
-	logger := logging.FromContext(ctx)
-
-	resourceClient, err := r.CreateResourceInterface(namespace, ref)
-	if err != nil {
-		logger.Warnf("failed to create dynamic client resource: %v", zap.Error(err))
-		return nil, err
-	}
-
-	return resourceClient.Get(ref.Name, metav1.GetOptions{})
-}
-
-func (r *reconciler) CreateResourceInterface(namespace string, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
-	rc := r.dynamicClient.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
-	if rc == nil {
-		return nil, fmt.Errorf("failed to create dynamic client resource")
-	}
-	return rc.Namespace(namespace), nil
-
 }
 
 func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.ContainerSource) (*appsv1.Deployment, error) {
