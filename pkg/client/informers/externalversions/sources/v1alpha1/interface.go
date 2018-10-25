@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// ContainerSources returns a ContainerSourceInformer.
 	ContainerSources() ContainerSourceInformer
+	// EdgeSources returns a EdgeSourceInformer.
+	EdgeSources() EdgeSourceInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ContainerSources returns a ContainerSourceInformer.
 func (v *version) ContainerSources() ContainerSourceInformer {
 	return &containerSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// EdgeSources returns a EdgeSourceInformer.
+func (v *version) EdgeSources() EdgeSourceInformer {
+	return &edgeSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

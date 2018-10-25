@@ -25,3 +25,11 @@ type ContainerSourceListerExpansion interface{}
 // ContainerSourceNamespaceListerExpansion allows custom methods to be added to
 // ContainerSourceNamespaceLister.
 type ContainerSourceNamespaceListerExpansion interface{}
+
+// EdgeSourceListerExpansion allows custom methods to be added to
+// EdgeSourceLister.
+type EdgeSourceListerExpansion interface{}
+
+// EdgeSourceNamespaceListerExpansion allows custom methods to be added to
+// EdgeSourceNamespaceLister.
+type EdgeSourceNamespaceListerExpansion interface{}

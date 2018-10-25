@@ -32,6 +32,10 @@ func (c *FakeSourcesV1alpha1) ContainerSources(namespace string) v1alpha1.Contai
 	return &FakeContainerSources{c, namespace}
 }
 
+func (c *FakeSourcesV1alpha1) EdgeSources(namespace string) v1alpha1.EdgeSourceInterface {
+	return &FakeEdgeSources{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeSourcesV1alpha1) RESTClient() rest.Interface {
