@@ -34,13 +34,13 @@ type GcpPubSubSourceListerExpansion interface{}
 // GcpPubSubSourceNamespaceLister.
 type GcpPubSubSourceNamespaceListerExpansion interface{}
 
-// GitHubEventSourceListerExpansion allows custom methods to be added to
-// GitHubEventSourceLister.
-type GitHubEventSourceListerExpansion interface{}
+// GitHubSourceListerExpansion allows custom methods to be added to
+// GitHubSourceLister.
+type GitHubSourceListerExpansion interface{}
 
-// GitHubEventSourceNamespaceListerExpansion allows custom methods to be added to
-// GitHubEventSourceNamespaceLister.
-type GitHubEventSourceNamespaceListerExpansion interface{}
+// GitHubSourceNamespaceListerExpansion allows custom methods to be added to
+// GitHubSourceNamespaceLister.
+type GitHubSourceNamespaceListerExpansion interface{}
 
 // KubernetesEventSourceListerExpansion allows custom methods to be added to
 // KubernetesEventSourceLister.

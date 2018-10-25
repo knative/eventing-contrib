@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package githubeventsource
+package githubsource
 
 import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// reconciler reconciles a GitHubEventSource object
+// reconciler reconciles a GitHubSource object
 type reconciler struct {
 	client.Client
 	scheme *runtime.Scheme
@@ -36,7 +36,7 @@ type reconciler struct {
 
 var _ reconcile.Reconciler = &reconciler{}
 
-// Add creates a new GitHubEventSource Controller and adds it to the
+// Add creates a new GitHubSource Controller and adds it to the
 // Manager with default RBAC. The Manager will set fields on the
 // Controller and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
@@ -51,22 +51,22 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("githubeventsource-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("githubsource-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to GitHubEventSource
-	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.GitHubEventSource{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to GitHubSource
+	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.GitHubSource{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
 	// TODO(user): Modify this to be the types you create
-	// Uncomment watch a Deployment created by GitHubEventSource - change this for objects you create
+	// Uncomment watch a Deployment created by GitHubSource - change this for objects you create
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &sourcesv1alpha1.GitHubEventSource{},
+		OwnerType:    &sourcesv1alpha1.GitHubSource{},
 	})
 	if err != nil {
 		return err

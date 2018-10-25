@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package githubeventsource
+package githubsource
 
 import (
 	"context"
@@ -33,16 +33,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// Reconcile reads that state of the cluster for a GitHubEventSource
+// Reconcile reads that state of the cluster for a GitHubSource
 // object and makes changes based on the state read and what is in the
-// GitHubEventSource.Spec
+// GitHubSource.Spec
 func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 	logger := logging.FromContext(ctx)
 	logger.Debug("Reconciling", zap.Any("key", request.NamespacedName))
 
-	// Fetch the GitHubEventSource instance
-	instance := &sourcesv1alpha1.GitHubEventSource{}
+	// Fetch the GitHubSource instance
+	instance := &sourcesv1alpha1.GitHubSource{}
 	err := r.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {

@@ -22,6 +22,6 @@ type ContainerSourceExpansion interface{}
 
 type GcpPubSubSourceExpansion interface{}
 
-type GitHubEventSourceExpansion interface{}
+type GitHubSourceExpansion interface{}
 
 type KubernetesEventSourceExpansion interface{}

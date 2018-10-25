@@ -29,7 +29,7 @@ type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ContainerSourcesGetter
 	GcpPubSubSourcesGetter
-	GitHubEventSourcesGetter
+	GitHubSourcesGetter
 	KubernetesEventSourcesGetter
 }
 
@@ -46,8 +46,8 @@ func (c *SourcesV1alpha1Client) GcpPubSubSources(namespace string) GcpPubSubSour
 	return newGcpPubSubSources(c, namespace)
 }
 
-func (c *SourcesV1alpha1Client) GitHubEventSources(namespace string) GitHubEventSourceInterface {
-	return newGitHubEventSources(c, namespace)
+func (c *SourcesV1alpha1Client) GitHubSources(namespace string) GitHubSourceInterface {
+	return newGitHubSources(c, namespace)
 }
 
 func (c *SourcesV1alpha1Client) KubernetesEventSources(namespace string) KubernetesEventSourceInterface {

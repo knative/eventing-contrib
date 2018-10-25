@@ -23,14 +23,14 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// GitHubEventSourceSpec defines the desired state of GitHubEventSource
-type GitHubEventSourceSpec struct {
+// GitHubSourceSpec defines the desired state of GitHubSource
+type GitHubSourceSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
-// GitHubEventSourceStatus defines the observed state of GitHubEventSource
-type GitHubEventSourceStatus struct {
+// GitHubSourceStatus defines the observed state of GitHubSource
+type GitHubSourceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -38,25 +38,25 @@ type GitHubEventSourceStatus struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// GitHubEventSource is the Schema for the githubeventsources API
+// GitHubSource is the Schema for the githubsources API
 // +k8s:openapi-gen=true
-type GitHubEventSource struct {
+type GitHubSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   GitHubEventSourceSpec   `json:"spec,omitempty"`
-	Status GitHubEventSourceStatus `json:"status,omitempty"`
+	Spec   GitHubSourceSpec   `json:"spec,omitempty"`
+	Status GitHubSourceStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// GitHubEventSourceList contains a list of GitHubEventSource
-type GitHubEventSourceList struct {
+// GitHubSourceList contains a list of GitHubSource
+type GitHubSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []GitHubEventSource `json:"items"`
+	Items           []GitHubSource `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&GitHubEventSource{}, &GitHubEventSourceList{})
+	SchemeBuilder.Register(&GitHubSource{}, &GitHubSourceList{})
 }

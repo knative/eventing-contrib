@@ -31,59 +31,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// GitHubEventSourceInformer provides access to a shared informer and lister for
-// GitHubEventSources.
-type GitHubEventSourceInformer interface {
+// GitHubSourceInformer provides access to a shared informer and lister for
+// GitHubSources.
+type GitHubSourceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.GitHubEventSourceLister
+	Lister() v1alpha1.GitHubSourceLister
 }
 
-type gitHubEventSourceInformer struct {
+type gitHubSourceInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewGitHubEventSourceInformer constructs a new informer for GitHubEventSource type.
+// NewGitHubSourceInformer constructs a new informer for GitHubSource type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewGitHubEventSourceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredGitHubEventSourceInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewGitHubSourceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredGitHubSourceInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredGitHubEventSourceInformer constructs a new informer for GitHubEventSource type.
+// NewFilteredGitHubSourceInformer constructs a new informer for GitHubSource type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredGitHubEventSourceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredGitHubSourceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourcesV1alpha1().GitHubEventSources(namespace).List(options)
+				return client.SourcesV1alpha1().GitHubSources(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourcesV1alpha1().GitHubEventSources(namespace).Watch(options)
+				return client.SourcesV1alpha1().GitHubSources(namespace).Watch(options)
 			},
 		},
-		&sourcesv1alpha1.GitHubEventSource{},
+		&sourcesv1alpha1.GitHubSource{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *gitHubEventSourceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredGitHubEventSourceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *gitHubSourceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredGitHubSourceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *gitHubEventSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sourcesv1alpha1.GitHubEventSource{}, f.defaultInformer)
+func (f *gitHubSourceInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&sourcesv1alpha1.GitHubSource{}, f.defaultInformer)
 }
 
-func (f *gitHubEventSourceInformer) Lister() v1alpha1.GitHubEventSourceLister {
-	return v1alpha1.NewGitHubEventSourceLister(f.Informer().GetIndexer())
+func (f *gitHubSourceInformer) Lister() v1alpha1.GitHubSourceLister {
+	return v1alpha1.NewGitHubSourceLister(f.Informer().GetIndexer())
 }
