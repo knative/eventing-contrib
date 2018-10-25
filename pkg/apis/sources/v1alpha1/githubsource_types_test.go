@@ -19,40 +19,169 @@ package v1alpha1
 import (
 	"testing"
 
-	"github.com/onsi/gomega"
-	"golang.org/x/net/context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 )
 
-func TestStorageGitHubSource(t *testing.T) {
-	key := types.NamespacedName{
-		Name:      "foo",
-		Namespace: "default",
+func TestGitHubSourceStatusIsReady(t *testing.T) {
+	tests := []struct {
+		name string
+		s    *GitHubSourceStatus
+		want bool
+	}{{
+		name: "uninitialized",
+		s:    &GitHubSourceStatus{},
+		want: false,
+	}, {
+		name: "initialized",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink then no sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkNoSink("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink empty",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink empty then sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: true,
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.s.IsReady()
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("%s: unexpected condition (-want, +got) = %v", test.name, diff)
+			}
+		})
 	}
-	created := &GitHubSource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "default",
-		}}
-	g := gomega.NewGomegaWithT(t)
+}
 
-	// Test Create
-	fetched := &GitHubSource{}
-	g.Expect(c.Create(context.TODO(), created)).NotTo(gomega.HaveOccurred())
+func TestGitHubSourceStatusGetCondition(t *testing.T) {
+	tests := []struct {
+		name      string
+		s         *GitHubSourceStatus
+		condQuery duckv1alpha1.ConditionType
+		want      *duckv1alpha1.Condition
+	}{{
+		name:      "uninitialized",
+		s:         &GitHubSourceStatus{},
+		condQuery: GitHubSourceConditionReady,
+		want:      nil,
+	}, {
+		name: "initialized",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}, {
+		name: "mark sink then no sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkNoSink("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    GitHubSourceConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink empty",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    GitHubSourceConditionReady,
+			Status:  corev1.ConditionUnknown,
+			Reason:  "SinkEmpty",
+			Message: "Sink has resolved to empty.",
+		},
+	}, {
+		name: "mark sink empty then sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}}
 
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(created))
-
-	// Test Updating the Labels
-	updated := fetched.DeepCopy()
-	updated.Labels = map[string]string{"hello": "world"}
-	g.Expect(c.Update(context.TODO(), updated)).NotTo(gomega.HaveOccurred())
-
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(updated))
-
-	// Test Delete
-	g.Expect(c.Delete(context.TODO(), fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(c.Get(context.TODO(), key, fetched)).To(gomega.HaveOccurred())
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.s.GetCondition(test.condQuery)
+			ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{}, "LastTransitionTime")
+			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
+				t.Errorf("unexpected condition (-want, +got) = %v", diff)
+			}
+		})
+	}
 }

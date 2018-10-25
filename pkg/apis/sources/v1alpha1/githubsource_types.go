@@ -17,22 +17,84 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/knative/pkg/apis/duck"
+	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// Check that GitHubSource can be validated and can be defaulted.
+var _ runtime.Object = (*GitHubSource)(nil)
+
+// Check that GitHubSource implements the Conditions duck type.
+var _ = duck.VerifyType(&GitHubSource{}, &duckv1alpha1.Conditions{})
 
 // GitHubSourceSpec defines the desired state of GitHubSource
 type GitHubSourceSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Sink is a reference to an object that will resolve to a domain
+	// name to use as the sink.
+	// +optional
+	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 }
+
+const (
+	// GitHubSourceConditionReady has status True when the
+	// GitHubSource is ready to send events.
+	GitHubSourceConditionReady = duckv1alpha1.ConditionReady
+
+	// GitHubSourceConditionSinkProvided has status True when the
+	// GitHubSource has been configured with a sink target.
+	GitHubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+)
+
+var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
+	GitHubSourceConditionSinkProvided)
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Conditions holds the state of a source at a point in time.
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// SinkURI is the current active sink URI that has been configured
+	// for the GitHubSource.
+	// +optional
+	SinkURI string `json:"sinkUri,omitempty"`
+}
+
+// GetCondition returns the condition currently associated with the given type, or nil.
+func (s *GitHubSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+	return gitHubSourceCondSet.Manage(s).GetCondition(t)
+}
+
+// IsReady returns true if the resource is ready overall.
+func (s *GitHubSourceStatus) IsReady() bool {
+	return gitHubSourceCondSet.Manage(s).IsHappy()
+}
+
+// InitializeConditions sets relevant unset conditions to Unknown state.
+func (s *GitHubSourceStatus) InitializeConditions() {
+	gitHubSourceCondSet.Manage(s).InitializeConditions()
+}
+
+// MarkSink sets the condition that the source has a sink configured.
+func (s *GitHubSourceStatus) MarkSink(uri string) {
+	s.SinkURI = uri
+	if len(uri) > 0 {
+		gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionSinkProvided)
+	} else {
+		gitHubSourceCondSet.Manage(s).MarkUnknown(GitHubSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+	}
+}
+
+// MarkNoSink sets the condition that the source does not have a sink configured.
+func (s *GitHubSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
 // +genclient
