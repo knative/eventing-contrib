@@ -273,6 +273,9 @@ integration with and making edits...
 
 Remember to update the package name.
 
-see the [PR]() for these details.
+see the [PR](https://github.com/knative/eventing-sources/pull/35) for these
+details.
+
+
 
 
