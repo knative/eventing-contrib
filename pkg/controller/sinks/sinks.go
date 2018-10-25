@@ -14,39 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package sdk
+package sinks
 
 import (
-	"context"
 	"fmt"
-	"k8s.io/client-go/dynamic"
 
+	duckapis "github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/logging"
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
 )
 
-func GetSinkUri(ctx context.Context, dc dynamic.Interface, sink *corev1.ObjectReference, namespace string) (string, error) {
-	logger := logging.FromContext(ctx)
-
+// GetSinkURI retrieves the sink URI from the object referenced by the given
+// ObjectReference.
+func GetSinkURI(dc dynamic.Interface, sink *corev1.ObjectReference) (string, error) {
 	// check to see if the source has provided a sink ref in the spec. Lets look for it.
-
 	if sink == nil {
 		return "", fmt.Errorf("sink ref is nil")
 	}
 
-	obj, err := FetchObjectReference(ctx, dc, namespace, sink)
+	obj, err := FetchObjectReference(dc, sink)
 	if err != nil {
-		logger.Warnf("failed to fetch sink target %+v: %s", sink, zap.Error(err))
 		return "", err
 	}
 	t := duckv1alpha1.Sink{}
 	err = duck.FromUnstructured(obj, &t)
 	if err != nil {
-		logger.Warnf("failed to deserialize sink: %s", zap.Error(err))
-		return "", err
+		return "", fmt.Errorf("failed to deserialize sink: %v", err)
 	}
 
 	if t.Status.Sinkable != nil {
@@ -54,4 +50,22 @@ func GetSinkUri(ctx context.Context, dc dynamic.Interface, sink *corev1.ObjectRe
 	}
 
 	return "", fmt.Errorf("sink does not contain sinkable")
+}
+
+// FetchObjectReference fetches an object based on ObjectReference.
+func FetchObjectReference(dc dynamic.Interface, ref *corev1.ObjectReference) (duck.Marshalable, error) {
+	resourceClient, err := createResourceInterface(dc, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	return resourceClient.Get(ref.Name, metav1.GetOptions{})
+}
+
+func createResourceInterface(dc dynamic.Interface, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
+	rc := dc.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
+	if rc == nil {
+		return nil, fmt.Errorf("failed to create dynamic client resource")
+	}
+	return rc.Namespace(ref.Namespace), nil
 }

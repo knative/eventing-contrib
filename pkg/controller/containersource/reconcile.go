@@ -18,13 +18,15 @@ package containersource
 
 import (
 	"context"
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
+	"fmt"
+	"strings"
+
 	"go.uber.org/zap"
 	"k8s.io/client-go/rest"
-	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
+	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/pkg/logging"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -79,17 +81,9 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		Args:      source.Spec.Args,
 	}
 
-	if uri, ok := sinkArg(source); ok {
-		args.SinkInArgs = true
-		source.Status.MarkSink(uri)
-	} else {
-		uri, err := sdk.GetSinkUri(ctx, r.dynamicClient, source.Spec.Sink, source.Namespace)
-		if err != nil {
-			source.Status.MarkNoSink("NotFound", "")
-			return source, err
-		}
-		source.Status.MarkSink(uri)
-		args.Sink = uri
+	err = r.setSinkURIArg(source, args)
+	if err != nil {
+		return source, err
 	}
 
 	deploy, err := r.getDeployment(ctx, source)
@@ -112,6 +106,34 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	}
 
 	return source, nil
+}
+
+func (r *reconciler) setSinkURIArg(source *v1alpha1.ContainerSource, args *resources.ContainerArguments) error {
+	if uri, ok := sinkArg(source); ok {
+		args.SinkInArgs = true
+		source.Status.MarkSink(uri)
+		return nil
+	}
+
+	if source.Spec.Sink == nil {
+		source.Status.MarkNoSink("Missing", "")
+		return fmt.Errorf("Sink missing from spec")
+	}
+
+	sinkRef := source.Spec.Sink.DeepCopy()
+	// Don't allow the sink ref to point to another namespace. Normally this
+	// is disallowed by a webhook, but we don't have a ContainerSource webhook.
+	// TODO add a webhook?
+	sinkRef.Namespace = source.Namespace
+	uri, err := sinks.GetSinkURI(r.dynamicClient, sinkRef)
+	if err != nil {
+		source.Status.MarkNoSink("NotFound", "")
+		return err
+	}
+	source.Status.MarkSink(uri)
+	args.Sink = uri
+
+	return nil
 }
 
 func sinkArg(source *v1alpha1.ContainerSource) (string, bool) {
