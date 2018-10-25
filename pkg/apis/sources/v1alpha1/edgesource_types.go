@@ -17,22 +17,70 @@ limitations under the License.
 package v1alpha1
 
 import (
+	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // EdgeSourceSpec defines the desired state of EdgeSource
 type EdgeSourceSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
+	// +optional
+	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 }
+
+const (
+	// ContainerSourceConditionReady has status True when the ContainerSource is ready to send events.
+	EdgeConditionReady = duckv1alpha1.ConditionReady
+
+	// EdgeConditionSinkProvided has status True when the EdgeSource has been configured with a sink target.
+	EdgeConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+)
+
+var edgeCondSet = duckv1alpha1.NewLivingConditionSet(
+	EdgeConditionSinkProvided)
 
 // EdgeSourceStatus defines the observed state of EdgeSource
 type EdgeSourceStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Conditions holds the state of a source at a point in time.
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// SinkURI is the current active sink URI that has been configured for the ContainerSource.
+	// +optional
+	SinkURI string `json:"sinkUri,omitempty"`
+}
+
+// GetCondition returns the condition currently associated with the given type, or nil.
+func (s *EdgeSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+	return edgeCondSet.Manage(s).GetCondition(t)
+}
+
+// IsReady returns true if the resource is ready overall.
+func (s *EdgeSourceStatus) IsReady() bool {
+	return edgeCondSet.Manage(s).IsHappy()
+}
+
+// InitializeConditions sets relevant unset conditions to Unknown state.
+func (s *EdgeSourceStatus) InitializeConditions() {
+	edgeCondSet.Manage(s).InitializeConditions()
+}
+
+// MarSink sets the condition that the source has a sink configured.
+func (s *EdgeSourceStatus) MarkSink(uri string) {
+	s.SinkURI = uri
+	if len(uri) > 0 {
+		containerCondSet.Manage(s).MarkTrue(EdgeConditionSinkProvided)
+	} else {
+		containerCondSet.Manage(s).MarkUnknown(EdgeConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+	}
+}
+
+// MarkNoSink sets the condition that the source does not have a sink configured.
+func (s *EdgeSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+	containerCondSet.Manage(s).MarkFalse(ContainerConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
 // +genclient
