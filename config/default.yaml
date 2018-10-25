@@ -103,6 +103,14 @@ rules:
   - list
   - watch
 - apiGroups:
+  - eventing.knative.dev
+  resources:
+  - channels
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - sources.eventing.knative.dev
   resources:
   - containersources
