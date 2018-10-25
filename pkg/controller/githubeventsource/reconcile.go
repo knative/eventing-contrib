@@ -22,6 +22,8 @@ import (
 	"reflect"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/pkg/logging"
+	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -35,9 +37,13 @@ import (
 // object and makes changes based on the state read and what is in the
 // GitHubEventSource.Spec
 func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	ctx := context.Background()
+	logger := logging.FromContext(ctx)
+	logger.Debug("Reconciling", zap.Any("key", request.NamespacedName))
+
 	// Fetch the GitHubEventSource instance
 	instance := &sourcesv1alpha1.GitHubEventSource{}
-	err := r.Get(context.TODO(), request.NamespacedName, instance)
+	err := r.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Object not found, return.  Created objects are automatically garbage collected.
@@ -79,10 +85,10 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	// TODO(user): Change this for the object type created by your controller
 	// Check if the Deployment already exists
 	found := &appsv1.Deployment{}
-	err = r.Get(context.TODO(), types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
+	err = r.Get(ctx, types.NamespacedName{Name: deploy.Name, Namespace: deploy.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		log.Printf("Creating Deployment %s/%s\n", deploy.Namespace, deploy.Name)
-		err = r.Create(context.TODO(), deploy)
+		err = r.Create(ctx, deploy)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -95,7 +101,7 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	if !reflect.DeepEqual(deploy.Spec, found.Spec) {
 		found.Spec = deploy.Spec
 		log.Printf("Updating Deployment %s/%s\n", deploy.Namespace, deploy.Name)
-		err = r.Update(context.TODO(), found)
+		err = r.Update(ctx, found)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
