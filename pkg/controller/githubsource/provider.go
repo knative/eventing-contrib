@@ -18,59 +18,31 @@ package githubsource
 
 import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// reconciler reconciles a GitHubSource object
-type reconciler struct {
-	client.Client
-	scheme *runtime.Scheme
-}
-
-var _ reconcile.Reconciler = &reconciler{}
+const (
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "github-source-controller"
+)
 
 // Add creates a new GitHubSource Controller and adds it to the
 // Manager with default RBAC. The Manager will set fields on the
 // Controller and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &reconciler{Client: mgr.GetClient(), scheme: mgr.GetScheme()}
-}
-
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
-	c, err := controller.New("githubsource-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
+	p := &sdk.Provider{
+		AgentName: controllerAgentName,
+		Parent:    &sourcesv1alpha1.GitHubSource{},
+		Owns:      []runtime.Object{&appsv1.Deployment{}},
+		Reconciler: &reconciler{
+			recorder: mgr.GetRecorder(controllerAgentName),
+			scheme:   mgr.GetScheme(),
+		},
 	}
 
-	// Watch for changes to GitHubSource
-	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.GitHubSource{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// TODO(user): Modify this to be the types you create
-	// Uncomment watch a Deployment created by GitHubSource - change this for objects you create
-	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &sourcesv1alpha1.GitHubSource{},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return p.Add(mgr)
 }
