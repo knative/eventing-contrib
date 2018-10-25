@@ -18,127 +18,34 @@ package sdk
 
 import (
 	"context"
+	"fmt"
+
+	duckapis "github.com/knative/pkg/apis"
+	"github.com/knative/pkg/apis/duck"
 	"github.com/knative/pkg/logging"
-	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
+	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type Reconciler struct {
-	client        client.Client
-	dynamicClient dynamic.Interface
-	recorder      record.EventRecorder
-	scheme        *runtime.Scheme
-
-	provider Provider
-}
-
-// Verify the struct implements reconcile.Reconciler
-var _ reconcile.Reconciler = &Reconciler{}
-
-// Reconcile compares the actual state with the desired, and attempts to
-// converge the two.
-func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.TODO()
+// fetchObjectReference fetches an object based on ObjectReference.
+func FetchObjectReference(ctx context.Context, dc dynamic.Interface, namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
 	logger := logging.FromContext(ctx)
 
-	logger.Infof("Reconciling %s %v", r.provider.Parent.GetObjectKind(), request)
-
-	obj := r.provider.Parent.DeepCopyObject()
-
-	err := r.client.Get(context.TODO(), request.NamespacedName, obj)
-
-	if errors.IsNotFound(err) {
-		logger.Errorf("could not find %s %v\n", r.provider.Parent.GetObjectKind(), request)
-		return reconcile.Result{}, nil
-	}
-
+	resourceClient, err := CreateResourceInterface(dc, namespace, ref)
 	if err != nil {
-		logger.Errorf("could not fetch %s %v for %+v\n", r.provider.Parent.GetObjectKind(), err, request)
-		return reconcile.Result{}, err
-	}
-
-	original := obj.DeepCopyObject()
-
-	// Reconcile this copy of the Source and then write back any status
-	// updates regardless of whether the reconcile error out.
-	obj, err = r.provider.Reconciler.Reconcile(ctx, obj)
-	if err != nil {
-		logger.Warnf("Failed to reconcile %s: %v", r.provider.Parent.GetObjectKind(), err)
-	}
-
-	if chg, err := r.statusHasChanged(ctx, original, obj); err != nil || !chg {
-		// If we didn't change anything then don't call updateStatus.
-		// This is important because the copy we loaded from the informer's
-		// cache may be stale and we don't want to overwrite a prior update
-		// to status with this stale state.
-		return reconcile.Result{}, err
-	} else if _, err := r.updateStatus(ctx, request, obj); err != nil {
-		logger.Warnf("Failed to update %s status: %v", r.provider.Parent.GetObjectKind(), err)
-		return reconcile.Result{}, err
-	}
-
-	// Requeue if the resource is not ready:
-	return reconcile.Result{}, err
-}
-
-func (r *Reconciler) InjectClient(c client.Client) error {
-	r.client = c
-	if r.provider.Reconciler != nil {
-		r.provider.Reconciler.InjectClient(c)
-	}
-	return nil
-}
-
-func (r *Reconciler) InjectConfig(c *rest.Config) error {
-	var err error
-	r.dynamicClient, err = dynamic.NewForConfig(c)
-	if r.provider.Reconciler != nil {
-		r.provider.Reconciler.InjectConfig(c)
-	}
-	return err
-}
-
-func (r *Reconciler) statusHasChanged(ctx context.Context, old, new runtime.Object) (bool, error) {
-	if old == nil {
-		return true, nil
-	}
-
-	o := NewReflectedStatusAccessor(old)
-	n := NewReflectedStatusAccessor(new)
-
-	oStatus := o.GetStatus()
-	nStatus := n.GetStatus()
-
-	if equality.Semantic.DeepEqual(oStatus, nStatus) {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func (r *Reconciler) updateStatus(ctx context.Context, request reconcile.Request, object runtime.Object) (runtime.Object, error) {
-	freshObj := r.provider.Parent.DeepCopyObject()
-	if err := r.client.Get(ctx, request.NamespacedName, freshObj); err != nil {
+		logger.Warnf("failed to create dynamic client resource: %v", zap.Error(err))
 		return nil, err
 	}
 
-	fresh := NewReflectedStatusAccessor(freshObj)
-	org := NewReflectedStatusAccessor(object)
+	return resourceClient.Get(ref.Name, metav1.GetOptions{})
+}
 
-	fresh.SetStatus(org.GetStatus())
-
-	// Until #38113 is merged, we must use Update instead of UpdateStatus to
-	// update the Status block of the Source resource. UpdateStatus will not
-	// allow changes to the Spec of the resource, which is ideal for ensuring
-	// nothing other than resource status has been updated.
-	if err := r.client.Update(ctx, freshObj); err != nil {
-		return nil, err
+func CreateResourceInterface(dc dynamic.Interface, namespace string, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
+	rc := dc.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
+	if rc == nil {
+		return nil, fmt.Errorf("failed to create dynamic client resource")
 	}
-	return freshObj, nil
+	return rc.Namespace(namespace), nil
 }

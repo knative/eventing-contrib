@@ -19,33 +19,39 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/dynamic"
 
-	duckapis "github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
+	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/dynamic"
 )
 
-// fetchObjectReference fetches an object based on ObjectReference.
-func FetchObjectReference(ctx context.Context, dc dynamic.Interface, namespace string, ref *corev1.ObjectReference) (duck.Marshalable, error) {
+func GetSinkUri(ctx context.Context, dc dynamic.Interface, sink *corev1.ObjectReference, namespace string) (string, error) {
 	logger := logging.FromContext(ctx)
 
-	resourceClient, err := CreateResourceInterface(dc, namespace, ref)
+	// check to see if the source has provided a sink ref in the spec. Lets look for it.
+
+	if sink == nil {
+		return "", fmt.Errorf("sink ref is nil")
+	}
+
+	obj, err := FetchObjectReference(ctx, dc, namespace, sink)
 	if err != nil {
-		logger.Warnf("failed to create dynamic client resource: %v", zap.Error(err))
-		return nil, err
+		logger.Warnf("failed to fetch sink target %+v: %s", sink, zap.Error(err))
+		return "", err
+	}
+	t := duckv1alpha1.Sink{}
+	err = duck.FromUnstructured(obj, &t)
+	if err != nil {
+		logger.Warnf("failed to deserialize sink: %s", zap.Error(err))
+		return "", err
 	}
 
-	return resourceClient.Get(ref.Name, metav1.GetOptions{})
-}
-
-func CreateResourceInterface(dc dynamic.Interface, namespace string, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
-	rc := dc.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
-	if rc == nil {
-		return nil, fmt.Errorf("failed to create dynamic client resource")
+	if t.Status.Sinkable != nil {
+		return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
 	}
-	return rc.Namespace(namespace), nil
+
+	return "", fmt.Errorf("sink does not contain sinkable")
 }
