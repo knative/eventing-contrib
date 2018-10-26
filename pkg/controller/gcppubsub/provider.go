@@ -18,11 +18,12 @@ package gcppubsub
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -31,7 +32,7 @@ const (
 	// itself when creating events.
 	controllerAgentName = "gcp-pubsub-source-controller"
 
-	raImageEnvVar = "GCPPUBSUB_RA_IMAGE"
+	raImageEnvVar          = "GCPPUBSUB_RA_IMAGE"
 	raServiceAccountEnvVar = "GCPPUBSUB_RA_SERVICE_ACCOUNT"
 )
 
@@ -52,8 +53,8 @@ func Add(mgr manager.Manager) error {
 		Parent:    &v1alpha1.GcpPubSubSource{},
 		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
 		Reconciler: &reconciler{
-			receiveAdapaterImage: raImage,
-			serviceAccountName: raServiceAccount,
+			receiveAdapterImage: raImage,
+			serviceAccountName:  raServiceAccount,
 		},
 	}
 

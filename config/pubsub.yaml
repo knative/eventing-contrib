@@ -1,0 +1,12 @@
+
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: GcpPubSubSource
+metadata:
+  name: test
+spec:
+  googleCloudProject: harwayne2
+  topic: laconia
+  sink:
+    apiVersion: eventing.knative.dev
+    kind: Channel
+    name: qux-2

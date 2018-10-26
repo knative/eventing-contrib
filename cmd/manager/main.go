@@ -19,6 +19,8 @@ package main
 import (
 	"log"
 
+	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+
 	"github.com/knative/eventing-sources/pkg/apis"
 	"github.com/knative/eventing-sources/pkg/controller"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -44,6 +46,9 @@ func main() {
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Fatal(err)
+	}
+	if err := servingv1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Fatal(err)
 	}
 

@@ -17,17 +17,19 @@ limitations under the License.
 package gcppubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
-	errors2 "errors"
+	"errors"
 	"fmt"
+	"net/url"
+
+	"cloud.google.com/go/pubsub"
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,7 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
-	"net/url"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -44,12 +45,16 @@ const (
 	finalizerName = controllerAgentName
 )
 
+var (
+	trueVal = true
+)
+
 type reconciler struct {
 	client        client.Client
 	dynamicClient dynamic.Interface
 
-	receiveAdapaterImage string
-	serviceAccountName   string
+	receiveAdapterImage string
+	serviceAccountName  string
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -98,7 +103,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	src.Status.InitializeConditions()
 
-	sinkURI, err :=(&sdk.SinkUri{}).Get(ctx, src.Namespace, src.Spec.Sink, r.dynamicClient)
+	sinkURI, err := sdk.GetSinkUri(ctx, r.dynamicClient, src.Spec.Sink, src.Namespace)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
 		return src, err
@@ -113,7 +118,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	raDomain := ra.Status.Domain
 	if raDomain == "" {
 		// The Receive Adapter does not yet have a domain set. Give it time to be reconciled.
-		return src, errors2.New("receive adapter domain not set")
+		return src, errors.New("receive adapter domain not set")
 	}
 	src.Status.MarkDeployed()
 
@@ -126,7 +131,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	return src, nil
 }
-
 
 func (r *reconciler) addFinalizer(s *v1alpha1.GcpPubSubSource) {
 	finalizers := sets.NewString(s.Finalizers...)
@@ -142,7 +146,7 @@ func (r *reconciler) removeFinalizer(s *v1alpha1.GcpPubSubSource) {
 
 func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, sinkURI string) (*servingv1alpha1.Service, error) {
 	ra, err := r.getReceiveAdapter(ctx, src)
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !apierrors.IsNotFound(err) {
 		logging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
 		return nil, err
 	}
@@ -157,7 +161,7 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource) (*servingv1alpha1.Service, error) {
 	sl := &servingv1alpha1.ServiceList{}
 	err := r.client.List(ctx, &client.ListOptions{
-		Namespace: src.Namespace,
+		Namespace:     src.Namespace,
 		LabelSelector: r.getLabelSelector(src),
 		Raw: &metav1.ListOptions{
 			TypeMeta: metav1.TypeMeta{
@@ -166,7 +170,7 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPub
 			},
 		},
 	},
-	sl)
+		sl)
 
 	if err != nil {
 		logging.FromContext(ctx).Desugar().Error("Unable to list deployments: %v", zap.Error(err))
@@ -177,7 +181,7 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPub
 			return &svc, nil
 		}
 	}
-	return nil, errors.NewNotFound(schema.GroupResource{}, "")
+	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
 }
 
 func (r *reconciler) getLabelSelector(src *v1alpha1.GcpPubSubSource) labels.Selector {
@@ -194,30 +198,38 @@ func (r *reconciler) getLabelSelector(src *v1alpha1.GcpPubSubSource) labels.Sele
 
 func getLabels(src *v1alpha1.GcpPubSubSource) map[string]string {
 	return map[string]string{
-		"knative-eventing-source": controllerAgentName,
+		"knative-eventing-source":      controllerAgentName,
 		"knative-eventing-source-name": src.Name,
-
 	}
 }
 
 func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI string) *servingv1alpha1.Service {
 	return &servingv1alpha1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: src.Namespace,
+			Namespace:    src.Namespace,
 			GenerateName: fmt.Sprintf("gcppubsub-%s", src.Name),
-			Labels: getLabels(src),
+			Labels:       getLabels(src),
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: v1alpha1.SchemeGroupVersion.String(),
+					Kind:       "GcpPubSubSource",
+					Name:       src.Name,
+					UID:        src.UID,
+					Controller: &trueVal,
+				},
+			},
 		},
 		Spec: servingv1alpha1.ServiceSpec{
-			RunLatest:&servingv1alpha1.RunLatestType{
-				Configuration:servingv1alpha1.ConfigurationSpec{
-					RevisionTemplate:servingv1alpha1.RevisionTemplateSpec{
-						Spec:servingv1alpha1.RevisionSpec{
+			RunLatest: &servingv1alpha1.RunLatestType{
+				Configuration: servingv1alpha1.ConfigurationSpec{
+					RevisionTemplate: servingv1alpha1.RevisionTemplateSpec{
+						Spec: servingv1alpha1.RevisionSpec{
 							ServiceAccountName: r.serviceAccountName,
 							Container: corev1.Container{
-								Image: r.receiveAdapaterImage,
+								Image: r.receiveAdapterImage,
 								Env: []corev1.EnvVar{
 									{
-										Name: "SINK_URI",
+										Name:  "SINK_URI",
 										Value: sinkURI,
 									},
 								},
@@ -231,18 +243,18 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI s
 }
 
 func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource, raDomain string) error {
-	client, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject) // TODO something about authing to GCP.
+	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject) // TODO something about authing to GCP.
 	if err != nil {
 		return err
 	}
 	raURI := url.URL{
 		Scheme: "http",
-		Host: raDomain,
-		Path: "/",
+		Host:   raDomain,
+		Path:   "/",
 	}
-	subID := client.SubscriptionInProject(generateSubName(src), src.Spec.GoogleCloudProject).String()
-	_, err = client.CreateSubscription(ctx, subID, pubsub.SubscriptionConfig{
-		Topic: client.Topic(src.Spec.Topic),
+	subID := psc.SubscriptionInProject(generateSubName(src), src.Spec.GoogleCloudProject).String()
+	_, err = psc.CreateSubscription(ctx, subID, pubsub.SubscriptionConfig{
+		Topic: psc.Topic(src.Spec.Topic),
 		PushConfig: pubsub.PushConfig{
 			Endpoint: raURI.String(),
 		},
@@ -251,11 +263,11 @@ func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPu
 }
 
 func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
-	client, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject) // TODO something about authing to GCP.
+	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject) // TODO something about authing to GCP.
 	if err != nil {
 		return err
 	}
-	sub := client.SubscriptionInProject(generateSubName(src), src.Spec.GoogleCloudProject)
+	sub := psc.SubscriptionInProject(generateSubName(src), src.Spec.GoogleCloudProject)
 	if exists, err := sub.Exists(ctx); err != nil {
 		return err
 	} else if !exists {

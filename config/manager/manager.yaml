@@ -48,4 +48,9 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
+        env:
+        - name: GCPPUBSUB_RA_IMAGE
+          value: foobar
+        - name: GCPPUBSUB_RA_SERVICE_ACCOUNT
+          value: system/default
       terminationGracePeriodSeconds: 10
