@@ -26,7 +26,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -83,15 +86,14 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 
 	source.Status.InitializeConditions()
 
-	cs := &sourcesv1alpha1.ContainerSource{}
-	//TODO is it necessary for the name to be the same? Can we search for a ContainerSource
-	// owned by this KubernetesEventSource instead?
-	csName := resources.ContainerSourceName(source)
-
-	if err := r.Get(ctx, client.ObjectKey{Namespace: source.Namespace, Name: csName}, cs); err != nil {
+	//TODO How do we ensure this never creates two container sources due to cache latency?
+	cs, err := r.getOwnedContainerSource(ctx, source)
+	if err != nil {
 		if errors.IsNotFound(err) {
 			cs := resources.MakeContainerSource(source)
-			//TODO set owner reference
+			if err := controllerutil.SetControllerReference(source, cs, r.scheme); err != nil {
+				return err
+			}
 			if err := r.Create(ctx, cs); err != nil {
 				return err
 			}
@@ -100,8 +102,35 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 	}
 
 	// TODO Hoist statuses from ContainerSource
+	logger.Debugf("ContainerSource: %#v", cs)
 
 	return nil
+}
+
+func (r *reconciler) getOwnedContainerSource(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) (*sourcesv1alpha1.ContainerSource, error) {
+	list := &sourcesv1alpha1.ContainerSourceList{}
+	err := r.List(ctx, &client.ListOptions{
+		Namespace:     source.Namespace,
+		LabelSelector: labels.Everything(),
+		// TODO this is here because the fake client needs it.
+		// Remove this when it's no longer needed.
+		Raw: &metav1.ListOptions{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+				Kind:       "ContainerSource",
+			},
+		},
+	},
+		list)
+	if err != nil {
+		return nil, err
+	}
+	for _, cs := range list.Items {
+		if metav1.IsControlledBy(&cs, source) {
+			return &cs, nil
+		}
+	}
+	return nil, errors.NewNotFound(sourcesv1alpha1.Resource("containersources"), "")
 }
 
 func (r *reconciler) update(ctx context.Context, u *sourcesv1alpha1.KubernetesEventSource) error {

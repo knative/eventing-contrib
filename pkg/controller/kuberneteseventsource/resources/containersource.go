@@ -21,19 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ContainerSourceName returns the name of the ContainerSource backing the given
-// KubernetesEventSource.
-func ContainerSourceName(source *sourcesv1alpha1.KubernetesEventSource) string {
-	return source.Name
-}
-
 // MakeContainerSource generates, but does not create, a ContainerSource for the
 // given KubernetesEventSource.
 func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource) *sourcesv1alpha1.ContainerSource {
 	return &sourcesv1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ContainerSourceName(source),
-			Namespace: source.Namespace,
+			GenerateName: source.Name,
+			Namespace:    source.Namespace,
 		},
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
 			Image: "TODO",
