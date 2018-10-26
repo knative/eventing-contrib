@@ -25,14 +25,14 @@ import (
 
 // MakeContainerSource generates, but does not create, a ContainerSource for the
 // given KubernetesEventSource.
-func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource) *sourcesv1alpha1.ContainerSource {
+func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource, receiveAdapterImage string) *sourcesv1alpha1.ContainerSource {
 	return &sourcesv1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),
 			Namespace:    source.Namespace,
 		},
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
-			Image: "hashicorp/http-echo", //TODO
+			Image: receiveAdapterImage,
 			Sink:  source.Spec.Sink,
 		},
 	}

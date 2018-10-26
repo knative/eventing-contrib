@@ -101,7 +101,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 	cs, err := r.getOwnedContainerSource(ctx, source)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			cs := resources.MakeContainerSource(source)
+			cs := resources.MakeContainerSource(source, r.receiveAdapterImage)
 			if err := controllerutil.SetControllerReference(source, cs, r.scheme); err != nil {
 				return err
 			}
@@ -117,8 +117,13 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 	if cs.Status.IsReady() {
 		source.Status.MarkReady()
 	} else {
-		csReady := cs.Status.GetCondition(sourcesv1alpha1.ContainerConditionReady)
-		source.Status.MarkUnready(csReady.Reason, csReady.Message)
+		reason := ""
+		message := ""
+		if ready := cs.Status.GetCondition(sourcesv1alpha1.ContainerConditionReady); ready != nil {
+			reason = ready.Reason
+			message = ready.Message
+		}
+		source.Status.MarkUnready(reason, message)
 	}
 
 	return nil

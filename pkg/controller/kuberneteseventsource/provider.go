@@ -17,6 +17,9 @@ limitations under the License.
 package kuberneteseventsource
 
 import (
+	"fmt"
+	"os"
+
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
@@ -30,12 +33,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+const (
+	raImageEnvVar = "K8S_RA_IMAGE"
+)
+
 // reconciler reconciles a KubernetesEventSource object
 type reconciler struct {
 	client.Client
-	dynamicClient dynamic.Interface
-	recorder      record.EventRecorder
-	scheme        *runtime.Scheme
+	dynamicClient       dynamic.Interface
+	recorder            record.EventRecorder
+	scheme              *runtime.Scheme
+	receiveAdapterImage string
 }
 
 var _ reconcile.Reconciler = &reconciler{}
@@ -44,14 +52,20 @@ var _ reconcile.Reconciler = &reconciler{}
 // with default RBAC. The Manager will set fields on the Controller and Start it
 // when the Manager is Started.
 func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
+	receiveAdapterImage, defined := os.LookupEnv(raImageEnvVar)
+	if !defined {
+		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
+	}
+
+	return add(mgr, newReconciler(mgr, receiveAdapterImage))
 }
 
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
+func newReconciler(mgr manager.Manager, receiveAdapterImage string) reconcile.Reconciler {
 	return &reconciler{
-		Client:   mgr.GetClient(),
-		scheme:   mgr.GetScheme(),
-		recorder: mgr.GetRecorder(controllerAgentName),
+		Client:              mgr.GetClient(),
+		scheme:              mgr.GetScheme(),
+		recorder:            mgr.GetRecorder(controllerAgentName),
+		receiveAdapterImage: receiveAdapterImage,
 	}
 }
 
