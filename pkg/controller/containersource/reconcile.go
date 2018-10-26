@@ -18,10 +18,11 @@ package containersource
 
 import (
 	"context"
+	"strings"
+
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"go.uber.org/zap"
 	"k8s.io/client-go/rest"
-	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"

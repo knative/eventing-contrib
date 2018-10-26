@@ -30,11 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// TODO(n3wscott): To show the source is working, and while knative eventing is
-// defining the ducktypes, tryTargetable allows us to point to a Service.service
-// to validate the source is working.
-const tryTargetable = true
-
 // Reconcile reads the state of the cluster for a KubernetesEventSource object
 // and makes changes based on the state read and what is in the
 // KubernetesEventSource.Spec.
@@ -96,6 +91,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 	if err := r.Get(ctx, client.ObjectKey{Namespace: source.Namespace, Name: csName}, cs); err != nil {
 		if errors.IsNotFound(err) {
 			cs := resources.MakeContainerSource(source)
+			//TODO set owner reference
 			if err := r.Create(ctx, cs); err != nil {
 				return err
 			}
