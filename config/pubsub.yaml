@@ -7,6 +7,6 @@ spec:
   googleCloudProject: harwayne2
   topic: laconia
   sink:
-    apiVersion: eventing.knative.dev
+    apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel
     name: qux-2

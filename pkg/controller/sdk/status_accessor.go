@@ -73,3 +73,42 @@ func (r *reflectedStatusAccessor) SetStatus(status interface{}) {
 		r.status.Set(reflect.ValueOf(status))
 	}
 }
+
+type FinalizerAccessor interface {
+	GetFinalizers() interface{}
+	SetFinalizers(finalizers interface{})
+}
+
+func NewReflectedFinalizersAccessor(object interface{}) FinalizerAccessor {
+	objectValue := reflect.Indirect(reflect.ValueOf(object))
+
+	// If object is not a struct, don't even try to use it.
+	if objectValue.Kind() != reflect.Struct {
+		return nil
+	}
+
+	finalizerField := objectValue.FieldByName("Finalizers")
+	if finalizerField.IsValid() && finalizerField.CanInterface() && finalizerField.CanSet() {
+		if _, ok := finalizerField.Interface().(interface{}); ok {
+			return &reflectedFinalizerAccessor{
+				finalizers: finalizerField,
+			}
+		}
+	}
+	return nil
+}
+
+type reflectedFinalizerAccessor struct {
+	finalizers reflect.Value
+}
+
+func (r *reflectedFinalizerAccessor) GetFinalizers() interface{} {
+	if finalizers, ok := r.finalizers.Interface().(interface{}); ok {
+		return finalizers
+	}
+	return nil
+}
+
+func (r *reflectedFinalizerAccessor) SetFinalizers(finalizers interface{}) {
+	r.finalizers.Set(reflect.ValueOf(finalizers))
+}

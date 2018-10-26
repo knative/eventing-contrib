@@ -39,8 +39,8 @@ spec:
             conditions:
               items:
                 properties:
-                  lastTransitionTime:
-                    type: object
+                  #lastTransitionTime:
+                  #  type: object
                   message:
                     type: string
                   reason:

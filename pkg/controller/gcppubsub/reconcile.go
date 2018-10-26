@@ -92,7 +92,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		err := r.deleteSubscription(ctx, src)
 		if err != nil {
 			logger.Error("Unable to delete the Subscription", zap.Error(err))
-			return nil, err
+			return src, err
 		}
 		r.removeFinalizer(src)
 		return src, nil
@@ -111,16 +111,15 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	if err = r.createSubscription(ctx, src); err != nil {
 		logger.Error("Unable to create the subscription", zap.Error(err))
-		return nil, err
+		return src, err
 	}
 	src.Status.MarkSubscribed()
 
-	ra, err := r.createReceiveAdapter(ctx, src, sinkURI)
+	_, err = r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
-		return nil, err
+		return src, err
 	}
-	logger.Info("Receive Adapter created.", zap.Any("receiveAdapter", ra))
 	src.Status.MarkDeployed()
 
 	return src, nil
@@ -145,10 +144,12 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		return nil, err
 	}
 	if ra != nil {
+		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		return ra, nil
 	}
 	svc := r.makeReceiveAdapter(src, sinkURI)
 	err = r.client.Create(ctx, svc)
+	logging.FromContext(ctx).Desugar().Info("Receive Adapter created.", zap.Error(err), zap.Any("receiveAdapter", svc))
 	return svc, err
 }
 
@@ -203,12 +204,13 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI s
 	credsVolume := "google-cloud-key"
 	credsMountPath := "/var/secrets/google"
 	credsFile := fmt.Sprintf("%s/key.json", credsMountPath)
-	var replicas int32 = 1
+	replicas := int32(1)
+	labels := getLabels(src)
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    src.Namespace,
-			GenerateName: fmt.Sprintf("gcppubsub-%s", src.Name),
-			Labels:       getLabels(src),
+			GenerateName: fmt.Sprintf("gcppubsub-%s-", src.Name),
+			Labels:       labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: v1alpha1.SchemeGroupVersion.String(),
@@ -221,10 +223,13 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI s
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: getLabels(src),
+				MatchLabels: labels,
 			},
 			Replicas: &replicas,
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: r.receiveAdapterServiceAccountName,
 					Containers: []corev1.Container{
@@ -282,11 +287,13 @@ func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPu
 	if exists, err := sub.Exists(ctx); err != nil {
 		return err
 	} else if exists {
+		logging.FromContext(ctx).Info("Reusing existing subscription.")
 		return nil
 	}
-	_, err = psc.CreateSubscription(ctx, sub.ID(), pubsub.SubscriptionConfig{
+	createdSub, err := psc.CreateSubscription(ctx, sub.ID(), pubsub.SubscriptionConfig{
 		Topic: psc.Topic(src.Spec.Topic),
 	})
+	logging.FromContext(ctx).Desugar().Info("Created new subscription", zap.Error(err), zap.Any("subscription", createdSub))
 	return err
 }
 

@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+
 	"github.com/knative/pkg/logging"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -67,24 +68,20 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	// Reconcile this copy of the Source and then write back any status
 	// updates regardless of whether the reconcile error out.
-	obj, err = r.provider.Reconciler.Reconcile(ctx, obj)
-	if err != nil {
-		logger.Warnf("Failed to reconcile %s: %v", r.provider.Parent.GetObjectKind(), err)
+	obj, reconcileErr := r.provider.Reconciler.Reconcile(ctx, obj)
+	if reconcileErr != nil {
+		logger.Warnf("Failed to reconcile %s: %v", r.provider.Parent.GetObjectKind(), reconcileErr)
 	}
 
-	if chg, err := r.statusHasChanged(ctx, original, obj); err != nil || !chg {
-		// If we didn't change anything then don't call updateStatus.
-		// This is important because the copy we loaded from the informer's
-		// cache may be stale and we don't want to overwrite a prior update
-		// to status with this stale state.
-		return reconcile.Result{}, err
-	} else if _, err := r.updateStatus(ctx, request, obj); err != nil {
-		logger.Warnf("Failed to update %s status: %v", r.provider.Parent.GetObjectKind(), err)
-		return reconcile.Result{}, err
+	if needsUpdate := r.needsUpdate(ctx, original, obj); needsUpdate {
+		if _, updateErr := r.update(ctx, request, obj); updateErr != nil {
+			logger.Warnf("Failed to update %s: %v", r.provider.Parent.GetObjectKind(), updateErr)
+			return reconcile.Result{}, updateErr
+		}
 	}
 
 	// Requeue if the resource is not ready:
-	return reconcile.Result{}, err
+	return reconcile.Result{}, reconcileErr
 }
 
 func (r *Reconciler) InjectClient(c client.Client) error {
@@ -104,22 +101,32 @@ func (r *Reconciler) InjectConfig(c *rest.Config) error {
 	return err
 }
 
-func (r *Reconciler) statusHasChanged(ctx context.Context, old, new runtime.Object) (bool, error) {
+func (r *Reconciler) needsUpdate(ctx context.Context, old, new runtime.Object) bool {
 	if old == nil {
-		return true, nil
+		return true
 	}
 
-	o := NewReflectedStatusAccessor(old)
-	n := NewReflectedStatusAccessor(new)
+	// Check Status.
+	os := NewReflectedStatusAccessor(old)
+	ns := NewReflectedStatusAccessor(new)
+	oStatus := os.GetStatus()
+	nStatus := ns.GetStatus()
 
-	oStatus := o.GetStatus()
-	nStatus := n.GetStatus()
-
-	if equality.Semantic.DeepEqual(oStatus, nStatus) {
-		return false, nil
+	if !equality.Semantic.DeepEqual(oStatus, nStatus) {
+		return true
 	}
 
-	return true, nil
+	// Check finalizers.
+	of := NewReflectedFinalizersAccessor(old)
+	nf := NewReflectedFinalizersAccessor(new)
+	oFinalizers := of.GetFinalizers()
+	nFinalizers := nf.GetFinalizers()
+
+	if !equality.Semantic.DeepEqual(oFinalizers, nFinalizers) {
+		return true
+	}
+
+	return false
 }
 
 func (r *Reconciler) updateStatus(ctx context.Context, request reconcile.Request, object runtime.Object) (runtime.Object, error) {
@@ -132,6 +139,32 @@ func (r *Reconciler) updateStatus(ctx context.Context, request reconcile.Request
 	org := NewReflectedStatusAccessor(object)
 
 	fresh.SetStatus(org.GetStatus())
+
+	// Until #38113 is merged, we must use Update instead of UpdateStatus to
+	// update the Status block of the Source resource. UpdateStatus will not
+	// allow changes to the Spec of the resource, which is ideal for ensuring
+	// nothing other than resource status has been updated.
+	if err := r.client.Update(ctx, freshObj); err != nil {
+		return nil, err
+	}
+	return freshObj, nil
+}
+
+func (r *Reconciler) update(ctx context.Context, request reconcile.Request, object runtime.Object) (runtime.Object, error) {
+	freshObj := r.provider.Parent.DeepCopyObject()
+	if err := r.client.Get(ctx, request.NamespacedName, freshObj); err != nil {
+		return nil, err
+	}
+
+	// Status
+	freshStatus := NewReflectedStatusAccessor(freshObj)
+	orgStatus := NewReflectedStatusAccessor(object)
+	freshStatus.SetStatus(orgStatus.GetStatus())
+
+	// Finalizers
+	freshFinalizers := NewReflectedFinalizersAccessor(freshObj)
+	orgFinalizers := NewReflectedFinalizersAccessor(object)
+	freshFinalizers.SetFinalizers(orgFinalizers.GetFinalizers())
 
 	// Until #38113 is merged, we must use Update instead of UpdateStatus to
 	// update the Status block of the Source resource. UpdateStatus will not
