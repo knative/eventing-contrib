@@ -81,12 +81,23 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) error {
-	logger := logging.FromContext(ctx)
+	logger := logging.FromContext(ctx).Named(controllerAgentName)
+	ctx = logging.WithLogger(ctx, logger)
 	logger.Debug("Reconciling", zap.String("name", source.Name), zap.String("namespace", source.Namespace))
 
 	source.Status.InitializeConditions()
 
 	//TODO How do we ensure this never creates two container sources due to cache latency?
+	// Is this possible?
+	// 1. User creates
+	// 2. KES gets into cache
+	// 3. Reconcile: create ContainerSource A, update KES status
+	// 4. KES gets into cache
+	// 5. Reconcile: create ContainerSource B, update KES status
+	// 6. KES gets into cache
+	// 7. ContainerSource A gets into cache
+	// 8. ContainerSource B gets into cache
+	// 9. Reconcile: which ContainerSource?
 	cs, err := r.getOwnedContainerSource(ctx, source)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -98,12 +109,17 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 				return err
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "ContainerSourceCreated", "Created ContainerSource %q", cs.Name)
-			//TODO early return?
+			// Wait for the ContainerSource to get a status
+			return nil
 		}
 	}
 
-	// TODO Hoist statuses from ContainerSource
-	logger.Debugf("ContainerSource: %#v", cs)
+	if cs.Status.IsReady() {
+		source.Status.MarkReady()
+	} else {
+		csReady := cs.Status.GetCondition(sourcesv1alpha1.ContainerConditionReady)
+		source.Status.MarkUnready(csReady.Reason, csReady.Message)
+	}
 
 	return nil
 }
@@ -128,6 +144,7 @@ func (r *reconciler) getOwnedContainerSource(ctx context.Context, source *source
 	}
 	for _, cs := range list.Items {
 		if metav1.IsControlledBy(&cs, source) {
+			//TODO if there are >1 controlled, delete all but first?
 			return &cs, nil
 		}
 	}

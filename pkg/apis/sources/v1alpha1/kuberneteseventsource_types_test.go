@@ -44,30 +44,21 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 		}(),
 		want: false,
 	}, {
-		name: "mark sink",
+		name: "mark ready",
 		s: func() *KubernetesEventSourceStatus {
 			s := &KubernetesEventSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkReady()
 			return s
 		}(),
 		want: true,
 	}, {
-		name: "mark empty sink",
+		name: "mark ready then unready",
 		s: func() *KubernetesEventSourceStatus {
 			s := &KubernetesEventSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
-			return s
-		}(),
-		want: false,
-	}, {
-		name: "mark sink then no sink",
-		s: func() *KubernetesEventSourceStatus {
-			s := &KubernetesEventSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
-			s.MarkNoSink("Testing", "")
+			s.MarkReady()
+			s.MarkUnready("Testing", "")
 			return s
 		}(),
 		want: false,
@@ -107,11 +98,11 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink",
+		name: "mark ready",
 		s: func() *KubernetesEventSourceStatus {
 			s := &KubernetesEventSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkReady()
 			return s
 		}(),
 		condQuery: KubernetesEventSourceConditionReady,
@@ -120,27 +111,12 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark empty sink",
+		name: "mark ready then unready",
 		s: func() *KubernetesEventSourceStatus {
 			s := &KubernetesEventSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
-			return s
-		}(),
-		condQuery: KubernetesEventSourceConditionReady,
-		want: &duckv1alpha1.Condition{
-			Type:    KubernetesEventSourceConditionReady,
-			Status:  corev1.ConditionUnknown,
-			Reason:  "SinkEmpty",
-			Message: "Sink has resolved to empty.",
-		},
-	}, {
-		name: "mark sink then no sink",
-		s: func() *KubernetesEventSourceStatus {
-			s := &KubernetesEventSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
-			s.MarkNoSink("Testing", "hi")
+			s.MarkReady()
+			s.MarkUnready("Testing", "hi")
 			return s
 		}(),
 		condQuery: KubernetesEventSourceConditionReady,
