@@ -30,8 +30,8 @@ func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource) *sources
 			Namespace:    source.Namespace,
 		},
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
-			Image: "TODO",
-			Args:  []string{"TODO"},
+			Image: "hashicorp/http-echo", //TODO
+			Args:  []string{`-text="hello eventing"`},
 			Sink:  source.Spec.Sink,
 		},
 	}
