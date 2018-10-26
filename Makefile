@@ -9,7 +9,7 @@ test: generate manifests verify
 
 # Deploy default
 deploy: manifests
-	kustomize build config/default | ko apply -f /dev/stdin/
+	kustomize build config/default | ko apply -f /dev/stdin
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests:

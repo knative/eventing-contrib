@@ -19,6 +19,7 @@ package containersource
 import (
 	"context"
 	"fmt"
+
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
@@ -220,12 +221,12 @@ var testCases = []controllertesting.TestCase{
 				s := getContainerSource()
 				s.Spec.Sink = nil
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("NotFound", "")
+				s.Status.MarkNoSink("Missing", "")
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink ref is nil`,
+		WantErrMsg:  "Sink missing from spec",
 	}, {
 		Name:       "valid containersource, sink is provided",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
