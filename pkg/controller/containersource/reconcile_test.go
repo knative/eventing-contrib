@@ -252,32 +252,6 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-	}, {
-		Name:       "valid containersource, sink is targetable",
-		Reconciles: &sourcesv1alpha1.ContainerSource{},
-		InitialState: []runtime.Object{
-			getContainerSource(),
-		},
-		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
-		Scheme:       scheme.Scheme,
-		Objects: []runtime.Object{
-			// sinkable resource
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": sinkableAPIVersion,
-					"kind":       sinkableKind,
-					"metadata": map[string]interface{}{
-						"namespace": testNS,
-						"name":      sinkableName,
-					},
-					"status": map[string]interface{}{
-						"targetable": map[string]interface{}{
-							"domainInternal": sinkableDNS,
-						},
-					},
-				},
-			},
-		},
 	}, /*
 		TODO(n3wscott): This does not work yet because we are only mocking the dynamic client
 		response and not the client list response. Fix this and the test will work.

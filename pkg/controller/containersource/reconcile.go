@@ -47,11 +47,6 @@ type reconciler struct {
 	recorder      record.EventRecorder
 }
 
-// TODO(n3wscott): To show the source is working, and while knative eventing is
-// defining the ducktypes, tryTargetable allows us to point to a Service.service
-// to validate the source is working.
-const tryTargetable = true
-
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
 func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
@@ -88,7 +83,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		args.SinkInArgs = true
 		source.Status.MarkSink(uri)
 	} else {
-		uri, err :=(&sdk.SinkUri{}).Get(ctx, source.Namespace, source.Spec.Sink, r.dynamicClient)
+		uri, err := sdk.GetSinkUri(ctx, r.dynamicClient, source.Spec.Sink, source.Namespace)
 		if err != nil {
 			source.Status.MarkNoSink("NotFound", "")
 			return source, err
@@ -127,8 +122,6 @@ func sinkArg(source *v1alpha1.ContainerSource) (string, bool) {
 	}
 	return "", false
 }
-
-
 
 func (r *reconciler) getDeployment(ctx context.Context, source *v1alpha1.ContainerSource) (*appsv1.Deployment, error) {
 	logger := logging.FromContext(ctx)
