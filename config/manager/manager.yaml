@@ -54,7 +54,7 @@ spec:
         - name: GCPPUBSUB_RA_CREDS_SECRET
           value: &secretName gcppubsub-source-key
         - name: GCPPUBSUB_RA_IMAGE
-          value: foobar
+          value: github.com/knative/eventing-sources/pkg/controller/gcppubsub/receive_adapter
         - name: GCPPUBSUB_RA_SERVICE_ACCOUNT
           value: default
         volumeMounts:
@@ -65,3 +65,20 @@ spec:
       - name: google-cloud-key
         secret:
           secretName: *secretName
+---
+
+# Needed by the GCP PubSub Source to communicate with GCP PubSub.
+
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: gcppubsub-bus-ext
+spec:
+  hosts:
+  - "*.googleapis.com"
+  - "accounts.google.com"
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  location: MESH_EXTERNAL

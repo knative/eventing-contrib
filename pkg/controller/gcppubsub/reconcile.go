@@ -109,13 +109,14 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	}
 	src.Status.MarkSink(sinkURI)
 
-	if err = r.createSubscription(ctx, src); err != nil {
+	sub, err := r.createSubscription(ctx, src)
+	if err != nil {
 		logger.Error("Unable to create the subscription", zap.Error(err))
 		return src, err
 	}
 	src.Status.MarkSubscribed()
 
-	_, err = r.createReceiveAdapter(ctx, src, sinkURI)
+	_, err = r.createReceiveAdapter(ctx, src, sub.ID(), sinkURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
 		return src, err
@@ -137,7 +138,7 @@ func (r *reconciler) removeFinalizer(s *v1alpha1.GcpPubSubSource) {
 	s.Finalizers = finalizers.List()
 }
 
-func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, sinkURI string) (*v1.Deployment, error) {
+func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, subscriptionId, sinkURI string) (*v1.Deployment, error) {
 	ra, err := r.getReceiveAdapter(ctx, src)
 	if err != nil && !apierrors.IsNotFound(err) {
 		logging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
@@ -147,7 +148,7 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		return ra, nil
 	}
-	svc := r.makeReceiveAdapter(src, sinkURI)
+	svc := r.makeReceiveAdapter(src, subscriptionId, sinkURI)
 	err = r.client.Create(ctx, svc)
 	logging.FromContext(ctx).Desugar().Info("Receive Adapter created.", zap.Error(err), zap.Any("receiveAdapter", svc))
 	return svc, err
@@ -200,7 +201,7 @@ func getLabels(src *v1alpha1.GcpPubSubSource) map[string]string {
 	}
 }
 
-func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI string) *v1.Deployment {
+func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscriptionId, sinkURI string) *v1.Deployment {
 	credsVolume := "google-cloud-key"
 	credsMountPath := "/var/secrets/google"
 	credsFile := fmt.Sprintf("%s/key.json", credsMountPath)
@@ -228,6 +229,9 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI s
 			Replicas: &replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar.istio.io/inject": "true",
+					},
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
@@ -248,6 +252,10 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI s
 								{
 									Name:  "GCPPUBSUB_TOPIC",
 									Value: src.Spec.Topic,
+								},
+								{
+									Name:  "GCPPUBSUB_SUBSCRIPTION_ID",
+									Value: subscriptionId,
 								},
 								{
 									Name:  "SINK_URI",
@@ -278,23 +286,23 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, sinkURI s
 	}
 }
 
-func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
+func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) (*pubsub.Subscription, error) {
 	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject) // TODO something about authing to GCP.
 	if err != nil {
-		return err
+		return nil, err
 	}
 	sub := psc.SubscriptionInProject(generateSubName(src), src.Spec.GoogleCloudProject)
 	if exists, err := sub.Exists(ctx); err != nil {
-		return err
+		return nil, err
 	} else if exists {
 		logging.FromContext(ctx).Info("Reusing existing subscription.")
-		return nil
+		return sub, nil
 	}
 	createdSub, err := psc.CreateSubscription(ctx, sub.ID(), pubsub.SubscriptionConfig{
 		Topic: psc.Topic(src.Spec.Topic),
 	})
 	logging.FromContext(ctx).Desugar().Info("Created new subscription", zap.Error(err), zap.Any("subscription", createdSub))
-	return err
+	return createdSub, err
 }
 
 func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {

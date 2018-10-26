@@ -169,9 +169,18 @@ rules:
   - list
   - watch
 - apiGroups:
+  - eventing.knative.dev
+  resources:
+  - channels
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - sources.eventing.knative.dev
   resources:
   - containersources
+  - gcppubsubsources
   verbs:
   - get
   - list
@@ -237,7 +246,7 @@ spec:
         - name: GCPPUBSUB_RA_CREDS_SECRET
           value: gcppubsub-source-key
         - name: GCPPUBSUB_RA_IMAGE
-          value: foobar
+          value: github.com/knative/eventing-sources/pkg/controller/gcppubsub/receive_adapter
         - name: GCPPUBSUB_RA_SERVICE_ACCOUNT
           value: default
         image: github.com/knative/eventing-sources/cmd/manager/
@@ -257,3 +266,18 @@ spec:
       - name: google-cloud-key
         secret:
           secretName: gcppubsub-source-key
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: gcppubsub-bus-ext
+  namespace: knative-sources
+spec:
+  hosts:
+  - '*.googleapis.com'
+  - accounts.google.com
+  location: MESH_EXTERNAL
+  ports:
+  - name: https
+    number: 443
+    protocol: HTTPS
