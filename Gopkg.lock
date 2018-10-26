@@ -237,14 +237,12 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  digest = "1:39e87becff5c9db8ed90321330c1304337186adb8cae0cf468a6210d1a0ea8bd"
-  name = "github.com/knative/build"
-  packages = [
-    "pkg/apis/build",
-    "pkg/apis/build/v1alpha1",
-  ]
+  branch = "master"
+  digest = "1:69da8762682721e4cb16e2e8dd5aeb47afad1054de1385fb4e43bea98d5b8875"
+  name = "github.com/knative/eventing"
+  packages = ["pkg/event"]
   pruneopts = "T"
-  revision = "5c1d8c8469d1ed34b2aecf4c2305b3a57fff2ee3"
+  revision = "642bfc15da9afa694e8adc9249e70302551aab60"
 
 [[projects]]
   digest = "1:09d23ea51491208bc07a01a1fc06c62de90d5d352592a4e0f3b773cc96aed199"
@@ -258,17 +256,6 @@
   ]
   pruneopts = "T"
   revision = "ba1a828cd571f605684f9a4506e85bc13cb65b8d"
-
-[[projects]]
-  digest = "1:6d4a9699c7d2ddccfb234045ba929e6ce4e39766e1c5bf03f577c0bcc2922d2b"
-  name = "github.com/knative/serving"
-  packages = [
-    "pkg/apis/serving",
-    "pkg/apis/serving/v1alpha1",
-  ]
-  pruneopts = "T"
-  revision = "37c640555a3241ed707962ba6b29d6c7fe68f937"
-  version = "v0.1.1"
 
 [[projects]]
   digest = "1:00f434f614520a4b48ef3f6d3ed5c7a1a4f89be1bed98c250711413f6da2eb51"
@@ -1001,15 +988,16 @@
     "github.com/emicklei/go-restful",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
+    "github.com/knative/eventing/pkg/event",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
     "github.com/knative/pkg/logging",
-    "github.com/knative/serving/pkg/apis/serving/v1alpha1",
     "github.com/knative/test-infra",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "go.uber.org/zap",
+    "golang.org/x/net/context",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",

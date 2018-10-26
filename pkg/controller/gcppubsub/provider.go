@@ -22,7 +22,7 @@ import (
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
-	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	"k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -57,7 +57,7 @@ func Add(mgr manager.Manager) error {
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.GcpPubSubSource{},
-		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
+		Owns:      []runtime.Object{&v1.Deployment{}},
 		Reconciler: &reconciler{
 			receiveAdapterImage:              raImage,
 			receiveAdapterServiceAccountName: raServiceAccount,
