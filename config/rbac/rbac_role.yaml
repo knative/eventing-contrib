@@ -24,10 +24,6 @@ rules:
   - get
   - list
   - watch
-  - create
-  - update
-  - patch
-  - delete
 - apiGroups:
   - sources.eventing.knative.dev
   resources:

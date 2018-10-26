@@ -32,6 +32,7 @@ const (
 	// itself when creating events.
 	controllerAgentName = "gcp-pubsub-source-controller"
 
+	raCredsSecretEnvVar    = "GCPPUBSUB_RA_CREDS_SECRET"
 	raImageEnvVar          = "GCPPUBSUB_RA_IMAGE"
 	raServiceAccountEnvVar = "GCPPUBSUB_RA_SERVICE_ACCOUNT"
 )
@@ -40,6 +41,10 @@ const (
 // default RBAC. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
 func Add(mgr manager.Manager) error {
+	raCredsSecret, defined := os.LookupEnv(raCredsSecretEnvVar)
+	if !defined {
+		return fmt.Errorf("required environment variable '%s' not defined", raCredsSecretEnvVar)
+	}
 	raImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
@@ -48,13 +53,15 @@ func Add(mgr manager.Manager) error {
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raServiceAccountEnvVar)
 	}
+
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.GcpPubSubSource{},
 		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
 		Reconciler: &reconciler{
-			receiveAdapterImage: raImage,
-			serviceAccountName:  raServiceAccount,
+			receiveAdapterImage:              raImage,
+			receiveAdapterServiceAccountName: raServiceAccount,
+			receiveAdapterCredsSecret:        raCredsSecret,
 		},
 	}
 
