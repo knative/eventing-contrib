@@ -69,6 +69,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to owned ContainerSource
+	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.ContainerSource{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &sourcesv1alpha1.KubernetesEventSource{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

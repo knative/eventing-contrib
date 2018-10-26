@@ -20,9 +20,10 @@ import (
 	"context"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
+	"github.com/knative/eventing-sources/pkg/controller/kuberneteseventsource/resources"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -82,16 +83,27 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) error {
-	//logger := logging.FromContext(ctx)
+	logger := logging.FromContext(ctx)
+	logger.Debug("Reconciling", zap.String("name", source.Name), zap.String("namespace", source.Namespace))
 
 	source.Status.InitializeConditions()
 
-	uri, err := sdk.GetSinkUri(ctx, r.dynamicClient, source.Spec.Sink, source.Namespace)
-	if err != nil {
-		source.Status.MarkNoSink("NotFound", "")
-		return err
+	cs := &sourcesv1alpha1.ContainerSource{}
+	//TODO is it necessary for the name to be the same? Can we search for a ContainerSource
+	// owned by this KubernetesEventSource instead?
+	csName := resources.ContainerSourceName(source)
+
+	if err := r.Get(ctx, client.ObjectKey{Namespace: source.Namespace, Name: csName}, cs); err != nil {
+		if errors.IsNotFound(err) {
+			cs := resources.MakeContainerSource(source)
+			if err := r.Create(ctx, cs); err != nil {
+				return err
+			}
+			r.recorder.Eventf(source, corev1.EventTypeNormal, "ContainerSourceCreated", "Created ContainerSource %q", source.Name)
+		}
 	}
-	source.Status.MarkSink(uri)
+
+	// TODO Hoist statuses from ContainerSource
 
 	return nil
 }
@@ -99,33 +111,18 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 func (r *reconciler) update(ctx context.Context, u *sourcesv1alpha1.KubernetesEventSource) error {
 	current := &sourcesv1alpha1.KubernetesEventSource{}
 	err := r.Get(ctx, client.ObjectKey{Namespace: u.Namespace, Name: u.Name}, current)
-
 	if err != nil {
 		return err
 	}
 
-	updated := false
-	if !equality.Semantic.DeepEqual(current.OwnerReferences, u.OwnerReferences) {
-		current.OwnerReferences = u.OwnerReferences
-		updated = true
-	}
-
-	if !equality.Semantic.DeepEqual(current.Finalizers, u.Finalizers) {
-		current.Finalizers = u.Finalizers
-		updated = true
-	}
-
 	if !equality.Semantic.DeepEqual(current.Status, u.Status) {
 		current.Status = u.Status
-		updated = true
+		// Until #38113 is merged, we must use Update instead of UpdateStatus to
+		// update the Status block of the Feed resource. UpdateStatus will not
+		// allow changes to the Spec of the resource, which is ideal for ensuring
+		// nothing other than resource status has been updated.
+		return r.Update(ctx, current)
 	}
 
-	if updated == false {
-		return nil
-	}
-	// Until #38113 is merged, we must use Update instead of UpdateStatus to
-	// update the Status block of the Feed resource. UpdateStatus will not
-	// allow changes to the Spec of the resource, which is ideal for ensuring
-	// nothing other than resource status has been updated.
-	return r.Update(ctx, current)
+	return nil
 }
