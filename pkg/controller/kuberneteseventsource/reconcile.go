@@ -97,7 +97,8 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 			if err := r.Create(ctx, cs); err != nil {
 				return err
 			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "ContainerSourceCreated", "Created ContainerSource %q", source.Name)
+			r.recorder.Eventf(source, corev1.EventTypeNormal, "ContainerSourceCreated", "Created ContainerSource %q", cs.Name)
+			//TODO early return?
 		}
 	}
 

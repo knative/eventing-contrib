@@ -17,6 +17,8 @@ limitations under the License.
 package resources
 
 import (
+	"fmt"
+
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -26,7 +28,7 @@ import (
 func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource) *sourcesv1alpha1.ContainerSource {
 	return &sourcesv1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: source.Name,
+			GenerateName: fmt.Sprintf("%s-", source.Name),
 			Namespace:    source.Namespace,
 		},
 		Spec: sourcesv1alpha1.ContainerSourceSpec{

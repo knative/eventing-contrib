@@ -17,6 +17,18 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - containersources
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - serving.knative.dev
   resources:
   - services
@@ -24,6 +36,26 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - channels
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - kuberneteseventsources
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
@@ -37,9 +69,9 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - sources.eventing.knative.dev
+  - ""
   resources:
-  - kuberneteseventsources
+  - events
   verbs:
   - get
   - list
