@@ -127,35 +127,35 @@ func createSelfLink(o corev1.ObjectReference) string {
 
 // Creates a CloudEvent Context for a given K8S event. For clarity, the following is a spew-dump
 // of a real K8S event:
-//&Event{
-//ObjectMeta:k8s_io_apimachinery_pkg_apis_meta_v1.ObjectMeta{
-//Name:k8s-events-00001.1542495ae3f5fbba,
-//Namespace:default,
-//SelfLink:/api/v1/namespaces/default/events/k8s-events-00001.1542495ae3f5fbba,
-//UID:fc2fffb3-8a12-11e8-8874-42010a8a0fd9,
-//ResourceVersion:2729,
-//Generation:0,
-//CreationTimestamp:2018-07-17 22:44:37 +0000 UTC,
-//},
-//InvolvedObject:ObjectReference{
-//Kind:Revision,
-//Namespace:default,
-//Name:k8s-events-00001,
-//UID:f5c19306-8a12-11e8-8874-42010a8a0fd9,
-//APIVersion:serving.knative.dev,
-//ResourceVersion:42683,
-//},
-//Reason:RevisionReady,
-//Message:Revision becomes ready upon endpoint "k8s-events-00001-service" becoming ready,
-//Source:EventSource{
-//Component:revision-controller,
-//},
-//FirstTimestamp:2018-07-17 22:44:37 +0000 UTC,
-//LastTimestamp:2018-07-17 22:49:40 +0000 UTC,
-//Count:91,
-//Type:Normal,
-//EventTime:0001-01-01 00:00:00 +0000 UTC,
-//}
+//	&Event{
+//		ObjectMeta:k8s_io_apimachinery_pkg_apis_meta_v1.ObjectMeta{
+//			Name:k8s-events-00001.1542495ae3f5fbba,
+//			Namespace:default,
+//			SelfLink:/api/v1/namespaces/default/events/k8s-events-00001.1542495ae3f5fbba,
+//			UID:fc2fffb3-8a12-11e8-8874-42010a8a0fd9,
+//			ResourceVersion:2729,
+//			Generation:0,
+//			CreationTimestamp:2018-07-17 22:44:37 +0000 UTC,
+//		},
+//		InvolvedObject:ObjectReference{
+//			Kind:Revision,
+//			Namespace:default,
+//			Name:k8s-events-00001,
+//			UID:f5c19306-8a12-11e8-8874-42010a8a0fd9,
+//			APIVersion:serving.knative.dev,
+//			ResourceVersion:42683,
+//		},
+//		Reason:RevisionReady,
+//		Message:Revision becomes ready upon endpoint "k8s-events-00001-service" becoming ready,
+//		Source:EventSource{
+//			Component:revision-controller,
+//		},
+//		FirstTimestamp:2018-07-17 22:44:37 +0000 UTC,
+//		LastTimestamp:2018-07-17 22:49:40 +0000 UTC,
+//		Count:91,
+//		Type:Normal,
+//		EventTime:0001-01-01 00:00:00 +0000 UTC,
+//	}
 func cloudEventsContext(m *corev1.Event) *event.EventContext {
 	return &event.EventContext{
 		// Events are themselves object and have a unique UUID. Could also have used the UID
