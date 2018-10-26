@@ -20,9 +20,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/knative/eventing-sources/pkg/controller/sinks"
+
 	"cloud.google.com/go/pubsub"
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"k8s.io/api/apps/v1"
@@ -102,7 +103,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	src.Status.InitializeConditions()
 
-	sinkURI, err := sdk.GetSinkUri(ctx, r.dynamicClient, src.Spec.Sink, src.Namespace)
+	sinkURI, err := sinks.GetSinkURI(r.dynamicClient, src.Spec.Sink, src.Namespace)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
 		return src, err

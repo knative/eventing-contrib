@@ -20,7 +20,7 @@ import (
 	"reflect"
 )
 
-// Conditions is the interface for a Resource that implements the getter and
+// StatusAccessor is the interface for a Resource that implements the getter and
 // setter for accessing a Condition collection.
 // +k8s:deepcopy-gen=true
 type StatusAccessor interface {
@@ -28,8 +28,8 @@ type StatusAccessor interface {
 	SetStatus(interface{})
 }
 
-// NewReflectedConditionsAccessor uses reflection to return a ConditionsAccessor
-// to access the field called "Conditions".
+// NewReflectedStatusAccessor uses reflection to return a StatusAccessor
+// to access the field called "Status".
 func NewReflectedStatusAccessor(object interface{}) StatusAccessor {
 	objectValue := reflect.Indirect(reflect.ValueOf(object))
 
