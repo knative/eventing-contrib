@@ -52,6 +52,8 @@ type GcpPubSubSourceSpec struct {
 	// GoogleCloudProject is the ID of the Google Cloud Project that the PubSub
 	GoogleCloudProject string `json:"googleCloudProject,omitempty"`
 
+	Topic string `json:"topic,omitempty"`
+
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
@@ -66,11 +68,15 @@ const (
 
 	// ContainerConditionDeployed has status True when the ContainerSource has had it's deployment created.
 	GcpPubSubSourceConditionDeployed duckv1alpha1.ConditionType = "Deployed"
+
+
+	GcpPubSubSourceConditionSubscribed duckv1alpha1.ConditionType = "Subscribed"
 )
 
-var GcpPubSubContainerCondSet = duckv1alpha1.NewLivingConditionSet(
+var gcpPubSubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	GcpPubSubSourceConditionSinkProvided,
-	GcpPubSubSourceConditionDeployed)
+	GcpPubSubSourceConditionDeployed,
+	GcpPubSubSourceConditionSubscribed)
 
 // ContainerSourceStatus defines the observed state of ContainerSource
 type GcpPubSubSourceStatus struct {
@@ -87,49 +93,52 @@ type GcpPubSubSourceStatus struct {
 
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (s *GcpPubSubSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
-	return containerCondSet.Manage(s).GetCondition(t)
+	return gcpPubSubSourceCondSet.Manage(s).GetCondition(t)
 }
 
 // IsReady returns true if the resource is ready overall.
 func (s *GcpPubSubSourceStatus) IsReady() bool {
-	return containerCondSet.Manage(s).IsHappy()
+	return gcpPubSubSourceCondSet.Manage(s).IsHappy()
 }
 
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (s *GcpPubSubSourceStatus) InitializeConditions() {
-	containerCondSet.Manage(s).InitializeConditions()
+	gcpPubSubSourceCondSet.Manage(s).InitializeConditions()
 }
 
 // MarSink sets the condition that the source has a sink configured.
 func (s *GcpPubSubSourceStatus) MarkSink(uri string) {
 	s.SinkURI = uri
 	if len(uri) > 0 {
-		containerCondSet.Manage(s).MarkTrue(ContainerConditionSinkProvided)
+		gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubSourceConditionSinkProvided)
 	} else {
-		containerCondSet.Manage(s).MarkUnknown(ContainerConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
 	}
 }
 
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *GcpPubSubSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	containerCondSet.Manage(s).MarkFalse(ContainerConditionSinkProvided, reason, messageFormat, messageA...)
+	gcpPubSubSourceCondSet.Manage(s).MarkFalse(GcpPubSubSourceConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
 // MarkDeployed sets the condition that the source has been deployed.
 func (s *GcpPubSubSourceStatus) MarkDeployed() {
-	containerCondSet.Manage(s).MarkTrue(ContainerConditionDeployed)
+	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubSourceConditionDeployed)
 }
 
 // MarkDeploying sets the condition that the source is deploying.
 func (s *GcpPubSubSourceStatus) MarkDeploying(reason, messageFormat string, messageA ...interface{}) {
-	containerCondSet.Manage(s).MarkUnknown(ContainerConditionDeployed, reason, messageFormat, messageA...)
+	gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubSourceConditionDeployed, reason, messageFormat, messageA...)
 }
 
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *GcpPubSubSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
-	containerCondSet.Manage(s).MarkFalse(ContainerConditionDeployed, reason, messageFormat, messageA...)
+	gcpPubSubSourceCondSet.Manage(s).MarkFalse(GcpPubSubSourceConditionDeployed, reason, messageFormat, messageA...)
 }
 
+func (s *GcpPubSubSourceStatus) MarkSubscribed() {
+	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubSourceConditionSubscribed)
+}
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
