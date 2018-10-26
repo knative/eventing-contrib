@@ -82,7 +82,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// 2. Create a receive adapter in the form of a Deployment.
 	//     - Will be garbage collected by K8s when this GcpPubSubSource is deleted.
 	// 3. Register that receive adapter as a Push endpoint for the specified GCP PubSub Topic.
-	//     - This need to deregistered during deletion.
+	//     - This needs to deregister during deletion.
 	// Because there is something that must happen during deletion, we add this controller as a
 	// finalizer to every GcpPubSubSource.
 
@@ -287,7 +287,9 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 }
 
 func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) (*pubsub.Subscription, error) {
-	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject) // TODO something about authing to GCP.
+	// Auth to GCP is handled by having the GOOGLE_APPLICATION_CREDENTIALS environment variable
+	// pointing at a credential file.
+	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +308,9 @@ func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPu
 }
 
 func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
-	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject) // TODO something about authing to GCP.
+	// Auth to GCP is handled by having the GOOGLE_APPLICATION_CREDENTIALS environment variable
+	// pointing at a credential file.
+	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject)
 	if err != nil {
 		return err
 	}

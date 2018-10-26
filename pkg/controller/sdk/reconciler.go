@@ -129,27 +129,6 @@ func (r *Reconciler) needsUpdate(ctx context.Context, old, new runtime.Object) b
 	return false
 }
 
-func (r *Reconciler) updateStatus(ctx context.Context, request reconcile.Request, object runtime.Object) (runtime.Object, error) {
-	freshObj := r.provider.Parent.DeepCopyObject()
-	if err := r.client.Get(ctx, request.NamespacedName, freshObj); err != nil {
-		return nil, err
-	}
-
-	fresh := NewReflectedStatusAccessor(freshObj)
-	org := NewReflectedStatusAccessor(object)
-
-	fresh.SetStatus(org.GetStatus())
-
-	// Until #38113 is merged, we must use Update instead of UpdateStatus to
-	// update the Status block of the Source resource. UpdateStatus will not
-	// allow changes to the Spec of the resource, which is ideal for ensuring
-	// nothing other than resource status has been updated.
-	if err := r.client.Update(ctx, freshObj); err != nil {
-		return nil, err
-	}
-	return freshObj, nil
-}
-
 func (r *Reconciler) update(ctx context.Context, request reconcile.Request, object runtime.Object) (runtime.Object, error) {
 	freshObj := r.provider.Parent.DeepCopyObject()
 	if err := r.client.Get(ctx, request.NamespacedName, freshObj); err != nil {
