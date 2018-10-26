@@ -29,13 +29,12 @@ import (
 
 // GetSinkURI retrieves the sink URI from the object referenced by the given
 // ObjectReference.
-func GetSinkURI(dc dynamic.Interface, sink *corev1.ObjectReference) (string, error) {
-	// check to see if the source has provided a sink ref in the spec. Lets look for it.
+func GetSinkURI(dc dynamic.Interface, sink *corev1.ObjectReference, namespace string) (string, error) {
 	if sink == nil {
 		return "", fmt.Errorf("sink ref is nil")
 	}
 
-	obj, err := FetchObjectReference(dc, sink)
+	obj, err := fetchObjectReference(dc, sink, namespace)
 	if err != nil {
 		return "", err
 	}
@@ -52,9 +51,8 @@ func GetSinkURI(dc dynamic.Interface, sink *corev1.ObjectReference) (string, err
 	return "", fmt.Errorf("sink does not contain sinkable")
 }
 
-// FetchObjectReference fetches an object based on ObjectReference.
-func FetchObjectReference(dc dynamic.Interface, ref *corev1.ObjectReference) (duck.Marshalable, error) {
-	resourceClient, err := createResourceInterface(dc, ref)
+func fetchObjectReference(dc dynamic.Interface, ref *corev1.ObjectReference, namespace string) (duck.Marshalable, error) {
+	resourceClient, err := createResourceInterface(dc, ref, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +60,10 @@ func FetchObjectReference(dc dynamic.Interface, ref *corev1.ObjectReference) (du
 	return resourceClient.Get(ref.Name, metav1.GetOptions{})
 }
 
-func createResourceInterface(dc dynamic.Interface, ref *corev1.ObjectReference) (dynamic.ResourceInterface, error) {
+func createResourceInterface(dc dynamic.Interface, ref *corev1.ObjectReference, namespace string) (dynamic.ResourceInterface, error) {
 	rc := dc.Resource(duckapis.KindToResource(ref.GroupVersionKind()))
 	if rc == nil {
 		return nil, fmt.Errorf("failed to create dynamic client resource")
 	}
-	return rc.Namespace(ref.Namespace), nil
+	return rc.Namespace(namespace), nil
 }

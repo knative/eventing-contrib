@@ -120,12 +120,7 @@ func (r *reconciler) setSinkURIArg(source *v1alpha1.ContainerSource, args *resou
 		return fmt.Errorf("Sink missing from spec")
 	}
 
-	sinkRef := source.Spec.Sink.DeepCopy()
-	// Don't allow the sink ref to point to another namespace. Normally this
-	// is disallowed by a webhook, but we don't have a ContainerSource webhook.
-	// TODO add a webhook?
-	sinkRef.Namespace = source.Namespace
-	uri, err := sinks.GetSinkURI(r.dynamicClient, sinkRef)
+	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return err
