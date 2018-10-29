@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/golang/glog"
@@ -33,13 +32,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-)
-
-const (
-	// Target for messages
-	envTarget = "TARGET"
-	// Namespace to watch
-	envNamespace = "NAMESPACE"
 )
 
 type EventWatcher struct {
@@ -61,16 +53,24 @@ func (e *EventWatcher) addEvent(new interface{}) {
 }
 
 func main() {
+	namespace := flag.String("namespace", "", "namespace to watch events for")
+	target := flag.String("sink", "", "uri to send events to")
+
 	flag.Parse()
+
+	if namespace == nil || *namespace == "" {
+		log.Fatalf("No namespace given")
+	}
+
+	if target == nil || *target == "" {
+		log.Fatalf("No target given")
+	}
 
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
 
-	target := os.Getenv(envTarget)
-	namespace := os.Getenv(envNamespace)
-
-	log.Printf("Target is: %q", target)
-	log.Printf("Namespace is: %q", namespace)
+	log.Printf("Target is: %q", *target)
+	log.Printf("Namespace is: %q", *namespace)
 
 	cfg, err := clientcmd.BuildConfigFromFlags("", "")
 	if err != nil {
@@ -83,10 +83,10 @@ func main() {
 	}
 
 	log.Printf("Creating a new Event Watcher...")
-	watcher := NewEventWatcher(target)
+	watcher := NewEventWatcher(*target)
 
 	eventsInformer := coreinformers.NewFilteredEventInformer(
-		kubeClient, namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
+		kubeClient, *namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
 
 	eventsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    watcher.addEvent,
@@ -170,11 +170,10 @@ func cloudEventsContext(m *corev1.Event) *event.EventContext {
 func postMessage(target string, m *corev1.Event) error {
 	ctx := cloudEventsContext(m)
 
-	URL := fmt.Sprintf("http://%s/", target)
-	log.Printf("Posting to %q", URL)
+	log.Printf("Posting to %q", target)
 	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
 	// event metadata.
-	req, err := event.Binary.NewRequest(URL, m, *ctx)
+	req, err := event.Binary.NewRequest(target, m, *ctx)
 	if err != nil {
 		log.Printf("Failed to create http request: %s", err)
 		return err
