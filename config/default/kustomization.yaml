@@ -9,6 +9,7 @@ namespace: knative-sources
 resources:
 - ../crds/sources_v1alpha1_containersource.yaml
 - ../crds/sources_v1alpha1_edgesource.yaml
+- ../crds/sources_v1alpha1_kuberneteseventsource.yaml
 - ../rbac/rbac_role.yaml
 - ../rbac/rbac_role_binding.yaml
 - ../manager/manager.yaml
@@ -17,3 +18,4 @@ patches:
 - manager_image_patch.yaml
 - containersource_conditions_patch.yaml
 - edgesource_conditions_patch.yaml
+- kuberneteseventsource_conditions_patch.yaml

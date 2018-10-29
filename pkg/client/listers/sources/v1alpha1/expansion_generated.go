@@ -26,6 +26,7 @@ type ContainerSourceListerExpansion interface{}
 // ContainerSourceNamespaceLister.
 type ContainerSourceNamespaceListerExpansion interface{}
 
+<<<<<<< HEAD
 // EdgeSourceListerExpansion allows custom methods to be added to
 // EdgeSourceLister.
 type EdgeSourceListerExpansion interface{}
@@ -33,3 +34,12 @@ type EdgeSourceListerExpansion interface{}
 // EdgeSourceNamespaceListerExpansion allows custom methods to be added to
 // EdgeSourceNamespaceLister.
 type EdgeSourceNamespaceListerExpansion interface{}
+=======
+// KubernetesEventSourceListerExpansion allows custom methods to be added to
+// KubernetesEventSourceLister.
+type KubernetesEventSourceListerExpansion interface{}
+
+// KubernetesEventSourceNamespaceListerExpansion allows custom methods to be added to
+// KubernetesEventSourceNamespaceLister.
+type KubernetesEventSourceNamespaceListerExpansion interface{}
+>>>>>>> master
