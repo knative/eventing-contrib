@@ -19,3 +19,4 @@ patches:
 - containersource_conditions_patch.yaml
 - kuberneteseventsource_conditions_patch.yaml
 - gcppubsubsource_conditions_patch.yaml
+- gcppubsubsource_env_patch.yaml
