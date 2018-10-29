@@ -29,18 +29,18 @@ spec:
           properties:
             googleCloudProject:
               type: string
-            topic:
-              type: string
             sink:
               type: object
+            topic:
+              type: string
           type: object
         status:
           properties:
             conditions:
               items:
                 properties:
-                  #lastTransitionTime:
-                  #  type: object
+                  lastTransitionTime:
+                    type: object
                   message:
                     type: string
                   reason:
