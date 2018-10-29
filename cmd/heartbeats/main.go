@@ -67,7 +67,7 @@ func main() {
 }
 
 // Creates a CloudEvent Context for a given heartbeat.
-func cloudEventsContext(hb *Heartbeat) *event.EventContext {
+func cloudEventsContext() *event.EventContext {
 	return &event.EventContext{
 		CloudEventsVersion: event.CloudEventsVersion,
 		EventType:          "dev.knative.source.heartbeats",
@@ -78,7 +78,7 @@ func cloudEventsContext(hb *Heartbeat) *event.EventContext {
 }
 
 func postMessage(target string, hb *Heartbeat) error {
-	ctx := cloudEventsContext(hb)
+	ctx := cloudEventsContext()
 
 	log.Printf("posting to %q", target)
 	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
