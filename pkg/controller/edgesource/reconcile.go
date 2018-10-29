@@ -19,7 +19,7 @@ package edgesource
 import (
 	"context"
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
+	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -62,7 +62,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	source.Status.InitializeConditions()
 
-	uri, err := sdk.GetSinkUri(ctx, r.dynamicClient, source.Spec.Sink, source.Namespace)
+	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return source, err

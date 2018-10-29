@@ -26,13 +26,10 @@ import (
 type Interface interface {
 	// ContainerSources returns a ContainerSourceInformer.
 	ContainerSources() ContainerSourceInformer
-<<<<<<< HEAD
 	// EdgeSources returns a EdgeSourceInformer.
 	EdgeSources() EdgeSourceInformer
-=======
 	// KubernetesEventSources returns a KubernetesEventSourceInformer.
 	KubernetesEventSources() KubernetesEventSourceInformer
->>>>>>> master
 }
 
 type version struct {
@@ -51,13 +48,12 @@ func (v *version) ContainerSources() ContainerSourceInformer {
 	return &containerSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-<<<<<<< HEAD
 // EdgeSources returns a EdgeSourceInformer.
 func (v *version) EdgeSources() EdgeSourceInformer {
 	return &edgeSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-=======
+}
+
 // KubernetesEventSources returns a KubernetesEventSourceInformer.
 func (v *version) KubernetesEventSources() KubernetesEventSourceInformer {
 	return &kubernetesEventSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
->>>>>>> master
 }

@@ -20,8 +20,6 @@ package v1alpha1
 
 type ContainerSourceExpansion interface{}
 
-<<<<<<< HEAD
 type EdgeSourceExpansion interface{}
-=======
+
 type KubernetesEventSourceExpansion interface{}
->>>>>>> master

@@ -32,13 +32,12 @@ func (c *FakeSourcesV1alpha1) ContainerSources(namespace string) v1alpha1.Contai
 	return &FakeContainerSources{c, namespace}
 }
 
-<<<<<<< HEAD
 func (c *FakeSourcesV1alpha1) EdgeSources(namespace string) v1alpha1.EdgeSourceInterface {
 	return &FakeEdgeSources{c, namespace}
-=======
+}
+
 func (c *FakeSourcesV1alpha1) KubernetesEventSources(namespace string) v1alpha1.KubernetesEventSourceInterface {
 	return &FakeKubernetesEventSources{c, namespace}
->>>>>>> master
 }
 
 // RESTClient returns a RESTClient that is used to communicate
