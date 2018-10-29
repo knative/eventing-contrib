@@ -24,10 +24,15 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	finalizerName = controllerAgentName
 )
 
 type reconciler struct {
@@ -56,10 +61,19 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	}
 	// No need to reconcile if the source has been marked for deletion.
 	deletionTimestamp := accessor.GetDeletionTimestamp()
-	if deletionTimestamp != nil {
+	if deletionTimestamp != nil && !r.hasFinalizer(source) {
 		return object, nil
 	}
 
+	if deletionTimestamp != nil {
+		return r.reconcileDelete(ctx, source)
+	}
+	return r.reconcile(ctx, source)
+}
+
+func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.EdgeSource) (*v1alpha1.EdgeSource, error) {
+
+	r.addFinalizer(source)
 	source.Status.InitializeConditions()
 
 	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
@@ -72,6 +86,29 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// TODO: reconcile
 
 	return source, nil
+}
+
+func (r *reconciler) reconcileDelete(ctx context.Context, source *v1alpha1.EdgeSource) (*v1alpha1.EdgeSource, error) {
+	// TODO: reconcile
+
+	return source, nil
+}
+
+func (r *reconciler) addFinalizer(s *v1alpha1.EdgeSource) {
+	finalizers := sets.NewString(s.Finalizers...)
+	finalizers.Insert(finalizerName)
+	s.Finalizers = finalizers.List()
+}
+
+func (r *reconciler) removeFinalizer(s *v1alpha1.EdgeSource) {
+	finalizers := sets.NewString(s.Finalizers...)
+	finalizers.Delete(finalizerName)
+	s.Finalizers = finalizers.List()
+}
+
+func (r *reconciler) hasFinalizer(s *v1alpha1.EdgeSource) bool {
+	finalizers := sets.NewString(s.Finalizers...)
+	return finalizers.Has(finalizerName)
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
