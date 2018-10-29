@@ -1,0 +1,35 @@
+
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: gcp-pubsub-source-controller
+  labels: &labels
+    control-plane: controller-manager
+    knative-source: gcp-pubsub
+spec:
+  selector:
+    matchLabels: *labels
+  replicas: 1
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      serviceAccountName: gcp-pubsub-source
+      containers:
+        - image: github.com/knative/eventing-sources/cmd/manager
+          name: manager
+          terminationGracePeriodSeconds: 10
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/key.json
+            - name: GCPPUBSUB_RA_IMAGE
+              value: github.com/knative/eventing-sources/pkg/controller/gcppubsub/receive_adapter
+            - name: GCPPUBSUB_RA_SERVICE_ACCOUNT
+              value: default
+          volumeMounts:
+            - name: google-cloud-key
+              mountPath: /var/secrets/google
+      volumes:
+        - name: google-cloud-key
+          secret:
+            secretName: gcppubsub-source-key

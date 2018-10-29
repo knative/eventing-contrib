@@ -25,3 +25,7 @@ the default:
 ```shell
 ko apply -f config/default.yaml
 ```
+
+### GCP PubSub
+
+The GCP PubSub source is not active in the `default.yaml` config. Add it by 

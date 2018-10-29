@@ -6,14 +6,14 @@ namespace: knative-sources
 # files that kustomize reads, modifies and emits as a
 # YAML string, with resources separated by document
 # markers ("---").
+
+bases:
+  - ../default
+
 resources:
-- ../crds/sources_v1alpha1_containersource.yaml
-- ../crds/sources_v1alpha1_kuberneteseventsource.yaml
-- ../rbac/rbac_role.yaml
-- ../rbac/rbac_role_binding.yaml
-- ../manager/manager.yaml
+  - ../crds/sources_v1alpha1_gcppubsubsource.yaml
+  - istio_egress.yaml
+  - deployment.yaml
 
 patches:
-- manager_image_patch.yaml
-- containersource_conditions_patch.yaml
-- kuberneteseventsource_conditions_patch.yaml
+  - conditions_patch.yaml
