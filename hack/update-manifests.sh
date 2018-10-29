@@ -23,7 +23,7 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/library.sh
 cd ${REPO_ROOT_DIR}
 
 # Ensure we have everything we need under vendor/
-./hack/update-deps.sh
+${REPO_ROOT_DIR}/hack/update-deps.sh
 
 # Generate manifests e.g. CRD, RBAC etc.
 go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all

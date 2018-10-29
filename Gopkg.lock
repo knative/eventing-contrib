@@ -220,11 +220,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:18ba4464748bd618d2c7b5e7fb1d072425e3149120293f6dfb61ae5369614524"
+  digest = "1:296aac2984bcdba6afc0bf0ee60fb1b11ae511de9f776d4e1e383a9e8ade18f5"
   name = "github.com/knative/eventing"
   packages = ["pkg/event"]
   pruneopts = "T"
-  revision = "80860baecb7b86a31b20b02a558c76f223aaa8a1"
+  revision = "5d73d6eac49404d1a7db461249d9219de7709a9f"
 
 [[projects]]
   digest = "1:09d23ea51491208bc07a01a1fc06c62de90d5d352592a4e0f3b773cc96aed199"
@@ -235,6 +235,7 @@
     "apis/duck/v1alpha1",
     "logging",
     "logging/logkey",
+    "signals",
   ]
   pruneopts = "T"
   revision = "ba1a828cd571f605684f9a4506e85bc13cb65b8d"
@@ -687,6 +688,8 @@
     "discovery/fake",
     "dynamic",
     "dynamic/fake",
+    "informers/core/v1",
+    "informers/internalinterfaces",
     "kubernetes",
     "kubernetes/scheme",
     "kubernetes/typed/admissionregistration/v1alpha1",
@@ -718,6 +721,7 @@
     "kubernetes/typed/storage/v1",
     "kubernetes/typed/storage/v1alpha1",
     "kubernetes/typed/storage/v1beta1",
+    "listers/core/v1",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
     "pkg/apis/clientauthentication/v1beta1",
@@ -860,6 +864,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/emicklei/go-restful",
+    "github.com/golang/glog",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/uuid",
@@ -868,6 +873,7 @@
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
     "github.com/knative/pkg/logging",
+    "github.com/knative/pkg/signals",
     "github.com/knative/test-infra",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
@@ -890,11 +896,14 @@
     "k8s.io/client-go/discovery/fake",
     "k8s.io/client-go/dynamic",
     "k8s.io/client-go/dynamic/fake",
+    "k8s.io/client-go/informers/core/v1",
+    "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
+    "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",

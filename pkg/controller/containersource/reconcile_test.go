@@ -19,6 +19,7 @@ package containersource
 import (
 	"context"
 	"fmt"
+
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
@@ -220,12 +221,12 @@ var testCases = []controllertesting.TestCase{
 				s := getContainerSource()
 				s.Spec.Sink = nil
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("NotFound", "")
+				s.Status.MarkNoSink("Missing", "")
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink ref is nil`,
+		WantErrMsg:  "Sink missing from spec",
 	}, {
 		Name:       "valid containersource, sink is provided",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
@@ -252,32 +253,6 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-	}, {
-		Name:       "valid containersource, sink is targetable",
-		Reconciles: &sourcesv1alpha1.ContainerSource{},
-		InitialState: []runtime.Object{
-			getContainerSource(),
-		},
-		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
-		Scheme:       scheme.Scheme,
-		Objects: []runtime.Object{
-			// sinkable resource
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": sinkableAPIVersion,
-					"kind":       sinkableKind,
-					"metadata": map[string]interface{}{
-						"namespace": testNS,
-						"name":      sinkableName,
-					},
-					"status": map[string]interface{}{
-						"targetable": map[string]interface{}{
-							"domainInternal": sinkableDNS,
-						},
-					},
-				},
-			},
-		},
 	}, /*
 		TODO(n3wscott): This does not work yet because we are only mocking the dynamic client
 		response and not the client list response. Fix this and the test will work.
