@@ -47,8 +47,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Channel{},
 		&ChannelList{},
-		&ClusterChannelProvisioner{},
-		&ClusterChannelProvisionerList{},
+		&ClusterProvisioner{},
+		&ClusterProvisionerList{},
 		&Subscription{},
 		&SubscriptionList{},
 	)

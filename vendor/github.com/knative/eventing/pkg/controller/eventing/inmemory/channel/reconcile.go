@@ -21,7 +21,7 @@ import (
 
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/eventing/pkg/controller"
-	ccpcontroller "github.com/knative/eventing/pkg/controller/eventing/inmemory/clusterchannelprovisioner"
+	cpcontroller "github.com/knative/eventing/pkg/controller/eventing/inmemory/clusterprovisioner"
 	"github.com/knative/eventing/pkg/sidecar/configmap"
 	"github.com/knative/eventing/pkg/sidecar/fanout"
 	"github.com/knative/eventing/pkg/sidecar/multichannelfanout"
@@ -109,10 +109,10 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 // shouldReconcile determines if this Controller should control (and therefore reconcile) a given
-// ClusterChannelProvisioner. This Controller only handles in-memory channels.
+// ClusterProvisioner. This Controller only handles in-memory channels.
 func (r *reconciler) shouldReconcile(c *eventingv1alpha1.Channel) bool {
 	if c.Spec.Provisioner != nil {
-		return ccpcontroller.IsControlled(c.Spec.Provisioner)
+		return cpcontroller.IsControlled(c.Spec.Provisioner, cpcontroller.Channel)
 	}
 	return false
 }
@@ -240,7 +240,7 @@ func (r *reconciler) createVirtualService(ctx context.Context, c *eventingv1alph
 func newK8sService(c *eventingv1alpha1.Channel) *corev1.Service {
 	labels := map[string]string{
 		"channel":     c.Name,
-		"provisioner": c.Spec.Provisioner.Name,
+		"provisioner": c.Spec.Provisioner.Ref.Name,
 	}
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -272,9 +272,9 @@ func newK8sService(c *eventingv1alpha1.Channel) *corev1.Service {
 func newVirtualService(channel *eventingv1alpha1.Channel) *istiov1alpha3.VirtualService {
 	labels := map[string]string{
 		"channel":     channel.Name,
-		"provisioner": channel.Spec.Provisioner.Name,
+		"provisioner": channel.Spec.Provisioner.Ref.Name,
 	}
-	destinationHost := controller.ServiceHostName(controller.ClusterBusDispatcherServiceName(channel.Spec.Provisioner.Name), system.Namespace)
+	destinationHost := controller.ServiceHostName(controller.ClusterBusDispatcherServiceName(channel.Spec.Provisioner.Ref.Name), system.Namespace)
 	return &istiov1alpha3.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      controller.ChannelVirtualServiceName(channel.Name),

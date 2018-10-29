@@ -21,7 +21,6 @@ import (
 	"github.com/knative/pkg/apis"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/webhook"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -65,7 +64,8 @@ type ChannelSpec struct {
 	Generation int64 `json:"generation,omitempty"`
 
 	// Provisioner defines the name of the Provisioner backing this channel.
-	Provisioner *corev1.ObjectReference `json:"provisioner,omitempty"`
+	// TODO: +optional If missing, a default Provisioner may be selected for the Channel.
+	Provisioner *ProvisionerReference `json:"provisioner,omitempty"`
 
 	// Arguments defines the arguments to pass to the Provisioner which provisions
 	// this Channel.

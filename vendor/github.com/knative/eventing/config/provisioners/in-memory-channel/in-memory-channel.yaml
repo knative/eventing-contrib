@@ -13,7 +13,7 @@
 # limitations under the License.
 
 apiVersion: eventing.knative.dev/v1alpha1
-kind: ClusterChannelProvisioner
+kind: ClusterProvisioner
 metadata:
   name: in-memory-channel
 spec:
@@ -40,7 +40,7 @@ rules:
       - eventing.knative.dev
     resources:
       - channels
-      - clusterchannelprovisioners
+      - clusterprovisioners
     verbs:
       - get
       - list
@@ -101,7 +101,7 @@ spec:
   replicas: 1
   selector:
     matchLabels: &labels
-      clusterChannelProvisioner: in-memory-channel
+      clusterProvisioner: in-memory-channel
       role: controller
   template:
     metadata:
@@ -164,7 +164,7 @@ spec:
   replicas: 1
   selector:
     matchLabels: &labels
-      clusterChannelProvisioner: in-memory-channel
+      clusterProvisioner: in-memory-channel
       role: dispatcher
   template:
     metadata:
