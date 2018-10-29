@@ -65,15 +65,16 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		return object, nil
 	}
 
+	// If the object has been marked for deletion, check to see if there is a
+	// job to run.
 	if deletionTimestamp != nil {
-		return r.reconcileDelete(ctx, source)
+		if j := source.Spec.GetJob(v1alpha1.EdgeJobStop); j != nil {
+			err = r.reconcileStartJob(ctx, source, j)
+		}
+		return source, err
 	}
-	return r.reconcile(ctx, source)
-}
 
-func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.EdgeSource) (*v1alpha1.EdgeSource, error) {
-
-	r.addFinalizer(source)
+	//Initialize and reconcile the source.
 	source.Status.InitializeConditions()
 
 	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
@@ -81,17 +82,14 @@ func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.EdgeSource)
 		source.Status.MarkNoSink("NotFound", "")
 		return source, err
 	}
-	source.Status.MarkSink(uri)
+	source.Status.MarkSink(uri) // TODO: if the sink is new, in teh future we should run update.
 
-	// TODO: reconcile
+	// Check to see if there is a start job.
+	if j := source.Spec.GetJob(v1alpha1.EdgeJobStart); j != nil {
+		err = r.reconcileStartJob(ctx, source, j)
+	}
 
-	return source, nil
-}
-
-func (r *reconciler) reconcileDelete(ctx context.Context, source *v1alpha1.EdgeSource) (*v1alpha1.EdgeSource, error) {
-	// TODO: reconcile
-
-	return source, nil
+	return source, err
 }
 
 func (r *reconciler) addFinalizer(s *v1alpha1.EdgeSource) {
