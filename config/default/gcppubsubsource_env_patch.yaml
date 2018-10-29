@@ -14,8 +14,6 @@ spec:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
-        - name: GCPPUBSUB_RA_CREDS_SECRET
-          value: &secretName gcppubsub-source-key
         - name: GCPPUBSUB_RA_IMAGE
           value: github.com/knative/eventing-sources/pkg/controller/gcppubsub/receive_adapter
         - name: GCPPUBSUB_RA_SERVICE_ACCOUNT
@@ -26,4 +24,4 @@ spec:
       volumes:
       - name: google-cloud-key
         secret:
-          secretName: *secretName
+          secretName: gcppubsub-source-key

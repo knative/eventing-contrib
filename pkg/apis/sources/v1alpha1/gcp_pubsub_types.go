@@ -49,9 +49,17 @@ var _ = duck.VerifyType(&GcpPubSubSource{}, &duckv1alpha1.Conditions{})
 
 // ContainerSourceSpec defines the desired state of ContainerSource
 type GcpPubSubSourceSpec struct {
-	// GoogleCloudProject is the ID of the Google Cloud Project that the PubSub
+	// GcpCredsSecret is the name of a K8s Secret in the same namespace as this GcpPubSubSource that
+	// contains the credentials used to authenticate with the GCP PubSub service. The credentials
+	// must be in the entry named 'key.json' and be in the JSON Service Account format.
+	GcpCredsSecret string `json:"gcpCredsSecret,omitempty`
+
+	// GoogleCloudProject is the ID of the Google Cloud Project that the PubSub Topic exists in.
 	GoogleCloudProject string `json:"googleCloudProject,omitempty"`
 
+	// Topic is the ID of the GCP PubSub Topic to Subscribe to. It must be in the form of the
+	// unique identifier within the project, not the entire name. E.g. it must be 'laconia', not
+	// 'projects/my-gcp-project/topics/laconia'.
 	Topic string `json:"topic,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
@@ -68,7 +76,6 @@ const (
 
 	// ContainerConditionDeployed has status True when the ContainerSource has had it's deployment created.
 	GcpPubSubSourceConditionDeployed duckv1alpha1.ConditionType = "Deployed"
-
 
 	GcpPubSubSourceConditionSubscribed duckv1alpha1.ConditionType = "Subscribed"
 )

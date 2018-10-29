@@ -54,7 +54,6 @@ type reconciler struct {
 
 	receiveAdapterImage              string
 	receiveAdapterServiceAccountName string
-	receiveAdapterCredsSecret        string
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -207,12 +206,12 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 	credsMountPath := "/var/secrets/google"
 	credsFile := fmt.Sprintf("%s/key.json", credsMountPath)
 	replicas := int32(1)
-	labels := getLabels(src)
+	dLabels := getLabels(src)
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    src.Namespace,
 			GenerateName: fmt.Sprintf("gcppubsub-%s-", src.Name),
-			Labels:       labels,
+			Labels:       dLabels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: v1alpha1.SchemeGroupVersion.String(),
@@ -225,7 +224,7 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: dLabels,
 			},
 			Replicas: &replicas,
 			Template: corev1.PodTemplateSpec{
@@ -233,7 +232,7 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 					Annotations: map[string]string{
 						"sidecar.istio.io/inject": "true",
 					},
-					Labels: labels,
+					Labels: dLabels,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: r.receiveAdapterServiceAccountName,
@@ -276,7 +275,7 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 							Name: credsVolume,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: r.receiveAdapterCredsSecret,
+									SecretName: src.Spec.GcpCredsSecret,
 								},
 							},
 						},
