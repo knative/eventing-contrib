@@ -19,5 +19,3 @@ limitations under the License.
 package v1alpha1
 
 type ContainerSourceExpansion interface{}
-
-type GcpPubSubSourceExpansion interface{}

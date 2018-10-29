@@ -8,7 +8,6 @@ namespace: knative-sources
 # markers ("---").
 resources:
 - ../crds/sources_v1alpha1_containersource.yaml
-- ../crds/sources_v1alpha1_gcppubsubsource.yaml
 - ../rbac/rbac_role.yaml
 - ../rbac/rbac_role_binding.yaml
 - ../manager/manager.yaml
