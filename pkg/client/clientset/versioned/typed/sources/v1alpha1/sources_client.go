@@ -28,7 +28,7 @@ import (
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ContainerSourcesGetter
-	GcpPubSubSourcesGetter
+	KubernetesEventSourcesGetter
 }
 
 // SourcesV1alpha1Client is used to interact with features provided by the sources.eventing.knative.dev group.
@@ -40,8 +40,8 @@ func (c *SourcesV1alpha1Client) ContainerSources(namespace string) ContainerSour
 	return newContainerSources(c, namespace)
 }
 
-func (c *SourcesV1alpha1Client) GcpPubSubSources(namespace string) GcpPubSubSourceInterface {
-	return newGcpPubSubSources(c, namespace)
+func (c *SourcesV1alpha1Client) KubernetesEventSources(namespace string) KubernetesEventSourceInterface {
+	return newKubernetesEventSources(c, namespace)
 }
 
 // NewForConfig creates a new SourcesV1alpha1Client for the given config.

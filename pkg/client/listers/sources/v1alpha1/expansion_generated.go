@@ -26,10 +26,10 @@ type ContainerSourceListerExpansion interface{}
 // ContainerSourceNamespaceLister.
 type ContainerSourceNamespaceListerExpansion interface{}
 
-// GcpPubSubSourceListerExpansion allows custom methods to be added to
-// GcpPubSubSourceLister.
-type GcpPubSubSourceListerExpansion interface{}
+// KubernetesEventSourceListerExpansion allows custom methods to be added to
+// KubernetesEventSourceLister.
+type KubernetesEventSourceListerExpansion interface{}
 
-// GcpPubSubSourceNamespaceListerExpansion allows custom methods to be added to
-// GcpPubSubSourceNamespaceLister.
-type GcpPubSubSourceNamespaceListerExpansion interface{}
+// KubernetesEventSourceNamespaceListerExpansion allows custom methods to be added to
+// KubernetesEventSourceNamespaceLister.
+type KubernetesEventSourceNamespaceListerExpansion interface{}

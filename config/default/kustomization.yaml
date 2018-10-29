@@ -8,6 +8,7 @@ namespace: knative-sources
 # markers ("---").
 resources:
 - ../crds/sources_v1alpha1_containersource.yaml
+- ../crds/sources_v1alpha1_kuberneteseventsource.yaml
 - ../crds/sources_v1alpha1_gcppubsubsource.yaml
 - ../rbac/rbac_role.yaml
 - ../rbac/rbac_role_binding.yaml
@@ -16,4 +17,5 @@ resources:
 patches:
 - manager_image_patch.yaml
 - containersource_conditions_patch.yaml
+- kuberneteseventsource_conditions_patch.yaml
 - gcppubsubsource_conditions_patch.yaml
