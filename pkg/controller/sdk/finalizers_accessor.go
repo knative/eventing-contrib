@@ -17,58 +17,66 @@ limitations under the License.
 package sdk
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 // FinalizersAccessor is the interface for a Resource that implements the getter and setting for
 // accessing its Finalizer set.
 // +k8s:deepcopy-gen=true
 type FinalizersAccessor interface {
-	GetFinalizers() interface{}
-	SetFinalizers(finalizers interface{})
+	GetFinalizers() sets.String
+	SetFinalizers(finalizers sets.String)
 }
 
 // NewReflectedFinalizersAccessor uses reflection to return a FinalizersAccessor to access the field
 // called "Finalizers".
-func NewReflectedFinalizersAccessor(object interface{}) FinalizersAccessor {
+func NewReflectedFinalizersAccessor(object interface{}) (FinalizersAccessor, error) {
 	objectValue := reflect.Indirect(reflect.ValueOf(object))
 
 	// If object is not a struct, don't even try to use it.
 	if objectValue.Kind() != reflect.Struct {
-		return nil
+		return nil, errors.New("object is not a struct")
 	}
 
-	finalizerField := objectValue.FieldByName("Finalizers")
-	if finalizerField.IsValid() && finalizerField.CanInterface() && finalizerField.CanSet() {
-		if _, ok := finalizerField.Interface().(interface{}); ok {
-			return &reflectedFinalizersAccessor{
-				finalizers: finalizerField,
+	finalizersField := objectValue.FieldByName("Finalizers")
+	if finalizersField.IsValid() && finalizersField.CanSet() && finalizersField.Kind() == reflect.Slice {
+		finalizers := sets.NewString()
+		for i := 0; i < finalizersField.Len(); i++ {
+			finalizer := finalizersField.Index(i)
+			if finalizer.IsValid() && finalizer.Kind() == reflect.String {
+				finalizers.Insert(finalizer.String())
+			} else {
+				return nil, fmt.Errorf("element in the Finalizer slice was not a string: %v", finalizer.Kind())
 			}
 		}
+		return &reflectedFinalizersAccessor{
+			finalizersField: finalizersField,
+			finalizersSet:   finalizers,
+		}, nil
 	}
-	return nil
+
+	return nil, fmt.Errorf("finalizer was not a slice: %v", finalizersField.Kind())
 }
 
 // reflectedFinalizersAccessor is an internal wrapper object to act as the FinalizersAccessor for
 // objects that do not implement FinalizersAccessor directly, but do expose the field using the
 // name "Finalizers".
 type reflectedFinalizersAccessor struct {
-	finalizers reflect.Value
+	finalizersField reflect.Value
+	finalizersSet   sets.String
 }
 
 // GetFinalizers uses reflection to return the Finalizers set from the held object.
-func (r *reflectedFinalizersAccessor) GetFinalizers() interface{} {
-	if r != nil && r.finalizers.IsValid() && r.finalizers.CanInterface() {
-		if finalizers, ok := r.finalizers.Interface().(interface{}); ok {
-			return finalizers
-		}
-	}
-	return nil
+func (r *reflectedFinalizersAccessor) GetFinalizers() sets.String {
+	return r.finalizersSet
 }
 
 // SetFinalizers uses reflection to set Finalizers on the held object.
-func (r *reflectedFinalizersAccessor) SetFinalizers(finalizers interface{}) {
-	if r != nil && r.finalizers.IsValid() && r.finalizers.CanSet() {
-		r.finalizers.Set(reflect.ValueOf(finalizers))
-	}
+func (r *reflectedFinalizersAccessor) SetFinalizers(finalizers sets.String) {
+	r.finalizersSet = finalizers
+	r.finalizersField.Set(reflect.ValueOf(finalizers.List()))
 }

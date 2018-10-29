@@ -75,10 +75,13 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 		logger.Warnf("Failed to reconcile %s: %v", r.provider.Parent.GetObjectKind(), reconcileErr)
 	}
 
-	if needsUpdate := r.needsUpdate(ctx, original, obj); needsUpdate {
-		if _, updateErr := r.update(ctx, request, obj); updateErr != nil {
+	if needsUpdate, err := r.needsUpdate(ctx, original, obj); err != nil {
+		logger.Desugar().Error("Unable to determine if an update is needed", zap.Error(err), zap.Any("original", original), zap.Any("obj", obj))
+		return reconcile.Result{}, err
+	} else if needsUpdate {
+		if _, err := r.update(ctx, request, obj); err != nil {
 			logger.Desugar().Error("Failed to update", zap.Error(err), zap.Any("objectKind", r.provider.Parent.GetObjectKind()))
-			return reconcile.Result{}, updateErr
+			return reconcile.Result{}, err
 		}
 	}
 
@@ -103,9 +106,9 @@ func (r *Reconciler) InjectConfig(c *rest.Config) error {
 	return err
 }
 
-func (r *Reconciler) needsUpdate(ctx context.Context, old, new runtime.Object) bool {
+func (r *Reconciler) needsUpdate(ctx context.Context, old, new runtime.Object) (bool, error) {
 	if old == nil {
-		return true
+		return true, nil
 	}
 
 	// Check Status.
@@ -115,20 +118,26 @@ func (r *Reconciler) needsUpdate(ctx context.Context, old, new runtime.Object) b
 	nStatus := ns.GetStatus()
 
 	if !equality.Semantic.DeepEqual(oStatus, nStatus) {
-		return true
+		return true, nil
 	}
 
 	// Check finalizers.
-	of := NewReflectedFinalizersAccessor(old)
-	nf := NewReflectedFinalizersAccessor(new)
+	of, err := NewReflectedFinalizersAccessor(old)
+	if err != nil {
+		return false, err
+	}
+	nf, err := NewReflectedFinalizersAccessor(new)
+	if err != nil {
+		return false, err
+	}
 	oFinalizers := of.GetFinalizers()
 	nFinalizers := nf.GetFinalizers()
 
 	if !equality.Semantic.DeepEqual(oFinalizers, nFinalizers) {
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 func (r *Reconciler) update(ctx context.Context, request reconcile.Request, object runtime.Object) (runtime.Object, error) {
@@ -143,8 +152,14 @@ func (r *Reconciler) update(ctx context.Context, request reconcile.Request, obje
 	freshStatus.SetStatus(orgStatus.GetStatus())
 
 	// Finalizers
-	freshFinalizers := NewReflectedFinalizersAccessor(freshObj)
-	orgFinalizers := NewReflectedFinalizersAccessor(object)
+	freshFinalizers, err := NewReflectedFinalizersAccessor(freshObj)
+	if err != nil {
+		return nil, err
+	}
+	orgFinalizers, err := NewReflectedFinalizersAccessor(object)
+	if err != nil {
+		return nil, err
+	}
 	freshFinalizers.SetFinalizers(orgFinalizers.GetFinalizers())
 
 	// Until #38113 is merged, we must use Update instead of UpdateStatus to
