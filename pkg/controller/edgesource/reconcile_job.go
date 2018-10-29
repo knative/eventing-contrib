@@ -128,7 +128,7 @@ func (r *reconciler) reconcileStopJob(ctx context.Context, source *v1alpha1.Edge
 
 				source.Status.MarkJobStarting("StopJob", "stop job in progress")
 				jobContext.StopJobName = job.Name
-				r.setJobContext(ct)
+				r.updateJobContext(ctx, source, jobContext)
 			}
 		}
 

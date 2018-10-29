@@ -222,7 +222,12 @@
   branch = "master"
   digest = "1:296aac2984bcdba6afc0bf0ee60fb1b11ae511de9f776d4e1e383a9e8ade18f5"
   name = "github.com/knative/eventing"
-  packages = ["pkg/event"]
+  packages = [
+    "pkg/apis/feeds",
+    "pkg/apis/feeds/v1alpha1",
+    "pkg/event",
+    "pkg/sources",
+  ]
   pruneopts = "T"
   revision = "5d73d6eac49404d1a7db461249d9219de7709a9f"
 
@@ -236,6 +241,7 @@
     "logging",
     "logging/logkey",
     "signals",
+    "webhook",
   ]
   pruneopts = "T"
   revision = "ba1a828cd571f605684f9a4506e85bc13cb65b8d"
@@ -867,7 +873,9 @@
     "github.com/golang/glog",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
+    "github.com/knative/eventing/pkg/apis/feeds/v1alpha1",
     "github.com/knative/eventing/pkg/event",
+    "github.com/knative/eventing/pkg/sources",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
@@ -891,6 +899,7 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
+    "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
