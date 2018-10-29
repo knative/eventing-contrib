@@ -19,6 +19,8 @@ package sdk
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"github.com/knative/pkg/logging"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -75,7 +77,7 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	if needsUpdate := r.needsUpdate(ctx, original, obj); needsUpdate {
 		if _, updateErr := r.update(ctx, request, obj); updateErr != nil {
-			logger.Warnf("Failed to update %s: %v", r.provider.Parent.GetObjectKind(), updateErr)
+			logger.Desugar().Error("Failed to update", zap.Error(err), zap.Any("objectKind", r.provider.Parent.GetObjectKind()))
 			return reconcile.Result{}, updateErr
 		}
 	}
