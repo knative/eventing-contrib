@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// ContainerSources returns a ContainerSourceInformer.
 	ContainerSources() ContainerSourceInformer
+	// KubernetesEventSources returns a KubernetesEventSourceInformer.
+	KubernetesEventSources() KubernetesEventSourceInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ContainerSources returns a ContainerSourceInformer.
 func (v *version) ContainerSources() ContainerSourceInformer {
 	return &containerSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// KubernetesEventSources returns a KubernetesEventSourceInformer.
+func (v *version) KubernetesEventSources() KubernetesEventSourceInformer {
+	return &kubernetesEventSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
