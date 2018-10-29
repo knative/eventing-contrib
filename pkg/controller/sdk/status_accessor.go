@@ -74,12 +74,17 @@ func (r *reflectedStatusAccessor) SetStatus(status interface{}) {
 	}
 }
 
-type FinalizerAccessor interface {
+// FinalizersAccessor is the interface for a Resource that implements the getter and setting for
+// accessing its Finalizer set.
+// +k8s:deepcopy-gen=true
+type FinalizersAccessor interface {
 	GetFinalizers() interface{}
 	SetFinalizers(finalizers interface{})
 }
 
-func NewReflectedFinalizersAccessor(object interface{}) FinalizerAccessor {
+// NewReflectedFinalizersAccessor uses reflection to return a FinalizersAccessor to access the field
+// called "Finalizers".
+func NewReflectedFinalizersAccessor(object interface{}) FinalizersAccessor {
 	objectValue := reflect.Indirect(reflect.ValueOf(object))
 
 	// If object is not a struct, don't even try to use it.
@@ -90,7 +95,7 @@ func NewReflectedFinalizersAccessor(object interface{}) FinalizerAccessor {
 	finalizerField := objectValue.FieldByName("Finalizers")
 	if finalizerField.IsValid() && finalizerField.CanInterface() && finalizerField.CanSet() {
 		if _, ok := finalizerField.Interface().(interface{}); ok {
-			return &reflectedFinalizerAccessor{
+			return &reflectedFinalizersAccessor{
 				finalizers: finalizerField,
 			}
 		}
@@ -98,17 +103,26 @@ func NewReflectedFinalizersAccessor(object interface{}) FinalizerAccessor {
 	return nil
 }
 
-type reflectedFinalizerAccessor struct {
+// reflectedFinalizersAccessor is an internal wrapper object to act as the FinalizersAccessor for
+// objects that do not implement FinalizersAccessor directly, but do expose the field using the
+// name "Finalizers".
+type reflectedFinalizersAccessor struct {
 	finalizers reflect.Value
 }
 
-func (r *reflectedFinalizerAccessor) GetFinalizers() interface{} {
-	if finalizers, ok := r.finalizers.Interface().(interface{}); ok {
-		return finalizers
+// GetFinalizers uses reflection to return the Finalizers set from the held object.
+func (r *reflectedFinalizersAccessor) GetFinalizers() interface{} {
+	if r != nil && r.finalizers.IsValid() && r.finalizers.CanInterface() {
+		if finalizers, ok := r.finalizers.Interface().(interface{}); ok {
+			return finalizers
+		}
 	}
 	return nil
 }
 
-func (r *reflectedFinalizerAccessor) SetFinalizers(finalizers interface{}) {
-	r.finalizers.Set(reflect.ValueOf(finalizers))
+// SetFinalizers uses reflection to set Finalizers on the held object.
+func (r *reflectedFinalizersAccessor) SetFinalizers(finalizers interface{}) {
+	if r != nil && r.finalizers.IsValid() && r.finalizers.CanSet() {
+		r.finalizers.Set(reflect.ValueOf(finalizers))
+	}
 }
