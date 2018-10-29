@@ -57,11 +57,12 @@ func main() {
 		Sequence: 0,
 		Label:    label,
 	}
-
+	ticker := time.NewTicker(period)
 	for {
 		hb.Sequence++
 		postMessage(sink, hb)
-		time.Sleep(period)
+		// Wait for next tick
+		<-ticker.C
 	}
 }
 
