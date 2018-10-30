@@ -38,6 +38,10 @@ spec:
               items:
                 type: string
               type: array
+            env:
+              items:
+                type: object
+              type: array
             image:
               minLength: 1
               type: string

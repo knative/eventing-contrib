@@ -35,6 +35,8 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 		containerArgs = append(containerArgs, remote)
 	}
 
+	env := append(args.Env, corev1.EnvVar{Name: "SINK", Value: args.Sink})
+
 	deploy := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -63,6 +65,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 							Name:            "source",
 							Image:           args.Image,
 							Args:            containerArgs,
+							Env:             env,
 							ImagePullPolicy: corev1.PullAlways,
 						},
 					},

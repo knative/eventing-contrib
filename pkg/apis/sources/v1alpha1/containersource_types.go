@@ -42,6 +42,13 @@ type ContainerSourceSpec struct {
 	// Args are passed to the ContainerSpec as they are.
 	Args []string `json:"args,omitempty"`
 
+	// Env is the list of environment variables to set in the container.
+	// Cannot be updated.
+	// +optional
+	// +patchMergeKey=name
+	// +patchStrategy=merge
+	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
