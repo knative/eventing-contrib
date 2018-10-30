@@ -22,8 +22,12 @@ spec:
           type: object
         spec:
           properties:
+            namespace:
+              type: string
             sink:
               type: object
+          required:
+          - namespace
           type: object
         status:
           properties:
