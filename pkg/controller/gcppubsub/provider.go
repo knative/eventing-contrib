@@ -62,6 +62,7 @@ func Add(mgr manager.Manager) error {
 		Owns:      []runtime.Object{&v1.Deployment{}},
 		Reconciler: &reconciler{
 			scheme:                           mgr.GetScheme(),
+			pubSubClientCreator:              gcpPubSubClientCreator,
 			receiveAdapterImage:              raImage,
 			receiveAdapterServiceAccountName: raServiceAccount,
 		},

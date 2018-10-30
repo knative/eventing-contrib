@@ -45,10 +45,26 @@ const (
 	finalizerName = controllerAgentName
 )
 
+// gcpPubSubClientCreator creates a real GCP PubSub client. It should always be used, except during
+// unit tests.
+func gcpPubSubClientCreator(ctx context.Context, googleCloudProject string) (pubSubClient, error) {
+	// Auth to GCP is handled by having the GOOGLE_APPLICATION_CREDENTIALS environment variable
+	// pointing at a credential file.
+	psc, err := pubsub.NewClient(ctx, googleCloudProject)
+	if err != nil {
+		return nil, err
+	}
+	return &realGcpPubSubClient{
+		client: psc,
+	}, nil
+}
+
 type reconciler struct {
 	client        client.Client
 	dynamicClient dynamic.Interface
 	scheme        *runtime.Scheme
+
+	pubSubClientCreator pubSubClientCreator
 
 	receiveAdapterImage              string
 	receiveAdapterServiceAccountName string
@@ -164,7 +180,7 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPub
 		// the fake is fixed.
 		Raw: &metav1.ListOptions{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: "v1",
+				APIVersion: v1.SchemeGroupVersion.String(),
 				Kind:       "Deployment",
 			},
 		},
@@ -272,10 +288,8 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 	return dep, err
 }
 
-func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) (*pubsub.Subscription, error) {
-	// Auth to GCP is handled by having the GOOGLE_APPLICATION_CREDENTIALS environment variable
-	// pointing at a credential file.
-	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject)
+func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) (pubSubSubscription, error) {
+	psc, err := r.pubSubClientCreator(ctx, src.Spec.GoogleCloudProject)
 	if err != nil {
 		return nil, err
 	}
@@ -294,9 +308,7 @@ func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPu
 }
 
 func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
-	// Auth to GCP is handled by having the GOOGLE_APPLICATION_CREDENTIALS environment variable
-	// pointing at a credential file.
-	psc, err := pubsub.NewClient(ctx, src.Spec.GoogleCloudProject)
+	psc, err := r.pubSubClientCreator(ctx, src.Spec.GoogleCloudProject)
 	if err != nil {
 		return err
 	}
