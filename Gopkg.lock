@@ -993,6 +993,7 @@
     "github.com/golang/glog",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
+    "github.com/google/uuid",
     "github.com/knative/eventing/pkg/event",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
