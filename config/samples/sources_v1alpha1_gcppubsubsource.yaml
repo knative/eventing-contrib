@@ -4,7 +4,9 @@ kind: GcpPubSubSource
 metadata:
   name: test
 spec:
-  gcpCredsSecret: google-cloud-key
+  gcpCredsSecret:
+    name: google-cloud-key
+    key: key.json
   googleCloudProject: harwayne2
   topic: laconia
   sink:

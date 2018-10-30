@@ -35,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -158,13 +157,9 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 
 func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource) (*v1.Deployment, error) {
 	dl := &v1.DeploymentList{}
-	ls, err := r.getLabelSelector(src)
-	if err != nil {
-		return nil, err
-	}
-	err = r.client.List(ctx, &client.ListOptions{
+	err := r.client.List(ctx, &client.ListOptions{
 		Namespace:     src.Namespace,
-		LabelSelector: ls,
+		LabelSelector: r.getLabelSelector(src),
 		// TODO this is only needed by the fake client. Real K8s does not need it. Remove it once
 		// the fake is fixed.
 		Raw: &metav1.ListOptions{
@@ -188,17 +183,8 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPub
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
 }
 
-func (r *reconciler) getLabelSelector(src *v1alpha1.GcpPubSubSource) (labels.Selector, error) {
-	ls := labels.NewSelector()
-	for k, v := range getLabels(src) {
-		req, err := labels.NewRequirement(k, selection.Equals, []string{v})
-		if err != nil {
-			// Famous last words -- this should never happen.
-			return nil, err
-		}
-		ls.Add(*req)
-	}
-	return ls, nil
+func (r *reconciler) getLabelSelector(src *v1alpha1.GcpPubSubSource) labels.Selector {
+	return labels.SelectorFromSet(getLabels(src))
 }
 
 func getLabels(src *v1alpha1.GcpPubSubSource) map[string]string {
