@@ -211,7 +211,7 @@ func getLabels(src *v1alpha1.GcpPubSubSource) map[string]string {
 func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscriptionId, sinkURI string) (*v1.Deployment, error) {
 	credsVolume := "google-cloud-key"
 	credsMountPath := "/var/secrets/google"
-	credsFile := fmt.Sprintf("%s/key.json", credsMountPath)
+	credsFile := fmt.Sprintf("%s/%s", credsMountPath, src.Spec.GcpCredsSecret.Key)
 	replicas := int32(1)
 	dLabels := getLabels(src)
 	dep := &v1.Deployment{
@@ -273,7 +273,7 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 							Name: credsVolume,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: src.Spec.GcpCredsSecret,
+									SecretName: src.Spec.GcpCredsSecret.Name,
 								},
 							},
 						},

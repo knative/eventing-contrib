@@ -49,10 +49,11 @@ var _ = duck.VerifyType(&GcpPubSubSource{}, &duckv1alpha1.Conditions{})
 
 // GcpPubSubSourceSpec defines the desired state of the GcpPubSubSource.
 type GcpPubSubSourceSpec struct {
-	// GcpCredsSecret is the name of a K8s Secret in the same namespace as this GcpPubSubSource that
-	// contains the credentials used to authenticate with the GCP PubSub service. The credentials
-	// must be in the entry named 'key.json' and be in the JSON Service Account format.
-	GcpCredsSecret string `json:"gcpCredsSecret,omitempty`
+	// GcpCredsSecret is the credential to use to poll the GCP PubSub Subscription. It is not used
+	// to create or delete the Subscription, only to poll it. The value of the secret entry must be
+	// a service account key in the JSON format (see
+	// https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+	GcpCredsSecret corev1.SecretKeySelector `json:"gcpCredsSecret,omitempty"`
 
 	// GoogleCloudProject is the ID of the Google Cloud Project that the PubSub Topic exists in.
 	GoogleCloudProject string `json:"googleCloudProject,omitempty"`
