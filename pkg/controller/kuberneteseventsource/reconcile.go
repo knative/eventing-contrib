@@ -114,6 +114,15 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 		}
 	}
 
+	// Update ContainerSource spec if it's changed
+	expected := resources.MakeContainerSource(source, r.receiveAdapterImage)
+	if !equality.Semantic.DeepEqual(cs.Spec, expected.Spec) {
+		cs.Spec = expected.Spec
+		if r.Update(ctx, cs); err != nil {
+			return err
+		}
+	}
+
 	// Copy ContainerSource conditions to source
 	source.Status.Conditions = cs.Status.Conditions.DeepCopy()
 	return nil
