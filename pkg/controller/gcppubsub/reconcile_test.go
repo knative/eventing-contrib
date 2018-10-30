@@ -116,6 +116,28 @@ func TestReconcile(t *testing.T) {
 				getNonGcpPubSubSource(),
 			},
 		}, {
+			Name: "deleting - cannot create client",
+			InitialState: []runtime.Object{
+				getDeletingSource(),
+			},
+			OtherTestData: map[string]interface{}{
+				pscData: pubSubClientCreatorData{
+					clientCreateErr: errors.New("test-induced-error"),
+				},
+			},
+			WantErrMsg: "test-induced-error",
+		}, {
+			Name: "deleting - error checking subscription exists",
+			InitialState: []runtime.Object{
+				getDeletingSource(),
+			},
+			OtherTestData: map[string]interface{}{
+				pscData: pubSubClientCreatorData{
+					subExistsErr: errors.New("test-induced-error"),
+				},
+			},
+			WantErrMsg: "test-induced-error",
+		}, {
 			Name: "deleting - cannot delete subscription",
 			InitialState: []runtime.Object{
 				getDeletingSource(),
@@ -145,28 +167,41 @@ func TestReconcile(t *testing.T) {
 			},
 			WantErrMsg: "sinks.duck.knative.dev \"testsink\" not found",
 		}, {
+			Name: "cannot create client",
+			InitialState: []runtime.Object{
+				getSource(),
+			},
+			Objects: getSinkable(),
+			OtherTestData: map[string]interface{}{
+				pscData: pubSubClientCreatorData{
+					clientCreateErr: errors.New("test-induced-error"),
+				},
+			},
+			WantPresent: []runtime.Object{
+				getSourceWithFinalizerAndSink(),
+			},
+			WantErrMsg: "test-induced-error",
+		}, {
+			Name: "error checking subscription exists",
+			InitialState: []runtime.Object{
+				getSource(),
+			},
+			Objects: getSinkable(),
+			OtherTestData: map[string]interface{}{
+				pscData: pubSubClientCreatorData{
+					subExistsErr: errors.New("test-induced-error"),
+				},
+			},
+			WantPresent: []runtime.Object{
+				getSourceWithFinalizerAndSink(),
+			},
+			WantErrMsg: "test-induced-error",
+		}, {
 			Name: "cannot create subscription",
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: []runtime.Object{
-				// sinkable resource
-				&unstructured.Unstructured{
-					Object: map[string]interface{}{
-						"apiVersion": sinkableAPIVersion,
-						"kind":       sinkableKind,
-						"metadata": map[string]interface{}{
-							"namespace": testNS,
-							"name":      sinkableName,
-						},
-						"status": map[string]interface{}{
-							"sinkable": map[string]interface{}{
-								"domainInternal": sinkableDNS,
-							},
-						},
-					},
-				},
-			},
+			Objects: getSinkable(),
 			OtherTestData: map[string]interface{}{
 				pscData: pubSubClientCreatorData{
 					createSubErr: errors.New("test-induced-error"),
@@ -177,31 +212,54 @@ func TestReconcile(t *testing.T) {
 			},
 			WantErrMsg: "test-induced-error",
 		}, {
+			Name: "reusing existing subscription - cannot create receive adapter",
+			InitialState: []runtime.Object{
+				getSource(),
+			},
+			Objects: getSinkable(),
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+						return controllertesting.Handled, errors.New("test-induced-error")
+					},
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				pscData: pubSubClientCreatorData{
+					subExists:    true,
+					createSubErr: errors.New("some other error that is not seen, because it is not created"),
+				},
+			},
+			WantPresent: []runtime.Object{
+				getSourceWithFinalizerAndSinkAndSubscribed(),
+			},
+			WantErrMsg: "test-induced-error",
+		}, {
 			Name: "cannot create receive adapter",
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: []runtime.Object{
-				// sinkable resource
-				&unstructured.Unstructured{
-					Object: map[string]interface{}{
-						"apiVersion": sinkableAPIVersion,
-						"kind":       sinkableKind,
-						"metadata": map[string]interface{}{
-							"namespace": testNS,
-							"name":      sinkableName,
-						},
-						"status": map[string]interface{}{
-							"sinkable": map[string]interface{}{
-								"domainInternal": sinkableDNS,
-							},
-						},
-					},
-				},
-			},
+			Objects: getSinkable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+						return controllertesting.Handled, errors.New("test-induced-error")
+					},
+				},
+			},
+			WantPresent: []runtime.Object{
+				getSourceWithFinalizerAndSinkAndSubscribed(),
+			},
+			WantErrMsg: "test-induced-error",
+		}, {
+			Name: "cannot list deployments",
+			InitialState: []runtime.Object{
+				getSource(),
+			},
+			Objects: getSinkable(),
+			Mocks: controllertesting.Mocks{
+				MockLists: []controllertesting.MockList{
+					func(_ client.Client, _ context.Context, _ *client.ListOptions, _ runtime.Object) (controllertesting.MockHandled, error) {
 						return controllertesting.Handled, errors.New("test-induced-error")
 					},
 				},
@@ -215,24 +273,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: []runtime.Object{
-				// sinkable resource
-				&unstructured.Unstructured{
-					Object: map[string]interface{}{
-						"apiVersion": sinkableAPIVersion,
-						"kind":       sinkableKind,
-						"metadata": map[string]interface{}{
-							"namespace": testNS,
-							"name":      sinkableName,
-						},
-						"status": map[string]interface{}{
-							"sinkable": map[string]interface{}{
-								"domainInternal": sinkableDNS,
-							},
-						},
-					},
-				},
-			},
+			Objects: getSinkable(),
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
@@ -382,6 +423,27 @@ func createPubSubClientCreator(value interface{}) pubSubClientCreator {
 		return &fakePubSubClient{
 			data: data,
 		}, nil
+	}
+}
+
+func getSinkable() []runtime.Object {
+	return []runtime.Object{
+		// sinkable resource
+		&unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": sinkableAPIVersion,
+				"kind":       sinkableKind,
+				"metadata": map[string]interface{}{
+					"namespace": testNS,
+					"name":      sinkableName,
+				},
+				"status": map[string]interface{}{
+					"sinkable": map[string]interface{}{
+						"domainInternal": sinkableDNS,
+					},
+				},
+			},
+		},
 	}
 }
 
