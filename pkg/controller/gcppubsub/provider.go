@@ -61,6 +61,7 @@ func Add(mgr manager.Manager) error {
 		Parent:    &v1alpha1.GcpPubSubSource{},
 		Owns:      []runtime.Object{&v1.Deployment{}},
 		Reconciler: &reconciler{
+			scheme:                           mgr.GetScheme(),
 			receiveAdapterImage:              raImage,
 			receiveAdapterServiceAccountName: raServiceAccount,
 		},

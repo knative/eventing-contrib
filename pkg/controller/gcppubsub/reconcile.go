@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 
 	"cloud.google.com/go/pubsub"
@@ -44,13 +46,10 @@ const (
 	finalizerName = controllerAgentName
 )
 
-var (
-	trueVal = true
-)
-
 type reconciler struct {
 	client        client.Client
 	dynamicClient dynamic.Interface
+	scheme        *runtime.Scheme
 
 	receiveAdapterImage              string
 	receiveAdapterServiceAccountName string
@@ -81,7 +80,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	//     - Nothing to delete.
 	// 2. Create a receive adapter in the form of a Deployment.
 	//     - Will be garbage collected by K8s when this GcpPubSubSource is deleted.
-	// 3. Register that receive adapter as a Push endpoint for the specified GCP PubSub Topic.
+	// 3. Register that receive adapter as a Pull endpoint for the specified GCP PubSub Topic.
 	//     - This needs to deregister during deletion.
 	// Because there is something that must happen during deletion, we add this controller as a
 	// finalizer to every GcpPubSubSource.
@@ -148,17 +147,24 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		return ra, nil
 	}
-	svc := r.makeReceiveAdapter(src, subscriptionId, sinkURI)
+	svc, err := r.makeReceiveAdapter(src, subscriptionId, sinkURI)
+	if err != nil {
+		return nil, err
+	}
 	err = r.client.Create(ctx, svc)
 	logging.FromContext(ctx).Desugar().Info("Receive Adapter created.", zap.Error(err), zap.Any("receiveAdapter", svc))
 	return svc, err
 }
 
 func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource) (*v1.Deployment, error) {
-	sl := &v1.DeploymentList{}
-	err := r.client.List(ctx, &client.ListOptions{
+	dl := &v1.DeploymentList{}
+	ls, err := r.getLabelSelector(src)
+	if err != nil {
+		return nil, err
+	}
+	err = r.client.List(ctx, &client.ListOptions{
 		Namespace:     src.Namespace,
-		LabelSelector: r.getLabelSelector(src),
+		LabelSelector: ls,
 		// TODO this is only needed by the fake client. Real K8s does not need it. Remove it once
 		// the fake is fixed.
 		Raw: &metav1.ListOptions{
@@ -168,30 +174,31 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPub
 			},
 		},
 	},
-		sl)
+		dl)
 
 	if err != nil {
 		logging.FromContext(ctx).Desugar().Error("Unable to list deployments: %v", zap.Error(err))
 		return nil, err
 	}
-	for _, svc := range sl.Items {
-		if metav1.IsControlledBy(&svc, src) {
-			return &svc, nil
+	for _, dep := range dl.Items {
+		if metav1.IsControlledBy(&dep, src) {
+			return &dep, nil
 		}
 	}
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
 }
 
-func (r *reconciler) getLabelSelector(src *v1alpha1.GcpPubSubSource) labels.Selector {
+func (r *reconciler) getLabelSelector(src *v1alpha1.GcpPubSubSource) (labels.Selector, error) {
 	ls := labels.NewSelector()
 	for k, v := range getLabels(src) {
 		req, err := labels.NewRequirement(k, selection.Equals, []string{v})
 		if err != nil {
-			// Probably fail.
+			// Famous last words -- this should never happen.
+			return nil, err
 		}
 		ls.Add(*req)
 	}
-	return ls
+	return ls, nil
 }
 
 func getLabels(src *v1alpha1.GcpPubSubSource) map[string]string {
@@ -201,26 +208,17 @@ func getLabels(src *v1alpha1.GcpPubSubSource) map[string]string {
 	}
 }
 
-func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscriptionId, sinkURI string) *v1.Deployment {
+func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscriptionId, sinkURI string) (*v1.Deployment, error) {
 	credsVolume := "google-cloud-key"
 	credsMountPath := "/var/secrets/google"
 	credsFile := fmt.Sprintf("%s/key.json", credsMountPath)
 	replicas := int32(1)
 	dLabels := getLabels(src)
-	return &v1.Deployment{
+	dep := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    src.Namespace,
 			GenerateName: fmt.Sprintf("gcppubsub-%s-", src.Name),
 			Labels:       dLabels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: v1alpha1.SchemeGroupVersion.String(),
-					Kind:       "GcpPubSubSource",
-					Name:       src.Name,
-					UID:        src.UID,
-					Controller: &trueVal,
-				},
-			},
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -284,6 +282,8 @@ func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscript
 			},
 		},
 	}
+	err := controllerutil.SetControllerReference(src, dep, r.scheme)
+	return dep, err
 }
 
 func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) (*pubsub.Subscription, error) {

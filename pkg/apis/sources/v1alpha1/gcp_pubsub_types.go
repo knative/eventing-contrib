@@ -24,13 +24,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Important: Run "make" to regenerate code after modifying this file
+// Important: Run "make generate" to regenerate code after modifying this file
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ContainerSource is the Schema for the containersources API
+// GcpPubSubSource is the Schema for the gcppubsubsources API.
 // +k8s:openapi-gen=true
 // +kubebuilder:categories=all,knative,eventing,sources
 type GcpPubSubSource struct {
@@ -41,13 +41,13 @@ type GcpPubSubSource struct {
 	Status GcpPubSubSourceStatus `json:"status,omitempty"`
 }
 
-// Check that ContainerSource can be validated and can be defaulted.
+// Check that GcpPubSubSource can be validated and can be defaulted.
 var _ runtime.Object = (*GcpPubSubSource)(nil)
 
-// Check that ContainerSource implements the Conditions duck type.
+// Check that GcpPubSubSource implements the Conditions duck type.
 var _ = duck.VerifyType(&GcpPubSubSource{}, &duckv1alpha1.Conditions{})
 
-// ContainerSourceSpec defines the desired state of ContainerSource
+// GcpPubSubSourceSpec defines the desired state of the GcpPubSubSource.
 type GcpPubSubSourceSpec struct {
 	// GcpCredsSecret is the name of a K8s Secret in the same namespace as this GcpPubSubSource that
 	// contains the credentials used to authenticate with the GCP PubSub service. The credentials
@@ -68,15 +68,16 @@ type GcpPubSubSourceSpec struct {
 }
 
 const (
-	// ContainerSourceConditionReady has status True when the ContainerSource is ready to send events.
+	// GcpPubSubSourceConditionReady has status True when the GcpPubSubSource is ready to send events.
 	GcpPubSubSourceConditionReady = duckv1alpha1.ConditionReady
 
-	// ContainerConditionSinkProvided has status True when the ContainerSource has been configured with a sink target.
+	// GcpPubSubSourceConditionSinkProvided has status True when the GcpPubSubSource has been configured with a sink target.
 	GcpPubSubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
 
-	// ContainerConditionDeployed has status True when the ContainerSource has had it's deployment created.
+	// GcpPubSubSourceConditionDeployed has status True when the GcpPubSubSource has had it's receive adapter deployment created.
 	GcpPubSubSourceConditionDeployed duckv1alpha1.ConditionType = "Deployed"
 
+	// GcpPubSubSourceConditionSubscribed has status True when a GCP PubSub Subscription has been created pointing at the created receive adapter deployment.
 	GcpPubSubSourceConditionSubscribed duckv1alpha1.ConditionType = "Subscribed"
 )
 
@@ -85,7 +86,7 @@ var gcpPubSubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	GcpPubSubSourceConditionDeployed,
 	GcpPubSubSourceConditionSubscribed)
 
-// ContainerSourceStatus defines the observed state of ContainerSource
+// GcpPubSubSourceStatus defines the observed state of GcpPubSubSource.
 type GcpPubSubSourceStatus struct {
 	// Conditions holds the state of a source at a point in time.
 	// +optional
@@ -93,7 +94,7 @@ type GcpPubSubSourceStatus struct {
 	// +patchStrategy=merge
 	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	// SinkURI is the current active sink URI that has been configured for the ContainerSource.
+	// SinkURI is the current active sink URI that has been configured for the GcpPubSubSource.
 	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
 }
@@ -113,7 +114,7 @@ func (s *GcpPubSubSourceStatus) InitializeConditions() {
 	gcpPubSubSourceCondSet.Manage(s).InitializeConditions()
 }
 
-// MarSink sets the condition that the source has a sink configured.
+// MarkSink sets the condition that the source has a sink configured.
 func (s *GcpPubSubSourceStatus) MarkSink(uri string) {
 	s.SinkURI = uri
 	if len(uri) > 0 {
@@ -149,7 +150,7 @@ func (s *GcpPubSubSourceStatus) MarkSubscribed() {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ContainerSourceList contains a list of ContainerSource
+// GcpPubSubSourceList contains a list of GcpPubSubSources.
 type GcpPubSubSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

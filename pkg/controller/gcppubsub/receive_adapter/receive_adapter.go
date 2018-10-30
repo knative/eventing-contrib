@@ -23,6 +23,9 @@ const (
 	// Sink for messages.
 	envSinkURI = "SINK_URI"
 
+	// envTopic is the name of the environment variable that contains the GCP PubSub Topic being
+	// subscribed to's name. In the form that is unique within the project. E.g. 'laconia', not
+	// 'projects/my-gcp-project/topics/laconia'.
 	envTopic = "GCPPUBSUB_TOPIC"
 
 	// Name of the subscription to use
@@ -57,7 +60,7 @@ func main() {
 	sub := client.Subscription(subscriptionID)
 
 	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		logger.Info("Received message", zap.Any("messageData", m.Data))
+		logger.Debug("Received message", zap.Any("messageData", m.Data))
 		err = postMessage(sinkURI, source, m, logger)
 		if err != nil {
 			logger.Error("Failed to post message", zap.Error(err))
@@ -75,7 +78,9 @@ func getRequiredEnv(envKey string) string {
 	if val, defined := os.LookupEnv(envKey); defined {
 		return val
 	}
-	panic(fmt.Errorf("required environment variable not defined '%s'", envKey))
+	log.Fatalf("required environment variable not defined '%s'", envKey)
+	// Unreachable.
+	return ""
 }
 
 func postMessage(sinkURI, source string, m *pubsub.Message, logger *zap.Logger) error {
@@ -92,7 +97,7 @@ func postMessage(sinkURI, source string, m *pubsub.Message, logger *zap.Logger) 
 		return err
 	}
 
-	logger.Info("Posting message", zap.String("sinkURI", sinkURI))
+	logger.Debug("Posting message", zap.String("sinkURI", sinkURI))
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -100,6 +105,6 @@ func postMessage(sinkURI, source string, m *pubsub.Message, logger *zap.Logger) 
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Info("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
+	logger.Debug("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
 	return nil
 }
