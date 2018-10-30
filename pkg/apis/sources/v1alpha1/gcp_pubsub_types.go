@@ -69,23 +69,23 @@ type GcpPubSubSourceSpec struct {
 }
 
 const (
-	// GcpPubSubSourceConditionReady has status True when the GcpPubSubSource is ready to send events.
-	GcpPubSubSourceConditionReady = duckv1alpha1.ConditionReady
+	// GcpPubSubConditionReady has status True when the GcpPubSubSource is ready to send events.
+	GcpPubSubConditionReady = duckv1alpha1.ConditionReady
 
-	// GcpPubSubSourceConditionSinkProvided has status True when the GcpPubSubSource has been configured with a sink target.
-	GcpPubSubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+	// GcpPubSubConditionSinkProvided has status True when the GcpPubSubSource has been configured with a sink target.
+	GcpPubSubConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
 
-	// GcpPubSubSourceConditionDeployed has status True when the GcpPubSubSource has had it's receive adapter deployment created.
-	GcpPubSubSourceConditionDeployed duckv1alpha1.ConditionType = "Deployed"
+	// GcpPubSubConditionDeployed has status True when the GcpPubSubSource has had it's receive adapter deployment created.
+	GcpPubSubConditionDeployed duckv1alpha1.ConditionType = "Deployed"
 
-	// GcpPubSubSourceConditionSubscribed has status True when a GCP PubSub Subscription has been created pointing at the created receive adapter deployment.
-	GcpPubSubSourceConditionSubscribed duckv1alpha1.ConditionType = "Subscribed"
+	// GcpPubSubConditionSubscribed has status True when a GCP PubSub Subscription has been created pointing at the created receive adapter deployment.
+	GcpPubSubConditionSubscribed duckv1alpha1.ConditionType = "Subscribed"
 )
 
 var gcpPubSubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
-	GcpPubSubSourceConditionSinkProvided,
-	GcpPubSubSourceConditionDeployed,
-	GcpPubSubSourceConditionSubscribed)
+	GcpPubSubConditionSinkProvided,
+	GcpPubSubConditionDeployed,
+	GcpPubSubConditionSubscribed)
 
 // GcpPubSubSourceStatus defines the observed state of GcpPubSubSource.
 type GcpPubSubSourceStatus struct {
@@ -119,34 +119,34 @@ func (s *GcpPubSubSourceStatus) InitializeConditions() {
 func (s *GcpPubSubSourceStatus) MarkSink(uri string) {
 	s.SinkURI = uri
 	if len(uri) > 0 {
-		gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubSourceConditionSinkProvided)
+		gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubConditionSinkProvided)
 	} else {
-		gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
 	}
 }
 
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *GcpPubSubSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	gcpPubSubSourceCondSet.Manage(s).MarkFalse(GcpPubSubSourceConditionSinkProvided, reason, messageFormat, messageA...)
+	gcpPubSubSourceCondSet.Manage(s).MarkFalse(GcpPubSubConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
 // MarkDeployed sets the condition that the source has been deployed.
 func (s *GcpPubSubSourceStatus) MarkDeployed() {
-	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubSourceConditionDeployed)
+	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubConditionDeployed)
 }
 
 // MarkDeploying sets the condition that the source is deploying.
 func (s *GcpPubSubSourceStatus) MarkDeploying(reason, messageFormat string, messageA ...interface{}) {
-	gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubSourceConditionDeployed, reason, messageFormat, messageA...)
+	gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubConditionDeployed, reason, messageFormat, messageA...)
 }
 
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *GcpPubSubSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
-	gcpPubSubSourceCondSet.Manage(s).MarkFalse(GcpPubSubSourceConditionDeployed, reason, messageFormat, messageA...)
+	gcpPubSubSourceCondSet.Manage(s).MarkFalse(GcpPubSubConditionDeployed, reason, messageFormat, messageA...)
 }
 
 func (s *GcpPubSubSourceStatus) MarkSubscribed() {
-	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubSourceConditionSubscribed)
+	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubConditionSubscribed)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
