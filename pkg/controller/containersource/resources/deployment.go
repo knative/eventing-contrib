@@ -55,6 +55,9 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar.istio.io/inject": "true",
+					},
 					Labels: map[string]string{
 						"source": args.Name,
 					},
