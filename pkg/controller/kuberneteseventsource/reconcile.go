@@ -114,18 +114,8 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 		}
 	}
 
-	if cs.Status.IsReady() {
-		source.Status.MarkReady()
-	} else {
-		reason := ""
-		message := ""
-		if ready := cs.Status.GetCondition(sourcesv1alpha1.ContainerConditionReady); ready != nil {
-			reason = ready.Reason
-			message = ready.Message
-		}
-		source.Status.MarkUnready(reason, message)
-	}
-
+	// Copy ContainerSource conditions to source
+	source.Status.Conditions = cs.Status.Conditions.DeepCopy()
 	return nil
 }
 
