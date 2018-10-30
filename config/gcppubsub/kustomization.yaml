@@ -13,7 +13,7 @@ bases:
 resources:
   - ../crds/sources_v1alpha1_gcppubsubsource.yaml
   - istio_egress.yaml
-  - deployment.yaml
 
 patches:
   - conditions_patch.yaml
+  - env_patch.yaml

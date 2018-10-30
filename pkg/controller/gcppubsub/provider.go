@@ -32,6 +32,10 @@ const (
 	// itself when creating events.
 	controllerAgentName = "gcp-pubsub-source-controller"
 
+	// gcpPubSubEnabledEnvVar is used to determine if the GCP PubSub Source's controller should run.
+	// It will only run if the environment variable is defined and has the value 'true'.
+	gcpPubSubEnabledEnvVar = "ENABLE_GCPPUBSUB_SOURCE"
+
 	raImageEnvVar          = "GCPPUBSUB_RA_IMAGE"
 	raServiceAccountEnvVar = "GCPPUBSUB_RA_SERVICE_ACCOUNT"
 )
@@ -40,6 +44,9 @@ const (
 // default RBAC. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
 func Add(mgr manager.Manager) error {
+	if enabled, defined := os.LookupEnv(gcpPubSubEnabledEnvVar); !defined || enabled != "true" {
+		return nil
+	}
 	raImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)

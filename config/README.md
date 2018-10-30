@@ -28,4 +28,15 @@ ko apply -f config/default.yaml
 
 ### GCP PubSub
 
-The GCP PubSub source is not active in the `default.yaml` config. Add it by 
+The GCP PubSub source is not active in the `default.yaml` config. Add it by using the `kustomization.yaml` file in `gcppubsub` (instead of the one in `default`):
+
+```shell
+kustomize build config/gcppubsub/ > custom.yaml
+ko apply -f custom.yaml
+```
+
+or use the prebuilt
+
+```shell
+ko apply -f config/default-gcppubsub.yaml
+```

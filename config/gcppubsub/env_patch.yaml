@@ -1,25 +1,19 @@
+# This adds the various environment variables needed by the GCP PubSub Source controller. It also
+# adds anything needed by those environment variables (e.g. the secret volume whose location is in
+# a env variable).
 
-apiVersion: v1
-kind: Deployment
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: gcp-pubsub-source-controller
-  labels: &labels
-    control-plane: controller-manager
-    knative-source: gcp-pubsub
+  name: controller-manager
 spec:
-  selector:
-    matchLabels: *labels
-  replicas: 1
   template:
-    metadata:
-      labels: *labels
     spec:
-      serviceAccountName: gcp-pubsub-source
       containers:
-        - image: github.com/knative/eventing-sources/cmd/manager
-          name: manager
-          terminationGracePeriodSeconds: 10
+        - name: manager
           env:
+            - name: ENABLE_GCPPUBSUB_SOURCE
+              value: 'true'
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /var/secrets/google/key.json
             - name: GCPPUBSUB_RA_IMAGE

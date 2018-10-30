@@ -28,8 +28,11 @@ ${REPO_ROOT_DIR}/hack/update-deps.sh
 # Generate manifests e.g. CRD, RBAC etc.
 go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
 
-# Generate the defailt config from kustomize.
+# Generate the default config from kustomize.
 kustomize build config/default/ > config/default.yaml
 
 # To deploy controller in the configured Kubernetes cluster in ~/.kube/config
 # kustomize build config/default | ko apply -f /dev/stdin/
+
+# Generate the default config that includes gcppubsub.
+kustomize build config/gcppubsub/ > config/default-gcppubsub.yaml
