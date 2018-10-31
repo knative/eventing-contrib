@@ -32,6 +32,9 @@ var _ = duck.VerifyType(&KubernetesEventSource{}, &duckv1alpha1.Conditions{})
 
 // KubernetesEventSourceSpec defines the desired state of the source.
 type KubernetesEventSourceSpec struct {
+	// Namespace that we watch kubernetes events in.
+	Namespace string `json:"namespace"`
+
 	// Sink is a reference to an object that will resolve to a domain name to use
 	// as the sink.
 	// +optional
