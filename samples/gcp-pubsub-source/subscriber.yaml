@@ -11,7 +11,7 @@ spec:
       revisionTemplate:
         spec:
           container:
-            image: github.com/adamharwayne/knative-playground/cmd/dumper
+            image: github.com/knative/eventing-sources/samples/gcp-pubsub-source/dumper
 
 ---
 

@@ -24,9 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Important: Run "make generate" to regenerate code after modifying this file
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
