@@ -79,6 +79,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		Namespace: source.Namespace,
 		Image:     source.Spec.Image,
 		Args:      source.Spec.Args,
+		Env:       source.Spec.Env,
 	}
 
 	err = r.setSinkURIArg(source, args)

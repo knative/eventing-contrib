@@ -95,6 +95,13 @@ func (in *ContainerSourceSpec) DeepCopyInto(out *ContainerSourceSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Env != nil {
+		in, out := &in.Env, &out.Env
+		*out = make([]v1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.Sink != nil {
 		in, out := &in.Sink, &out.Sink
 		*out = new(v1.ObjectReference)
