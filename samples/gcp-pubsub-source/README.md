@@ -31,7 +31,7 @@
             kubectl -n knative-sources create secret generic gcppubsub-source-key --from-file=key.json=PATH_TO_KEY_FILE.json
             ```
             
-            - Note that you can change the secret's name and the secret's key, but will need to modify `default-gcppubsub.yaml` in a later step with the updated values (they are environment variables on the `Deployment`).
+            - Note that you can change the secret's name and the secret's key, but will need to modify `default-gcppubsub.yaml` in a later step with the updated values (they are environment variables on the `StatefulSet`).
     - The Receive Adapter's Service Account.
         1. Determine the Service Account to use, or create a new one.
         1. Give that Service Account the 'Pub/Sub Subscriber' role on your GCP project.
