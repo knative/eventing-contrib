@@ -1,15 +1,14 @@
-
 apiVersion: sources.eventing.knative.dev/v1alpha1
 kind: GcpPubSubSource
 metadata:
-  name: test
+  name: TOPIC-NAME-source
 spec:
   gcpCredsSecret:
     name: google-cloud-key
     key: key.json
-  googleCloudProject: harwayne2
-  topic: laconia
+  googleCloudProject: MY-GCP-PROJECT
+  topic: TOPIC-NAME
   sink:
     apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel
-    name: qux-2
+    name: qux-1
