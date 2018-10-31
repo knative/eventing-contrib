@@ -50,6 +50,8 @@ var (
 	// deletionTime is used when objects are marked as deleted. Rfc3339Copy()
 	// truncates to seconds to match the loss of precision during serialization.
 	deletionTime = metav1.Now().Rfc3339Copy()
+
+	trueVal = true
 )
 
 const (
@@ -60,6 +62,7 @@ const (
 
 	image      = "github.com/knative/test/image"
 	sourceName = "test-gcp-pub-sub-source"
+	sourceUID  = "1234-5678-90"
 	testNS     = "testnamespace"
 
 	sinkableName       = "testsink"
@@ -277,6 +280,23 @@ func TestReconcile(t *testing.T) {
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
+		}, {
+			Name: "successful create - reuse existing receive adapter",
+			InitialState: []runtime.Object{
+				getSource(),
+				getReceiveAdapter(),
+			},
+			Objects: getSinkable(),
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+						return controllertesting.Handled, errors.New("an error that won't be seen because create is not called")
+					},
+				},
+			},
+			WantPresent: []runtime.Object{
+				getReadySource(),
+			},
 		},
 	}
 	for _, tc := range testCases {
@@ -327,7 +347,10 @@ func getNonGcpPubSubSource() *sourcesv1alpha1.ContainerSource {
 
 func getSource() *sourcesv1alpha1.GcpPubSubSource {
 	obj := &sourcesv1alpha1.GcpPubSubSource{
-		TypeMeta:   sourceType(),
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+			Kind:       "GcpPubSubSource",
+		},
 		ObjectMeta: om(testNS, sourceName),
 		Spec: sourcesv1alpha1.GcpPubSubSourceSpec{
 			GcpCredsSecret: corev1.SecretKeySelector{
@@ -393,18 +416,12 @@ func getReadySource() *sourcesv1alpha1.GcpPubSubSource {
 	return src
 }
 
-func sourceType() metav1.TypeMeta {
-	return metav1.TypeMeta{
-		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
-		Kind:       "GcpPubSubSource",
-	}
-}
-
 func om(namespace, name string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Namespace: namespace,
 		Name:      name,
 		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
+		UID:       sourceUID,
 	}
 }
 
@@ -443,6 +460,25 @@ func getSinkable() []runtime.Object {
 					},
 				},
 			},
+		},
+	}
+}
+
+func getReceiveAdapter() *v1.Deployment {
+	return &v1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Controller: &trueVal,
+					UID:        sourceUID,
+				},
+			},
+			Labels:    getLabels(getSource()),
+			Namespace: testNS,
+		},
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: v1.SchemeGroupVersion.String(),
+			Kind:       "Deployment",
 		},
 	}
 }
