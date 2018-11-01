@@ -30,6 +30,7 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	//"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -152,6 +153,36 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid containersource, sink is sinkable, fields filled in",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			getContainerSource_filledIn(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			getDeployment(getContainerSource_filledIn()),
 		},
 		IgnoreTimes: true,
 	}, {
@@ -377,6 +408,15 @@ func getContainerSource() *sourcesv1alpha1.ContainerSource {
 	return obj
 }
 
+func getContainerSource_filledIn() *sourcesv1alpha1.ContainerSource {
+	obj := getContainerSource()
+	obj.ObjectMeta.UID = containerSourceUID
+	obj.Spec.Args = []string{"--foo", "bar"}
+	obj.Spec.Env = []corev1.EnvVar{{Name: "FOO", Value: "bar"}}
+	obj.Spec.ServiceAccountName = "foo"
+	return obj
+}
+
 func getContainerSource_sinkService() *sourcesv1alpha1.ContainerSource {
 	obj := &sourcesv1alpha1.ContainerSource{
 		TypeMeta:   containerSourceType(),
@@ -414,10 +454,59 @@ func getContainerSource_unsinkable() *sourcesv1alpha1.ContainerSource {
 	obj.ObjectMeta.SelfLink = ""
 	return obj
 }
+
+func getDeployment(source *sourcesv1alpha1.ContainerSource) *appsv1.Deployment {
+	sinkableURI := fmt.Sprintf("http://%s/", sinkableDNS)
+	args := append(source.Spec.Args, fmt.Sprintf("--sink=%s", sinkableURI))
+	env := append(source.Spec.Env, corev1.EnvVar{Name: "SINK", Value: sinkableURI})
+	return &appsv1.Deployment{
+		TypeMeta: deploymentType(),
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName:    fmt.Sprintf("%s-", source.Name),
+			Namespace:       source.Namespace,
+			OwnerReferences: getOwnerReferences(),
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"source": source.Name,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar.istio.io/inject": "true",
+					},
+					Labels: map[string]string{
+						"source": source.Name,
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name:            "source",
+						Image:           source.Spec.Image,
+						Args:            args,
+						Env:             env,
+						ImagePullPolicy: corev1.PullAlways,
+					}},
+					ServiceAccountName: source.Spec.ServiceAccountName,
+				},
+			},
+		},
+	}
+}
+
 func containerSourceType() metav1.TypeMeta {
 	return metav1.TypeMeta{
 		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 		Kind:       "ContainerSource",
+	}
+}
+
+func deploymentType() metav1.TypeMeta {
+	return metav1.TypeMeta{
+		APIVersion: appsv1.SchemeGroupVersion.String(),
+		Kind:       "Deployment",
 	}
 }
 
@@ -431,11 +520,12 @@ func om(namespace, name string) metav1.ObjectMeta {
 
 func getOwnerReferences() []metav1.OwnerReference {
 	return []metav1.OwnerReference{{
-		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
-		Kind:       "ContainerSource",
-		Name:       containerSourceName,
-		Controller: &trueVal,
-		UID:        containerSourceUID,
+		APIVersion:         sourcesv1alpha1.SchemeGroupVersion.String(),
+		Kind:               "ContainerSource",
+		Name:               containerSourceName,
+		Controller:         &trueVal,
+		BlockOwnerDeletion: &trueVal,
+		UID:                containerSourceUID,
 	}}
 }
 

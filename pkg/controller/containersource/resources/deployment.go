@@ -47,7 +47,6 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 			Namespace:    args.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: func() *int32 { var i int32 = 1; return &i }(),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"source": args.Name,
@@ -63,6 +62,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 					},
 				},
 				Spec: corev1.PodSpec{
+					ServiceAccountName: args.ServiceAccountName,
 					Containers: []corev1.Container{
 						{
 							Name:            "source",
