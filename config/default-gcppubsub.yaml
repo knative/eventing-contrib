@@ -298,6 +298,30 @@ rules:
   - list
   - watch
 - apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - githubsources
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - sources.eventing.knative.dev
   resources:
   - kuberneteseventsources
@@ -393,6 +417,8 @@ spec:
           value: github.com/knative/eventing-sources/cmd/gcppubsub_receive_adapter
         - name: K8S_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/kuberneteseventsource
+        - name: GH_RA_IMAGE
+          value: github.com/knative/eventing-sources/cmd/githubsource
         image: github.com/knative/eventing-sources/cmd/manager
         name: manager
         resources:

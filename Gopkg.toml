@@ -75,6 +75,10 @@ required = [
   name = "cloud.google.com/go"
   revision = "90f2606161ee6a14efe2ca79fc05ac2b8efe250b"
 
+[[constraint]]
+  name = "github.com/knative/serving"
+  version = "v0.1.1"
+
 # STANZAS BELOW ARE GENERATED AND MAY BE WRITTEN - DO NOT MODIFY BELOW THIS LINE.
 
 [[constraint]]

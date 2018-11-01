@@ -23,26 +23,34 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/controller/githubsource/resources"
 	duckapis "github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/logging"
+	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	serving "github.com/knative/serving/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // reconciler reconciles a GitHubSource object
 type reconciler struct {
-	client        client.Client
-	scheme        *runtime.Scheme
-	dynamicClient dynamic.Interface
-	recorder      record.EventRecorder
+	client              client.Client
+	scheme              *runtime.Scheme
+	dynamicClient       dynamic.Interface
+	recorder            record.EventRecorder
+	servingClient       serving.Clientset
+	receiveAdapterImage string
 }
 
 // TODO(n3wscott): To show the source is working, and while knative eventing is
@@ -74,16 +82,43 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		return object, nil
 	}
 
+	reconcileErr := r.reconcile(ctx, source)
+	return source, reconcileErr
+}
+
+func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSource) error {
 	source.Status.InitializeConditions()
 
 	uri, err := r.getSinkURI(ctx, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
-		return source, err
+		return err
 	}
 	source.Status.MarkSink(uri)
 
-	return source, nil
+	ksvc, err := r.getOwnedService(ctx, source)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			ksvc := resources.MakeService(source, r.receiveAdapterImage)
+			if err := controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
+				return err
+			}
+			if err := r.client.Create(ctx, ksvc); err != nil {
+				return err
+			}
+			r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
+			// TODO: Mark Deploying
+			// Wait for the Service to get a status
+			return nil
+		}
+	} else {
+		routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
+		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue {
+			// TODO: Mark Deployed
+		}
+	}
+
+	return nil
 }
 
 func (r *reconciler) getSinkURI(ctx context.Context, source *v1alpha1.GitHubSource) (string, error) {
@@ -126,6 +161,33 @@ func (r *reconciler) getSinkURI(ctx context.Context, source *v1alpha1.GitHubSour
 	}
 
 	return "", fmt.Errorf("sink does not contain sinkable")
+}
+
+func (r *reconciler) getOwnedService(ctx context.Context, source *v1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {
+	list := &servingv1alpha1.ServiceList{}
+	err := r.client.List(ctx, &client.ListOptions{
+		Namespace:     source.Namespace,
+		LabelSelector: labels.Everything(),
+		// TODO this is here because the fake client needs it.
+		// Remove this when it's no longer needed.
+		Raw: &metav1.ListOptions{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: servingv1alpha1.SchemeGroupVersion.String(),
+				Kind:       "Service",
+			},
+		},
+	},
+		list)
+	if err != nil {
+		return nil, err
+	}
+	for _, ksvc := range list.Items {
+		if metav1.IsControlledBy(&ksvc, source) {
+			//TODO if there are >1 controlled, delete all but first?
+			return &ksvc, nil
+		}
+	}
+	return nil, errors.NewNotFound(servingv1alpha1.Resource("services"), "")
 }
 
 // fetchObjectReference fetches an object based on ObjectReference.

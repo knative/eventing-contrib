@@ -22,6 +22,20 @@ spec:
           type: object
         spec:
           properties:
+            accessToken:
+              properties:
+                secretKeyRef:
+                  type: object
+              type: object
+            repository:
+              type: string
+            secretToken:
+              properties:
+                secretKeyRef:
+                  type: object
+              type: object
+            serviceAccountName:
+              type: string
             sink:
               type: object
           type: object
@@ -54,5 +68,5 @@ status:
   acceptedNames:
     kind: ""
     plural: ""
-  conditions: null
-  storedVersions: null
+  conditions: []
+  storedVersions: []

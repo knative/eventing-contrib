@@ -34,10 +34,34 @@ var _ = duck.VerifyType(&GitHubSource{}, &duckv1alpha1.Conditions{})
 
 // GitHubSourceSpec defines the desired state of GitHubSource
 type GitHubSourceSpec struct {
+	// ServiceAccountName holds the name of the Kubernetes service account
+	// as which the underlying K8s resources should be run. If unspecified
+	// this will default to the "default" service account for the namespace
+	// in which the GitHubSource exists.
+	// +optional
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+
+	// Repository is the GitHub repository to receive events from
+	Repository string `json:"repository,omitempty"`
+
+	// AccessToken is the Kubernetes secret containing the GitHub
+	// access token
+	AccessToken SecretValueFromSource `json:"accessToken,omitempty"`
+
+	// SecretToken is the Kubernetes secret containing the GitHub
+	// secret token
+	SecretToken SecretValueFromSource `json:"secretToken,omitempty"`
+
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+}
+
+// SecretValueFromSource represents the source of a secret value
+type SecretValueFromSource struct {
+	// The Secret key to select from.
+	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
 const (

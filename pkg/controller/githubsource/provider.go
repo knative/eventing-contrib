@@ -17,9 +17,12 @@ limitations under the License.
 package githubsource
 
 import (
+	"fmt"
+	"os"
+
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
-	appsv1 "k8s.io/api/apps/v1"
+	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -28,19 +31,26 @@ const (
 	// controllerAgentName is the string used by this controller to identify
 	// itself when creating events.
 	controllerAgentName = "github-source-controller"
+	raImageEnvVar       = "GH_RA_IMAGE"
 )
 
 // Add creates a new GitHubSource Controller and adds it to the
 // Manager with default RBAC. The Manager will set fields on the
 // Controller and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
+	receiveAdapterImage, defined := os.LookupEnv(raImageEnvVar)
+	if !defined {
+		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
+	}
+
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &sourcesv1alpha1.GitHubSource{},
-		Owns:      []runtime.Object{&appsv1.Deployment{}},
+		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
 		Reconciler: &reconciler{
-			recorder: mgr.GetRecorder(controllerAgentName),
-			scheme:   mgr.GetScheme(),
+			recorder:            mgr.GetRecorder(controllerAgentName),
+			scheme:              mgr.GetScheme(),
+			receiveAdapterImage: receiveAdapterImage,
 		},
 	}
 
