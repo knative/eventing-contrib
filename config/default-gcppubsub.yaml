@@ -38,6 +38,10 @@ spec:
               items:
                 type: string
               type: array
+            env:
+              items:
+                type: object
+              type: array
             image:
               minLength: 1
               type: string
@@ -105,7 +109,11 @@ spec:
           type: object
         spec:
           properties:
+            gcpCredsSecret:
+              type: object
             googleCloudProject:
+              type: string
+            serviceAccountName:
               type: string
             sink:
               type: object
@@ -168,8 +176,12 @@ spec:
           type: object
         spec:
           properties:
+            namespace:
+              type: string
             sink:
               type: object
+          required:
+          - namespace
           type: object
         status:
           properties:
@@ -374,9 +386,7 @@ spec:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
         - name: GCPPUBSUB_RA_IMAGE
-          value: github.com/knative/eventing-sources/pkg/controller/gcppubsub/receive_adapter
-        - name: GCPPUBSUB_RA_SERVICE_ACCOUNT
-          value: default
+          value: github.com/knative/eventing-sources/cmd/gcppubsub_receive_adapter
         - name: K8S_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/kuberneteseventsource/
         image: github.com/knative/eventing-sources/cmd/manager/

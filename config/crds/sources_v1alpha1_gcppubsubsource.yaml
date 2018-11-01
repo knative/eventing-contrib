@@ -27,7 +27,11 @@ spec:
           type: object
         spec:
           properties:
+            gcpCredsSecret:
+              type: object
             googleCloudProject:
+              type: string
+            serviceAccountName:
               type: string
             sink:
               type: object
