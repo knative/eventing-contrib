@@ -34,6 +34,8 @@ type pubSubClient interface {
 	Topic(name string) *pubsub.Topic
 }
 
+// realGcpPubSubClient is the client that will be used everywhere except unit tests. Verify that it
+// satisfies the interface.
 var _ pubSubClient = &realGcpPubSubClient{}
 
 // realGcpPubSubClient wraps a real GCP PubSub client, so that it matches the pubSubClient
@@ -55,11 +57,14 @@ func (c *realGcpPubSubClient) Topic(id string) *pubsub.Topic {
 	return c.client.Topic(id)
 }
 
-// pubSubSubscription is the set of methods we use on pubsub.Subscription.
+// pubSubSubscription is the set of methods we use on pubsub.Subscription. It exists to make
+// pubSubClient unit testable.
 type pubSubSubscription interface {
 	Exists(ctx context.Context) (bool, error)
 	ID() string
 	Delete(ctx context.Context) error
 }
 
+// pubsub.Subscription is the real pubSubSubscription that is used everywhere except unit tests.
+// Verify that it satisfies the interface.
 var _ pubSubSubscription = &pubsub.Subscription{}

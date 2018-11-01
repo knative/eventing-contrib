@@ -18,6 +18,7 @@ package gcppubsub
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
@@ -36,7 +37,11 @@ const (
 	// It will only run if the environment variable is defined and has the value 'true'.
 	gcpPubSubEnabledEnvVar = "ENABLE_GCPPUBSUB_SOURCE"
 
-	raImageEnvVar          = "GCPPUBSUB_RA_IMAGE"
+	// raImageEnvVar is the name of the environment variable that contains the receive adapter's
+	// image. It must be defined.
+	raImageEnvVar = "GCPPUBSUB_RA_IMAGE"
+	// raServiceAccountEnvVar is the name of the environment variable that contains the receive
+	// adapter's service account name. It must be defined.
 	raServiceAccountEnvVar = "GCPPUBSUB_RA_SERVICE_ACCOUNT"
 )
 
@@ -45,6 +50,7 @@ const (
 // the Manager is Started.
 func Add(mgr manager.Manager) error {
 	if enabled, defined := os.LookupEnv(gcpPubSubEnabledEnvVar); !defined || enabled != "true" {
+		log.Println("Skipping the GCP PubSub Source controller.")
 		return nil
 	}
 	raImage, defined := os.LookupEnv(raImageEnvVar)
@@ -56,6 +62,7 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raServiceAccountEnvVar)
 	}
 
+	log.Println("Adding the GCP PubSub Source controller.")
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.GcpPubSubSource{},
