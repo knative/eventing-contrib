@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"github.com/knative/eventing-sources/pkg/controller/gcppubsub/resources"
 
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 
@@ -29,7 +29,6 @@ import (
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -152,7 +151,7 @@ func (r *reconciler) removeFinalizer(s *v1alpha1.GcpPubSubSource) {
 	s.Finalizers = finalizers.List()
 }
 
-func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, subscriptionId, sinkURI string) (*v1.Deployment, error) {
+func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, subscriptionID, sinkURI string) (*v1.Deployment, error) {
 	ra, err := r.getReceiveAdapter(ctx, src)
 	if err != nil && !apierrors.IsNotFound(err) {
 		logging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
@@ -162,7 +161,15 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		return ra, nil
 	}
-	svc, err := r.makeReceiveAdapter(src, subscriptionId, sinkURI)
+	svc, err := resources.MakeReceiveAdapter(resources.ReceiveAdapterArgs{
+		ServiceAccountName: r.receiveAdapterServiceAccountName,
+		Image:              r.receiveAdapterImage,
+		Scheme:             r.scheme,
+		Source:             src,
+		Labels:             getLabels(src),
+		SubscriptionID:     subscriptionID,
+		SinkURI:            sinkURI,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -208,84 +215,6 @@ func getLabels(src *v1alpha1.GcpPubSubSource) map[string]string {
 		"knative-eventing-source":      controllerAgentName,
 		"knative-eventing-source-name": src.Name,
 	}
-}
-
-func (r *reconciler) makeReceiveAdapter(src *v1alpha1.GcpPubSubSource, subscriptionId, sinkURI string) (*v1.Deployment, error) {
-	credsVolume := "google-cloud-key"
-	credsMountPath := "/var/secrets/google"
-	credsFile := fmt.Sprintf("%s/%s", credsMountPath, src.Spec.GcpCredsSecret.Key)
-	replicas := int32(1)
-	dLabels := getLabels(src)
-	dep := &v1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace:    src.Namespace,
-			GenerateName: fmt.Sprintf("gcppubsub-%s-", src.Name),
-			Labels:       dLabels,
-		},
-		Spec: v1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: dLabels,
-			},
-			Replicas: &replicas,
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"sidecar.istio.io/inject": "true",
-					},
-					Labels: dLabels,
-				},
-				Spec: corev1.PodSpec{
-					ServiceAccountName: r.receiveAdapterServiceAccountName,
-					Containers: []corev1.Container{
-						{
-							Name:  "receive-adapter",
-							Image: r.receiveAdapterImage,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: credsFile,
-								},
-								{
-									Name:  "GCPPUBSUB_PROJECT",
-									Value: src.Spec.GoogleCloudProject,
-								},
-								{
-									Name:  "GCPPUBSUB_TOPIC",
-									Value: src.Spec.Topic,
-								},
-								{
-									Name:  "GCPPUBSUB_SUBSCRIPTION_ID",
-									Value: subscriptionId,
-								},
-								{
-									Name:  "SINK_URI",
-									Value: sinkURI,
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      credsVolume,
-									MountPath: credsMountPath,
-								},
-							},
-						},
-					},
-					Volumes: []corev1.Volume{
-						{
-							Name: credsVolume,
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: src.Spec.GcpCredsSecret.Name,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-	err := controllerutil.SetControllerReference(src, dep, r.scheme)
-	return dep, err
 }
 
 func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPubSubSource) (pubSubSubscription, error) {
