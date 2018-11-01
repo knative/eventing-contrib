@@ -35,6 +35,11 @@ type KubernetesEventSourceSpec struct {
 	// Namespace that we watch kubernetes events in.
 	Namespace string `json:"namespace"`
 
+	// ServiceAccountName is the name of the ServiceAccount to use to run this
+	// source.
+	// +optional
+	ServiceAccountName string `json:"serviceAccountName"`
+
 	// Sink is a reference to an object that will resolve to a domain name to use
 	// as the sink.
 	// +optional

@@ -32,9 +32,10 @@ func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource, receiveA
 			Namespace:    source.Namespace,
 		},
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
-			Image: receiveAdapterImage,
-			Args:  []string{fmt.Sprintf("--namespace=%s", source.Spec.Namespace)},
-			Sink:  source.Spec.Sink,
+			Image:              receiveAdapterImage,
+			Args:               []string{fmt.Sprintf("--namespace=%s", source.Spec.Namespace)},
+			ServiceAccountName: source.Spec.ServiceAccountName,
+			Sink:               source.Spec.Sink,
 		},
 	}
 }
