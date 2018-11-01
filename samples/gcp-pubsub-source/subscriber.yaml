@@ -31,4 +31,4 @@ spec:
       revisionTemplate:
         spec:
           container:
-            image: github.com/knative/eventing-sources/samples/gcp-pubsub-source/dumper
+            image: github.com/knative/eventing-sources/cmd/message_dumper

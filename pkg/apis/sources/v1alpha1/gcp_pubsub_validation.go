@@ -32,7 +32,7 @@ func (current *GcpPubSubSource) CheckImmutableFields(og apis.Immutable) *apis.Fi
 
 	// All of the fields are immutable because the controller doesn't understand when it would need
 	// to delete and create a new Receive Adapter with updated arguments. We could relax it slightly
-	// to allow a nil Sink -> non-nil Sink, but I don't think it is needed it yet.
+	// to allow a nil Sink -> non-nil Sink, but I don't think it is needed yet.
 	if diff := cmp.Diff(original.Spec, current.Spec); diff != "" {
 		return &apis.FieldError{
 			Message: "Immutable fields changed (-old +new)",
