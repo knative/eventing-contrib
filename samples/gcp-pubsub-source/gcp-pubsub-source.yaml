@@ -1,17 +1,17 @@
 # Replace the following before applying this file:
-#   TOPIC-NAME: Replace with the GCP PubSub Topic name.
-#   MY-GCP-PROJECT: Replace with the GCP Project's ID.
+#   TOPIC_NAME: Replace with the GCP PubSub Topic name.
+#   MY_GCP_PROJECT: Replace with the GCP Project's ID.
 
 apiVersion: sources.eventing.knative.dev/v1alpha1
 kind: GcpPubSubSource
 metadata:
-  name: TOPIC-NAME-source
+  name: TOPIC_NAME-source
 spec:
   gcpCredsSecret:
     name: google-cloud-key
     key: key.json
-  googleCloudProject: MY-GCP-PROJECT
-  topic: TOPIC-NAME
+  googleCloudProject: MY_GCP_PROJECT
+  topic: TOPIC_NAME
   sink:
     apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel

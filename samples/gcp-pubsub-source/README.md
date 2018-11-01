@@ -60,8 +60,8 @@
     - Note that if the `Source` Service Account secret is in a non-default location, you will need to update the YAML first.
     
 1. Replace the place holders in `gcp-pubsub-source.yaml`.
-    - `MY-GCP-PROJECT` should be replaced with your [Google Cloud Project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)'s ID.
-    - `TOPIC-NAME` should be replaced with your GCP PubSub Topic's name. It should be the unique portion within the project. E.g. `laconia`, not `projects/my-gcp-project/topics/laconia`.
+    - `MY_GCP_PROJECT` should be replaced with your [Google Cloud Project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)'s ID.
+    - `TOPIC_NAME` should be replaced with your GCP PubSub Topic's name. It should be the unique portion within the project. E.g. `laconia`, not `projects/my-gcp-project/topics/laconia`.
     - `qux-1` should be replaced with the name of the `Channel` you want messages sent to. If you deployed an unaltered `channel.yaml`, then you can leave it as `qux-1`.
     - `gcpCredsSecret` should be replaced if you are using a non-default secret or key name for the receive adapter's credentials.
     
