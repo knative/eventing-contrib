@@ -25,3 +25,11 @@ type ContainerSourceListerExpansion interface{}
 // ContainerSourceNamespaceListerExpansion allows custom methods to be added to
 // ContainerSourceNamespaceLister.
 type ContainerSourceNamespaceListerExpansion interface{}
+
+// KubernetesEventSourceListerExpansion allows custom methods to be added to
+// KubernetesEventSourceLister.
+type KubernetesEventSourceListerExpansion interface{}
+
+// KubernetesEventSourceNamespaceListerExpansion allows custom methods to be added to
+// KubernetesEventSourceNamespaceLister.
+type KubernetesEventSourceNamespaceListerExpansion interface{}

@@ -1,0 +1,54 @@
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: KubernetesEventSource
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: kuberneteseventsource-sample
+spec:
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: k8ssource
+    
+---
+  
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Channel
+metadata:
+  name: k8ssource
+spec:
+  provisioner:
+    name: in-memory-channel
+    
+---
+  
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: event-watcher
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+  
+---
+  
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  creationTimestamp: null
+  name: k8s-ra-event-watcher
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: event-watcher
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default

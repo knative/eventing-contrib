@@ -16,11 +16,16 @@ limitations under the License.
 
 package resources
 
+import (
+	corev1 "k8s.io/api/core/v1"
+)
+
 type ContainerArguments struct {
 	Name       string
 	Namespace  string
 	Image      string
 	Args       []string
+	Env        []corev1.EnvVar
 	SinkInArgs bool
 	Sink       string
 }

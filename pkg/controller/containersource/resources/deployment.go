@@ -35,6 +35,8 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 		containerArgs = append(containerArgs, remote)
 	}
 
+	env := append(args.Env, corev1.EnvVar{Name: "SINK", Value: args.Sink})
+
 	deploy := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -53,6 +55,9 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar.istio.io/inject": "true",
+					},
 					Labels: map[string]string{
 						"source": args.Name,
 					},
@@ -63,6 +68,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 							Name:            "source",
 							Image:           args.Image,
 							Args:            containerArgs,
+							Env:             env,
 							ImagePullPolicy: corev1.PullAlways,
 						},
 					},
