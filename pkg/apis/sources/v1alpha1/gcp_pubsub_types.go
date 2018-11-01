@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -40,6 +41,9 @@ type GcpPubSubSource struct {
 
 // Check that GcpPubSubSource can be validated and can be defaulted.
 var _ runtime.Object = (*GcpPubSubSource)(nil)
+
+// Check that GcpPubSubSource will be checked for immutable fields.
+var _ apis.Immutable = (*GcpPubSubSource)(nil)
 
 // Check that GcpPubSubSource implements the Conditions duck type.
 var _ = duck.VerifyType(&GcpPubSubSource{}, &duckv1alpha1.Conditions{})
