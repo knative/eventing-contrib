@@ -38,6 +38,7 @@ var (
 			Namespace:  "baz",
 			Name:       "qux",
 		},
+		ServiceAccountName: "service-account-name",
 	}
 )
 
@@ -63,6 +64,7 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 				GoogleCloudProject: fullSpec.GoogleCloudProject,
 				Topic:              fullSpec.Topic,
 				Sink:               fullSpec.Sink,
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},
@@ -78,6 +80,7 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 				GoogleCloudProject: fullSpec.GoogleCloudProject,
 				Topic:              fullSpec.Topic,
 				Sink:               fullSpec.Sink,
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},
@@ -93,6 +96,7 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 				GoogleCloudProject: "some-other-project",
 				Topic:              fullSpec.Topic,
 				Sink:               fullSpec.Sink,
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},
@@ -108,6 +112,7 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 				GoogleCloudProject: fullSpec.GoogleCloudProject,
 				Topic:              "some-other-topic",
 				Sink:               fullSpec.Sink,
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},
@@ -128,10 +133,11 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 					Namespace:  fullSpec.Sink.Namespace,
 					Name:       fullSpec.Sink.Name,
 				},
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},
-		"Sink.APIVersion kind": {
+		"Sink.Kind changed": {
 			orig: &fullSpec,
 			updated: GcpPubSubSourceSpec{
 				GcpCredsSecret: corev1.SecretKeySelector{
@@ -148,10 +154,11 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 					Namespace:  fullSpec.Sink.Namespace,
 					Name:       fullSpec.Sink.Name,
 				},
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},
-		"Sink.APIVersion namespace": {
+		"Sink.Namespace changed": {
 			orig: &fullSpec,
 			updated: GcpPubSubSourceSpec{
 				GcpCredsSecret: corev1.SecretKeySelector{
@@ -168,10 +175,11 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 					Namespace:  "some-other-namespace",
 					Name:       fullSpec.Sink.Name,
 				},
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},
-		"Sink.APIVersion name": {
+		"Sink.Name changed": {
 			orig: &fullSpec,
 			updated: GcpPubSubSourceSpec{
 				GcpCredsSecret: corev1.SecretKeySelector{
@@ -188,6 +196,28 @@ func TestGcpPubSubSourceCheckImmutableFields(t *testing.T) {
 					Namespace:  fullSpec.Sink.Namespace,
 					Name:       "some-other-name",
 				},
+				ServiceAccountName: fullSpec.ServiceAccountName,
+			},
+			allowed: false,
+		},
+		"ServiceAccountName changed": {
+			orig: &fullSpec,
+			updated: GcpPubSubSourceSpec{
+				GcpCredsSecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fullSpec.GcpCredsSecret.Name,
+					},
+					Key: fullSpec.GcpCredsSecret.Key,
+				},
+				GoogleCloudProject: fullSpec.GoogleCloudProject,
+				Topic:              fullSpec.Topic,
+				Sink: &corev1.ObjectReference{
+					APIVersion: fullSpec.Sink.APIVersion,
+					Kind:       fullSpec.Sink.Kind,
+					Namespace:  fullSpec.Sink.Namespace,
+					Name:       "some-other-name",
+				},
+				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,
 		},

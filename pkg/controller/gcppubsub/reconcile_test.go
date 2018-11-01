@@ -55,8 +55,7 @@ var (
 )
 
 const (
-	raImage    = "test-ra-image"
-	raSvcAccnt = "test-ra-service-account"
+	raImage = "test-ra-image"
 
 	pscData = "pubSubClientCreatorData"
 
@@ -315,8 +314,7 @@ func TestReconcile(t *testing.T) {
 
 			pubSubClientCreator: createPubSubClientCreator(tc.OtherTestData[pscData]),
 
-			receiveAdapterImage:              raImage,
-			receiveAdapterServiceAccountName: raSvcAccnt,
+			receiveAdapterImage: raImage,
 		}
 		r.InjectClient(c)
 		t.Run(tc.Name, tc.Runner(t, r, c))

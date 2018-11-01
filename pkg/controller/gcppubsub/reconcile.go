@@ -65,8 +65,7 @@ type reconciler struct {
 
 	pubSubClientCreator pubSubClientCreator
 
-	receiveAdapterImage              string
-	receiveAdapterServiceAccountName string
+	receiveAdapterImage string
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -162,13 +161,12 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		return ra, nil
 	}
 	svc, err := resources.MakeReceiveAdapter(resources.ReceiveAdapterArgs{
-		ServiceAccountName: r.receiveAdapterServiceAccountName,
-		Image:              r.receiveAdapterImage,
-		Scheme:             r.scheme,
-		Source:             src,
-		Labels:             getLabels(src),
-		SubscriptionID:     subscriptionID,
-		SinkURI:            sinkURI,
+		Image:          r.receiveAdapterImage,
+		Scheme:         r.scheme,
+		Source:         src,
+		Labels:         getLabels(src),
+		SubscriptionID: subscriptionID,
+		SinkURI:        sinkURI,
 	})
 	if err != nil {
 		return nil, err

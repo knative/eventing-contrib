@@ -18,8 +18,6 @@ spec:
               value: /var/secrets/google/key.json
             - name: GCPPUBSUB_RA_IMAGE
               value: github.com/knative/eventing-sources/cmd/gcppubsub_receive_adapter
-            - name: GCPPUBSUB_RA_SERVICE_ACCOUNT
-              value: default
           volumeMounts:
             - name: google-cloud-key
               mountPath: /var/secrets/google

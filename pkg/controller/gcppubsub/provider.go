@@ -40,9 +40,6 @@ const (
 	// raImageEnvVar is the name of the environment variable that contains the receive adapter's
 	// image. It must be defined.
 	raImageEnvVar = "GCPPUBSUB_RA_IMAGE"
-	// raServiceAccountEnvVar is the name of the environment variable that contains the receive
-	// adapter's service account name. It must be defined.
-	raServiceAccountEnvVar = "GCPPUBSUB_RA_SERVICE_ACCOUNT"
 )
 
 // Add creates a new GcpPubSubSource Controller and adds it to the Manager with
@@ -57,10 +54,6 @@ func Add(mgr manager.Manager) error {
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
-	raServiceAccount, defined := os.LookupEnv(raServiceAccountEnvVar)
-	if !defined {
-		return fmt.Errorf("required environment variable '%s' not defined", raServiceAccountEnvVar)
-	}
 
 	log.Println("Adding the GCP PubSub Source controller.")
 	p := &sdk.Provider{
@@ -68,10 +61,9 @@ func Add(mgr manager.Manager) error {
 		Parent:    &v1alpha1.GcpPubSubSource{},
 		Owns:      []runtime.Object{&v1.Deployment{}},
 		Reconciler: &reconciler{
-			scheme:                           mgr.GetScheme(),
-			pubSubClientCreator:              gcpPubSubClientCreator,
-			receiveAdapterImage:              raImage,
-			receiveAdapterServiceAccountName: raServiceAccount,
+			scheme:              mgr.GetScheme(),
+			pubSubClientCreator: gcpPubSubClientCreator,
+			receiveAdapterImage: raImage,
 		},
 	}
 

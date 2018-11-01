@@ -30,13 +30,12 @@ import (
 // ReceiveAdapterArgs are the arguments needed to create a GCP PubSub Source Receive Adapter. Every
 // field is required.
 type ReceiveAdapterArgs struct {
-	ServiceAccountName string
-	Image              string
-	Scheme             *runtime.Scheme
-	Source             *v1alpha1.GcpPubSubSource
-	Labels             map[string]string
-	SubscriptionID     string
-	SinkURI            string
+	Image          string
+	Scheme         *runtime.Scheme
+	Source         *v1alpha1.GcpPubSubSource
+	Labels         map[string]string
+	SubscriptionID string
+	SinkURI        string
 }
 
 // MakeReceiveAdapter generates (but does not insert into K8s) the Receive Adapter Deployment for
@@ -65,7 +64,7 @@ func MakeReceiveAdapter(args ReceiveAdapterArgs) (*v1.Deployment, error) {
 					Labels: args.Labels,
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: args.ServiceAccountName,
+					ServiceAccountName: args.Source.Spec.ServiceAccountName,
 					Containers: []corev1.Container{
 						{
 							Name:  "receive-adapter",

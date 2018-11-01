@@ -67,6 +67,10 @@ type GcpPubSubSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+
+	// ServiceAccoutName is the name of the ServiceAccount that will be used to run the Receive
+	// Adapter Deployment.
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 }
 
 const (
