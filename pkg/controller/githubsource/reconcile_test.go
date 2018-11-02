@@ -220,32 +220,6 @@ var testCases = []controllertesting.TestCase{
 		IgnoreTimes: true,
 		WantErrMsg:  `sink ref is nil`,
 	}, {
-		Name:       "valid githubsource, sink is targetable",
-		Reconciles: &sourcesv1alpha1.GitHubSource{},
-		InitialState: []runtime.Object{
-			getGitHubSource(),
-		},
-		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
-		Scheme:       scheme.Scheme,
-		Objects: []runtime.Object{
-			// sinkable resource
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": sinkableAPIVersion,
-					"kind":       sinkableKind,
-					"metadata": map[string]interface{}{
-						"namespace": testNS,
-						"name":      sinkableName,
-					},
-					"status": map[string]interface{}{
-						"targetable": map[string]interface{}{
-							"domainInternal": sinkableDNS,
-						},
-					},
-				},
-			},
-		},
-	}, {
 		Name:       "invalid githubsource, repository is empty",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
