@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// ContainerSources returns a ContainerSourceInformer.
 	ContainerSources() ContainerSourceInformer
+	// GcpPubSubSources returns a GcpPubSubSourceInformer.
+	GcpPubSubSources() GcpPubSubSourceInformer
 	// KubernetesEventSources returns a KubernetesEventSourceInformer.
 	KubernetesEventSources() KubernetesEventSourceInformer
 }
@@ -44,6 +46,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ContainerSources returns a ContainerSourceInformer.
 func (v *version) ContainerSources() ContainerSourceInformer {
 	return &containerSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// GcpPubSubSources returns a GcpPubSubSourceInformer.
+func (v *version) GcpPubSubSources() GcpPubSubSourceInformer {
+	return &gcpPubSubSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // KubernetesEventSources returns a KubernetesEventSourceInformer.

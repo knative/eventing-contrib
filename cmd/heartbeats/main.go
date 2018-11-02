@@ -19,7 +19,7 @@ package main
 import (
 	"flag"
 	"github.com/google/uuid"
-	"github.com/knative/eventing/pkg/event"
+	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -67,9 +67,9 @@ func main() {
 }
 
 // Creates a CloudEvent Context for a given heartbeat.
-func cloudEventsContext() *event.EventContext {
-	return &event.EventContext{
-		CloudEventsVersion: event.CloudEventsVersion,
+func cloudEventsContext() *cloudevents.EventContext {
+	return &cloudevents.EventContext{
+		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          "dev.knative.source.heartbeats",
 		EventID:            uuid.New().String(),
 		Source:             "heartbeats-demo",
@@ -83,7 +83,7 @@ func postMessage(target string, hb *Heartbeat) error {
 	log.Printf("posting to %q", target)
 	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
 	// event metadata.
-	req, err := event.Binary.NewRequest(target, hb, *ctx)
+	req, err := cloudevents.Binary.NewRequest(target, hb, *ctx)
 	if err != nil {
 		log.Printf("failed to create http request: %s", err)
 		return err
