@@ -42,6 +42,11 @@ required = [
   unused-packages = false
   non-go = false
 
+[[prune.project]]
+  name = "golang.org/x/net"
+  unused-packages = false
+  non-go = false
+
 [[override]]
   name = "github.com/knative/pkg"
   # HEAD as of 2018-11-02

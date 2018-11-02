@@ -480,7 +480,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e033187b8833cf38fee913916ee6302ef36148715d07800fb2bead1a56189162"
+  digest = "1:1244f7fbc53a2b9c4174e7e1e62ed5cad5f2f42c67abeac2400a7a72c6c76643"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -495,7 +495,7 @@
     "internal/timeseries",
     "trace",
   ]
-  pruneopts = "NUT"
+  pruneopts = "T"
   revision = "04a2e542c03f1d053ab3e4d6e5abcd4b66e2be8e"
 
 [[projects]]
