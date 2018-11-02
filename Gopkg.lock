@@ -296,17 +296,11 @@
   revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
 
 [[projects]]
-  digest = "1:63f3974f3afe3dc5b6a115c0d53b0897cd01be6880c4bf5d014fc69a95db6ed1"
+  digest = "1:38c165470f72f1114bde1fa42c555bab5883ab685c95ff32d4f74a1fddeddea1"
   name = "github.com/knative/serving"
   packages = [
-    "pkg/apis/istio",
-    "pkg/apis/istio/v1alpha3",
     "pkg/apis/serving",
     "pkg/apis/serving/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/istio/v1alpha3",
-    "pkg/client/clientset/versioned/typed/serving/v1alpha1",
   ]
   pruneopts = "NUT"
   revision = "37c640555a3241ed707962ba6b29d6c7fe68f937"
@@ -1070,7 +1064,6 @@
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/signals",
     "github.com/knative/serving/pkg/apis/serving/v1alpha1",
-    "github.com/knative/serving/pkg/client/clientset/versioned",
     "github.com/knative/test-infra",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
