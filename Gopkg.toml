@@ -18,6 +18,8 @@ required = [
 
 [prune]
   go-tests = true
+  unused-packages = true
+  non-go = true
 
 [[prune.project]]
   name = "github.com/knative/test-infra"
@@ -26,8 +28,8 @@ required = [
 
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2018-10-09
-  revision = "ba1a828cd571f605684f9a4506e85bc13cb65b8d"
+  # HEAD as of 2018-11-02
+  revision = "04b40fd38ac1cf17e0426b79860c792fd593ce71"
 
 [[override]]
   name = "k8s.io/api"
