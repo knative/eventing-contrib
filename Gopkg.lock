@@ -244,20 +244,13 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  branch = "master"
-  digest = "1:5f9056df2f0f5143cf9c86754c1c0d71db89644b02a75004a5cd70e08019388c"
-  name = "github.com/knative/eventing"
-  packages = ["pkg/event"]
-  pruneopts = "NUT"
-  revision = "5d73d6eac49404d1a7db461249d9219de7709a9f"
-
-[[projects]]
-  digest = "1:804ca940d47d3017c5440c9461eeeed0dc8227d566679be79d214218fcbc10f9"
+  digest = "1:f6243bc7622bbf9b2ae92c44f01fd9d496aee8858039f8b86289e15399262c4e"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
     "apis/duck",
     "apis/duck/v1alpha1",
+    "cloudevents",
     "logging",
     "logging/logkey",
     "signals",
@@ -1002,10 +995,10 @@
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/uuid",
-    "github.com/knative/eventing/pkg/event",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
+    "github.com/knative/pkg/cloudevents",
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/signals",
     "github.com/knative/test-infra",

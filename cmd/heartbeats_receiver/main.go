@@ -18,7 +18,7 @@ package main
 
 import (
 	"context"
-	"github.com/knative/eventing/pkg/event"
+	"github.com/knative/pkg/cloudevents"
 	"log"
 	"net/http"
 	"time"
@@ -30,11 +30,11 @@ type Heartbeat struct {
 }
 
 func handler(ctx context.Context, hb *Heartbeat) {
-	metadata := event.FromContext(ctx)
+	metadata := cloudevents.FromContext(ctx)
 	log.Printf("[%s] %s %s: %d,%q", metadata.EventTime.Format(time.RFC3339), metadata.ContentType, metadata.Source, hb.Sequence, hb.Label)
 }
 
 func main() {
 	log.Print("Ready and listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", event.Handler(handler)))
+	log.Fatal(http.ListenAndServe(":8080", cloudevents.Handler(handler)))
 }
