@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:a7f70a0a0c1cea618aba08a0120c8023fe07090da25cce5eb1a7e89a0dc7b65f"
+  digest = "1:97bdeb31587a8bee3e13eb4519db4cc592bff017632bb07cbcd7c02925d8d621"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
@@ -14,8 +14,7 @@
     "pubsub/internal/distribution",
   ]
   pruneopts = "NUT"
-  revision = "dfffe386c33fb24c34ee501e5723df5b97b98514"
-  version = "v0.30.0"
+  revision = "90f2606161ee6a14efe2ca79fc05ac2b8efe250b"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -104,7 +103,7 @@
   revision = "6f2cf27854a4a29e3811b0371547be335d411b8b"
 
 [[projects]]
-  digest = "1:a2ecb56e5053d942aafc86738915fb94c9131bac848c543b8b6764365fd69080"
+  digest = "1:2ad803563aaf977423818ad6bc3d8b3b898acde79131f1cb3541fdd4167b69f5"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -115,7 +114,7 @@
     "ptypes/empty",
     "ptypes/timestamp",
   ]
-  pruneopts = "T"
+  pruneopts = "NUT"
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
   version = "v1.2.0"
 
@@ -480,7 +479,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1244f7fbc53a2b9c4174e7e1e62ed5cad5f2f42c67abeac2400a7a72c6c76643"
+  digest = "1:4949cdd7a4dba50af120571c3f2defa631b8a1da52920f8f3f4bbbfd25fb4bec"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -495,7 +494,7 @@
     "internal/timeseries",
     "trace",
   ]
-  pruneopts = "T"
+  pruneopts = "NUT"
   revision = "04a2e542c03f1d053ab3e4d6e5abcd4b66e2be8e"
 
 [[projects]]
