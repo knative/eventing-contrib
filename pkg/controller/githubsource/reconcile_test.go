@@ -49,6 +49,10 @@ const (
 	unsinkableName       = "testunsinkable"
 	unsinkableKind       = "KResource"
 	unsinkableAPIVersion = "duck.knative.dev/v1alpha1"
+
+	secretName     = "testsecret"
+	accessTokenKey = "accessToken"
+	secretTokenKey = "secretToken"
 )
 
 // Adds the list of known types to Scheme.
@@ -135,6 +139,7 @@ var testCases = []controllertesting.TestCase{
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(sinkableURI)
+				s.Status.MarkValid()
 				return s
 			}(),
 		},
@@ -168,6 +173,7 @@ var testCases = []controllertesting.TestCase{
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSink("NotFound", "")
+				s.Status.MarkValid()
 				return s
 			}(),
 		},
@@ -207,6 +213,7 @@ var testCases = []controllertesting.TestCase{
 				s.Spec.Sink = nil
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSink("NotFound", "")
+				s.Status.MarkValid()
 				return s
 			}(),
 		},
@@ -238,6 +245,129 @@ var testCases = []controllertesting.TestCase{
 				},
 			},
 		},
+	}, {
+		Name:       "invalid githubsource, repository is empty",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.Repository = ""
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.Repository = ""
+				s.Status.InitializeConditions()
+				s.Status.MarkNotValid("RepositoryMissing", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `repository is empty`,
+	}, {
+		Name:       "invalid githubsource, access token ref is nil",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.AccessToken.SecretKeyRef = nil
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.AccessToken.SecretKeyRef = nil
+				s.Status.InitializeConditions()
+				s.Status.MarkNotValid("AccessTokenMissing", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `access token ref is nil`,
+	}, {
+		Name:       "invalid githubsource, secret token ref is nil",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.SecretToken.SecretKeyRef = nil
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.SecretToken.SecretKeyRef = nil
+				s.Status.InitializeConditions()
+				s.Status.MarkNotValid("SecretTokenMissing", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `secret token ref is nil`,
 	},
 }
 
@@ -263,6 +393,23 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 		TypeMeta:   gitHubSourceType(),
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
+			Repository: "foo/bar",
+			AccessToken: sourcesv1alpha1.SecretValueFromSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secretName,
+					},
+					Key: accessTokenKey,
+				},
+			},
+			SecretToken: sourcesv1alpha1.SecretValueFromSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secretName,
+					},
+					Key: secretTokenKey,
+				},
+			},
 			Sink: &corev1.ObjectReference{
 				Name:       sinkableName,
 				Kind:       sinkableKind,
@@ -280,6 +427,23 @@ func getGitHubSourceUnsinkable() *sourcesv1alpha1.GitHubSource {
 		TypeMeta:   gitHubSourceType(),
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
+			Repository: "foo/bar",
+			AccessToken: sourcesv1alpha1.SecretValueFromSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secretName,
+					},
+					Key: accessTokenKey,
+				},
+			},
+			SecretToken: sourcesv1alpha1.SecretValueFromSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secretName,
+					},
+					Key: secretTokenKey,
+				},
+			},
 			Sink: &corev1.ObjectReference{
 				Name:       unsinkableName,
 				Kind:       unsinkableKind,

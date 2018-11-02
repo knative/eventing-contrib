@@ -69,12 +69,17 @@ const (
 	// GitHubSource is ready to send events.
 	GitHubSourceConditionReady = duckv1alpha1.ConditionReady
 
+	// GitHubSourceConditionValid has status True when the
+	// GitHubSource has valid values in required spec fields
+	GitHubSourceConditionValid duckv1alpha1.ConditionType = "Valid"
+
 	// GitHubSourceConditionSinkProvided has status True when the
 	// GitHubSource has been configured with a sink target.
 	GitHubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
 )
 
 var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
+	GitHubSourceConditionValid,
 	GitHubSourceConditionSinkProvided)
 
 // GitHubSourceStatus defines the observed state of GitHubSource
@@ -104,6 +109,16 @@ func (s *GitHubSourceStatus) IsReady() bool {
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (s *GitHubSourceStatus) InitializeConditions() {
 	gitHubSourceCondSet.Manage(s).InitializeConditions()
+}
+
+// MarkValid sets the condition that the source has a valid spec
+func (s *GitHubSourceStatus) MarkValid() {
+	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionValid)
+}
+
+// MarkNotValid sets the condition that the source does not have a valid spec
+func (s *GitHubSourceStatus) MarkNotValid(reason, messageFormat string, messageA ...interface{}) {
+	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionValid, reason, messageFormat, messageA...)
 }
 
 // MarkSink sets the condition that the source has a sink configured.

@@ -18,6 +18,7 @@ package githubsource
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -31,7 +32,7 @@ import (
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	serving "github.com/knative/serving/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -89,6 +90,20 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSource) error {
 	source.Status.InitializeConditions()
 
+	if source.Spec.Repository == "" {
+		source.Status.MarkNotValid("RepositoryMissing", "")
+		return errors.New("repository is empty")
+	}
+	if source.Spec.AccessToken.SecretKeyRef == nil {
+		source.Status.MarkNotValid("AccessTokenMissing", "")
+		return errors.New("access token ref is nil")
+	}
+	if source.Spec.SecretToken.SecretKeyRef == nil {
+		source.Status.MarkNotValid("SecretTokenMissing", "")
+		return errors.New("secret token ref is nil")
+	}
+	source.Status.MarkValid()
+
 	uri, err := r.getSinkURI(ctx, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
@@ -98,7 +113,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSourc
 
 	ksvc, err := r.getOwnedService(ctx, source)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			ksvc := resources.MakeService(source, r.receiveAdapterImage)
 			if err := controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
 				return err
@@ -187,7 +202,7 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *v1alpha1.GitHu
 			return &ksvc, nil
 		}
 	}
-	return nil, errors.NewNotFound(servingv1alpha1.Resource("services"), "")
+	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
 }
 
 // fetchObjectReference fetches an object based on ObjectReference.
