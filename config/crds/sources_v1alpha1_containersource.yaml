@@ -38,6 +38,8 @@ spec:
             image:
               minLength: 1
               type: string
+            serviceAccountName:
+              type: string
             sink:
               type: object
           type: object

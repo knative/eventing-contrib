@@ -24,6 +24,8 @@ spec:
           properties:
             namespace:
               type: string
+            serviceAccountName:
+              type: string
             sink:
               type: object
           required:
