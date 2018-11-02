@@ -50,32 +50,65 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.MarkSink("uri://example")
 			return s
 		}(),
-		want: true,
+		want: false,
 	}, {
-		name: "mark sink then no sink",
+		name: "mark valid",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkValid()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and valid",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
+			s.MarkValid()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink and valid then no sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkValid()
 			s.MarkNoSink("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty",
+		name: "mark sink and valid then not valid",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink("uri://example")
+			s.MarkValid()
+			s.MarkNotValid("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty then sink",
+		name: "mark sink empty and valid",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
+			s.MarkValid()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink empty and valid then sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkValid()
 			s.MarkSink("uri://example")
 			return s
 		}(),
@@ -126,14 +159,42 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 		condQuery: GitHubSourceConditionReady,
 		want: &duckv1alpha1.Condition{
 			Type:   GitHubSourceConditionReady,
-			Status: corev1.ConditionTrue,
+			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink then no sink",
+		name: "mark valid",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkValid()
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink and valid",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
+			s.MarkValid()
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}, {
+		name: "mark sink and valid then no sink",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkValid()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
 		}(),
@@ -145,11 +206,29 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink empty",
+		name: "mark sink and valid then not valid",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkValid()
+			s.MarkNotValid("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    GitHubSourceConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink empty and valid",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
+			s.MarkValid()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -160,11 +239,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "Sink has resolved to empty.",
 		},
 	}, {
-		name: "mark sink empty then sink",
+		name: "mark sink empty and valid then sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
+			s.MarkValid()
 			s.MarkSink("uri://example")
 			return s
 		}(),
