@@ -190,6 +190,38 @@ rules:
   - list
   - watch
 - apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - gcppubsubsources
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - channels
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - sources.eventing.knative.dev
   resources:
   - kuberneteseventsources
