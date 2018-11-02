@@ -32,7 +32,6 @@ import (
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
-	serving "github.com/knative/serving/pkg/client/clientset/versioned"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
@@ -54,7 +53,6 @@ type reconciler struct {
 	scheme              *runtime.Scheme
 	dynamicClient       dynamic.Interface
 	recorder            record.EventRecorder
-	servingClient       serving.Clientset
 	receiveAdapterImage string
 }
 
