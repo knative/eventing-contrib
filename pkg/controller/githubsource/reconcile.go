@@ -27,7 +27,6 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/githubsource/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	"github.com/knative/eventing/pkg/sources/github"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"go.uber.org/zap"
@@ -127,7 +126,11 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
 			// TODO: Mark Deployed for the ksvc
 			// TODO: Mark some condition for the webhook status?
-			return r.createWebhook(ctx, source, receiveAdapterDomain)
+			if source.Status.WebhookIDKey == "" {
+				// TODO: We need to handle deleting the webhook if
+				// this source gets deleted
+				return r.createWebhook(ctx, source, receiveAdapterDomain)
+			}
 		}
 	}
 
@@ -225,7 +228,7 @@ func parseEventsFrom(eventType string) ([]string, error) {
 	if len(eventType) == 0 {
 		return []string(nil), fmt.Errorf("event type is empty")
 	}
-	event, ok := github.GithubEventType[eventType]
+	event, ok := sourcesv1alpha1.GitHubSourceGitHubEventType[eventType]
 	if !ok {
 		return []string(nil), fmt.Errorf("event type is unknown: %s", eventType)
 	}
