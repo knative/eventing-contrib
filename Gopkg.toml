@@ -36,16 +36,6 @@ required = [
   unused-packages = false
   non-go = false
 
-[[prune.project]]
-  name = "github.com/google/go-github"
-  unused-packages = true
-  non-go = true
-
-[[prune.project]]
-  name = "gopkg.in/go-playground/webhooks.v3"
-  unused-packages = true
-  non-go = true
-
 [[override]]
   name = "github.com/knative/pkg"
   # HEAD as of 2018-11-05

@@ -206,12 +206,6 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-- apiGroups:
   - sources.eventing.knative.dev
   resources:
   - gcppubsubsources
@@ -255,6 +249,12 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
