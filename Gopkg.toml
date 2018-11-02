@@ -37,6 +37,11 @@ required = [
   unused-packages = false
   non-go = false
 
+[[prune.project]]
+  name = "github.com/golang/protobuf"
+  unused-packages = false
+  non-go = false
+
 [[override]]
   name = "github.com/knative/pkg"
   # HEAD as of 2018-11-02
