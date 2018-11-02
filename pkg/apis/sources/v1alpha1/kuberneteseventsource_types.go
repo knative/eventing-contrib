@@ -38,7 +38,7 @@ type KubernetesEventSourceSpec struct {
 	// ServiceAccountName is the name of the ServiceAccount to use to run this
 	// source.
 	// +optional
-	ServiceAccountName string `json:"serviceAccountName"`
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to use
 	// as the sink.
