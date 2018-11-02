@@ -15,4 +15,3 @@ spec:
                 properties:
                   lastTransitionTime:
                     type: string
-status: null

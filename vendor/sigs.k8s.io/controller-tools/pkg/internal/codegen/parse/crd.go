@@ -91,6 +91,9 @@ func (b *APIs) parseCRDs() {
 						resource.HasStatusSubresource = true
 					}
 
+					resource.CRD.Status.Conditions = []v1beta1.CustomResourceDefinitionCondition{}
+					resource.CRD.Status.StoredVersions = []string{}
+
 					if len(resource.ShortName) > 0 {
 						resource.CRD.Spec.Names.ShortNames = []string{resource.ShortName}
 					}

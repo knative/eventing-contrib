@@ -69,7 +69,7 @@ required = [
   # Kubebuilder is currently refactoring this into the kubebuilder area, unknown
   # if it will be better.
   source = "https://github.com/n3wscott/controller-tools.git"
-  version = "v0.1.1-assume_exe"
+  version = "v0.1.1-assume_exe_status"
 
 [[override]]
   name = "cloud.google.com/go"
