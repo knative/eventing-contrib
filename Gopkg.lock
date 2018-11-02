@@ -770,20 +770,20 @@
   version = "kubernetes-1.11.3"
 
 [[projects]]
-  digest = "1:8a5d7d39d58442d70717601f367e8cd9513615579fdeda93335ee1dca50f6ffd"
+  digest = "1:3b9c82e73290987c719062ba514f47cc95a7b1e10d9868b1e083e48044c0820b"
   name = "k8s.io/code-generator"
   packages = [
     "cmd/deepcopy-gen",
     "cmd/deepcopy-gen/args",
     "pkg/util",
   ]
-  pruneopts = "NUT"
+  pruneopts = "T"
   revision = "8c97d6ab64da020f8b151e9d3ed8af3172f5c390"
   version = "kubernetes-1.11.3"
 
 [[projects]]
   branch = "master"
-  digest = "1:63d18b00923c8c3b9b230b752bf0ab6da6bfdd02ca029c49455bfda97f3e0c26"
+  digest = "1:f90b6152db4c5ee920eda292be42f4103498429d4238ea3e4003972b0dc5cfdd"
   name = "k8s.io/gengo"
   packages = [
     "args",
@@ -794,7 +794,7 @@
     "parser",
     "types",
   ]
-  pruneopts = "NUT"
+  pruneopts = "T"
   revision = "7338e4bfd6915369a1375890db1bbda0158c9863"
 
 [[projects]]
