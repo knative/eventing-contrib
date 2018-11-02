@@ -20,4 +20,6 @@ package v1alpha1
 
 type ContainerSourceExpansion interface{}
 
+type GcpPubSubSourceExpansion interface{}
+
 type KubernetesEventSourceExpansion interface{}
