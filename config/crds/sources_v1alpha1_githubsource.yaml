@@ -27,6 +27,8 @@ spec:
                 secretKeyRef:
                   type: object
               type: object
+            eventType:
+              type: string
             repository:
               type: string
             secretToken:
@@ -60,6 +62,8 @@ spec:
                 type: object
               type: array
             sinkUri:
+              type: string
+            webhookIDKey:
               type: string
           type: object
       type: object

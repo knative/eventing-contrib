@@ -44,6 +44,9 @@ type GitHubSourceSpec struct {
 	// Repository is the GitHub repository to receive events from
 	Repository string `json:"repository,omitempty"`
 
+	// EventType is the type of event to receive from GitHub
+	EventType string `json:"eventType,omitempty"`
+
 	// AccessToken is the Kubernetes secret containing the GitHub
 	// access token
 	AccessToken SecretValueFromSource `json:"accessToken,omitempty"`
@@ -62,6 +65,24 @@ type GitHubSourceSpec struct {
 type SecretValueFromSource struct {
 	// The Secret key to select from.
 	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
+}
+
+const (
+	// GitHubSourcePullRequestEvent is the event type for a pull request
+	GitHubSourcePullRequestEvent = "dev.knative.source.github.pullrequest"
+	// GitHubSourceUnsupportedEvent is the event type for everything else
+	GitHubSourceUnsupportedEvent = "dev.knative.source.github.unsupported"
+)
+
+// GitHubSourceCloudEventType maps X-GitHub-Event types to CloudEvent types
+var GitHubSourceCloudEventType = map[string]string{
+	"pull_request": GitHubSourcePullRequestEvent,
+	"":             GitHubSourceUnsupportedEvent,
+}
+
+// GitHubSourceGitHubEventType maps CloudEvent types to X-GitHub-Event types
+var GitHubSourceGitHubEventType = map[string]string{
+	GitHubSourcePullRequestEvent: "pull_request",
 }
 
 const (
@@ -89,6 +110,9 @@ type GitHubSourceStatus struct {
 	// +patchMergeKey=type
 	// +patchStrategy=merge
 	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+
+	// WebhookIDKey is the ID of the webhook registered with GitHub
+	WebhookIDKey string `json:"webhookIDKey,omitempty"`
 
 	// SinkURI is the current active sink URI that has been configured
 	// for the GitHubSource.

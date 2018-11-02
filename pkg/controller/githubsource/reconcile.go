@@ -20,17 +20,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
-	"go.uber.org/zap"
-
-	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	ghclient "github.com/google/go-github/github"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/githubsource/resources"
+	"github.com/knative/eventing/pkg/sources/github"
 	duckapis "github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	serving "github.com/knative/serving/pkg/client/clientset/versioned"
+	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -65,7 +69,7 @@ const tryTargetable = true
 func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
 	logger := logging.FromContext(ctx)
 
-	source, ok := object.(*v1alpha1.GitHubSource)
+	source, ok := object.(*sourcesv1alpha1.GitHubSource)
 	if !ok {
 		logger.Errorf("could not find github source %v\n", object)
 		return object, nil
@@ -87,7 +91,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	return source, reconcileErr
 }
 
-func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSource) error {
+func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
 	source.Status.InitializeConditions()
 
 	if source.Spec.Repository == "" {
@@ -122,21 +126,122 @@ func (r *reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSourc
 				return err
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
-			// TODO: Mark Deploying
+			// TODO: Mark Deploying for the ksvc
 			// Wait for the Service to get a status
 			return nil
 		}
 	} else {
 		routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
-		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue {
-			// TODO: Mark Deployed
+		receiveAdapterDomain := ksvc.Status.Domain
+		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
+			// TODO: Mark Deployed for the ksvc
+			// TODO: Mark some condition for the webhook status?
+			return r.createWebhook(ctx, source, receiveAdapterDomain)
 		}
 	}
 
 	return nil
 }
 
-func (r *reconciler) getSinkURI(ctx context.Context, source *v1alpha1.GitHubSource) (string, error) {
+func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain string) error {
+	logger := logging.FromContext(ctx)
+
+	logger.Info("creating GitHub webhook")
+
+	owner, repo, err := parseOwnerRepoFrom(source.Spec.Repository)
+	if err != nil {
+		return err
+	}
+
+	events, err := parseEventsFrom(source.Spec.EventType)
+	if err != nil {
+		return err
+	}
+
+	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	if err != nil {
+		return fmt.Errorf("failed to get access token from GitHubSource: %v", err)
+	}
+
+	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	if err != nil {
+		return fmt.Errorf("failed to get secret token from GitHubSource: %v", err)
+	}
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: accessToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := ghclient.NewClient(tc)
+	active := true
+	config := make(map[string]interface{})
+	config["url"] = fmt.Sprintf("http://%s", domain)
+	config["content_type"] = "json"
+	config["secret"] = secretToken
+
+	// GitHub hook names are required to be named "web" or the name of a GitHub service
+	hookname := "web"
+	hook := ghclient.Hook{
+		Name:   &hookname,
+		URL:    &domain,
+		Events: events,
+		Active: &active,
+		Config: config,
+	}
+
+	h, resp, err := client.Repositories.CreateHook(ctx, owner, repo, &hook)
+	if err != nil {
+		logger.Infof("create webhook error response:\n%+v", resp)
+		return fmt.Errorf("failed to create the webhook: %v", err)
+	}
+	logger.Infof("created hook: %+v", h)
+
+	source.Status.WebhookIDKey = strconv.FormatInt(*h.ID, 10)
+	return nil
+}
+
+func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
+	secret := &corev1.Secret{}
+	err := r.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretKeySelector.Name}, secret)
+	if err != nil {
+		return "", err
+	}
+	return string(secret.Data[secretKeySelector.Key]), nil
+}
+
+func parseOwnerRepoFrom(resource string) (string, string, error) {
+	if len(resource) == 0 {
+		return "", "", fmt.Errorf("resouce is empty")
+	}
+	components := strings.Split(resource, "/")
+	if len(components) != 2 {
+		return "", "", fmt.Errorf("resouce is malformatted, expected 'owner/repo' but found %q", resource)
+	}
+	owner := components[0]
+	if len(owner) == 0 {
+		return "", "", fmt.Errorf("owner is empty, expected 'owner/repo' but found %q", resource)
+	}
+	repo := components[1]
+	if len(repo) == 0 {
+		return "", "", fmt.Errorf("repo is empty, expected 'owner/repo' but found %q", resource)
+	}
+
+	return owner, repo, nil
+}
+
+func parseEventsFrom(eventType string) ([]string, error) {
+	if len(eventType) == 0 {
+		return []string(nil), fmt.Errorf("event type is empty")
+	}
+	event, ok := github.GithubEventType[eventType]
+	if !ok {
+		return []string(nil), fmt.Errorf("event type is unknown: %s", eventType)
+	}
+	return []string{event}, nil
+}
+
+func (r *reconciler) getSinkURI(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (string, error) {
 	logger := logging.FromContext(ctx)
 
 	// check to see if the source has provided a sink ref in the spec. Lets look for it.
@@ -178,7 +283,7 @@ func (r *reconciler) getSinkURI(ctx context.Context, source *v1alpha1.GitHubSour
 	return "", fmt.Errorf("sink does not contain sinkable")
 }
 
-func (r *reconciler) getOwnedService(ctx context.Context, source *v1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {
+func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {
 	list := &servingv1alpha1.ServiceList{}
 	err := r.client.List(ctx, &client.ListOptions{
 		Namespace:     source.Namespace,

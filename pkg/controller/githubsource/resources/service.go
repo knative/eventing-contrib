@@ -32,6 +32,20 @@ func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage strin
 	labels := map[string]string{
 		"receive-adapter": "github",
 	}
+	sinkURI := source.Status.SinkURI
+	env := []corev1.EnvVar{
+		{
+			Name: "GITHUB_SECRET_TOKEN",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: source.Spec.SecretToken.SecretKeyRef,
+			},
+		},
+		{
+			Name:  "SINK",
+			Value: sinkURI,
+		},
+	}
+	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI)}
 	return &servingv1alpha1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),
@@ -46,18 +60,8 @@ func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage strin
 							ServiceAccountName: source.Spec.ServiceAccountName,
 							Container: corev1.Container{
 								Image: receiveAdapterImage,
-								Env: []corev1.EnvVar{
-									{
-										Name: "GITHUB_SECRET_TOKEN",
-										ValueFrom: &corev1.EnvVarSource{
-											SecretKeyRef: source.Spec.SecretToken.SecretKeyRef,
-										},
-									},
-									{
-										Name:  "TARGET",
-										Value: source.Status.SinkURI,
-									},
-								},
+								Env:   env,
+								Args:  containerArgs,
 							},
 						},
 					},
