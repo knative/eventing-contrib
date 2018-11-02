@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:5c3894b2aa4d6bead0ceeea6831b305d62879c871780e7b76296ded1b004bc57"
+  digest = "1:a7f70a0a0c1cea618aba08a0120c8023fe07090da25cce5eb1a7e89a0dc7b65f"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
