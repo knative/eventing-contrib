@@ -21,11 +21,12 @@ import (
 )
 
 type ContainerArguments struct {
-	Name       string
-	Namespace  string
-	Image      string
-	Args       []string
-	Env        []corev1.EnvVar
-	SinkInArgs bool
-	Sink       string
+	Name               string
+	Namespace          string
+	Image              string
+	Args               []string
+	Env                []corev1.EnvVar
+	ServiceAccountName string
+	SinkInArgs         bool
+	Sink               string
 }

@@ -75,11 +75,12 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	source.Status.InitializeConditions()
 
 	args := &resources.ContainerArguments{
-		Name:      source.Name,
-		Namespace: source.Namespace,
-		Image:     source.Spec.Image,
-		Args:      source.Spec.Args,
-		Env:       source.Spec.Env,
+		Name:               source.Name,
+		Namespace:          source.Namespace,
+		Image:              source.Spec.Image,
+		Args:               source.Spec.Args,
+		Env:                source.Spec.Env,
+		ServiceAccountName: source.Spec.ServiceAccountName,
 	}
 
 	err = r.setSinkURIArg(source, args)
