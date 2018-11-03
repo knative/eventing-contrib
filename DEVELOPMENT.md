@@ -53,48 +53,46 @@ Once you reach this point you are ready to do a full build and deploy as follows
 
 ## Installing a Source
 
-Once you've [setup your development environment](#getting-started), install a
-source with:
+Once you've [setup your development environment](#getting-started), install all
+sources _except gcppubsub_ with:
 
 <!-- TODO(n3wscott): Update to show how to install a single source. -->
 
 ```shell
-ko apply -f config/
+ko apply -f config/default.yaml
 ```
+
+This command is idempotent, so you can run it at any time to update your deployment.
+
+_See [config/README.md](./config/README.md) for instructions on installing the gcppubsub source._
 
 You can see things running with:
 
 ```shell
 $ kubectl -n knative-sources get pods
-NAME                       READY     STATUS    RESTARTS   AGE
-manager-59f7969778-4dt7l   1/1       Running   0          2h
+NAME                   READY     STATUS    RESTARTS   AGE
+controller-manager-0   1/1       Running   0          2h
 ```
 
 You can access the Eventing Manager's logs with:
 
 ```shell
-kubectl -n knative-source logs $(kubectl -n knative-souce get pods -l control-plane=controller-manager -o name)
+kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=controller-manager -o name)
 ```
 
 ## Iterating
 
 As you make changes to the code-base, there are two special cases to be aware of:
 
-- **If you change a type definition ([pkg/apis/](./pkg/apis/.)),** then you must run
-  [`./hack/update-codegen.sh`](./hack/update-codegen.sh).
 - **If you change a package's deps** (including adding external dep), then you must run
   [`./hack/update-deps.sh`](./hack/update-deps.sh).
+- **If you change a type definition ([pkg/apis/](./pkg/apis/.)),** then you must run
+  [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This also runs [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 
-
-These are both idempotent, and we expect that running these at `HEAD` to have
+These are both idempotent, and we expect that running these in the `master` branch to produce
 no diffs.
 
-Once the codegen and dependency information is correct, redeploying the
-controller is simply:
-
-```shell
-ko apply -f config/controller.yaml
-```
+Once the codegen and dependency information is correct, redeploy using the same `ko apply` command you used [Installing a Source](#installing-a-source).
 
 Or you can [clean it up completely](#clean-up) and start again.
 
@@ -108,7 +106,7 @@ test docs](./test/README.md).
 You can delete `Knative Sources` with:
 
 ```shell
-ko delete -f config/
+ko delete -f config/default.yaml
 ```
 
 <!-- 
