@@ -26,7 +26,8 @@ readonly EVENTING_SOURCES_RELEASE_GCR
 
 # Yaml files to generate, and the source config dir for them.
 declare -A RELEASES
-RELEASES["release.yaml"]="config"
+RELEASES["release-without-gcppubsub.yaml"]="config/default.yaml"
+RELEASES["release-with-gcppubsub.yaml"]="config/default-gcppubsub.yaml"
 readonly RELEASES
 
 # Script entry point.
@@ -55,7 +56,7 @@ all_yamls=()
 for yaml in "${!RELEASES[@]}"; do
   config="${RELEASES[${yaml}]}"
   echo "Building Knative Eventing Sources - ${config}"
-  ko resolve ${KO_FLAGS} -f ${config}/ > ${yaml}
+  ko resolve ${KO_FLAGS} -f ${config} > ${yaml}
   tag_images_in_yaml ${yaml} ${EVENTING_SOURCES_RELEASE_GCR} ${TAG}
   all_yamls+=(${yaml})
 done
