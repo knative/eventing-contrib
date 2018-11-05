@@ -260,23 +260,21 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  digest = "1:3b8adce8bbe5865d7155ddfadbd063915265f04a22ab47a3f5cddd7b32333d1e"
+  digest = "1:345bbba667abadd6263391c915251ede8d9fa6f6852839c60bb6738b6122b89c"
   name = "github.com/knative/build"
   packages = [
     "pkg/apis/build",
     "pkg/apis/build/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "5c1d8c8469d1ed34b2aecf4c2305b3a57fff2ee3"
+  revision = "94859753e2c6724df2be86f6a254f810895fa3eb"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:4a74e458f58c5ecdd8b14ff58e6e64552847f6c404e3d69e465062c7626f1365"
+  digest = "1:5f9056df2f0f5143cf9c86754c1c0d71db89644b02a75004a5cd70e08019388c"
   name = "github.com/knative/eventing"
-  packages = [
-    "pkg/event",
-    "pkg/sources/github",
-  ]
+  packages = ["pkg/event"]
   pruneopts = "NUT"
   revision = "5d73d6eac49404d1a7db461249d9219de7709a9f"
 
@@ -288,6 +286,7 @@
     "apis/duck",
     "apis/duck/v1alpha1",
     "cloudevents",
+    "kmeta",
     "logging",
     "logging/logkey",
     "signals",
@@ -296,15 +295,18 @@
   revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
 
 [[projects]]
-  digest = "1:38c165470f72f1114bde1fa42c555bab5883ab685c95ff32d4f74a1fddeddea1"
+  digest = "1:39d60b103c12246d5c192a7ba0805079f3206e57f9f5f3af6ccafa980f6d0ebd"
   name = "github.com/knative/serving"
   packages = [
+    "pkg/apis/autoscaling",
+    "pkg/apis/networking",
+    "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
     "pkg/apis/serving/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "37c640555a3241ed707962ba6b29d6c7fe68f937"
-  version = "v0.1.1"
+  revision = "5ec3b89b9ac9313dee514683229aefc3c8056577"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
@@ -1056,7 +1058,6 @@
     "github.com/google/go-github/github",
     "github.com/google/uuid",
     "github.com/knative/eventing/pkg/event",
-    "github.com/knative/eventing/pkg/sources/github",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",

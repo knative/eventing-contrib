@@ -412,12 +412,10 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: []servingv1alpha1.ServiceCondition{
-							servingv1alpha1.ServiceCondition{
-								Type:   servingv1alpha1.ServiceConditionRoutesReady,
-								Status: corev1.ConditionTrue,
-							},
-						},
+						Conditions: duckv1alpha1.Conditions{{
+							Type:   servingv1alpha1.ServiceConditionRoutesReady,
+							Status: corev1.ConditionTrue,
+						}},
 						Domain: serviceDNS,
 					},
 				}
