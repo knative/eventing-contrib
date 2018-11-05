@@ -51,6 +51,7 @@ func Add(mgr manager.Manager) error {
 			recorder:            mgr.GetRecorder(controllerAgentName),
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: receiveAdapterImage,
+			webhookCreator:      gitHubWebhookCreator,
 		},
 	}
 

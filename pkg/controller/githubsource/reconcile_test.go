@@ -25,6 +25,7 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -34,10 +35,15 @@ import (
 	"k8s.io/client-go/tools/record"
 )
 
+var (
+	trueVal = true
+)
+
 const (
 	image            = "github.com/knative/test/image"
 	gitHubSourceName = "testgithubsource"
 	testNS           = "testnamespace"
+	gitHubSourceUID  = "2b2219e2-ce67-11e8-b3a3-42010a8a00af"
 
 	sinkableDNS = "sinkable.sink.svc.cluster.local"
 	sinkableURI = "http://sinkable.sink.svc.cluster.local/"
@@ -53,6 +59,11 @@ const (
 	secretName     = "testsecret"
 	accessTokenKey = "accessToken"
 	secretTokenKey = "secretToken"
+
+	serviceName = gitHubSourceName + "-abc"
+	serviceDNS  = serviceName + "." + testNS + ".svc.cluster.local"
+
+	webhookData = "webhookCreatorData"
 )
 
 // Adds the list of known types to Scheme.
@@ -70,6 +81,7 @@ func init() {
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
 	duckAddKnownTypes(scheme.Scheme)
+	servingv1alpha1.AddToScheme(scheme.Scheme)
 }
 
 var testCases = []controllertesting.TestCase{
@@ -261,6 +273,47 @@ var testCases = []controllertesting.TestCase{
 		IgnoreTimes: true,
 		WantErrMsg:  `repository is empty`,
 	}, {
+		Name:       "invalid githubsource, eventType is empty",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.EventType = ""
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Spec.EventType = ""
+				s.Status.InitializeConditions()
+				s.Status.MarkNotValid("EventTypeMissing", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `event type is empty`,
+	}, {
 		Name:       "invalid githubsource, access token ref is nil",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
@@ -342,6 +395,82 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 		WantErrMsg:  `secret token ref is nil`,
+	}, {
+		Name:       "valid githubsource, webhook created",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Conditions: []servingv1alpha1.ServiceCondition{
+							servingv1alpha1.ServiceCondition{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							},
+						},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			func() runtime.Object {
+				secret := &corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      secretName,
+					},
+				}
+				return secret
+			}(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				hookID: "randomhookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}{
+							"domainInternal": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkableURI)
+				s.Status.MarkValid()
+				s.Status.WebhookIDKey = "randomhookid"
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
 	},
 }
 
@@ -353,9 +482,10 @@ func TestAllCases(t *testing.T) {
 		dc := tc.GetDynamicClient()
 
 		r := &reconciler{
-			dynamicClient: dc,
-			scheme:        tc.Scheme,
-			recorder:      recorder,
+			dynamicClient:  dc,
+			scheme:         tc.Scheme,
+			recorder:       recorder,
+			webhookCreator: createWebhookCreator(tc.OtherTestData[webhookData]),
 		}
 		r.InjectClient(c)
 		t.Run(tc.Name, tc.Runner(t, r, c))
@@ -368,6 +498,7 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
 			Repository: "foo/bar",
+			EventType:  "dev.knative.source.github.pullrequest",
 			AccessToken: sourcesv1alpha1.SecretValueFromSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -402,6 +533,7 @@ func getGitHubSourceUnsinkable() *sourcesv1alpha1.GitHubSource {
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
 			Repository: "foo/bar",
+			EventType:  "dev.knative.source.github.pullrequest",
 			AccessToken: sourcesv1alpha1.SecretValueFromSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -442,6 +574,37 @@ func om(namespace, name string) metav1.ObjectMeta {
 		Namespace: namespace,
 		Name:      name,
 		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
+	}
+}
+
+func getOwnerReferences() []metav1.OwnerReference {
+	return []metav1.OwnerReference{{
+		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+		Kind:       "GitHubSource",
+		Name:       gitHubSourceName,
+		Controller: &trueVal,
+		UID:        gitHubSourceUID,
+	}}
+}
+
+type webhookCreatorData struct {
+	clientCreateErr error
+	hookID          string
+}
+
+func createWebhookCreator(value interface{}) webhookCreator {
+	var data webhookCreatorData
+	var ok bool
+	if data, ok = value.(webhookCreatorData); !ok {
+		data = webhookCreatorData{}
+	}
+	if data.clientCreateErr != nil {
+		return func(_ context.Context, _ *webhookCreatorOptions) (string, error) {
+			return "", data.clientCreateErr
+		}
+	}
+	return func(_ context.Context, _ *webhookCreatorOptions) (string, error) {
+		return data.hookID, nil
 	}
 }
 

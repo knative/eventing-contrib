@@ -44,6 +44,55 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+type webhookCreatorOptions struct {
+	accessToken string
+	secretToken string
+	domain      string
+	owner       string
+	repo        string
+	events      []string
+}
+
+// webhookCreator creates a webhook and makes unit testing easier
+type webhookCreator func(ctx context.Context, options *webhookCreatorOptions) (string, error)
+
+// gitHubWebhookCreator creates a GitHub webhook
+func gitHubWebhookCreator(ctx context.Context, options *webhookCreatorOptions) (string, error) {
+	logger := logging.FromContext(ctx)
+	domain := options.domain
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: options.accessToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := ghclient.NewClient(tc)
+	active := true
+	config := make(map[string]interface{})
+	config["url"] = fmt.Sprintf("http://%s", domain)
+	config["content_type"] = "json"
+	config["secret"] = options.secretToken
+
+	// GitHub hook names are required to be named "web" or the name of a GitHub service
+	hookname := "web"
+	hook := ghclient.Hook{
+		Name:   &hookname,
+		URL:    &domain,
+		Events: options.events,
+		Active: &active,
+		Config: config,
+	}
+
+	h, resp, err := client.Repositories.CreateHook(ctx, options.owner, options.repo, &hook)
+	if err != nil {
+		logger.Infof("create webhook error response:\n%+v", resp)
+		return "", fmt.Errorf("failed to create the webhook: %v", err)
+	}
+	logger.Infof("created hook: %+v", h)
+
+	return strconv.FormatInt(*h.ID, 10), nil
+}
+
 // reconciler reconciles a GitHubSource object
 type reconciler struct {
 	client              client.Client
@@ -51,6 +100,7 @@ type reconciler struct {
 	dynamicClient       dynamic.Interface
 	recorder            record.EventRecorder
 	receiveAdapterImage string
+	webhookCreator      webhookCreator
 }
 
 // Reconcile reads that state of the cluster for a GitHubSource
@@ -87,6 +137,10 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	if source.Spec.Repository == "" {
 		source.Status.MarkNotValid("RepositoryMissing", "")
 		return errors.New("repository is empty")
+	}
+	if source.Spec.EventType == "" {
+		source.Status.MarkNotValid("EventTypeMissing", "")
+		return errors.New("event type is empty")
 	}
 	if source.Spec.AccessToken.SecretKeyRef == nil {
 		source.Status.MarkNotValid("AccessTokenMissing", "")
@@ -162,36 +216,19 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 		return fmt.Errorf("failed to get secret token from GitHubSource: %v", err)
 	}
 
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: accessToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := ghclient.NewClient(tc)
-	active := true
-	config := make(map[string]interface{})
-	config["url"] = fmt.Sprintf("http://%s", domain)
-	config["content_type"] = "json"
-	config["secret"] = secretToken
-
-	// GitHub hook names are required to be named "web" or the name of a GitHub service
-	hookname := "web"
-	hook := ghclient.Hook{
-		Name:   &hookname,
-		URL:    &domain,
-		Events: events,
-		Active: &active,
-		Config: config,
+	hookOptions := &webhookCreatorOptions{
+		accessToken: accessToken,
+		secretToken: secretToken,
+		domain:      domain,
+		owner:       owner,
+		repo:        repo,
+		events:      events,
 	}
-
-	h, resp, err := client.Repositories.CreateHook(ctx, owner, repo, &hook)
+	hookID, err := r.webhookCreator(ctx, hookOptions)
 	if err != nil {
-		logger.Infof("create webhook error response:\n%+v", resp)
-		return fmt.Errorf("failed to create the webhook: %v", err)
+		return fmt.Errorf("failed to create webhook: %v", err)
 	}
-	logger.Infof("created hook: %+v", h)
-
-	source.Status.WebhookIDKey = strconv.FormatInt(*h.ID, 10)
+	source.Status.WebhookIDKey = hookID
 	return nil
 }
 
@@ -204,30 +241,24 @@ func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKey
 	return string(secret.Data[secretKeySelector.Key]), nil
 }
 
-func parseOwnerRepoFrom(resource string) (string, string, error) {
-	if len(resource) == 0 {
-		return "", "", fmt.Errorf("resouce is empty")
-	}
-	components := strings.Split(resource, "/")
+func parseOwnerRepoFrom(repository string) (string, string, error) {
+	components := strings.Split(repository, "/")
 	if len(components) != 2 {
-		return "", "", fmt.Errorf("resouce is malformatted, expected 'owner/repo' but found %q", resource)
+		return "", "", fmt.Errorf("repository is malformatted, expected 'owner/repo' but found %q", repository)
 	}
 	owner := components[0]
 	if len(owner) == 0 {
-		return "", "", fmt.Errorf("owner is empty, expected 'owner/repo' but found %q", resource)
+		return "", "", fmt.Errorf("owner is empty, expected 'owner/repo' but found %q", repository)
 	}
 	repo := components[1]
 	if len(repo) == 0 {
-		return "", "", fmt.Errorf("repo is empty, expected 'owner/repo' but found %q", resource)
+		return "", "", fmt.Errorf("repo is empty, expected 'owner/repo' but found %q", repository)
 	}
 
 	return owner, repo, nil
 }
 
 func parseEventsFrom(eventType string) ([]string, error) {
-	if len(eventType) == 0 {
-		return []string(nil), fmt.Errorf("event type is empty")
-	}
 	event, ok := sourcesv1alpha1.GitHubSourceGitHubEventType[eventType]
 	if !ok {
 		return []string(nil), fmt.Errorf("event type is unknown: %s", eventType)
