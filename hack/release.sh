@@ -27,7 +27,6 @@ readonly EVENTING_SOURCES_RELEASE_GCR
 # Yaml files to generate, and the source config dir for them.
 declare -A RELEASES
 RELEASES["release.yaml"]="config/default.yaml"
-RELEASES["release-without-gcppubsub.yaml"]="config/default.yaml"
 RELEASES["release-with-gcppubsub.yaml"]="config/default-gcppubsub.yaml"
 readonly RELEASES
 
