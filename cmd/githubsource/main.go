@@ -48,17 +48,12 @@ type GitHubHandler struct {
 func (h *GitHubHandler) HandlePullRequest(payload interface{}, header webhooks.Header) {
 	log.Print("Handling Pull Request")
 
-	hdr := http.Header(header)
+	eventType := sourcesv1alpha1.GitHubSourcePullRequestEvent
 
 	pl := payload.(gh.PullRequestPayload)
-
 	source := pl.PullRequest.HTMLURL
 
-	eventType, ok := sourcesv1alpha1.GitHubSourceCloudEventType[hdr.Get("X-GitHub-Event")]
-	if !ok {
-		eventType = sourcesv1alpha1.GitHubSourceUnsupportedEvent
-	}
-
+	hdr := http.Header(header)
 	eventID := hdr.Get("X-GitHub-Delivery")
 	if len(eventID) == 0 {
 		if uuid, err := uuid.NewRandom(); err != nil {

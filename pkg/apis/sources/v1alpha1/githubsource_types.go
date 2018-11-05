@@ -74,12 +74,6 @@ const (
 	GitHubSourceUnsupportedEvent = "dev.knative.source.github.unsupported"
 )
 
-// GitHubSourceCloudEventType maps X-GitHub-Event types to CloudEvent types
-var GitHubSourceCloudEventType = map[string]string{
-	"pull_request": GitHubSourcePullRequestEvent,
-	"":             GitHubSourceUnsupportedEvent,
-}
-
 // GitHubSourceGitHubEventType maps CloudEvent types to X-GitHub-Event types
 var GitHubSourceGitHubEventType = map[string]string{
 	GitHubSourcePullRequestEvent: "pull_request",
