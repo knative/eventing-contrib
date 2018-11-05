@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,15 +27,12 @@ import (
 	ghclient "github.com/google/go-github/github"
 	"github.com/google/uuid"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing/pkg/event"
-
+	"github.com/knative/pkg/cloudevents"
 	"gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 
 const (
-	// Sink for messages
-	envSink = "SINK"
 	// Environment variable containing GitHub secret token
 	envSecret = "GITHUB_SECRET_TOKEN"
 )
@@ -78,12 +74,11 @@ func main() {
 
 	flag.Parse()
 
-	secretToken := os.Getenv(envSecret)
-
 	if sink == nil || *sink == "" {
 		log.Fatalf("No sink given")
 	}
 
+	secretToken := os.Getenv(envSecret)
 	if secretToken == "" {
 		log.Fatalf("No secret token given")
 	}
@@ -113,22 +108,20 @@ func main() {
 }
 
 func postMessage(sink string, payload interface{}, source, eventType, eventID string) error {
-	URL := fmt.Sprintf("http://%s/", sink)
-
-	ctx := event.EventContext{
-		CloudEventsVersion: event.CloudEventsVersion,
+	ctx := cloudevents.EventContext{
+		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          eventType,
 		EventID:            eventID,
 		EventTime:          time.Now(),
 		Source:             source,
 	}
-	req, err := event.Binary.NewRequest(URL, payload, ctx)
+	req, err := cloudevents.Binary.NewRequest(sink, payload, ctx)
 	if err != nil {
 		log.Printf("Failed to marshal the message: %+v : %s", payload, err)
 		return err
 	}
 
-	log.Printf("Posting to %q", URL)
+	log.Printf("Posting to %q", sink)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
