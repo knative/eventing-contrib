@@ -20,6 +20,10 @@ set -o pipefail
 
 source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/library.sh
 
+function run_kustomize() {
+  run_go_tool sigs.k8s.io/kustomize kustomize "$@"
+}
+
 cd ${REPO_ROOT_DIR}
 
 # Ensure we have everything we need under vendor/
@@ -29,10 +33,10 @@ ${REPO_ROOT_DIR}/hack/update-deps.sh
 go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
 
 # Generate the default config from kustomize.
-run_go_tool kustomize sigs.k8s.io/kustomize build config/default/ > config/default.yaml
+run_kustomize build config/default/ > config/default.yaml
 
 # To deploy controller in the configured Kubernetes cluster in ~/.kube/config
-# kustomize build config/default | ko apply -f /dev/stdin/
+# run_kustomize build config/default | ko apply -f /dev/stdin/
 
 # Generate the default config that includes gcppubsub.
-run_go_tool kustomize sigs.k8s.io/kustomize build config/gcppubsub/ > config/default-gcppubsub.yaml
+run_kustomize build config/gcppubsub/ > config/default-gcppubsub.yaml

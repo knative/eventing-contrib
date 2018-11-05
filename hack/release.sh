@@ -26,13 +26,13 @@ readonly EVENTING_SOURCES_RELEASE_GCR
 
 # Yaml files to generate, and the source config dir for them.
 declare -A RELEASES
-RELEASES["release-without-gcppubsub.yaml"]="config/default.yaml"
+RELEASES["release.yaml"]="config/default.yaml"
 RELEASES["release-with-gcppubsub.yaml"]="config/default-gcppubsub.yaml"
 readonly RELEASES
 
 # Script entry point.
 
-parse_flags $@
+initialize $@
 
 set -o errexit
 set -o pipefail
@@ -43,9 +43,9 @@ banner "Building the release"
 
 # Set the repository
 export KO_DOCKER_REPO=${EVENTING_SOURCES_RELEASE_GCR}
+echo "- Destination GCR: ${EVENTING_SOURCES_RELEASE_GCR}"
 
 if (( PUBLISH_RELEASE )); then
-  echo "- Destination GCR: ${EVENTING_SOURCES_RELEASE_GCR}"
   echo "- Destination GCS: ${EVENTING_SOURCES_RELEASE_GCS}"
 fi
 
@@ -73,5 +73,7 @@ for yaml in ${all_yamls[@]}; do
   echo "Publishing ${yaml}"
   publish_yaml ${yaml} ${EVENTING_SOURCES_RELEASE_GCS} ${TAG}
 done
+
+branch_release "Knative Eventing Sources" "${all_yamls[@]}"
 
 echo "New release published successfully"
