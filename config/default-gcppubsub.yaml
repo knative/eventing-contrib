@@ -392,8 +392,8 @@ spec:
         - name: GCPPUBSUB_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/gcppubsub_receive_adapter
         - name: K8S_RA_IMAGE
-          value: github.com/knative/eventing-sources/cmd/kuberneteseventsource/
-        image: github.com/knative/eventing-sources/cmd/manager/
+          value: github.com/knative/eventing-sources/cmd/kuberneteseventsource
+        image: github.com/knative/eventing-sources/cmd/manager
         name: manager
         resources:
           limits:
