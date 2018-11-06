@@ -59,9 +59,13 @@ func TestNewReflectedStatusAccessor(t *testing.T) {
 		"set status with conditions": {
 			obj:     &v1alpha1.ContainerSource{},
 			initial: v1alpha1.ContainerSourceStatus{},
-			update: v1alpha1.ContainerSourceStatus{
-				SinkURI: "just testing",
-			},
+			update: func() v1alpha1.ContainerSourceStatus {
+				s := v1alpha1.ContainerSourceStatus{
+					SinkURI: "updated",
+				}
+				s.InitializeConditions()
+				return s
+			}(),
 		},
 		"replace status": {
 			obj: &v1alpha1.ContainerSource{
