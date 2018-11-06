@@ -112,8 +112,14 @@ func (r *Reconciler) needsUpdate(ctx context.Context, old, new runtime.Object) (
 	}
 
 	// Check Status.
-	os := NewReflectedStatusAccessor(old)
-	ns := NewReflectedStatusAccessor(new)
+	os, err := NewReflectedStatusAccessor(old)
+	if err != nil {
+		return false, err
+	}
+	ns, err := NewReflectedStatusAccessor(new)
+	if err != nil {
+		return false, err
+	}
 	oStatus := os.GetStatus()
 	nStatus := ns.GetStatus()
 
@@ -147,8 +153,14 @@ func (r *Reconciler) update(ctx context.Context, request reconcile.Request, obje
 	}
 
 	// Status
-	freshStatus := NewReflectedStatusAccessor(freshObj)
-	orgStatus := NewReflectedStatusAccessor(object)
+	freshStatus, err := NewReflectedStatusAccessor(freshObj)
+	if err != nil {
+		return nil, err
+	}
+	orgStatus, err := NewReflectedStatusAccessor(object)
+	if err != nil {
+		return nil, err
+	}
 	freshStatus.SetStatus(orgStatus.GetStatus())
 
 	// Finalizers
