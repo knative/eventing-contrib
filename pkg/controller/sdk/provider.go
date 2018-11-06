@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -47,12 +48,17 @@ type Provider struct {
 
 // ProvideController returns a controller for controller-runtime.
 func (p *Provider) Add(mgr manager.Manager) error {
+	return p.add(mgr, &Reconciler{
+		provider: *p,
+		recorder: mgr.GetRecorder(p.AgentName),
+	})
+}
+
+// ProvideController returns a controller for controller-runtime.
+func (p *Provider) add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Setup a new controller to Reconcile Subscriptions.
 	c, err := controller.New(p.AgentName, mgr, controller.Options{
-		Reconciler: &Reconciler{
-			provider: *p,
-			recorder: mgr.GetRecorder(p.AgentName),
-		},
+		Reconciler: r,
 	})
 	if err != nil {
 		return err

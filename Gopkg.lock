@@ -744,11 +744,14 @@
   version = "kubernetes-1.11.3"
 
 [[projects]]
-  digest = "1:47c5c037c8cb018f77a7b3c50e7278f50e595b7764340fbddd4bdba469b5369d"
+  digest = "1:e762108455a2930c3d35d270c67192f67c4d68135391e29dae2506156c630cd1"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
     "pkg/apis/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset",
+    "pkg/client/clientset/clientset/scheme",
+    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
   ]
   pruneopts = "NUT"
   revision = "b05d9bb7cc74a62c5daac9cef31894343e5d2c9b"
@@ -923,7 +926,7 @@
   revision = "e494cc58111187acad93e64529228a2fc0153e39"
 
 [[projects]]
-  digest = "1:2065f69665cc5fed8acaf8b4b1fb477aeaaef34a70e7d140514f7e1b476b10e2"
+  digest = "1:1169fa4077ef0955c3fe111317f77e97c97802c51cbe2f03eb43d462c778ac32"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/cache",
@@ -934,6 +937,8 @@
     "pkg/client/fake",
     "pkg/controller",
     "pkg/controller/controllerutil",
+    "pkg/envtest",
+    "pkg/envtest/printer",
     "pkg/event",
     "pkg/handler",
     "pkg/internal/controller",
@@ -1041,6 +1046,7 @@
     "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
+    "sigs.k8s.io/controller-runtime/pkg/envtest",
     "sigs.k8s.io/controller-runtime/pkg/handler",
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
