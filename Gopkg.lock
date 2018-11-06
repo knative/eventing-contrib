@@ -271,15 +271,7 @@
   version = "v0.2.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:5f9056df2f0f5143cf9c86754c1c0d71db89644b02a75004a5cd70e08019388c"
-  name = "github.com/knative/eventing"
-  packages = ["pkg/event"]
-  pruneopts = "NUT"
-  revision = "5d73d6eac49404d1a7db461249d9219de7709a9f"
-
-[[projects]]
-  digest = "1:c7fa3732aed841ac9b12025b4d4736c5c5d844500cf0854014c9879e7b161140"
+  digest = "1:4e2acba8aae54baf3edf83beeefb1c8e40c566f482c7bc91f6eacf28c1f3f032"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
