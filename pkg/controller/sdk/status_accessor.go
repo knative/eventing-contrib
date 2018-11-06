@@ -49,7 +49,7 @@ func NewReflectedStatusAccessor(object interface{}) (StatusAccessor, error) {
 			}, nil
 		}
 	}
-	return nil, fmt.Errorf("status was not a interface: %v", statusField.Kind())
+	return nil, fmt.Errorf("status was not an interface: %v", statusField.Kind())
 }
 
 // reflectedConditionsAccessor is an internal wrapper object to act as the
