@@ -24,8 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // Check that GitHubSource can be validated and can be defaulted.
 var _ runtime.Object = (*GitHubSource)(nil)
 
