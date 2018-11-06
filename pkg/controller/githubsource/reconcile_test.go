@@ -45,16 +45,16 @@ const (
 	testNS           = "testnamespace"
 	gitHubSourceUID  = "2b2219e2-ce67-11e8-b3a3-42010a8a00af"
 
-	sinkableDNS = "sinkable.sink.svc.cluster.local"
-	sinkableURI = "http://sinkable.sink.svc.cluster.local/"
+	addressableDNS = "addressable.sink.svc.cluster.local"
+	addressableURI = "http://addressable.sink.svc.cluster.local/"
 
-	sinkableName       = "testsink"
-	sinkableKind       = "Sink"
-	sinkableAPIVersion = "duck.knative.dev/v1alpha1"
+	addressableName       = "testsink"
+	addressableKind       = "Sink"
+	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 
-	unsinkableName       = "testunsinkable"
-	unsinkableKind       = "KResource"
-	unsinkableAPIVersion = "duck.knative.dev/v1alpha1"
+	unaddressableName       = "testunaddressable"
+	unaddressableKind       = "KResource"
+	unaddressableAPIVersion = "duck.knative.dev/v1alpha1"
 
 	secretName     = "testsecret"
 	accessTokenKey = "accessToken"
@@ -70,7 +70,7 @@ const (
 func duckAddKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(
 		duckv1alpha1.SchemeGroupVersion,
-		&duckv1alpha1.SinkList{},
+		&duckv1alpha1.AddressableTypeList{},
 	)
 	metav1.AddToGroupVersion(scheme, duckv1alpha1.SchemeGroupVersion)
 	return nil
@@ -100,30 +100,30 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		WantErrMsg:   `sinks.duck.knative.dev "testsink" not found`,
 	}, {
-		Name:       "valid githubsource, but sink is not sinkable",
+		Name:       "valid githubsource, but sink is not addressable",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
-			getGitHubSourceUnsinkable(),
+			getGitHubSourceUnaddressable(),
 			getGitHubSecrets(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// unsinkable resource
+			// unaddressable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
-					"apiVersion": unsinkableAPIVersion,
-					"kind":       unsinkableKind,
+					"apiVersion": unaddressableAPIVersion,
+					"kind":       unaddressableKind,
 					"metadata": map[string]interface{}{
 						"namespace": testNS,
-						"name":      unsinkableName,
+						"name":      unaddressableName,
 					},
 				},
 			},
 		},
-		WantErrMsg: "sink does not contain sinkable",
+		WantErrMsg: "sink does not contain address",
 	}, {
-		Name:       "valid githubsource, sink is sinkable",
+		Name:       "valid githubsource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
@@ -132,20 +132,20 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			getSinkableResource(),
+			getAddressableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkSink(sinkableURI)
+				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
 	}, {
-		Name:       "valid githubsource, sink is sinkable but sink is nil",
+		Name:       "valid githubsource, sink is addressable but sink is nil",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
@@ -154,17 +154,17 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// sinkable resource
+			// addressable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
-					"apiVersion": sinkableAPIVersion,
-					"kind":       sinkableKind,
+					"apiVersion": addressableAPIVersion,
+					"kind":       addressableKind,
 					"metadata": map[string]interface{}{
 						"namespace": testNS,
-						"name":      sinkableName,
+						"name":      addressableName,
 					},
 					"status": map[string]interface{}{
-						"sinkable": map[string]interface{}(nil),
+						"address": map[string]interface{}(nil),
 					},
 				},
 			},
@@ -179,7 +179,7 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink does not contain sinkable`,
+		WantErrMsg:  `sink does not contain address`,
 	}, {
 		Name:       "invalid githubsource, sink is nil",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
@@ -194,7 +194,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			getSinkableResource(),
+			getAddressableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
@@ -247,14 +247,14 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			getSinkableResource(),
+			getAddressableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.UID = gitHubSourceUID
 				s.Status.InitializeConditions()
-				s.Status.MarkSink(sinkableURI)
+				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
 				return s
@@ -300,7 +300,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			getSinkableResource(),
+			getAddressableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
@@ -308,7 +308,7 @@ var testCases = []controllertesting.TestCase{
 				s.UID = gitHubSourceUID
 				s.Spec.OwnerAndRepository = "myorganization"
 				s.Status.InitializeConditions()
-				s.Status.MarkSink(sinkableURI)
+				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "orghookid"
 				return s
@@ -324,7 +324,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			getSinkableResource(),
+			getAddressableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
@@ -354,7 +354,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			getSinkableResource(),
+			getAddressableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
@@ -411,9 +411,9 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 				},
 			},
 			Sink: &corev1.ObjectReference{
-				Name:       sinkableName,
-				Kind:       sinkableKind,
-				APIVersion: sinkableAPIVersion,
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
 			},
 		},
 	}
@@ -422,7 +422,7 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 	return obj
 }
 
-func getGitHubSourceUnsinkable() *sourcesv1alpha1.GitHubSource {
+func getGitHubSourceUnaddressable() *sourcesv1alpha1.GitHubSource {
 	obj := &sourcesv1alpha1.GitHubSource{
 		TypeMeta:   gitHubSourceType(),
 		ObjectMeta: om(testNS, gitHubSourceName),
@@ -446,9 +446,9 @@ func getGitHubSourceUnsinkable() *sourcesv1alpha1.GitHubSource {
 				},
 			},
 			Sink: &corev1.ObjectReference{
-				Name:       unsinkableName,
-				Kind:       unsinkableKind,
-				APIVersion: unsinkableAPIVersion,
+				Name:       unaddressableName,
+				Kind:       unaddressableKind,
+				APIVersion: unaddressableAPIVersion,
 			},
 		},
 	}
@@ -482,18 +482,18 @@ func getOwnerReferences() []metav1.OwnerReference {
 	}}
 }
 
-func getSinkableResource() *unstructured.Unstructured {
+func getAddressableResource() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": sinkableAPIVersion,
-			"kind":       sinkableKind,
+			"apiVersion": addressableAPIVersion,
+			"kind":       addressableKind,
 			"metadata": map[string]interface{}{
 				"namespace": testNS,
-				"name":      sinkableName,
+				"name":      addressableName,
 			},
 			"status": map[string]interface{}{
-				"sinkable": map[string]interface{}{
-					"domainInternal": sinkableDNS,
+				"address": map[string]interface{}{
+					"hostname": addressableDNS,
 				},
 			},
 		},
@@ -549,9 +549,9 @@ func createWebhookCreator(value interface{}) webhookCreator {
 func TestObjectNotGitHubSource(t *testing.T) {
 	r := reconciler{}
 	obj := &corev1.ObjectReference{
-		Name:       unsinkableName,
-		Kind:       unsinkableKind,
-		APIVersion: unsinkableAPIVersion,
+		Name:       unaddressableName,
+		Kind:       unaddressableKind,
+		APIVersion: unaddressableAPIVersion,
 	}
 
 	got, gotErr := r.Reconcile(context.TODO(), obj)
