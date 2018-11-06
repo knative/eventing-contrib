@@ -70,7 +70,7 @@ const (
 func duckAddKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(
 		duckv1alpha1.SchemeGroupVersion,
-		&duckv1alpha1.SinkList{},
+		&duckv1alpha1.AddressableTypeList{},
 	)
 	metav1.AddToGroupVersion(scheme, duckv1alpha1.SchemeGroupVersion)
 	return nil
@@ -98,7 +98,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		WantErrMsg:   `sinks.duck.knative.dev "testsink" not found`,
 	}, {
-		Name:       "valid containersource, but sink is not sinkable",
+		Name:       "valid containersource, but sink is not addressable",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource_unsinkable(),
@@ -106,7 +106,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// unsinkable resource
+			// unaddressable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": unsinkableAPIVersion,
@@ -118,9 +118,9 @@ var testCases = []controllertesting.TestCase{
 				},
 			},
 		},
-		WantErrMsg: "sink does not contain sinkable",
+		WantErrMsg: "sink does not contain address",
 	}, {
-		Name:       "valid containersource, sink is sinkable",
+		Name:       "valid containersource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource(),
@@ -128,7 +128,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// sinkable resource
+			// Addressable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -138,8 +138,8 @@ var testCases = []controllertesting.TestCase{
 						"name":      sinkableName,
 					},
 					"status": map[string]interface{}{
-						"sinkable": map[string]interface{}{
-							"domainInternal": sinkableDNS,
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
 						},
 					},
 				},
@@ -156,7 +156,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 	}, {
-		Name:       "valid containersource, sink is sinkable, fields filled in",
+		Name:       "valid containersource, sink is addressable, fields filled in",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource_filledIn(),
@@ -164,7 +164,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// sinkable resource
+			// Addressable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -174,8 +174,8 @@ var testCases = []controllertesting.TestCase{
 						"name":      sinkableName,
 					},
 					"status": map[string]interface{}{
-						"sinkable": map[string]interface{}{
-							"domainInternal": sinkableDNS,
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
 						},
 					},
 				},
@@ -186,7 +186,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 	}, {
-		Name:       "valid containersource, sink is sinkable but sink is nil",
+		Name:       "valid containersource, sink is Addressable but sink is nil",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource(),
@@ -194,7 +194,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// sinkable resource
+			// Addressable resource
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkableAPIVersion,
@@ -204,7 +204,7 @@ var testCases = []controllertesting.TestCase{
 						"name":      sinkableName,
 					},
 					"status": map[string]interface{}{
-						"sinkable": map[string]interface{}(nil),
+						"address": map[string]interface{}(nil),
 					},
 				},
 			},
@@ -218,7 +218,7 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink does not contain sinkable`,
+		WantErrMsg:  `sink does not contain address`,
 	}, {
 		Name:       "invalid containersource, sink is nil",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
