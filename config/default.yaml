@@ -114,7 +114,7 @@ spec:
             eventType:
               minLength: 1
               type: string
-            repository:
+            ownerAndRepository:
               minLength: 1
               type: string
             secretToken:
@@ -127,7 +127,7 @@ spec:
             sink:
               type: object
           required:
-          - repository
+          - ownerAndRepository
           - eventType
           - accessToken
           - secretToken

@@ -41,9 +41,14 @@ type GitHubSourceSpec struct {
 	// +optional
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
-	// Repository is the GitHub repository to receive events from
+	// OwnerAndRepository is the GitHub owner/org and repository to
+	// receive events from. The repository may be left off to receive
+	// events from an entire organization.
+	// Examples:
+	//  myuser/project
+	//  myorganization
 	// +kubebuilder:validation:MinLength=1
-	Repository string `json:"repository"`
+	OwnerAndRepository string `json:"ownerAndRepository"`
 
 	// EventType is the type of event to receive from GitHub. These
 	// correspond to the "Webhook event name" values listed at

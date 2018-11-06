@@ -82,7 +82,14 @@ func gitHubWebhookCreator(ctx context.Context, options *webhookCreatorOptions) (
 		Config: config,
 	}
 
-	h, resp, err := client.Repositories.CreateHook(ctx, options.owner, options.repo, &hook)
+	var h *ghclient.Hook
+	var resp *ghclient.Response
+	var err error
+	if options.repo != "" {
+		h, resp, err = client.Repositories.CreateHook(ctx, options.owner, options.repo, &hook)
+	} else {
+		h, resp, err = client.Organizations.CreateHook(ctx, options.owner, &hook)
+	}
 	if err != nil {
 		logger.Infof("create webhook error response:\n%+v", resp)
 		return "", fmt.Errorf("failed to create the webhook: %v", err)
@@ -189,7 +196,7 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 
 	logger.Info("creating GitHub webhook")
 
-	owner, repo, err := parseOwnerRepoFrom(source.Spec.Repository)
+	owner, repo, err := parseOwnerRepoFrom(source.Spec.OwnerAndRepository)
 	if err != nil {
 		return err
 	}
@@ -228,18 +235,18 @@ func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKey
 	return string(secretVal), nil
 }
 
-func parseOwnerRepoFrom(repository string) (string, string, error) {
-	components := strings.Split(repository, "/")
-	if len(components) != 2 {
-		return "", "", fmt.Errorf("repository is malformatted, expected 'owner/repo' but found %q", repository)
+func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
+	components := strings.Split(ownerAndRepository, "/")
+	if len(components) > 2 {
+		return "", "", fmt.Errorf("ownerAndRepository is malformatted, expected 'owner/repository' but found %q", ownerAndRepository)
 	}
 	owner := components[0]
-	if len(owner) == 0 {
-		return "", "", fmt.Errorf("owner is empty, expected 'owner/repo' but found %q", repository)
+	if len(owner) == 0 && len(components) > 1 {
+		return "", "", fmt.Errorf("owner is empty, expected 'owner/repository' but found %q", ownerAndRepository)
 	}
-	repo := components[1]
-	if len(repo) == 0 {
-		return "", "", fmt.Errorf("repo is empty, expected 'owner/repo' but found %q", repository)
+	repo := ""
+	if len(components) > 1 {
+		repo = components[1]
 	}
 
 	return owner, repo, nil

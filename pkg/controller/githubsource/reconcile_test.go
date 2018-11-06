@@ -209,7 +209,7 @@ var testCases = []controllertesting.TestCase{
 		IgnoreTimes: true,
 		WantErrMsg:  `sink ref is nil`,
 	}, {
-		Name:       "valid githubsource, webhook created",
+		Name:       "valid githubsource, repo webhook created",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			func() runtime.Object {
@@ -239,7 +239,9 @@ var testCases = []controllertesting.TestCase{
 		},
 		OtherTestData: map[string]interface{}{
 			webhookData: webhookCreatorData{
-				hookID: "randomhookid",
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
 			},
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
@@ -254,7 +256,61 @@ var testCases = []controllertesting.TestCase{
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(sinkableURI)
 				s.Status.MarkSecrets()
-				s.Status.WebhookIDKey = "randomhookid"
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid githubsource, org webhook created",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Spec.OwnerAndRepository = "myorganization"
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Conditions: duckv1alpha1.Conditions{{
+							Type:   servingv1alpha1.ServiceConditionRoutesReady,
+							Status: corev1.ConditionTrue,
+						}},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myorganization",
+				hookID:        "orghookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getSinkableResource(),
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Spec.OwnerAndRepository = "myorganization"
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkableURI)
+				s.Status.MarkSecrets()
+				s.Status.WebhookIDKey = "orghookid"
 				return s
 			}(),
 		},
@@ -336,8 +392,8 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 		TypeMeta:   gitHubSourceType(),
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
-			Repository: "foo/bar",
-			EventType:  "dev.knative.source.github.pullrequest",
+			OwnerAndRepository: "myuser/myproject",
+			EventType:          "dev.knative.source.github.pullrequest",
 			AccessToken: sourcesv1alpha1.SecretValueFromSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -371,8 +427,8 @@ func getGitHubSourceUnsinkable() *sourcesv1alpha1.GitHubSource {
 		TypeMeta:   gitHubSourceType(),
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
-			Repository: "foo/bar",
-			EventType:  "dev.knative.source.github.pullrequest",
+			OwnerAndRepository: "foo/bar",
+			EventType:          "dev.knative.source.github.pullrequest",
 			AccessToken: sourcesv1alpha1.SecretValueFromSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -459,6 +515,8 @@ func getGitHubSecrets() *corev1.Secret {
 
 type webhookCreatorData struct {
 	clientCreateErr error
+	expectedOwner   string
+	expectedRepo    string
 	hookID          string
 }
 
@@ -473,7 +531,15 @@ func createWebhookCreator(value interface{}) webhookCreator {
 			return "", data.clientCreateErr
 		}
 	}
-	return func(_ context.Context, _ *webhookCreatorOptions) (string, error) {
+	return func(_ context.Context, options *webhookCreatorOptions) (string, error) {
+		if data.expectedOwner != options.owner {
+			return "", fmt.Errorf(`expected webhook owner of "%s", got "%s"`,
+				data.expectedOwner, options.owner)
+		}
+		if data.expectedRepo != options.repo {
+			return "", fmt.Errorf(`expected webhook repository of "%s", got "%s"`,
+				data.expectedRepo, options.repo)
+		}
 		return data.hookID, nil
 	}
 }
@@ -522,6 +588,46 @@ func TestInjectConfig(t *testing.T) {
 	r.InjectConfig(&rest.Config{})
 
 	if r.dynamicClient == nil {
-		t.Errorf("dynamicClient was nil but expected non nil")
+		t.Error("dynamicClient was nil but expected non nil")
+	}
+}
+
+func TestOwnerAndRepositoryValid(t *testing.T) {
+	owner, repo, err := parseOwnerRepoFrom("owner/repository")
+	if err != nil {
+		t.Errorf("unexpected error parsing owner and repository: %v", err)
+	}
+	if owner != "owner" {
+		t.Errorf(`unexpected owner - want "owner", got "%s"`, owner)
+	}
+	if repo != "repository" {
+		t.Errorf(`unexpected repository - want "repository", got "%s"`, repo)
+	}
+}
+
+func TestOwnerAndRepositoryMissingOwner(t *testing.T) {
+	_, _, err := parseOwnerRepoFrom("/repository")
+	if err == nil {
+		t.Error("expected an error parsing owner and repository with no owner")
+	}
+}
+
+func TestOwnerAndRepositoryExtraParts(t *testing.T) {
+	_, _, err := parseOwnerRepoFrom("owner/repository/foo")
+	if err == nil {
+		t.Error("expected an error parsing owner and repository with extra parts")
+	}
+}
+
+func TestOwnerAndRepositoryOrganization(t *testing.T) {
+	owner, repo, err := parseOwnerRepoFrom("organization")
+	if err != nil {
+		t.Errorf("unexpected error parsing owner and repository: %v", err)
+	}
+	if owner != "organization" {
+		t.Errorf(`unexpected owner - want "organization", got "%s"`, owner)
+	}
+	if repo != "" {
+		t.Errorf(`unexpected repository - want "", got "%s"`, repo)
 	}
 }

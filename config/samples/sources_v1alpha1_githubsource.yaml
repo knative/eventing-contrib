@@ -6,7 +6,7 @@ metadata:
   name: githubsource-sample
 spec:
   eventType: dev.knative.source.github.pullrequest
-  repository: "<your GitHub org>/<your GitHub repo>"
+  ownerAndRepository: "<your GitHub org>/<your GitHub repo>"
   accessToken:
     secretKeyRef:
       name: githubsecret
