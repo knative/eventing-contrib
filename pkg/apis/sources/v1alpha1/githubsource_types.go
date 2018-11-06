@@ -42,18 +42,23 @@ type GitHubSourceSpec struct {
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Repository is the GitHub repository to receive events from
-	Repository string `json:"repository,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	Repository string `json:"repository"`
 
-	// EventType is the type of event to receive from GitHub
-	EventType string `json:"eventType,omitempty"`
+	// EventType is the type of event to receive from GitHub. These
+	// correspond to the "Webhook event name" values listed at
+	// https://developer.github.com/v3/activity/events/types/ - ie
+	// "pull_request"
+	// +kubebuilder:validation:MinLength=1
+	EventType string `json:"eventType"`
 
 	// AccessToken is the Kubernetes secret containing the GitHub
 	// access token
-	AccessToken SecretValueFromSource `json:"accessToken,omitempty"`
+	AccessToken SecretValueFromSource `json:"accessToken"`
 
 	// SecretToken is the Kubernetes secret containing the GitHub
 	// secret token
-	SecretToken SecretValueFromSource `json:"secretToken,omitempty"`
+	SecretToken SecretValueFromSource `json:"secretToken"`
 
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.

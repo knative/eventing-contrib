@@ -18,7 +18,6 @@ package githubsource
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -134,22 +133,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
 	source.Status.InitializeConditions()
 
-	if source.Spec.Repository == "" {
-		source.Status.MarkNotValid("RepositoryMissing", "")
-		return errors.New("repository is empty")
-	}
-	if source.Spec.EventType == "" {
-		source.Status.MarkNotValid("EventTypeMissing", "")
-		return errors.New("event type is empty")
-	}
-	if source.Spec.AccessToken.SecretKeyRef == nil {
-		source.Status.MarkNotValid("AccessTokenMissing", "")
-		return errors.New("access token ref is nil")
-	}
-	if source.Spec.SecretToken.SecretKeyRef == nil {
-		source.Status.MarkNotValid("SecretTokenMissing", "")
-		return errors.New("secret token ref is nil")
-	}
 	source.Status.MarkValid()
 
 	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)

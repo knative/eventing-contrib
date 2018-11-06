@@ -28,8 +28,10 @@ spec:
                   type: object
               type: object
             eventType:
+              minLength: 1
               type: string
             repository:
+              minLength: 1
               type: string
             secretToken:
               properties:
@@ -40,6 +42,11 @@ spec:
               type: string
             sink:
               type: object
+          required:
+          - repository
+          - eventType
+          - accessToken
+          - secretToken
           type: object
         status:
           properties:
