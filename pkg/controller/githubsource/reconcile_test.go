@@ -95,6 +95,7 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
+			getGitHubSecrets(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		WantErrMsg:   `sinks.duck.knative.dev "testsink" not found`,
@@ -103,6 +104,7 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSourceUnsinkable(),
+			getGitHubSecrets(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
@@ -125,33 +127,19 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
+			getGitHubSecrets(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// sinkable resource
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": sinkableAPIVersion,
-					"kind":       sinkableKind,
-					"metadata": map[string]interface{}{
-						"namespace": testNS,
-						"name":      sinkableName,
-					},
-					"status": map[string]interface{}{
-						"sinkable": map[string]interface{}{
-							"domainInternal": sinkableDNS,
-						},
-					},
-				},
-			},
+			getSinkableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(sinkableURI)
-				s.Status.MarkValid()
+				s.Status.MarkSecrets()
 				return s
 			}(),
 		},
@@ -161,6 +149,7 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
+			getGitHubSecrets(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
@@ -185,7 +174,7 @@ var testCases = []controllertesting.TestCase{
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSink("NotFound", "")
-				s.Status.MarkValid()
+				s.Status.MarkSecrets()
 				return s
 			}(),
 		},
@@ -200,24 +189,12 @@ var testCases = []controllertesting.TestCase{
 				s.Spec.Sink = nil
 				return s
 			}(),
+			getGitHubSecrets(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// sinkable resource
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": sinkableAPIVersion,
-					"kind":       sinkableKind,
-					"metadata": map[string]interface{}{
-						"namespace": testNS,
-						"name":      sinkableName,
-					},
-					"status": map[string]interface{}{
-						"sinkable": map[string]interface{}(nil),
-					},
-				},
-			},
+			getSinkableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
@@ -225,7 +202,7 @@ var testCases = []controllertesting.TestCase{
 				s.Spec.Sink = nil
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSink("NotFound", "")
-				s.Status.MarkValid()
+				s.Status.MarkSecrets()
 				return s
 			}(),
 		},
@@ -258,15 +235,7 @@ var testCases = []controllertesting.TestCase{
 				svc.SetOwnerReferences(getOwnerReferences())
 				return svc
 			}(),
-			func() runtime.Object {
-				secret := &corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: testNS,
-						Name:      secretName,
-					},
-				}
-				return secret
-			}(),
+			getGitHubSecrets(),
 		},
 		OtherTestData: map[string]interface{}{
 			webhookData: webhookCreatorData{
@@ -276,22 +245,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// sinkable resource
-			&unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": sinkableAPIVersion,
-					"kind":       sinkableKind,
-					"metadata": map[string]interface{}{
-						"namespace": testNS,
-						"name":      sinkableName,
-					},
-					"status": map[string]interface{}{
-						"sinkable": map[string]interface{}{
-							"domainInternal": sinkableDNS,
-						},
-					},
-				},
-			},
+			getSinkableResource(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
@@ -299,12 +253,63 @@ var testCases = []controllertesting.TestCase{
 				s.UID = gitHubSourceUID
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(sinkableURI)
-				s.Status.MarkValid()
+				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "randomhookid"
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
+	}, {
+		Name:       "invalid githubsource, secret does not exist",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			getGitHubSource(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getSinkableResource(),
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSecrets("AccessTokenNotFound", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `secrets "testsecret" not found`,
+	}, {
+		Name:       "invalid githubsource, secret key ref does not exist",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			getGitHubSource(),
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: testNS,
+					Name:      secretName,
+				},
+				Data: map[string][]byte{
+					accessTokenKey: []byte("foo"),
+				},
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getSinkableResource(),
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSecrets("SecretTokenNotFound", "")
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  `key "secretToken" not found in secret "testsecret"`,
 	},
 }
 
@@ -419,6 +424,37 @@ func getOwnerReferences() []metav1.OwnerReference {
 		Controller: &trueVal,
 		UID:        gitHubSourceUID,
 	}}
+}
+
+func getSinkableResource() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": sinkableAPIVersion,
+			"kind":       sinkableKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      sinkableName,
+			},
+			"status": map[string]interface{}{
+				"sinkable": map[string]interface{}{
+					"domainInternal": sinkableDNS,
+				},
+			},
+		},
+	}
+}
+
+func getGitHubSecrets() *corev1.Secret {
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: testNS,
+			Name:      secretName,
+		},
+		Data: map[string][]byte{
+			accessTokenKey: []byte("foo"),
+			secretTokenKey: []byte("bar"),
+		},
+	}
 }
 
 type webhookCreatorData struct {

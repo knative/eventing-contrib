@@ -133,7 +133,17 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
 	source.Status.InitializeConditions()
 
-	source.Status.MarkValid()
+	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	if err != nil {
+		source.Status.MarkNoSecrets("AccessTokenNotFound", "")
+		return err
+	}
+	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	if err != nil {
+		source.Status.MarkNoSecrets("SecretTokenNotFound", "")
+		return err
+	}
+	source.Status.MarkSecrets()
 
 	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
 	if err != nil {
@@ -166,7 +176,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 			if source.Status.WebhookIDKey == "" {
 				// TODO: We need to handle deleting the webhook if
 				// this source gets deleted
-				return r.createWebhook(ctx, source, receiveAdapterDomain)
+				return r.createWebhook(ctx, source, receiveAdapterDomain, accessToken, secretToken)
 			}
 		}
 	}
@@ -174,7 +184,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	return nil
 }
 
-func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain string) error {
+func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain, accessToken, secretToken string) error {
 	logger := logging.FromContext(ctx)
 
 	logger.Info("creating GitHub webhook")
@@ -187,16 +197,6 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 	events, err := parseEventsFrom(source.Spec.EventType)
 	if err != nil {
 		return err
-	}
-
-	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
-	if err != nil {
-		return fmt.Errorf("failed to get access token from GitHubSource: %v", err)
-	}
-
-	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
-	if err != nil {
-		return fmt.Errorf("failed to get secret token from GitHubSource: %v", err)
 	}
 
 	hookOptions := &webhookCreatorOptions{
@@ -221,7 +221,11 @@ func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKey
 	if err != nil {
 		return "", err
 	}
-	return string(secret.Data[secretKeySelector.Key]), nil
+	secretVal, ok := secret.Data[secretKeySelector.Key]
+	if !ok {
+		return "", fmt.Errorf(`key "%s" not found in secret "%s"`, secretKeySelector.Key, secretKeySelector.Name)
+	}
+	return string(secretVal), nil
 }
 
 func parseOwnerRepoFrom(repository string) (string, string, error) {

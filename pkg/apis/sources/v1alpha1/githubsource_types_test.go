@@ -52,63 +52,63 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 		}(),
 		want: false,
 	}, {
-		name: "mark valid",
+		name: "mark secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkValid()
+			s.MarkSecrets()
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink and valid",
+		name: "mark sink and secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
-			s.MarkValid()
+			s.MarkSecrets()
 			return s
 		}(),
 		want: true,
 	}, {
-		name: "mark sink and valid then no sink",
+		name: "mark sink and secrets then no sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
-			s.MarkValid()
+			s.MarkSecrets()
 			s.MarkNoSink("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink and valid then not valid",
+		name: "mark sink and secrets then no secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
-			s.MarkValid()
-			s.MarkNotValid("Testing", "")
+			s.MarkSecrets()
+			s.MarkNoSecrets("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty and valid",
+		name: "mark sink empty and secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
-			s.MarkValid()
+			s.MarkSecrets()
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty and valid then sink",
+		name: "mark sink empty and secrets then sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
-			s.MarkValid()
+			s.MarkSecrets()
 			s.MarkSink("uri://example")
 			return s
 		}(),
@@ -162,11 +162,11 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark valid",
+		name: "mark secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkValid()
+			s.MarkSecrets()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -175,12 +175,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink and valid",
+		name: "mark sink and secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
-			s.MarkValid()
+			s.MarkSecrets()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -189,12 +189,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark sink and valid then no sink",
+		name: "mark sink and secrets then no sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
-			s.MarkValid()
+			s.MarkSecrets()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
 		}(),
@@ -206,13 +206,13 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and valid then not valid",
+		name: "mark sink and secrets then no secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
-			s.MarkValid()
-			s.MarkNotValid("Testing", "hi%s", "")
+			s.MarkSecrets()
+			s.MarkNoSecrets("Testing", "hi%s", "")
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -223,12 +223,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink empty and valid",
+		name: "mark sink empty and secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
-			s.MarkValid()
+			s.MarkSecrets()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -239,12 +239,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "Sink has resolved to empty.",
 		},
 	}, {
-		name: "mark sink empty and valid then sink",
+		name: "mark sink empty and secrets then sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
-			s.MarkValid()
+			s.MarkSecrets()
 			s.MarkSink("uri://example")
 			return s
 		}(),
