@@ -38,21 +38,21 @@ func GetSinkURI(dc dynamic.Interface, sink *corev1.ObjectReference, namespace st
 	if err != nil {
 		return "", err
 	}
-	t := duckv1alpha1.Sink{}
+	t := duckv1alpha1.AddressableType{}
 	err = duck.FromUnstructured(obj, &t)
 	if err != nil {
 		return "", fmt.Errorf("failed to deserialize sink: %v", err)
 	}
 
-	if t.Status.Sinkable == nil {
-		return "", fmt.Errorf("sink does not contain sinkable")
+	if t.Status.Address == nil {
+		return "", fmt.Errorf("sink does not contain address")
 	}
 
-	if t.Status.Sinkable.DomainInternal == "" {
-		return "", fmt.Errorf("sinkable does not contain a URI")
+	if t.Status.Address.Hostname == "" {
+		return "", fmt.Errorf("sink contains an empty hostname")
 	}
 
-	return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
+	return fmt.Sprintf("http://%s/", t.Status.Address.Hostname), nil
 }
 
 func fetchObjectReference(dc dynamic.Interface, ref *corev1.ObjectReference, namespace string) (duck.Marshalable, error) {

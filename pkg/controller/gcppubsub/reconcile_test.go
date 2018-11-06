@@ -65,7 +65,7 @@ const (
 func duckAddKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(
 		duckv1alpha1.SchemeGroupVersion,
-		&duckv1alpha1.SinkList{},
+		&duckv1alpha1.AddressableTypeList{},
 	)
 	metav1.AddToGroupVersion(scheme, duckv1alpha1.SchemeGroupVersion)
 	return nil
@@ -163,7 +163,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			OtherTestData: map[string]interface{}{
 				pscData: pubSubClientCreatorData{
 					clientCreateErr: errors.New("test-induced-error"),
@@ -178,7 +178,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			OtherTestData: map[string]interface{}{
 				pscData: pubSubClientCreatorData{
 					subExistsErr: errors.New("test-induced-error"),
@@ -193,7 +193,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			OtherTestData: map[string]interface{}{
 				pscData: pubSubClientCreatorData{
 					createSubErr: errors.New("test-induced-error"),
@@ -208,7 +208,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -231,7 +231,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -248,7 +248,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockLists: []controllertesting.MockList{
 					func(_ client.Client, _ context.Context, _ *client.ListOptions, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -265,7 +265,7 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
@@ -275,7 +275,7 @@ func TestReconcile(t *testing.T) {
 				getSource(),
 				getReceiveAdapter(),
 			},
-			Objects: getSinkable(),
+			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -431,9 +431,9 @@ func createPubSubClientCreator(value interface{}) pubSubClientCreator {
 	}
 }
 
-func getSinkable() []runtime.Object {
+func getAddressable() []runtime.Object {
 	return []runtime.Object{
-		// sinkable resource
+		// addressable resource
 		&unstructured.Unstructured{
 			Object: map[string]interface{}{
 				"apiVersion": sinkableAPIVersion,
@@ -443,8 +443,8 @@ func getSinkable() []runtime.Object {
 					"name":      sinkableName,
 				},
 				"status": map[string]interface{}{
-					"sinkable": map[string]interface{}{
-						"domainInternal": sinkableDNS,
+					"address": map[string]interface{}{
+						"hostname": sinkableDNS,
 					},
 				},
 			},
