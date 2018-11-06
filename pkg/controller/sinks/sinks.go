@@ -44,11 +44,15 @@ func GetSinkURI(dc dynamic.Interface, sink *corev1.ObjectReference, namespace st
 		return "", fmt.Errorf("failed to deserialize sink: %v", err)
 	}
 
-	if t.Status.Sinkable != nil {
-		return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
+	if t.Status.Sinkable == nil {
+		return "", fmt.Errorf("sink does not contain sinkable")
 	}
 
-	return "", fmt.Errorf("sink does not contain sinkable")
+	if t.Status.Sinkable.DomainInternal == "" {
+		return "", fmt.Errorf("sinkable does not contain a URI")
+	}
+
+	return fmt.Sprintf("http://%s/", t.Status.Sinkable.DomainInternal), nil
 }
 
 func fetchObjectReference(dc dynamic.Interface, ref *corev1.ObjectReference, namespace string) (duck.Marshalable, error) {
