@@ -99,7 +99,9 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
 			source.Status.MarkDeploying("Deploying", "Created deployment %s", args.Name)
-			// Wait for the deployment to get a status
+			// Since the Deployment has just been created, there's nothing more
+			// to do until it gets a status. This ContainerSource will be reconciled
+			// again when the Deployment is updated.
 			return object, nil
 		}
 		return object, err
