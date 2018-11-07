@@ -18,12 +18,14 @@ package sdk
 
 import (
 	"k8s.io/apimachinery/pkg/api/meta"
+	"log"
 	"testing"
 	"time"
 
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
+	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,7 +41,7 @@ import (
 var c client.Client
 
 var expectedRequest = reconcile.Request{NamespacedName: types.NamespacedName{Name: "foo", Namespace: "default"}}
-var depKey = types.NamespacedName{Name: "foo-kr", Namespace: "default"}
+var krKey = types.NamespacedName{Name: "foo-kr", Namespace: "default"}
 
 const timeout = time.Second * 5
 
@@ -68,22 +70,24 @@ func TestReconcile(t *testing.T) {
 		return
 	}
 	g.Expect(err).NotTo(gomega.HaveOccurred())
-	defer c.Delete(context.TODO(), instance)
+
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
 
 	kr := &duckv1alpha1.KResource{}
-	g.Eventually(func() error { return c.Get(context.TODO(), depKey, kr) }, timeout).
+	g.Eventually(func() error { return c.Get(context.TODO(), krKey, kr) }, timeout).
 		Should(gomega.Succeed())
 
 	// Delete the KResource and expect Reconcile to be called for KResource deletion
 	g.Expect(c.Delete(context.TODO(), kr)).NotTo(gomega.HaveOccurred())
+
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
-	g.Eventually(func() error { return c.Get(context.TODO(), depKey, kr) }, timeout).
+	g.Eventually(func() error { return c.Get(context.TODO(), krKey, kr) }, timeout).
 		Should(gomega.Succeed())
+
+	c.Delete(context.TODO(), instance)
 
 	// Manually delete KResource since GC isn't enabled in the test control plane
 	g.Expect(c.Delete(context.TODO(), kr)).To(gomega.Succeed())
-
 }
 
 func newProvider(mgr manager.Manager) *Provider {
@@ -126,6 +130,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		return object, nil
 	}
 
+	log.Printf("reconciling %s", addr.Name)
+
 	// See if the source has been deleted
 	accessor, err := meta.Accessor(addr)
 	if err != nil {
@@ -134,14 +140,30 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// No need to reconcile if the source has been marked for deletion.
 	deletionTimestamp := accessor.GetDeletionTimestamp()
 	if deletionTimestamp != nil {
+		log.Print("marked for deletion")
 		return object, nil
 	}
 
 	kr := &duckv1alpha1.KResource{ObjectMeta: metav1.ObjectMeta{Name: addr.Name + "-kr", Namespace: addr.Namespace}}
 	if err := controllerutil.SetControllerReference(addr, kr, r.scheme); err != nil {
+		log.Printf("error setting controller ref: %v", err)
 		return addr, err
 	}
-	err = r.client.Create(ctx, kr)
+
+	found := &duckv1alpha1.KResource{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: kr.Name, Namespace: kr.Namespace}, found)
+	if err != nil && errors.IsNotFound(err) {
+		err = r.client.Create(ctx, kr)
+		if err != nil {
+			log.Printf("failed to create kr: %v", err)
+			return addr, err
+		}
+		log.Printf("created kr: %s", kr.Name)
+	} else if err != nil {
+		log.Printf("failed to find kr: %v", err)
+		return addr, err
+	}
+	log.Print("reconciled")
 	return addr, err
 }
 func (r *reconciler) InjectClient(c client.Client) error {
