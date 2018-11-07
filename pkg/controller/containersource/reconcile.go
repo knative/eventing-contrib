@@ -30,6 +30,7 @@ import (
 	"github.com/knative/pkg/logging"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -98,13 +99,24 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
 			source.Status.MarkDeploying("Deploying", "Created deployment %s", args.Name)
-		} else {
-			return source, err
+			// Wait for the deployment to get a status
+			return object, nil
 		}
-	} else {
-		if deploy.Status.ReadyReplicas > 0 {
-			source.Status.MarkDeployed()
+		return object, err
+	}
+
+	// Update Deployment spec if it's changed
+	expected := resources.MakeDeployment(nil, args)
+	if !equality.Semantic.DeepEqual(deploy.Spec, expected.Spec) {
+		deploy.Spec = expected.Spec
+		if r.client.Update(ctx, deploy); err != nil {
+			return object, err
 		}
+	}
+
+	// Update source status
+	if deploy.Status.ReadyReplicas > 0 {
+		source.Status.MarkDeployed()
 	}
 
 	return source, nil
