@@ -17,6 +17,8 @@ limitations under the License.
 package gcppubsub
 
 import (
+	"encoding/json"
+	"testing"
 	"time"
 
 	// Imports the Google Cloud Pub/Sub client package.
@@ -56,4 +58,36 @@ func (t *PubSubMockMessage) ID() string {
 
 func (t *PubSubMockMessage) PublishTime() time.Time {
 	return t.MockPublishTime
+}
+
+func TestPubSubMessageWrapper(t *testing.T) {
+	data, err := json.Marshal(map[string]string{"key": "value"})
+	if err != nil {
+		t.Errorf("unexpected error, %v", err)
+	}
+	now := time.Now()
+
+	m := &PubSubMessageWrapper{
+		M: &pubsub.Message{
+			ID:          "ABC",
+			Data:        data,
+			PublishTime: now,
+		},
+	}
+
+	if m.ID() != "ABC" {
+		t.Errorf("expected ID to be %s, got %s", "ABC", m.ID())
+	}
+
+	if m.PublishTime() != now {
+		t.Errorf("expected PublishTime to be %v, got %v", now, m.PublishTime())
+	}
+
+	if string(m.Data()) != string(data) {
+		t.Errorf("expected Data to be %v, got %v", string(data), m.Data())
+	}
+
+	if m.Message() != m.M {
+		t.Errorf("expected Message to be %v, got %v", m.M, m.Message())
+	}
 }
