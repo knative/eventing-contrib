@@ -19,17 +19,14 @@ package githubsource
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
-	ghclient "github.com/google/go-github/github"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/githubsource/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"go.uber.org/zap"
-	"golang.org/x/oauth2"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -39,65 +36,14 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/kubernetes/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-type webhookCreatorOptions struct {
-	accessToken string
-	secretToken string
-	domain      string
-	owner       string
-	repo        string
-	events      []string
-}
-
-// webhookCreator creates a webhook and makes unit testing easier
-type webhookCreator func(ctx context.Context, options *webhookCreatorOptions) (string, error)
-
-// gitHubWebhookCreator creates a GitHub webhook
-func gitHubWebhookCreator(ctx context.Context, options *webhookCreatorOptions) (string, error) {
-	logger := logging.FromContext(ctx)
-	domain := options.domain
-
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: options.accessToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := ghclient.NewClient(tc)
-	active := true
-	config := make(map[string]interface{})
-	config["url"] = fmt.Sprintf("http://%s", domain)
-	config["content_type"] = "json"
-	config["secret"] = options.secretToken
-
-	// GitHub hook names are required to be named "web" or the name of a GitHub service
-	hookname := "web"
-	hook := ghclient.Hook{
-		Name:   &hookname,
-		URL:    &domain,
-		Events: options.events,
-		Active: &active,
-		Config: config,
-	}
-
-	var h *ghclient.Hook
-	var resp *ghclient.Response
-	var err error
-	if options.repo != "" {
-		h, resp, err = client.Repositories.CreateHook(ctx, options.owner, options.repo, &hook)
-	} else {
-		h, resp, err = client.Organizations.CreateHook(ctx, options.owner, &hook)
-	}
-	if err != nil {
-		logger.Infof("create webhook error response:\n%+v", resp)
-		return "", fmt.Errorf("failed to create the webhook: %v", err)
-	}
-	logger.Infof("created hook: %+v", h)
-
-	return strconv.FormatInt(*h.ID, 10), nil
-}
+const (
+	finalizerName = controllerAgentName
+)
 
 // reconciler reconciles a GitHubSource object
 type reconciler struct {
@@ -106,7 +52,7 @@ type reconciler struct {
 	dynamicClient       dynamic.Interface
 	recorder            record.EventRecorder
 	receiveAdapterImage string
-	webhookCreator      webhookCreator
+	webhookClient       webhookClient
 }
 
 // Reconcile reads that state of the cluster for a GitHubSource
@@ -127,17 +73,14 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
 		return object, err
 	}
-	// No need to reconcile if the source has been marked for deletion.
-	deletionTimestamp := accessor.GetDeletionTimestamp()
-	if deletionTimestamp != nil {
-		return object, nil
-	}
+	deleted := accessor.GetDeletionTimestamp() != nil
 
-	reconcileErr := r.reconcile(ctx, source)
+	reconcileErr := r.reconcile(ctx, source, deleted)
 	return source, reconcileErr
 }
 
-func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
+func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource, deleted bool) error {
+	r.addFinalizer(source)
 	source.Status.InitializeConditions()
 
 	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
@@ -161,7 +104,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 
 	ksvc, err := r.getOwnedService(ctx, source)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) && !deleted {
 			ksvc := resources.MakeService(source, r.receiveAdapterImage)
 			if err := controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
 				return err
@@ -175,33 +118,47 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 			return nil
 		}
 	} else {
+		if deleted {
+			if source.Status.WebhookIDKey != "" {
+				err := r.deleteWebhook(ctx, source, accessToken, source.Status.WebhookIDKey)
+				if err != nil {
+					return err
+				}
+				source.Status.WebhookIDKey = ""
+				r.removeFinalizer(source)
+			}
+			return nil
+		}
+
 		routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
 		receiveAdapterDomain := ksvc.Status.Domain
 		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
 			// TODO: Mark Deployed for the ksvc
 			// TODO: Mark some condition for the webhook status?
 			if source.Status.WebhookIDKey == "" {
-				// TODO: We need to handle deleting the webhook if
-				// this source gets deleted
-				return r.createWebhook(ctx, source, receiveAdapterDomain, accessToken, secretToken)
+				hookID, err := r.createWebhook(ctx, source,
+					receiveAdapterDomain, accessToken, secretToken)
+				if err != nil {
+					return err
+				}
+				source.Status.WebhookIDKey = hookID
 			}
 		}
 	}
-
 	return nil
 }
 
-func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain, accessToken, secretToken string) error {
+func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain, accessToken, secretToken string) (string, error) {
 	logger := logging.FromContext(ctx)
 
 	logger.Info("creating GitHub webhook")
 
 	owner, repo, err := parseOwnerRepoFrom(source.Spec.OwnerAndRepository)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	hookOptions := &webhookCreatorOptions{
+	hookOptions := &webhookOptions{
 		accessToken: accessToken,
 		secretToken: secretToken,
 		domain:      domain,
@@ -209,11 +166,33 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 		repo:        repo,
 		events:      source.Spec.EventTypes,
 	}
-	hookID, err := r.webhookCreator(ctx, hookOptions)
+	hookID, err := r.webhookClient.Create(ctx, hookOptions)
 	if err != nil {
-		return fmt.Errorf("failed to create webhook: %v", err)
+		return "", fmt.Errorf("failed to create webhook: %v", err)
 	}
-	source.Status.WebhookIDKey = hookID
+	return hookID, nil
+}
+
+func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, accessToken, hookID string) error {
+	logger := logging.FromContext(ctx)
+
+	logger.Info("deleting GitHub webhook")
+
+	owner, repo, err := parseOwnerRepoFrom(source.Spec.OwnerAndRepository)
+	if err != nil {
+		return err
+	}
+
+	hookOptions := &webhookOptions{
+		accessToken: accessToken,
+		owner:       owner,
+		repo:        repo,
+		events:      source.Spec.EventTypes,
+	}
+	err = r.webhookClient.Delete(ctx, hookOptions, hookID)
+	if err != nil {
+		return fmt.Errorf("failed to delete webhook: %v", err)
+	}
 	return nil
 }
 
@@ -272,6 +251,18 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 		}
 	}
 	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
+}
+
+func (r *reconciler) addFinalizer(s *sourcesv1alpha1.GitHubSource) {
+	finalizers := sets.NewString(s.Finalizers...)
+	finalizers.Insert(finalizerName)
+	s.Finalizers = finalizers.List()
+}
+
+func (r *reconciler) removeFinalizer(s *sourcesv1alpha1.GitHubSource) {
+	finalizers := sets.NewString(s.Finalizers...)
+	finalizers.Delete(finalizerName)
+	s.Finalizers = finalizers.List()
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
