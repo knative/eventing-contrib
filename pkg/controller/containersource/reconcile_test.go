@@ -487,7 +487,7 @@ func getDeployment(source *sourcesv1alpha1.ContainerSource) *appsv1.Deployment {
 						Image:           source.Spec.Image,
 						Args:            args,
 						Env:             env,
-						ImagePullPolicy: corev1.PullAlways,
+						ImagePullPolicy: corev1.PullIfNotPresent,
 					}},
 					ServiceAccountName: source.Spec.ServiceAccountName,
 				},

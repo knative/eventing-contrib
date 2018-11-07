@@ -69,7 +69,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 							Image:           args.Image,
 							Args:            containerArgs,
 							Env:             env,
-							ImagePullPolicy: corev1.PullAlways,
+							ImagePullPolicy: corev1.PullIfNotPresent,
 						},
 					},
 				},
