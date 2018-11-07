@@ -17,6 +17,8 @@ limitations under the License.
 package sdk
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -30,12 +32,12 @@ type StatusAccessor interface {
 
 // NewReflectedStatusAccessor uses reflection to return a StatusAccessor
 // to access the field called "Status".
-func NewReflectedStatusAccessor(object interface{}) StatusAccessor {
+func NewReflectedStatusAccessor(object interface{}) (StatusAccessor, error) {
 	objectValue := reflect.Indirect(reflect.ValueOf(object))
 
 	// If object is not a struct, don't even try to use it.
 	if objectValue.Kind() != reflect.Struct {
-		return nil
+		return nil, errors.New("object is not a struct")
 	}
 
 	statusField := objectValue.FieldByName("Status")
@@ -44,10 +46,10 @@ func NewReflectedStatusAccessor(object interface{}) StatusAccessor {
 		if _, ok := statusField.Interface().(interface{}); ok {
 			return &reflectedStatusAccessor{
 				status: statusField,
-			}
+			}, nil
 		}
 	}
-	return nil
+	return nil, fmt.Errorf("status was not an interface: %v", statusField.Kind())
 }
 
 // reflectedConditionsAccessor is an internal wrapper object to act as the
