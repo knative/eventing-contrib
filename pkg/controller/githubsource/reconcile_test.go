@@ -393,7 +393,7 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
 			OwnerAndRepository: "myuser/myproject",
-			EventType:          "dev.knative.source.github.pullrequest",
+			EventTypes:         []string{"pull_request"},
 			AccessToken: sourcesv1alpha1.SecretValueFromSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -427,8 +427,8 @@ func getGitHubSourceUnaddressable() *sourcesv1alpha1.GitHubSource {
 		TypeMeta:   gitHubSourceType(),
 		ObjectMeta: om(testNS, gitHubSourceName),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
-			OwnerAndRepository: "foo/bar",
-			EventType:          "dev.knative.source.github.pullrequest",
+			OwnerAndRepository: "myuser/myproject",
+			EventTypes:         []string{"pull_request"},
 			AccessToken: sourcesv1alpha1.SecretValueFromSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{

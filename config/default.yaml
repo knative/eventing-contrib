@@ -111,9 +111,45 @@ spec:
                 secretKeyRef:
                   type: object
               type: object
-            eventType:
-              minLength: 1
-              type: string
+            eventTypes:
+              items:
+                enum:
+                - commit_comment
+                - create
+                - delete
+                - deployment
+                - deployment_status
+                - fork
+                - gollum
+                - installation
+                - integration_installation
+                - issue_comment
+                - issues
+                - label
+                - member
+                - membership
+                - milestone
+                - organization
+                - org_block
+                - page_build
+                - ping
+                - project_card
+                - project_column
+                - project
+                - public
+                - pull_request
+                - pull_request_review
+                - pull_request_review_comment
+                - push
+                - release
+                - repository
+                - status
+                - team
+                - team_add
+                - watch
+                type: string
+              minItems: 1
+              type: array
             ownerAndRepository:
               minLength: 1
               type: string
@@ -128,7 +164,7 @@ spec:
               type: object
           required:
           - ownerAndRepository
-          - eventType
+          - eventTypes
           - accessToken
           - secretToken
           type: object

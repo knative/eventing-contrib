@@ -201,18 +201,13 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 		return err
 	}
 
-	events, err := parseEventsFrom(source.Spec.EventType)
-	if err != nil {
-		return err
-	}
-
 	hookOptions := &webhookCreatorOptions{
 		accessToken: accessToken,
 		secretToken: secretToken,
 		domain:      domain,
 		owner:       owner,
 		repo:        repo,
-		events:      events,
+		events:      source.Spec.EventTypes,
 	}
 	hookID, err := r.webhookCreator(ctx, hookOptions)
 	if err != nil {
@@ -250,14 +245,6 @@ func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 	}
 
 	return owner, repo, nil
-}
-
-func parseEventsFrom(eventType string) ([]string, error) {
-	event, ok := sourcesv1alpha1.GitHubSourceGitHubEventType[eventType]
-	if !ok {
-		return []string(nil), fmt.Errorf("event type is unknown: %s", eventType)
-	}
-	return []string{event}, nil
 }
 
 func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {

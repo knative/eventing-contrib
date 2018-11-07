@@ -18,51 +18,22 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"time"
 
-	ghclient "github.com/google/go-github/github"
-	"github.com/google/uuid"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/pkg/cloudevents"
+	"github.com/knative/eventing-sources/pkg/githubsource"
 	"gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 
 const (
+	// Environment variable containing the HTTP port
+	envPort = "PORT"
+
 	// Environment variable containing GitHub secret token
 	envSecret = "GITHUB_SECRET_TOKEN"
 )
-
-// GitHubHandler holds necessary objects for communicating with
-// GitHub.
-type GitHubHandler struct {
-	client *ghclient.Client
-	sink   string
-}
-
-// HandlePullRequest is invoked whenever a PullRequest is modified (created, updated, etc.)
-func (h *GitHubHandler) HandlePullRequest(payload interface{}, header webhooks.Header) {
-	log.Print("Handling Pull Request")
-
-	eventType := sourcesv1alpha1.GitHubSourcePullRequestEvent
-
-	pl := payload.(gh.PullRequestPayload)
-	source := pl.PullRequest.HTMLURL
-
-	hdr := http.Header(header)
-	eventID := hdr.Get("X-GitHub-Delivery")
-	if len(eventID) == 0 {
-		if uuid, err := uuid.NewRandom(); err != nil {
-			eventID = uuid.String()
-		}
-	}
-
-	postMessage(h.sink, payload, source, eventType, eventID)
-}
 
 func main() {
 	sink := flag.String("sink", "", "uri to send events to")
@@ -73,6 +44,11 @@ func main() {
 		log.Fatalf("No sink given")
 	}
 
+	port := os.Getenv(envPort)
+	if port == "" {
+		port = "8080"
+	}
+
 	secretToken := os.Getenv(envSecret)
 	if secretToken == "" {
 		log.Fatalf("No secret token given")
@@ -80,55 +56,49 @@ func main() {
 
 	log.Printf("Sink is: %q", sink)
 
-	// Set up the auth for being able to talk to GitHub.
-	var tc *http.Client
-
-	client := ghclient.NewClient(tc)
-
-	h := &GitHubHandler{
-		client: client,
-		sink:   *sink,
+	ra := &githubsource.GitHubReceiveAdapter{
+		Sink: *sink,
 	}
 
 	hook := gh.New(&gh.Config{Secret: secretToken})
-	// TODO: GitHub has more than just Pull Request Events. This needs to
-	// handle them all?
-	hook.RegisterEvents(h.HandlePullRequest, gh.PullRequestEvent)
+	hook.RegisterEvents(ra.HandleEvent,
+		gh.CommitCommentEvent,
+		gh.CreateEvent,
+		gh.DeleteEvent,
+		gh.DeploymentEvent,
+		gh.DeploymentStatusEvent,
+		gh.ForkEvent,
+		gh.GollumEvent,
+		gh.InstallationEvent,
+		gh.IntegrationInstallationEvent,
+		gh.IssueCommentEvent,
+		gh.IssuesEvent,
+		gh.LabelEvent,
+		gh.MemberEvent,
+		gh.MembershipEvent,
+		gh.MilestoneEvent,
+		gh.OrganizationEvent,
+		gh.OrgBlockEvent,
+		gh.PageBuildEvent,
+		gh.PingEvent,
+		gh.ProjectCardEvent,
+		gh.ProjectColumnEvent,
+		gh.ProjectEvent,
+		gh.PublicEvent,
+		gh.PullRequestEvent,
+		gh.PullRequestReviewEvent,
+		gh.PullRequestReviewCommentEvent,
+		gh.PushEvent,
+		gh.ReleaseEvent,
+		gh.RepositoryEvent,
+		gh.StatusEvent,
+		gh.TeamEvent,
+		gh.TeamAddEvent,
+		gh.WatchEvent)
 
-	// TODO(n3wscott): Do we need to configure the PORT?
-	err := webhooks.Run(hook, ":8080", "/")
+	addr := fmt.Sprintf(":%s", port)
+	err := webhooks.Run(hook, addr, "/")
 	if err != nil {
 		log.Fatalf("Failed to run the webhook")
 	}
-}
-
-func postMessage(sink string, payload interface{}, source, eventType, eventID string) error {
-	ctx := cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            eventID,
-		EventTime:          time.Now(),
-		Source:             source,
-	}
-	req, err := cloudevents.Binary.NewRequest(sink, payload, ctx)
-	if err != nil {
-		log.Printf("Failed to marshal the message: %+v : %s", payload, err)
-		return err
-	}
-
-	log.Printf("Posting to %q", sink)
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// TODO: in general, receive adapters may have to be able to retry for error cases.
-		log.Printf("response Status: %s", resp.Status)
-		body, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("response Body: %s", string(body))
-	}
-	return nil
 }

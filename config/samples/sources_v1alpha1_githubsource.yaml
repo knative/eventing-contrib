@@ -5,7 +5,8 @@ metadata:
     controller-tools.k8s.io: "1.0"
   name: githubsource-sample
 spec:
-  eventType: dev.knative.source.github.pullrequest
+  eventTypes:
+  - pull_request
   ownerAndRepository: "<your GitHub org>/<your GitHub repo>"
   accessToken:
     secretKeyRef:

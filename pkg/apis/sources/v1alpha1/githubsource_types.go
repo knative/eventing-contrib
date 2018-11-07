@@ -52,8 +52,9 @@ type GitHubSourceSpec struct {
 	// correspond to the "Webhook event name" values listed at
 	// https://developer.github.com/v3/activity/events/types/ - ie
 	// "pull_request"
-	// +kubebuilder:validation:MinLength=1
-	EventType string `json:"eventType"`
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:Enum=commit_comment,create,delete,deployment,deployment_status,fork,gollum,installation,integration_installation,issue_comment,issues,label,member,membership,milestone,organization,org_block,page_build,ping,project_card,project_column,project,public,pull_request,pull_request_review,pull_request_review_comment,push,release,repository,status,team,team_add,watch
+	EventTypes []string `json:"eventTypes"`
 
 	// AccessToken is the Kubernetes secret containing the GitHub
 	// access token
@@ -76,16 +77,10 @@ type SecretValueFromSource struct {
 }
 
 const (
-	// GitHubSourcePullRequestEvent is the event type for a pull request
-	GitHubSourcePullRequestEvent = "dev.knative.source.github.pullrequest"
-	// GitHubSourceUnsupportedEvent is the event type for everything else
-	GitHubSourceUnsupportedEvent = "dev.knative.source.github.unsupported"
+	// GitHubSourceEventPrefix is what all GitHub event types get
+	// prefixed with when converting to CloudEvent EventType
+	GitHubSourceEventPrefix = "dev.knative.source.github"
 )
-
-// GitHubSourceGitHubEventType maps CloudEvent types to X-GitHub-Event types
-var GitHubSourceGitHubEventType = map[string]string{
-	GitHubSourcePullRequestEvent: "pull_request",
-}
 
 const (
 	// GitHubSourceConditionReady has status True when the
