@@ -19,15 +19,18 @@ package gcppubsub
 import (
 	"fmt"
 	"github.com/knative/pkg/logging"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
-
-	"go.uber.org/zap"
 
 	// Imports the Google Cloud Pub/Sub client package.
 	"cloud.google.com/go/pubsub"
 	"github.com/knative/pkg/cloudevents"
 	"golang.org/x/net/context"
+)
+
+const (
+	eventType = "google.pubsub.topic.publish"
 )
 
 // Adapter implements the GCP Pub/Sub adapter to deliver Pub/Sub messages from
@@ -60,15 +63,20 @@ func (a *Adapter) Start(ctx context.Context) error {
 	a.subscription = a.client.Subscription(a.SubscriptionID)
 
 	// Using that subscription, start receiving messages.
-	if err := a.subscription.Receive(ctx, a.receiveMessage); err != nil {
+	if err := a.subscription.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+		a.receiveMessage(ctx, &PubSubMessageWrapper{M: m})
+		m.Nack()
+	}); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *Adapter) receiveMessage(ctx context.Context, m *pubsub.Message) {
+func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 	logger := logging.FromContext(ctx)
-	logger.Debug("Received message", zap.Any("messageData", m.Data))
+
+	logger.Debug("Received message", zap.Any("messageData", m.Data()))
+
 	err := a.postMessage(ctx, m)
 	if err != nil {
 		logger.Error("Failed to post message", zap.Error(err))
@@ -77,19 +85,19 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *pubsub.Message) {
 		m.Ack()
 	}
 }
-func (a *Adapter) postMessage(ctx context.Context, m *pubsub.Message) error {
+func (a *Adapter) postMessage(ctx context.Context, m PubSubMessage) error {
 	logger := logging.FromContext(ctx)
 
 	event := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          "google.pubsub.topic.publish",
-		EventID:            m.ID,
-		EventTime:          m.PublishTime,
+		EventType:          eventType,
+		EventID:            m.ID(),
+		EventTime:          m.PublishTime(),
 		Source:             a.source,
 	}
-	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, event)
+	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m.Message(), event)
 	if err != nil {
-		logger.Error("Failed to marshal the message.", zap.Error(err), zap.Any("message", m))
+		logger.Error("Failed to marshal the message.", zap.Error(err), zap.Any("message", m.Message()))
 		return err
 	}
 
@@ -103,5 +111,11 @@ func (a *Adapter) postMessage(ctx context.Context, m *pubsub.Message) error {
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	logger.Debug("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
+
+	// If the response is not within the 2xx range, return an error.
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("[%d] unexpected response %s", resp.StatusCode, body)
+	}
+
 	return nil
 }
