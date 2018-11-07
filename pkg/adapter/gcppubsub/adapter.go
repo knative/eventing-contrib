@@ -30,11 +30,17 @@ import (
 	"golang.org/x/net/context"
 )
 
+// Adapter implements the GCP Pub/Sub adapter to deliver Pub/Sub messages from
+// a pre-existing topic/subscription to a Sink.
 type Adapter struct {
-	ProjectID      string
-	TopicID        string
-	SinkURI        string
+	// ProjectID is the pre-existing gcp project id to use.
+	ProjectID string
+	// TopicID is the pre-existing gcp pub/sub topic id to use.
+	TopicID string
+	// SubscriptionID is the pre-existing gcp pub/sub subscription id to use.
 	SubscriptionID string
+	// SinkURI is the URI messages will be forwarded on to.
+	SinkURI string
 
 	source       string
 	client       *pubsub.Client
@@ -42,17 +48,9 @@ type Adapter struct {
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	logger := logging.FromContext(ctx)
-	logger.Info("Starting.",
-		zap.String("projectID", a.ProjectID),
-		zap.String("topicID", a.TopicID),
-		zap.String("subscriptionID", a.SubscriptionID),
-		zap.String("sinkURI", a.SinkURI))
-
 	a.source = fmt.Sprintf("//pubsub.googleapis.com/%s/topics/%s", a.ProjectID, a.TopicID)
 
 	var err error
-
 	// Make the client to pubsub
 	if a.client, err = pubsub.NewClient(ctx, a.ProjectID); err != nil {
 		return err
