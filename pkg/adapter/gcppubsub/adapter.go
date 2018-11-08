@@ -63,13 +63,10 @@ func (a *Adapter) Start(ctx context.Context) error {
 	a.subscription = a.client.Subscription(a.SubscriptionID)
 
 	// Using that subscription, start receiving messages.
-	if err := a.subscription.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+	// Note: subscription.Receive is a blocking call.
+	return a.subscription.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		a.receiveMessage(ctx, &PubSubMessageWrapper{M: m})
-		m.Nack()
-	}); err != nil {
-		return err
-	}
-	return nil
+	})
 }
 
 func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
@@ -82,6 +79,7 @@ func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 		logger.Error("Failed to post message", zap.Error(err))
 		m.Nack()
 	} else {
+		logger.Debug("Message sent successfully")
 		m.Ack()
 	}
 }
