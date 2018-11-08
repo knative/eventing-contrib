@@ -113,6 +113,6 @@ func (a *Adapter) postMessage(m *corev1.Event) error {
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugf("response", zap.Any("status", resp.Status), zap.Any("body", string(body)))
+	logger.Debug("response", zap.Any("status", resp.Status), zap.Any("body", string(body)))
 	return nil
 }
