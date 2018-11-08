@@ -17,5 +17,5 @@ limitations under the License.
 // Package githubsource implements a GitHubSource controller.
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=githubsources,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
 package githubsource
