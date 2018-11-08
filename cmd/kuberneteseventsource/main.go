@@ -33,12 +33,12 @@ var (
 func init() {
 	flag.StringVar(&sink, "sink", "", "uri to send events to")
 	flag.StringVar(&namespace, "namespace", "default", "namespace to watch events for")
-
 }
 
 func main() {
 	flag.Parse()
 	ctx := context.Background()
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("unable to create logger: %v", err)
