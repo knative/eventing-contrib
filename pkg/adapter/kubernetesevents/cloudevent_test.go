@@ -17,14 +17,14 @@ limitations under the License.
 package kubernetesevents
 
 import (
-	"github.com/google/go-cmp/cmp"
-	"github.com/knative/pkg/cloudevents"
-	"k8s.io/apimachinery/pkg/types"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/knative/pkg/cloudevents"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func TestCloudEventsContext(t *testing.T) {
