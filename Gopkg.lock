@@ -991,7 +991,6 @@
   input-imports = [
     "cloud.google.com/go/pubsub",
     "github.com/emicklei/go-restful",
-    "github.com/golang/glog",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/uuid",
