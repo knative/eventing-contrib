@@ -129,8 +129,8 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected message to be nacked, but was not.")
 			}
 
-			if !m.Acked && !m.Nacked {
-				t.Errorf("Neither Acked nor Nacked")
+			if m.Acked == m.Nacked {
+				t.Errorf("Message has the same Ack and Nack status: %v", m.Acked)
 			}
 		})
 	}
