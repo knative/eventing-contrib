@@ -41,15 +41,15 @@ func main() {
 	ctx := context.Background()
 	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatalf("Unable to create logger: %v", err)
+		log.Fatalf("unable to create logger: %v", err)
 	}
 
 	if namespace == "" {
-		logger.Fatal("No namespace provided")
+		logger.Fatal("no namespace provided")
 	}
 
 	if sink == "" {
-		logger.Fatal("No sink provided")
+		logger.Fatal("no sink provided")
 	}
 
 	a := kubernetesevents.Adapter{
@@ -59,5 +59,5 @@ func main() {
 
 	a.Run(ctx)
 
-	log.Printf("Exiting...")
+	logger.Info("exiting...")
 }
