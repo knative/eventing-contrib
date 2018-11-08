@@ -57,6 +57,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().ContainerSources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("gcppubsubsources"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().GcpPubSubSources().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("githubsources"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().GitHubSources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("kuberneteseventsources"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().KubernetesEventSources().Informer()}, nil
 

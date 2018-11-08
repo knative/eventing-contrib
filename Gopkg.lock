@@ -141,6 +141,22 @@
   version = "v0.2.0"
 
 [[projects]]
+  digest = "1:f4f203acd8b11b8747bdcd91696a01dbc95ccb9e2ca2db6abf81c3a4f5e950ce"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  pruneopts = "NUT"
+  revision = "f55b50f38167644bb7e4be03d9a2bde71d435239"
+  version = "v18.2.0"
+
+[[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "NUT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
   name = "github.com/google/gofuzz"
@@ -244,19 +260,45 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  digest = "1:c7fa3732aed841ac9b12025b4d4736c5c5d844500cf0854014c9879e7b161140"
+  digest = "1:345bbba667abadd6263391c915251ede8d9fa6f6852839c60bb6738b6122b89c"
+  name = "github.com/knative/build"
+  packages = [
+    "pkg/apis/build",
+    "pkg/apis/build/v1alpha1",
+  ]
+  pruneopts = "NUT"
+  revision = "94859753e2c6724df2be86f6a254f810895fa3eb"
+  version = "v0.2.0"
+
+[[projects]]
+  digest = "1:4e2acba8aae54baf3edf83beeefb1c8e40c566f482c7bc91f6eacf28c1f3f032"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
     "apis/duck",
     "apis/duck/v1alpha1",
     "cloudevents",
+    "kmeta",
     "logging",
     "logging/logkey",
     "signals",
   ]
   pruneopts = "NUT"
   revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
+
+[[projects]]
+  digest = "1:39d60b103c12246d5c192a7ba0805079f3206e57f9f5f3af6ccafa980f6d0ebd"
+  name = "github.com/knative/serving"
+  packages = [
+    "pkg/apis/autoscaling",
+    "pkg/apis/networking",
+    "pkg/apis/networking/v1alpha1",
+    "pkg/apis/serving",
+    "pkg/apis/serving/v1alpha1",
+  ]
+  pruneopts = "NUT"
+  revision = "5ec3b89b9ac9313dee514683229aefc3c8056577"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
@@ -681,6 +723,17 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:d98a45237ffb67adfb77bf618a164407d476ecd925a9a987e2fa1cda9137db5e"
+  name = "gopkg.in/go-playground/webhooks.v3"
+  packages = [
+    ".",
+    "github",
+  ]
+  pruneopts = "NUT"
+  revision = "8ffb2ffc32b7af2c7e940944eccba4dcd66c692a"
+  version = "v3.13.0"
+
+[[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
   name = "gopkg.in/inf.v0"
   packages = ["."]
@@ -993,6 +1046,7 @@
     "github.com/emicklei/go-restful",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
+    "github.com/google/go-github/github",
     "github.com/google/uuid",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
@@ -1000,11 +1054,15 @@
     "github.com/knative/pkg/cloudevents",
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/signals",
+    "github.com/knative/serving/pkg/apis/serving/v1alpha1",
     "github.com/knative/test-infra",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "go.uber.org/zap",
     "golang.org/x/net/context",
+    "golang.org/x/oauth2",
+    "gopkg.in/go-playground/webhooks.v3",
+    "gopkg.in/go-playground/webhooks.v3/github",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
