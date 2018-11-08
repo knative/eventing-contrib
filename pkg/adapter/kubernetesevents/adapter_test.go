@@ -17,7 +17,6 @@ limitations under the License.
 package kubernetesevents
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -56,7 +55,6 @@ func TestUpdateEvent_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				SinkURI:   sinkServer.URL,
 				Namespace: "default",
-				ctx:       context.TODO(),
 			}
 
 			uid := types.UID("ABC")
@@ -95,7 +93,6 @@ func TestUpdateEvent_NonExistentSink(t *testing.T) {
 	a := &Adapter{
 		SinkURI:   "http://localhost:50/",
 		Namespace: "default",
-		ctx:       context.TODO(),
 	}
 
 	uid := types.UID("ABC")
@@ -120,15 +117,12 @@ func TestUpdateEvent_NonExistentSink(t *testing.T) {
 	}
 
 	a.updateEvent(nil, event)
-
-	t.Log("should get here without crashing.")
 }
 
 func TestPostMessage_InvalidSink(t *testing.T) {
 	a := &Adapter{
 		SinkURI:   "@#$@",
 		Namespace: "default",
-		ctx:       context.TODO(),
 	}
 
 	uid := types.UID("ABC")
@@ -154,8 +148,9 @@ func TestPostMessage_InvalidSink(t *testing.T) {
 
 	err := a.postMessage(event)
 
-	if err == nil {
-		t.Errorf("expected error for invalid sink uri")
+	want := `Post @#$@: unsupported protocol scheme ""`
+	if err == nil || err.Error() != want {
+		t.Errorf("want %q, got: %q", want, err.Error())
 	}
 }
 

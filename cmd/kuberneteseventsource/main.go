@@ -17,8 +17,8 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"flag"
+	"github.com/knative/pkg/signals"
 	"log"
 
 	"github.com/knative/eventing-sources/pkg/adapter/kubernetesevents"
@@ -37,7 +37,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-	ctx := context.Background()
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -57,7 +56,12 @@ func main() {
 		SinkURI:   sink,
 	}
 
-	a.Run(ctx)
+	stopCh := signals.SetupSignalHandler()
+
+	err = a.Start(stopCh)
+	if err != nil {
+		logger.Fatal("Failed to start the adapter", zap.Error(err))
+	}
 
 	logger.Info("exiting...")
 }

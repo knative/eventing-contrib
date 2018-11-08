@@ -18,8 +18,8 @@ package kubernetesevents
 
 import (
 	"context"
+	"fmt"
 	"github.com/knative/pkg/logging"
-	"github.com/knative/pkg/signals"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
@@ -41,27 +41,23 @@ type Adapter struct {
 	Namespace string
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
-
-	ctx context.Context
 }
 
 // Run starts the kubernetes receive adapter and sends events produced in the
 // configured namespace and send them to the sink uri provided.
-func (a *Adapter) Run(ctx context.Context) {
-	a.ctx = ctx
-	logger := logging.FromContext(ctx)
+func (a *Adapter) Start(stopCh <-chan struct{}) error {
+	logger := logging.FromContext(context.TODO())
 
 	// set up signals so we handle the first shutdown signal gracefully
-	stopCh := signals.SetupSignalHandler()
 
 	cfg, err := clientcmd.BuildConfigFromFlags("", "")
 	if err != nil {
-		logger.Fatalf("error building kubeconfig: %v", zap.Error(err))
+		return err
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		logger.Fatalf("error building kubernetes clientset: %v", zap.Error(err))
+		return err
 	}
 
 	eventsInformer := coreinformers.NewFilteredEventInformer(
@@ -77,10 +73,11 @@ func (a *Adapter) Run(ctx context.Context) {
 
 	logger.Debug("waiting for caches to sync...")
 	if ok := cache.WaitForCacheSync(stopCh, eventsInformer.HasSynced); !ok {
-		logger.Fatalf("Failed to wait for events cache to sync")
+		return fmt.Errorf("failed to wait for events cache to sync")
 	}
 	logger.Debug("caches synced...")
 	<-stopCh
+	return nil
 }
 
 func (a *Adapter) updateEvent(old, new interface{}) {
@@ -88,35 +85,34 @@ func (a *Adapter) updateEvent(old, new interface{}) {
 }
 
 func (a *Adapter) addEvent(new interface{}) {
-	logger := logging.FromContext(a.ctx)
+	logger := logging.FromContext(context.TODO())
 	event := new.(*corev1.Event)
-	logger.Debugf("GOT EVENT: %+v", event)
+	logger.Debug("GOT EVENT", zap.Any("event", event))
 	a.postMessage(event)
 }
 
 func (a *Adapter) postMessage(m *corev1.Event) error {
-	logger := logging.FromContext(a.ctx)
+	logger := logging.FromContext(context.TODO())
 
 	ectx := cloudEventsContext(m)
 
-	logger.Debugf("posting to %q", a.SinkURI)
+	logger.Debug("posting to sinkURI", zap.Any("sinkURI", a.SinkURI))
 	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
 	// event metadata.
 	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, *ectx)
 	if err != nil {
-		logger.Errorf("failed to create http request: %v", zap.Error(err))
+		logger.Error("failed to create http request", zap.Error(err))
 		return err
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Errorf("failed to do POST: %v", zap.Error(err))
+		logger.Error("failed to do POST", zap.Error(err))
 		return err
 	}
 	defer resp.Body.Close()
-	logger.Debugf("response Status: %s", resp.Status)
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugf("response Body: %s", string(body))
+	logger.Debugf("response", zap.Any("status", resp.Status), zap.Any("body", string(body)))
 	return nil
 }
