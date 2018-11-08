@@ -174,7 +174,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("NotFound", "")
+				s.Status.MarkNoSink("NotFound", "sink does not contain address")
 				s.Status.MarkSecrets()
 				return s
 			}(),
@@ -202,7 +202,7 @@ var testCases = []controllertesting.TestCase{
 				s := getGitHubSource()
 				s.Spec.Sink = nil
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("NotFound", "")
+				s.Status.MarkNoSink("NotFound", "sink ref is nil")
 				s.Status.MarkSecrets()
 				return s
 			}(),
@@ -331,12 +331,13 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSecrets("AccessTokenNotFound", "")
+				s.Status.MarkNoSecrets("AccessTokenNotFound",
+					fmt.Sprintf(`secrets "%s" not found`, secretName))
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `secrets "testsecret" not found`,
+		WantErrMsg:  fmt.Sprintf(`secrets "%s" not found`, secretName),
 	}, {
 		Name:       "invalid githubsource, secret key ref does not exist",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
@@ -361,12 +362,13 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSecrets("SecretTokenNotFound", "")
+				s.Status.MarkNoSecrets("SecretTokenNotFound",
+					fmt.Sprintf(`key "%s" not found in secret "%s"`, secretTokenKey, secretName))
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `key "secretToken" not found in secret "testsecret"`,
+		WantErrMsg:  fmt.Sprintf(`key "%s" not found in secret "%s"`, secretTokenKey, secretName),
 	}, {
 		Name:       "valid githubsource, deleted",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},

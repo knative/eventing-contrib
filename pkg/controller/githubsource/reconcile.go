@@ -85,19 +85,19 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 
 	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets("AccessTokenNotFound", "")
+		source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
 		return err
 	}
 	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets("SecretTokenNotFound", "")
+		source.Status.MarkNoSecrets("SecretTokenNotFound", "%s", err)
 		return err
 	}
 	source.Status.MarkSecrets()
 
 	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
 	if err != nil {
-		source.Status.MarkNoSink("NotFound", "")
+		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
 	}
 	source.Status.MarkSink(uri)

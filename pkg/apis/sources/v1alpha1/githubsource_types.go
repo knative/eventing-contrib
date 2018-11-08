@@ -148,7 +148,8 @@ func (s *GitHubSourceStatus) MarkSink(uri string) {
 	if len(uri) > 0 {
 		gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionSinkProvided)
 	} else {
-		gitHubSourceCondSet.Manage(s).MarkUnknown(GitHubSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		gitHubSourceCondSet.Manage(s).MarkUnknown(GitHubSourceConditionSinkProvided,
+			"SinkEmpty", "Sink has resolved to empty.")
 	}
 }
 
