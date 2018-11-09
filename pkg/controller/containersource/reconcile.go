@@ -113,7 +113,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		deploy.Spec = expected.Spec
 		err := r.client.Update(ctx, deploy)
 		// if no error, update the status.
-		if err != nil {
+		if err == nil {
 			source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
 		} else {
 			source.Status.MarkDeploying("DeployNeedsUpdate", "Attempting to update deployment %s", deploy.Name)
