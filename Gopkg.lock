@@ -287,7 +287,7 @@
   revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
 
 [[projects]]
-  digest = "1:39d60b103c12246d5c192a7ba0805079f3206e57f9f5f3af6ccafa980f6d0ebd"
+  digest = "1:5d4ddd664e297c3453b40e94e69ea3d1aaa8efbff3c4fe0d892f9a588c499770"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -297,8 +297,8 @@
     "pkg/apis/serving/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "5ec3b89b9ac9313dee514683229aefc3c8056577"
-  version = "v0.2.0"
+  revision = "1036f34badadfa711d88378a1c09a3527bb1584b"
+  version = "v0.2.1"
 
 [[projects]]
   branch = "master"
