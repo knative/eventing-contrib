@@ -17,14 +17,15 @@ limitations under the License.
 package resources
 
 import (
-	"encoding/json"
 	"github.com/google/go-cmp/cmp"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
 func TestMakeDeployment_sink(t *testing.T) {
-	args := &ContainerArguments{
+	got := MakeDeployment(nil, &ContainerArguments{
 		Name:      "test-name",
 		Namespace: "test-namespace",
 		Image:     "test-image",
@@ -43,23 +44,73 @@ func TestMakeDeployment_sink(t *testing.T) {
 		ServiceAccountName: "test-service-account",
 		SinkInArgs:         false,
 		Sink:               "test-sink",
+	})
+
+	want := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-name-",
+			Namespace:    "test-namespace",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"source": "test-name",
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar.istio.io/inject": "true",
+					},
+					Labels: map[string]string{
+						"source": "test-name",
+					},
+				},
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "test-service-account",
+					Containers: []corev1.Container{
+						{
+							Name:  "source",
+							Image: "test-image",
+							Args: []string{
+								"--test1=args1",
+								"--test2=args2",
+								"--sink=test-sink",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "test1",
+									Value: "arg1",
+								}, {
+									Name: "test2",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											Key: "test2-secret",
+										},
+									},
+								}, {
+									Name:  "SINK",
+									Value: "test-sink",
+								}},
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
+					},
+				},
+			},
+		},
 	}
 
-	want := `{"kind":"Deployment","apiVersion":"apps/v1","metadata":{"generateName":"test-name-","namespace":"test-namespace","creationTimestamp":null},"spec":{"selector":{"matchLabels":{"source":"test-name"}},"template":{"metadata":{"creationTimestamp":null,"labels":{"source":"test-name"},"annotations":{"sidecar.istio.io/inject":"true"}},"spec":{"containers":[{"name":"source","image":"test-image","args":["--test1=args1","--test2=args2","--sink=test-sink"],"env":[{"name":"test1","value":"arg1"},{"name":"test2","valueFrom":{"secretKeyRef":{"key":"test2-secret"}}},{"name":"SINK","value":"test-sink"}],"resources":{},"imagePullPolicy":"IfNotPresent"}],"serviceAccountName":"test-service-account"}},"strategy":{}},"status":{}}`
-
-	deploy := MakeDeployment(nil, args)
-	got, err := json.Marshal(deploy)
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-
-	if diff := cmp.Diff(want, string(got)); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
 }
 
 func TestMakeDeployment_sinkinargs(t *testing.T) {
-	args := &ContainerArguments{
+	got := MakeDeployment(nil, &ContainerArguments{
 		Name:      "test-name",
 		Namespace: "test-namespace",
 		Image:     "test-image",
@@ -77,17 +128,67 @@ func TestMakeDeployment_sinkinargs(t *testing.T) {
 		}},
 		ServiceAccountName: "test-service-account",
 		SinkInArgs:         true,
+	})
+
+	want := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-name-",
+			Namespace:    "test-namespace",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"source": "test-name",
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar.istio.io/inject": "true",
+					},
+					Labels: map[string]string{
+						"source": "test-name",
+					},
+				},
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "test-service-account",
+					Containers: []corev1.Container{
+						{
+							Name:  "source",
+							Image: "test-image",
+							Args: []string{
+								"--test1=args1",
+								"--test2=args2",
+								"--sink=test-sink",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "test1",
+									Value: "arg1",
+								}, {
+									Name: "test2",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											Key: "test2-secret",
+										},
+									},
+								}, {
+									Name:  "SINK",
+									Value: "test-sink",
+								}},
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
+					},
+				},
+			},
+		},
 	}
 
-	want := `{"kind":"Deployment","apiVersion":"apps/v1","metadata":{"generateName":"test-name-","namespace":"test-namespace","creationTimestamp":null},"spec":{"selector":{"matchLabels":{"source":"test-name"}},"template":{"metadata":{"creationTimestamp":null,"labels":{"source":"test-name"},"annotations":{"sidecar.istio.io/inject":"true"}},"spec":{"containers":[{"name":"source","image":"test-image","args":["--test1=args1","--test2=args2","--sink=test-sink"],"env":[{"name":"test1","value":"arg1"},{"name":"test2","valueFrom":{"secretKeyRef":{"key":"test2-secret"}}},{"name":"SINK"}],"resources":{},"imagePullPolicy":"IfNotPresent"}],"serviceAccountName":"test-service-account"}},"strategy":{}},"status":{}}`
-
-	deploy := MakeDeployment(nil, args)
-	got, err := json.Marshal(deploy)
-	if err != nil {
-		t.Errorf("unexpected error %v", err)
-	}
-
-	if diff := cmp.Diff(want, string(got)); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
 }
