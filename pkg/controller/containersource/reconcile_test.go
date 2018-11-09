@@ -48,6 +48,7 @@ const (
 	containerSourceName = "testcontainersource"
 	testNS              = "testnamespace"
 	containerSourceUID  = "2a2208d1-ce67-11e8-b3a3-42010a8a00af"
+	deployGeneratedName = "" //sad trombone
 
 	sinkableDNS = "sinkable.sink.svc.cluster.local"
 
@@ -147,7 +148,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getContainerSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", deployGeneratedName)
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
@@ -276,7 +277,7 @@ var testCases = []controllertesting.TestCase{
 				s.Spec.Sink = nil
 				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("Deploying", "Created deployment %s", containerSourceName)
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", deployGeneratedName)
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
@@ -356,7 +357,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 	}, {
-		Name:       "xxxvalid containersource, sink, but deployment needs update",
+		Name:       "valid containersource, sink, but deployment needs update",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			func() runtime.Object {
