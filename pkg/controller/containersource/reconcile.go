@@ -98,7 +98,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 				return object, err
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
-			source.Status.MarkDeploying("Deploying", "Created deployment %s", args.Name)
+			source.Status.MarkDeploying("Deploying", "Created deployment %s", deploy.Name)
 			// Since the Deployment has just been created, there's nothing more
 			// to do until it gets a status. This ContainerSource will be reconciled
 			// again when the Deployment is updated.
@@ -111,9 +111,16 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	expected := resources.MakeDeployment(nil, args)
 	if !equality.Semantic.DeepEqual(deploy.Spec, expected.Spec) {
 		deploy.Spec = expected.Spec
-		if r.client.Update(ctx, deploy); err != nil {
-			return object, err
+		err := r.client.Update(ctx, deploy)
+		// if no error, update the status.
+		if err == nil {
+			source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
+		} else {
+			source.Status.MarkDeploying("DeployNeedsUpdate", "Attempting to update deployment %s", deploy.Name)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, "DeployNeedsUpdate", "Failed to update deployment %q", deploy.Name)
 		}
+		// Return after this update or error and reconcile again
+		return object, err
 	}
 
 	// Update source status
