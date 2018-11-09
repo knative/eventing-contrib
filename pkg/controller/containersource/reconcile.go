@@ -97,7 +97,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 				r.recorder.Eventf(source, corev1.EventTypeNormal, "DeploymentBlocked", "waiting for %v", err)
 				return object, err
 			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
+			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", args.Name)
 			source.Status.MarkDeploying("Deploying", "Created deployment %s", args.Name)
 			// Since the Deployment has just been created, there's nothing more
 			// to do until it gets a status. This ContainerSource will be reconciled
@@ -112,6 +112,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	if !equality.Semantic.DeepEqual(deploy.Spec, expected.Spec) {
 		deploy.Spec = expected.Spec
 		err := r.client.Update(ctx, deploy)
+		source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
 		// Return after this update and reconcile again
 		return object, err
 	}

@@ -314,7 +314,11 @@ var testCases = []controllertesting.TestCase{
 				j, _ := u.MarshalJSON()
 				json.Unmarshal(j, d)
 
-				d1 := resources.MakeDeployment(nil, &resources.ContainerArguments{})
+				d1 := resources.MakeDeployment(nil, &resources.ContainerArguments{
+					Name:  containerSourceName,
+					Sink:  "http://" + sinkableDNS + "/",
+					Image: image,
+				})
 				d.Spec = d1.Spec
 				return d
 			}(),
@@ -346,6 +350,79 @@ var testCases = []controllertesting.TestCase{
 				s.UID = containerSourceUID
 				s.Status.InitializeConditions()
 				s.Status.MarkDeployed()
+				s.Status.MarkSink(targetURI)
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "xxxvalid containersource, sink, but deployment needs update",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.UID = containerSourceUID
+				return s
+			}(),
+			func() runtime.Object {
+				// TODO(n3wscott): this is very strange, I was not able to get
+				// the fake client to return the resources.MakeDeployment version
+				// back in the list call. I might have missed setting some special
+				// metadata? Converting an unstructured and setting the fields
+				// I care about did work.
+				u := &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"apiVersion": "apps/v1",
+						"kind":       "Deployment",
+						"metadata": map[string]interface{}{
+							"namespace": testNS,
+							"name":      containerSourceName + "-abc",
+						},
+					},
+				}
+				u.SetOwnerReferences(getOwnerReferences())
+
+				d := &appsv1.Deployment{}
+				d.Status.ReadyReplicas = 1
+				j, _ := u.MarshalJSON()
+				json.Unmarshal(j, d)
+
+				d1 := resources.MakeDeployment(nil, &resources.ContainerArguments{
+					Name:  containerSourceName,
+					Sink:  "http://old-" + sinkableDNS + "/",
+					Image: image,
+				})
+				d.Spec = d1.Spec
+				return d
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+						"uid":       containerSourceUID,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.UID = containerSourceUID
+				s.Status.InitializeConditions()
+				s.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", containerSourceName+"-abc")
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
