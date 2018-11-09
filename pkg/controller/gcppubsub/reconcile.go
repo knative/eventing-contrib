@@ -19,6 +19,7 @@ package gcppubsub
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/knative/eventing-sources/pkg/controller/gcppubsub/resources"
 
@@ -160,15 +161,14 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		return ra, nil
 	}
-	svc, err := resources.MakeReceiveAdapter(resources.ReceiveAdapterArgs{
+	svc := resources.MakeReceiveAdapter(&resources.ReceiveAdapterArgs{
 		Image:          r.receiveAdapterImage,
-		Scheme:         r.scheme,
 		Source:         src,
 		Labels:         getLabels(src),
 		SubscriptionID: subscriptionID,
 		SinkURI:        sinkURI,
 	})
-	if err != nil {
+	if err := controllerutil.SetControllerReference(src, svc, r.scheme); err != nil {
 		return nil, err
 	}
 	err = r.client.Create(ctx, svc)
