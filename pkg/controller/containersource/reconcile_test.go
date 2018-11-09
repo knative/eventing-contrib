@@ -292,6 +292,11 @@ var testCases = []controllertesting.TestCase{
 				return s
 			}(),
 			func() runtime.Object {
+				// TODO(n3wscott): this is very strange, I was not able to get
+				// the fake client to return the resources.MakeDeployment version
+				// back in the list call. I might have missed setting some special
+				// metadata? Converting an unstructured and setting the fields
+				// I care about did work.
 				u := &unstructured.Unstructured{
 					Object: map[string]interface{}{
 						"apiVersion": "apps/v1",
@@ -334,24 +339,6 @@ var testCases = []controllertesting.TestCase{
 					},
 				},
 			},
-			// deployment resource
-			func() runtime.Object {
-				u := &unstructured.Unstructured{
-					Object: map[string]interface{}{
-						"apiVersion": "extensions/v1beta1",
-						"kind":       "Deployment",
-						"metadata": map[string]interface{}{
-							"namespace": testNS,
-							"name":      containerSourceName + "-abc",
-						},
-						"status": map[string]interface{}{
-							"readyReplicas": "1",
-						},
-					},
-				}
-				u.SetOwnerReferences(getOwnerReferences())
-				return u
-			}(),
 		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
