@@ -36,6 +36,10 @@ func (c *FakeSourcesV1alpha1) GcpPubSubSources(namespace string) v1alpha1.GcpPub
 	return &FakeGcpPubSubSources{c, namespace}
 }
 
+func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSourceInterface {
+	return &FakeGitHubSources{c, namespace}
+}
+
 func (c *FakeSourcesV1alpha1) KubernetesEventSources(namespace string) v1alpha1.KubernetesEventSourceInterface {
 	return &FakeKubernetesEventSources{c, namespace}
 }

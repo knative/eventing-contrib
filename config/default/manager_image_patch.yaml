@@ -11,3 +11,5 @@ spec:
         env:
         - name: K8S_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/kuberneteseventsource
+        - name: GH_RA_IMAGE
+          value: github.com/knative/eventing-sources/cmd/githubsource
