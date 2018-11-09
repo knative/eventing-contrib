@@ -117,7 +117,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
 		} else {
 			source.Status.MarkDeploying("DeployNeedsUpdate", "Attempting to update deployment %s", deploy.Name)
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "DeployUpdated", "Failed to update deployment %q", deploy.Name)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, "DeployNeedsUpdate", "Failed to update deployment %q", deploy.Name)
 		}
 		// Return after this update or error and reconcile again
 		return object, err
