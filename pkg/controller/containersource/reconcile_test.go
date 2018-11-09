@@ -18,26 +18,24 @@ package containersource
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
-
 	"github.com/google/go-cmp/cmp"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/client-go/rest"
-
-	//"fmt"
-	"testing"
-
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
-	//"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"testing"
 )
 
 var (
@@ -284,71 +282,167 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-	}, /*
-		TODO(n3wscott): This does not work yet because we are only mocking the dynamic client
-		response and not the client list response. Fix this and the test will work.
-		{
-			Name:       "valid containersource, sink, and deployment",
-			Reconciles: &sourcesv1alpha1.ContainerSource{},
-			InitialState: []runtime.Object{
-				func() runtime.Object {
-					s := getContainerSource()
-					s.UID = containerSourceUID
-					return s
-				}(),
-			},
-			ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
-			Scheme:       scheme.Scheme,
-			Objects: []runtime.Object{
-				// sinkable
-				&unstructured.Unstructured{
+	}, {
+		Name:       "valid containersource, sink, and deployment",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.UID = containerSourceUID
+				return s
+			}(),
+			func() runtime.Object {
+				u := &unstructured.Unstructured{
 					Object: map[string]interface{}{
-						"apiVersion": sinkableAPIVersion,
-						"kind":       sinkableKind,
+						"apiVersion": "apps/v1",
+						"kind":       "Deployment",
 						"metadata": map[string]interface{}{
 							"namespace": testNS,
-							"name":      sinkableName,
-							"uid":       containerSourceUID,
+							"name":      containerSourceName + "-abc",
 						},
-						"status": map[string]interface{}{
-							"sinkable": map[string]interface{}{
-								"domainInternal": sinkableDNS,
-							},
+					},
+				}
+				u.SetOwnerReferences(getOwnerReferences())
+
+				d := &appsv1.Deployment{}
+				d.Status.ReadyReplicas = 1
+				j, _ := u.MarshalJSON()
+				json.Unmarshal(j, d)
+
+				d1 := resources.MakeDeployment(nil, &resources.ContainerArguments{})
+				d.Spec = d1.Spec
+				return d
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+						"uid":       containerSourceUID,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
 						},
 					},
 				},
-				// deployment resource
-				func() runtime.Object {
-					u := &unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "extensions/v1beta1",
-							"kind":       "Deployment",
-							"metadata": map[string]interface{}{
-								"namespace": testNS,
-								"name":      containerSourceName + "-abc",
-							},
-							"status": map[string]interface{}{
-								"readyReplicas": "1",
-							},
+			},
+			// deployment resource
+			func() runtime.Object {
+				u := &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"apiVersion": "extensions/v1beta1",
+						"kind":       "Deployment",
+						"metadata": map[string]interface{}{
+							"namespace": testNS,
+							"name":      containerSourceName + "-abc",
 						},
-					}
-					u.SetOwnerReferences(getOwnerReferences())
-					return u
-				}(),
-			},
-			WantPresent: []runtime.Object{
-				func() runtime.Object {
-					s := getContainerSource()
-					s.UID = containerSourceUID
-					s.Status.InitializeConditions()
-					s.Status.MarkDeployed()
-					s.Status.MarkSink(targetURI)
-					return s
-				}(),
-			},
-			IgnoreTimes: true,
+						"status": map[string]interface{}{
+							"readyReplicas": "1",
+						},
+					},
+				}
+				u.SetOwnerReferences(getOwnerReferences())
+				return u
+			}(),
 		},
-	*/
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.UID = containerSourceUID
+				s.Status.InitializeConditions()
+				s.Status.MarkDeployed()
+				s.Status.MarkSink(targetURI)
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "Error for create deployment",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.UID = containerSourceUID
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Mocks: controllertesting.Mocks{
+			MockCreates: []controllertesting.MockCreate{
+				func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+					return controllertesting.Handled, errors.New("force an error into client create")
+				},
+			},
+		},
+		Objects: []runtime.Object{
+			// Addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  "force an error into client create",
+	}, {
+		Name:       "Error for get source, other than not found",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.UID = containerSourceUID
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		Mocks: controllertesting.Mocks{
+			MockLists: []controllertesting.MockList{
+				func(_ client.Client, _ context.Context, _ *client.ListOptions, _ runtime.Object) (controllertesting.MockHandled, error) {
+					return controllertesting.Handled, errors.New("force an error into client list")
+				},
+			},
+		},
+		Objects: []runtime.Object{
+			// Addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  "force an error into client list",
+	},
 	/* TODO: support k8s service {
 		Name:       "valid containersource, sink is a k8s service",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
