@@ -112,8 +112,11 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	if !equality.Semantic.DeepEqual(deploy.Spec, expected.Spec) {
 		deploy.Spec = expected.Spec
 		err := r.client.Update(ctx, deploy)
-		source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
-		// Return after this update and reconcile again
+		// if no error, update the status.
+		if err != nil {
+			source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
+		}
+		// Return after this update or error and reconcile again
 		return object, err
 	}
 
