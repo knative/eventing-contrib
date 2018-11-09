@@ -31,6 +31,7 @@ var _ runtime.Object = (*GitHubSource)(nil)
 var _ = duck.VerifyType(&GitHubSource{}, &duckv1alpha1.Conditions{})
 
 // GitHubSourceSpec defines the desired state of GitHubSource
+// +kubebuilder:categories=all,knative,eventing,sources
 type GitHubSourceSpec struct {
 	// ServiceAccountName holds the name of the Kubernetes service account
 	// as which the underlying K8s resources should be run. If unspecified
@@ -163,6 +164,7 @@ func (s *GitHubSourceStatus) MarkNoSink(reason, messageFormat string, messageA .
 
 // GitHubSource is the Schema for the githubsources API
 // +k8s:openapi-gen=true
+// +kubebuilder:categories=all,knative,eventing,sources
 type GitHubSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
