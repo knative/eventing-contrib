@@ -26,7 +26,7 @@ import (
 )
 
 func TestMakeContainerSource(t *testing.T) {
-	kes := &sourcesv1alpha1.KubernetesEventSource{
+	got := MakeContainerSource(&sourcesv1alpha1.KubernetesEventSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "kes",
 			Namespace: "ns",
@@ -39,9 +39,8 @@ func TestMakeContainerSource(t *testing.T) {
 				Namespace: "sinkns",
 			},
 		},
-	}
+	}, "raimage")
 
-	got := MakeContainerSource(kes, "raimage")
 	want := &sourcesv1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "kes-",
