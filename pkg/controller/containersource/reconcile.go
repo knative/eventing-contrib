@@ -111,9 +111,9 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	expected := resources.MakeDeployment(nil, args)
 	if !equality.Semantic.DeepEqual(deploy.Spec, expected.Spec) {
 		deploy.Spec = expected.Spec
-		if r.client.Update(ctx, deploy); err != nil {
-			return object, err
-		}
+		err := r.client.Update(ctx, deploy)
+		// Return after this update and reconcile again
+		return object, err
 	}
 
 	// Update source status
