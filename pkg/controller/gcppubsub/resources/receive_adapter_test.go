@@ -17,78 +17,98 @@ limitations under the License.
 package resources
 
 import (
-	"fmt"
-
+	"github.com/google/go-cmp/cmp"
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"testing"
 )
 
-// ReceiveAdapterArgs are the arguments needed to create a GCP PubSub Source Receive Adapter. Every
-// field is required.
-type ReceiveAdapterArgs struct {
-	Image          string
-	Source         *v1alpha1.GcpPubSubSource
-	Labels         map[string]string
-	SubscriptionID string
-	SinkURI        string
-}
-
-const (
-	credsVolume    = "google-cloud-key"
-	credsMountPath = "/var/secrets/google"
-)
-
-// MakeReceiveAdapter generates (but does not insert into K8s) the Receive Adapter Deployment for
-// GCP PubSub Sources.
-func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
-	credsFile := fmt.Sprintf("%s/%s", credsMountPath, args.Source.Spec.GcpCredsSecret.Key)
-	replicas := int32(1)
-	return &v1.Deployment{
+func TestMakeReceiveAdapter(t *testing.T) {
+	src := &v1alpha1.GcpPubSubSource{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:    args.Source.Namespace,
-			GenerateName: fmt.Sprintf("gcppubsub-%s-", args.Source.Name),
-			Labels:       args.Labels,
+			Name:      "source-name",
+			Namespace: "source-namespace",
+		},
+		Spec: v1alpha1.GcpPubSubSourceSpec{
+			ServiceAccountName: "source-svc-acct",
+			GoogleCloudProject: "gcp-name",
+			Topic:              "topic",
+			GcpCredsSecret: corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: "gcp-secret-name",
+				},
+				Key: "gcp-secret-key",
+			},
+		},
+	}
+
+	got := MakeReceiveAdapter(&ReceiveAdapterArgs{
+		Image:  "test-image",
+		Source: src,
+		Labels: map[string]string{
+			"test-key1": "test-value1",
+			"test-key2": "test-value2",
+		},
+		SubscriptionID: "sub-id",
+		SinkURI:        "sink-uri",
+	})
+
+	one := int32(1)
+	want := &v1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:    "source-namespace",
+			GenerateName: "gcppubsub-source-name-",
+			Labels: map[string]string{
+				"test-key1": "test-value1",
+				"test-key2": "test-value2",
+			},
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: args.Labels,
+				MatchLabels: map[string]string{
+					"test-key1": "test-value1",
+					"test-key2": "test-value2",
+				},
 			},
-			Replicas: &replicas,
+			Replicas: &one,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						"sidecar.istio.io/inject": "true",
 					},
-					Labels: args.Labels,
+					Labels: map[string]string{
+						"test-key1": "test-value1",
+						"test-key2": "test-value2",
+					},
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: args.Source.Spec.ServiceAccountName,
+					ServiceAccountName: "source-svc-acct",
 					Containers: []corev1.Container{
 						{
 							Name:  "receive-adapter",
-							Image: args.Image,
+							Image: "test-image",
 							Env: []corev1.EnvVar{
 								{
 									Name:  "GOOGLE_APPLICATION_CREDENTIALS",
-									Value: credsFile,
+									Value: "/var/secrets/google/gcp-secret-key",
 								},
 								{
 									Name:  "GCPPUBSUB_PROJECT",
-									Value: args.Source.Spec.GoogleCloudProject,
+									Value: "gcp-name",
 								},
 								{
 									Name:  "GCPPUBSUB_TOPIC",
-									Value: args.Source.Spec.Topic,
+									Value: "topic",
 								},
 								{
 									Name:  "GCPPUBSUB_SUBSCRIPTION_ID",
-									Value: args.SubscriptionID,
+									Value: "sub-id",
 								},
 								{
 									Name:  "SINK_URI",
-									Value: args.SinkURI,
+									Value: "sink-uri",
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
@@ -104,7 +124,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 							Name: credsVolume,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: args.Source.Spec.GcpCredsSecret.Name,
+									SecretName: "gcp-secret-name",
 								},
 							},
 						},
@@ -112,5 +132,9 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 				},
 			},
 		},
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
 }
