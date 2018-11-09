@@ -8,6 +8,11 @@ metadata:
 spec:
   group: sources.eventing.knative.dev
   names:
+    categories:
+    - all
+    - knative
+    - eventing
+    - sources
     kind: GitHubSource
     plural: githubsources
   scope: Namespaced
