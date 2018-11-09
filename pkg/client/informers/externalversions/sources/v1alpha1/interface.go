@@ -28,6 +28,8 @@ type Interface interface {
 	ContainerSources() ContainerSourceInformer
 	// GcpPubSubSources returns a GcpPubSubSourceInformer.
 	GcpPubSubSources() GcpPubSubSourceInformer
+	// GitHubSources returns a GitHubSourceInformer.
+	GitHubSources() GitHubSourceInformer
 	// KubernetesEventSources returns a KubernetesEventSourceInformer.
 	KubernetesEventSources() KubernetesEventSourceInformer
 }
@@ -51,6 +53,11 @@ func (v *version) ContainerSources() ContainerSourceInformer {
 // GcpPubSubSources returns a GcpPubSubSourceInformer.
 func (v *version) GcpPubSubSources() GcpPubSubSourceInformer {
 	return &gcpPubSubSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// GitHubSources returns a GitHubSourceInformer.
+func (v *version) GitHubSources() GitHubSourceInformer {
+	return &gitHubSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // KubernetesEventSources returns a KubernetesEventSourceInformer.
