@@ -18,6 +18,7 @@ package resources
 
 import (
 	"fmt"
+	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -25,6 +26,7 @@ import (
 )
 
 func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.Deployment {
+
 	containerArgs := []string(nil)
 	if args != nil {
 		containerArgs = args.Args
@@ -35,7 +37,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 		containerArgs = append(containerArgs, remote)
 	}
 
-	env := append(args.Env, corev1.EnvVar{Name: "SINK", Value: args.Sink})
+	env := append(args.Env, corev1.EnvVar{Name: "SINK", Value: sinkArg(args)})
 
 	deploy := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -78,4 +80,15 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 	}
 
 	return deploy
+}
+
+func sinkArg(args *ContainerArguments) string {
+	if args.SinkInArgs {
+		for _, a := range args.Args {
+			if strings.HasPrefix(a, "--sink=") {
+				return strings.Replace(a, "--sink=", "", -1)
+			}
+		}
+	}
+	return args.Sink
 }
