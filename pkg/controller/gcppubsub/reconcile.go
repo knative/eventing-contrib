@@ -230,7 +230,11 @@ func (r *reconciler) createSubscription(ctx context.Context, src *v1alpha1.GcpPu
 	createdSub, err := psc.CreateSubscription(ctx, sub.ID(), pubsub.SubscriptionConfig{
 		Topic: psc.Topic(src.Spec.Topic),
 	})
-	logging.FromContext(ctx).Desugar().Info("Created new subscription", zap.Error(err), zap.Any("subscription", createdSub))
+	if err != nil {
+		logging.FromContext(ctx).Desugar().Info("Error creating new subscription", zap.Error(err))
+	} else {
+		logging.FromContext(ctx).Desugar().Info("Created new subscription", zap.Any("subscription", createdSub))
+	}
 	return createdSub, err
 }
 
