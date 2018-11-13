@@ -165,6 +165,21 @@
   revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:0d5e3798bfa2642ac268341c96710b8def1f3cbc3bc803c421d90704d72107d8"
+  name = "github.com/google/licenseclassifier"
+  packages = [
+    ".",
+    "internal/sets",
+    "stringclassifier",
+    "stringclassifier/internal/pq",
+    "stringclassifier/searchset",
+    "stringclassifier/searchset/tokenizer",
+  ]
+  pruneopts = "NUT"
+  revision = "e979a0b10eebe748549c702a25e997c556349da6"
+
+[[projects]]
   digest = "1:a1578f7323eca2b88021fdc9a79a99833d40b12c32a5ea4f284e2fad19ea2657"
   name = "github.com/google/uuid"
   packages = ["."]
@@ -302,10 +317,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:74cb96c67ebca1a00240a23e7a6a33b7a9b3336f621e223666eff9550acae1a8"
+  digest = "1:12f7fb56cd9f930f17cbbd7e77b8df1680828866cf70d4b9339859472c7ef551"
   name = "github.com/knative/test-infra"
-  packages = ["."]
-  pruneopts = "T"
+  packages = [
+    "scripts",
+    "tools/dep-collector",
+  ]
+  pruneopts = "UT"
   revision = "9303db13a4bcf216af14aa7ab65802c0672e01f6"
 
 [[projects]]
@@ -421,6 +439,14 @@
   pruneopts = "NUT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
+  name = "github.com/sergi/go-diff"
+  packages = ["diffmatchpatch"]
+  pruneopts = "NUT"
+  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:330e9062b308ac597e28485699c02223bd052437a6eed32a173c9227dcb9d95a"
@@ -1055,7 +1081,8 @@
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/signals",
     "github.com/knative/serving/pkg/apis/serving/v1alpha1",
-    "github.com/knative/test-infra",
+    "github.com/knative/test-infra/scripts",
+    "github.com/knative/test-infra/tools/dep-collector",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "go.uber.org/zap",
