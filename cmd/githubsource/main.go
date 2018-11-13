@@ -54,7 +54,7 @@ func main() {
 		log.Fatalf("No secret token given")
 	}
 
-	log.Printf("Sink is: %q", sink)
+	log.Printf("Sink is: %q", *sink)
 
 	ra := &githubsource.GitHubReceiveAdapter{
 		Sink: *sink,
