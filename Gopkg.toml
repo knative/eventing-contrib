@@ -83,7 +83,8 @@ required = [
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
-  revision = "0f0740db56812f732d90ff7df3520a291a9f04c9"
+  revision = "5373e8e1f3188ff4266902a6fc86372bc14b3815"
+  # version="v0.1.1"
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]

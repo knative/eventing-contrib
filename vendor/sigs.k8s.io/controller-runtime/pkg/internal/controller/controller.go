@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	ctrlmetrics "sigs.k8s.io/controller-runtime/pkg/internal/controller/metrics"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -125,6 +124,7 @@ func (c *Controller) Watch(src source.Source, evthdler handler.EventHandler, prc
 // Start implements controller.Controller
 func (c *Controller) Start(stop <-chan struct{}) error {
 	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	// TODO(pwittrock): Reconsider HandleCrash
 	defer utilruntime.HandleCrash()
@@ -142,7 +142,6 @@ func (c *Controller) Start(stop <-chan struct{}) error {
 		// Leaving it here because that could happen in the future
 		err := fmt.Errorf("failed to wait for %s caches to sync", c.Name)
 		log.Error(err, "Could not wait for Cache to sync", "Controller", c.Name)
-		c.mu.Unlock()
 		return err
 	}
 
@@ -161,7 +160,6 @@ func (c *Controller) Start(stop <-chan struct{}) error {
 	}
 
 	c.Started = true
-	c.mu.Unlock()
 
 	<-stop
 	log.Info("Stopping workers", "Controller", c.Name)
@@ -172,10 +170,6 @@ func (c *Controller) Start(stop <-chan struct{}) error {
 // attempt to process it, by calling the syncHandler.
 func (c *Controller) processNextWorkItem() bool {
 	// This code copy-pasted from the sample-Controller.
-
-	// Update metrics after processing each item
-	reconcileStartTS := time.Now()
-	defer c.updateMetrics(time.Now().Sub(reconcileStartTS))
 
 	obj, shutdown := c.Queue.Get()
 	if obj == nil {
@@ -213,7 +207,6 @@ func (c *Controller) processNextWorkItem() bool {
 	if result, err := c.Do.Reconcile(req); err != nil {
 		c.Queue.AddRateLimited(req)
 		log.Error(err, "Reconciler error", "Controller", c.Name, "Request", req)
-		ctrlmetrics.ReconcileErrors.WithLabelValues(c.Name).Inc()
 
 		return false
 	} else if result.RequeueAfter > 0 {
@@ -239,10 +232,4 @@ func (c *Controller) processNextWorkItem() bool {
 func (c *Controller) InjectFunc(f inject.Func) error {
 	c.SetFields = f
 	return nil
-}
-
-// updateMetrics updates prometheus metrics within the controller
-func (c *Controller) updateMetrics(reconcileTime time.Duration) {
-	ctrlmetrics.QueueLength.WithLabelValues(c.Name).Set(float64(c.Queue.Len()))
-	ctrlmetrics.ReconcileTime.WithLabelValues(c.Name).Observe(reconcileTime.Seconds())
 }
