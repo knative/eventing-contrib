@@ -109,7 +109,10 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	// Update Deployment spec if it's changed
 	expected := resources.MakeDeployment(nil, args)
-	if !equality.Semantic.DeepEqual(deploy.Spec, expected.Spec) {
+	// Since the Deployment spec has fields defaulted by the webhook, it won't
+	// be equal to expected. Use DeepDerivative to compare only the fields that
+	// are set in expected.
+	if !equality.Semantic.DeepDerivative(expected.Spec, deploy.Spec) {
 		deploy.Spec = expected.Spec
 		err := r.client.Update(ctx, deploy)
 		// if no error, update the status.
