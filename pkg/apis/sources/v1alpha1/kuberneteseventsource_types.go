@@ -32,7 +32,9 @@ var _ = duck.VerifyType(&KubernetesEventSource{}, &duckv1alpha1.Conditions{})
 
 // KubernetesEventSourceSpec defines the desired state of the source.
 type KubernetesEventSourceSpec struct {
-	// Namespace that we watch kubernetes events in.
+	// Namespace that we watch kubernetes events in. Defaults to the namespace
+	// of the source.
+	// +optional
 	Namespace string `json:"namespace"`
 
 	// ServiceAccountName is the name of the ServiceAccount to use to run this

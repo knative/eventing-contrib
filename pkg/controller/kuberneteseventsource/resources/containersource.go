@@ -26,6 +26,11 @@ import (
 // MakeContainerSource generates, but does not create, a ContainerSource for the
 // given KubernetesEventSource.
 func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource, receiveAdapterImage string) *sourcesv1alpha1.ContainerSource {
+	namespace := source.Spec.Namespace
+	if namespace == "" {
+		namespace = source.Namespace
+	}
+
 	return &sourcesv1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),
@@ -33,7 +38,7 @@ func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource, receiveA
 		},
 		Spec: sourcesv1alpha1.ContainerSourceSpec{
 			Image:              receiveAdapterImage,
-			Args:               []string{fmt.Sprintf("--namespace=%s", source.Spec.Namespace)},
+			Args:               []string{fmt.Sprintf("--namespace=%s", namespace)},
 			ServiceAccountName: source.Spec.ServiceAccountName,
 			Sink:               source.Spec.Sink,
 		},
