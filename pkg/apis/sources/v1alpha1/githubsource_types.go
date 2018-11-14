@@ -164,6 +164,7 @@ func (s *GitHubSourceStatus) MarkNoSink(reason, messageFormat string, messageA .
 
 // GitHubSource is the Schema for the githubsources API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 // +kubebuilder:categories=all,knative,eventing,sources
 type GitHubSource struct {
 	metav1.TypeMeta   `json:",inline"`
