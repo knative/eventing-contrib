@@ -61,7 +61,6 @@ spec:
             sinkUri:
               type: string
           type: object
-      type: object
   version: v1alpha1
 status:
   acceptedNames:
