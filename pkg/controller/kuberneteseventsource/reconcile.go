@@ -164,7 +164,11 @@ func (r *reconciler) update(ctx context.Context, u *sourcesv1alpha1.KubernetesEv
 
 	if !equality.Semantic.DeepEqual(current.Status, u.Status) {
 		current.Status = u.Status
-		return r.Status().Update(ctx, current)
+		// Until #38113 is merged, we must use Update instead of UpdateStatus to
+		// update the Status block of the Feed resource. UpdateStatus will not
+		// allow changes to the Spec of the resource, which is ideal for ensuring
+		// nothing other than resource status has been updated.
+		return r.Update(ctx, current)
 	}
 
 	return nil

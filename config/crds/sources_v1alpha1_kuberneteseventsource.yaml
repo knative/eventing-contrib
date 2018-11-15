@@ -16,8 +16,6 @@ spec:
     kind: KubernetesEventSource
     plural: kuberneteseventsources
   scope: Namespaced
-  subresources:
-    status: {}
   validation:
     openAPIV3Schema:
       properties:

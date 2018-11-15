@@ -23,8 +23,6 @@ spec:
     kind: ContainerSource
     plural: containersources
   scope: Namespaced
-  subresources:
-    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -102,8 +100,6 @@ spec:
     kind: GcpPubSubSource
     plural: gcppubsubsources
   scope: Namespaced
-  subresources:
-    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -176,8 +172,6 @@ spec:
     kind: GitHubSource
     plural: githubsources
   scope: Namespaced
-  subresources:
-    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -303,8 +297,6 @@ spec:
     kind: KubernetesEventSource
     plural: kuberneteseventsources
   scope: Namespaced
-  subresources:
-    status: {}
   validation:
     openAPIV3Schema:
       properties:
