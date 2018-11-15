@@ -174,9 +174,10 @@ func (r *Reconciler) update(ctx context.Context, request reconcile.Request, obje
 	}
 	freshFinalizers.SetFinalizers(orgFinalizers.GetFinalizers())
 
-	// We could use the status subresource here, but since there may be an update
-	// to finalizers also, we have to update the entire object.
-	//TODO(grantr): use status subresource if finalizers did not change
+	// Until #38113 is merged, we must use Update instead of UpdateStatus to
+	// update the Status block of the Source resource. UpdateStatus will not
+	// allow changes to the Spec of the resource, which is ideal for ensuring
+	// nothing other than resource status has been updated.
 	if err := r.client.Update(ctx, freshObj); err != nil {
 		return nil, err
 	}
