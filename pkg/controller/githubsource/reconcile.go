@@ -34,7 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,7 +48,6 @@ const (
 type reconciler struct {
 	client              client.Client
 	scheme              *runtime.Scheme
-	dynamicClient       dynamic.Interface
 	recorder            record.EventRecorder
 	receiveAdapterImage string
 	webhookClient       webhookClient
@@ -95,7 +93,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	}
 	source.Status.MarkSecrets()
 
-	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
+	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
@@ -271,7 +269,5 @@ func (r *reconciler) InjectClient(c client.Client) error {
 }
 
 func (r *reconciler) InjectConfig(c *rest.Config) error {
-	var err error
-	r.dynamicClient, err = dynamic.NewForConfig(c)
-	return err
+	return nil
 }
