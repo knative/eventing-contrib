@@ -4,8 +4,8 @@
 [![Go Report Card](https://goreportcard.com/badge/knative/eventing-sources)](https://goreportcard.com/report/knative/eventing-sources)
 
 Knative Eventing Sources builds on Kubernetes and Knative to provide useful
-generic strategies for developing a source to deliver messaging events to a
-[Sinkable](https://github.com/knative/eventing/tree/master/docs/spec/interfaces.md#sinkable)
+generic strategies for developing a source to deliver messaging events to an
+[Addressable](https://github.com/knative/eventing/tree/master/docs/spec/interfaces.md#addressable)
 target.
 
 The Knative Eventing Sources project provides source implementations that:
@@ -16,9 +16,11 @@ The Knative Eventing Sources project provides source implementations that:
 - Integrate with Pub/Sub
 - Expose an ingress
 
-For complete Knative Eventing documentation, see
-[Knative Eventing](https://github.com/knative/docs/tree/master/eventing) or
-[Knative docs](https://github.com/knative/docs) to learn about Knative.
+For complete documentation about Knative Eventing, see the following repos:
+- [Knative Eventing](https:S//github.com/knative/docs/tree/master/eventing) for
+  the Knative Eventing spec.
+- [Knative docs](https://github.com/knative/docs) for an overview of Knative and
+  to view user documentation.
 
 If you are interested in contributing, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 and [DEVELOPMENT.md](./DEVELOPMENT.md).
