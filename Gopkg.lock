@@ -1100,7 +1100,7 @@
   revision = "0f0740db56812f732d90ff7df3520a291a9f04c9"
 
 [[projects]]
-  digest = "1:05cdc547626625cfabf187136210c6321ca8bd11f13732825c90c4a2fdd1b8db"
+  digest = "1:41e7c89bdceb653e2235a7b5627d23af65fa22fb4dad368bf49eb2857e23bac2"
   name = "sigs.k8s.io/controller-tools"
   packages = [
     "cmd/controller-gen",
@@ -1112,9 +1112,8 @@
     "pkg/util",
   ]
   pruneopts = "NUT"
-  revision = "be900f829917bbbe4f7a932fda3f7d311988466c"
-  source = "https://github.com/n3wscott/controller-tools.git"
-  version = "v0.1.1-assume_exe_status"
+  revision = "38b2f3f497ed6b8ea5d2844ecf00c28ac4b5c2c4"
+  version = "v0.1.6"
 
 [[projects]]
   branch = "master"

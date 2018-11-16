@@ -73,7 +73,6 @@ spec:
             sinkUri:
               type: string
           type: object
-      type: object
   version: v1alpha1
 status:
   acceptedNames:
@@ -198,7 +197,6 @@ spec:
             webhookIDKey:
               type: string
           type: object
-      type: object
   version: v1alpha1
 status:
   acceptedNames:
@@ -268,7 +266,6 @@ spec:
             sinkUri:
               type: string
           type: object
-      type: object
   version: v1alpha1
 status:
   acceptedNames:
