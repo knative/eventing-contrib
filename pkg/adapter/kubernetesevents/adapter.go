@@ -19,10 +19,11 @@ package kubernetesevents
 import (
 	"context"
 	"fmt"
-	"github.com/knative/pkg/logging"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/knative/pkg/logging"
+	"go.uber.org/zap"
 
 	"github.com/knative/pkg/cloudevents"
 	corev1 "k8s.io/api/core/v1"
@@ -114,5 +115,12 @@ func (a *Adapter) postMessage(m *corev1.Event) error {
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	logger.Debug("response", zap.Any("status", resp.Status), zap.Any("body", string(body)))
+
+	// If the response is not within the 2xx range, return an error.
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		logger.Errorf("[%d] unexpected response %q", resp.StatusCode, body)
+		return fmt.Errorf("[%d] unexpected response %q", resp.StatusCode, body)
+	}
+
 	return nil
 }
