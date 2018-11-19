@@ -1,0 +1,14 @@
+# Needed by the AWS SQS Source to communicate with AWS SQS.
+
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: awssqs-bus-ext
+spec:
+  hosts:
+  - "*.amazonaws.com"
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  location: MESH_EXTERNAL

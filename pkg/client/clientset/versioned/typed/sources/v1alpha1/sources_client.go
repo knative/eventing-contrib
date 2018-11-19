@@ -27,6 +27,7 @@ import (
 
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	AwsSqsSourcesGetter
 	ContainerSourcesGetter
 	GcpPubSubSourcesGetter
 	GitHubSourcesGetter
@@ -36,6 +37,10 @@ type SourcesV1alpha1Interface interface {
 // SourcesV1alpha1Client is used to interact with features provided by the sources.eventing.knative.dev group.
 type SourcesV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *SourcesV1alpha1Client) AwsSqsSources(namespace string) AwsSqsSourceInterface {
+	return newAwsSqsSources(c, namespace)
 }
 
 func (c *SourcesV1alpha1Client) ContainerSources(namespace string) ContainerSourceInterface {

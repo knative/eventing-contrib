@@ -60,6 +60,7 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - gcppubsubsources
+  - awssqssources
   verbs:
   - get
   - list

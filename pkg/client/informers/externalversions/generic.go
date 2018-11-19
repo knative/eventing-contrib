@@ -53,6 +53,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=sources.eventing.knative.dev, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("awssqssources"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().AwsSqsSources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("containersources"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().ContainerSources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("gcppubsubsources"):
