@@ -72,6 +72,58 @@ func TestGetSinkURI(t *testing.T) {
 			},
 			want: "http://example.com/",
 		},
+		"nil hostname": {
+			dc: getDynamicClient(scheme.Scheme,
+				[]runtime.Object{
+					// unaddressable resource
+					&unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": "duck.knative.dev/v1alpha1",
+							"kind":       "Sink",
+							"metadata": map[string]interface{}{
+								"namespace": "default",
+								"name":      "foo",
+							},
+							"status": map[string]interface{}{
+								"address": map[string]interface{}{
+									"hostname": nil,
+								},
+							},
+						},
+					},
+				}),
+			namespace: "default",
+			ref: &corev1.ObjectReference{
+				Kind:       "Sink",
+				Name:       "foo",
+				APIVersion: "duck.knative.dev/v1alpha1",
+			},
+			wantErr: fmt.Errorf(`sink contains an empty hostname`),
+		},
+		"nil sink": {
+			dc: getDynamicClient(scheme.Scheme,
+				[]runtime.Object{
+					// unaddressable resource
+					&unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": "duck.knative.dev/v1alpha1",
+							"kind":       "Sink",
+							"metadata": map[string]interface{}{
+								"namespace": "default",
+								"name":      "foo",
+							},
+							"status": map[string]interface{}{
+								"address": map[string]interface{}{
+									"hostname": nil,
+								},
+							},
+						},
+					},
+				}),
+			namespace: "default",
+			ref:       nil,
+			wantErr:   fmt.Errorf(`sink ref is nil`),
+		},
 		"notSink": {
 			dc: getDynamicClient(scheme.Scheme,
 				[]runtime.Object{
