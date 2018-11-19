@@ -44,6 +44,34 @@ func TestGetSinkURI(t *testing.T) {
 		wantErr   error
 		ref       *corev1.ObjectReference
 	}{
+		"happy": {
+			dc: getDynamicClient(scheme.Scheme,
+				[]runtime.Object{
+					// unaddressable resource
+					&unstructured.Unstructured{
+						Object: map[string]interface{}{
+							"apiVersion": "duck.knative.dev/v1alpha1",
+							"kind":       "Sink",
+							"metadata": map[string]interface{}{
+								"namespace": "default",
+								"name":      "foo",
+							},
+							"status": map[string]interface{}{
+								"address": map[string]interface{}{
+									"hostname": "example.com",
+								},
+							},
+						},
+					},
+				}),
+			namespace: "default",
+			ref: &corev1.ObjectReference{
+				Kind:       "Sink",
+				Name:       "foo",
+				APIVersion: "duck.knative.dev/v1alpha1",
+			},
+			want: "http://example.com/",
+		},
 		"notSink": {
 			dc: getDynamicClient(scheme.Scheme,
 				[]runtime.Object{
@@ -82,9 +110,13 @@ func TestGetSinkURI(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			uri, gotErr := GetSinkURI(tc.dc, tc.ref, tc.namespace)
-			if tc.wantErr != gotErr {
-				if diff := cmp.Diff(tc.wantErr.Error(), gotErr.Error()); diff != "" {
-					t.Errorf("%s: unexpected error (-want, +got) = %v", n, diff)
+			if gotErr != nil {
+				if tc.wantErr != nil {
+					if diff := cmp.Diff(tc.wantErr.Error(), gotErr.Error()); diff != "" {
+						t.Errorf("%s: unexpected error (-want, +got) = %v", n, diff)
+					}
+				} else {
+					t.Errorf("%s: unexpected error %v", n, gotErr.Error())
 				}
 			}
 			if gotErr == nil {
