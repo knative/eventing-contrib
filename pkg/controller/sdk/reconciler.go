@@ -25,18 +25,17 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
 type Reconciler struct {
-	client        client.Client
-	dynamicClient dynamic.Interface
-	recorder      record.EventRecorder
-	scheme        *runtime.Scheme
+	client   client.Client
+	recorder record.EventRecorder
+	scheme   *runtime.Scheme
 
 	provider Provider
 }
@@ -91,18 +90,12 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 func (r *Reconciler) InjectClient(c client.Client) error {
 	r.client = c
-	if r.provider.Reconciler != nil {
-		r.provider.Reconciler.InjectClient(c)
-	}
-	return nil
+	_, err := inject.ClientInto(c, r.provider.Reconciler)
+	return err
 }
 
 func (r *Reconciler) InjectConfig(c *rest.Config) error {
-	var err error
-	r.dynamicClient, err = dynamic.NewForConfig(c)
-	if r.provider.Reconciler != nil {
-		r.provider.Reconciler.InjectConfig(c)
-	}
+	_, err := inject.ConfigInto(c, r.provider.Reconciler)
 	return err
 }
 
