@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script runs the end-to-end tests against the eventing sources
+# This script runs the end-to-end tests against the eventing
 # built from source.
 
 # If you already have the *_OVERRIDE environment variables set, call
@@ -27,10 +27,98 @@
 
 source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.sh
 
+readonly KNATIVE_EVENTING_RELEASE=https://knative-releases.storage.googleapis.com/eventing/latest/release.yaml
+
+# Names of the Resources used in the tests.
+readonly E2E_TEST_NAMESPACE=e2etest
+readonly E2E_TEST_FUNCTION_NAMESPACE=e2etestfn3
+
+function run_e2e_tests() {
+  header "Running tests in $1"
+  local options=""
+  (( EMIT_METRICS )) && options="-emitmetrics"
+  report_go_test -v -tags=e2e -count=1 ./test/$1 ${options}
+  return $?
+}
+
+# Helper functions.
+
+# Install the latest stable Knative/eventing in the current cluster.
+function start_latest_eventing() {
+  header "Starting Knative Eventing"
+  subheader "Installing Knative Eventing"
+  kubectl apply -f ${KNATIVE_EVENTING_RELEASE} || return 1
+  wait_until_pods_running knative-eventing || return 1
+}
+
+
+function teardown() {
+  teardown_events_test_resources
+  ko delete --ignore-not-found=true -f config/default.yaml
+  ko delete --ignore-not-found=true -f ${KNATIVE_EVENTING_RELEASE}
+
+  wait_until_object_does_not_exist namespaces knative-sources
+  wait_until_object_does_not_exist namespaces knative-eventing
+
+  wait_until_object_does_not_exist customresourcedefinitions containersources.sources.knative.dev
+  wait_until_object_does_not_exist customresourcedefinitions gcppubsubsources.sources.knative.dev
+  wait_until_object_does_not_exist customresourcedefinitions githubsources.sources.knative.dev
+  wait_until_object_does_not_exist customresourcedefinitions kuberneteseventsources.sources.knative.dev
+}
+
+function setup_events_test_resources() {
+  kubectl create namespace $E2E_TEST_NAMESPACE
+  kubectl label namespace $E2E_TEST_NAMESPACE istio-injection=enabled --overwrite
+  kubectl create namespace $E2E_TEST_FUNCTION_NAMESPACE
+}
+
+function teardown_events_test_resources() {
+  # Delete the function namespace
+  echo "Deleting namespace $E2E_TEST_FUNCTION_NAMESPACE"
+  kubectl --ignore-not-found=true delete namespace $E2E_TEST_FUNCTION_NAMESPACE
+  wait_until_object_does_not_exist namespaces $E2E_TEST_FUNCTION_NAMESPACE || return 1
+
+  # Delete the test namespace
+  echo "Deleting namespace $E2E_TEST_NAMESPACE"
+  kubectl --ignore-not-found=true delete namespace $E2E_TEST_NAMESPACE
+  wait_until_object_does_not_exist namespaces $E2E_TEST_NAMESPACE
+}
+
 # Script entry point.
 
 initialize $@
 
-# TODO(#8): Write E2E tests.
+# Install Knative Serving if not using an existing cluster
+if (( ! USING_EXISTING_CLUSTER )); then
+  start_latest_knative_serving || fail_test
+fi
+
+# Install Knative Eventing
+start_latest_eventing || fail_test
+
+# Clean up anything that might still be around
+teardown_events_test_resources
+
+# Fail fast during setup.
+set -o errexit
+set -o pipefail
+
+header "Standing up Knative Eventing Sources"
+export KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
+ko resolve -f config/default.yaml
+ko apply -f config/default.yaml
+wait_until_pods_running knative-sources
+
+# Publish test images
+$(dirname $0)/upload-test-images.sh e2e
+
+# Handle test failures ourselves, so we can dump useful info.
+set +o errexit
+set +o pipefail
+
+# Setup resources common to all eventing tests
+setup_events_test_resources
+
+run_e2e_tests e2e || fail_test
 
 success
