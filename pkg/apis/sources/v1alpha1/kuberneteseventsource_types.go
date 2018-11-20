@@ -101,7 +101,7 @@ func (ss *KubernetesEventSourceStatus) PropagateContainerSourceStatus(cs Contain
 			kubernetesEventSourceCondSet.Manage(ss).MarkFalse(KubernetesEventSourceConditionSinkProvided, c.Reason, c.Message)
 		}
 	} else {
-		kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionSinkProvided, "NotSpecified", "container source has nil deployed condition")
+		kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionSinkProvided, "NotSpecified", "container source has nil sink provided condition")
 	}
 
 	c = cs.GetCondition(ContainerConditionDeployed)
