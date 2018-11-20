@@ -120,7 +120,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	}
 
 	// Mark the source status to the current state of the container source status
-	source.Status.PropagateContainerSourceStatus(cs.Status)
+	source.Status.MarkContainerSourceReadyStatus(cs.Status)
 
 	return source, nil
 }

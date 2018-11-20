@@ -103,7 +103,7 @@ var testCases = []controllertesting.TestCase{
 
 				c := getContainerSource_isReady()
 
-				s.Status.PropagateContainerSourceStatus(c.Status)
+				s.Status.MarkContainerSourceReadyStatus(c.Status)
 				return s
 			}(),
 			func() runtime.Object {
@@ -141,7 +141,7 @@ var testCases = []controllertesting.TestCase{
 
 				c := getContainerSource_isReady()
 
-				s.Status.PropagateContainerSourceStatus(c.Status)
+				s.Status.MarkContainerSourceReadyStatus(c.Status)
 				return s
 			}(),
 			func() runtime.Object {
@@ -172,7 +172,7 @@ var testCases = []controllertesting.TestCase{
 				c := getContainerSource()
 				c.Status.InitializeConditions()
 
-				s.Status.PropagateContainerSourceStatus(c.Status)
+				s.Status.MarkContainerSourceReadyStatus(c.Status)
 				return s
 			}(),
 			// TODO: can't test that the object exists because the mock does not
@@ -215,7 +215,7 @@ var testCases = []controllertesting.TestCase{
 				c.Status.InitializeConditions()
 				c.Status.MarkDeploying("reason", "message")
 
-				s.Status.PropagateContainerSourceStatus(c.Status)
+				s.Status.MarkContainerSourceReadyStatus(c.Status)
 				return s
 			}(),
 			func() runtime.Object {

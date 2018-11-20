@@ -116,7 +116,7 @@ func (ss *KubernetesEventSourceStatus) MarkContainerSourceReadyStatus(cs Contain
 
 	if deployed == nil {
 		reason = reason + "Deploy"
-		message = appendMessage(message, "deploy status is nil")
+		message = appendMessage(message, "Deploy status is nil")
 	} else if deployed.IsUnknown() {
 		reason = reason + deployed.Reason
 		message = appendMessage(message, deployed.Message)

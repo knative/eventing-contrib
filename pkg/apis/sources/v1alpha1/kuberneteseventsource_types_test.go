@@ -280,12 +280,12 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:    KubernetesEventSourceConditionReady,
 			Status:  corev1.ConditionUnknown,
 			Reason:  "SinkProvidedDeploy",
-			Message: "SinkProvided status is nil; deploy status is nil",
+			Message: "SinkProvided status is nil; Deploy status is nil",
 		}, {
 			Type:    KubernetesEventSourceContainerSourceReady,
 			Status:  corev1.ConditionUnknown,
 			Reason:  "SinkProvidedDeploy",
-			Message: "SinkProvided status is nil; deploy status is nil",
+			Message: "SinkProvided status is nil; Deploy status is nil",
 		}},
 	}, {
 		name: "propagate initialized",
