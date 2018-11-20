@@ -18,6 +18,11 @@ package kuberneteseventsource
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/record"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/kuberneteseventsource/resources"
@@ -30,60 +35,47 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// Reconcile reads the state of the cluster for a KubernetesEventSource object
-// and makes changes based on the state read and what is in the
-// KubernetesEventSource.Spec.
-func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-	// TODO use controller-runtime logf to get a scoped logger for this controller
-	logger := logging.FromContext(ctx)
-	logger.Debug("Reconciling", zap.Any("key", request.NamespacedName))
-
-	// Fetch the KubernetesEventSource resource
-	instance := &sourcesv1alpha1.KubernetesEventSource{}
-	err := r.Get(ctx, request.NamespacedName, instance)
-	if err != nil {
-		// If the resource cannot be found, it was probably deleted since being
-		// added to the workqueue. Return a successful result without retrying.
-		if errors.IsNotFound(err) {
-			logger.Warn("Could not find KubernetesEventSource", zap.Any("key", request.NamespacedName))
-			return reconcile.Result{}, nil
-		}
-		// If the resource exists but cannot be retrieved, then retry.
-		return reconcile.Result{}, err
-	}
-
-	// The resource exists, so we can reconcile it. An error returned
-	// here means the reconcile did not complete and the resource should be
-	// requeued for another attempt.
-	// A successful reconcile does not mean the resource is in the desired state,
-	// it means no more can be done for now. The resource will not be reconciled
-	// again until the resync period expires or a watched resource changes.
-	var reconcileErr error
-	if reconcileErr = r.reconcile(ctx, instance); reconcileErr != nil {
-		logger.Error("Reconcile error", zap.Error(reconcileErr))
-	}
-
-	// Since the reconcile is a sequence of steps, earlier steps may complete
-	// successfully while later steps fail. The resource is updated on failure to
-	// preserve any useful status or metadata mutations made before the failure
-	// occurred.
-	if updateErr := r.update(ctx, instance); updateErr != nil {
-		// An error here means the instance should be reconciled again, regardless
-		// of whether the reconcile was successful or not.
-		return reconcile.Result{}, updateErr
-	}
-
-	return reconcile.Result{}, reconcileErr
+// reconciler reconciles a KubernetesEventSource object
+type reconciler struct {
+	client              client.Client
+	scheme              *runtime.Scheme
+	dynamicClient       dynamic.Interface
+	recorder            record.EventRecorder
+	receiveAdapterImage string
 }
 
-func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) error {
+func (r *reconciler) InjectClient(c client.Client) error {
+	r.client = c
+	return nil
+}
+
+func (r *reconciler) InjectConfig(c *rest.Config) error {
+	var err error
+	r.dynamicClient, err = dynamic.NewForConfig(c)
+	return err
+}
+
+func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
 	logger := logging.FromContext(ctx).Named(controllerAgentName)
 	ctx = logging.WithLogger(ctx, logger)
+
+	source, ok := object.(*sourcesv1alpha1.KubernetesEventSource)
+	if !ok {
+		logger.Errorf("could not find github source %v\n", object)
+		return object, nil
+	}
+
 	logger.Debug("Reconciling", zap.String("name", source.Name), zap.String("namespace", source.Namespace))
+
+	// See if the source has been deleted
+	accessor, err := meta.Accessor(source)
+	if err != nil {
+		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
+		return object, err
+	}
+	deleted := accessor.GetDeletionTimestamp() != nil
 
 	source.Status.InitializeConditions()
 
@@ -100,37 +92,40 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 	// 9. Reconcile: which ContainerSource?
 	cs, err := r.getOwnedContainerSource(ctx, source)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if errors.IsNotFound(err) && !deleted {
 			cs := resources.MakeContainerSource(source, r.receiveAdapterImage)
 			if err := controllerutil.SetControllerReference(source, cs, r.scheme); err != nil {
-				return err
+				return source, err
 			}
-			if err := r.Create(ctx, cs); err != nil {
-				return err
+			if err := r.client.Create(ctx, cs); err != nil {
+				return source, err
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "ContainerSourceCreated", "Created ContainerSource %q", cs.Name)
 			// Wait for the ContainerSource to get a status
-			return nil
+			return source, nil
 		}
 	}
-
+	if deleted {
+		return source, nil
+	}
 	// Update ContainerSource spec if it's changed
 	expected := resources.MakeContainerSource(source, r.receiveAdapterImage)
 	if !equality.Semantic.DeepEqual(cs.Spec, expected.Spec) {
 		cs.Spec = expected.Spec
-		if r.Update(ctx, cs); err != nil {
-			return err
+		if r.client.Update(ctx, cs); err != nil {
+			return source, err
 		}
 	}
 
 	// Copy ContainerSource conditions to source
 	source.Status.Conditions = cs.Status.Conditions.DeepCopy()
-	return nil
+
+	return source, nil
 }
 
 func (r *reconciler) getOwnedContainerSource(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) (*sourcesv1alpha1.ContainerSource, error) {
 	list := &sourcesv1alpha1.ContainerSourceList{}
-	err := r.List(ctx, &client.ListOptions{
+	err := r.client.List(ctx, &client.ListOptions{
 		Namespace:     source.Namespace,
 		LabelSelector: labels.Everything(),
 		// TODO this is here because the fake client needs it.
@@ -153,23 +148,4 @@ func (r *reconciler) getOwnedContainerSource(ctx context.Context, source *source
 		}
 	}
 	return nil, errors.NewNotFound(sourcesv1alpha1.Resource("containersources"), "")
-}
-
-func (r *reconciler) update(ctx context.Context, u *sourcesv1alpha1.KubernetesEventSource) error {
-	current := &sourcesv1alpha1.KubernetesEventSource{}
-	err := r.Get(ctx, client.ObjectKey{Namespace: u.Namespace, Name: u.Name}, current)
-	if err != nil {
-		return err
-	}
-
-	if !equality.Semantic.DeepEqual(current.Status, u.Status) {
-		current.Status = u.Status
-		// Until #38113 is merged, we must use Update instead of UpdateStatus to
-		// update the Status block of the Feed resource. UpdateStatus will not
-		// allow changes to the Spec of the resource, which is ideal for ensuring
-		// nothing other than resource status has been updated.
-		return r.Update(ctx, current)
-	}
-
-	return nil
 }
