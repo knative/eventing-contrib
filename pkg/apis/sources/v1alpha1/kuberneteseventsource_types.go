@@ -50,9 +50,14 @@ const (
 	// KubernetesEventSourceConditionReady has status True when the
 	// source is ready to send events.
 	KubernetesEventSourceConditionReady = duckv1alpha1.ConditionReady
+
+	KubernetesEventSourceConditionSinkProvided = ContainerConditionSinkProvided
+	KubernetesEventSourceConditionDeployed     = ContainerConditionDeployed
 )
 
-var kubernetesEventSourceCondSet = duckv1alpha1.NewLivingConditionSet()
+var kubernetesEventSourceCondSet = duckv1alpha1.NewLivingConditionSet(
+	KubernetesEventSourceConditionSinkProvided,
+	KubernetesEventSourceConditionDeployed)
 
 // KubernetesEventSourceStatus defines the observed state of the source.
 type KubernetesEventSourceStatus struct {
@@ -82,16 +87,36 @@ func (s *KubernetesEventSourceStatus) InitializeConditions() {
 	kubernetesEventSourceCondSet.Manage(s).InitializeConditions()
 }
 
-// MarkReady sets the condition that the ContainerSource owned by
-// the source has Ready status True.
-func (s *KubernetesEventSourceStatus) MarkReady() {
-	kubernetesEventSourceCondSet.Manage(s).MarkTrue(KubernetesEventSourceConditionReady)
-}
+// PropagateContainerSourceStatus examines the given container source and synchronizes the conditions that matter to
+// the kubernetes event source status.
+func (ss *KubernetesEventSourceStatus) PropagateContainerSourceStatus(cs ContainerSourceStatus) {
+	c := cs.GetCondition(ContainerConditionSinkProvided)
+	if c != nil {
+		switch {
+		case c.Status == corev1.ConditionUnknown:
+			kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionSinkProvided, c.Reason, c.Message)
+		case c.Status == corev1.ConditionTrue:
+			kubernetesEventSourceCondSet.Manage(ss).MarkTrue(KubernetesEventSourceConditionSinkProvided)
+		case c.Status == corev1.ConditionFalse:
+			kubernetesEventSourceCondSet.Manage(ss).MarkFalse(KubernetesEventSourceConditionSinkProvided, c.Reason, c.Message)
+		}
+	} else {
+		kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionSinkProvided, "NotSpecified", "container source has nil deployed condition")
+	}
 
-// MarkUnready sets the condition that the ContainerSource owned by
-// the source does not have Ready status True.
-func (s *KubernetesEventSourceStatus) MarkUnready(reason, messageFormat string, messageA ...interface{}) {
-	kubernetesEventSourceCondSet.Manage(s).MarkFalse(KubernetesEventSourceConditionReady, reason, messageFormat, messageA...)
+	c = cs.GetCondition(ContainerConditionDeployed)
+	if c != nil {
+		switch {
+		case c.Status == corev1.ConditionUnknown:
+			kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionDeployed, c.Reason, c.Message)
+		case c.Status == corev1.ConditionTrue:
+			kubernetesEventSourceCondSet.Manage(ss).MarkTrue(KubernetesEventSourceConditionDeployed)
+		case c.Status == corev1.ConditionFalse:
+			kubernetesEventSourceCondSet.Manage(ss).MarkFalse(KubernetesEventSourceConditionDeployed, c.Reason, c.Message)
+		}
+	} else {
+		kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionDeployed, "NotSpecified", "container source has nil deployed condition")
+	}
 }
 
 // +genclient

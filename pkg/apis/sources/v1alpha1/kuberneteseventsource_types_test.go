@@ -43,26 +43,8 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			return s
 		}(),
 		want: false,
-	}, {
-		name: "mark ready",
-		s: func() *KubernetesEventSourceStatus {
-			s := &KubernetesEventSourceStatus{}
-			s.InitializeConditions()
-			s.MarkReady()
-			return s
-		}(),
-		want: true,
-	}, {
-		name: "mark ready then unready",
-		s: func() *KubernetesEventSourceStatus {
-			s := &KubernetesEventSourceStatus{}
-			s.InitializeConditions()
-			s.MarkReady()
-			s.MarkUnready("Testing", "")
-			return s
-		}(),
-		want: false,
 	}}
+	// TODO(n3wscott): add a set of tests for PropagateContainerSourceStatus
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -97,36 +79,8 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:   KubernetesEventSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
-	}, {
-		name: "mark ready",
-		s: func() *KubernetesEventSourceStatus {
-			s := &KubernetesEventSourceStatus{}
-			s.InitializeConditions()
-			s.MarkReady()
-			return s
-		}(),
-		condQuery: KubernetesEventSourceConditionReady,
-		want: &duckv1alpha1.Condition{
-			Type:   KubernetesEventSourceConditionReady,
-			Status: corev1.ConditionTrue,
-		},
-	}, {
-		name: "mark ready then unready",
-		s: func() *KubernetesEventSourceStatus {
-			s := &KubernetesEventSourceStatus{}
-			s.InitializeConditions()
-			s.MarkReady()
-			s.MarkUnready("Testing", "hi")
-			return s
-		}(),
-		condQuery: KubernetesEventSourceConditionReady,
-		want: &duckv1alpha1.Condition{
-			Type:    KubernetesEventSourceConditionReady,
-			Status:  corev1.ConditionFalse,
-			Reason:  "Testing",
-			Message: "hi",
-		},
 	}}
+	// TODO(n3wscott): add a set of tests for PropagateContainerSourceStatus
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

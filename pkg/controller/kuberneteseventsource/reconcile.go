@@ -75,7 +75,12 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
 		return object, err
 	}
-	deleted := accessor.GetDeletionTimestamp() != nil
+
+	// No need to reconcile if the source has been marked for deletion.
+	deletionTimestamp := accessor.GetDeletionTimestamp()
+	if deletionTimestamp != nil {
+		return object, nil
+	}
 
 	source.Status.InitializeConditions()
 
@@ -92,8 +97,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// 9. Reconcile: which ContainerSource?
 	cs, err := r.getOwnedContainerSource(ctx, source)
 	if err != nil {
-		if errors.IsNotFound(err) && !deleted {
-			cs := resources.MakeContainerSource(source, r.receiveAdapterImage)
+		if errors.IsNotFound(err) {
+			cs = resources.MakeContainerSource(source, r.receiveAdapterImage)
 			if err := controllerutil.SetControllerReference(source, cs, r.scheme); err != nil {
 				return source, err
 			}
@@ -105,9 +110,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			return source, nil
 		}
 	}
-	if deleted {
-		return source, nil
-	}
 	// Update ContainerSource spec if it's changed
 	expected := resources.MakeContainerSource(source, r.receiveAdapterImage)
 	if !equality.Semantic.DeepEqual(cs.Spec, expected.Spec) {
@@ -117,8 +119,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		}
 	}
 
-	// Copy ContainerSource conditions to source
-	source.Status.Conditions = cs.Status.Conditions.DeepCopy()
+	// Mark the source status to the current state of the container source status
+	source.Status.PropagateContainerSourceStatus(cs.Status)
 
 	return source, nil
 }
