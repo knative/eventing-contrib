@@ -294,7 +294,23 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:4e2acba8aae54baf3edf83beeefb1c8e40c566f482c7bc91f6eacf28c1f3f032"
+  branch = "master"
+  digest = "1:82740c058f52dc62fda0ea6f56dc843a73f20a37468c60f0055be4bb9a4f5bc9"
+  name = "github.com/knative/eventing"
+  packages = [
+    "pkg/apis/duck/v1alpha1",
+    "pkg/apis/eventing",
+    "pkg/apis/eventing/v1alpha1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
+    "test",
+  ]
+  pruneopts = "NUT"
+  revision = "f42832a6f40a4738e99b9ea006993f0955d6d97a"
+
+[[projects]]
+  digest = "1:b1c00bc0bcb3541cda6366982f146ea792dad40fd3ee5c7e92a7626b86c72270"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -305,19 +321,30 @@
     "logging",
     "logging/logkey",
     "signals",
+    "test",
+    "test/logging",
+    "test/spoof",
+    "test/zipkin",
+    "webhook",
   ]
   pruneopts = "NUT"
   revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
 
 [[projects]]
-  digest = "1:5d4ddd664e297c3453b40e94e69ea3d1aaa8efbff3c4fe0d892f9a588c499770"
+  digest = "1:cf62a9e49c586f87503a2ca683f636afae817333b6056c7529f2643ec285ed7e"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
+    "pkg/apis/autoscaling/v1alpha1",
     "pkg/apis/networking",
     "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
     "pkg/apis/serving/v1alpha1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
+    "pkg/client/clientset/versioned/typed/networking/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1alpha1",
   ]
   pruneopts = "NUT"
   revision = "1036f34badadfa711d88378a1c09a3527bb1584b"
@@ -1136,12 +1163,16 @@
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
     "github.com/google/uuid",
+    "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
+    "github.com/knative/eventing/test",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
     "github.com/knative/pkg/cloudevents",
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/signals",
+    "github.com/knative/pkg/test",
+    "github.com/knative/pkg/test/logging",
     "github.com/knative/serving/pkg/apis/serving/v1alpha1",
     "github.com/knative/test-infra/scripts",
     "github.com/knative/test-infra/tools/dep-collector",
@@ -1154,6 +1185,7 @@
     "gopkg.in/go-playground/webhooks.v3/github",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/rbac/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
@@ -1166,6 +1198,7 @@
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/sets",
+    "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
