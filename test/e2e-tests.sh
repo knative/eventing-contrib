@@ -111,6 +111,6 @@ set +o pipefail
 # Setup resources common to all eventing tests
 setup_events_test_resources
 
-go_test_e2e e2e || fail_test
+go_test_e2e ./test/e2e || fail_test
 
 success
