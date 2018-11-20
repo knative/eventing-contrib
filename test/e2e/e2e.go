@@ -51,15 +51,6 @@ func Setup(t *testing.T, logger *logging.BaseLogger) (*test.Clients, *test.Clean
 // TearDown will delete created names using clients.
 func TearDown(clients *test.Clients, cleaner *test.Cleaner, logger *logging.BaseLogger) {
 	cleaner.Clean(true)
-
-	// There seems to be an Istio bug where if we delete / create
-	// VirtualServices too quickly we will hit pro-longed "No health
-	// upstream" causing timeouts.  Adding this small sleep to
-	// sidestep the issue.
-	//
-	// TODO(#1376):  Fix this when upstream fix is released.
-	logger.Info("Sleeping for 20 seconds after clean to avoid hitting issue in #1376")
-	time.Sleep(20 * time.Second)
 }
 
 // CreateRouteAndConfig will create Route and Config objects using clients.
