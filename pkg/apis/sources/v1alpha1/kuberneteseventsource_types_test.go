@@ -51,7 +51,7 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 
 			s := ContainerSourceStatus{}
 
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 			return k
 		}(),
 		want: false,
@@ -65,7 +65,7 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 			return k
 		}(),
 		want: false,
@@ -79,7 +79,7 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -94,10 +94,10 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -112,13 +112,13 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkNoSink("Testing", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -133,13 +133,13 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeploying("Testing", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -154,13 +154,13 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkNotDeployed("Testing", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -175,16 +175,16 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkNotDeployed("MarkNotDeployed", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeploying("MarkDeploying", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -199,10 +199,10 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -217,13 +217,13 @@ func TestKubernetesEventSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -272,25 +272,20 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			k.InitializeConditions()
 
 			s := ContainerSourceStatus{}
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
 		want: duckv1alpha1.Conditions{{
 			Type:    KubernetesEventSourceConditionReady,
 			Status:  corev1.ConditionUnknown,
-			Reason:  "NotSpecified",
-			Message: "container source has nil deployed condition",
+			Reason:  "SinkProvidedDeploy",
+			Message: "SinkProvided status is nil; deploy status is nil",
 		}, {
-			Type:    KubernetesEventSourceConditionDeployed,
+			Type:    KubernetesEventSourceContainerSourceReady,
 			Status:  corev1.ConditionUnknown,
-			Reason:  "NotSpecified",
-			Message: "container source has nil deployed condition",
-		}, {
-			Type:    KubernetesEventSourceConditionSinkProvided,
-			Status:  corev1.ConditionUnknown,
-			Reason:  "NotSpecified",
-			Message: "container source has nil sink provided condition",
+			Reason:  "SinkProvidedDeploy",
+			Message: "SinkProvided status is nil; deploy status is nil",
 		}},
 	}, {
 		name: "propagate initialized",
@@ -301,7 +296,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s := ContainerSourceStatus{}
 			s.InitializeConditions()
 
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -309,10 +304,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:   KubernetesEventSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
-			Status: corev1.ConditionUnknown,
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
+			Type:   KubernetesEventSourceContainerSourceReady,
 			Status: corev1.ConditionUnknown,
 		}},
 	}, {
@@ -325,7 +317,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -333,10 +325,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:   KubernetesEventSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
-			Status: corev1.ConditionTrue,
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
+			Type:   KubernetesEventSourceContainerSourceReady,
 			Status: corev1.ConditionUnknown,
 		}},
 	}, {
@@ -349,7 +338,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -357,11 +346,8 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:   KubernetesEventSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
+			Type:   KubernetesEventSourceContainerSourceReady,
 			Status: corev1.ConditionUnknown,
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
-			Status: corev1.ConditionTrue,
 		}},
 	}, {
 		name: "propagate mark sink and deployed",
@@ -373,10 +359,10 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -384,10 +370,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:   KubernetesEventSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
-			Status: corev1.ConditionTrue,
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
+			Type:   KubernetesEventSourceContainerSourceReady,
 			Status: corev1.ConditionTrue,
 		}},
 	}, {
@@ -400,13 +383,13 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkNoSink("Testing", "hi%s", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -416,10 +399,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Reason:  "Testing",
 			Message: "hi",
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
-			Status: corev1.ConditionTrue,
-		}, {
-			Type:    KubernetesEventSourceConditionSinkProvided,
+			Type:    KubernetesEventSourceContainerSourceReady,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Testing",
 			Message: "hi",
@@ -434,13 +414,13 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeploying("Testing", "hi%s", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -450,13 +430,10 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Reason:  "Testing",
 			Message: "hi",
 		}, {
-			Type:    KubernetesEventSourceConditionDeployed,
+			Type:    KubernetesEventSourceContainerSourceReady,
 			Status:  corev1.ConditionUnknown,
 			Reason:  "Testing",
 			Message: "hi",
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
-			Status: corev1.ConditionTrue,
 		}},
 	}, {
 		name: "propagate mark sink and deployed then not deployed",
@@ -468,13 +445,13 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkNotDeployed("Testing", "hi%s", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -484,13 +461,10 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Reason:  "Testing",
 			Message: "hi",
 		}, {
-			Type:    KubernetesEventSourceConditionDeployed,
+			Type:    KubernetesEventSourceContainerSourceReady,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Testing",
 			Message: "hi",
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
-			Status: corev1.ConditionTrue,
 		}},
 	}, {
 		name: "propagate mark sink and not deployed then deploying then deployed",
@@ -502,16 +476,16 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkNotDeployed("MarkNotDeployed", "%s", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeploying("MarkDeploying", "%s", "")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -519,10 +493,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:   KubernetesEventSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
-			Status: corev1.ConditionTrue,
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
+			Type:   KubernetesEventSourceContainerSourceReady,
 			Status: corev1.ConditionTrue,
 		}},
 	}, {
@@ -535,10 +506,10 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -548,10 +519,7 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Reason:  "SinkEmpty",
 			Message: "Sink has resolved to empty.",
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
-			Status: corev1.ConditionTrue,
-		}, {
-			Type:    KubernetesEventSourceConditionSinkProvided,
+			Type:    KubernetesEventSourceContainerSourceReady,
 			Status:  corev1.ConditionUnknown,
 			Reason:  "SinkEmpty",
 			Message: "Sink has resolved to empty.",
@@ -566,13 +534,13 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 
 			s.MarkSink("")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkDeployed()
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			s.MarkSink("uri://example")
-			k.PropagateContainerSourceStatus(s)
+			k.MarkContainerSourceReadyStatus(s)
 
 			return k
 		}(),
@@ -580,14 +548,11 @@ func TestKubernetesEventSourceStatusGetCondition(t *testing.T) {
 			Type:   KubernetesEventSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		}, {
-			Type:   KubernetesEventSourceConditionDeployed,
-			Status: corev1.ConditionTrue,
-		}, {
-			Type:   KubernetesEventSourceConditionSinkProvided,
+			Type:   KubernetesEventSourceContainerSourceReady,
 			Status: corev1.ConditionTrue,
 		}},
 	}}
-	// TODO(n3wscott): add a set of tests for PropagateContainerSourceStatus
+	// TODO(n3wscott): add a set of tests for MarkContainerSourceReadyStatus
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

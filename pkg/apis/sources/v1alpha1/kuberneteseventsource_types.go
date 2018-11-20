@@ -51,13 +51,13 @@ const (
 	// source is ready to send events.
 	KubernetesEventSourceConditionReady = duckv1alpha1.ConditionReady
 
-	KubernetesEventSourceConditionSinkProvided = ContainerConditionSinkProvided
-	KubernetesEventSourceConditionDeployed     = ContainerConditionDeployed
+	// KubernetesEventSourceContainerSourceReady has status True when the
+	// container source produced as a result of this resource is ready.
+	KubernetesEventSourceContainerSourceReady = "ContainerSourceReady"
 )
 
 var kubernetesEventSourceCondSet = duckv1alpha1.NewLivingConditionSet(
-	KubernetesEventSourceConditionSinkProvided,
-	KubernetesEventSourceConditionDeployed)
+	KubernetesEventSourceContainerSourceReady)
 
 // KubernetesEventSourceStatus defines the observed state of the source.
 type KubernetesEventSourceStatus struct {
@@ -89,34 +89,55 @@ func (s *KubernetesEventSourceStatus) InitializeConditions() {
 
 // PropagateContainerSourceStatus examines the given container source and synchronizes the conditions that matter to
 // the kubernetes event source status.
-func (ss *KubernetesEventSourceStatus) PropagateContainerSourceStatus(cs ContainerSourceStatus) {
-	c := cs.GetCondition(ContainerConditionSinkProvided)
-	if c != nil {
-		switch {
-		case c.Status == corev1.ConditionUnknown:
-			kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionSinkProvided, c.Reason, c.Message)
-		case c.Status == corev1.ConditionTrue:
-			kubernetesEventSourceCondSet.Manage(ss).MarkTrue(KubernetesEventSourceConditionSinkProvided)
-		case c.Status == corev1.ConditionFalse:
-			kubernetesEventSourceCondSet.Manage(ss).MarkFalse(KubernetesEventSourceConditionSinkProvided, c.Reason, c.Message)
-		}
-	} else {
-		kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionSinkProvided, "NotSpecified", "container source has nil sink provided condition")
+func (ss *KubernetesEventSourceStatus) MarkContainerSourceReadyStatus(cs ContainerSourceStatus) {
+	if cs.IsReady() {
+		kubernetesEventSourceCondSet.Manage(ss).MarkTrue(KubernetesEventSourceContainerSourceReady)
+		return
 	}
 
-	c = cs.GetCondition(ContainerConditionDeployed)
-	if c != nil {
-		switch {
-		case c.Status == corev1.ConditionUnknown:
-			kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionDeployed, c.Reason, c.Message)
-		case c.Status == corev1.ConditionTrue:
-			kubernetesEventSourceCondSet.Manage(ss).MarkTrue(KubernetesEventSourceConditionDeployed)
-		case c.Status == corev1.ConditionFalse:
-			kubernetesEventSourceCondSet.Manage(ss).MarkFalse(KubernetesEventSourceConditionDeployed, c.Reason, c.Message)
-		}
-	} else {
-		kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceConditionDeployed, "NotSpecified", "container source has nil deployed condition")
+	sinkProvided := cs.GetCondition(ContainerConditionSinkProvided)
+	deployed := cs.GetCondition(ContainerConditionDeployed)
+
+	reason := ""
+	message := ""
+	isFalse := false
+
+	if sinkProvided == nil {
+		reason = reason + "SinkProvided"
+		message = appendMessage(message, "SinkProvided status is nil")
+	} else if sinkProvided.IsUnknown() {
+		reason = reason + sinkProvided.Reason
+		message = appendMessage(message, sinkProvided.Message)
+	} else if sinkProvided.IsFalse() {
+		reason = reason + sinkProvided.Reason
+		message = appendMessage(message, sinkProvided.Message)
+		isFalse = true
 	}
+
+	if deployed == nil {
+		reason = reason + "Deploy"
+		message = appendMessage(message, "deploy status is nil")
+	} else if deployed.IsUnknown() {
+		reason = reason + deployed.Reason
+		message = appendMessage(message, deployed.Message)
+	} else if deployed.IsFalse() {
+		reason = reason + deployed.Reason
+		message = appendMessage(message, deployed.Message)
+		isFalse = true
+	}
+
+	if isFalse {
+		kubernetesEventSourceCondSet.Manage(ss).MarkFalse(KubernetesEventSourceContainerSourceReady, reason, message)
+	} else {
+		kubernetesEventSourceCondSet.Manage(ss).MarkUnknown(KubernetesEventSourceContainerSourceReady, reason, message)
+	}
+}
+
+func appendMessage(a string, b string) string {
+	if a != "" {
+		a += "; "
+	}
+	return a + b
 }
 
 // +genclient
