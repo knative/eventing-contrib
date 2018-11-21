@@ -30,6 +30,8 @@ RELEASES=(
   ["release.yaml"]="config/default.yaml"
   ["release-with-gcppubsub.yaml"]="config/default-gcppubsub.yaml"
   ["message-dumper.yaml"]="config/tools/message-dumper.yaml"
+  ["heartbeats-source.yaml"]="config/tools/heartbeats-source.yaml"
+  ["heartbeats-receiver.yaml"]="config/tools/heartbeats-receiver.yaml"
 )
 readonly RELEASES
 

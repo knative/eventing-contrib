@@ -1,0 +1,16 @@
+# Heartbeats sends a cloud event every <period> seconds to the given sink. It
+# uses a ContainerSource to do this.
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: ContainerSource
+metadata:
+  name: heartbeats
+spec:
+  image: github.com/knative/eventing-sources/cmd/heartbeats
+  args:
+  - '--label="<3"'
+  - '--period=2'
+  # TODO: replace the sink with your own service or channel.
+  sink:
+    apiVersion: serving.knative.dev/v1alpha1
+    kind: Service
+    name: heartbeats-receiver

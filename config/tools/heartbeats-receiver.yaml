@@ -1,0 +1,13 @@
+# Heartbeats receiver outputs the contents of a heartbeats cloud event as a
+# single log line.
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: heartbeats-receiver
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        spec:
+          container:
+            image: github.com/knative/eventing-sources/cmd/heartbeats_receiver
