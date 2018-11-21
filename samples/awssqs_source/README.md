@@ -41,13 +41,32 @@
 
     - Note that if the `Source` Service Account secret is in a non-default location, you will need to update the YAML first.
 
-1. Replace the place holders in `awssqs-source.yaml`.
+1. Replace the place holders in `samples/aws-sqssource/awssqs-source.yaml`.
     - `QUEUE_URL` should be replaced with your AWS SQS queue URL.
+
+      export QUEUE_URL=https://sqs-eu-west-1.amazonaws.com/1234234234/my-queue
+      sed -i "s|QUEUE_URL|$QUEUE_URL|" awssqs-source.yaml
+
+    - `QUEUE_NAME` will be used to name the event source, you can choose
+      any value that makes sense to you, although a good choice is the
+      last segment of the URL.
+
+      export QUEUE_NAME="my-queue"
+      sed -i "s|QUEUE_NAME|$QUEUE_NAME|" awssqs-source.yaml
+
+    - `AWS_REGION` should be replaced with the AWS region where your SQS
+      queue lives.
+
+      export AWS_REGION="eu-west-1"
+      sed -i "s|AWS_REGION|$AWS_REGION|" awssqs-source.yaml
+
+    - `awsCredsSecret` should be replaced with the name of the k8s
+      secret that contains the AWS credentials.  Change this only if you
+      deployed an altered `config/default-awssqs.yaml` source config.
+
     - `qux-1` should be replaced with the name of the `Channel` you want
       messages sent to. If you deployed an unaltered `channel.yaml`
       then you can leave it as `qux-1`.
-    - `awsCredsSecret` should be replaced if you are using a non-default
-      secret or key name for the receive adapter's credentials.
 
 1. Deploy `awssqs-source.yaml`.
 
@@ -72,10 +91,11 @@ In order to check the `AwsSqsSource` is fully working, we will create a simple K
 Publish messages to your AWS SQS queue.
 
 ```shell
-aws sqs send-message --queue-url
-https://sqs.us-east-1.amazonaws.com/80398EXAMPLE/MyQueue --message-body
-"Hello World!"
+aws sqs send-message --queue-url $QUEUE_URL --message-body "Hello World!"
 ```
+
+Where the `QUEUE_URL` variable contains the full AWS SQS URL (e.g.
+`https://sqs.us-east-1.amazonaws.com/80398EXAMPLE/MyQueue`)
 
 ### Verify
 

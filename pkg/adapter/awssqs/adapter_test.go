@@ -52,8 +52,9 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			defer sinkServer.Close()
 
 			a := &Adapter{
-				QueueUrl: "https://test.sqs.aws/123123",
-				SinkURI:  sinkServer.URL,
+				QueueUrl:             "https://test.sqs.aws/123123",
+				SinkURI:              sinkServer.URL,
+				OnFailedPollWaitSecs: 1,
 			}
 
 			body := "The body"

@@ -46,7 +46,7 @@ var _ = duck.VerifyType(&AwsSqsSource{}, &duckv1alpha1.Conditions{})
 
 // AwsSqsSourceSpec defines the desired state of the source.
 type AwsSqsSourceSpec struct {
-	// Url of the SQS queue that we will poll from.
+	// QueueUrl of the SQS queue that we will poll from.
 	QueueUrl string `json:"queueUrl"`
 
 	// Region for the given SQS queue

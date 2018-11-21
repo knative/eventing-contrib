@@ -36,7 +36,7 @@ const (
 	eventType = "aws.sqs.message"
 )
 
-// Adapter implements the AWS SQS adapter to deliver SQS messages from a
+// Adapter implements the AWS SQS adapter to deliver SQS messages from
 // an SQS queue to a Sink.
 type Adapter struct {
 
@@ -51,6 +51,10 @@ type Adapter struct {
 
 	// CredsFile is the full path of the AWS credentials file
 	CredsFile string
+
+	// OnFailedPollWaitSecs determines the interval to wait after a
+	// failed poll before making another one
+	OnFailedPollWaitSecs time.Duration
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
@@ -60,7 +64,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 	stopCh := signals.SetupSignalHandler()
 	cctx, cancel := context.WithCancel(ctx)
 
-	logger.Info("Starting with config: ", zap.Reflect("adapter", a))
+	logger.Info("Starting with config: ", zap.Any("adapter", a))
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigDisable,
@@ -75,7 +79,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 			messages, err := poll(cctx, q, a.QueueUrl, 10)
 			if err != nil {
 				logger.Warn("Failed to poll from SQS queue", zap.Error(err))
-				time.Sleep(2 * time.Second)
+				time.Sleep(a.OnFailedPollWaitSecs * time.Second)
 				continue
 			}
 			for _, m := range messages {

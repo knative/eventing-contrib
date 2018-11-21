@@ -80,9 +80,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// 2. Create a receive adapter in the form of a Deployment.
 	//     - Will be garbage collected by K8s when this AwsSqsSource is deleted.
 	// 3. Register that receive adapter as a Pull endpoint for the specified AWS SQS queue.
-	//     - This needs to deregister during deletion.
-	// Because there is something that must happen during deletion, we add this controller as a
-	// finalizer to every AwsSqsSource.
 
 	// See if the source has been deleted.
 	deletionTimestamp := src.DeletionTimestamp
@@ -105,6 +102,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	_, err = r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
+		return src, err
 	}
 	src.Status.MarkDeployed()
 
@@ -190,5 +188,5 @@ func getLabels(src *v1alpha1.AwsSqsSource) map[string]string {
 }
 
 func generateSubName(src *v1alpha1.AwsSqsSource) string {
-	return fmt.Sprintf("knative-eventing-%s-%s-%s", src.Namespace, src.Name, src.UID)
+	return fmt.Sprintf("knative-eventing_%s_%s_%s", src.Namespace, src.Name, src.UID)
 }

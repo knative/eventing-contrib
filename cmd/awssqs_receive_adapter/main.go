@@ -28,14 +28,14 @@ import (
 )
 
 const (
-	// Sink for messages.
+	// envSinkURI for messages.
 	envSinkURI = "SINK_URI"
 
 	// envRegion is the AWS region for the given SQS queue
 	envRegion = "AWS_REGION"
 
-	// envUrl is the URL of the SQS queue to consume messages from.
-	envQueueUrl = "AWS_SQS_URL"
+	// envQueueURL is the URL of the SQS queue to consume messages from.
+	envQueueURL = "AWS_SQS_URL"
 
 	// envCredsFile is the path of the AWS credentials file
 	envCredsFile = "AWS_APPLICATION_CREDENTIALS"
@@ -59,13 +59,14 @@ func main() {
 	}
 
 	adapter := &awssqs.Adapter{
-		Region:    getRequiredEnv(envRegion),
-		QueueUrl:  getRequiredEnv(envQueueUrl),
-		SinkURI:   getRequiredEnv(envSinkURI),
-		CredsFile: getRequiredEnv(envCredsFile),
+		Region:               getRequiredEnv(envRegion),
+		QueueUrl:             getRequiredEnv(envQueueURL),
+		SinkURI:              getRequiredEnv(envSinkURI),
+		CredsFile:            getRequiredEnv(envCredsFile),
+		OnFailedPollWaitSecs: 2,
 	}
 
-	logger.Info("Starting AWS SQS Receive Adapter. %v", zap.Reflect("adapter", adapter))
+	logger.Info("Starting AWS SQS Receive Adapter.", zap.Any("adapter", adapter))
 	if err := adapter.Start(ctx); err != nil {
 		logger.Fatal("failed to start adapter: ", zap.Error(err))
 	}
