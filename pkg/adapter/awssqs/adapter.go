@@ -29,6 +29,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -74,8 +75,14 @@ func (a *Adapter) Start(ctx context.Context) error {
 
 	q := sqs.New(sess)
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
 		for {
+			select {
+			case <-stopCh:
+				break
+			}
 			messages, err := poll(cctx, q, a.QueueUrl, 10)
 			if err != nil {
 				logger.Warn("Failed to poll from SQS queue", zap.Error(err))
@@ -99,7 +106,8 @@ func (a *Adapter) Start(ctx context.Context) error {
 			}
 		}
 	}()
-	<-stopCh
+
+	wg.Wait()
 	cancel()
 	logger.Info("Exiting")
 
