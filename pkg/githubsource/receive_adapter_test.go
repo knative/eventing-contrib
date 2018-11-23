@@ -432,7 +432,10 @@ func (tc *testCase) runner(t *testing.T, ra GitHubReceiveAdapter) func(t *testin
 		if tc.eventType == "" {
 			t.Fatal("eventType is required for table tests")
 		}
-		evtErr := ra.handleEvent(tc.payload, tc.eventType, tc.eventID)
+		hdr := http.Header{}
+		hdr.Set("X-GitHub-Event", tc.eventType)
+		hdr.Set("X-GitHub-Delivery", tc.eventID)
+		evtErr := ra.handleEvent(tc.payload, hdr)
 
 		if err := tc.verifyErr(evtErr); err != nil {
 			t.Error(err)
@@ -486,7 +489,9 @@ func (tc *testCase) verifyErr(err error) error {
 
 func TestHandleEvent(t *testing.T) {
 	eventID := "12345"
+	eventType := "pull_request"
 	var success bool
+
 	client := &http.Client{
 		Transport: mockTransport(func(req *http.Request) (*http.Response, error) {
 			cloudEvent, err := cloudevents.Binary.FromRequest(nil, req)
@@ -496,6 +501,17 @@ func TestHandleEvent(t *testing.T) {
 			if eventID != cloudEvent.EventID {
 				return nil, fmt.Errorf("want eventID %s, got %s", eventID, cloudEvent.EventID)
 			}
+
+			ceHdr := cloudEvent.Extensions[CeExtensionPrefix+GhHeaderDelivery].(string)
+			if eventID != ceHdr {
+				return nil, fmt.Errorf("%s expected to be %s was %s", GhHeaderDelivery, eventID, ceHdr)
+			}
+
+			ceHdr = cloudEvent.Extensions[CeExtensionPrefix+GhHeaderEvent].(string)
+			if eventType != ceHdr {
+				return nil, fmt.Errorf("%s expected to be %s was %s", GhHeaderEvent, eventType, ceHdr)
+			}
+
 			success = true
 			return &http.Response{
 				StatusCode: 200,
@@ -511,8 +527,8 @@ func TestHandleEvent(t *testing.T) {
 	payload := gh.PullRequestPayload{}
 	payload.PullRequest.HTMLURL = testSource
 	header := http.Header{}
-	header.Set("X-GitHub-Event", "pull_request")
-	header.Set("X-GitHub-Delivery", eventID)
+	header.Set(GhHeaderEvent, eventType)
+	header.Set(GhHeaderDelivery, eventID)
 	ra.HandleEvent(payload, webhooks.Header(header))
 	if !success {
 		t.Error("did not handle event successfully")
