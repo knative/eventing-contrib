@@ -502,14 +502,14 @@ func TestHandleEvent(t *testing.T) {
 				return nil, fmt.Errorf("want eventID %s, got %s", eventID, cloudEvent.EventID)
 			}
 
-			ceHdr := cloudEvent.Extensions[CeExtensionPrefix+GhHeaderDelivery].(string)
+			ceHdr := cloudEvent.Extensions[CEExtensionPrefix+GHHeaderDelivery].(string)
 			if eventID != ceHdr {
-				return nil, fmt.Errorf("%s expected to be %s was %s", GhHeaderDelivery, eventID, ceHdr)
+				return nil, fmt.Errorf("%s expected to be %s was %s", GHHeaderDelivery, eventID, ceHdr)
 			}
 
-			ceHdr = cloudEvent.Extensions[CeExtensionPrefix+GhHeaderEvent].(string)
+			ceHdr = cloudEvent.Extensions[CEExtensionPrefix+GHHeaderEvent].(string)
 			if eventType != ceHdr {
-				return nil, fmt.Errorf("%s expected to be %s was %s", GhHeaderEvent, eventType, ceHdr)
+				return nil, fmt.Errorf("%s expected to be %s was %s", GHHeaderEvent, eventType, ceHdr)
 			}
 
 			success = true
@@ -527,8 +527,8 @@ func TestHandleEvent(t *testing.T) {
 	payload := gh.PullRequestPayload{}
 	payload.PullRequest.HTMLURL = testSource
 	header := http.Header{}
-	header.Set(GhHeaderEvent, eventType)
-	header.Set(GhHeaderDelivery, eventID)
+	header.Set(GHHeaderEvent, eventType)
+	header.Set(GHHeaderDelivery, eventID)
 	ra.HandleEvent(payload, webhooks.Header(header))
 	if !success {
 		t.Error("did not handle event successfully")
