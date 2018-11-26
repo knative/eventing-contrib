@@ -56,6 +56,10 @@ func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, hdr http.Header
 
 	gitHubEventType := hdr.Get(GHHeaderEvent)
 	eventID := hdr.Get(GHHeaderDelivery)
+	extensions := map[string]interface{}{
+		CEExtensionPrefix + GHHeaderEvent:    hdr.Get(GHHeaderEvent),
+		CEExtensionPrefix + GHHeaderDelivery: hdr.Get(GHHeaderDelivery),
+	}
 
 	log.Printf("Handling %s", gitHubEventType)
 
@@ -68,20 +72,18 @@ func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, hdr http.Header
 	cloudEventType := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, gitHubEventType)
 	source := sourceFromGitHubEvent(gh.Event(gitHubEventType), payload)
 
-	return ra.postMessage(payload, source, cloudEventType, eventID, hdr)
+	return ra.postMessage(payload, source, cloudEventType, eventID, extensions)
 }
 
-func (ra *GitHubReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string, hdr http.Header) error {
+func (ra *GitHubReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
+	extensions map[string]interface{}) error {
 	ctx := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          eventType,
 		EventID:            eventID,
 		EventTime:          time.Now(),
 		Source:             source,
-		Extensions: map[string]interface{}{
-			CEExtensionPrefix + GHHeaderEvent:    hdr.Get(GHHeaderEvent),
-			CEExtensionPrefix + GHHeaderDelivery: hdr.Get(GHHeaderDelivery),
-		},
+		Extensions:         extensions,
 	}
 	req, err := cloudevents.Binary.NewRequest(ra.Sink, payload, ctx)
 	if err != nil {
