@@ -294,12 +294,13 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:4e2acba8aae54baf3edf83beeefb1c8e40c566f482c7bc91f6eacf28c1f3f032"
+  digest = "1:1fe0bcb5add717cf1e89b28406e0ead3612ec3145cce0022c0bc3f8a74bbd6cc"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
     "apis/duck",
     "apis/duck/v1alpha1",
+    "changeset",
     "cloudevents",
     "kmeta",
     "logging",
@@ -307,7 +308,7 @@
     "signals",
   ]
   pruneopts = "NUT"
-  revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
+  revision = "862aa6dbe7b6a79430354f732da044d02dcadac0"
 
 [[projects]]
   digest = "1:5d4ddd664e297c3453b40e94e69ea3d1aaa8efbff3c4fe0d892f9a588c499770"
