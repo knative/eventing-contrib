@@ -31,9 +31,8 @@ import (
 )
 
 const (
-	GHHeaderEvent     = "X-GitHub-Event"
-	GHHeaderDelivery  = "X-GitHub-Delivery"
-	CEExtensionPrefix = "CE-"
+	GHHeaderEvent    = "GitHub-Event"
+	GHHeaderDelivery = "GitHub-Delivery"
 )
 
 // GitHubReceiveAdapter converts incoming GitHub webhook events to
@@ -54,11 +53,11 @@ func (ra *GitHubReceiveAdapter) HandleEvent(payload interface{}, header webhooks
 
 func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, hdr http.Header) error {
 
-	gitHubEventType := hdr.Get(GHHeaderEvent)
-	eventID := hdr.Get(GHHeaderDelivery)
+	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
+	eventID := hdr.Get("X-" + GHHeaderDelivery)
 	extensions := map[string]interface{}{
-		CEExtensionPrefix + GHHeaderEvent:    hdr.Get(GHHeaderEvent),
-		CEExtensionPrefix + GHHeaderDelivery: hdr.Get(GHHeaderDelivery),
+		cloudevents.HeaderExtensionsPrefix + GHHeaderEvent:    hdr.Get("X-" + GHHeaderEvent),
+		cloudevents.HeaderExtensionsPrefix + GHHeaderDelivery: hdr.Get("X-" + GHHeaderDelivery),
 	}
 
 	log.Printf("Handling %s", gitHubEventType)
