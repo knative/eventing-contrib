@@ -61,8 +61,6 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger := logging.FromContext(ctx)
 
-	cctx, cancel := context.WithCancel(ctx)
-
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
@@ -73,14 +71,28 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	q := sqs.New(sess)
 
+	err := a.pollLoop(ctx, q, stopCh)
+	return err
+}
+
+// pollLoop continuously polls from the given SQS queue until stopCh
+// emits an element.  The
+func (a *Adapter) pollLoop(ctx context.Context, q *sqs.SQS, stopCh <-chan struct{}) error {
+
+	logger := logging.FromContext(ctx)
+	cctx, cancel := context.WithCancel(ctx)
+
 	var wg sync.WaitGroup
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
+	Loop:
 		for {
 			select {
 			case <-stopCh:
-				break
+				break Loop
+			default:
 			}
 			messages, err := poll(cctx, q, a.QueueUrl, 10)
 			if err != nil {

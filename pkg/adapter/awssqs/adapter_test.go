@@ -129,6 +129,24 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 	}
 }
 
+func TestPollLoopCancels(t *testing.T) {
+
+	a := &Adapter{
+		QueueUrl: "https://test.sqs.aws/123123",
+		SinkURI:  "https://sink.server/",
+	}
+
+	ctx := context.Background()
+	stopCh := make(chan struct{}, 1)
+
+	msg := struct{}{}
+	stopCh <- msg
+	err := a.pollLoop(ctx, nil, stopCh)
+	if err != nil {
+		t.Error("expected pollLoop to return cleanly, but got", err)
+	}
+}
+
 type fakeHandler struct {
 	body []byte
 
