@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"github.com/knative/eventing-sources/pkg/adapter/awssqs"
+	"github.com/knative/pkg/signals"
 	"log"
 	"os"
 
@@ -67,7 +68,8 @@ func main() {
 	}
 
 	logger.Info("Starting AWS SQS Receive Adapter.", zap.Any("adapter", adapter))
-	if err := adapter.Start(ctx); err != nil {
+	stopCh := signals.SetupSignalHandler()
+	if err := adapter.Start(ctx, stopCh); err != nil {
 		logger.Fatal("failed to start adapter: ", zap.Error(err))
 	}
 }

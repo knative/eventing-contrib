@@ -23,7 +23,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/knative/pkg/cloudevents"
 	"github.com/knative/pkg/logging"
-	"github.com/knative/pkg/signals"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"io/ioutil"
@@ -58,11 +57,10 @@ type Adapter struct {
 	OnFailedPollWaitSecs time.Duration
 }
 
-func (a *Adapter) Start(ctx context.Context) error {
+func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger := logging.FromContext(ctx)
 
-	stopCh := signals.SetupSignalHandler()
 	cctx, cancel := context.WithCancel(ctx)
 
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
