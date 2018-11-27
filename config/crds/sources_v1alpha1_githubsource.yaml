@@ -100,6 +100,8 @@ spec:
                     type: string
                   reason:
                     type: string
+                  severity:
+                    type: string
                   status:
                     type: string
                   type:

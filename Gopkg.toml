@@ -39,7 +39,7 @@ required = [
 [[override]]
   name = "github.com/knative/pkg"
   # HEAD as of 2018-11-05
-  revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
+  revision = "862aa6dbe7b6a79430354f732da044d02dcadac0"
 
 [[override]]
   name = "k8s.io/api"
