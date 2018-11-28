@@ -547,7 +547,7 @@ spec:
         - name: AWS_APPLICATION_CREDENTIALS
           value: /var/secrets/aws/credentials
         - name: AWSSQS_RA_IMAGE
-          value: github.com/srvaroa/eventing-sources/cmd/awssqs_receive_adapter
+          value: github.com/knative/eventing-sources/cmd/awssqs_receive_adapter
         - name: K8S_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/kuberneteseventsource
         - name: GH_RA_IMAGE
