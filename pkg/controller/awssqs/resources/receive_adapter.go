@@ -75,7 +75,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 								},
 								{
 									Name:  "AWS_SQS_URL",
-									Value: args.Source.Spec.QueueUrl,
+									Value: args.Source.Spec.QueueURL,
 								},
 								{
 									Name:  "SINK_URI",

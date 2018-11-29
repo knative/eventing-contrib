@@ -57,7 +57,7 @@ func main() {
 	}
 
 	adapter := &awssqs.Adapter{
-		QueueUrl:             getRequiredEnv(envQueueURL),
+		QueueURL:             getRequiredEnv(envQueueURL),
 		SinkURI:              getRequiredEnv(envSinkURI),
 		CredsFile:            getRequiredEnv(envCredsFile),
 		OnFailedPollWaitSecs: 2,

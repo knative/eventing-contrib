@@ -40,8 +40,8 @@ const (
 // an SQS queue to a Sink.
 type Adapter struct {
 
-	// QueueUrl is the AWS SQS URL that we're polling messages from
-	QueueUrl string
+	// QueueURL is the AWS SQS URL that we're polling messages from
+	QueueURL string
 
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
@@ -60,9 +60,9 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
 
-	urlParts := strings.Split(a.QueueUrl, ".")
+	urlParts := strings.Split(a.QueueURL, ".")
 	if len(urlParts) < 2 {
-		err := fmt.Errorf("QueueUrl does not look correct: %s", a.QueueUrl)
+		err := fmt.Errorf("QueueURL does not look correct: %s", a.QueueURL)
 		logger.Error(err)
 		return err
 	}
@@ -94,7 +94,7 @@ Loop:
 			break Loop
 		default:
 		}
-		messages, err := poll(cctx, q, a.QueueUrl, 10)
+		messages, err := poll(cctx, q, a.QueueURL, 10)
 		if err != nil {
 			logger.Warn("Failed to poll from SQS queue", zap.Error(err))
 			time.Sleep(a.OnFailedPollWaitSecs * time.Second)
@@ -103,7 +103,7 @@ Loop:
 		for _, m := range messages {
 			a.receiveMessage(ctx, m, func() {
 				_, err = q.DeleteMessage(&sqs.DeleteMessageInput{
-					QueueUrl:      &a.QueueUrl,
+					QueueUrl:      &a.QueueURL,
 					ReceiptHandle: m.ReceiptHandle,
 				})
 				if err != nil {
@@ -155,7 +155,7 @@ func (a *Adapter) postMessage(ctx context.Context, m *sqs.Message) error {
 		EventType:          eventType,
 		EventID:            *m.MessageId,
 		EventTime:          time.Unix(timestamp, 0),
-		Source:             a.QueueUrl,
+		Source:             a.QueueURL,
 	}
 	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, event)
 	if err != nil {

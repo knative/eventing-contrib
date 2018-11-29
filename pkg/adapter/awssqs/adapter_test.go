@@ -18,7 +18,6 @@ package awssqs
 
 import (
 	"context"
-	// "encoding/json"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"io/ioutil"
 	"net/http"
@@ -52,7 +51,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			defer sinkServer.Close()
 
 			a := &Adapter{
-				QueueUrl:             "https://test.sqs.aws/123123",
+				QueueURL:             "https://test.sqs.aws/123123",
 				SinkURI:              sinkServer.URL,
 				OnFailedPollWaitSecs: 1,
 			}
@@ -113,7 +112,7 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 			defer sinkServer.Close()
 
 			a := &Adapter{
-				QueueUrl: "https://test.sqs.aws/123123",
+				QueueURL: "https://test.sqs.aws/123123",
 				SinkURI:  sinkServer.URL,
 			}
 
@@ -132,7 +131,7 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 func TestPollLoopCancels(t *testing.T) {
 
 	a := &Adapter{
-		QueueUrl: "https://test.sqs.aws/123123",
+		QueueURL: "https://test.sqs.aws/123123",
 		SinkURI:  "https://sink.server/",
 	}
 
