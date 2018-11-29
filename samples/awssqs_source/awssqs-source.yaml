@@ -1,7 +1,6 @@
 # Replace the following before applying this file:
 #   QUEUE_URL: Replace with the AWS SQS queue.
 #   QUEUE_NAME: Replace with the name of the queue (to use as name)
-#   AWS_REGION: Replace with the name of the AWS region
 
 apiVersion: sources.eventing.knative.dev/v1alpha1
 kind: AwsSqsSource
@@ -12,7 +11,6 @@ spec:
     name: aws-credentials
     key: credentials
   queueUrl: QUEUE_URL
-  region: AWS_REGION
   sink:
     apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel

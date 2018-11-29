@@ -54,12 +54,6 @@
       export QUEUE_NAME="my-queue"
       sed -i "s|QUEUE_NAME|$QUEUE_NAME|" awssqs-source.yaml
 
-    - `AWS_REGION` should be replaced with the AWS region where your SQS
-      queue lives.
-
-      export AWS_REGION="eu-west-1"
-      sed -i "s|AWS_REGION|$AWS_REGION|" awssqs-source.yaml
-
     - `awsCredsSecret` should be replaced with the name of the k8s
       secret that contains the AWS credentials.  Change this only if you
       deployed an altered `config/default-awssqs.yaml` source config.

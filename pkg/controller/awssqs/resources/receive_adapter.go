@@ -74,10 +74,6 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 									Value: credsFile,
 								},
 								{
-									Name:  "AWS_REGION",
-									Value: args.Source.Spec.Region,
-								},
-								{
 									Name:  "AWS_SQS_URL",
 									Value: args.Source.Spec.QueueUrl,
 								},

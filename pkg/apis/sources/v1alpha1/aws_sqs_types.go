@@ -49,9 +49,6 @@ type AwsSqsSourceSpec struct {
 	// QueueUrl of the SQS queue that we will poll from.
 	QueueUrl string `json:"queueUrl"`
 
-	// Region for the given SQS queue
-	Region string `json:"region"`
-
 	// AwsCredsSecret is the credential to use to poll the AWS SQS
 	AwsCredsSecret corev1.SecretKeySelector `json:"awsCredsSecret,omitempty"`
 

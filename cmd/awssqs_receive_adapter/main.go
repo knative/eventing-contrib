@@ -32,9 +32,6 @@ const (
 	// envSinkURI for messages.
 	envSinkURI = "SINK_URI"
 
-	// envRegion is the AWS region for the given SQS queue
-	envRegion = "AWS_REGION"
-
 	// envQueueURL is the URL of the SQS queue to consume messages from.
 	envQueueURL = "AWS_SQS_URL"
 
@@ -60,7 +57,6 @@ func main() {
 	}
 
 	adapter := &awssqs.Adapter{
-		Region:               getRequiredEnv(envRegion),
 		QueueUrl:             getRequiredEnv(envQueueURL),
 		SinkURI:              getRequiredEnv(envSinkURI),
 		CredsFile:            getRequiredEnv(envCredsFile),

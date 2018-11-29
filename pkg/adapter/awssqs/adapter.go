@@ -28,6 +28,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -39,9 +40,6 @@ const (
 // Adapter implements the AWS SQS adapter to deliver SQS messages from
 // an SQS queue to a Sink.
 type Adapter struct {
-
-	// Region is the AWS region
-	Region string
 
 	// QueueUrl is the AWS SQS URL that we're polling messages from
 	QueueUrl string
@@ -63,9 +61,17 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
 
+	urlParts := strings.Split(a.QueueUrl, ".")
+	if len(urlParts) < 2 {
+		err := fmt.Errorf("QueueUrl does not look correct: %s", a.QueueUrl)
+		logger.Error(err)
+		return err
+	}
+	region := urlParts[1]
+
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigDisable,
-		Config:            aws.Config{Region: aws.String(a.Region)},
+		Config:            aws.Config{Region: &region},
 		SharedConfigFiles: []string{a.CredsFile},
 	}))
 
