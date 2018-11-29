@@ -29,7 +29,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -88,43 +87,36 @@ func (a *Adapter) pollLoop(ctx context.Context, q *sqs.SQS, stopCh <-chan struct
 	logger := logging.FromContext(ctx)
 	cctx, cancel := context.WithCancel(ctx)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-	Loop:
-		for {
-			select {
-			case <-stopCh:
-				break Loop
-			default:
-			}
-			messages, err := poll(cctx, q, a.QueueUrl, 10)
-			if err != nil {
-				logger.Warn("Failed to poll from SQS queue", zap.Error(err))
-				time.Sleep(a.OnFailedPollWaitSecs * time.Second)
-				continue
-			}
-			for _, m := range messages {
-				a.receiveMessage(ctx, m, func() {
-					_, err = q.DeleteMessage(&sqs.DeleteMessageInput{
-						QueueUrl:      &a.QueueUrl,
-						ReceiptHandle: m.ReceiptHandle,
-					})
-					if err != nil {
-						// the only consequence is that the message will
-						// get redelivered later, given that SQS is
-						// at-least-once delivery. That should be
-						// acceptable as "normal operation"
-						logger.Error("Failed to delete message", zap.Error(err))
-					}
-				})
-			}
+Loop:
+	for {
+		select {
+		case <-stopCh:
+			break Loop
+		default:
 		}
-	}()
+		messages, err := poll(cctx, q, a.QueueUrl, 10)
+		if err != nil {
+			logger.Warn("Failed to poll from SQS queue", zap.Error(err))
+			time.Sleep(a.OnFailedPollWaitSecs * time.Second)
+			continue
+		}
+		for _, m := range messages {
+			a.receiveMessage(ctx, m, func() {
+				_, err = q.DeleteMessage(&sqs.DeleteMessageInput{
+					QueueUrl:      &a.QueueUrl,
+					ReceiptHandle: m.ReceiptHandle,
+				})
+				if err != nil {
+					// the only consequence is that the message will
+					// get redelivered later, given that SQS is
+					// at-least-once delivery. That should be
+					// acceptable as "normal operation"
+					logger.Error("Failed to delete message", zap.Error(err))
+				}
+			})
+		}
+	}
 
-	wg.Wait()
 	cancel()
 	logger.Info("Exiting")
 
@@ -206,7 +198,7 @@ func poll(ctx context.Context, q *sqs.SQS, url string, maxBatchSize int64) ([]*s
 		// Controls the maximum time to wait in the poll performed with
 		// ReceiveMessageWithContext.  If there are no messages in the
 		// given secs, the call times out and returns control to us.
-		WaitTimeSeconds: aws.Int64(5),
+		WaitTimeSeconds: aws.Int64(3),
 	})
 
 	if err != nil {
