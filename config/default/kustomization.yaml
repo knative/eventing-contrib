@@ -10,6 +10,7 @@ resources:
 - ../crds/sources_v1alpha1_containersource.yaml
 - ../crds/sources_v1alpha1_kuberneteseventsource.yaml
 - ../crds/sources_v1alpha1_githubsource.yaml
+- ../crds/sources_v1alpha1_cronjobsource.yaml
 - ../rbac/rbac_role.yaml
 - ../rbac/rbac_role_binding.yaml
 - ../manager/manager.yaml
@@ -19,3 +20,4 @@ patches:
 - containersource_conditions_patch.yaml
 - kuberneteseventsource_conditions_patch.yaml
 - githubsource_conditions_patch.yaml
+- cronjobsource_conditions_patch.yaml

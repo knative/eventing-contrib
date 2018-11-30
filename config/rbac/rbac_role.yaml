@@ -133,6 +133,18 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - cronjobsources
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - ""
   resources:
   - events
