@@ -20,10 +20,10 @@ added.*
 * `--publish`, `--nopublish` Whether the generated images should be published
 to a GCR, and the generated manifests written to a GCS bucket or not. If yes,
 the destination GCR is defined by the environment variable
-`$EVENTING_SOURCES_RELEASE_GCR` (defaults to `gcr.io/knative-releases`) and
+`$EVENTING_SOURCES_RELEASE_GCR` (defaults to `gcr.io/knative-nightly`) and
 ther destination GCS bucket is defined by the environment variable
 `$EVENTING_SOURCES_RELEASE_GCS` (defaults to
-`knative-releases/eventing-sources`). If no, the images will be pushed to the
+`knative-nightly/eventing-sources`). If no, the images will be pushed to the
 `ko.local` registry, and the manifests written to the local disk only (in the
 repository root directory).
 
