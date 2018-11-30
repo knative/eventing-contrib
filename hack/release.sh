@@ -17,8 +17,8 @@
 source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 
 # Set default GCS/GCR
-: ${EVENTING_SOURCES_RELEASE_GCS:="knative-releases/eventing-sources"}
-: ${EVENTING_SOURCES_RELEASE_GCR:="gcr.io/knative-releases"}
+: ${EVENTING_SOURCES_RELEASE_GCS:="knative-nightly/eventing-sources"}
+: ${EVENTING_SOURCES_RELEASE_GCR:="gcr.io/knative-nightly"}
 readonly EVENTING_SOURCES_RELEASE_GCS
 readonly EVENTING_SOURCES_RELEASE_GCR
 
