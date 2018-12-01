@@ -28,6 +28,7 @@ import (
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ContainerSourcesGetter
+	CronJobSourcesGetter
 	GcpPubSubSourcesGetter
 	GitHubSourcesGetter
 	KubernetesEventSourcesGetter
@@ -40,6 +41,10 @@ type SourcesV1alpha1Client struct {
 
 func (c *SourcesV1alpha1Client) ContainerSources(namespace string) ContainerSourceInterface {
 	return newContainerSources(c, namespace)
+}
+
+func (c *SourcesV1alpha1Client) CronJobSources(namespace string) CronJobSourceInterface {
+	return newCronJobSources(c, namespace)
 }
 
 func (c *SourcesV1alpha1Client) GcpPubSubSources(namespace string) GcpPubSubSourceInterface {
