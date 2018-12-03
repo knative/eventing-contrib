@@ -56,33 +56,27 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 					},
 					Labels: args.Labels,
 				},
-				Spec: GeneratePodSpec(args),
-			},
-		},
-	}
-}
-
-// GeneratePodSpec generates PodSpec for receive adapter Deployment.
-// It could also be called in reconcile when it needs to reuse existing adapter.
-func GeneratePodSpec(args *ReceiveAdapterArgs) corev1.PodSpec {
-	return corev1.PodSpec{
-		ServiceAccountName: args.Source.Spec.ServiceAccountName,
-		Containers: []corev1.Container{
-			{
-				Name:  "receive-adapter",
-				Image: args.Image,
-				Env: []corev1.EnvVar{
-					{
-						Name:  "SCHEDULE",
-						Value: args.Source.Spec.Schedule,
-					},
-					{
-						Name:  "DATA",
-						Value: args.Source.Spec.Data,
-					},
-					{
-						Name:  "SINK_URI",
-						Value: args.SinkURI,
+				Spec: corev1.PodSpec{
+					ServiceAccountName: args.Source.Spec.ServiceAccountName,
+					Containers: []corev1.Container{
+						{
+							Name:  "receive-adapter",
+							Image: args.Image,
+							Env: []corev1.EnvVar{
+								{
+									Name:  "SCHEDULE",
+									Value: args.Source.Spec.Schedule,
+								},
+								{
+									Name:  "DATA",
+									Value: args.Source.Spec.Data,
+								},
+								{
+									Name:  "SINK_URI",
+									Value: args.SinkURI,
+								},
+							},
+						},
 					},
 				},
 			},

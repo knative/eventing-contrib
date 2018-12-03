@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package gcppubsub implements the GcpPubSubSource controller.
+// Package cronjobsource implements the CronJobSource controller.
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=gcppubsubsources,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=cronjobsources,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eventing.knative.dev,resources=channels,verbs=get;list;watch
 package cronjobsource

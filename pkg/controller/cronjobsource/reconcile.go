@@ -31,14 +31,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	finalizerName = controllerAgentName
 )
 
 type reconciler struct {
@@ -71,21 +66,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	// This Source attempts to reconcile three things.
 	// 1. Determine the sink's URI.
 	//     - Nothing to delete.
-	// 2. Create a receive adapter in the form of a CronJob.
+	// 2. Create a receive adapter in the form of a Deployment.
 	//     - Will be garbage collected by K8s when this CronJobSource is deleted.
-	// 3. Register that receive adapter.
-	//     - This needs to deregister during deletion.
-	// Because there is something that must happen during deletion, we add this controller as a
-	// finalizer to every CronJobSource.
-
-	// See if the source has been deleted.
-	deletionTimestamp := src.DeletionTimestamp
-	if deletionTimestamp != nil {
-		r.removeFinalizer(src)
-		return src, nil
-	}
-
-	r.addFinalizer(src)
 
 	src.Status.InitializeConditions()
 
@@ -106,18 +88,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	return src, nil
 }
 
-func (r *reconciler) addFinalizer(s *v1alpha1.CronJobSource) {
-	finalizers := sets.NewString(s.Finalizers...)
-	finalizers.Insert(finalizerName)
-	s.Finalizers = finalizers.List()
-}
-
-func (r *reconciler) removeFinalizer(s *v1alpha1.CronJobSource) {
-	finalizers := sets.NewString(s.Finalizers...)
-	finalizers.Delete(finalizerName)
-	s.Finalizers = finalizers.List()
-}
-
 func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.CronJobSource, sinkURI string) (*v1.Deployment, error) {
 	ra, err := r.getReceiveAdapter(ctx, src)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -130,40 +100,48 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cro
 		Labels:  getLabels(src),
 		SinkURI: sinkURI,
 	}
+	expected := resources.MakeReceiveAdapter(&adapterArgs)
 	if ra != nil {
-		podSpec := resources.GeneratePodSpec(&adapterArgs)
-		if r.podSpecChanged(ra.Spec.Template.Spec, podSpec) {
-			ra.Spec.Template.Spec = podSpec
-			err = r.client.Update(ctx, ra)
-			if err != nil {
+		if r.podSpecChanged(ra.Spec.Template.Spec, expected.Spec.Template.Spec) {
+			ra.Spec.Template.Spec = expected.Spec.Template.Spec
+			if err = r.client.Update(ctx, ra); err != nil {
 				return ra, err
 			}
-			logging.FromContext(ctx).Desugar().Info("Receive Adapter updated.", zap.Error(err), zap.Any("receiveAdapter", ra))
+			logging.FromContext(ctx).Desugar().Info("Receive Adapter updated.", zap.Any("receiveAdapter", ra))
 		} else {
 			logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		}
 		return ra, nil
 	}
 
-	svc := resources.MakeReceiveAdapter(&adapterArgs)
-	if err := controllerutil.SetControllerReference(src, svc, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(src, expected, r.scheme); err != nil {
 		return nil, err
 	}
-	err = r.client.Create(ctx, svc)
-	logging.FromContext(ctx).Desugar().Info("Receive Adapter created.", zap.Error(err), zap.Any("receiveAdapter", svc))
-	return svc, err
+	if err = r.client.Create(ctx, expected); err != nil {
+		return nil, err
+	}
+	logging.FromContext(ctx).Desugar().Info("Receive Adapter created.", zap.Any("receiveAdapter", expected))
+	return expected, err
 }
 
 func (r *reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
 	if oldPodSpec.ServiceAccountName != newPodSpec.ServiceAccountName {
 		return true
 	}
-	oldEvnMap := make(map[string]string)
+	if oldPodSpec.Containers[0].Image != newPodSpec.Containers[0].Image {
+		return true
+	}
+	if len(oldPodSpec.Containers[0].Env) != len(newPodSpec.Containers[0].Env) {
+		return true
+	}
+	oldEnvMap := make(map[string]string)
 	for _, e := range oldPodSpec.Containers[0].Env {
-		oldEvnMap[e.Name] = e.Value
+		oldEnvMap[e.Name] = e.Value
 	}
 	for _, e := range newPodSpec.Containers[0].Env {
-		if e.Value != oldEvnMap[e.Name] {
+		if oldValue, ok := oldEnvMap[e.Name]; !ok {
+			return true
+		} else if e.Value != oldValue {
 			return true
 		}
 	}

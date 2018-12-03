@@ -97,20 +97,12 @@ func TestReconcile(t *testing.T) {
 				getNonCronJobSource(),
 			},
 		}, {
-			Name: "deleting - remove finalizer",
-			InitialState: []runtime.Object{
-				getDeletingSource(),
-			},
-			WantPresent: []runtime.Object{
-				getDeletingSourceWithoutFinalizer(),
-			},
-		}, {
 			Name: "cannot get sinkURI",
 			InitialState: []runtime.Object{
 				getSource(),
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithFinalizerAndNoSink(),
+				getSourceWithoutSink(),
 			},
 			WantErrMsg: "sinks.duck.knative.dev \"testsink\" not found",
 		}, {
@@ -127,11 +119,11 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithFinalizerAndSink(),
+				getSourceWithSink(),
 			},
 			WantErrMsg: "test-induced-error",
 		}, {
-			Name: "cannot list cronjobs",
+			Name: "cannot list deployments",
 			InitialState: []runtime.Object{
 				getSource(),
 			},
@@ -144,7 +136,7 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithFinalizerAndSink(),
+				getSourceWithSink(),
 			},
 			WantErrMsg: "test-induced-error",
 		}, {
@@ -240,39 +232,28 @@ func getSource() *sourcesv1alpha1.CronJobSource {
 	return obj
 }
 
-func getDeletingSourceWithoutFinalizer() *sourcesv1alpha1.CronJobSource {
+func getDeletingSource() *sourcesv1alpha1.CronJobSource {
 	src := getSource()
 	src.DeletionTimestamp = &deletionTime
 	return src
 }
 
-func getDeletingSource() *sourcesv1alpha1.CronJobSource {
-	src := getDeletingSourceWithoutFinalizer()
-	src.Finalizers = []string{finalizerName}
-	return src
-}
-
-func getSourceWithFinalizer() *sourcesv1alpha1.CronJobSource {
+func getSourceWithoutSink() *sourcesv1alpha1.CronJobSource {
 	src := getSource()
-	src.Finalizers = []string{finalizerName}
 	src.Status.InitializeConditions()
-	return src
-}
-
-func getSourceWithFinalizerAndNoSink() *sourcesv1alpha1.CronJobSource {
-	src := getSourceWithFinalizer()
 	src.Status.MarkNoSink("NotFound", "")
 	return src
 }
 
-func getSourceWithFinalizerAndSink() *sourcesv1alpha1.CronJobSource {
-	src := getSourceWithFinalizer()
+func getSourceWithSink() *sourcesv1alpha1.CronJobSource {
+	src := getSource()
+	src.Status.InitializeConditions()
 	src.Status.MarkSink(sinkableURI)
 	return src
 }
 
 func getReadySource() *sourcesv1alpha1.CronJobSource {
-	src := getSourceWithFinalizerAndSink()
+	src := getSourceWithSink()
 	src.Status.MarkDeployed()
 	return src
 }

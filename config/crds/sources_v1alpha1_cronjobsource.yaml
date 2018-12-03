@@ -27,9 +27,9 @@ spec:
           type: object
         spec:
           properties:
-            schedule:
-              type: string
             data:
+              type: string
+            schedule:
               type: string
             serviceAccountName:
               type: string

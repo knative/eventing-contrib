@@ -57,16 +57,17 @@ func (a *Adapter) Start(ctx context.Context) error {
 		return err
 	}
 	c := cron.New()
+	stopCh := signals.SetupSignalHandler()
+	cctx, cancel := context.WithCancel(ctx)
 	c.Schedule(sched, cron.FuncJob(func() {
 		m := Message{ID: a.generateMessageId(), EventTime: time.Now().UTC(), Body: a.Data}
-		err = a.postMessage(ctx, &m)
+		err = a.postMessage(cctx, &m)
 		if err != nil {
 			logger.Error("Failed to post message.", zap.Error(err))
+			return
 		}
 		logger.Debug("Finished posting message job.", zap.Any("message", m))
 	}))
-	stopCh := signals.SetupSignalHandler()
-	_, cancel := context.WithCancel(ctx)
 	go c.Start()
 	<-stopCh
 	cancel()
@@ -80,7 +81,7 @@ func (a *Adapter) postMessage(ctx context.Context, m *Message) error {
 	event := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          eventType,
-		EventID:            a.generateMessageId(),
+		EventID:            m.ID,
 		EventTime:          m.EventTime,
 		Source:             "CronJob",
 	}
