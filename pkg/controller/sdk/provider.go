@@ -23,11 +23,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 type KnativeReconciler interface {
 	Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error)
+	inject.Client
 }
 
 type Provider struct {
