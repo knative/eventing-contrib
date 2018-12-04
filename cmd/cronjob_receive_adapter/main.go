@@ -29,7 +29,7 @@ import (
 
 const (
 	// Environment variable container schedule.
-	envSchedue = "SCHEDULE"
+	envSchedule = "SCHEDULE"
 
 	// Environment variable containing data.
 	envData = "DATA"
@@ -41,7 +41,7 @@ const (
 func getRequiredEnv(envKey string) string {
 	val, defined := os.LookupEnv(envKey)
 	if !defined {
-		log.Fatalf("required environment variable not defined '%s'", envKey)
+		log.Fatalf("required environment variable not defined %q", envKey)
 	}
 	return val
 }
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	adapter := &cronjobevents.Adapter{
-		Schedule: getRequiredEnv(envSchedue),
+		Schedule: getRequiredEnv(envSchedule),
 		Data:     getRequiredEnv(envData),
 		SinkURI:  getRequiredEnv(envSinkURI),
 	}

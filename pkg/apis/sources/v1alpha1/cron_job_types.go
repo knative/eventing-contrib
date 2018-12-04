@@ -48,7 +48,8 @@ var _ = duck.VerifyType(&CronJobSource{}, &duckv1alpha1.Conditions{})
 type CronJobSourceSpec struct {
 
 	// Schedule is the cronjob schedule.
-	Schedule string `json:"schedule,omitempty"`
+	// +required
+	Schedule string `json:"schedule"`
 
 	// Data is the data posted to the target function.
 	Data string `json:"data,omitempty"`
@@ -66,6 +67,9 @@ const (
 	// CronJobConditionReady has status True when the CronJobSource is ready to send events.
 	CronJobConditionReady = duckv1alpha1.ConditionReady
 
+	// CronJobConditionValidSchedule has status True when the CronJobSource has been configured with a valid schedule.
+	CronJobConditionValidSchedule duckv1alpha1.ConditionType = "ValidSchedule"
+
 	// CronJobConditionSinkProvided has status True when the CronJobSource has been configured with a sink target.
 	CronJobConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
 
@@ -74,6 +78,7 @@ const (
 )
 
 var cronJobSourceCondSet = duckv1alpha1.NewLivingConditionSet(
+	CronJobConditionValidSchedule,
 	CronJobConditionSinkProvided,
 	CronJobConditionDeployed)
 
@@ -103,6 +108,16 @@ func (s *CronJobSourceStatus) IsReady() bool {
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (s *CronJobSourceStatus) InitializeConditions() {
 	cronJobSourceCondSet.Manage(s).InitializeConditions()
+}
+
+// MarkSchedule sets the condition that the source has a valid schedule configured.
+func (s *CronJobSourceStatus) MarkSchedule() {
+	cronJobSourceCondSet.Manage(s).MarkTrue(CronJobConditionValidSchedule)
+}
+
+// MarkInvalidSchedule sets the condition that the source does not have a valid schedule configured.
+func (s *CronJobSourceStatus) MarkInvalidSchedule(reason, messageFormat string, messageA ...interface{}) {
+	cronJobSourceCondSet.Manage(s).MarkFalse(CronJobConditionValidSchedule, reason, messageFormat, messageA...)
 }
 
 // MarkSink sets the condition that the source has a sink configured.

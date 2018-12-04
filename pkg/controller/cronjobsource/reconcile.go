@@ -20,12 +20,14 @@ import (
 
 	"github.com/knative/eventing-sources/pkg/controller/cronjobsource/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/robfig/cron"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -71,6 +73,12 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	src.Status.InitializeConditions()
 
+	_, err := cron.ParseStandard(src.Spec.Schedule)
+	if err != nil {
+		src.Status.MarkInvalidSchedule("Invalid", "")
+		return src, err
+	}
+	src.Status.MarkSchedule()
 	sinkURI, err := sinks.GetSinkURI(r.dynamicClient, src.Spec.Sink, src.Namespace)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
@@ -84,7 +92,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		return src, err
 	}
 	src.Status.MarkDeployed()
-
 	return src, nil
 }
 
@@ -125,23 +132,14 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cro
 }
 
 func (r *reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
-	if oldPodSpec.ServiceAccountName != newPodSpec.ServiceAccountName {
+	if !equality.Semantic.DeepDerivative(newPodSpec, oldPodSpec) {
 		return true
 	}
-	if oldPodSpec.Containers[0].Image != newPodSpec.Containers[0].Image {
+	if len(oldPodSpec.Containers) != len(newPodSpec.Containers) {
 		return true
 	}
-	if len(oldPodSpec.Containers[0].Env) != len(newPodSpec.Containers[0].Env) {
-		return true
-	}
-	oldEnvMap := make(map[string]string)
-	for _, e := range oldPodSpec.Containers[0].Env {
-		oldEnvMap[e.Name] = e.Value
-	}
-	for _, e := range newPodSpec.Containers[0].Env {
-		if oldValue, ok := oldEnvMap[e.Name]; !ok {
-			return true
-		} else if e.Value != oldValue {
+	for i := range newPodSpec.Containers {
+		if !equality.Semantic.DeepEqual(newPodSpec.Containers[i].Env, oldPodSpec.Containers[i].Env) {
 			return true
 		}
 	}

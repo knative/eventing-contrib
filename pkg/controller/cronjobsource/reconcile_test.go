@@ -46,10 +46,12 @@ var (
 const (
 	raImage = "test-ra-image"
 
-	image      = "github.com/knative/test/image"
-	sourceName = "test-cronjob-source"
-	sourceUID  = "1234-5678-90"
-	testNS     = "testnamespace"
+	image        = "github.com/knative/test/image"
+	sourceName   = "test-cronjob-source"
+	sourceUID    = "1234-5678-90"
+	testNS       = "testnamespace"
+	testSchedule = "*/2 * * * *"
+	testData     = "data"
 
 	sinkableName       = "testsink"
 	sinkableKind       = "Sink"
@@ -96,6 +98,13 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getNonCronJobSource(),
 			},
+		}, {
+			Name: "invalid schedule",
+			InitialState: []runtime.Object{
+				getSourceWithInvalidSchedule(),
+			},
+			Reconciles: getSourceWithInvalidSchedule(),
+			WantErrMsg: "Expected exactly 5 fields, found 2: invalid schedule",
 		}, {
 			Name: "cannot get sinkURI",
 			InitialState: []runtime.Object{
@@ -218,8 +227,8 @@ func getSource() *sourcesv1alpha1.CronJobSource {
 		},
 		ObjectMeta: om(testNS, sourceName),
 		Spec: sourcesv1alpha1.CronJobSourceSpec{
-			Schedule: "*/2 * * * *",
-			Data:     "data",
+			Schedule: testSchedule,
+			Data:     testData,
 			Sink: &corev1.ObjectReference{
 				Name:       sinkableName,
 				Kind:       sinkableKind,
@@ -238,9 +247,16 @@ func getDeletingSource() *sourcesv1alpha1.CronJobSource {
 	return src
 }
 
+func getSourceWithInvalidSchedule() *sourcesv1alpha1.CronJobSource {
+	src := getSource()
+	src.Spec.Schedule = "invalid schedule"
+	return src
+}
+
 func getSourceWithoutSink() *sourcesv1alpha1.CronJobSource {
 	src := getSource()
 	src.Status.InitializeConditions()
+	src.Status.MarkSchedule()
 	src.Status.MarkNoSink("NotFound", "")
 	return src
 }
@@ -248,6 +264,7 @@ func getSourceWithoutSink() *sourcesv1alpha1.CronJobSource {
 func getSourceWithSink() *sourcesv1alpha1.CronJobSource {
 	src := getSource()
 	src.Status.InitializeConditions()
+	src.Status.MarkSchedule()
 	src.Status.MarkSink(sinkableURI)
 	return src
 }
@@ -310,19 +327,19 @@ func getReceiveAdapter() *v1.Deployment {
 					Containers: []corev1.Container{
 						{
 							Name:  "receive-adapter",
-							Image: "image",
+							Image: raImage,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "SCHEDULE",
-									Value: "*/2 * * * *",
+									Value: testSchedule,
 								},
 								{
 									Name:  "DATA",
-									Value: "data",
+									Value: testData,
 								},
 								{
 									Name:  "SINK_URI",
-									Value: "uri",
+									Value: sinkableURI,
 								},
 							},
 						},

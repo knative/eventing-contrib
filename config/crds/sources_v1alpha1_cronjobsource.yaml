@@ -35,6 +35,8 @@ spec:
               type: string
             sink:
               type: object
+          required:
+          - schedule
           type: object
         status:
           properties:

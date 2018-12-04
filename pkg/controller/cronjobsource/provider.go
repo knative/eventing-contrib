@@ -44,7 +44,7 @@ const (
 func Add(mgr manager.Manager) error {
 	raImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
-		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
+		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
 
 	log.Println("Adding the Cron Job Source controller.")
