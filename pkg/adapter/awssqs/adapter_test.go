@@ -51,7 +51,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			defer sinkServer.Close()
 
 			a := &Adapter{
-				QueueURL:             "https://test.sqs.aws/123123",
+				QueueURL:             "https://sqs.us-east-2.amazonaws.com/123123/MyQueue",
 				SinkURI:              sinkServer.URL,
 				OnFailedPollWaitSecs: 1,
 			}
@@ -76,6 +76,21 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)
 			}
 		})
+	}
+}
+
+func TestGetRegionInvalidUrl(t *testing.T) {
+	actual, err := getRegion("sdfadf")
+	if err == nil {
+		t.Error("Expecting an error but got a result", actual)
+	}
+}
+
+func TestGetRegionValidUrl(t *testing.T) {
+	expected := "eu-west-1"
+	actual, _ := getRegion("https://sqs.eu-west-1.amazonaws.com/23234/test")
+	if expected != actual {
+		t.Error("Expecting", expected, "but got", actual)
 	}
 }
 
@@ -112,7 +127,7 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 			defer sinkServer.Close()
 
 			a := &Adapter{
-				QueueURL: "https://test.sqs.aws/123123",
+				QueueURL: "https://sqs.us-east-2.amazonaws.com/123123/MyQueue",
 				SinkURI:  sinkServer.URL,
 			}
 

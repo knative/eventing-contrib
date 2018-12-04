@@ -54,19 +54,36 @@ type Adapter struct {
 	OnFailedPollWaitSecs time.Duration
 }
 
+// getRegion takes an AWS SQS URL and extracts the region from it
+// e.g. URLs have this form:
+// https://sqs.<region>.amazonaws.com/<account_id>/<queue_name>
+// See
+// https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-general-identifiers.html
+// for reference.  Note that AWS does not make any promises re. url
+// structure although it feels reasonable to rely on it at this point
+// rather than add an additional `region` parameter to the spec that
+// will now be redundant most of the time.
+func getRegion(url string) (string, error) {
+	parts := strings.Split(url, ".")
+
+	if len(parts) < 2 {
+		err := fmt.Errorf("QueueURL does not look correct: %s", url)
+		return "", err
+	}
+	return parts[1], nil
+}
+
 func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger := logging.FromContext(ctx)
 
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
 
-	urlParts := strings.Split(a.QueueURL, ".")
-	if len(urlParts) < 2 {
-		err := fmt.Errorf("QueueURL does not look correct: %s", a.QueueURL)
-		logger.Error(err)
+	region, err := getRegion(a.QueueURL)
+	if err != nil {
+		logger.Error("Failed to parse region from queue URL", err)
 		return err
 	}
-	region := urlParts[1]
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigDisable,
@@ -76,8 +93,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	q := sqs.New(sess)
 
-	err := a.pollLoop(ctx, q, stopCh)
-	return err
+	return a.pollLoop(ctx, q, stopCh)
 }
 
 // pollLoop continuously polls from the given SQS queue until stopCh
@@ -85,16 +101,15 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 func (a *Adapter) pollLoop(ctx context.Context, q *sqs.SQS, stopCh <-chan struct{}) error {
 
 	logger := logging.FromContext(ctx)
-	cctx, cancel := context.WithCancel(ctx)
 
-Loop:
 	for {
 		select {
 		case <-stopCh:
-			break Loop
+			logger.Info("Exiting")
+			return nil
 		default:
 		}
-		messages, err := poll(cctx, q, a.QueueURL, 10)
+		messages, err := poll(ctx, q, a.QueueURL, 10)
 		if err != nil {
 			logger.Warn("Failed to poll from SQS queue", zap.Error(err))
 			time.Sleep(a.OnFailedPollWaitSecs * time.Second)
@@ -116,11 +131,6 @@ Loop:
 			})
 		}
 	}
-
-	cancel()
-	logger.Info("Exiting")
-
-	return nil
 }
 
 // receiveMessage handles an incoming message from the AWS SQS queue,
