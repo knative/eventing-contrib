@@ -14,6 +14,7 @@ The Knative Eventing Sources project provides source implementations that:
 - Integrate with GitHub
 - Integrate with Kubernetes Events
 - Integrate with Pub/Sub
+- Integrate with Websockets
 - Expose an ingress
 
 For complete documentation about Knative Eventing, see the following repos:
