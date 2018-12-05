@@ -95,9 +95,12 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
-		return err
+		if !deleted {
+			return err
+		}
+	} else {
+		source.Status.MarkSink(uri)
 	}
-	source.Status.MarkSink(uri)
 
 	ksvc, err := r.getOwnedService(ctx, source)
 	if err != nil {
