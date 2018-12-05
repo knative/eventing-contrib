@@ -60,23 +60,12 @@ const (
 	addressableURI        = "http://addressable.sink.svc.cluster.local/"
 )
 
-// Adds the list of known types to Scheme.
-func duckAddKnownTypes(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(
-		duckv1alpha1.SchemeGroupVersion,
-		&duckv1alpha1.AddressableTypeList{},
-	)
-	metav1.AddToGroupVersion(scheme, duckv1alpha1.SchemeGroupVersion)
-	return nil
-}
-
 func init() {
 	// Add types to scheme
 	v1.AddToScheme(scheme.Scheme)
 	corev1.AddToScheme(scheme.Scheme)
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
-	duckAddKnownTypes(scheme.Scheme)
 }
 
 type pubSubClientCreatorData struct {
