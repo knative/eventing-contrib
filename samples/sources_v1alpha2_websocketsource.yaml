@@ -1,0 +1,49 @@
+# Use the ServiceEntry and VirtualService if your istio installation
+# forbids external communication.
+# 
+# apiVersion: networking.istio.io/v1alpha3
+# kind: ServiceEntry
+# metadata:
+#   name: urbanobservatory-api
+# spec:
+#   hosts:
+#   - api.usb.urbanobservatory.ac.uk
+#   ports:
+#   - number: 443
+#     name: https
+#     protocol: HTTPS
+#   resolution: DNS
+#   location: MESH_EXTERNAL
+# ---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: urbanobservatory-api
+# spec:
+#   hosts:
+#   - api.usb.urbanobservatory.ac.uk
+#   tls:
+#   - match:
+#     - port: 443
+#       sni_hosts:
+#       - api.usb.urbanobservatory.ac.uk
+#     route:
+#     - destination:
+#         host: api.usb.urbanobservatory.ac.uk
+#         port:
+#           number: 443
+#       weight: 100
+# ---
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: ContainerSource
+metadata:
+  name: urbanobservatory-event-source
+spec:
+  image: github.com/knative/eventing-sources/cmd/websocketsource/
+  args: 
+    - '--source=wss://api.usb.urbanobservatory.ac.uk/stream'
+# Fill this out:
+#  sink:
+#    apiVersion: <apiverion>
+#    kind: <kind>
+#    name: <name>
