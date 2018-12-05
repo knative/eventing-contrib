@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	"k8s.io/client-go/rest"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
@@ -210,9 +209,5 @@ func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.Cont
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
-	return nil
-}
-
-func (r *reconciler) InjectConfig(c *rest.Config) error {
 	return nil
 }

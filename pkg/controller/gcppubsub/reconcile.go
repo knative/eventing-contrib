@@ -37,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -70,10 +69,6 @@ type reconciler struct {
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
-	return nil
-}
-
-func (r *reconciler) InjectConfig(c *rest.Config) error {
 	return nil
 }
 

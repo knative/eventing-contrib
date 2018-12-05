@@ -34,7 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -265,9 +264,5 @@ func (r *reconciler) removeFinalizer(s *sourcesv1alpha1.GitHubSource) {
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
-	return nil
-}
-
-func (r *reconciler) InjectConfig(c *rest.Config) error {
 	return nil
 }

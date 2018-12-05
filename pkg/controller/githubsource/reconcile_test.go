@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 )
 
@@ -631,12 +630,6 @@ func TestObjectNotGitHubSource(t *testing.T) {
 	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
 		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
 	}
-}
-
-func TestInjectConfig(t *testing.T) {
-	r := reconciler{}
-
-	r.InjectConfig(&rest.Config{})
 }
 
 func TestOwnerAndRepositoryValid(t *testing.T) {
