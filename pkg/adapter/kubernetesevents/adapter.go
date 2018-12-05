@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	eventType = "dev.knative.k8s.event"
+	eventType = "dev.knative.eventing.k8s"
 )
 
 type Adapter struct {

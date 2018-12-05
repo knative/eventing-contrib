@@ -28,19 +28,21 @@ import (
 	"github.com/knative/pkg/cloudevents"
 )
 
+const (
+	eventType = "dev.knative.eventing.websocket"
+)
+
 var (
 	sink   string
 	source string
 
 	// CloudEvents specific parameters
-	eventType   string
 	eventSource string
 )
 
 func init() {
 	flag.StringVar(&sink, "sink", "", "the host url to send messages to")
 	flag.StringVar(&source, "source", "", "the url to get messages from")
-	flag.StringVar(&eventType, "eventType", "websocket-event", "the event-type (CloudEvents)")
 	flag.StringVar(&eventSource, "eventSource", "", "the event-source (CloudEvents)")
 }
 

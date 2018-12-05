@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	eventType = "dev.knative.cronjob.event"
+	eventType = "dev.knative.eventing.cronjob"
 )
 
 // Adapter implements the Cron Job adapter to trigger a Sink.

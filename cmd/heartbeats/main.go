@@ -70,7 +70,7 @@ func main() {
 func cloudEventsContext() *cloudevents.EventContext {
 	return &cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          "dev.knative.source.heartbeats",
+		EventType:          "dev.knative.eventing.heartbeats",
 		EventID:            uuid.New().String(),
 		Source:             "heartbeats-demo",
 		EventTime:          time.Now(),
