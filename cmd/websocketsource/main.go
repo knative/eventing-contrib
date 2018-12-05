@@ -18,17 +18,14 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"time"
+
+	"github.com/knative/eventing-sources/pkg/sources"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/knative/pkg/cloudevents"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -38,8 +35,6 @@ var (
 	// CloudEvents specific parameters
 	eventType   string
 	eventSource string
-
-	httpClient = &http.Client{}
 )
 
 func init() {
@@ -62,6 +57,8 @@ func main() {
 		eventSource = source
 	}
 
+	poster := sources.NewEventForwarder(sink)
+
 	c, _, err := websocket.DefaultDialer.Dial(source, nil)
 	if err != nil {
 		log.Fatal("error connecting:", err)
@@ -74,36 +71,16 @@ func main() {
 			log.Println("error while reading message:", err)
 			return
 		}
-		if err := postMessage(message); err != nil {
+
+		ctx := cloudevents.EventContext{
+			CloudEventsVersion: cloudevents.CloudEventsVersion,
+			EventType:          eventType,
+			EventID:            uuid.New().String(),
+			Source:             eventSource,
+			EventTime:          time.Now(),
+		}
+		if err := poster.PostEvent(ctx, message); err != nil {
 			log.Printf("sending event to channel failed: %v", err)
 		}
 	}
-}
-
-func postMessage(message []byte) error {
-	ctx := cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            uuid.New().String(),
-		Source:             eventSource,
-		EventTime:          time.Now(),
-	}
-
-	req, err := cloudevents.Binary.NewRequest(sink, message, ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create http request")
-	}
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return errors.Wrap(err, "request failed")
-	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode >= 300 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		return fmt.Errorf("request failed: code: %d, body: %s", resp.StatusCode, string(body))
-	}
-
-	io.Copy(ioutil.Discard, resp.Body)
-	return nil
 }
