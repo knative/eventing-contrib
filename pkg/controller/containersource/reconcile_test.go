@@ -65,21 +65,10 @@ const (
 	sinkServiceAPIVersion = "v1"
 )
 
-// Adds the list of known types to Scheme.
-func duckAddKnownTypes(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(
-		duckv1alpha1.SchemeGroupVersion,
-		&duckv1alpha1.AddressableTypeList{},
-	)
-	metav1.AddToGroupVersion(scheme, duckv1alpha1.SchemeGroupVersion)
-	return nil
-}
-
 func init() {
 	// Add types to scheme
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
-	duckAddKnownTypes(scheme.Scheme)
 }
 
 var testCases = []controllertesting.TestCase{
