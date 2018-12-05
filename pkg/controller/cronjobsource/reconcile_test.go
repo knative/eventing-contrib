@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -53,11 +52,11 @@ const (
 	testSchedule = "*/2 * * * *"
 	testData     = "data"
 
-	sinkableName       = "testsink"
-	sinkableKind       = "Sink"
-	sinkableAPIVersion = "duck.knative.dev/v1alpha1"
-	sinkableDNS        = "sinkable.sink.svc.cluster.local"
-	sinkableURI        = "http://sinkable.sink.svc.cluster.local/"
+	addressableName       = "testsink"
+	addressableKind       = "Sink"
+	addressableAPIVersion = "duck.knative.dev/v1alpha1"
+	addressableDNS        = "sinkable.sink.svc.cluster.local"
+	addressableURI        = "http://sinkable.sink.svc.cluster.local/"
 )
 
 // Adds the list of known types to Scheme.
@@ -77,16 +76,6 @@ func init() {
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
 	duckAddKnownTypes(scheme.Scheme)
-}
-
-func TestInjectConfig(t *testing.T) {
-	r := reconciler{}
-
-	r.InjectConfig(&rest.Config{})
-
-	if r.dynamicClient == nil {
-		t.Errorf("dynamicClient was nil but expected non nil")
-	}
 }
 
 func TestReconcile(t *testing.T) {
@@ -118,8 +107,8 @@ func TestReconcile(t *testing.T) {
 			Name: "cannot create receive adapter",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -135,8 +124,8 @@ func TestReconcile(t *testing.T) {
 			Name: "cannot list deployments",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockLists: []controllertesting.MockList{
 					func(_ client.Client, _ context.Context, _ *client.ListOptions, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -152,8 +141,8 @@ func TestReconcile(t *testing.T) {
 			Name: "successful create",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
@@ -161,9 +150,9 @@ func TestReconcile(t *testing.T) {
 			Name: "successful create - reuse existing receive adapter",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 				getReceiveAdapter(),
 			},
-			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -186,9 +175,8 @@ func TestReconcile(t *testing.T) {
 
 		c := tc.GetClient()
 		r := &reconciler{
-			client:        c,
-			dynamicClient: tc.GetDynamicClient(),
-			scheme:        tc.Scheme,
+			client: c,
+			scheme: tc.Scheme,
 
 			receiveAdapterImage: raImage,
 		}
@@ -208,9 +196,9 @@ func getNonCronJobSource() *sourcesv1alpha1.ContainerSource {
 			Image: image,
 			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
-				Name:       sinkableName,
-				Kind:       sinkableKind,
-				APIVersion: sinkableAPIVersion,
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
 			},
 		},
 	}
@@ -230,9 +218,9 @@ func getSource() *sourcesv1alpha1.CronJobSource {
 			Schedule: testSchedule,
 			Data:     testData,
 			Sink: &corev1.ObjectReference{
-				Name:       sinkableName,
-				Kind:       sinkableKind,
-				APIVersion: sinkableAPIVersion,
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
 			},
 		},
 	}
@@ -265,7 +253,7 @@ func getSourceWithSink() *sourcesv1alpha1.CronJobSource {
 	src := getSource()
 	src.Status.InitializeConditions()
 	src.Status.MarkSchedule()
-	src.Status.MarkSink(sinkableURI)
+	src.Status.MarkSink(addressableURI)
 	return src
 }
 
@@ -284,21 +272,18 @@ func om(namespace, name string) metav1.ObjectMeta {
 	}
 }
 
-func getAddressable() []runtime.Object {
-	return []runtime.Object{
-		// addressable resource
-		&unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": sinkableAPIVersion,
-				"kind":       sinkableKind,
-				"metadata": map[string]interface{}{
-					"namespace": testNS,
-					"name":      sinkableName,
-				},
-				"status": map[string]interface{}{
-					"address": map[string]interface{}{
-						"hostname": sinkableDNS,
-					},
+func getAddressable() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": addressableAPIVersion,
+			"kind":       addressableKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      addressableName,
+			},
+			"status": map[string]interface{}{
+				"address": map[string]interface{}{
+					"hostname": addressableDNS,
 				},
 			},
 		},
@@ -339,7 +324,7 @@ func getReceiveAdapter() *v1.Deployment {
 								},
 								{
 									Name:  "SINK_URI",
-									Value: sinkableURI,
+									Value: addressableURI,
 								},
 							},
 						},
