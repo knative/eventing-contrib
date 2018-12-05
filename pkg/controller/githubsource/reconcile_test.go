@@ -384,6 +384,60 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
+	}, {
+		Name:       "valid githubsource, deleted, missing addressable",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Conditions: duckv1alpha1.Conditions{{
+							Type:   servingv1alpha1.ServiceConditionRoutesReady,
+							Status: corev1.ConditionTrue,
+						}},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSink("NotFound", "%s", fmt.Errorf(`sinks.duck.knative.dev "testsink" not found`))
+				s.Status.MarkSecrets()
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = ""
+				s.Finalizers = nil
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
 	},
 }
 
