@@ -363,9 +363,6 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.UID = gitHubSourceUID
-				s.Status.InitializeConditions()
-				s.Status.MarkSink(addressableURI)
-				s.Status.MarkSecrets()
 				s.DeletionTimestamp = &now
 				s.Status.WebhookIDKey = ""
 				s.Finalizers = nil
@@ -373,6 +370,77 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
+	}, {
+		Name:       "valid githubsource, deleted, missing addressable",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+			getGitHubSecrets(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = ""
+				s.Finalizers = nil
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid githubsource, deleted, missing secret",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Status.MarkNoSecrets("AccessTokenNotFound", "%s", fmt.Errorf("secrets %q not found", secretName))
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = "repohookid"
+				s.Finalizers = nil
+				return s
+			}(),
+			//TODO check for Event
+			// Type: Warning
+			// Reason: FailedFinalize
+			// Message: Could not delete webhook "repohookid": secrets "testsecret" not found
+		},
+		IgnoreTimes: true,
+		WantErrMsg:  fmt.Sprintf("secrets %q not found", secretName),
 	},
 }
 
