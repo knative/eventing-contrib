@@ -36,7 +36,6 @@ const (
 )
 
 func TestKubernetesEvents(t *testing.T) {
-
 	logger := logging.GetContextLogger("TestKubernetesEvents")
 
 	clients, cleaner := Setup(t, logger)
