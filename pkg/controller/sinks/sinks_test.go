@@ -17,6 +17,7 @@ limitations under the License.
 package sinks
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -25,10 +26,23 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	dynamicfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+)
+
+var (
+	addressableDNS = "addressable.sink.svc.cluster.local"
+
+	addressableName       = "testsink"
+	addressableKind       = "Sink"
+	addressableAPIVersion = "duck.knative.dev/v1alpha1"
+
+	unaddressableName       = "testunaddressable"
+	unaddressableKind       = "KResource"
+	unaddressableAPIVersion = "duck.knative.dev/v1alpha1"
+	unaddressableResource   = "kresources.duck.knative.dev"
+
+	testNS = "testnamespace"
 )
 
 func init() {
@@ -38,130 +52,55 @@ func init() {
 
 func TestGetSinkURI(t *testing.T) {
 	testCases := map[string]struct {
-		dc        dynamic.Interface
+		objects   []runtime.Object
 		namespace string
 		want      string
 		wantErr   error
 		ref       *corev1.ObjectReference
 	}{
 		"happy": {
-			dc: getDynamicClient(scheme.Scheme,
-				[]runtime.Object{
-					// unaddressable resource
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "duck.knative.dev/v1alpha1",
-							"kind":       "Sink",
-							"metadata": map[string]interface{}{
-								"namespace": "default",
-								"name":      "foo",
-							},
-							"status": map[string]interface{}{
-								"address": map[string]interface{}{
-									"hostname": "example.com",
-								},
-							},
-						},
-					},
-				}),
-			namespace: "default",
-			ref: &corev1.ObjectReference{
-				Kind:       "Sink",
-				Name:       "foo",
-				APIVersion: "duck.knative.dev/v1alpha1",
+			objects: []runtime.Object{
+				getAddressable(),
 			},
-			want: "http://example.com/",
+			namespace: testNS,
+			ref:       getAddressableRef(),
+			want:      fmt.Sprintf("http://%s/", addressableDNS),
 		},
 		"nil hostname": {
-			dc: getDynamicClient(scheme.Scheme,
-				[]runtime.Object{
-					// unaddressable resource
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "duck.knative.dev/v1alpha1",
-							"kind":       "Sink",
-							"metadata": map[string]interface{}{
-								"namespace": "default",
-								"name":      "foo",
-							},
-							"status": map[string]interface{}{
-								"address": map[string]interface{}{
-									"hostname": nil,
-								},
-							},
-						},
-					},
-				}),
-			namespace: "default",
-			ref: &corev1.ObjectReference{
-				Kind:       "Sink",
-				Name:       "foo",
-				APIVersion: "duck.knative.dev/v1alpha1",
+			objects: []runtime.Object{
+				getAddressable_nilHostname(),
 			},
-			wantErr: fmt.Errorf(`sink contains an empty hostname`),
+			namespace: testNS,
+			ref:       getUnaddressableRef(),
+			wantErr:   fmt.Errorf(`sink contains an empty hostname`),
 		},
 		"nil sink": {
-			dc: getDynamicClient(scheme.Scheme,
-				[]runtime.Object{
-					// unaddressable resource
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "duck.knative.dev/v1alpha1",
-							"kind":       "Sink",
-							"metadata": map[string]interface{}{
-								"namespace": "default",
-								"name":      "foo",
-							},
-							"status": map[string]interface{}{
-								"address": map[string]interface{}{
-									"hostname": nil,
-								},
-							},
-						},
-					},
-				}),
-			namespace: "default",
+			objects: []runtime.Object{
+				getAddressable_nilHostname(),
+			},
+			namespace: testNS,
 			ref:       nil,
 			wantErr:   fmt.Errorf(`sink ref is nil`),
 		},
 		"notSink": {
-			dc: getDynamicClient(scheme.Scheme,
-				[]runtime.Object{
-					// unaddressable resource
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "duck.knative.dev/v1alpha1",
-							"kind":       "KResource",
-							"metadata": map[string]interface{}{
-								"namespace": "default",
-								"name":      "foo",
-							},
-						},
-					},
-				}),
-			namespace: "default",
-			ref: &corev1.ObjectReference{
-				Kind:       "KResource",
-				Name:       "foo",
-				APIVersion: "duck.knative.dev/v1alpha1",
+			objects: []runtime.Object{
+				getAddressable_noStatus(),
 			},
-			wantErr: fmt.Errorf(`sink does not contain address`),
+			namespace: testNS,
+			ref:       getUnaddressableRef(),
+			wantErr:   fmt.Errorf(`sink does not contain address`),
 		},
 		"notFound": {
-			dc: getDynamicClient(scheme.Scheme,
-				nil),
-			namespace: "default",
-			ref: &corev1.ObjectReference{
-				Kind:       "KResource",
-				Name:       "foo",
-				APIVersion: "duck.knative.dev/v1alpha1",
-			},
-			wantErr: fmt.Errorf(`kresources.duck.knative.dev "foo" not found`),
+			namespace: testNS,
+			ref:       getUnaddressableRef(),
+			wantErr:   fmt.Errorf(`%s "%s" not found`, unaddressableResource, unaddressableName),
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			uri, gotErr := GetSinkURI(tc.dc, tc.ref, tc.namespace)
+			ctx := context.Background()
+			client := fake.NewFakeClient(tc.objects...)
+			uri, gotErr := GetSinkURI(ctx, client, tc.ref, tc.namespace)
 			if gotErr != nil {
 				if tc.wantErr != nil {
 					if diff := cmp.Diff(tc.wantErr.Error(), gotErr.Error()); diff != "" {
@@ -181,161 +120,83 @@ func TestGetSinkURI(t *testing.T) {
 	}
 }
 
-func TestFetchObjectReference(t *testing.T) {
-	testCases := map[string]struct {
-		dc        dynamic.Interface
-		namespace string
-		want      *unstructured.Unstructured
-		wantErr   error
-		ref       *corev1.ObjectReference
-	}{
-		"happy": {
-			dc: getDynamicClient(scheme.Scheme,
-				[]runtime.Object{
-					// unaddressable resource
-					&unstructured.Unstructured{
-						Object: map[string]interface{}{
-							"apiVersion": "duck.knative.dev/v1alpha1",
-							"kind":       "KResource",
-							"metadata": map[string]interface{}{
-								"namespace": "default",
-								"name":      "foo",
-							},
-						},
-					},
-				}),
-			ref: &corev1.ObjectReference{
-				Kind:       "KResource",
-				Name:       "foo",
-				Namespace:  "default",
-				APIVersion: "duck.knative.dev/v1alpha1",
+func getAddressable() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": addressableAPIVersion,
+			"kind":       addressableKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      addressableName,
 			},
-			namespace: "default",
-			want: &unstructured.Unstructured{
-				Object: map[string]interface{}{
-					"apiVersion": "duck.knative.dev/v1alpha1",
-					"kind":       "KResource",
-					"metadata": map[string]interface{}{
-						"namespace": "default",
-						"name":      "foo",
-					},
+			"status": map[string]interface{}{
+				"address": map[string]interface{}{
+					"hostname": addressableDNS,
 				},
 			},
-			wantErr: error(nil),
 		},
-		"dynamicClientError": {
-			dc: getErrorClient(),
-			ref: &corev1.ObjectReference{
-				Kind:       "Kind",
-				Name:       "Name",
-				APIVersion: "api/version",
-			},
-			namespace: "default",
-			wantErr:   fmt.Errorf("failed to create dynamic client resource"),
-		},
-		"errorNotFound": {
-			dc: getDynamicClient(nil, nil),
-			ref: &corev1.ObjectReference{
-				Kind:       "Kind",
-				Name:       "Name",
-				APIVersion: "api/version",
-			},
-			namespace: "default",
-			wantErr:   fmt.Errorf(`kinds.api "Name" not found`),
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			obj, gotErr := fetchObjectReference(tc.dc, tc.ref, tc.namespace)
-
-			if tc.wantErr != gotErr {
-				if diff := cmp.Diff(tc.wantErr.Error(), gotErr.Error()); diff != "" {
-					t.Errorf("unexpected error (-want, +got) = %v", diff)
-				}
-			}
-
-			var want []byte
-			var got []byte
-
-			if gotErr == nil && obj != nil {
-				got, _ = obj.MarshalJSON()
-			}
-			if tc.want != nil {
-				want, _ = tc.want.MarshalJSON()
-			}
-
-			if diff := cmp.Diff(string(want), string(got)); diff != "" {
-				t.Errorf("unexpected object (-want, +got) = %v", diff)
-			}
-		})
-	}
-
-}
-
-func TestCreateResourceInterface(t *testing.T) {
-	testCases := map[string]struct {
-		dc        dynamic.Interface
-		namespace string
-		wantNil   bool
-		wantErr   error
-		ref       *corev1.ObjectReference
-	}{
-		"happy": {
-			dc: getDynamicClient(nil, nil),
-			ref: &corev1.ObjectReference{
-				Kind:       "Kind",
-				Name:       "Name",
-				APIVersion: "api/version",
-			},
-			namespace: "default",
-			wantErr:   error(nil),
-			wantNil:   false,
-		},
-		"error": {
-			dc: getErrorClient(),
-			ref: &corev1.ObjectReference{
-				Kind:       "Kind",
-				Name:       "Name",
-				APIVersion: "api/version",
-			},
-			namespace: "default",
-			wantErr:   fmt.Errorf("failed to create dynamic client resource"),
-			wantNil:   true,
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			got, gotErr := createResourceInterface(tc.dc, tc.ref, tc.namespace)
-
-			if tc.wantErr != gotErr {
-				if diff := cmp.Diff(tc.wantErr.Error(), gotErr.Error()); diff != "" {
-					t.Errorf("unexpected error (-want, +got) = %v", diff)
-				}
-			}
-
-			if (got != nil) == tc.wantNil {
-				t.Errorf("%s: unexpected interface wanted nil %v, got %v", n, tc.wantNil, got == nil)
-			}
-		})
 	}
 }
 
-// GetDynamicClient returns the mockDynamicClient to use for this test case.
-func getDynamicClient(scheme *runtime.Scheme, objs []runtime.Object) dynamic.Interface {
-	if scheme == nil {
-		return dynamicfake.NewSimpleDynamicClient(runtime.NewScheme(), objs...)
+func getAddressable_noStatus() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": unaddressableAPIVersion,
+			"kind":       unaddressableKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      unaddressableName,
+			},
+		},
 	}
-	return dynamicfake.NewSimpleDynamicClient(scheme, objs...)
 }
 
-func getErrorClient() dynamic.Interface {
-	return &errorClient{}
+func getAddressable_nilAddress() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": unaddressableAPIVersion,
+			"kind":       unaddressableKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      unaddressableName,
+			},
+			"status": map[string]interface{}{
+				"address": map[string]interface{}(nil),
+			},
+		},
+	}
 }
 
-type errorClient struct{}
+func getAddressable_nilHostname() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": unaddressableAPIVersion,
+			"kind":       unaddressableKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      unaddressableName,
+			},
+			"status": map[string]interface{}{
+				"address": map[string]interface{}{
+					"hostname": nil,
+				},
+			},
+		},
+	}
+}
 
-var _ dynamic.Interface = &errorClient{}
+func getAddressableRef() *corev1.ObjectReference {
+	return &corev1.ObjectReference{
+		Kind:       addressableKind,
+		Name:       addressableName,
+		APIVersion: addressableAPIVersion,
+	}
+}
 
-func (c *errorClient) Resource(resource schema.GroupVersionResource) dynamic.NamespaceableResourceInterface {
-	return nil
+func getUnaddressableRef() *corev1.ObjectReference {
+	return &corev1.ObjectReference{
+		Kind:       unaddressableKind,
+		Name:       unaddressableName,
+		APIVersion: unaddressableAPIVersion,
+	}
 }

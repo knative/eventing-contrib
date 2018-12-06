@@ -19,6 +19,7 @@ package gcppubsub
 import (
 	"context"
 	"fmt"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/knative/eventing-sources/pkg/controller/gcppubsub/resources"
@@ -36,8 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -60,9 +59,8 @@ func gcpPubSubClientCreator(ctx context.Context, googleCloudProject string) (pub
 }
 
 type reconciler struct {
-	client        client.Client
-	dynamicClient dynamic.Interface
-	scheme        *runtime.Scheme
+	client client.Client
+	scheme *runtime.Scheme
 
 	pubSubClientCreator pubSubClientCreator
 
@@ -72,12 +70,6 @@ type reconciler struct {
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
 	return nil
-}
-
-func (r *reconciler) InjectConfig(c *rest.Config) error {
-	var err error
-	r.dynamicClient, err = dynamic.NewForConfig(c)
-	return err
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
@@ -115,7 +107,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	src.Status.InitializeConditions()
 
-	sinkURI, err := sinks.GetSinkURI(r.dynamicClient, src.Spec.Sink, src.Namespace)
+	sinkURI, err := sinks.GetSinkURI(ctx, r.client, src.Spec.Sink, src.Namespace)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
 		return src, err

@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -54,22 +53,12 @@ const (
 	sourceUID  = "1234-5678-90"
 	testNS     = "testnamespace"
 
-	sinkableName       = "testsink"
-	sinkableKind       = "Sink"
-	sinkableAPIVersion = "duck.knative.dev/v1alpha1"
-	sinkableDNS        = "sinkable.sink.svc.cluster.local"
-	sinkableURI        = "http://sinkable.sink.svc.cluster.local/"
+	addressableName       = "testsink"
+	addressableKind       = "Sink"
+	addressableAPIVersion = "duck.knative.dev/v1alpha1"
+	addressableDNS        = "addressable.sink.svc.cluster.local"
+	addressableURI        = "http://addressable.sink.svc.cluster.local/"
 )
-
-// Adds the list of known types to Scheme.
-func duckAddKnownTypes(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(
-		duckv1alpha1.SchemeGroupVersion,
-		&duckv1alpha1.AddressableTypeList{},
-	)
-	metav1.AddToGroupVersion(scheme, duckv1alpha1.SchemeGroupVersion)
-	return nil
-}
 
 func init() {
 	// Add types to scheme
@@ -77,7 +66,6 @@ func init() {
 	corev1.AddToScheme(scheme.Scheme)
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
-	duckAddKnownTypes(scheme.Scheme)
 }
 
 type pubSubClientCreatorData struct {
@@ -86,16 +74,6 @@ type pubSubClientCreatorData struct {
 	subExistsErr    error
 	createSubErr    error
 	deleteSubErr    error
-}
-
-func TestInjectConfig(t *testing.T) {
-	r := reconciler{}
-
-	r.InjectConfig(&rest.Config{})
-
-	if r.dynamicClient == nil {
-		t.Errorf("dynamicClient was nil but expected non nil")
-	}
 }
 
 func TestReconcile(t *testing.T) {
@@ -162,8 +140,8 @@ func TestReconcile(t *testing.T) {
 			Name: "cannot create client",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			OtherTestData: map[string]interface{}{
 				pscData: pubSubClientCreatorData{
 					clientCreateErr: errors.New("test-induced-error"),
@@ -177,8 +155,8 @@ func TestReconcile(t *testing.T) {
 			Name: "error checking subscription exists",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			OtherTestData: map[string]interface{}{
 				pscData: pubSubClientCreatorData{
 					subExistsErr: errors.New("test-induced-error"),
@@ -192,8 +170,8 @@ func TestReconcile(t *testing.T) {
 			Name: "cannot create subscription",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			OtherTestData: map[string]interface{}{
 				pscData: pubSubClientCreatorData{
 					createSubErr: errors.New("test-induced-error"),
@@ -207,8 +185,8 @@ func TestReconcile(t *testing.T) {
 			Name: "reusing existing subscription - cannot create receive adapter",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -230,8 +208,8 @@ func TestReconcile(t *testing.T) {
 			Name: "cannot create receive adapter",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -247,8 +225,8 @@ func TestReconcile(t *testing.T) {
 			Name: "cannot list deployments",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockLists: []controllertesting.MockList{
 					func(_ client.Client, _ context.Context, _ *client.ListOptions, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -264,8 +242,8 @@ func TestReconcile(t *testing.T) {
 			Name: "successful create",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 			},
-			Objects: getAddressable(),
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
@@ -273,9 +251,9 @@ func TestReconcile(t *testing.T) {
 			Name: "successful create - reuse existing receive adapter",
 			InitialState: []runtime.Object{
 				getSource(),
+				getAddressable(),
 				getReceiveAdapter(),
 			},
-			Objects: getAddressable(),
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
 					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
@@ -298,9 +276,8 @@ func TestReconcile(t *testing.T) {
 
 		c := tc.GetClient()
 		r := &reconciler{
-			client:        c,
-			dynamicClient: tc.GetDynamicClient(),
-			scheme:        tc.Scheme,
+			client: c,
+			scheme: tc.Scheme,
 
 			pubSubClientCreator: createPubSubClientCreator(tc.OtherTestData[pscData]),
 
@@ -322,9 +299,9 @@ func getNonGcpPubSubSource() *sourcesv1alpha1.ContainerSource {
 			Image: image,
 			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
-				Name:       sinkableName,
-				Kind:       sinkableKind,
-				APIVersion: sinkableAPIVersion,
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
 			},
 		},
 	}
@@ -350,9 +327,9 @@ func getSource() *sourcesv1alpha1.GcpPubSubSource {
 			GoogleCloudProject: "my-gcp-project",
 			Topic:              "laconia",
 			Sink: &corev1.ObjectReference{
-				Name:       sinkableName,
-				Kind:       sinkableKind,
-				APIVersion: sinkableAPIVersion,
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
 			},
 		},
 	}
@@ -388,7 +365,7 @@ func getSourceWithFinalizerAndNoSink() *sourcesv1alpha1.GcpPubSubSource {
 
 func getSourceWithFinalizerAndSink() *sourcesv1alpha1.GcpPubSubSource {
 	src := getSourceWithFinalizer()
-	src.Status.MarkSink(sinkableURI)
+	src.Status.MarkSink(addressableURI)
 	return src
 }
 
@@ -431,21 +408,18 @@ func createPubSubClientCreator(value interface{}) pubSubClientCreator {
 	}
 }
 
-func getAddressable() []runtime.Object {
-	return []runtime.Object{
-		// addressable resource
-		&unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": sinkableAPIVersion,
-				"kind":       sinkableKind,
-				"metadata": map[string]interface{}{
-					"namespace": testNS,
-					"name":      sinkableName,
-				},
-				"status": map[string]interface{}{
-					"address": map[string]interface{}{
-						"hostname": sinkableDNS,
-					},
+func getAddressable() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": addressableAPIVersion,
+			"kind":       addressableKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      addressableName,
+			},
+			"status": map[string]interface{}{
+				"address": map[string]interface{}{
+					"hostname": addressableDNS,
 				},
 			},
 		},

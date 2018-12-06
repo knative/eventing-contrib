@@ -254,6 +254,14 @@
   version = "v0.2.0"
 
 [[projects]]
+  digest = "1:4a0c072e44da763409da72d41492373a034baf2e6d849c76d239b4abdfbb6c49"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+  version = "v1.4.0"
+
+[[projects]]
   branch = "master"
   digest = "1:7fdf3223c7372d1ced0b98bf53457c5e89d89aecbad9a77ba9fcc6e01f9e5621"
   name = "github.com/gregjones/httpcache"
@@ -371,14 +379,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7a7aea24f67afa5dedb422fb3592d5a5c3af91b4b9d59eddf06767729915b3c4"
+  digest = "1:c30af6878fed9f93bc1ccb3a802720d1e5911c40d8903cd25fe95bcc21f0e31a"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "7ed32409fa2c447a44a4281f0022ab25ce955f51"
+  revision = "8a63be3b3795aa2f7ae9be32d840e096ba877c78"
 
 [[projects]]
   digest = "1:3bdaa9a837c8e57b264c8b81603264e00d3f80b86a8e623c0cdbf9e159f010ce"
@@ -546,6 +554,14 @@
   ]
   pruneopts = "NUT"
   revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
+
+[[projects]]
+  digest = "1:53c3320ee307f01fd24a88e396a8d2239cd8346d1a085320209319f2d33f59cc"
+  name = "github.com/robfig/cron"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b41be1df696709bb6395fe435af20370037c0b4c"
+  version = "v1.1"
 
 [[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
@@ -1185,6 +1201,7 @@
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
     "github.com/google/uuid",
+    "github.com/gorilla/websocket",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
@@ -1196,6 +1213,8 @@
     "github.com/knative/test-infra/tools/dep-collector",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
+    "github.com/pkg/errors",
+    "github.com/robfig/cron",
     "go.uber.org/zap",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
@@ -1239,6 +1258,7 @@
     "sigs.k8s.io/controller-runtime/pkg/handler",
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
+    "sigs.k8s.io/controller-runtime/pkg/runtime/inject",
     "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
     "sigs.k8s.io/controller-runtime/pkg/source",

@@ -30,6 +30,11 @@ import (
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 
+const (
+	GHHeaderEvent    = "GitHub-Event"
+	GHHeaderDelivery = "GitHub-Delivery"
+)
+
 // GitHubReceiveAdapter converts incoming GitHub webhook events to
 // CloudEvents and then sends them to the specified Sink
 type GitHubReceiveAdapter struct {
@@ -40,16 +45,21 @@ type GitHubReceiveAdapter struct {
 // HandleEvent is invoked whenever an event comes in from GitHub
 func (ra *GitHubReceiveAdapter) HandleEvent(payload interface{}, header webhooks.Header) {
 	hdr := http.Header(header)
-	gitHubEventType := hdr.Get("X-GitHub-Event")
-	eventID := hdr.Get("X-GitHub-Delivery")
-
-	err := ra.handleEvent(payload, gitHubEventType, eventID)
+	err := ra.handleEvent(payload, hdr)
 	if err != nil {
 		log.Printf("unexpected error handling GitHub event: %s", err)
 	}
 }
 
-func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, gitHubEventType string, eventID string) error {
+func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, hdr http.Header) error {
+
+	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
+	eventID := hdr.Get("X-" + GHHeaderDelivery)
+	extensions := map[string]interface{}{
+		cloudevents.HeaderExtensionsPrefix + GHHeaderEvent:    hdr.Get("X-" + GHHeaderEvent),
+		cloudevents.HeaderExtensionsPrefix + GHHeaderDelivery: hdr.Get("X-" + GHHeaderDelivery),
+	}
+
 	log.Printf("Handling %s", gitHubEventType)
 
 	if len(eventID) == 0 {
@@ -61,16 +71,18 @@ func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, gitHubEventType
 	cloudEventType := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, gitHubEventType)
 	source := sourceFromGitHubEvent(gh.Event(gitHubEventType), payload)
 
-	return ra.postMessage(payload, source, cloudEventType, eventID)
+	return ra.postMessage(payload, source, cloudEventType, eventID, extensions)
 }
 
-func (ra *GitHubReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string) error {
+func (ra *GitHubReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
+	extensions map[string]interface{}) error {
 	ctx := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          eventType,
 		EventID:            eventID,
 		EventTime:          time.Now(),
 		Source:             source,
+		Extensions:         extensions,
 	}
 	req, err := cloudevents.Binary.NewRequest(ra.Sink, payload, ctx)
 	if err != nil {

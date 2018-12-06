@@ -34,6 +34,14 @@ type ContainerSourceListerExpansion interface{}
 // ContainerSourceNamespaceLister.
 type ContainerSourceNamespaceListerExpansion interface{}
 
+// CronJobSourceListerExpansion allows custom methods to be added to
+// CronJobSourceLister.
+type CronJobSourceListerExpansion interface{}
+
+// CronJobSourceNamespaceListerExpansion allows custom methods to be added to
+// CronJobSourceNamespaceLister.
+type CronJobSourceNamespaceListerExpansion interface{}
+
 // GcpPubSubSourceListerExpansion allows custom methods to be added to
 // GcpPubSubSourceLister.
 type GcpPubSubSourceListerExpansion interface{}
