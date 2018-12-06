@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script runs the end-to-end tests against the eventing
+# This script runs the end-to-end tests against the eventing sources
 # built from source.
 
 # If you already have the *_OVERRIDE environment variables set, call

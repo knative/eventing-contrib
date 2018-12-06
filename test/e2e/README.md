@@ -4,7 +4,7 @@
 
 ## Adding end to end tests
 
-Knative Eventing Sources e2e tests [test the end to end functionality of the
+Knative Eventing Sources e2e tests test the end to end functionality of the
 [Knative Eventing Sources](#requirements) to verify they work as expected.
 
 ### Requirements
