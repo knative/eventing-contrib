@@ -18,10 +18,11 @@ package gcppubsub
 
 import (
 	"fmt"
-	"github.com/knative/pkg/logging"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/knative/pkg/logging"
+	"go.uber.org/zap"
 
 	// Imports the Google Cloud Pub/Sub client package.
 	"cloud.google.com/go/pubsub"
