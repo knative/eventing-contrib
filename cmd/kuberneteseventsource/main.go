@@ -18,8 +18,9 @@ package main
 
 import (
 	"flag"
-	"github.com/knative/pkg/signals"
 	"log"
+
+	"github.com/knative/pkg/signals"
 
 	"github.com/knative/eventing-sources/pkg/adapter/kubernetesevents"
 	"go.uber.org/zap"
