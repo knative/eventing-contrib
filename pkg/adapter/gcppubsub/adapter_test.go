@@ -17,13 +17,14 @@ limitations under the License.
 package gcppubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"cloud.google.com/go/pubsub"
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
