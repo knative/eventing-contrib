@@ -18,6 +18,7 @@ The Knative Eventing Sources project provides source implementations that:
 - Expose an ingress
 
 For complete documentation about Knative Eventing, see the following repos:
+
 - [Knative Eventing](https://github.com/knative/docs/tree/master/eventing) for
   the Knative Eventing spec.
 - [Knative docs](https://github.com/knative/docs) for an overview of Knative and
