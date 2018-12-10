@@ -86,9 +86,7 @@ kubectl delete pods busybox
 ### Verify
 
 We will verify that the Kubernetes events were sent into the Knative eventing
-system by looking at our message dumper function logs. If you deployed the
-[Subscriber](#subscriber), then continue using this section. If not, then you
-will need to look downstream yourself.
+system by looking the subscriber's logs.
 
 ```shell
 kubectl logs --tail=50 -l serving.knative.dev/service=message-dumper -c user-container
