@@ -33,7 +33,9 @@
    least privilege. If you create only one, then use the permissions for the
    `Source`'s Service Account (which is a superset of the Receive Adapter's
    permission) and provide the same key in both secrets.
+
    - The `Source`'s Service Account.
+
      1. Determine the Service Account to use, or create a new one.
      1. Give that Service Account the 'Pub/Sub Editor' role on your GCP project.
      1. Download a new JSON private key for that Service Account.
@@ -46,7 +48,9 @@
         - Note that you can change the secret's name and the secret's key, but
           will need to modify `default-gcppubsub.yaml` in a later step with the
           updated values (they are environment variables on the `StatefulSet`).
+
    - The Receive Adapter's Service Account.
+
      1. Determine the Service Account to use, or create a new one.
      1. Give that Service Account the 'Pub/Sub Subscriber' role on your GCP
         project.
@@ -61,6 +65,7 @@
         - Note that you can change the secret's name and the secret's key, but
           will need to modify `gcp-pubsub-source.yaml`'s `spec.gcpCredsSecret`
           in a later step with the updated values.
+
 1. Create a GCP PubSub Topic. Replace `TOPIC-NAME` with your desired topic name.
 
    ```shell
