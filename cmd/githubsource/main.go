@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/knative/eventing-sources/pkg/githubsource"
-	"gopkg.in/go-playground/webhooks.v3"
+	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 
