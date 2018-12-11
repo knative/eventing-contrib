@@ -344,12 +344,12 @@
   revision = "8a63be3b3795aa2f7ae9be32d840e096ba877c78"
 
 [[projects]]
-  digest = "1:3bdaa9a837c8e57b264c8b81603264e00d3f80b86a8e623c0cdbf9e159f010ce"
+  digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
   name = "github.com/markbates/inflect"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "28bf78dadb0f64748ff13a0b6547e4972a5cea64"
-  version = "v1.0.1"
+  revision = "24b83195037b3bc61fcda2d28b7b0518bce293b6"
+  version = "v1.0.4"
 
 [[projects]]
   branch = "master"
