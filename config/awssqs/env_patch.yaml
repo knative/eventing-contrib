@@ -1,0 +1,28 @@
+# This adds the various environment variables needed by the AWS SQS
+# Source controller. It also adds anything needed by those environment
+# variables (e.g. the secret volume whose location is in a env
+# variable).
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: controller-manager
+spec:
+  template:
+    spec:
+      containers:
+        - name: manager
+          env:
+            - name: ENABLE_AWSSQS_SOURCE
+              value: 'true'
+            - name: AWS_APPLICATION_CREDENTIALS
+              value: /var/secrets/aws/credentials
+            - name: AWSSQS_RA_IMAGE
+              value: github.com/knative/eventing-sources/cmd/awssqs_receive_adapter
+          volumeMounts:
+            - name: aws-credentials
+              mountPath: /var/secrets/aws
+      volumes:
+        - name: aws-credentials
+          secret:
+            secretName: awssqs-source-credentials

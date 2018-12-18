@@ -18,6 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
+// AwsSqsSourceListerExpansion allows custom methods to be added to
+// AwsSqsSourceLister.
+type AwsSqsSourceListerExpansion interface{}
+
+// AwsSqsSourceNamespaceListerExpansion allows custom methods to be added to
+// AwsSqsSourceNamespaceLister.
+type AwsSqsSourceNamespaceListerExpansion interface{}
+
 // ContainerSourceListerExpansion allows custom methods to be added to
 // ContainerSourceLister.
 type ContainerSourceListerExpansion interface{}
