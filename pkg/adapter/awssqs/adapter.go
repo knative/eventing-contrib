@@ -18,6 +18,12 @@ package awssqs
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -25,11 +31,6 @@ import (
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"io/ioutil"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
