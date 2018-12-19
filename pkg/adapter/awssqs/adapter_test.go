@@ -18,11 +18,12 @@ package awssqs
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {

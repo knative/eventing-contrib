@@ -18,10 +18,11 @@ package main
 
 import (
 	"flag"
-	"github.com/knative/eventing-sources/pkg/adapter/awssqs"
-	"github.com/knative/pkg/signals"
 	"log"
 	"os"
+
+	"github.com/knative/eventing-sources/pkg/adapter/awssqs"
+	"github.com/knative/pkg/signals"
 
 	"go.uber.org/zap"
 
