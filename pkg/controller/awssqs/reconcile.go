@@ -117,7 +117,7 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Aws
 	}
 
 	if ra != nil {
-		logging.FromContext(ctx).Desugar().Info("Reusing exising receive adapter", zap.Any("receiveAdapter", ra))
+		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		return ra, nil
 	}
 
