@@ -24,8 +24,9 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/k8s.io/code-
 
 # Generate based on annotations
 go generate ./pkg/... ./cmd/... ./contrib/gcppubsub/pkg/...
+go generate ./pkg/... ./cmd/... ./contrib/camel/pkg/...
 
-API_DIRS=(pkg contrib/gcppubsub/pkg)
+API_DIRS=(pkg contrib/gcppubsub/pkg contrib/camel/pkg)
 
 for DIR in "${API_DIRS[@]}"; do
   # generate the code with:
