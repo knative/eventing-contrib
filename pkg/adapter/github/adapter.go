@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package githubsource
+package github
 
 import (
 	"fmt"
@@ -35,15 +35,15 @@ const (
 	GHHeaderDelivery = "GitHub-Delivery"
 )
 
-// GitHubReceiveAdapter converts incoming GitHub webhook events to
-// CloudEvents and then sends them to the specified Sink
-type GitHubReceiveAdapter struct {
+// Adapter converts incoming GitHub webhook events to CloudEvents and
+// then sends them to the specified Sink
+type Adapter struct {
 	Sink   string
 	Client *http.Client
 }
 
 // HandleEvent is invoked whenever an event comes in from GitHub
-func (ra *GitHubReceiveAdapter) HandleEvent(payload interface{}, header webhooks.Header) {
+func (ra *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
 	hdr := http.Header(header)
 	err := ra.handleEvent(payload, hdr)
 	if err != nil {
@@ -51,7 +51,7 @@ func (ra *GitHubReceiveAdapter) HandleEvent(payload interface{}, header webhooks
 	}
 }
 
-func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, hdr http.Header) error {
+func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 
 	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
 	eventID := hdr.Get("X-" + GHHeaderDelivery)
@@ -74,7 +74,7 @@ func (ra *GitHubReceiveAdapter) handleEvent(payload interface{}, hdr http.Header
 	return ra.postMessage(payload, source, cloudEventType, eventID, extensions)
 }
 
-func (ra *GitHubReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
+func (ra *Adapter) postMessage(payload interface{}, source, eventType, eventID string,
 	extensions map[string]interface{}) error {
 	ctx := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,

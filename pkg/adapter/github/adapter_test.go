@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package githubsource
+package github
 
 import (
 	"bytes"
@@ -418,7 +418,7 @@ func TestAllCases(t *testing.T) {
 		client := &http.Client{
 			Transport: mockTransport(tc.handleRequest),
 		}
-		ra := GitHubReceiveAdapter{
+		ra := Adapter{
 			Sink:   "http://addressable.sink.svc.cluster.local",
 			Client: client,
 		}
@@ -427,7 +427,7 @@ func TestAllCases(t *testing.T) {
 }
 
 // runner returns a testing func that can be passed to t.Run.
-func (tc *testCase) runner(t *testing.T, ra GitHubReceiveAdapter) func(t *testing.T) {
+func (tc *testCase) runner(t *testing.T, ra Adapter) func(t *testing.T) {
 	return func(t *testing.T) {
 		if tc.eventType == "" {
 			t.Fatal("eventType is required for table tests")
@@ -520,7 +520,7 @@ func TestHandleEvent(t *testing.T) {
 			}, nil
 		}),
 	}
-	ra := GitHubReceiveAdapter{
+	ra := Adapter{
 		Sink:   "http://addressable.sink.svc.cluster.local",
 		Client: client,
 	}
