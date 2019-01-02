@@ -41,18 +41,20 @@ func GetSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReferen
 		return "", err
 	}
 
+	objIdentifier := fmt.Sprintf("\"%s/%s\" (%s.%s)", u.GetNamespace(), u.GetName(), u.GetAPIVersion(), u.GetKind())
+
 	t := duckv1alpha1.AddressableType{}
 	err = duck.FromUnstructured(u, &t)
 	if err != nil {
-		return "", fmt.Errorf("failed to deserialize sink: %v", err)
+		return "", fmt.Errorf("failed to deserialize sink %s: %v", objIdentifier, err)
 	}
 
 	if t.Status.Address == nil {
-		return "", fmt.Errorf("sink does not contain address")
+		return "", fmt.Errorf("sink %s does not contain address", objIdentifier)
 	}
 
 	if t.Status.Address.Hostname == "" {
-		return "", fmt.Errorf("sink contains an empty hostname")
+		return "", fmt.Errorf("sink %s contains an empty hostname", objIdentifier)
 	}
 
 	return fmt.Sprintf("http://%s/", t.Status.Address.Hostname), nil
