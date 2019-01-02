@@ -1,5 +1,7 @@
 # Kubernetes Event Source example
 
+_This sample is deprecated. Please see the official sample at https://github.com/knative/docs/tree/master/eventing/samples/kubernetes-event-source._
+
 Kubernetes Event Source example shows how to wire kubernetes cluster events for
 consumption by a function that has been implemented as a Knative Service.
 
