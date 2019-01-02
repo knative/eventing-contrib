@@ -39,4 +39,4 @@ run_kustomize build config/default/ > config/default.yaml
 # run_kustomize build config/default | ko apply -f /dev/stdin/
 
 # Generate the default config that includes gcppubsub.
-run_kustomize build config/gcppubsub/ > config/default-gcppubsub.yaml
+run_kustomize build contrib/gcppubsub/config/ > contrib/gcppubsub/config/default-gcppubsub.yaml

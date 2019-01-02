@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/knative/eventing-sources/pkg/client/clientset/versioned/typed/sources/v1alpha1"
+	v1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/clientset/versioned/typed/sources/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
@@ -28,24 +28,8 @@ type FakeSourcesV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeSourcesV1alpha1) AwsSqsSources(namespace string) v1alpha1.AwsSqsSourceInterface {
-	return &FakeAwsSqsSources{c, namespace}
-}
-
-func (c *FakeSourcesV1alpha1) ContainerSources(namespace string) v1alpha1.ContainerSourceInterface {
-	return &FakeContainerSources{c, namespace}
-}
-
-func (c *FakeSourcesV1alpha1) CronJobSources(namespace string) v1alpha1.CronJobSourceInterface {
-	return &FakeCronJobSources{c, namespace}
-}
-
-func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSourceInterface {
-	return &FakeGitHubSources{c, namespace}
-}
-
-func (c *FakeSourcesV1alpha1) KubernetesEventSources(namespace string) v1alpha1.KubernetesEventSourceInterface {
-	return &FakeKubernetesEventSources{c, namespace}
+func (c *FakeSourcesV1alpha1) GcpPubSubSources(namespace string) v1alpha1.GcpPubSubSourceInterface {
+	return &FakeGcpPubSubSources{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
