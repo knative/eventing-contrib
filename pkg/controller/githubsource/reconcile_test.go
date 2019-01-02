@@ -98,7 +98,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
-		WantErrMsg:   "sink \"testnamespace/testunaddressable\" (duck.knative.dev/v1alpha1.KResource) does not contain address",
+		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1.KResource) does not contain address`,
 	}, {
 		Name:       "valid githubsource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},

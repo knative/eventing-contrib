@@ -94,7 +94,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
-		WantErrMsg:   "sink \"testnamespace/testunaddressable\" (duck.knative.dev/v1alpha1.KResource) does not contain address",
+		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1.KResource) does not contain address`,
 	}, {
 		Name:       "valid containersource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
@@ -168,7 +168,7 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  "Sink missing from spec",
+		WantErrMsg:  `Sink missing from spec`,
 	}, {
 		Name:       "valid containersource, sink is provided",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
@@ -325,7 +325,7 @@ var testCases = []controllertesting.TestCase{
 			},
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  "force an error into client create",
+		WantErrMsg:  `force an error into client create`,
 	}, {
 		Name:       "Error for get source, other than not found",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
@@ -347,7 +347,7 @@ var testCases = []controllertesting.TestCase{
 			},
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  "force an error into client list",
+		WantErrMsg:  `force an error into client list`,
 	},
 	/* TODO: support k8s service {
 		Name:       "valid containersource, sink is a k8s service",
