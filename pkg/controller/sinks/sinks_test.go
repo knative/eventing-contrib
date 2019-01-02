@@ -72,7 +72,7 @@ func TestGetSinkURI(t *testing.T) {
 			},
 			namespace: testNS,
 			ref:       getUnaddressableRef(),
-			wantErr:   fmt.Errorf(`sink contains an empty hostname`),
+			wantErr:   fmt.Errorf(`sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1.KResource) contains an empty hostname`),
 		},
 		"nil sink": {
 			objects: []runtime.Object{
@@ -88,7 +88,7 @@ func TestGetSinkURI(t *testing.T) {
 			},
 			namespace: testNS,
 			ref:       getUnaddressableRef(),
-			wantErr:   fmt.Errorf(`sink does not contain address`),
+			wantErr:   fmt.Errorf(`sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1.KResource) does not contain address`),
 		},
 		"notFound": {
 			namespace: testNS,

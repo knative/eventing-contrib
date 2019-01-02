@@ -98,7 +98,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
-		WantErrMsg:   "sink does not contain address",
+		WantErrMsg:   "sink \"testnamespace/testunaddressable\" (duck.knative.dev/v1alpha1.KResource) does not contain address",
 	}, {
 		Name:       "valid githubsource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
@@ -133,13 +133,13 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("NotFound", "sink does not contain address")
+				s.Status.MarkNoSink("NotFound", "sink \"testnamespace/testsink\" (duck.knative.dev/v1alpha1.Sink) does not contain address")
 				s.Status.MarkSecrets()
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink does not contain address`,
+		WantErrMsg:  `sink "testnamespace/testsink" (duck.knative.dev/v1alpha1.Sink) does not contain address`,
 	}, {
 		Name:       "invalid githubsource, sink is nil",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
