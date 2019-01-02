@@ -22,7 +22,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/githubsource"
+	"github.com/knative/eventing-sources/pkg/adapter/github"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
@@ -56,7 +56,7 @@ func main() {
 
 	log.Printf("Sink is: %q", *sink)
 
-	ra := &githubsource.GitHubReceiveAdapter{
+	ra := &github.Adapter{
 		Sink: *sink,
 	}
 
