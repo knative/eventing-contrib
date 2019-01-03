@@ -1,6 +1,7 @@
 # Kubernetes Event Source example
 
-_This sample is deprecated. Please see the official sample at https://github.com/knative/docs/tree/master/eventing/samples/kubernetes-event-source._
+_This sample is deprecated. Please see the official sample at
+https://github.com/knative/docs/tree/master/eventing/samples/kubernetes-event-source._
 
 Kubernetes Event Source example shows how to wire kubernetes cluster events for
 consumption by a function that has been implemented as a Knative Service.
@@ -27,9 +28,9 @@ kubectl -n default apply -f samples/kubernetes-event-source/channel.yaml
 
 ### Service Account
 
-1. Create a Service Account that the _Receive Adapter_ runs as. The
-   _Receive Adapter_ watches for Kubernetes events and forwards them to the
-   Knative Eventing Framework.
+1. Create a Service Account that the _Receive Adapter_ runs as. The _Receive
+   Adapter_ watches for Kubernetes events and forwards them to the Knative
+   Eventing Framework.
 
 ```shell
 kubectl apply -f samples/kubernetes-event-source/serviceaccount.yaml
