@@ -18,6 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
+// AwsSqsSourceListerExpansion allows custom methods to be added to
+// AwsSqsSourceLister.
+type AwsSqsSourceListerExpansion interface{}
+
+// AwsSqsSourceNamespaceListerExpansion allows custom methods to be added to
+// AwsSqsSourceNamespaceLister.
+type AwsSqsSourceNamespaceListerExpansion interface{}
+
 // ContainerSourceListerExpansion allows custom methods to be added to
 // ContainerSourceLister.
 type ContainerSourceListerExpansion interface{}
@@ -25,6 +33,14 @@ type ContainerSourceListerExpansion interface{}
 // ContainerSourceNamespaceListerExpansion allows custom methods to be added to
 // ContainerSourceNamespaceLister.
 type ContainerSourceNamespaceListerExpansion interface{}
+
+// CronJobSourceListerExpansion allows custom methods to be added to
+// CronJobSourceLister.
+type CronJobSourceListerExpansion interface{}
+
+// CronJobSourceNamespaceListerExpansion allows custom methods to be added to
+// CronJobSourceNamespaceLister.
+type CronJobSourceNamespaceListerExpansion interface{}
 
 // GcpPubSubSourceListerExpansion allows custom methods to be added to
 // GcpPubSubSourceLister.

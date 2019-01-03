@@ -12,4 +12,6 @@ spec:
         - name: K8S_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/kuberneteseventsource
         - name: GH_RA_IMAGE
-          value: github.com/knative/eventing-sources/cmd/githubsource
+          value: github.com/knative/eventing-sources/cmd/github_receive_adapter
+        - name: CRONJOB_RA_IMAGE
+          value: github.com/knative/eventing-sources/cmd/cronjob_receive_adapter

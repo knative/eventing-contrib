@@ -34,8 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -49,7 +47,6 @@ const (
 type reconciler struct {
 	client              client.Client
 	scheme              *runtime.Scheme
-	dynamicClient       dynamic.Interface
 	recorder            record.EventRecorder
 	receiveAdapterImage string
 	webhookClient       webhookClient
@@ -73,14 +70,18 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
 		return object, err
 	}
-	deleted := accessor.GetDeletionTimestamp() != nil
 
-	reconcileErr := r.reconcile(ctx, source, deleted)
+	var reconcileErr error
+	if accessor.GetDeletionTimestamp() == nil {
+		reconcileErr = r.reconcile(ctx, source)
+	} else {
+		reconcileErr = r.finalize(ctx, source)
+	}
+
 	return source, reconcileErr
 }
 
-func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource, deleted bool) error {
-	r.addFinalizer(source)
+func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
 	source.Status.InitializeConditions()
 
 	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
@@ -95,7 +96,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	}
 	source.Status.MarkSecrets()
 
-	uri, err := sinks.GetSinkURI(r.dynamicClient, source.Spec.Sink, source.Namespace)
+	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
@@ -104,12 +105,12 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 
 	ksvc, err := r.getOwnedService(ctx, source)
 	if err != nil {
-		if apierrors.IsNotFound(err) && !deleted {
-			ksvc := resources.MakeService(source, r.receiveAdapterImage)
-			if err := controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
+		if apierrors.IsNotFound(err) {
+			ksvc = resources.MakeService(source, r.receiveAdapterImage)
+			if err = controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
 				return err
 			}
-			if err := r.client.Create(ctx, ksvc); err != nil {
+			if err = r.client.Create(ctx, ksvc); err != nil {
 				return err
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
@@ -117,33 +118,52 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 			// Wait for the Service to get a status
 			return nil
 		}
-	} else {
-		if deleted {
-			if source.Status.WebhookIDKey != "" {
-				err := r.deleteWebhook(ctx, source, accessToken, source.Status.WebhookIDKey)
-				if err != nil {
-					return err
-				}
-				source.Status.WebhookIDKey = ""
-				r.removeFinalizer(source)
+		// Error was something other than NotFound
+		return err
+	}
+
+	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
+	receiveAdapterDomain := ksvc.Status.Domain
+	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
+		// TODO: Mark Deployed for the ksvc
+		// TODO: Mark some condition for the webhook status?
+		r.addFinalizer(source)
+		if source.Status.WebhookIDKey == "" {
+			hookID, err := r.createWebhook(ctx, source,
+				receiveAdapterDomain, accessToken, secretToken)
+			if err != nil {
+				return err
 			}
-			return nil
+			source.Status.WebhookIDKey = hookID
+		}
+	}
+	return nil
+}
+
+func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
+	// Always remove the finalizer. If there's a failure cleaning up, an event
+	// will be recorded allowing the webhook to be removed manually by the
+	// operator.
+	r.removeFinalizer(source)
+
+	// If a webhook was created, try to delete it
+	if source.Status.WebhookIDKey != "" {
+		// Get access token
+		accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+		if err != nil {
+			source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			return err
 		}
 
-		routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
-		receiveAdapterDomain := ksvc.Status.Domain
-		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
-			// TODO: Mark Deployed for the ksvc
-			// TODO: Mark some condition for the webhook status?
-			if source.Status.WebhookIDKey == "" {
-				hookID, err := r.createWebhook(ctx, source,
-					receiveAdapterDomain, accessToken, secretToken)
-				if err != nil {
-					return err
-				}
-				source.Status.WebhookIDKey = hookID
-			}
+		// Delete the webhook using the access token and stored webhook ID
+		err = r.deleteWebhook(ctx, source, accessToken, source.Status.WebhookIDKey)
+		if err != nil {
+			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			return err
 		}
+		// Webhook deleted, clear ID
+		source.Status.WebhookIDKey = ""
 	}
 	return nil
 }
@@ -268,10 +288,4 @@ func (r *reconciler) removeFinalizer(s *sourcesv1alpha1.GitHubSource) {
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
 	return nil
-}
-
-func (r *reconciler) InjectConfig(c *rest.Config) error {
-	var err error
-	r.dynamicClient, err = dynamic.NewForConfig(c)
-	return err
 }

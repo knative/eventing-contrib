@@ -39,7 +39,7 @@ required = [
 [[override]]
   name = "github.com/knative/pkg"
   # HEAD as of 2018-11-05
-  revision = "a8160c7d728d26da67e596c5b1975877082a26e6"
+  revision = "862aa6dbe7b6a79430354f732da044d02dcadac0"
 
 [[override]]
   name = "k8s.io/api"
@@ -86,3 +86,11 @@ required = [
   # This is the commit at which k8s depends on this in 1.11
   # It seems to be broken at HEAD.
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
+
+[[constraint]]
+  name = "github.com/aws/aws-sdk-go"
+  version = "1.15.73"
+
+[[constraint]]
+  name = "github.com/gorilla/websocket"
+  version = "1.4.0"

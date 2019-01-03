@@ -5,3 +5,4 @@ bazel-*
 .DS_Store
 cover.out
 bin/
+*.swp

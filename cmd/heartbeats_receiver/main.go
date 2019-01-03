@@ -18,10 +18,11 @@ package main
 
 import (
 	"context"
-	"github.com/knative/pkg/cloudevents"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/knative/pkg/cloudevents"
 )
 
 type Heartbeat struct {

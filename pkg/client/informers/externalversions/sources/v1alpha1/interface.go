@@ -24,8 +24,12 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// AwsSqsSources returns a AwsSqsSourceInformer.
+	AwsSqsSources() AwsSqsSourceInformer
 	// ContainerSources returns a ContainerSourceInformer.
 	ContainerSources() ContainerSourceInformer
+	// CronJobSources returns a CronJobSourceInformer.
+	CronJobSources() CronJobSourceInformer
 	// GcpPubSubSources returns a GcpPubSubSourceInformer.
 	GcpPubSubSources() GcpPubSubSourceInformer
 	// GitHubSources returns a GitHubSourceInformer.
@@ -45,9 +49,19 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
+// AwsSqsSources returns a AwsSqsSourceInformer.
+func (v *version) AwsSqsSources() AwsSqsSourceInformer {
+	return &awsSqsSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
 // ContainerSources returns a ContainerSourceInformer.
 func (v *version) ContainerSources() ContainerSourceInformer {
 	return &containerSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// CronJobSources returns a CronJobSourceInformer.
+func (v *version) CronJobSources() CronJobSourceInformer {
+	return &cronJobSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // GcpPubSubSources returns a GcpPubSubSourceInformer.

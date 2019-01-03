@@ -18,13 +18,14 @@ package main
 
 import (
 	"flag"
-	"github.com/google/uuid"
-	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/knative/pkg/cloudevents"
 )
 
 type Heartbeat struct {

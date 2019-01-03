@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
-	"github.com/knative/eventing-sources/pkg/adapter/gcppubsub"
 	"log"
 	"os"
+
+	"github.com/knative/eventing-sources/pkg/adapter/gcppubsub"
 
 	"go.uber.org/zap"
 

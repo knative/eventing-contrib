@@ -17,11 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	"testing"
 )
 
 func TestGcpPubSubSourceStatusIsReady(t *testing.T) {
@@ -351,7 +352,8 @@ func TestGcpPubSubSourceStatusGetCondition(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.s.GetCondition(test.condQuery)
-			ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{}, "LastTransitionTime")
+			ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{},
+				"LastTransitionTime", "Severity")
 			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
 				t.Errorf("unexpected condition (-want, +got) = %v", diff)
 			}
