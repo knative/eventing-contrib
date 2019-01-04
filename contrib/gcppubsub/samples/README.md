@@ -10,6 +10,9 @@ source is most useful as a bridge from other GCP services, such as
 
 ## Deployment Steps
 
+These steps assume that you have checked out the repo and have a shell
+in this `samples` directory.
+
 ### Prerequisites
 
 1. Create a
@@ -73,7 +76,7 @@ source is most useful as a bridge from other GCP services, such as
        ```
 
        `gcppubsub-source-key` and `key.json` are pre-configured values in the
-       `controller-manager` StatefulSet which manages your Eventing sources.
+       `gcppubsub-controller` StatefulSet which manages your Eventing sources.
 
        `google-cloud-key` and `key.json` are pre-configured values in
        [`gcp-pubsub-source.yaml`](./gcp-pubsub-source.yaml). If you choose to
@@ -83,10 +86,11 @@ source is most useful as a bridge from other GCP services, such as
 
 ### Deployment
 
-1. Create a GCP PubSub Topic. Replace `TOPIC-NAME` with your desired topic name.
+1. Create a GCP PubSub Topic. Set `$TOPIC_NAME` to the name of the topic you
+   want to receive on. This will be used in subsequent steps as well.
 
    ```shell
-   gcloud pubsub topics create TOPIC-NAME
+   gcloud pubsub topics create $TOPIC_NAME
    ```
 
 1. Replace the place holders in `gcp-pubsub-source.yaml`.
@@ -106,10 +110,10 @@ source is most useful as a bridge from other GCP services, such as
    - `gcpCredsSecret` should be replaced if you are using a non-default secret
      or key name for the receive adapter's credentials.
 
-1. Deploy `gcp-pubsub-source.yaml`.
+   You can do this with `sed`:
 
    ```shell
-   kubectl apply -f gcp-pubsub-source.yaml
+   sed -e "s/MY_GCP_PROJECT/$PROJECT_ID/g" -e "s/TOPIC_NAME/$TOPIC_NAME/g" gcp-pubsub-source.yaml | kubectl apply -f -
    ```
 
 ### Subscriber
