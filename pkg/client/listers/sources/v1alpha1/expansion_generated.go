@@ -42,14 +42,6 @@ type CronJobSourceListerExpansion interface{}
 // CronJobSourceNamespaceLister.
 type CronJobSourceNamespaceListerExpansion interface{}
 
-// GcpPubSubSourceListerExpansion allows custom methods to be added to
-// GcpPubSubSourceLister.
-type GcpPubSubSourceListerExpansion interface{}
-
-// GcpPubSubSourceNamespaceListerExpansion allows custom methods to be added to
-// GcpPubSubSourceNamespaceLister.
-type GcpPubSubSourceNamespaceListerExpansion interface{}
-
 // GitHubSourceListerExpansion allows custom methods to be added to
 // GitHubSourceLister.
 type GitHubSourceListerExpansion interface{}

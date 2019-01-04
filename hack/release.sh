@@ -22,7 +22,7 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 declare -A RELEASES
 RELEASES=(
   ["release.yaml"]="config/default.yaml"
-  ["release-with-gcppubsub.yaml"]="config/default-gcppubsub.yaml"
+  ["release-gcppubsub.yaml"]="contrib/gcppubsub/config/default-gcppubsub.yaml"
   ["message-dumper.yaml"]="config/tools/message-dumper.yaml"
 )
 readonly RELEASES

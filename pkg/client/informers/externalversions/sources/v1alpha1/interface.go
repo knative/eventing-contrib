@@ -30,8 +30,6 @@ type Interface interface {
 	ContainerSources() ContainerSourceInformer
 	// CronJobSources returns a CronJobSourceInformer.
 	CronJobSources() CronJobSourceInformer
-	// GcpPubSubSources returns a GcpPubSubSourceInformer.
-	GcpPubSubSources() GcpPubSubSourceInformer
 	// GitHubSources returns a GitHubSourceInformer.
 	GitHubSources() GitHubSourceInformer
 	// KubernetesEventSources returns a KubernetesEventSourceInformer.
@@ -62,11 +60,6 @@ func (v *version) ContainerSources() ContainerSourceInformer {
 // CronJobSources returns a CronJobSourceInformer.
 func (v *version) CronJobSources() CronJobSourceInformer {
 	return &cronJobSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// GcpPubSubSources returns a GcpPubSubSourceInformer.
-func (v *version) GcpPubSubSources() GcpPubSubSourceInformer {
-	return &gcpPubSubSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // GitHubSources returns a GitHubSourceInformer.
