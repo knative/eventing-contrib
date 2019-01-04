@@ -54,4 +54,5 @@ spec:
         - name: google-cloud-key
           secret:
             secretName: gcppubsub-source-key
+      serviceAccount: gcppubsub
       terminationGracePeriodSeconds: 10

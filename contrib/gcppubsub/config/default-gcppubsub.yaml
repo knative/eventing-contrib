@@ -71,6 +71,14 @@ status:
   conditions: []
   storedVersions: []
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gcppubsub
+  namespace: knative-sources
+secrets:
+- name: gcppubsub-source-key
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -137,8 +145,17 @@ roleRef:
   name: gcppubsub-controller-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: gcppubsub
   namespace: knative-sources
+---
+apiVersion: v1
+data:
+  key.json: ""
+kind: Secret
+metadata:
+  name: gcppubsub-source-key
+  namespace: knative-sources
+type: Opaque
 ---
 apiVersion: v1
 kind: Service
@@ -190,6 +207,7 @@ spec:
         volumeMounts:
         - mountPath: /var/secrets/google
           name: google-cloud-key
+      serviceAccount: gcppubsub
       terminationGracePeriodSeconds: 10
       volumes:
       - name: google-cloud-key

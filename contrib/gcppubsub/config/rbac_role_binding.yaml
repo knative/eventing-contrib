@@ -9,5 +9,5 @@ roleRef:
   name: gcppubsub-controller-role
 subjects:
 - kind: ServiceAccount
-  name: default
-  namespace: system
+  name: gcppubsub
+  # namespace will be filled in by kustomize
