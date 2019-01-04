@@ -24,6 +24,7 @@ import (
 	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"golang.org/x/net/context"
 )
@@ -56,7 +57,9 @@ func main() {
 	flag.Parse()
 
 	ctx := context.Background()
-	logger, err := zap.NewProduction()
+	logCfg := zap.NewProductionConfig()
+	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	logger, err := logCfg.Build()
 	if err != nil {
 		log.Fatalf("Unable to create logger: %v", err)
 	}

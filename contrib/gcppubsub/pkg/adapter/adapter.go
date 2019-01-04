@@ -71,22 +71,20 @@ func (a *Adapter) Start(ctx context.Context) error {
 }
 
 func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
-	logger := logging.FromContext(ctx)
+	logger := logging.FromContext(ctx).With(zap.Any("eventID", m.ID()), zap.Any("sink", a.SinkURI))
 
-	logger.Debug("Received message", zap.Any("messageData", m.Data()))
+	logger.Debugw("Received message", zap.Any("messageData", m.Data()))
 
-	err := a.postMessage(ctx, m)
+	err := a.postMessage(ctx, logger, m)
 	if err != nil {
-		logger.Error("Failed to post message", zap.Error(err))
+		logger.Infof("Failed to post message: %s", err)
 		m.Nack()
 	} else {
 		logger.Debug("Message sent successfully")
 		m.Ack()
 	}
 }
-func (a *Adapter) postMessage(ctx context.Context, m PubSubMessage) error {
-	logger := logging.FromContext(ctx)
-
+func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m PubSubMessage) error {
 	event := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          eventType,
@@ -96,11 +94,10 @@ func (a *Adapter) postMessage(ctx context.Context, m PubSubMessage) error {
 	}
 	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m.Message(), event)
 	if err != nil {
-		logger.Error("Failed to marshal the message.", zap.Error(err), zap.Any("message", m.Message()))
-		return err
+		return fmt.Errorf("Failed to marshal the message: %s", err)
 	}
 
-	logger.Debug("Posting message", zap.String("sinkURI", a.SinkURI))
+	logger.Debug("Posting message")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -109,7 +106,7 @@ func (a *Adapter) postMessage(ctx context.Context, m PubSubMessage) error {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debug("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
+	logger.Debugw("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
 
 	// If the response is not within the 2xx range, return an error.
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
