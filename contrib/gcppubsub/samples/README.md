@@ -86,6 +86,14 @@ in this `samples` directory.
 
 ### Deployment
 
+1. Decide on a topic name, and export variables for your GCP project
+   ID and topic name in your shell:
+   
+   ```shell
+   export PROJECT_ID=$(gcloud config get-value project)
+   export TOPIC_NAME=laconia
+   ```
+
 1. Create a GCP PubSub Topic. Set `$TOPIC_NAME` to the name of the topic you
    want to receive on. This will be used in subsequent steps as well.
 
@@ -123,8 +131,7 @@ simple Knative Service that dumps incoming messages to its log, and direct the
 PubSub source to send messages directly (i.e. without buffering or fanout within
 the cluster).
 
-1. Setup [Knative Serving](https://github.com/knative/docs/tree/master/serving).
-1. Deploy `dumper.yaml`.
+Deploy `dumper.yaml`, building it from source:
 
    ```shell
    ko apply -f dumper.yaml
@@ -135,7 +142,7 @@ the cluster).
 Publish messages to your GCP PubSub Topic.
 
 ```shell
-gcloud pubsub topics publish TOPIC-NAME --message="Hello World!"
+gcloud pubsub topics publish $TOPIC_NAME --message="Hello World!"
 ```
 
 ### Verify
@@ -148,7 +155,7 @@ not, then you will need to look downstream yourself.
 1. Use [`kail`](https://github.com/boz/kail) to tail the logs of the subscriber.
 
    ```shell
-   kail -d message-dumper -c user-container --since=10m
+   kail -d message-dumper --since=10m
    ```
 
 You should see log lines similar to:
