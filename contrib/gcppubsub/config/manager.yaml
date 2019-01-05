@@ -1,0 +1,58 @@
+# This is the control plane manager (reconciler + webhook) for the
+# GCPPubSub event source.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gcppubsub-controller-service
+  labels:
+    control-plane: gcppubsub-controller
+spec:
+  selector:
+    control-plane: gcppubsub-controller
+  ports:
+  - port: 443
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gcppubsub-controller
+  labels:
+    control-plane: gcpubsub-controller
+spec:
+  selector:
+    matchLabels:
+      control-plane: gcppubsub-controller
+  serviceName: gcppubsub-controller-service
+  template:
+    metadata:
+      labels:
+        control-plane: gcppubsub-controller
+    spec:
+      containers:
+        - name: manager
+          image: github.com/knative/eventing-sources/contrib/gcppubsub/cmd/controller
+          env:
+            - name: ENABLE_GCPPUBSUB_SOURCE
+              value: 'true'
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/key.json
+            - name: GCPPUBSUB_RA_IMAGE
+              value: github.com/knative/eventing-sources/contrib/gcppubsub/cmd/receive_adapter
+          volumeMounts:
+            - name: google-cloud-key
+              mountPath: /var/secrets/google
+          resources:
+            limits:
+              cpu: 100m
+              memory: 30Mi
+            requests:
+              cpu: 20m
+              memory: 20Mi
+      volumes:
+        - name: google-cloud-key
+          secret:
+            secretName: gcppubsub-source-key
+      serviceAccount: gcppubsub
+      terminationGracePeriodSeconds: 10

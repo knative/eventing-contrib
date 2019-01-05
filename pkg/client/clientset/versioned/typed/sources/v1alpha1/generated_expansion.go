@@ -24,8 +24,6 @@ type ContainerSourceExpansion interface{}
 
 type CronJobSourceExpansion interface{}
 
-type GcpPubSubSourceExpansion interface{}
-
 type GitHubSourceExpansion interface{}
 
 type KubernetesEventSourceExpansion interface{}

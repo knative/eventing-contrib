@@ -40,10 +40,6 @@ func (c *FakeSourcesV1alpha1) CronJobSources(namespace string) v1alpha1.CronJobS
 	return &FakeCronJobSources{c, namespace}
 }
 
-func (c *FakeSourcesV1alpha1) GcpPubSubSources(namespace string) v1alpha1.GcpPubSubSourceInterface {
-	return &FakeGcpPubSubSources{c, namespace}
-}
-
 func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSourceInterface {
 	return &FakeGitHubSources{c, namespace}
 }
