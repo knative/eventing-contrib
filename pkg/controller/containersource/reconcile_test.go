@@ -94,7 +94,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
-		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1.KResource) does not contain address`,
+		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1, Kind=KResource) does not contain address`,
 	}, {
 		Name:       "valid containersource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
@@ -145,7 +145,7 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink "testnamespace/testsink" (duck.knative.dev/v1alpha1.Sink) does not contain address`,
+		WantErrMsg:  `sink "testnamespace/testsink" (duck.knative.dev/v1alpha1, Kind=Sink) does not contain address`,
 	}, {
 		Name:       "invalid containersource, sink is nil",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},

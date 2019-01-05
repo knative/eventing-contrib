@@ -41,7 +41,7 @@ func GetSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReferen
 		return "", err
 	}
 
-	objIdentifier := fmt.Sprintf("\"%s/%s\" (%s.%s)", u.GetNamespace(), u.GetName(), u.GetAPIVersion(), u.GetKind())
+	objIdentifier := fmt.Sprintf("\"%s/%s\" (%s)", u.GetNamespace(), u.GetName(), u.GroupVersionKind())
 
 	t := duckv1alpha1.AddressableType{}
 	err = duck.FromUnstructured(u, &t)
