@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -146,9 +148,9 @@ func TestPostMessage_InvalidSink(t *testing.T) {
 		InvolvedObject: ref,
 	}
 
-	err := a.postMessage(event)
+	err := a.postMessage(zap.S(), event)
 
-	want := `Post @#$@: unsupported protocol scheme ""`
+	want := `POST failed: Post @#$@: unsupported protocol scheme ""`
 	if err == nil || err.Error() != want {
 		t.Errorf("want %q, got: %q", want, err.Error())
 	}
