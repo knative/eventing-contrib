@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package awssqs
+package awssqssource
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller/awssqs/resources"
+	"github.com/knative/eventing-sources/pkg/controller/awssqssource/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/pkg/logging"
 

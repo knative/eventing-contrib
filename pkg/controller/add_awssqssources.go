@@ -17,10 +17,10 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/knative/eventing-sources/pkg/controller/awssqs"
+	"github.com/knative/eventing-sources/pkg/controller/awssqssource"
 )
 
 func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, awssqs.Add)
+	AddToManagerFuncs = append(AddToManagerFuncs, awssqssource.Add)
 }
