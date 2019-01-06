@@ -138,12 +138,12 @@ func (a *Adapter) pollLoop(ctx context.Context, q *sqs.SQS, stopCh <-chan struct
 // and forwards it to a Sink, calling `ack()` when the forwarding is
 // successful.
 func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()) {
-	logger := logging.FromContext(ctx)
-	logger.Debug("Received message from SQS:", zap.Any("message", m))
+	logger := logging.FromContext(ctx).With(zap.Any("eventID", m.MessageId)).With(zap.Any("sink", a.SinkURI))
+	logger.Debugw("Received message from SQS:", zap.Any("message", m))
 
-	err := a.postMessage(ctx, m)
+	err := a.postMessage(ctx, logger, m)
 	if err != nil {
-		logger.Error("Failed to post message to Sink", zap.Error(err))
+		logger.Infof("Event delivery failed: %s", err)
 	} else {
 		logger.Debug("Message successfully posted to Sink")
 		ack()
@@ -151,13 +151,12 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 }
 
 // postMessage sends an SQS event to the SinkURI
-func (a *Adapter) postMessage(ctx context.Context, m *sqs.Message) error {
-	logger := logging.FromContext(ctx)
+func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
 
 	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)
 	if err != nil {
-		logger.Error("Failed to marshal the message.", zap.Error(err), zap.Any("message", m.Body))
+		logger.Errorw("Failed to unmarshal the message.", zap.Error(err), zap.Any("message", m.Body))
 		timestamp = time.Now().UnixNano()
 	}
 
@@ -170,11 +169,10 @@ func (a *Adapter) postMessage(ctx context.Context, m *sqs.Message) error {
 	}
 	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, event)
 	if err != nil {
-		logger.Error("Failed to marshal the message.", zap.Error(err), zap.Any("message", m))
-		return err
+		return fmt.Errorf("Failed to marshall the message: %s", err)
 	}
 
-	logger.Debug("Posting message", zap.String("sinkURI", a.SinkURI))
+	logger.Debug("Posting message")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -183,7 +181,7 @@ func (a *Adapter) postMessage(ctx context.Context, m *sqs.Message) error {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debug("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
+	logger.Debugw("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
 
 	// If the response is not within the 2xx range, return an error.
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

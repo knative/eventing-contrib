@@ -59,12 +59,13 @@ func (a *Adapter) Start(ctx context.Context) error {
 	c := cron.New()
 	c.Schedule(sched, cron.FuncJob(func() {
 		m := Message{ID: a.generateMessageId(), EventTime: time.Now().UTC(), Body: a.Data}
-		err = a.postMessage(ctx, &m)
+		logger := logger.With(zap.Any("eventID", m.ID), zap.Any("sink", a.SinkURI))
+		err = a.postMessage(ctx, logger, &m)
 		if err != nil {
-			logger.Error("Failed to post message.", zap.Error(err))
+			logger.Infof("Failed to post message: %s", err)
 			return
 		}
-		logger.Debug("Finished posting message job.", zap.Any("message", m))
+		logger.Debug("Finished posting message job.")
 	}))
 	stopCh := signals.SetupSignalHandler()
 	c.Start()
@@ -74,9 +75,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (a *Adapter) postMessage(ctx context.Context, m *Message) error {
-	logger := logging.FromContext(ctx)
-
+func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *Message) error {
 	event := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          eventType,
@@ -86,11 +85,10 @@ func (a *Adapter) postMessage(ctx context.Context, m *Message) error {
 	}
 	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, event)
 	if err != nil {
-		logger.Error("Failed to marshal the message.", zap.Error(err), zap.Any("message", *m))
-		return err
+		return fmt.Errorf("Failed to marshal message: %s", err)
 	}
 
-	logger.Debug("Posting message", zap.String("sinkURI", a.SinkURI))
+	logger.Debugw("Posting message")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -99,7 +97,7 @@ func (a *Adapter) postMessage(ctx context.Context, m *Message) error {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debug("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
+	logger.Debugw("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
 
 	// If the response is not within the 2xx range, return an error.
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
