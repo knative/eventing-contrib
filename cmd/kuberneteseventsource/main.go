@@ -43,7 +43,7 @@ func main() {
 	logConfig := zap.NewProductionConfig()
 	logConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, err := logConfig.Build()
-		
+
 	if err != nil {
 		log.Fatalf("unable to create logger: %v", err)
 	}
