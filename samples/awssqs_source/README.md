@@ -52,19 +52,19 @@
 
    - `QUEUE_URL` should be replaced with your AWS SQS queue URL.
 
-      ```shell
-      export QUEUE_URL=https://sqs-eu-west-1.amazonaws.com/1234234234/my-queue
-      sed -i "s|QUEUE_URL|$QUEUE_URL|" awssqs-source.yaml
-      ```
+     ```shell
+     export QUEUE_URL=https://sqs-eu-west-1.amazonaws.com/1234234234/my-queue
+     sed -i "s|QUEUE_URL|$QUEUE_URL|" awssqs-source.yaml
+     ```
 
    - `QUEUE_NAME` will be used to name the event source, you can choose any
      value that makes sense to you, although a good choice is the last segment
      of the URL.
 
-      ```shell
-      export QUEUE_NAME="my-queue"
-      sed -i "s|QUEUE_NAME|$QUEUE_NAME|" awssqs-source.yaml
-      ```
+     ```shell
+     export QUEUE_NAME="my-queue"
+     sed -i "s|QUEUE_NAME|$QUEUE_NAME|" awssqs-source.yaml
+     ```
 
    - `awsCredsSecret` should be replaced with the name of the k8s secret that
      contains the AWS credentials. Change this only if you deployed an altered
