@@ -21,7 +21,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
+	gcppubsub "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
