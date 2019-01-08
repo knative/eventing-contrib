@@ -24,7 +24,7 @@
 source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/presubmit-tests.sh
 
 # Directories with code to build/test
-readonly CODE_PACKAGES=(cmd pkg)
+readonly CODE_PACKAGES=(cmd pkg contrib)
 
 # Convert list of packages into list of dirs for go
 CODE_PACKAGES_STR="${CODE_PACKAGES[*]}"
