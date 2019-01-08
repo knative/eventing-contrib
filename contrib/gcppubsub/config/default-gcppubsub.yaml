@@ -16,6 +16,8 @@ spec:
     kind: GcpPubSubSource
     plural: gcppubsubsources
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -109,6 +111,14 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - gcppubsubsources/status
+  verbs:
+  - get
+  - update
+  - patch
 - apiGroups:
   - ""
   resources:

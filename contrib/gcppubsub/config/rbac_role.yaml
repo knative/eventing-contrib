@@ -29,6 +29,14 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - gcppubsubsources/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
   - ""
   resources:
   - secrets

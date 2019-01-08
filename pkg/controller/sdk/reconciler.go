@@ -145,17 +145,6 @@ func (r *Reconciler) update(ctx context.Context, request reconcile.Request, obje
 		return nil, err
 	}
 
-	// Status
-	freshStatus, err := NewReflectedStatusAccessor(freshObj)
-	if err != nil {
-		return nil, err
-	}
-	orgStatus, err := NewReflectedStatusAccessor(object)
-	if err != nil {
-		return nil, err
-	}
-	freshStatus.SetStatus(orgStatus.GetStatus())
-
 	// Finalizers
 	freshFinalizers, err := NewReflectedFinalizersAccessor(freshObj)
 	if err != nil {
@@ -167,12 +156,30 @@ func (r *Reconciler) update(ctx context.Context, request reconcile.Request, obje
 	}
 	freshFinalizers.SetFinalizers(orgFinalizers.GetFinalizers())
 
-	// Until #38113 is merged, we must use Update instead of UpdateStatus to
-	// update the Status block of the Source resource. UpdateStatus will not
-	// allow changes to the Spec of the resource, which is ideal for ensuring
-	// nothing other than resource status has been updated.
 	if err := r.client.Update(ctx, freshObj); err != nil {
 		return nil, err
 	}
+
+	// Refetch
+	freshObj = r.provider.Parent.DeepCopyObject()
+	if err := r.client.Get(ctx, request.NamespacedName, freshObj); err != nil {
+		return nil, err
+	}
+
+	// Status
+	freshStatus, err := NewReflectedStatusAccessor(freshObj)
+	if err != nil {
+		return nil, err
+	}
+	orgStatus, err := NewReflectedStatusAccessor(object)
+	if err != nil {
+		return nil, err
+	}
+	freshStatus.SetStatus(orgStatus.GetStatus())
+
+	if err := r.client.Status().Update(ctx, freshObj); err != nil {
+		return nil, err
+	}
+
 	return freshObj, nil
 }

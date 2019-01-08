@@ -17,6 +17,7 @@ limitations under the License.
 // Package containersource implements the ContainerSource controller.
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=containersources,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=containersources/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch
 // +kubebuilder:rbac:groups=eventing.knative.dev,resources=channels,verbs=get;list;watch
 package containersource

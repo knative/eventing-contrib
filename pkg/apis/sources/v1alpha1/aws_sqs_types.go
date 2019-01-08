@@ -29,6 +29,7 @@ import (
 
 // AwsSqsSource is the Schema for the AWS SQS API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 // +kubebuilder:categories=all,knative,eventing,sources
 type AwsSqsSource struct {
 	metav1.TypeMeta   `json:",inline"`

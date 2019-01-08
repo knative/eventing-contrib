@@ -23,6 +23,8 @@ spec:
     kind: ContainerSource
     plural: containersources
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -101,6 +103,8 @@ spec:
     kind: CronJobSource
     plural: cronjobsources
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -174,6 +178,8 @@ spec:
     kind: GitHubSource
     plural: githubsources
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -300,6 +306,8 @@ spec:
     kind: KubernetesEventSource
     plural: kuberneteseventsources
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -384,6 +392,14 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - awssqssources/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
   - eventing.knative.dev
   resources:
   - channels
@@ -415,6 +431,14 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - containersources/status
+  verbs:
+  - get
+  - update
+  - patch
 - apiGroups:
   - serving.knative.dev
   resources:
@@ -456,6 +480,14 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - cronjobsources/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
   - eventing.knative.dev
   resources:
   - channels
@@ -488,6 +520,14 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - githubsources/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
   - ""
   resources:
   - secrets
@@ -510,6 +550,14 @@ rules:
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
+  - kuberneteseventsources/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
   - containersources
   verbs:
   - get
@@ -519,6 +567,14 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - containersources/status
+  verbs:
+  - get
+  - update
+  - patch
 - apiGroups:
   - ""
   resources:
