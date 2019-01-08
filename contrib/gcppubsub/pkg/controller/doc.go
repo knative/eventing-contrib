@@ -17,5 +17,11 @@ limitations under the License.
 // Package gcppubsub implements the GcpPubSubSource controller.
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=gcppubsubsources,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=,resources=secrets,verbs=get;list;watch
+
+// This is needed to be able to watch channels when delivering to a channel.
 // +kubebuilder:rbac:groups=eventing.knative.dev,resources=channels,verbs=get;list;watch
+
+// This is needed to be able to watch the sink when delivering messages directly.
+// +kubebuilder:rbac:groups=serving.knative.dev,resources=services;routes,verbs=get;list;watch
 package gcppubsub

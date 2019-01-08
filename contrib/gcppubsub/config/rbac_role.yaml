@@ -29,6 +29,14 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - eventing.knative.dev
   resources:
   - channels
@@ -40,14 +48,7 @@ rules:
   - serving.knative.dev
   resources:
   - services
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
+  - routes
   verbs:
   - get
   - list

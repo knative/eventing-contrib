@@ -1,0 +1,9 @@
+# Change the robot which the gcppubsub controller runs as to not collide with 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gcppubsub-controller-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: gcppubsub
+  namespace: 
