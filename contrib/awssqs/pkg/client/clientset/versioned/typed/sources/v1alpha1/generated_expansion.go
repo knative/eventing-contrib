@@ -18,10 +18,4 @@ limitations under the License.
 
 package v1alpha1
 
-type ContainerSourceExpansion interface{}
-
-type CronJobSourceExpansion interface{}
-
-type GitHubSourceExpansion interface{}
-
-type KubernetesEventSourceExpansion interface{}
+type AwsSqsSourceExpansion interface{}

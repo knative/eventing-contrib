@@ -21,7 +21,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	v1alpha1 "github.com/knative/eventing-sources/contrib/awssqs/pkg/apis/sources/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -53,14 +53,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=sources.eventing.knative.dev, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("containersources"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().ContainerSources().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("cronjobsources"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().CronJobSources().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("githubsources"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().GitHubSources().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("kuberneteseventsources"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().KubernetesEventSources().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("awssqssources"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().AwsSqsSources().Informer()}, nil
 
 	}
 

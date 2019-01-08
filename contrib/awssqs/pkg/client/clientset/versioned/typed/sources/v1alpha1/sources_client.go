@@ -19,18 +19,15 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/client/clientset/versioned/scheme"
+	v1alpha1 "github.com/knative/eventing-sources/contrib/awssqs/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/contrib/awssqs/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	ContainerSourcesGetter
-	CronJobSourcesGetter
-	GitHubSourcesGetter
-	KubernetesEventSourcesGetter
+	AwsSqsSourcesGetter
 }
 
 // SourcesV1alpha1Client is used to interact with features provided by the sources.eventing.knative.dev group.
@@ -38,20 +35,8 @@ type SourcesV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *SourcesV1alpha1Client) ContainerSources(namespace string) ContainerSourceInterface {
-	return newContainerSources(c, namespace)
-}
-
-func (c *SourcesV1alpha1Client) CronJobSources(namespace string) CronJobSourceInterface {
-	return newCronJobSources(c, namespace)
-}
-
-func (c *SourcesV1alpha1Client) GitHubSources(namespace string) GitHubSourceInterface {
-	return newGitHubSources(c, namespace)
-}
-
-func (c *SourcesV1alpha1Client) KubernetesEventSources(namespace string) KubernetesEventSourceInterface {
-	return newKubernetesEventSources(c, namespace)
+func (c *SourcesV1alpha1Client) AwsSqsSources(namespace string) AwsSqsSourceInterface {
+	return newAwsSqsSources(c, namespace)
 }
 
 // NewForConfig creates a new SourcesV1alpha1Client for the given config.

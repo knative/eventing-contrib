@@ -1,0 +1,56 @@
+# This is the control plane manager (reconciler + webhook) for the
+# AWSSQS event source.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: awssqs-controller-service
+  labels:
+    control-plane: awssqs-controller
+spec:
+  selector:
+    control-plane: awssqs-controller
+  ports:
+  - port: 443
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: awssqs-controller
+  labels:
+    control-plane: awssqs-controller
+spec:
+  selector:
+    matchLabels:
+      control-plane: awssqs-controller
+  serviceName: awssqs-controller-service
+  template:
+    metadata:
+      labels:
+        control-plane: awssqs-controller
+    spec:
+      containers:
+        - name: manager
+          image: github.com/knative/eventing-sources/contrib/awssqs/cmd/controller
+          env:
+            - name: AWS_APPLICATION_CREDENTIALS
+              value: /var/secrets/aws/credentials
+            - name: AWSSQS_RA_IMAGE
+              value: github.com/knative/eventing-sources/contrib/awssqs/cmd/receive_adapter
+          resources:
+            limits:
+              cpu: 100m
+              memory: 30Mi
+            requests:
+              cpu: 20m
+              memory: 20Mi
+          volumeMounts:
+            - mountPath: /var/secrets/aws
+              name: aws-credentials
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: aws-credentials
+          secret:
+            secretName: awssqs-source-credentials
+
