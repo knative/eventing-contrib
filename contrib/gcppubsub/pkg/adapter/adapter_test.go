@@ -30,13 +30,21 @@ import (
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
 	testCases := map[string]struct {
-		sink    func(http.ResponseWriter, *http.Request)
-		reqBody string
-		error   bool
+		sink              func(http.ResponseWriter, *http.Request)
+		reqBody           string
+		attributes        map[string]string
+		expectedEventType string
+		error             bool
 	}{
 		"happy": {
 			sink:    sinkAccepted,
 			reqBody: `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":null,"PublishTime":"0001-01-01T00:00:00Z"}`,
+		},
+		"happyWithCustomEvent": {
+			sink:              sinkAccepted,
+			attributes:        map[string]string{"ce-type": "foobar"},
+			reqBody:           `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":{"ce-type":"foobar"},"PublishTime":"0001-01-01T00:00:00Z"}`,
+			expectedEventType: "foobar",
 		},
 		"rejected": {
 			sink:    sinkRejected,
@@ -65,8 +73,9 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			m := &PubSubMockMessage{
 				MockID: "ABC",
 				M: &pubsub.Message{
-					ID:   "ABC",
-					Data: data,
+					ID:         "ABC",
+					Data:       data,
+					Attributes: tc.attributes,
 				},
 			}
 			err = a.postMessage(context.TODO(), zap.S(), m)
@@ -75,6 +84,21 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected error, but got %v", err)
 			}
 
+			et := ""
+			if eth, ok := h.header["Ce-Eventtype"]; ok {
+				if len(eth) > 0 {
+					et = eth[0]
+				}
+			}
+
+			expectedEventType := eventType
+			if tc.expectedEventType != "" {
+				expectedEventType = tc.expectedEventType
+			}
+
+			if et != expectedEventType {
+				t.Errorf("Expected eventtype %q, but got %q", tc.expectedEventType, et)
+			}
 			if tc.reqBody != string(h.body) {
 				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)
 			}
@@ -139,12 +163,14 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 }
 
 type fakeHandler struct {
-	body []byte
+	body   []byte
+	header http.Header
 
 	handler func(http.ResponseWriter, *http.Request)
 }
 
 func (h *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.header = r.Header
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "can not read body", http.StatusBadRequest)
