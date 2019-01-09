@@ -17,3 +17,4 @@ resources:
 
 patches:
   - conditions_patch.yaml
+  - rbac_role_binding_patch.yaml
