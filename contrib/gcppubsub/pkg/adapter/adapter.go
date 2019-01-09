@@ -32,6 +32,10 @@ import (
 
 const (
 	eventType = "google.pubsub.topic.publish"
+	// If in the PubSub message attributes this header is set, use
+	// it as the Cloud Event type so as to preserve types that flow
+	// through the Receive Adapter.
+	eventTypeOverrideKey = "ce-type"
 )
 
 // Adapter implements the GCP Pub/Sub adapter to deliver Pub/Sub messages from
@@ -85,9 +89,15 @@ func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 	}
 }
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m PubSubMessage) error {
+	et := eventType
+	if override, ok := m.Message().Attributes[eventTypeOverrideKey]; ok {
+		et = override
+		logger.Infof("overriding the cloud event type with %q", et)
+	}
+
 	event := cloudevents.EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
+		EventType:          et,
 		EventID:            m.ID(),
 		EventTime:          m.PublishTime(),
 		Source:             a.source,
