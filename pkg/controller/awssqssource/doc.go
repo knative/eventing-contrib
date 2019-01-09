@@ -18,4 +18,4 @@ limitations under the License.
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=awssqssources,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=eventing.knative.dev,resources=channels,verbs=get;list;watch
-package awssqs
+package awssqssource
