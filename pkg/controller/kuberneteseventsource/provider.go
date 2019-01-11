@@ -22,6 +22,8 @@ import (
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -38,6 +40,7 @@ const (
 // reconciler reconciles a KubernetesEventSource object
 type reconciler struct {
 	client.Client
+	dynamicClient       dynamic.Interface
 	recorder            record.EventRecorder
 	scheme              *runtime.Scheme
 	receiveAdapterImage string
@@ -90,4 +93,10 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	return nil
+}
+
+func (r *reconciler) InjectConfig(c *rest.Config) error {
+	var err error
+	r.dynamicClient, err = dynamic.NewForConfig(c)
+	return err
 }

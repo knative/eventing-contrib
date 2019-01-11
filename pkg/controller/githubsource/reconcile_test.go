@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 )
 
@@ -94,21 +95,22 @@ var testCases = []controllertesting.TestCase{
 		InitialState: []runtime.Object{
 			getGitHubSourceUnaddressable(),
 			getGitHubSecrets(),
-			getAddressable_noStatus(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
-		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1, Kind=KResource) does not contain address`,
+		WantErrMsg:   `kresources.duck.knative.dev "testunaddressable" not found`,
 	}, {
 		Name:       "valid githubsource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
 			getGitHubSecrets(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getAddressableResource(),
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
@@ -125,21 +127,36 @@ var testCases = []controllertesting.TestCase{
 		InitialState: []runtime.Object{
 			getGitHubSource(),
 			getGitHubSecrets(),
-			getAddressable_nilAddress(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": addressableAPIVersion,
+					"kind":       addressableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      addressableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}(nil),
+					},
+				},
+			},
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("NotFound", "sink \"testnamespace/testsink\" (duck.knative.dev/v1alpha1, Kind=Sink) does not contain address")
+				s.Status.MarkNoSink("NotFound", "sink does not contain address")
 				s.Status.MarkSecrets()
 				return s
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink "testnamespace/testsink" (duck.knative.dev/v1alpha1, Kind=Sink) does not contain address`,
+		WantErrMsg:  `sink does not contain address`,
 	}, {
 		Name:       "invalid githubsource, sink is nil",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
@@ -150,10 +167,12 @@ var testCases = []controllertesting.TestCase{
 				return s
 			}(),
 			getGitHubSecrets(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getAddressableResource(),
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
@@ -194,7 +213,6 @@ var testCases = []controllertesting.TestCase{
 				return svc
 			}(),
 			getGitHubSecrets(),
-			getAddressable(),
 		},
 		OtherTestData: map[string]interface{}{
 			webhookData: webhookCreatorData{
@@ -205,6 +223,9 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getAddressableResource(),
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
@@ -246,7 +267,6 @@ var testCases = []controllertesting.TestCase{
 				return svc
 			}(),
 			getGitHubSecrets(),
-			getAddressable(),
 		},
 		OtherTestData: map[string]interface{}{
 			webhookData: webhookCreatorData{
@@ -256,6 +276,9 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getAddressableResource(),
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
@@ -274,10 +297,12 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getAddressableResource(),
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
@@ -294,7 +319,6 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
 			getGitHubSource(),
-			getAddressable(),
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: testNS,
@@ -307,6 +331,9 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getAddressableResource(),
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
@@ -348,7 +375,6 @@ var testCases = []controllertesting.TestCase{
 				return svc
 			}(),
 			getGitHubSecrets(),
-			getAddressable(),
 		},
 		OtherTestData: map[string]interface{}{
 			webhookData: webhookCreatorData{
@@ -359,6 +385,9 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			getAddressableResource(),
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
@@ -449,6 +478,7 @@ func TestAllCases(t *testing.T) {
 
 	for _, tc := range testCases {
 		c := tc.GetClient()
+		dc := tc.GetDynamicClient()
 
 		var hookData webhookCreatorData
 		var ok bool
@@ -457,8 +487,9 @@ func TestAllCases(t *testing.T) {
 		}
 
 		r := &reconciler{
-			scheme:   tc.Scheme,
-			recorder: recorder,
+			dynamicClient: dc,
+			scheme:        tc.Scheme,
+			recorder:      recorder,
 			webhookClient: &mockWebhookClient{
 				data: hookData,
 			},
@@ -564,7 +595,7 @@ func getOwnerReferences() []metav1.OwnerReference {
 	}}
 }
 
-func getAddressable() *unstructured.Unstructured {
+func getAddressableResource() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,
@@ -577,35 +608,6 @@ func getAddressable() *unstructured.Unstructured {
 				"address": map[string]interface{}{
 					"hostname": addressableDNS,
 				},
-			},
-		},
-	}
-}
-
-func getAddressable_noStatus() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": unaddressableAPIVersion,
-			"kind":       unaddressableKind,
-			"metadata": map[string]interface{}{
-				"namespace": testNS,
-				"name":      unaddressableName,
-			},
-		},
-	}
-}
-
-func getAddressable_nilAddress() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": addressableAPIVersion,
-			"kind":       addressableKind,
-			"metadata": map[string]interface{}{
-				"namespace": testNS,
-				"name":      addressableName,
-			},
-			"status": map[string]interface{}{
-				"address": map[string]interface{}(nil),
 			},
 		},
 	}
@@ -686,6 +688,16 @@ func TestObjectNotGitHubSource(t *testing.T) {
 	var wantErr error
 	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
 		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	}
+}
+
+func TestInjectConfig(t *testing.T) {
+	r := reconciler{}
+
+	r.InjectConfig(&rest.Config{})
+
+	if r.dynamicClient == nil {
+		t.Error("dynamicClient was nil but expected non nil")
 	}
 }
 

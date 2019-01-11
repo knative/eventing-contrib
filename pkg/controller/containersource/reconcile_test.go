@@ -34,13 +34,14 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
 	trueVal   = true
-	targetURI = "http://addressable.sink.svc.cluster.local/"
+	targetURI = "http://sinkable.sink.svc.cluster.local/"
 )
 
 const (
@@ -50,15 +51,15 @@ const (
 	containerSourceUID  = "2a2208d1-ce67-11e8-b3a3-42010a8a00af"
 	deployGeneratedName = "" //sad trombone
 
-	addressableDNS = "addressable.sink.svc.cluster.local"
+	sinkableDNS = "sinkable.sink.svc.cluster.local"
 
-	addressableName       = "testsink"
-	addressableKind       = "Sink"
-	addressableAPIVersion = "duck.knative.dev/v1alpha1"
+	sinkableName       = "testsink"
+	sinkableKind       = "Sink"
+	sinkableAPIVersion = "duck.knative.dev/v1alpha1"
 
-	unaddressableName       = "testunaddressable"
-	unaddressableKind       = "KResource"
-	unaddressableAPIVersion = "duck.knative.dev/v1alpha1"
+	unsinkableName       = "testunsinkable"
+	unsinkableKind       = "KResource"
+	unsinkableAPIVersion = "duck.knative.dev/v1alpha1"
 
 	sinkServiceName       = "testsinkservice"
 	sinkServiceKind       = "Service"
@@ -89,21 +90,37 @@ var testCases = []controllertesting.TestCase{
 		Name:       "valid containersource, but sink is not addressable",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
-			getContainerSource_unaddressable(),
-			getAddressable_noStatus(),
+			getContainerSource_unsinkable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
-		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1, Kind=KResource) does not contain address`,
+		WantErrMsg:   `kresources.duck.knative.dev "testunsinkable" not found`,
 	}, {
 		Name:       "valid containersource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// Addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
@@ -119,10 +136,27 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource_filledIn(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// Addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
 		WantPresent: []runtime.Object{
 			getDeployment(getContainerSource_filledIn()),
 		},
@@ -132,10 +166,25 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource(),
-			getAddressable_nilAddress(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// Addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}(nil),
+					},
+				},
+			},
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
@@ -145,7 +194,7 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
-		WantErrMsg:  `sink "testnamespace/testsink" (duck.knative.dev/v1alpha1, Kind=Sink) does not contain address`,
+		WantErrMsg:  `sink does not contain address`,
 	}, {
 		Name:       "invalid containersource, sink is nil",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
@@ -158,6 +207,22 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"sinkable": map[string]interface{}(nil),
+					},
+				},
+			},
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
@@ -182,6 +247,7 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
+		Objects:      []runtime.Object{},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
@@ -228,16 +294,34 @@ var testCases = []controllertesting.TestCase{
 
 				d1 := resources.MakeDeployment(nil, &resources.ContainerArguments{
 					Name:  containerSourceName,
-					Sink:  "http://" + addressableDNS + "/",
+					Sink:  "http://" + sinkableDNS + "/",
 					Image: image,
 				})
 				d.Spec = d1.Spec
 				return d
 			}(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+						"uid":       containerSourceUID,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
@@ -283,16 +367,34 @@ var testCases = []controllertesting.TestCase{
 
 				d1 := resources.MakeDeployment(nil, &resources.ContainerArguments{
 					Name:  containerSourceName,
-					Sink:  "http://old-" + addressableDNS + "/",
+					Sink:  "http://old-" + sinkableDNS + "/",
 					Image: image,
 				})
 				d.Spec = d1.Spec
 				return d
 			}(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
+		Objects: []runtime.Object{
+			// sinkable
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+						"uid":       containerSourceUID,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
+				},
+			},
+		},
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getContainerSource()
@@ -313,7 +415,6 @@ var testCases = []controllertesting.TestCase{
 				s.UID = containerSourceUID
 				return s
 			}(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
@@ -321,6 +422,24 @@ var testCases = []controllertesting.TestCase{
 			MockCreates: []controllertesting.MockCreate{
 				func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
 					return controllertesting.Handled, errors.New("force an error into client create")
+				},
+			},
+		},
+		Objects: []runtime.Object{
+			// Addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
 				},
 			},
 		},
@@ -335,7 +454,6 @@ var testCases = []controllertesting.TestCase{
 				s.UID = containerSourceUID
 				return s
 			}(),
-			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
@@ -343,6 +461,24 @@ var testCases = []controllertesting.TestCase{
 			MockLists: []controllertesting.MockList{
 				func(_ client.Client, _ context.Context, _ *client.ListOptions, _ runtime.Object) (controllertesting.MockHandled, error) {
 					return controllertesting.Handled, errors.New("force an error into client list")
+				},
+			},
+		},
+		Objects: []runtime.Object{
+			// Addressable resource
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": sinkableAPIVersion,
+					"kind":       sinkableKind,
+					"metadata": map[string]interface{}{
+						"namespace": testNS,
+						"name":      sinkableName,
+					},
+					"status": map[string]interface{}{
+						"address": map[string]interface{}{
+							"hostname": sinkableDNS,
+						},
+					},
 				},
 			},
 		},
@@ -358,7 +494,7 @@ var testCases = []controllertesting.TestCase{
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		Objects: []runtime.Object{
-			// addressable
+			// sinkable
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
 					"apiVersion": sinkServiceAPIVersion,
@@ -377,10 +513,12 @@ func TestAllCases(t *testing.T) {
 
 	for _, tc := range testCases {
 		c := tc.GetClient()
+		dc := tc.GetDynamicClient()
 
 		r := &reconciler{
-			scheme:   tc.Scheme,
-			recorder: recorder,
+			dynamicClient: dc,
+			scheme:        tc.Scheme,
+			recorder:      recorder,
 		}
 		r.InjectClient(c)
 		t.Run(tc.Name, tc.Runner(t, r, c))
@@ -395,9 +533,9 @@ func getContainerSource() *sourcesv1alpha1.ContainerSource {
 			Image: image,
 			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
-				Name:       addressableName,
-				Kind:       addressableKind,
-				APIVersion: addressableAPIVersion,
+				Name:       sinkableName,
+				Kind:       sinkableKind,
+				APIVersion: sinkableAPIVersion,
 			},
 		},
 	}
@@ -434,7 +572,7 @@ func getContainerSource_sinkService() *sourcesv1alpha1.ContainerSource {
 	return obj
 }
 
-func getContainerSource_unaddressable() *sourcesv1alpha1.ContainerSource {
+func getContainerSource_unsinkable() *sourcesv1alpha1.ContainerSource {
 	obj := &sourcesv1alpha1.ContainerSource{
 		TypeMeta:   containerSourceType(),
 		ObjectMeta: om(testNS, containerSourceName),
@@ -442,9 +580,9 @@ func getContainerSource_unaddressable() *sourcesv1alpha1.ContainerSource {
 			Image: image,
 			Args:  []string{},
 			Sink: &corev1.ObjectReference{
-				Name:       unaddressableName,
-				Kind:       unaddressableKind,
-				APIVersion: unaddressableAPIVersion,
+				Name:       unsinkableName,
+				Kind:       unsinkableKind,
+				APIVersion: unsinkableAPIVersion,
 			},
 		},
 	}
@@ -453,57 +591,10 @@ func getContainerSource_unaddressable() *sourcesv1alpha1.ContainerSource {
 	return obj
 }
 
-func getAddressable() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": addressableAPIVersion,
-			"kind":       addressableKind,
-			"metadata": map[string]interface{}{
-				"namespace": testNS,
-				"name":      addressableName,
-			},
-			"status": map[string]interface{}{
-				"address": map[string]interface{}{
-					"hostname": addressableDNS,
-				},
-			},
-		},
-	}
-}
-
-func getAddressable_noStatus() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": unaddressableAPIVersion,
-			"kind":       unaddressableKind,
-			"metadata": map[string]interface{}{
-				"namespace": testNS,
-				"name":      unaddressableName,
-			},
-		},
-	}
-}
-
-func getAddressable_nilAddress() *unstructured.Unstructured {
-	return &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": addressableAPIVersion,
-			"kind":       addressableKind,
-			"metadata": map[string]interface{}{
-				"namespace": testNS,
-				"name":      addressableName,
-			},
-			"status": map[string]interface{}{
-				"address": map[string]interface{}(nil),
-			},
-		},
-	}
-}
-
 func getDeployment(source *sourcesv1alpha1.ContainerSource) *appsv1.Deployment {
-	addressableURI := fmt.Sprintf("http://%s/", addressableDNS)
-	args := append(source.Spec.Args, fmt.Sprintf("--sink=%s", addressableURI))
-	env := append(source.Spec.Env, corev1.EnvVar{Name: "SINK", Value: addressableURI})
+	sinkableURI := fmt.Sprintf("http://%s/", sinkableDNS)
+	args := append(source.Spec.Args, fmt.Sprintf("--sink=%s", sinkableURI))
+	env := append(source.Spec.Env, corev1.EnvVar{Name: "SINK", Value: sinkableURI})
 	return &appsv1.Deployment{
 		TypeMeta: deploymentType(),
 		ObjectMeta: metav1.ObjectMeta{
@@ -579,9 +670,9 @@ func getOwnerReferences() []metav1.OwnerReference {
 func TestObjectNotContainerSource(t *testing.T) {
 	r := reconciler{}
 	obj := &corev1.ObjectReference{
-		Name:       unaddressableName,
-		Kind:       unaddressableKind,
-		APIVersion: unaddressableAPIVersion,
+		Name:       unsinkableName,
+		Kind:       unsinkableKind,
+		APIVersion: unsinkableAPIVersion,
 	}
 
 	got, gotErr := r.Reconcile(context.TODO(), obj)
@@ -609,5 +700,15 @@ func TestObjectHasDeleteTimestamp(t *testing.T) {
 	var wantErr error = nil
 	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
 		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	}
+}
+
+func TestInjectConfig(t *testing.T) {
+	r := reconciler{}
+
+	r.InjectConfig(&rest.Config{})
+
+	if r.dynamicClient == nil {
+		t.Errorf("dynamicClient was nil but expected non nil")
 	}
 }
