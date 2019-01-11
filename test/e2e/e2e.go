@@ -7,8 +7,8 @@ import (
 	"time"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/test"
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"github.com/knative/eventing/test"
 	pkgTest "github.com/knative/pkg/test"
 	"github.com/knative/pkg/test/logging"
 	servingV1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
@@ -230,5 +230,5 @@ func WaitForAllPodsRunning(clients *test.Clients, logger *logging.BaseLogger, na
 
 // ImagePath is a helper function to prefix image name with repo and suffix with tag
 func ImagePath(name string) string {
-	return fmt.Sprintf("%s/%s:%s", test.EventingFlags.DockerRepo, name, test.EventingFlags.Tag)
+	return fmt.Sprintf("%s/%s:%s", test.EventingSourcesFlags.DockerRepo, name, test.EventingSourcesFlags.Tag)
 }
