@@ -227,7 +227,9 @@ func (rep *Reporter) InjectHandlers(handlers *request.Handlers) {
 	apiCallAttemptHandler := request.NamedHandler{Name: APICallAttemptMetricHandlerName, Fn: rep.sendAPICallAttemptMetric}
 
 	handlers.Complete.PushFrontNamed(apiCallHandler)
-	handlers.CompleteAttempt.PushFrontNamed(apiCallAttemptHandler)
+	handlers.Complete.PushFrontNamed(apiCallAttemptHandler)
+
+	handlers.AfterRetry.PushFrontNamed(apiCallAttemptHandler)
 }
 
 // boolIntValue return 1 for true and 0 for false.
