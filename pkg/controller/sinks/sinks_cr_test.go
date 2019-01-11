@@ -50,7 +50,7 @@ func init() {
 	duckv1alpha1.AddToScheme(scheme.Scheme)
 }
 
-func TestGetSinkURI(t *testing.T) {
+func TestGetSinkURI_CR(t *testing.T) {
 	testCases := map[string]struct {
 		objects   []runtime.Object
 		namespace string
@@ -100,7 +100,7 @@ func TestGetSinkURI(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			ctx := context.Background()
 			client := fake.NewFakeClient(tc.objects...)
-			uri, gotErr := GetSinkURI(ctx, client, tc.ref, tc.namespace)
+			uri, gotErr := GetSinkURI_CR(ctx, client, tc.ref, tc.namespace)
 			if gotErr != nil {
 				if tc.wantErr != nil {
 					if diff := cmp.Diff(tc.wantErr.Error(), gotErr.Error()); diff != "" {
