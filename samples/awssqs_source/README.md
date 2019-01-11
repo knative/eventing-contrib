@@ -18,7 +18,7 @@
     different name, then you will need to alter other commands later.
 
     ```shell
-    kubectl -n default apply -f samples/awssqs-source/channel.yaml
+    kubectl -n default apply -f samples/awssqs_source/channel.yaml
     ```
 
 1.  Acquire
@@ -48,19 +48,23 @@
    - Note that if the `Source` Service Account secret is in a non-default
      location, you will need to update the YAML first.
 
-1. Replace the place holders in `samples/aws-sqssource/awssqs-source.yaml`.
+1. Replace the place holders in `samples/awssqs_source/awssqs-source.yaml`.
 
    - `QUEUE_URL` should be replaced with your AWS SQS queue URL.
 
+     ```shell
      export QUEUE_URL=https://sqs-eu-west-1.amazonaws.com/1234234234/my-queue
-     sed -i "s|QUEUE_URL|\$QUEUE_URL|" awssqs-source.yaml
+     sed -i "s|QUEUE_URL|$QUEUE_URL|" awssqs-source.yaml
+     ```
 
    - `QUEUE_NAME` will be used to name the event source, you can choose any
      value that makes sense to you, although a good choice is the last segment
      of the URL.
 
-     export QUEUE_NAME="my-queue" sed -i "s|QUEUE_NAME|\$QUEUE_NAME|"
-     awssqs-source.yaml
+     ```shell
+     export QUEUE_NAME="my-queue"
+     sed -i "s|QUEUE_NAME|$QUEUE_NAME|" awssqs-source.yaml
+     ```
 
    - `awsCredsSecret` should be replaced with the name of the k8s secret that
      contains the AWS credentials. Change this only if you deployed an altered
@@ -73,7 +77,7 @@
 1. Deploy `awssqs-source.yaml`.
 
    ```shell
-   kubectl -n default apply -f samples/awssqs-source/awssqs-source.yaml
+   kubectl -n default apply -f samples/awssqs_source/awssqs-source.yaml
    ```
 
 ### Subscriber
@@ -88,7 +92,7 @@ Knative Service that dumps incoming messages to its log and create a
 1. Deploy `subscriber.yaml`.
 
    ```shell
-   ko -n default apply -f samples/awssqs-source/subscriber.yaml
+   ko -n default apply -f samples/awssqs_source/subscriber.yaml
    ```
 
 ### Publish

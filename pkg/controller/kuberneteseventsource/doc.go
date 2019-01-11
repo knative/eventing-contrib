@@ -16,6 +16,7 @@ limitations under the License.
 
 // Package kuberneteseventsource implements a KubernetesEventSource controller.
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=kuberneteseventsources,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=kuberneteseventsources/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=containersources,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=,resources=events,verbs=get;list;watch;create;update;patch;delete
 package kuberneteseventsource

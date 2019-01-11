@@ -23,6 +23,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
@@ -67,7 +69,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Body:       &body,
 				Attributes: attrs,
 			}
-			err := a.postMessage(context.TODO(), m)
+			err := a.postMessage(context.TODO(), zap.S(), m)
 
 			if tc.error && err == nil {
 				t.Errorf("expected error, but got %v", err)

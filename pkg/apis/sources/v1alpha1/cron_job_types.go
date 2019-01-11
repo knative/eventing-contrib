@@ -29,6 +29,7 @@ import (
 
 // CronJobSource is the Schema for the cronjobsources API.
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 // +kubebuilder:categories=all,knative,eventing,sources
 type CronJobSource struct {
 	metav1.TypeMeta   `json:",inline"`

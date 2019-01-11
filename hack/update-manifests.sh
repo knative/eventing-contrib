@@ -24,19 +24,39 @@ function run_kustomize() {
   run_go_tool sigs.k8s.io/kustomize kustomize "$@"
 }
 
+# We've had to make local changes to controller-gen in the past, so always run
+# it from vendor rather than upstream.
+# TODO(n3wscott): Is this still needed?
+function run_controller_gen() {
+  go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go "$@"
+}
+
 cd ${REPO_ROOT_DIR}
 
 # Ensure we have everything we need under vendor/
 ${REPO_ROOT_DIR}/hack/update-deps.sh
 
 # Generate manifests e.g. CRD, RBAC etc.
-go run vendor/sigs.k8s.io/controller-tools/cmd/controller-gen/main.go all
+run_controller_gen all
 
 # Generate the default config from kustomize.
 run_kustomize build config/default/ > config/default.yaml
 
+run_kustomize build config/awssqs > config/default-awssqs.yaml
+
 # To deploy controller in the configured Kubernetes cluster in ~/.kube/config
 # run_kustomize build config/default | ko apply -f /dev/stdin/
 
+# Items in contrib will need the above tools applied separately for each
+# directory.
+
+PUBSUB_INPUT_DIR="$(realpath contrib/gcppubsub)"
+PUBSUB_OUTPUT_DIR="$(realpath contrib/gcppubsub/config)"
+run_controller_gen crd --root-path="${PUBSUB_INPUT_DIR}" --output-dir="${PUBSUB_OUTPUT_DIR}"
+# `run_controller_gen all` doesn't support setting the --name flag for rbac,
+# which is needed to avoid collisions between the gcppubsub controller and the
+# default controller.
+run_controller_gen rbac --name=gcppubsub-controller --input-dir="${PUBSUB_INPUT_DIR}/pkg" --output-dir="${PUBSUB_OUTPUT_DIR}"
+
 # Generate the default config that includes gcppubsub.
-run_kustomize build config/gcppubsub/ > config/default-gcppubsub.yaml
+run_kustomize build contrib/gcppubsub/config/ > contrib/gcppubsub/config/default-gcppubsub.yaml

@@ -1248,6 +1248,7 @@
     "github.com/pkg/errors",
     "github.com/robfig/cron",
     "go.uber.org/zap",
+    "go.uber.org/zap/zapcore",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "gopkg.in/go-playground/webhooks.v3",

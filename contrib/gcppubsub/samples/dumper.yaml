@@ -1,0 +1,45 @@
+# This is a very simple Knative Service that writes the input request to its log.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-dumper
+spec:
+  selector:
+    matchLabels:
+      app: message-dumper
+  template:
+    metadata:
+      labels:
+        app: message-dumper
+    spec:
+      containers:
+      - name: user-container
+        image: github.com/knative/eventing-sources/cmd/message_dumper
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: message-dumper
+spec:
+  selector:
+    app: message-dumper
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+
+# apiVersion: serving.knative.dev/v1alpha1
+# kind: Service
+# metadata:
+#   name: message-dumper
+#   namespace: default
+# spec:
+#   runLatest:
+#     configuration:
+#       revisionTemplate:
+#         spec:
+#           container:
+#             image: github.com/knative/eventing-sources/cmd/message_dumper

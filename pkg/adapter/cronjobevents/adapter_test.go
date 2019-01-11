@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
@@ -54,7 +56,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				ID:   "ABC",
 				Body: a.Data,
 			}
-			err := a.postMessage(context.TODO(), m)
+			err := a.postMessage(context.TODO(), zap.S(), m)
 
 			if tc.error && err == nil {
 				t.Errorf("expected error, but got %v", err)
