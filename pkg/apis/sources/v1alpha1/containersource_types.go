@@ -137,6 +137,7 @@ func (s *ContainerSourceStatus) MarkNotDeployed(reason, messageFormat string, me
 
 // ContainerSource is the Schema for the containersources API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 // +kubebuilder:categories=all,knative,eventing,sources
 type ContainerSource struct {
 	metav1.TypeMeta   `json:",inline"`

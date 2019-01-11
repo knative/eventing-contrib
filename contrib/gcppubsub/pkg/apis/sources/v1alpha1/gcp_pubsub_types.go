@@ -30,6 +30,7 @@ import (
 
 // GcpPubSubSource is the Schema for the gcppubsubsources API.
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
 // +kubebuilder:categories=all,knative,eventing,sources
 type GcpPubSubSource struct {
 	metav1.TypeMeta   `json:",inline"`
