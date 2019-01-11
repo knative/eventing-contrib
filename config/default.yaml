@@ -568,14 +568,6 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - sources.eventing.knative.dev
-  resources:
-  - containersources/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
   - ""
   resources:
   - events

@@ -18,7 +18,6 @@ limitations under the License.
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=kuberneteseventsources,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=kuberneteseventsources/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=containersources,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=containersources/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=,resources=events,verbs=get;list;watch;create;update;patch;delete
 package kuberneteseventsource
 
