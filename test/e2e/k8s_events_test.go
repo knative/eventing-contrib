@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/knative/eventing/test"
+	"github.com/knative/eventing-sources/test"
 	pkgTest "github.com/knative/pkg/test"
 	"github.com/knative/pkg/test/logging"
 )

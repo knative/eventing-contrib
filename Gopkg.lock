@@ -347,7 +347,7 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:b4b0e00f7fdc46c5f68ac669d0a71fdfc0269ae10e050cc3ed325f9bac20f109"
+  digest = "1:2eb648d2ff990646fead56b6b10f6326354e7dd0173698819de24c25f4deca3f"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
@@ -356,7 +356,6 @@
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
-    "test",
   ]
   pruneopts = "NUT"
   revision = "4712e3a42fccad12a37f3ee07fc407fa5b0c4506"
@@ -1231,7 +1230,6 @@
     "github.com/gorilla/websocket",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
-    "github.com/knative/eventing/test",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
@@ -1258,6 +1256,7 @@
     "gopkg.in/go-playground/webhooks.v3/github",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/rbac/v1",
     "k8s.io/api/rbac/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",
