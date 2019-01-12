@@ -42,8 +42,6 @@ run_controller_gen all
 # Generate the default config from kustomize.
 run_kustomize build config/default/ > config/default.yaml
 
-run_kustomize build config/awssqs > config/default-awssqs.yaml
-
 # To deploy controller in the configured Kubernetes cluster in ~/.kube/config
 # run_kustomize build config/default | ko apply -f /dev/stdin/
 
@@ -60,3 +58,6 @@ run_controller_gen rbac --name=gcppubsub-controller --input-dir="${PUBSUB_INPUT_
 
 # Generate the default config that includes gcppubsub.
 run_kustomize build contrib/gcppubsub/config/ > contrib/gcppubsub/config/default-gcppubsub.yaml
+# Generate the default config that includes awssqs
+run_kustomize build contrib/awssqs/config > contrib/awssqs/config/default-awssqs.yaml
+
