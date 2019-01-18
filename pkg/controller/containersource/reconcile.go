@@ -132,6 +132,11 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	return source, nil
 }
 
+// setSinkURIArg attempts to get the sink URI from the sink reference and
+// set it in the source status. On failure, the source's Sink condition is
+// updated to reflect the error.
+// If an error is returned from this function, the caller should also record
+// an Event containing the error string.
 func (r *reconciler) setSinkURIArg(ctx context.Context, source *v1alpha1.ContainerSource, args *resources.ContainerArguments) error {
 	if uri, ok := sinkArg(source); ok {
 		args.SinkInArgs = true
