@@ -121,10 +121,10 @@ func (s *ContainerSourceStatus) MarkNoSink(reason, messageFormat string, message
 // false.
 func (s *ContainerSourceStatus) IsDeployed() bool {
 	c := containerCondSet.Manage(s).GetCondition(ContainerConditionDeployed)
-	if c == nil || !c.IsTrue() {
-		return false
+	if c != nil {
+		return c.IsTrue()
 	}
-	return true
+	return false
 }
 
 // MarkDeployed sets the condition that the source has been deployed.
