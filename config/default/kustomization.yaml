@@ -8,16 +8,20 @@ namespace: knative-sources
 # markers ("---").
 resources:
 - ../crds/sources_v1alpha1_containersource.yaml
-- ../crds/sources_v1alpha1_kuberneteseventsource.yaml
-- ../crds/sources_v1alpha1_githubsource.yaml
 - ../crds/sources_v1alpha1_cronjobsource.yaml
+- ../crds/sources_v1alpha1_githubsource.yaml
+- ../crds/sources_v1alpha1_kuberneteseventsource.yaml
 - ../rbac/rbac_role.yaml
 - ../rbac/rbac_role_binding.yaml
 - ../manager/manager.yaml
 
 patches:
 - manager_image_patch.yaml
+- containersource_label_patch.yaml
+- cronjobsource_label_patch.yaml
+- githubsource_label_patch.yaml
+- kuberneteseventsource_label_patch.yaml
 - containersource_conditions_patch.yaml
-- kuberneteseventsource_conditions_patch.yaml
-- githubsource_conditions_patch.yaml
 - cronjobsource_conditions_patch.yaml
+- githubsource_conditions_patch.yaml
+- kuberneteseventsource_conditions_patch.yaml

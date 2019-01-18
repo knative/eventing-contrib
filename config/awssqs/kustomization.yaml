@@ -16,4 +16,5 @@ resources:
 
 patches:
   - conditions_patch.yaml
+  - label_patch.yaml
   - env_patch.yaml
