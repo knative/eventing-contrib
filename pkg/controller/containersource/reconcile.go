@@ -92,20 +92,17 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		if errors.IsNotFound(err) {
 			deploy, err = r.createDeployment(ctx, source, nil, args)
 			if err != nil {
-				r.recorder.Eventf(source, corev1.EventTypeWarning, "DeploymentCreateFailed", "Could not create deployment: %v", err)
-				source.Status.MarkDeploying("DeploymentCreateFailed", "Could not create deployment: %v", err)
+				r.markDeployingAndRecordEvent(source, corev1.EventTypeWarning, "DeploymentCreateFailed", "Could not create deployment: %v", err)
 				return object, err
 			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "DeploymentCreated", "Created deployment %q", deploy.Name)
-			source.Status.MarkDeploying("DeploymentCreated", "Created deployment %q", deploy.Name)
+			r.markDeployingAndRecordEvent(source, corev1.EventTypeNormal, "DeploymentCreated", "Created deployment %q", deploy.Name)
 			// Since the Deployment has just been created, there's nothing more
 			// to do until it gets a status. This ContainerSource will be reconciled
 			// again when the Deployment is updated.
 			return object, nil
 		}
 		// Something unexpected happened getting the deployment.
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "DeploymentGetFailed", "Error getting deployment: %v", err)
-		source.Status.MarkDeploying("DeploymentGetFailed", "Error getting deployment: %v", err)
+		r.markDeployingAndRecordEvent(source, corev1.EventTypeWarning, "DeploymentGetFailed", "Error getting deployment: %v", err)
 		return object, err
 	}
 
@@ -117,13 +114,10 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	if !equality.Semantic.DeepDerivative(expected.Spec, deploy.Spec) {
 		deploy.Spec = expected.Spec
 		err := r.client.Update(ctx, deploy)
-		// if no error, update the status.
-		if err == nil {
-			source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "DeploymentUpdated", "Updated deployment %q", deploy.Name)
+		if err != nil {
+			r.markDeployingAndRecordEvent(source, corev1.EventTypeWarning, "DeploymentUpdateFailed", "Failed to update deployment %q: %v", deploy.Name, err)
 		} else {
-			source.Status.MarkDeploying("DeploymentUpdateFailed", "Failed to update deployment %q: %v", deploy.Name, err)
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "DeploymentUpdateFailed", "Failed to update deployment %q: %v", deploy.Name, err)
+			r.markDeployingAndRecordEvent(source, corev1.EventTypeNormal, "DeploymentUpdated", "Updated deployment %q", deploy.Name)
 		}
 		// Return after this update or error and reconcile again
 		return object, err
@@ -212,6 +206,11 @@ func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.Cont
 		return nil, err
 	}
 	return deployment, nil
+}
+
+func (r *reconciler) markDeployingAndRecordEvent(source *v1alpha1.ContainerSource, evType string, reason string, messageFmt string, args ...interface{}) {
+	r.recorder.Eventf(source, evType, reason, messageFmt, args...)
+	source.Status.MarkDeploying(reason, messageFmt, args...)
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {

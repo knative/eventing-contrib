@@ -298,7 +298,7 @@ var testCases = []controllertesting.TestCase{
 				s := getContainerSource()
 				s.UID = containerSourceUID
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", containerSourceName+"-abc")
+				s.Status.MarkDeploying("DeploymentUpdated", "Updated deployment %q", containerSourceName+"-abc")
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
