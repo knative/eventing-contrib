@@ -11,8 +11,10 @@ resources:
   - sources_v1alpha1_awssqssource.yaml
   - istio_egress.yaml
   - manager.yaml
+  - service_account.yaml
   - rbac_role.yaml
   - rbac_role_binding.yaml
 
 patches:
   - conditions_patch.yaml
+  - rbac_role_binding_patch.yaml

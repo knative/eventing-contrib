@@ -29,13 +29,21 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - ""
+  - sources.eventing.knative.dev
   resources:
-  - secrets
+  - awssqssources/status
   verbs:
   - get
-  - list
-  - watch
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+    - secrets
+  verbs:
+    - get
+    - list
+    - watch
 - apiGroups:
   - eventing.knative.dev
   resources:
