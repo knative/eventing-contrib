@@ -26,6 +26,14 @@ type AwsSqsSourceListerExpansion interface{}
 // AwsSqsSourceNamespaceLister.
 type AwsSqsSourceNamespaceListerExpansion interface{}
 
+// CloudEventsIngressSourceListerExpansion allows custom methods to be added to
+// CloudEventsIngressSourceLister.
+type CloudEventsIngressSourceListerExpansion interface{}
+
+// CloudEventsIngressSourceNamespaceListerExpansion allows custom methods to be added to
+// CloudEventsIngressSourceNamespaceLister.
+type CloudEventsIngressSourceNamespaceListerExpansion interface{}
+
 // GitHubSourceListerExpansion allows custom methods to be added to
 // GitHubSourceLister.
 type GitHubSourceListerExpansion interface{}

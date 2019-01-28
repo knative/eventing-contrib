@@ -28,6 +28,7 @@ import (
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AwsSqsSourcesGetter
+	CloudEventsIngressSourcesGetter
 	GitHubSourcesGetter
 	KubernetesEventSourcesGetter
 }
@@ -39,6 +40,10 @@ type SourcesV1alpha1Client struct {
 
 func (c *SourcesV1alpha1Client) AwsSqsSources(namespace string) AwsSqsSourceInterface {
 	return newAwsSqsSources(c, namespace)
+}
+
+func (c *SourcesV1alpha1Client) CloudEventsIngressSources(namespace string) CloudEventsIngressSourceInterface {
+	return newCloudEventsIngressSources(c, namespace)
 }
 
 func (c *SourcesV1alpha1Client) GitHubSources(namespace string) GitHubSourceInterface {

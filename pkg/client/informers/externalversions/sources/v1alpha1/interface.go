@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// AwsSqsSources returns a AwsSqsSourceInformer.
 	AwsSqsSources() AwsSqsSourceInformer
+	// CloudEventsIngressSources returns a CloudEventsIngressSourceInformer.
+	CloudEventsIngressSources() CloudEventsIngressSourceInformer
 	// GitHubSources returns a GitHubSourceInformer.
 	GitHubSources() GitHubSourceInformer
 	// KubernetesEventSources returns a KubernetesEventSourceInformer.
@@ -46,6 +48,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // AwsSqsSources returns a AwsSqsSourceInformer.
 func (v *version) AwsSqsSources() AwsSqsSourceInformer {
 	return &awsSqsSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// CloudEventsIngressSources returns a CloudEventsIngressSourceInformer.
+func (v *version) CloudEventsIngressSources() CloudEventsIngressSourceInformer {
+	return &cloudEventsIngressSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // GitHubSources returns a GitHubSourceInformer.

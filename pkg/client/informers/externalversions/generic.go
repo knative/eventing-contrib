@@ -55,6 +55,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=sources.eventing.knative.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("awssqssources"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().AwsSqsSources().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("cloudeventsingresssources"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().CloudEventsIngressSources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("githubsources"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().GitHubSources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("kuberneteseventsources"):

@@ -24,6 +24,7 @@ rules:
   - awssqssources
   - githubsources
   - kuberneteseventsources
+  - cloudeventingresses
   verbs: &everything
   - get
   - list
@@ -58,6 +59,7 @@ rules:
   - awssqssources/status
   - githubsources/status
   - kuberneteseventsources/status
+  - cloudeventingresses/status
   verbs:
   - get
   - update

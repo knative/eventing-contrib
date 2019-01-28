@@ -32,6 +32,10 @@ func (c *FakeSourcesV1alpha1) AwsSqsSources(namespace string) v1alpha1.AwsSqsSou
 	return &FakeAwsSqsSources{c, namespace}
 }
 
+func (c *FakeSourcesV1alpha1) CloudEventsIngressSources(namespace string) v1alpha1.CloudEventsIngressSourceInterface {
+	return &FakeCloudEventsIngressSources{c, namespace}
+}
+
 func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSourceInterface {
 	return &FakeGitHubSources{c, namespace}
 }
