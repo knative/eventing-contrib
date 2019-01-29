@@ -136,7 +136,7 @@ func TestStart(t *testing.T) {
 		stopped = true
 	}()
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
 	if !stopped {
 		t.Errorf("failed to stop adapter")
