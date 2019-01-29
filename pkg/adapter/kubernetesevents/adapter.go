@@ -70,7 +70,8 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	})
 
 	logger.Debug("Starting eventsInformer...")
-	go eventsInformer.Run(stopCh)
+	stop := make(chan struct{})
+	go eventsInformer.Run(stop)
 
 	logger.Debug("waiting for caches to sync...")
 	if ok := cache.WaitForCacheSync(stopCh, eventsInformer.HasSynced); !ok {
@@ -78,6 +79,7 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	}
 	logger.Debug("caches synced...")
 	<-stopCh
+	stop <- struct{}{}
 	return nil
 }
 

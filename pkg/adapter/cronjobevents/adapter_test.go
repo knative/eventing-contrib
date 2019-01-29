@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
 func TestStart_ServeHTTP(t *testing.T) {
@@ -65,7 +64,7 @@ func TestStart_ServeHTTP(t *testing.T) {
 				SinkURI:  sinkServer.URL,
 			}
 
-			stop := make(chan struct{}, 10)
+			stop := make(chan struct{})
 
 			stopped := false
 			go func() {
@@ -80,13 +79,6 @@ func TestStart_ServeHTTP(t *testing.T) {
 			}()
 
 			a.cronTick() // force a tick.
-
-			stop <- struct{}{}
-			time.Sleep(10 * time.Millisecond)
-
-			if !stopped {
-				t.Errorf("failed to stop adapter")
-			}
 
 			if tc.reqBody != string(h.body) {
 				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)

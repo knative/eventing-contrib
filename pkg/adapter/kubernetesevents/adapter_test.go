@@ -19,6 +19,7 @@ package kubernetesevents
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -117,6 +118,29 @@ func TestUpdateEvent_NonExistentSink(t *testing.T) {
 	}
 
 	a.updateEvent(nil, event)
+}
+
+func TestStart(t *testing.T) {
+	a := &Adapter{
+		SinkURI:   "http://localhost:50/",
+		Namespace: "default",
+	}
+
+	stop := make(chan struct{})
+
+	stopped := false
+	go func() {
+		if err := a.Start(stop); err != nil {
+			log.Printf("failed to start, %v", err) //not expected to start.
+		}
+		stopped = true
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+
+	if !stopped {
+		t.Errorf("failed to stop adapter")
+	}
 }
 
 type fakeHandler struct {
