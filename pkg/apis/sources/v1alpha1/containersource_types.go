@@ -24,9 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Important: Run "make" to regenerate code after modifying this file
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // Check that ContainerSource can be validated and can be defaulted.
 var _ runtime.Object = (*ContainerSource)(nil)
 
