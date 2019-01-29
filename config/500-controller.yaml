@@ -28,8 +28,6 @@ spec:
     metadata:
       labels:
         app: controller-manager
-        # TODO does changing the labels 
-        # cause orphaned pods?
     spec:
       containers:
       - image: github.com/knative/eventing-sources/cmd/manager

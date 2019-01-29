@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gcppubsub-controller-manager
+  namespace: knative-sources
+  labels:
+    app: gcppubsub-controller-manager
+spec:
+  selector:
+    matchLabels:
+      app: gcppubsub-controller-manager
+  serviceName: gcppubsub-controller-manager
+  serviceAccountName: gcppubsub-controller-manager
+  template:
+    metadata:
+      labels:
+        app: gcppubsub-controller-manager
+    spec:
+      containers:
+      - name: manager
+        image: github.com/knative/eventing-sources/contrib/gcppubsub/cmd/controller
+        env:
+        - name: ENABLE_GCPPUBSUB_SOURCE
+          value: 'true'
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name: GCPPUBSUB_RA_IMAGE
+          value: github.com/knative/eventing-sources/contrib/gcppubsub/cmd/receive_adapter
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 20m
+            memory: 20Mi
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: gcppubsub-source-key
+      serviceAccount: gcppubsub-controller-manager
+      terminationGracePeriodSeconds: 10
