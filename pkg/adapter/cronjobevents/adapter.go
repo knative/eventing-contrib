@@ -23,7 +23,6 @@ import (
 
 	"github.com/knative/pkg/cloudevents"
 	"github.com/knative/pkg/logging"
-	"github.com/knative/pkg/signals"
 	"go.uber.org/zap"
 )
 
@@ -46,13 +45,8 @@ type Adapter struct {
 	client *cloudevents.Client
 }
 
-func (a *Adapter) Start(ctx context.Context) error {
+func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	logger := logging.FromContext(ctx)
-
-	a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{
-		EventType: eventType,
-		Source:    "CronJob",
-	})
 
 	sched, err := cron.ParseStandard(a.Schedule)
 	if err != nil {
@@ -61,7 +55,6 @@ func (a *Adapter) Start(ctx context.Context) error {
 	}
 	c := cron.New()
 	c.Schedule(sched, cron.FuncJob(a.cronTick))
-	stopCh := signals.SetupSignalHandler()
 	c.Start()
 	<-stopCh
 	c.Stop()
@@ -72,8 +65,10 @@ func (a *Adapter) Start(ctx context.Context) error {
 func (a *Adapter) cronTick() {
 	logger := logging.FromContext(context.TODO())
 	if a.client == nil {
-		logger.Error("cloudevents client is nil")
-		return
+		a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{
+			EventType: eventType,
+			Source:    "CronJob",
+		})
 	}
 	if err := a.client.Send(message(a.Data)); err != nil {
 		logger.Error("failed to send cloudevent", err)

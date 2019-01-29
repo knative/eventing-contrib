@@ -14,14 +14,87 @@ limitations under the License.
 package cronjobevents
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/google/go-cmp/cmp"
 	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
+
+func TestStart_ServeHTTP(t *testing.T) {
+	testCases := map[string]struct {
+		schedule string
+		sink     func(http.ResponseWriter, *http.Request)
+		reqBody  string
+		error    bool
+	}{
+		"happy": {
+			schedule: "* * * * *", // every minute
+			sink:     sinkAccepted,
+			reqBody:  `{"body":"data"}`,
+		},
+		"rejected": {
+			schedule: "* * * * *", // every minute
+			sink:     sinkRejected,
+			reqBody:  `{"body":"data"}`,
+			error:    true,
+		},
+		"bad cron": {
+			schedule: "bad",
+			sink:     sinkRejected,
+			reqBody:  `{"body":"data"}`,
+			error:    true,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			h := &fakeHandler{
+				handler: tc.sink,
+			}
+			sinkServer := httptest.NewServer(h)
+			defer sinkServer.Close()
+
+			a := &Adapter{
+				Schedule: tc.schedule,
+				Data:     "data",
+				SinkURI:  sinkServer.URL,
+			}
+
+			stop := make(chan struct{}, 10)
+
+			stopped := false
+			go func() {
+				if err := a.Start(context.TODO(), stop); err != nil {
+					if tc.error {
+						// skip
+					} else {
+						t.Errorf("failed to start, %v", err)
+					}
+				}
+				stopped = true
+			}()
+
+			a.cronTick() // force a tick.
+
+			stop <- struct{}{}
+			time.Sleep(10 * time.Millisecond)
+
+			if !stopped {
+				t.Errorf("failed to stop adapter")
+			}
+
+			if tc.reqBody != string(h.body) {
+				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)
+			}
+			log.Print("test done")
+		})
+	}
+}
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
 	testCases := map[string]struct {
@@ -102,8 +175,8 @@ func TestMessage(t *testing.T) {
 }
 
 type fakeHandler struct {
-	body []byte
-
+	body    []byte
+	ran     int
 	handler func(http.ResponseWriter, *http.Request)
 }
 
@@ -117,6 +190,8 @@ func (h *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 	h.handler(w, r)
+
+	h.ran++
 }
 
 func sinkAccepted(writer http.ResponseWriter, req *http.Request) {
