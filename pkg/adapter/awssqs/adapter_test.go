@@ -18,6 +18,7 @@ package awssqs
 
 import (
 	"context"
+	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -57,6 +58,10 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				QueueURL:             "https://sqs.us-east-2.amazonaws.com/123123/MyQueue",
 				SinkURI:              sinkServer.URL,
 				OnFailedPollWaitSecs: 1,
+				client: cloudevents.NewClient(sinkServer.URL, cloudevents.Builder{
+					EventType: eventType,
+					Source:    "awssqs",
+				}),
 			}
 
 			body := "The body"
@@ -132,6 +137,10 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				QueueURL: "https://sqs.us-east-2.amazonaws.com/123123/MyQueue",
 				SinkURI:  sinkServer.URL,
+				client: cloudevents.NewClient(sinkServer.URL, cloudevents.Builder{
+					EventType: eventType,
+					Source:    "awssqs",
+				}),
 			}
 
 			ack := new(bool)

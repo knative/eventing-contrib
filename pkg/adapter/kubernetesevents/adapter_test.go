@@ -24,8 +24,6 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -119,41 +117,6 @@ func TestUpdateEvent_NonExistentSink(t *testing.T) {
 	}
 
 	a.updateEvent(nil, event)
-}
-
-func TestPostMessage_InvalidSink(t *testing.T) {
-	a := &Adapter{
-		SinkURI:   "@#$@",
-		Namespace: "default",
-	}
-
-	uid := types.UID("ABC")
-
-	ref := corev1.ObjectReference{
-		Kind:            "Kind",
-		Namespace:       "Namespace",
-		Name:            "Name",
-		APIVersion:      "api/version",
-		ResourceVersion: "v1test1",
-		FieldPath:       "field",
-	}
-
-	now := time.Now()
-
-	event := &corev1.Event{
-		ObjectMeta: metav1.ObjectMeta{
-			UID:               uid,
-			CreationTimestamp: metav1.Time{Time: now},
-		},
-		InvolvedObject: ref,
-	}
-
-	err := a.postMessage(zap.S(), event)
-
-	want := `POST failed: Post @#$@: unsupported protocol scheme ""`
-	if err == nil || err.Error() != want {
-		t.Errorf("want %q, got: %q", want, err.Error())
-	}
 }
 
 type fakeHandler struct {

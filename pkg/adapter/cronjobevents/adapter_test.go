@@ -14,13 +14,13 @@ limitations under the License.
 package cronjobevents
 
 import (
-	"context"
+	"encoding/json"
+	"github.com/google/go-cmp/cmp"
+	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"go.uber.org/zap"
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
@@ -31,11 +31,11 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 	}{
 		"happy": {
 			sink:    sinkAccepted,
-			reqBody: `{"ID":"ABC","EventTime":"0001-01-01T00:00:00Z","Body":"data"}`,
+			reqBody: `{"body":"data"}`,
 		},
 		"rejected": {
 			sink:    sinkRejected,
-			reqBody: `{"ID":"ABC","EventTime":"0001-01-01T00:00:00Z","Body":"data"}`,
+			reqBody: `{"body":"data"}`,
 			error:   true,
 		},
 	}
@@ -50,20 +50,52 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				Data:    "data",
 				SinkURI: sinkServer.URL,
+				client: cloudevents.NewClient(sinkServer.URL, cloudevents.Builder{
+					EventType: eventType,
+					Source:    "CronJob",
+				}),
 			}
 
-			m := &Message{
-				ID:   "ABC",
-				Body: a.Data,
-			}
-			err := a.postMessage(context.TODO(), zap.S(), m)
-
-			if tc.error && err == nil {
-				t.Errorf("expected error, but got %v", err)
-			}
+			a.cronTick()
 
 			if tc.reqBody != string(h.body) {
 				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)
+			}
+		})
+	}
+}
+
+func TestMessage(t *testing.T) {
+	testCases := map[string]struct {
+		body string
+		want string
+	}{
+		"json simple": {
+			body: `{"message": "Hello world!"}`,
+			want: `{"message":"Hello world!"}`,
+		},
+		"json complex": {
+			body: `{"message": "Hello world!","extra":{"a":"sub", "b":[1,2,3]}}`,
+			want: `{"extra":{"a":"sub","b":[1,2,3]},"message":"Hello world!"}`,
+		},
+		"string": {
+			body: "Hello, World!",
+			want: `{"body":"Hello, World!"}`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			m := message(tc.body)
+
+			j, err := json.Marshal(m)
+			if err != nil {
+				t.Errorf("failed to marshel message: %v", err)
+			}
+
+			got := string(j)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("%s: (-want, +got) = %v", n, diff)
 			}
 		})
 	}

@@ -19,9 +19,6 @@ package kubernetesevents
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 
@@ -42,6 +39,9 @@ type Adapter struct {
 	Namespace string
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
+
+	// client sends cloudevents.
+	client *cloudevents.Client
 }
 
 // Run starts the kubernetes receive adapter and sends events produced in the
@@ -60,6 +60,11 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	if err != nil {
 		return err
 	}
+
+	a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{
+		EventType: eventType,
+		Source:    "k8s",
+	})
 
 	eventsInformer := coreinformers.NewFilteredEventInformer(
 		kubeClient, a.Namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
@@ -89,35 +94,8 @@ func (a *Adapter) addEvent(new interface{}) {
 	event := new.(*corev1.Event)
 	logger := logging.FromContext(context.TODO()).With(zap.Any("eventID", event.ObjectMeta.UID), zap.Any("sink", a.SinkURI))
 	logger.Debug("GOT EVENT", event)
-	if err := a.postMessage(logger, event); err != nil {
+
+	if err := a.client.Send(event, cloudEventOverrides(event)); err != nil {
 		logger.Info("Event delivery failed: %s", err)
 	}
-}
-
-func (a *Adapter) postMessage(logger *zap.SugaredLogger, m *corev1.Event) error {
-	ectx := cloudEventsContext(m)
-
-	logger.Debug("posting to sinkURI")
-	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
-	// event metadata.
-	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, *ectx)
-	if err != nil {
-		return fmt.Errorf("Encoding failed: %s", err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("POST failed: %s", err)
-	}
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugw("response", zap.Any("status", resp.Status), zap.Any("body", string(body)))
-
-	// If the response is not within the 2xx range, return an error.
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("[%d] unexpected response %q", resp.StatusCode, body)
-	}
-
-	return nil
 }
