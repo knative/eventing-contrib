@@ -135,12 +135,6 @@ func TestStart(t *testing.T) {
 		}
 		stopped = true
 	}()
-
-	time.Sleep(50 * time.Millisecond)
-
-	if !stopped {
-		t.Errorf("failed to stop adapter")
-	}
 }
 
 type fakeHandler struct {
