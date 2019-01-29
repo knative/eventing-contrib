@@ -61,11 +61,6 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 		return err
 	}
 
-	a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{
-		EventType: eventType,
-		Source:    "k8s",
-	})
-
 	eventsInformer := coreinformers.NewFilteredEventInformer(
 		kubeClient, a.Namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
 
@@ -94,6 +89,10 @@ func (a *Adapter) addEvent(new interface{}) {
 	event := new.(*corev1.Event)
 	logger := logging.FromContext(context.TODO()).With(zap.Any("eventID", event.ObjectMeta.UID), zap.Any("sink", a.SinkURI))
 	logger.Debug("GOT EVENT", event)
+
+	if a.client == nil {
+		a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{EventType: eventType})
+	}
 
 	if err := a.client.Send(event, cloudEventOverrides(event)); err != nil {
 		logger.Info("Event delivery failed: %s", err)

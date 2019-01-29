@@ -43,7 +43,7 @@ func TestCloudEventOverrides(t *testing.T) {
 
 	now := time.Now()
 
-	want := &cloudevents.V01EventContext{
+	want := cloudevents.V01EventContext{
 		EventID:   string(uid),
 		Source:    refLink,
 		EventTime: now,
