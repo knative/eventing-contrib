@@ -16,14 +16,20 @@
 
 source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 
-# TODO(n3wscott): finalize the release packages when we have something to release.
-
 # Yaml files to generate, and the source config dir for them.
+declare -A COMPONENTS
+COMPONENTS=(
+  ["sources.yaml"]="config"
+  ["gcppubsub.yaml"]="contrib/gcppubsub/config"
+  ["message-dumper.yaml"]="config/tools/message-dumper"
+)
+readonly COMPONENTS
+
 declare -A RELEASES
 RELEASES=(
-  ["release.yaml"]="config/default.yaml"
-  ["release-gcppubsub.yaml"]="contrib/gcppubsub/config/default-gcppubsub.yaml"
-  ["message-dumper.yaml"]="config/tools/message-dumper.yaml"
+  ["release.yaml"]="sources.yaml"
+  ["gcppubsub.yaml"]="gcppubsub.yaml"
+  ["message-dumper.yaml"]="message-dumper.yaml"
 )
 readonly RELEASES
 
@@ -40,12 +46,27 @@ run_validation_tests ./test/presubmit-tests.sh
 
 banner "Building the release"
 
+# Build the components
+
 all_yamls=()
 
-for yaml in "${!RELEASES[@]}"; do
-  config="${RELEASES[${yaml}]}"
+for yaml in "${!COMPONENTS[@]}"; do
+  config="${COMPONENTS[${yaml}]}"
   echo "Building Knative Eventing Sources - ${config}"
-  ko resolve ${KO_FLAGS} -f ${config} > ${yaml}
+  ko resolve ${KO_FLAGS} -f ${config}/ > ${yaml}
+  tag_images_in_yaml ${yaml}
+  all_yamls+=(${yaml})
+done
+
+# Assemble the release
+for yaml in "${!RELEASES[@]}"; do
+  echo "Assembling Knative Eventing Sources - ${yaml}"
+  echo "" > ${yaml}
+  for component in ${RELEASES[${yaml}]}; do
+    echo "---" >> ${yaml}
+    echo "# ${component}" >> ${yaml}
+    cat ${component} >> ${yaml}
+  done
   tag_images_in_yaml ${yaml}
   all_yamls+=(${yaml})
 done

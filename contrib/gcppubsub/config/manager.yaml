@@ -2,33 +2,21 @@
 # GCPPubSub event source.
 
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: gcppubsub-controller-service
-  labels:
-    control-plane: gcppubsub-controller
-spec:
-  selector:
-    control-plane: gcppubsub-controller
-  ports:
-  - port: 443
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: gcppubsub-controller
+  name: gcppubsub-controller-manager
   labels:
-    control-plane: gcpubsub-controller
+    control-plane: gcpubsub-controller-manager
 spec:
   selector:
     matchLabels:
-      control-plane: gcppubsub-controller
-  serviceName: gcppubsub-controller-service
+      control-plane: gcppubsub-controller-manager
+  serviceName: gcppubsub-controller
   template:
     metadata:
       labels:
-        control-plane: gcppubsub-controller
+        control-plane: gcppubsub-controller-manager
     spec:
       containers:
         - name: manager
@@ -54,5 +42,5 @@ spec:
         - name: google-cloud-key
           secret:
             secretName: gcppubsub-source-key
-      serviceAccount: gcppubsub
+      serviceAccount: gcppubsub-controller-manager
       terminationGracePeriodSeconds: 10

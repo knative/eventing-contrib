@@ -2,20 +2,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: gcppubsub-controller-role
+  name: eventing-sources-gcppubsub-controller
 rules:
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
@@ -28,6 +17,7 @@ rules:
   - update
   - patch
   - delete
+
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
@@ -36,6 +26,20 @@ rules:
   - get
   - update
   - patch
+
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+
 - apiGroups:
   - ""
   resources:
@@ -44,6 +48,7 @@ rules:
   - get
   - list
   - watch
+
 - apiGroups:
   - eventing.knative.dev
   resources:
@@ -52,6 +57,7 @@ rules:
   - get
   - list
   - watch
+
 - apiGroups:
   - serving.knative.dev
   resources:
