@@ -18,7 +18,6 @@ package awssqs
 
 import (
 	"context"
-	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -58,10 +57,6 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				QueueURL:             "https://sqs.us-east-2.amazonaws.com/123123/MyQueue",
 				SinkURI:              sinkServer.URL,
 				OnFailedPollWaitSecs: 1,
-				client: cloudevents.NewClient(sinkServer.URL, cloudevents.Builder{
-					EventType: eventType,
-					Source:    "awssqs",
-				}),
 			}
 
 			body := "The body"
@@ -137,10 +132,6 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				QueueURL: "https://sqs.us-east-2.amazonaws.com/123123/MyQueue",
 				SinkURI:  sinkServer.URL,
-				client: cloudevents.NewClient(sinkServer.URL, cloudevents.Builder{
-					EventType: eventType,
-					Source:    "awssqs",
-				}),
 			}
 
 			ack := new(bool)
@@ -170,6 +161,24 @@ func TestPollLoopCancels(t *testing.T) {
 	err := a.pollLoop(ctx, nil, stopCh)
 	if err != nil {
 		t.Error("expected pollLoop to return cleanly, but got", err)
+	}
+}
+
+func TestStart(t *testing.T) {
+
+	a := &Adapter{
+		QueueURL: "https://test.sqs.aws/123123",
+		SinkURI:  "https://sink.server/",
+	}
+
+	ctx := context.Background()
+	stopCh := make(chan struct{}, 1)
+
+	msg := struct{}{}
+	stopCh <- msg
+	err := a.Start(ctx, stopCh)
+	if err != nil {
+		t.Error("expected Start to return cleanly, but got", err)
 	}
 }
 

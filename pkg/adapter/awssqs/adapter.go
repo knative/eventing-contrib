@@ -87,11 +87,6 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		return err
 	}
 
-	a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{
-		EventType: eventType,
-		Source:    "awssqs",
-	})
-
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigDisable,
 		Config:            aws.Config{Region: &region},
@@ -158,6 +153,9 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 
 // postMessage sends an SQS event to the SinkURI
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
+	if a.client == nil {
+		a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{EventType: eventType})
+	}
 
 	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)
