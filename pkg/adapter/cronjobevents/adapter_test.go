@@ -65,8 +65,6 @@ func TestStart_ServeHTTP(t *testing.T) {
 			}
 
 			stop := make(chan struct{})
-
-			stopped := false
 			go func() {
 				if err := a.Start(context.TODO(), stop); err != nil {
 					if tc.error {
@@ -75,7 +73,6 @@ func TestStart_ServeHTTP(t *testing.T) {
 						t.Errorf("failed to start, %v", err)
 					}
 				}
-				stopped = true
 			}()
 
 			a.cronTick() // force a tick.

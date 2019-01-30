@@ -127,13 +127,10 @@ func TestStart(t *testing.T) {
 	}
 
 	stop := make(chan struct{})
-
-	stopped := false
 	go func() {
 		if err := a.Start(stop); err != nil {
 			log.Printf("failed to start, %v", err) //not expected to start.
 		}
-		stopped = true
 	}()
 }
 
