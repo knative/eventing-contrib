@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/google/go-cmp/cmp"
-	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -39,12 +38,6 @@ func TestStart_ServeHTTP(t *testing.T) {
 		},
 		"rejected": {
 			schedule: "* * * * *", // every minute
-			sink:     sinkRejected,
-			reqBody:  `{"body":"data"}`,
-			error:    true,
-		},
-		"bad cron": {
-			schedule: "bad",
 			sink:     sinkRejected,
 			reqBody:  `{"body":"data"}`,
 			error:    true,
@@ -85,6 +78,21 @@ func TestStart_ServeHTTP(t *testing.T) {
 	}
 }
 
+func TestStartBadCron(t *testing.T) {
+	schedule := "bad"
+
+	a := &Adapter{
+		Schedule: schedule,
+	}
+
+	stop := make(chan struct{})
+	if err := a.Start(context.TODO(), stop); err == nil {
+
+		t.Errorf("failed to fail, %v", err)
+
+	}
+}
+
 func TestPostMessage_ServeHTTP(t *testing.T) {
 	testCases := map[string]struct {
 		sink    func(http.ResponseWriter, *http.Request)
@@ -112,10 +120,6 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				Data:    "data",
 				SinkURI: sinkServer.URL,
-				client: cloudevents.NewClient(sinkServer.URL, cloudevents.Builder{
-					EventType: eventType,
-					Source:    "CronJob",
-				}),
 			}
 
 			a.cronTick()
