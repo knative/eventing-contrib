@@ -12,21 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Replace the following before applying this file:
-#   TOPIC_NAME: Replace with the GCP PubSub Topic name.
-#   MY_GCP_PROJECT: Replace with the GCP Project's ID.
-
-apiVersion: sources.eventing.knative.dev/v1alpha1
-kind: GcpPubSubSource
+apiVersion: v1
+kind: Service
 metadata:
-  name: TOPIC_NAME-source
+  name: controller
+  namespace: knative-sources
+  labels:
+    control-plane: controller-manager
 spec:
-  gcpCredsSecret:
-    name: google-cloud-key
-    key: key.json
-  googleCloudProject: MY_GCP_PROJECT
-  topic: TOPIC_NAME
-  sink:
-    apiVersion: v1
-    kind: Service
-    name: message-dumper
+  selector:
+    control-plane: controller-manager
+  ports:
+  - port: 443
