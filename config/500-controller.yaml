@@ -21,13 +21,12 @@ metadata:
     control-plane: controller-manager
 spec:
   selector:
-    matchLabels:
+    matchLabels: &labels
       control-plane: controller-manager
   serviceName: controller-manager
   template:
     metadata:
-      labels:
-        control-plane: controller-manager
+      labels: *labels
     spec:
       serviceAccountName: controller-manager
       containers:

@@ -21,13 +21,12 @@ metadata:
     control-plane: gcppubsub-controller-manager
 spec:
   selector:
-    matchLabels:
+    matchLabels: &labels
       control-plane: gcppubsub-controller-manager
   serviceName: gcppubsub-controller-manager
   template:
     metadata:
-      labels:
-        control-plane: gcppubsub-controller-manager
+      labels: *labels
     spec:
       serviceAccountName: gcppubsub-controller-manager
       containers:
