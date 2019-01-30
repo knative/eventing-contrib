@@ -42,7 +42,7 @@ kubectl apply -f samples/kubernetes-event-source/serviceaccount.yaml
    controller. This makes kubernetes events available for subscriptions.
 
 ```shell
-ko apply -f config/default.yaml
+ko apply -f config/
 ```
 
 ### Create Event Source for Kubernetes Events
