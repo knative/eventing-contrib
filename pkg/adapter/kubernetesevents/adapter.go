@@ -42,6 +42,20 @@ type Adapter struct {
 
 	// client sends cloudevents.
 	client *cloudevents.Client
+
+	kubeClient kubernetes.Interface
+}
+
+func (a *Adapter) makeKubeClient() error {
+	cfg, err := clientcmd.BuildConfigFromFlags("", "")
+	if err != nil {
+		return err
+	}
+	a.kubeClient, err = kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Run starts the kubernetes receive adapter and sends events produced in the
@@ -49,20 +63,14 @@ type Adapter struct {
 func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	logger := logging.FromContext(context.TODO())
 
-	// set up signals so we handle the first shutdown signal gracefully
-
-	cfg, err := clientcmd.BuildConfigFromFlags("", "")
-	if err != nil {
-		return err
-	}
-
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return err
+	if a.kubeClient == nil {
+		if err := a.makeKubeClient(); err != nil {
+			return err
+		}
 	}
 
 	eventsInformer := coreinformers.NewFilteredEventInformer(
-		kubeClient, a.Namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
+		a.kubeClient, a.Namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
 
 	eventsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    a.addEvent,
@@ -97,6 +105,6 @@ func (a *Adapter) addEvent(new interface{}) {
 	}
 
 	if err := a.client.Send(event, cloudEventOverrides(event)); err != nil {
-		logger.Info("Event delivery failed: %s", err)
+		logger.Infof("Event delivery failed: %s", err)
 	}
 }

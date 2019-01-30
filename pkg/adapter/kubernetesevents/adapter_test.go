@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	testclient "k8s.io/client-go/kubernetes/fake"
 )
 
 func TestUpdateEvent_ServeHTTP(t *testing.T) {
@@ -120,7 +121,22 @@ func TestUpdateEvent_NonExistentSink(t *testing.T) {
 	a.updateEvent(nil, event)
 }
 
-func TestStart(t *testing.T) {
+func TestStartWithKubeClient(t *testing.T) {
+	a := &Adapter{
+		SinkURI:    "http://localhost:50/",
+		Namespace:  "default",
+		kubeClient: testclient.NewSimpleClientset(),
+	}
+
+	stop := make(chan struct{})
+	go func() {
+		if err := a.Start(stop); err != nil {
+			log.Printf("failed to start, %v", err) //not expected to start.
+		}
+	}()
+}
+
+func TestStartWithoutKubeClient(t *testing.T) {
 	a := &Adapter{
 		SinkURI:   "http://localhost:50/",
 		Namespace: "default",
