@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func TestCloudEventsContext(t *testing.T) {
+func TestCloudEventOverrides(t *testing.T) {
 
 	uid := types.UID("ABC")
 
@@ -43,12 +43,10 @@ func TestCloudEventsContext(t *testing.T) {
 
 	now := time.Now()
 
-	want := &cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            string(uid),
-		Source:             refLink,
-		EventTime:          now,
+	want := cloudevents.V01EventContext{
+		EventID:   string(uid),
+		Source:    refLink,
+		EventTime: now,
 	}
 
 	event := &corev1.Event{
@@ -59,7 +57,7 @@ func TestCloudEventsContext(t *testing.T) {
 		InvolvedObject: ref,
 	}
 
-	got := cloudEventsContext(event)
+	got := cloudEventOverrides(event)
 
 	//ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{}, "LastTransitionTime")
 	if diff := cmp.Diff(want, got); diff != "" {

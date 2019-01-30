@@ -75,13 +75,10 @@ func createSelfLink(o corev1.ObjectReference) string {
 //		Type:Normal,
 //		EventTime:0001-01-01 00:00:00 +0000 UTC,
 //	}
-func cloudEventsContext(m *corev1.Event) *cloudevents.EventContext {
-	return &cloudevents.EventContext{
-		// Events are themselves object and have a unique UUID. Could also have used the UID
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            string(m.ObjectMeta.UID),
-		Source:             createSelfLink(m.InvolvedObject),
-		EventTime:          m.ObjectMeta.CreationTimestamp.Time,
+func cloudEventOverrides(m *corev1.Event) cloudevents.V01EventContext {
+	return cloudevents.V01EventContext{
+		EventID:   string(m.ObjectMeta.UID),
+		Source:    createSelfLink(m.InvolvedObject),
+		EventTime: m.ObjectMeta.CreationTimestamp.Time,
 	}
 }

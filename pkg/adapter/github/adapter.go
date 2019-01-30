@@ -18,16 +18,13 @@ package github
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"time"
-
 	"github.com/google/uuid"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/cloudevents"
-	webhooks "gopkg.in/go-playground/webhooks.v3"
+	"gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
+	"log"
+	"net/http"
 )
 
 const (
@@ -39,7 +36,7 @@ const (
 // then sends them to the specified Sink
 type Adapter struct {
 	Sink   string
-	Client *http.Client
+	client *cloudevents.Client
 }
 
 // HandleEvent is invoked whenever an event comes in from GitHub
@@ -52,12 +49,15 @@ func (ra *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
 }
 
 func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
+	if ra.client == nil {
+		ra.client = cloudevents.NewClient(ra.Sink, cloudevents.Builder{})
+	}
 
 	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
 	eventID := hdr.Get("X-" + GHHeaderDelivery)
 	extensions := map[string]interface{}{
-		cloudevents.HeaderExtensionsPrefix + GHHeaderEvent:    hdr.Get("X-" + GHHeaderEvent),
-		cloudevents.HeaderExtensionsPrefix + GHHeaderDelivery: hdr.Get("X-" + GHHeaderDelivery),
+		GHHeaderEvent:    hdr.Get("X-" + GHHeaderEvent),
+		GHHeaderDelivery: hdr.Get("X-" + GHHeaderDelivery),
 	}
 
 	log.Printf("Handling %s", gitHubEventType)
@@ -71,43 +71,12 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	cloudEventType := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, gitHubEventType)
 	source := sourceFromGitHubEvent(gh.Event(gitHubEventType), payload)
 
-	return ra.postMessage(payload, source, cloudEventType, eventID, extensions)
-}
-
-func (ra *Adapter) postMessage(payload interface{}, source, eventType, eventID string,
-	extensions map[string]interface{}) error {
-	ctx := cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            eventID,
-		EventTime:          time.Now(),
-		Source:             source,
-		Extensions:         extensions,
-	}
-	req, err := cloudevents.Binary.NewRequest(ra.Sink, payload, ctx)
-	if err != nil {
-		log.Printf("Failed to marshal the message: %+v : %s", payload, err)
-		return err
-	}
-
-	log.Printf("Posting to %q", ra.Sink)
-	client := ra.Client
-	if client == nil {
-		client = &http.Client{}
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// TODO: in general, receive adapters may have to be able to retry for error cases.
-		log.Printf("response Status: %s", resp.Status)
-		body, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("response Body: %s", string(body))
-	}
-	return nil
+	return ra.client.Send(payload, cloudevents.V01EventContext{
+		EventType:  cloudEventType,
+		EventID:    eventID,
+		Source:     source,
+		Extensions: extensions,
+	})
 }
 
 func sourceFromGitHubEvent(gitHubEvent gh.Event, payload interface{}) string {

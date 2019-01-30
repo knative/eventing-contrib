@@ -18,14 +18,9 @@ package main
 
 import (
 	"flag"
-	"log"
-	"time"
-
-	"github.com/knative/eventing-sources/pkg/sources"
-
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/knative/pkg/cloudevents"
+	"log"
 )
 
 var (
@@ -57,29 +52,25 @@ func main() {
 		eventSource = source
 	}
 
-	poster := sources.NewEventForwarder(sink)
+	client := cloudevents.NewClient(sink, cloudevents.Builder{
+		EventType: eventType,
+		Source:    eventSource,
+	})
 
-	c, _, err := websocket.DefaultDialer.Dial(source, nil)
+	ws, _, err := websocket.DefaultDialer.Dial(source, nil)
 	if err != nil {
 		log.Fatal("error connecting:", err)
 	}
 
 	for {
-		_, message, err := c.ReadMessage()
+		_, message, err := ws.ReadMessage()
 		if err != nil {
 			// TODO(markusthoemmes): Handle failures and reconnect
 			log.Println("error while reading message:", err)
 			return
 		}
 
-		ctx := cloudevents.EventContext{
-			CloudEventsVersion: cloudevents.CloudEventsVersion,
-			EventType:          eventType,
-			EventID:            uuid.New().String(),
-			Source:             eventSource,
-			EventTime:          time.Now(),
-		}
-		if err := poster.PostEvent(ctx, message); err != nil {
+		if err := client.Send(message); err != nil {
 			log.Printf("sending event to channel failed: %v", err)
 		}
 	}

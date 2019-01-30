@@ -15,13 +15,83 @@ package cronjobevents
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/google/go-cmp/cmp"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"go.uber.org/zap"
 )
+
+func TestStart_ServeHTTP(t *testing.T) {
+	testCases := map[string]struct {
+		schedule string
+		sink     func(http.ResponseWriter, *http.Request)
+		reqBody  string
+		error    bool
+	}{
+		"happy": {
+			schedule: "* * * * *", // every minute
+			sink:     sinkAccepted,
+			reqBody:  `{"body":"data"}`,
+		},
+		"rejected": {
+			schedule: "* * * * *", // every minute
+			sink:     sinkRejected,
+			reqBody:  `{"body":"data"}`,
+			error:    true,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			h := &fakeHandler{
+				handler: tc.sink,
+			}
+			sinkServer := httptest.NewServer(h)
+			defer sinkServer.Close()
+
+			a := &Adapter{
+				Schedule: tc.schedule,
+				Data:     "data",
+				SinkURI:  sinkServer.URL,
+			}
+
+			stop := make(chan struct{})
+			go func() {
+				if err := a.Start(context.TODO(), stop); err != nil {
+					if tc.error {
+						// skip
+					} else {
+						t.Errorf("failed to start, %v", err)
+					}
+				}
+			}()
+
+			a.cronTick() // force a tick.
+
+			if tc.reqBody != string(h.body) {
+				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)
+			}
+			log.Print("test done")
+		})
+	}
+}
+
+func TestStartBadCron(t *testing.T) {
+	schedule := "bad"
+
+	a := &Adapter{
+		Schedule: schedule,
+	}
+
+	stop := make(chan struct{})
+	if err := a.Start(context.TODO(), stop); err == nil {
+
+		t.Errorf("failed to fail, %v", err)
+
+	}
+}
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
 	testCases := map[string]struct {
@@ -31,11 +101,11 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 	}{
 		"happy": {
 			sink:    sinkAccepted,
-			reqBody: `{"ID":"ABC","EventTime":"0001-01-01T00:00:00Z","Body":"data"}`,
+			reqBody: `{"body":"data"}`,
 		},
 		"rejected": {
 			sink:    sinkRejected,
-			reqBody: `{"ID":"ABC","EventTime":"0001-01-01T00:00:00Z","Body":"data"}`,
+			reqBody: `{"body":"data"}`,
 			error:   true,
 		},
 	}
@@ -52,15 +122,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				SinkURI: sinkServer.URL,
 			}
 
-			m := &Message{
-				ID:   "ABC",
-				Body: a.Data,
-			}
-			err := a.postMessage(context.TODO(), zap.S(), m)
-
-			if tc.error && err == nil {
-				t.Errorf("expected error, but got %v", err)
-			}
+			a.cronTick()
 
 			if tc.reqBody != string(h.body) {
 				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)
@@ -69,9 +131,45 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 	}
 }
 
-type fakeHandler struct {
-	body []byte
+func TestMessage(t *testing.T) {
+	testCases := map[string]struct {
+		body string
+		want string
+	}{
+		"json simple": {
+			body: `{"message": "Hello world!"}`,
+			want: `{"message":"Hello world!"}`,
+		},
+		"json complex": {
+			body: `{"message": "Hello world!","extra":{"a":"sub", "b":[1,2,3]}}`,
+			want: `{"extra":{"a":"sub","b":[1,2,3]},"message":"Hello world!"}`,
+		},
+		"string": {
+			body: "Hello, World!",
+			want: `{"body":"Hello, World!"}`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
 
+			m := message(tc.body)
+
+			j, err := json.Marshal(m)
+			if err != nil {
+				t.Errorf("failed to marshel message: %v", err)
+			}
+
+			got := string(j)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("%s: (-want, +got) = %v", n, diff)
+			}
+		})
+	}
+}
+
+type fakeHandler struct {
+	body    []byte
+	ran     int
 	handler func(http.ResponseWriter, *http.Request)
 }
 
@@ -85,6 +183,8 @@ func (h *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 	h.handler(w, r)
+
+	h.ran++
 }
 
 func sinkAccepted(writer http.ResponseWriter, req *http.Request) {

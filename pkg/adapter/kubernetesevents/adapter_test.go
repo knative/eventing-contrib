@@ -19,16 +19,16 @@ package kubernetesevents
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	testclient "k8s.io/client-go/kubernetes/fake"
 )
 
 func TestUpdateEvent_ServeHTTP(t *testing.T) {
@@ -121,39 +121,33 @@ func TestUpdateEvent_NonExistentSink(t *testing.T) {
 	a.updateEvent(nil, event)
 }
 
-func TestPostMessage_InvalidSink(t *testing.T) {
+func TestStartWithKubeClient(t *testing.T) {
 	a := &Adapter{
-		SinkURI:   "@#$@",
+		SinkURI:    "http://localhost:50/",
+		Namespace:  "default",
+		kubeClient: testclient.NewSimpleClientset(),
+	}
+
+	stop := make(chan struct{})
+	go func() {
+		if err := a.Start(stop); err != nil {
+			log.Printf("failed to start, %v", err) //not expected to start.
+		}
+	}()
+}
+
+func TestStartWithoutKubeClient(t *testing.T) {
+	a := &Adapter{
+		SinkURI:   "http://localhost:50/",
 		Namespace: "default",
 	}
 
-	uid := types.UID("ABC")
-
-	ref := corev1.ObjectReference{
-		Kind:            "Kind",
-		Namespace:       "Namespace",
-		Name:            "Name",
-		APIVersion:      "api/version",
-		ResourceVersion: "v1test1",
-		FieldPath:       "field",
-	}
-
-	now := time.Now()
-
-	event := &corev1.Event{
-		ObjectMeta: metav1.ObjectMeta{
-			UID:               uid,
-			CreationTimestamp: metav1.Time{Time: now},
-		},
-		InvolvedObject: ref,
-	}
-
-	err := a.postMessage(zap.S(), event)
-
-	want := `POST failed: Post @#$@: unsupported protocol scheme ""`
-	if err == nil || err.Error() != want {
-		t.Errorf("want %q, got: %q", want, err.Error())
-	}
+	stop := make(chan struct{})
+	go func() {
+		if err := a.Start(stop); err != nil {
+			log.Printf("failed to start, %v", err) //not expected to start.
+		}
+	}()
 }
 
 type fakeHandler struct {

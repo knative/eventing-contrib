@@ -164,6 +164,24 @@ func TestPollLoopCancels(t *testing.T) {
 	}
 }
 
+func TestStart(t *testing.T) {
+
+	a := &Adapter{
+		QueueURL: "https://test.sqs.aws/123123",
+		SinkURI:  "https://sink.server/",
+	}
+
+	ctx := context.Background()
+	stopCh := make(chan struct{}, 1)
+
+	msg := struct{}{}
+	stopCh <- msg
+	err := a.Start(ctx, stopCh)
+	if err != nil {
+		t.Error("expected Start to return cleanly, but got", err)
+	}
+}
+
 type fakeHandler struct {
 	body []byte
 

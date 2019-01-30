@@ -18,8 +18,6 @@ package awssqs
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -53,6 +51,9 @@ type Adapter struct {
 	// OnFailedPollWaitSecs determines the interval to wait after a
 	// failed poll before making another one
 	OnFailedPollWaitSecs time.Duration
+
+	// Client sends cloudevents to the target.
+	client *cloudevents.Client
 }
 
 // getRegion takes an AWS SQS URL and extracts the region from it
@@ -152,6 +153,9 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 
 // postMessage sends an SQS event to the SinkURI
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
+	if a.client == nil {
+		a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{EventType: eventType})
+	}
 
 	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)
@@ -160,35 +164,11 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		timestamp = time.Now().UnixNano()
 	}
 
-	event := cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            *m.MessageId,
-		EventTime:          time.Unix(timestamp, 0),
-		Source:             a.QueueURL,
-	}
-	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, event)
-	if err != nil {
-		return fmt.Errorf("Failed to marshall the message: %s", err)
-	}
-
-	logger.Debug("Posting message")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugw("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
-
-	// If the response is not within the 2xx range, return an error.
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("[%d] unexpected response %s", resp.StatusCode, body)
-	}
-
-	return nil
+	return a.client.Send(m, cloudevents.V01EventContext{
+		EventID:   *m.MessageId,
+		EventTime: time.Unix(timestamp, 0),
+		Source:    a.QueueURL,
+	})
 }
 
 // poll reads messages from the queue in batches of a given maximum size.
