@@ -30,6 +30,5 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.s
 # Script entry point.
 
 echo "TODO(#8): Write E2E tests."
-# initialize $@
 
 success
