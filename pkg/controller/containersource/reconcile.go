@@ -49,25 +49,25 @@ type reconciler struct {
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
-func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
+func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error {
 	logger := logging.FromContext(ctx)
 
 	source, ok := object.(*v1alpha1.ContainerSource)
 	if !ok {
 		logger.Errorf("could not find container source %v\n", object)
-		return object, nil
+		return nil
 	}
 
 	// See if the source has been deleted
 	accessor, err := meta.Accessor(source)
 	if err != nil {
 		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
-		return object, err
+		return err
 	}
 	// No need to reconcile if the source has been marked for deletion.
 	deletionTimestamp := accessor.GetDeletionTimestamp()
 	if deletionTimestamp != nil {
-		return object, nil
+		return nil
 	}
 
 	source.Status.InitializeConditions()
@@ -83,7 +83,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 
 	err = r.setSinkURIArg(ctx, source, args)
 	if err != nil {
-		return source, err
+		return err
 	}
 
 	deploy, err := r.getDeployment(ctx, source)
@@ -92,16 +92,16 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			deploy, err = r.createDeployment(ctx, source, nil, args)
 			if err != nil {
 				r.recorder.Eventf(source, corev1.EventTypeNormal, "DeploymentBlocked", "waiting for %v", err)
-				return object, err
+				return err
 			}
 			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
 			source.Status.MarkDeploying("Deploying", "Created deployment %s", deploy.Name)
 			// Since the Deployment has just been created, there's nothing more
 			// to do until it gets a status. This ContainerSource will be reconciled
 			// again when the Deployment is updated.
-			return object, nil
+			return nil
 		}
-		return object, err
+		return err
 	}
 
 	// Update Deployment spec if it's changed
@@ -120,7 +120,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 			r.recorder.Eventf(source, corev1.EventTypeWarning, "DeployNeedsUpdate", "Failed to update deployment %q", deploy.Name)
 		}
 		// Return after this update or error and reconcile again
-		return object, err
+		return err
 	}
 
 	// Update source status
@@ -128,7 +128,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		source.Status.MarkDeployed()
 	}
 
-	return source, nil
+	return nil
 }
 
 func (r *reconciler) setSinkURIArg(ctx context.Context, source *v1alpha1.ContainerSource, args *resources.ContainerArguments) error {

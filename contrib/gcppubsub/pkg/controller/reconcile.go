@@ -72,13 +72,13 @@ func (r *reconciler) InjectClient(c client.Client) error {
 	return nil
 }
 
-func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
+func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error {
 	logger := logging.FromContext(ctx).Desugar()
 
 	src, ok := object.(*v1alpha1.GcpPubSubSource)
 	if !ok {
 		logger.Error("could not find GcpPubSub source", zap.Any("object", object))
-		return object, nil
+		return nil
 	}
 
 	// This Source attempts to reconcile three things.
@@ -97,10 +97,10 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		err := r.deleteSubscription(ctx, src)
 		if err != nil {
 			logger.Error("Unable to delete the Subscription", zap.Error(err))
-			return src, err
+			return err
 		}
 		r.removeFinalizer(src)
-		return src, nil
+		return nil
 	}
 
 	r.addFinalizer(src)
@@ -110,25 +110,25 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	sinkURI, err := sinks.GetSinkURI(ctx, r.client, src.Spec.Sink, src.Namespace)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
-		return src, err
+		return err
 	}
 	src.Status.MarkSink(sinkURI)
 
 	sub, err := r.createSubscription(ctx, src)
 	if err != nil {
 		logger.Error("Unable to create the subscription", zap.Error(err))
-		return src, err
+		return err
 	}
 	src.Status.MarkSubscribed()
 
 	_, err = r.createReceiveAdapter(ctx, src, sub.ID(), sinkURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
-		return src, err
+		return err
 	}
 	src.Status.MarkDeployed()
 
-	return src, nil
+	return nil
 }
 
 func (r *reconciler) addFinalizer(s *v1alpha1.GcpPubSubSource) {

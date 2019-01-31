@@ -584,7 +584,8 @@ func TestObjectNotContainerSource(t *testing.T) {
 		APIVersion: unaddressableAPIVersion,
 	}
 
-	got, gotErr := r.Reconcile(context.TODO(), obj)
+	got := obj.DeepCopy()
+	gotErr := r.Reconcile(context.TODO(), got)
 	var want runtime.Object = obj
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected returned object (-want, +got) = %v", diff)
@@ -601,7 +602,8 @@ func TestObjectHasDeleteTimestamp(t *testing.T) {
 
 	now := metav1.Now()
 	obj.DeletionTimestamp = &now
-	got, gotErr := r.Reconcile(context.TODO(), obj)
+	got := obj.DeepCopy()
+	gotErr := r.Reconcile(context.TODO(), got)
 	var want runtime.Object = obj
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected returned object (-want, +got) = %v", diff)

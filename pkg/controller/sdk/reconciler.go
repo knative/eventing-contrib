@@ -51,9 +51,9 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	logger.Infof("Reconciling %s %v", r.provider.Parent.GetObjectKind(), request)
 
-	obj := r.provider.Parent.DeepCopyObject()
+	original := r.provider.Parent.DeepCopyObject()
 
-	err := r.client.Get(context.TODO(), request.NamespacedName, obj)
+	err := r.client.Get(context.TODO(), request.NamespacedName, original)
 
 	if errors.IsNotFound(err) {
 		logger.Errorf("could not find %s %v\n", r.provider.Parent.GetObjectKind(), request)
@@ -65,11 +65,12 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	original := obj.DeepCopyObject()
+	// Don't modify the cache's copy
+	obj := original.DeepCopyObject()
 
 	// Reconcile this copy of the Source and then write back any status
 	// updates regardless of whether the reconcile error out.
-	obj, reconcileErr := r.provider.Reconciler.Reconcile(ctx, obj)
+	reconcileErr := r.provider.Reconciler.Reconcile(ctx, obj)
 	if reconcileErr != nil {
 		logger.Warnf("Failed to reconcile %s: %v", r.provider.Parent.GetObjectKind(), reconcileErr)
 	}
