@@ -65,6 +65,7 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
+	// Don't modify the cache's copy
 	obj := original.DeepCopyObject()
 
 	// Reconcile this copy of the Source and then write back any status
