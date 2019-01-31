@@ -15,8 +15,4 @@ limitations under the License.
 */
 
 // Package cronjobsource implements the CronJobSource controller.
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=cronjobsources,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=cronjobsources/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=eventing.knative.dev,resources=channels,verbs=get;list;watch
 package cronjobsource
