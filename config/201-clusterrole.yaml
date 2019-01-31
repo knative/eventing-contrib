@@ -26,7 +26,7 @@ rules:
   - cronjobsources
   - githubsources
   - kuberneteseventsources
-  verbs:
+  verbs: &everything
   - get
   - list
   - watch
@@ -34,7 +34,7 @@ rules:
   - update
   - patch
   - delete
-  
+
 # Source statuses update
 - apiGroups:
   - sources.eventing.knative.dev
@@ -54,59 +54,35 @@ rules:
   - apps
   resources:
   - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything
 
 # Channels read
 - apiGroups:
   - eventing.knative.dev
   resources:
   - channels
-  verbs:
+  verbs: &readOnly
   - get
   - list
   - watch
-  
+
 # Knative Services admin
 - apiGroups:
   - serving.knative.dev
   resources:
   - services
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything
 
 # Secrets read
 - apiGroups:
   - ""
   resources:
   - secrets
-  verbs:
-  - get
-  - list
-  - watch
+  verbs: *readOnly
 
 # Events admin
 - apiGroups:
   - ""
   resources:
   - events
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything

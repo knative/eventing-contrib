@@ -22,7 +22,7 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - gcppubsubsources
-  verbs:
+  verbs: &everything
   - get
   - list
   - watch
@@ -44,20 +44,13 @@ rules:
   - apps
   resources:
   - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything
 
 - apiGroups:
   - ""
   resources:
   - secrets
-  verbs:
+  verbs: &readOnly
   - get
   - list
   - watch
@@ -66,17 +59,11 @@ rules:
   - eventing.knative.dev
   resources:
   - channels
-  verbs:
-  - get
-  - list
-  - watch
+  verbs: *readOnly
 
 - apiGroups:
   - serving.knative.dev
   resources:
   - services
   - routes
-  verbs:
-  - get
-  - list
-  - watch
+  verbs: *readOnly
