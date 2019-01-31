@@ -28,7 +28,7 @@ import (
 )
 
 type KnativeReconciler interface {
-	Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error)
+	Reconcile(ctx context.Context, object runtime.Object) error
 	inject.Client
 }
 

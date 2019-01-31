@@ -55,20 +55,20 @@ type reconciler struct {
 // Reconcile reads that state of the cluster for a GitHubSource
 // object and makes changes based on the state read and what is in the
 // GitHubSource.Spec
-func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
+func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error {
 	logger := logging.FromContext(ctx)
 
 	source, ok := object.(*sourcesv1alpha1.GitHubSource)
 	if !ok {
 		logger.Errorf("could not find github source %v\n", object)
-		return object, nil
+		return nil
 	}
 
 	// See if the source has been deleted
 	accessor, err := meta.Accessor(source)
 	if err != nil {
 		logger.Warnf("Failed to get metadata accessor: %s", zap.Error(err))
-		return object, err
+		return err
 	}
 
 	var reconcileErr error
@@ -78,7 +78,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 		reconcileErr = r.finalize(ctx, source)
 	}
 
-	return source, reconcileErr
+	return reconcileErr
 }
 
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {

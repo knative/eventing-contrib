@@ -63,7 +63,7 @@ func (r *reconciler) InjectConfig(c *rest.Config) error {
 	return err
 }
 
-func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
+func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error {
 	logger := logging.FromContext(ctx).Desugar()
 
 	var err error
@@ -71,7 +71,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	src, ok := object.(*v1alpha1.AwsSqsSource)
 	if !ok {
 		logger.Error("could not find AwsSqs source", zap.Any("object", object))
-		return object, nil
+		return nil
 	}
 
 	// This Source attempts to reconcile three things.
@@ -85,7 +85,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	deletionTimestamp := src.DeletionTimestamp
 	if deletionTimestamp != nil {
 		r.removeFinalizer(src)
-		return src, nil
+		return nil
 	}
 
 	r.addFinalizer(src)
@@ -95,18 +95,18 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	sinkURI, err := sinks.GetSinkURI(ctx, r.client, src.Spec.Sink, src.Namespace)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
-		return src, err
+		return err
 	}
 	src.Status.MarkSink(sinkURI)
 
 	_, err = r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
-		return src, err
+		return err
 	}
 	src.Status.MarkDeployed()
 
-	return src, nil
+	return nil
 }
 
 func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.AwsSqsSource, sinkURI string) (*v1.Deployment, error) {

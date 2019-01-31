@@ -47,13 +47,13 @@ func (r *reconciler) InjectClient(c client.Client) error {
 	return nil
 }
 
-func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runtime.Object, error) {
+func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error {
 	logger := logging.FromContext(ctx).Desugar()
 
 	src, ok := object.(*v1alpha1.CronJobSource)
 	if !ok {
 		logger.Error("could not find Cron Job source", zap.Any("object", object))
-		return object, nil
+		return nil
 	}
 
 	// This Source attempts to reconcile three things.
@@ -67,23 +67,23 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) (runt
 	_, err := cron.ParseStandard(src.Spec.Schedule)
 	if err != nil {
 		src.Status.MarkInvalidSchedule("Invalid", "")
-		return src, err
+		return err
 	}
 	src.Status.MarkSchedule()
 	sinkURI, err := sinks.GetSinkURI(ctx, r.client, src.Spec.Sink, src.Namespace)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
-		return src, err
+		return err
 	}
 	src.Status.MarkSink(sinkURI)
 
 	_, err = r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
-		return src, err
+		return err
 	}
 	src.Status.MarkDeployed()
-	return src, nil
+	return nil
 }
 
 func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.CronJobSource, sinkURI string) (*v1.Deployment, error) {
