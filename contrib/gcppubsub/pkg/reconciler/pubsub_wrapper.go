@@ -18,6 +18,7 @@ package gcppubsub
 
 import (
 	"context"
+	"fmt"
 
 	"cloud.google.com/go/pubsub"
 )
@@ -46,15 +47,24 @@ type realGcpPubSubClient struct {
 }
 
 func (c *realGcpPubSubClient) SubscriptionInProject(id, projectId string) pubSubSubscription {
-	return c.client.SubscriptionInProject(id, projectId)
+	if c.client != nil {
+		return c.client.SubscriptionInProject(id, projectId)
+	}
+	return nil
 }
 
 func (c *realGcpPubSubClient) CreateSubscription(ctx context.Context, id string, cfg pubsub.SubscriptionConfig) (pubSubSubscription, error) {
-	return c.client.CreateSubscription(ctx, id, cfg)
+	if c.client != nil {
+		return c.client.CreateSubscription(ctx, id, cfg)
+	}
+	return nil, fmt.Errorf("pubsub client is nil")
 }
 
 func (c *realGcpPubSubClient) Topic(id string) *pubsub.Topic {
-	return c.client.Topic(id)
+	if c.client != nil {
+		return c.client.Topic(id)
+	}
+	return nil
 }
 
 // pubSubSubscription is the set of methods we use on pubsub.Subscription. It exists to make
