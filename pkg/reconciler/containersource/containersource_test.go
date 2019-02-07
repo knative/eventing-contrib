@@ -25,8 +25,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
+	"github.com/knative/eventing-sources/pkg/reconciler/containersource/resources"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

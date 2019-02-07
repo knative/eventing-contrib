@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"strings"
 
-	"go.uber.org/zap"
-
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller/containersource/resources"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/knative/eventing-sources/pkg/reconciler/containersource/resources"
 	"github.com/knative/pkg/logging"
+	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -39,7 +39,31 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
+
+const (
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "container-source-controller"
+)
+
+// Add creates a new ContainerSource Controller and adds it to the Manager with
+// default RBAC. The Manager will set fields on the Controller and Start it when
+// the Manager is Started.
+func Add(mgr manager.Manager) error {
+	p := &sdk.Provider{
+		AgentName: controllerAgentName,
+		Parent:    &v1alpha1.ContainerSource{},
+		Owns:      []runtime.Object{&appsv1.Deployment{}},
+		Reconciler: &reconciler{
+			recorder: mgr.GetRecorder(controllerAgentName),
+			scheme:   mgr.GetScheme(),
+		},
+	}
+
+	return p.Add(mgr)
+}
 
 type reconciler struct {
 	client   client.Client

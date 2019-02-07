@@ -19,11 +19,13 @@ package githubsource
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller/githubsource/resources"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"go.uber.org/zap"
@@ -37,11 +39,40 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 const (
-	finalizerName = controllerAgentName
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "github-source-controller"
+	raImageEnvVar       = "GH_RA_IMAGE"
+	finalizerName       = controllerAgentName
 )
+
+// Add creates a new GitHubSource Controller and adds it to the
+// Manager with default RBAC. The Manager will set fields on the
+// Controller and Start it when the Manager is Started.
+func Add(mgr manager.Manager) error {
+	receiveAdapterImage, defined := os.LookupEnv(raImageEnvVar)
+	if !defined {
+		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
+	}
+
+	p := &sdk.Provider{
+		AgentName: controllerAgentName,
+		Parent:    &sourcesv1alpha1.GitHubSource{},
+		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
+		Reconciler: &reconciler{
+			recorder:            mgr.GetRecorder(controllerAgentName),
+			scheme:              mgr.GetScheme(),
+			receiveAdapterImage: receiveAdapterImage,
+			webhookClient:       gitHubWebhookClient{},
+		},
+	}
+
+	return p.Add(mgr)
+}
 
 // reconciler reconciles a GitHubSource object
 type reconciler struct {

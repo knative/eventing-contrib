@@ -20,7 +20,7 @@ import (
 	"log"
 
 	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis"
-	controller "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/controller"
+	controller "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

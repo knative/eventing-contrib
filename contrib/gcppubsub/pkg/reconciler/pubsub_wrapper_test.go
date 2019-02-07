@@ -1,7 +1,7 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Apache License, Veroute.on 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
@@ -14,13 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package gcppubsub
 
 import (
-	"github.com/knative/eventing-sources/pkg/reconciler/kuberneteseventsource"
+	"context"
+	"testing"
+
+	"cloud.google.com/go/pubsub"
 )
 
-func init() {
-	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, kuberneteseventsource.Add)
+func TestPubSubWrapperFluff(t *testing.T) {
+	c := &realGcpPubSubClient{}
+
+	c.SubscriptionInProject("foo", "bar")
+
+	c.Topic("foo")
+
+	c.CreateSubscription(context.TODO(), "foo", pubsub.SubscriptionConfig{})
 }

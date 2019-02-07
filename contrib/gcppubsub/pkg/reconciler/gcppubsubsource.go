@@ -19,10 +19,15 @@ package gcppubsub
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/controller/resources"
+	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler/resources"
 
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 
@@ -41,8 +46,40 @@ import (
 )
 
 const (
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "gcp-pubsub-source-controller"
+
+	// raImageEnvVar is the name of the environment variable that contains the receive adapter's
+	// image. It must be defined.
+	raImageEnvVar = "GCPPUBSUB_RA_IMAGE"
+
 	finalizerName = controllerAgentName
 )
+
+// Add creates a new GcpPubSubSource Controller and adds it to the Manager with
+// default RBAC. The Manager will set fields on the Controller and Start it when
+// the Manager is Started.
+func Add(mgr manager.Manager) error {
+	raImage, defined := os.LookupEnv(raImageEnvVar)
+	if !defined {
+		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
+	}
+
+	log.Println("Adding the GCP PubSub Source controller.")
+	p := &sdk.Provider{
+		AgentName: controllerAgentName,
+		Parent:    &v1alpha1.GcpPubSubSource{},
+		Owns:      []runtime.Object{&v1.Deployment{}},
+		Reconciler: &reconciler{
+			scheme:              mgr.GetScheme(),
+			pubSubClientCreator: gcpPubSubClientCreator,
+			receiveAdapterImage: raImage,
+		},
+	}
+
+	return p.Add(mgr)
+}
 
 // gcpPubSubClientCreator creates a real GCP PubSub client. It should always be used, except during
 // unit tests.

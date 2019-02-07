@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package awssqs implements the AwsSqsSource controller.
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=awssqssources,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=awssqssources/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=eventing.knative.dev,resources=channels,verbs=get;list;watch
-package awssqssource
+// Package gcppubsub implements the GcpPubSubSource controller.
+// This is needed to be able to watch channels when delivering to a channel.
+// This is needed to be able to watch the sink when delivering messages directly.
+package gcppubsub

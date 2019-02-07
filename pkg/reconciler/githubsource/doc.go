@@ -14,13 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
-
-import (
-	"github.com/knative/eventing-sources/pkg/reconciler/kuberneteseventsource"
-)
-
-func init() {
-	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, kuberneteseventsource.Add)
-}
+// Package githubsource implements a GitHubSource controller.
+package githubsource

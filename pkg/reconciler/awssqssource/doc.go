@@ -14,9 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package githubsource implements a GitHubSource controller.
-// +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=githubsources,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.knative.dev,resources=githubsources/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
-package githubsource
+// Package awssqs implements the AwsSqsSource controller.
+package awssqssource
