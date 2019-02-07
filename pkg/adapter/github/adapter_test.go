@@ -20,15 +20,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"github.com/knative/pkg/cloudevents"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"gopkg.in/go-playground/webhooks.v3"
+	"github.com/google/go-cmp/cmp"
+	"github.com/knative/pkg/cloudevents"
+
+	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 

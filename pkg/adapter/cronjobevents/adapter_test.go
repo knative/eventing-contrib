@@ -16,12 +16,13 @@ package cronjobevents
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/go-cmp/cmp"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestStart_ServeHTTP(t *testing.T) {

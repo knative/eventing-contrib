@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
-	"github.com/mgutz/logxi/v1"
 	"strconv"
 	"time"
+
+	log "github.com/mgutz/logxi/v1"
 
 	"github.com/knative/pkg/cloudevents"
 )

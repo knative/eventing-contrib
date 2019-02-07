@@ -19,6 +19,7 @@ package kubernetesevents
 import (
 	"context"
 	"fmt"
+
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 

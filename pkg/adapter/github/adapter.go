@@ -18,13 +18,14 @@ package github
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/google/uuid"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/cloudevents"
-	"gopkg.in/go-playground/webhooks.v3"
+	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
-	"log"
-	"net/http"
 )
 
 const (

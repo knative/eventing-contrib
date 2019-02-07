@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
+	"log"
+
 	"github.com/gorilla/websocket"
 	"github.com/knative/pkg/cloudevents"
-	"log"
 )
 
 var (

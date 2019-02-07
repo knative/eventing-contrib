@@ -19,6 +19,7 @@ package cronjobevents
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/robfig/cron"
 
 	"github.com/knative/pkg/cloudevents"
