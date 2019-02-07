@@ -391,6 +391,7 @@ function main() {
   echo "New release built successfully"
   if (( PUBLISH_RELEASE )); then
     tag_images_in_yamls ${YAMLS_TO_PUBLISH}
+    publish_yamls ${YAMLS_TO_PUBLISH}
     publish_to_github ${YAMLS_TO_PUBLISH}
     echo "New release published successfully"
   fi
