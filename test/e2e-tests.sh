@@ -46,7 +46,7 @@ function start_latest_eventing() {
 
 function teardown() {
   teardown_events_test_resources
-  ko delete --ignore-not-found=true -f config/default.yaml
+  ko delete --ignore-not-found=true -f config/
   ko delete --ignore-not-found=true -f ${KNATIVE_EVENTING_RELEASE}
 
   wait_until_object_does_not_exist namespaces knative-sources
@@ -96,8 +96,8 @@ set -o pipefail
 
 header "Standing up Knative Eventing Sources"
 export KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
-ko resolve -f config/default.yaml
-ko apply -f config/default.yaml
+ko resolve -f config/
+ko apply -f config/
 wait_until_pods_running knative-sources
 
 # Publish test images
