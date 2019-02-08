@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -39,6 +41,9 @@ const (
 type testCase struct {
 	// name is a descriptive name for this test suitable as a first argument to t.Run()
 	name string
+
+	// sink the response from the fake sink
+	sink func(http.ResponseWriter, *http.Request)
 
 	// wantErr is true when we expect the test to return an error.
 	wantErr bool
@@ -68,7 +73,7 @@ var testCases = []testCase{
 		name:       "no source",
 		payload:    gh.PullRequestPayload{},
 		eventType:  "pull_request",
-		wantErrMsg: `missing required field "Source"`,
+		wantErrMsg: `ctx.Source resolved empty`,
 	}, {
 		name: "valid commit_comment",
 		payload: func() interface{} {
@@ -415,12 +420,15 @@ func (mt mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 // TestAllCases runs all the table tests
 func TestAllCases(t *testing.T) {
 	for _, tc := range testCases {
-		client := &http.Client{
-			Transport: mockTransport(tc.handleRequest),
+		h := &fakeHandler{
+			//handler: tc.sink,
+			handler: sinkAccepted, // No tests expect the sink to do anything interesting
 		}
+		sinkServer := httptest.NewServer(h)
+		defer sinkServer.Close()
+
 		ra := Adapter{
-			Sink:   "http://addressable.sink.svc.cluster.local",
-			Client: client,
+			Sink: sinkServer.URL,
 		}
 		t.Run(tc.name, tc.runner(t, ra))
 	}
@@ -487,50 +495,116 @@ func (tc *testCase) verifyErr(err error) error {
 
 // Direct Unit tests
 
+var (
+	// Headers that are added to the response, but we don't want to check in our assertions.
+	unimportantHeaders = map[string]struct{}{
+		"accept-encoding": {},
+		"content-length":  {},
+		"user-agent":      {},
+		"ce-eventtime":    {},
+	}
+)
+
+type requestValidation struct {
+	Host    string
+	Headers http.Header
+	Body    string
+}
+
 func TestHandleEvent(t *testing.T) {
 	eventID := "12345"
 	eventType := "pull_request"
-	var success bool
 
-	client := &http.Client{
-		Transport: mockTransport(func(req *http.Request) (*http.Response, error) {
-			cloudEvent, err := cloudevents.Binary.FromRequest(nil, req)
-			if err != nil {
-				return nil, fmt.Errorf("unexpected error decoding cloudevent: %s", err)
-			}
-			if eventID != cloudEvent.EventID {
-				return nil, fmt.Errorf("want eventID %s, got %s", eventID, cloudEvent.EventID)
-			}
+	expectedRequest := requestValidation{
+		Headers: map[string][]string{
+			"ce-cloudeventsversion": {"0.1"},
+			"ce-eventid":            {"12345"},
+			"ce-eventtime":          {"2019-01-29T09:35:10.69383396-08:00"},
+			"ce-eventtype":          {"dev.knative.source.github.pull_request"},
+			"ce-source":             {"http://github.com/a/b"},
+			"ce-x-github-delivery":  {"12345"},
+			"ce-x-github-event":     {"pull_request"},
 
-			ceHdr := cloudEvent.Extensions[cloudevents.HeaderExtensionsPrefix+GHHeaderDelivery].(string)
-			if eventID != ceHdr {
-				return nil, fmt.Errorf("%s expected to be %s was %s", GHHeaderDelivery, eventID, ceHdr)
-			}
-
-			ceHdr = cloudEvent.Extensions[cloudevents.HeaderExtensionsPrefix+GHHeaderEvent].(string)
-			if eventType != ceHdr {
-				return nil, fmt.Errorf("%s expected to be %s was %s", GHHeaderEvent, eventType, ceHdr)
-			}
-
-			success = true
-			return &http.Response{
-				StatusCode: 200,
-				Body:       ioutil.NopCloser(bytes.NewBufferString("")),
-				Header:     make(http.Header),
-			}, nil
-		}),
+			"content-type": {"application/json"},
+		},
+		Body: `{"action":"","number":0,"pull_request":{"url":"","id":0,"html_url":"http://github.com/a/b","diff_url":"","patch_url":"","issue_url":"","number":0,"state":"","locked":false,"title":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"body":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","closed_at":null,"merged_at":null,"merge_commit_sha":null,"assignee":null,"milestone":null,"commits_url":"","review_comments_url":"","review_comment_url":"","comments_url":"","statuses_url":"","labels":null,"head":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"base":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"_links":{"self":{"href":""},"html":{"href":""},"issue":{"href":""},"comments":{"href":""},"review_comments":{"href":""},"review_comment":{"href":""},"commits":{"href":""},"statuses":{"href":""}},"merged":false,"mergeable":null,"mergeable_state":"","merged_by":null,"comments":0,"review_comments":0,"commits":0,"additions":0,"deletions":0,"changed_files":0},"label":{"id":0,"url":"","name":"","color":"","default":false},"repository":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""},"sender":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"installation":{"id":0}}`,
 	}
+
+	h := &fakeHandler{
+		//handler: tc.sink,
+		handler: sinkAccepted, // No tests expect the sink to do anything interesting
+	}
+	sinkServer := httptest.NewServer(h)
+	defer sinkServer.Close()
+
 	ra := Adapter{
-		Sink:   "http://addressable.sink.svc.cluster.local",
-		Client: client,
+		Sink: sinkServer.URL,
 	}
+
 	payload := gh.PullRequestPayload{}
 	payload.PullRequest.HTMLURL = testSource
 	header := http.Header{}
 	header.Set("X-"+GHHeaderEvent, eventType)
 	header.Set("X-"+GHHeaderDelivery, eventID)
 	ra.HandleEvent(payload, webhooks.Header(header))
-	if !success {
-		t.Error("did not handle event successfully")
+
+	// TODO(https://github.com/knative/pkg/issues/250): clean this up when there is a shared test client.
+
+	canonicalizeHeaders(expectedRequest)
+	if diff := cmp.Diff(expectedRequest.Headers, h.header); diff != "" {
+		t.Errorf("Unexpected difference (-want, +got): %v", diff)
+	}
+
+	if diff := cmp.Diff(expectedRequest.Body, string(h.body)); diff != "" {
+		t.Errorf("Unexpected difference (-want, +got): %v", diff)
+	}
+}
+
+type fakeHandler struct {
+	body   []byte
+	header http.Header
+
+	handler func(http.ResponseWriter, *http.Request)
+}
+
+func (h *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "can not read body", http.StatusBadRequest)
+		return
+	}
+	h.body = body
+	h.header = make(map[string][]string)
+
+	for n, v := range r.Header {
+		ln := strings.ToLower(n)
+		if _, present := unimportantHeaders[ln]; !present {
+			h.header[ln] = v
+		}
+	}
+
+	defer r.Body.Close()
+	h.handler(w, r)
+}
+
+func sinkAccepted(writer http.ResponseWriter, req *http.Request) {
+	writer.WriteHeader(http.StatusOK)
+}
+
+func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
+	writer.WriteHeader(http.StatusRequestTimeout)
+}
+
+func canonicalizeHeaders(rvs ...requestValidation) {
+	// HTTP header names are case-insensitive, so normalize them to lower case for comparison.
+	for _, rv := range rvs {
+		headers := rv.Headers
+		for n, v := range headers {
+			delete(headers, n)
+			ln := strings.ToLower(n)
+			if _, present := unimportantHeaders[ln]; !present {
+				headers[ln] = v
+			}
+		}
 	}
 }

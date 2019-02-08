@@ -153,7 +153,7 @@ func (tc *TestCase) Reconcile(c client.Client, r sdk.KnativeReconciler) (runtime
 		return nil, nil
 	}
 
-	return r.Reconcile(context.TODO(), obj)
+	return obj, r.Reconcile(context.TODO(), obj)
 }
 
 // VerifyErr verifies that the given error returned from Reconcile is the error

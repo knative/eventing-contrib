@@ -103,10 +103,6 @@ wait_until_pods_running knative-sources
 # Publish test images
 $(dirname $0)/upload-test-images.sh e2e
 
-# Handle test failures ourselves, so we can dump useful info.
-set +o errexit
-set +o pipefail
-
 # Setup resources common to all eventing tests
 setup_events_test_resources
 

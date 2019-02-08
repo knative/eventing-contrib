@@ -63,7 +63,7 @@ sources _except gcppubsub_ with:
 <!-- TODO(n3wscott): Update to show how to install a single source. -->
 
 ```shell
-ko apply -f config/default.yaml
+ko apply -f config/
 ```
 
 This command is idempotent, so you can run it at any time to update your
@@ -115,7 +115,7 @@ Running tests as you make changes to the code-base is pretty simple. See
 You can delete `Knative Sources` with:
 
 ```shell
-ko delete -f config/default.yaml
+ko delete -f config/
 ```
 
 <!--

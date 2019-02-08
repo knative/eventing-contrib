@@ -101,6 +101,7 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		EventID:            m.ID(),
 		EventTime:          m.PublishTime(),
 		Source:             a.source,
+		ContentType:        "application/json",
 	}
 	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m.Message(), event)
 	if err != nil {

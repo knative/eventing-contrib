@@ -18,13 +18,11 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
+	log "github.com/mgutz/logxi/v1"
+
 	"github.com/knative/pkg/cloudevents"
 )
 
@@ -47,6 +45,12 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	client := cloudevents.NewClient(sink, cloudevents.Builder{
+		EventType: "dev.knative.source.heartbeats",
+		Source:    "heartbeats-demo",
+	})
+
 	var period time.Duration
 	if p, err := strconv.Atoi(periodStr); err != nil {
 		period = time.Duration(5) * time.Second
@@ -61,44 +65,10 @@ func main() {
 	ticker := time.NewTicker(period)
 	for {
 		hb.Sequence++
-		postMessage(sink, hb)
+		if err := client.Send(hb); err != nil {
+			log.Error("failed to send cloudevent", err)
+		}
 		// Wait for next tick
 		<-ticker.C
 	}
-}
-
-// Creates a CloudEvent Context for a given heartbeat.
-func cloudEventsContext() *cloudevents.EventContext {
-	return &cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          "dev.knative.source.heartbeats",
-		EventID:            uuid.New().String(),
-		Source:             "heartbeats-demo",
-		EventTime:          time.Now(),
-	}
-}
-
-func postMessage(target string, hb *Heartbeat) error {
-	ctx := cloudEventsContext()
-
-	log.Printf("posting to %q", target)
-	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
-	// event metadata.
-	req, err := cloudevents.Binary.NewRequest(target, hb, *ctx)
-	if err != nil {
-		log.Printf("failed to create http request: %s", err)
-		return err
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("Failed to do POST: %v", err)
-		return err
-	}
-	defer resp.Body.Close()
-	log.Printf("response Status: %s", resp.Status)
-	body, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("response Body: %s", string(body))
-	return nil
 }
