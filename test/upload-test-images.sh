@@ -16,9 +16,8 @@
 
 set -o errexit
 
-: ${DOCKER_REPO_OVERRIDE:?"You must set 'DOCKER_REPO_OVERRIDE', see DEVELOPMENT.md"}
+: ${KO_DOCKER_REPO:?"You must set 'KO_DOCKER_REPO', see DEVELOPMENT.md"}
 
-export KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
 IMAGE_PATHS_FILE="$(dirname $0)/image_paths.txt"
 DOCKER_TAG=$1
 
