@@ -94,3 +94,8 @@ required = [
 [[constraint]]
   name = "github.com/gorilla/websocket"
   version = "1.4.0"
+
+# Use CloudEvents
+[[override]]
+  name = "github.com/cloudevents/sdk-go"
+  branch = "master"
