@@ -20,14 +20,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cetypes "github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+
 	"github.com/google/go-cmp/cmp"
-	"github.com/knative/pkg/cloudevents"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func TestCloudEventOverrides(t *testing.T) {
+func TestCloudEventFrom(t *testing.T) {
 
 	uid := types.UID("ABC")
 
@@ -43,12 +45,6 @@ func TestCloudEventOverrides(t *testing.T) {
 
 	now := time.Now()
 
-	want := cloudevents.V01EventContext{
-		EventID:   string(uid),
-		Source:    refLink,
-		EventTime: now,
-	}
-
 	event := &corev1.Event{
 		ObjectMeta: metav1.ObjectMeta{
 			UID:               uid,
@@ -57,9 +53,18 @@ func TestCloudEventOverrides(t *testing.T) {
 		InvolvedObject: ref,
 	}
 
-	got := cloudEventOverrides(event)
+	want := cloudevents.Event{
+		Context: cloudevents.EventContextV01{
+			EventType: eventType,
+			EventID:   string(uid),
+			Source:    *cetypes.ParseURLRef(refLink),
+			EventTime: &cetypes.Timestamp{Time: now},
+		},
+		Data: event,
+	}
 
-	//ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{}, "LastTransitionTime")
+	got := cloudEventFrom(event)
+
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected context (-want, +got) = %v", diff)
 	}

@@ -20,8 +20,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/knative/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	corev1 "k8s.io/api/core/v1"
+)
+
+const (
+	eventType = "dev.knative.k8s.event"
 )
 
 // Creates a URI of the form found in object metadata selfLinks
@@ -75,10 +81,14 @@ func createSelfLink(o corev1.ObjectReference) string {
 //		Type:Normal,
 //		EventTime:0001-01-01 00:00:00 +0000 UTC,
 //	}
-func cloudEventOverrides(m *corev1.Event) cloudevents.V01EventContext {
-	return cloudevents.V01EventContext{
-		EventID:   string(m.ObjectMeta.UID),
-		Source:    createSelfLink(m.InvolvedObject),
-		EventTime: m.ObjectMeta.CreationTimestamp.Time,
+func cloudEventFrom(m *corev1.Event) cloudevents.Event {
+	return cloudevents.Event{
+		Context: cloudevents.EventContextV01{
+			EventID:   string(m.ObjectMeta.UID),
+			EventType: eventType,
+			Source:    *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
+			EventTime: &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
+		},
+		Data: m,
 	}
 }
