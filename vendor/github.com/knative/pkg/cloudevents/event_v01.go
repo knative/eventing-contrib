@@ -60,13 +60,35 @@ type V01EventContext struct {
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-// AsV01 implements the LoadContext interface.
+// AsV01 implements the ContextTranslator interface.
 func (ec V01EventContext) AsV01() V01EventContext {
 	return ec
 }
 
+// AsV02 implements the ContextTranslator interface.
+func (ec V01EventContext) AsV02() V02EventContext {
+	ret := V02EventContext{
+		SpecVersion: V02CloudEventsVersion,
+		Type:        ec.EventType,
+		Source:      ec.Source,
+		ID:          ec.EventID,
+		Time:        ec.EventTime,
+		SchemaURL:   ec.SchemaURL,
+		ContentType: ec.ContentType,
+		Extensions:  make(map[string]interface{}),
+	}
+	// eventTypeVersion was retired in v0.2, so put it in an extension.
+	if ec.EventTypeVersion != "" {
+		ret.Extensions["eventtypeversion"] = ec.EventTypeVersion
+	}
+	for k, v := range ec.Extensions {
+		ret.Extensions[k] = v
+	}
+	return ret
+}
+
 // AsHeaders implements the BinarySender interface.
-func (ec V01EventContext) AsHeaders() http.Header {
+func (ec V01EventContext) AsHeaders() (http.Header, error) {
 	h := http.Header{}
 	h.Set("CE-CloudEventsVersion", ec.CloudEventsVersion)
 	h.Set("CE-EventID", ec.EventID)
@@ -88,17 +110,17 @@ func (ec V01EventContext) AsHeaders() http.Header {
 		h.Set("Content-Type", ec.ContentType)
 	}
 	for k, v := range ec.Extensions {
-		data := fmt.Sprint(v)
 		encoded, err := json.Marshal(v)
 		if err != nil {
-			data = string(encoded)
+			return nil, err
 		}
-		h["CE-X-"+k] = []string{data}
+		// Preserve case in v0.1, even though HTTP headers are case-insensitive.
+		h["CE-X-"+k] = []string{string(encoded)}
 	}
-	return h
+	return h, nil
 }
 
-// FromHeaders implements the BinaryContext interface
+// FromHeaders implements the BinaryLoader interface.
 func (ec *V01EventContext) FromHeaders(in http.Header) error {
 	missingField := func(name string) error {
 		if in.Get("CE-"+name) == "" {
@@ -106,13 +128,11 @@ func (ec *V01EventContext) FromHeaders(in http.Header) error {
 		}
 		return nil
 	}
-	err := anyError(
+	if err := anyError(
 		missingField("CloudEventsVersion"),
 		missingField("EventID"),
 		missingField("EventType"),
-		missingField("Source"),
-	)
-	if err != nil {
+		missingField("Source")); err != nil {
 		return err
 	}
 	data := V01EventContext{
@@ -126,6 +146,7 @@ func (ec *V01EventContext) FromHeaders(in http.Header) error {
 		Extensions:         make(map[string]interface{}),
 	}
 	if timeStr := in.Get("CE-EventTime"); timeStr != "" {
+		var err error
 		if data.EventTime, err = time.Parse(time.RFC3339Nano, timeStr); err != nil {
 			return err
 		}
@@ -134,10 +155,10 @@ func (ec *V01EventContext) FromHeaders(in http.Header) error {
 		if strings.EqualFold(k[:len("CE-X-")], "CE-X-") {
 			key := k[len("CE-X-"):]
 			var tmp interface{}
-			if err = json.Unmarshal([]byte(v[0]), &tmp); err == nil {
+			if err := json.Unmarshal([]byte(v[0]), &tmp); err == nil {
 				data.Extensions[key] = tmp
 			} else {
-				// If we can't unmarshall the data, treat it as a string
+				// If we can't unmarshal the data, treat it as a string.
 				data.Extensions[key] = v[0]
 			}
 		}
@@ -146,28 +167,28 @@ func (ec *V01EventContext) FromHeaders(in http.Header) error {
 	return nil
 }
 
-// AsJSON implements the StructuredSender interface
+// AsJSON implements the StructuredSender interface.
 func (ec V01EventContext) AsJSON() (map[string]json.RawMessage, error) {
 	ret := make(map[string]json.RawMessage)
 	err := anyError(
-		encodeKey(&ret, "cloudEventsVersion", ec.CloudEventsVersion),
-		encodeKey(&ret, "eventID", ec.EventID),
-		encodeKey(&ret, "eventTime", ec.EventTime),
-		encodeKey(&ret, "eventType", ec.EventType),
-		encodeKey(&ret, "eventTypeVersion", ec.EventTypeVersion),
-		encodeKey(&ret, "schemaURL", ec.SchemaURL),
-		encodeKey(&ret, "contentType", ec.ContentType),
-		encodeKey(&ret, "source", ec.Source),
-		encodeKey(&ret, "extensions", ec.Extensions))
+		encodeKey(ret, "cloudEventsVersion", ec.CloudEventsVersion),
+		encodeKey(ret, "eventID", ec.EventID),
+		encodeKey(ret, "eventTime", ec.EventTime),
+		encodeKey(ret, "eventType", ec.EventType),
+		encodeKey(ret, "eventTypeVersion", ec.EventTypeVersion),
+		encodeKey(ret, "schemaURL", ec.SchemaURL),
+		encodeKey(ret, "contentType", ec.ContentType),
+		encodeKey(ret, "source", ec.Source),
+		encodeKey(ret, "extensions", ec.Extensions))
 	return ret, err
 }
 
-// DataContentType implements the StructuredSender interface
+// DataContentType implements the StructuredSender interface.
 func (ec V01EventContext) DataContentType() string {
 	return ec.ContentType
 }
 
-// FromJSON implements the StructuredContext interface
+// FromJSON implements the StructuredLoader interface.
 func (ec *V01EventContext) FromJSON(in map[string]json.RawMessage) error {
 	data := V01EventContext{
 		CloudEventsVersion: extractKey(in, "cloudEventsVersion"),
@@ -176,8 +197,7 @@ func (ec *V01EventContext) FromJSON(in map[string]json.RawMessage) error {
 		Source:             extractKey(in, "source"),
 	}
 	var err error
-	timeStr := extractKey(in, "eventTime")
-	if timeStr != "" {
+	if timeStr := extractKey(in, "eventTime"); timeStr != "" {
 		if data.EventTime, err = time.Parse(time.RFC3339Nano, timeStr); err != nil {
 			return err
 		}
@@ -188,20 +208,19 @@ func (ec *V01EventContext) FromJSON(in map[string]json.RawMessage) error {
 	if len(in["extensions"]) == 0 {
 		in["extensions"] = []byte("{}")
 	}
-	err = json.Unmarshal(in["extensions"], &data.Extensions)
-	if err != nil {
+	if err = json.Unmarshal(in["extensions"], &data.Extensions); err != nil {
 		return err
 	}
 	*ec = data
 	return nil
 }
 
-func encodeKey(out *map[string]json.RawMessage, key string, value interface{}) (err error) {
-	if s, ok := value.(string); s == "" && ok {
-		// Skip empty strings
+func encodeKey(out map[string]json.RawMessage, key string, value interface{}) (err error) {
+	if s, ok := value.(string); ok && s == "" {
+		// Skip empty strings.
 		return nil
 	}
-	(*out)[key], err = json.Marshal(value)
+	out[key], err = json.Marshal(value)
 	return
 }
 
