@@ -55,13 +55,10 @@ type envConfig struct {
 	Sink string `envconfig:"SINK"`
 
 	// Name of this pod.
-	Name string `envconfig:"POD_NAME"`
+	Name string `envconfig:"POD_NAME" required:"true"`
 
 	// Namespace this pod exists in.
-	Namespace string `envconfig:"POD_NAMESPACE"`
-
-	// The ip address of this pod.
-	IP string `envconfig:"POD_IP"`
+	Namespace string `envconfig:"POD_NAMESPACE" required:"true"`
 }
 
 func main() {
