@@ -95,7 +95,8 @@ required = [
   name = "github.com/gorilla/websocket"
   version = "1.4.0"
 
-# Use CloudEvents
+# Use CloudEvents, master as of Feb 21, 2019
+# Will use releases as soon as they get releases going.
 [[override]]
   name = "github.com/cloudevents/sdk-go"
-  branch = "master"
+  revision = "35a5e9427340482bd5f078747b629e4d9b4ab418"
