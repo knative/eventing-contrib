@@ -68,7 +68,8 @@ install Knative Serving stack with Istio, upload test images to your Docker repo
 and run the end-to-end tests against the Knative Eventing Sources built from
 source.
 
-If you already have the `*_OVERRIDE` environment variables set, call the script
+If you already have the `KO_DOCKER_REPO` environment variable set and a cluster
+setup and currently selected in your kubeconfig, call the script
 with the `--run-tests` argument and it will use the cluster and run the tests.
 Note that this requires you to have Serving and Istio installed and configured
 to your particular configuration setup. Knative Eventing Sources will still
@@ -76,8 +77,7 @@ built and deployed from source.
 
 Otherwise, calling this script without arguments will create a new cluster in
 project `$PROJECT_ID`, start Knative Serving and the eventing system, upload
-test images, run the tests and delete the cluster. In this case, it's required
-that `$DOCKER_REPO_OVERRIDE` points to a valid writable docker repo.
+test images, run the tests and delete the cluster.
 
 ## Test images
 
@@ -90,10 +90,10 @@ automatically.
 The [`upload-test-images.sh`](./upload-test-images.sh) script can be used to
 build and push the test images used by the e2e tests. It requires:
 
-- [`DOCKER_REPO_OVERRIDE`](https://github.com/knative/serving/blob/master/DEVELOPMENT.md#environment-setup)
+- [`KO_DOCKER_REPO`](https://github.com/knative/serving/blob/master/DEVELOPMENT.md#environment-setup)
   to be set
 - You to be
-  [authenticated with your `DOCKER_REPO_OVERRIDE`](https://github.com/knative/serving/blob/master/DEVELOPMENT.md#environment-setup)
+  [authenticated with your `KO_DOCKER_REPO`](https://github.com/knative/serving/blob/master/DEVELOPMENT.md#environment-setup)
 - [`docker`](https://docs.docker.com/install/) to be installed
 
 To run the script for all end to end test images:

@@ -95,7 +95,7 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		logger.Infof("overriding the cloud event type with %q", et)
 	}
 
-	event := cloudevents.EventContext{
+	event := cloudevents.V01EventContext{
 		CloudEventsVersion: cloudevents.CloudEventsVersion,
 		EventType:          et,
 		EventID:            m.ID(),

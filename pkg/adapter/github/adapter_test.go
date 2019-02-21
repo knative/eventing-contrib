@@ -452,7 +452,8 @@ func (tc *testCase) runner(t *testing.T, ra Adapter) func(t *testing.T) {
 }
 
 func (tc *testCase) handleRequest(req *http.Request) (*http.Response, error) {
-	cloudEvent, err := cloudevents.Binary.FromRequest(nil, req)
+	rawContext, err := cloudevents.Binary.FromRequest(nil, req)
+	cloudEvent := rawContext.AsV01()
 	if err != nil {
 		return nil, fmt.Errorf("unexpected error decoding cloudevent: %s", err)
 	}
@@ -522,8 +523,8 @@ func TestHandleEvent(t *testing.T) {
 			"ce-eventtime":          {"2019-01-29T09:35:10.69383396-08:00"},
 			"ce-eventtype":          {"dev.knative.source.github.pull_request"},
 			"ce-source":             {"http://github.com/a/b"},
-			"ce-x-github-delivery":  {"12345"},
-			"ce-x-github-event":     {"pull_request"},
+			"ce-x-github-delivery":  {`"12345"`},
+			"ce-x-github-event":     {`"pull_request"`},
 
 			"content-type": {"application/json"},
 		},
