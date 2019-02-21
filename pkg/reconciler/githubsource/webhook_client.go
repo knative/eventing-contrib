@@ -19,6 +19,7 @@ package githubsource
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	ghclient "github.com/google/go-github/github"
@@ -38,14 +39,29 @@ type webhookOptions struct {
 type webhookClient interface {
 	Create(ctx context.Context, options *webhookOptions) (string, error)
 	Delete(ctx context.Context, options *webhookOptions, hookID string) error
+	CreateWithGitHubBaseURL(ctx context.Context, options *webhookOptions, alternateGitHubAPIURL string) (string, error)
+	DeleteWithGitHubBaseURL(ctx context.Context, options *webhookOptions, hookID string, alternateGitHubAPIURL string) error
 }
 
 type gitHubWebhookClient struct{}
 
 func (client gitHubWebhookClient) Create(ctx context.Context, options *webhookOptions) (string, error) {
+	return client.CreateWithGitHubBaseURL(ctx, options, "")
+}
+
+func (client gitHubWebhookClient) Delete(ctx context.Context, options *webhookOptions, hookID string) error {
+	return client.DeleteWithGitHubBaseURL(ctx, options, hookID, "")
+}
+
+func (client gitHubWebhookClient) CreateWithGitHubBaseURL(ctx context.Context, options *webhookOptions, alternateGitHubAPIURL string) (string, error) {
 	logger := logging.FromContext(ctx)
 
 	ghClient := client.createGitHubClient(ctx, options)
+	if alternateGitHubAPIURL != "" {
+		//This is to support GitHub Enterprise, this might be something like https://github.company.com/api/v3/
+		ghClient.BaseURL, _ = url.Parse(alternateGitHubAPIURL)
+	}
+
 	hook := client.hookConfig(ctx, options)
 
 	var h *ghclient.Hook
@@ -65,7 +81,7 @@ func (client gitHubWebhookClient) Create(ctx context.Context, options *webhookOp
 	return strconv.FormatInt(*h.ID, 10), nil
 }
 
-func (client gitHubWebhookClient) Delete(ctx context.Context, options *webhookOptions, hookID string) error {
+func (client gitHubWebhookClient) DeleteWithGitHubBaseURL(ctx context.Context, options *webhookOptions, hookID, alternateGitHubAPIURL string) error {
 	logger := logging.FromContext(ctx)
 
 	hookIDInt, err := strconv.ParseInt(hookID, 10, 64)
@@ -74,6 +90,10 @@ func (client gitHubWebhookClient) Delete(ctx context.Context, options *webhookOp
 	}
 
 	ghClient := client.createGitHubClient(ctx, options)
+	if alternateGitHubAPIURL != "" {
+		ghClient.BaseURL, _ = url.Parse(alternateGitHubAPIURL)
+	}
+
 	hook := client.hookConfig(ctx, options)
 
 	var resp *ghclient.Response
