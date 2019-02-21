@@ -101,7 +101,7 @@ func (a *Adapter) addEvent(new interface{}) {
 
 	if a.ceClient == nil {
 		var err error
-		a.ceClient, err = client.NewHttpClient(context.TODO(), a.SinkURI, http.BinaryV01)
+		a.ceClient, err = client.NewHttpClient(context.TODO(), a.SinkURI, http.BinaryV02)
 		if err != nil {
 			logger.Errorf("failed to create cloudevent client: %s", err.Error())
 			return
