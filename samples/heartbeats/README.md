@@ -7,8 +7,10 @@ sources to see a working example.
 
 ### Prerequisites
 
-- [ ] Install [Knative Core](https://github.com/knative/docs/tree/master/install)
-- [ ] Install [ko](https://github.com/google/go-containerregistry/tree/master/cmd/ko)
+- [ ] Install
+      [Knative Core](https://github.com/knative/docs/tree/master/install)
+- [ ] Install
+      [ko](https://github.com/google/go-containerregistry/tree/master/cmd/ko)
 
 ### Deploy Heartbeats Sender and Receiver
 
