@@ -40,7 +40,7 @@ type Adapter struct {
 	SinkURI string
 
 	// ceClient is a client that sends cloudevents.
-	ceClient *client.Client
+	ceClient client.Client
 
 	kubeClient kubernetes.Interface
 }
@@ -101,14 +101,14 @@ func (a *Adapter) addEvent(new interface{}) {
 
 	if a.ceClient == nil {
 		var err error
-		a.ceClient, err = client.NewHttpClient(context.TODO(), a.SinkURI, http.BinaryV02)
+		a.ceClient, err = client.NewHTTPClient(client.WithTarget(a.SinkURI), client.WithHTTPEncoding(http.BinaryV02))
 		if err != nil {
 			logger.Errorf("failed to create cloudevent client: %s", err.Error())
 			return
 		}
 	}
 
-	if err := a.ceClient.Send(cloudEventFrom(event)); err != nil {
+	if err := a.ceClient.Send(context.TODO(), cloudEventFrom(event)); err != nil {
 		logger.Infof("Event delivery failed: %s", err)
 	}
 }

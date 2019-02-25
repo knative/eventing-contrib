@@ -54,11 +54,11 @@ func TestCloudEventFrom(t *testing.T) {
 	}
 
 	want := cloudevents.Event{
-		Context: cloudevents.EventContextV01{
-			EventType: eventType,
-			EventID:   string(uid),
-			Source:    *cetypes.ParseURLRef(refLink),
-			EventTime: &cetypes.Timestamp{Time: now},
+		Context: cloudevents.EventContextV02{
+			Type:   eventType,
+			ID:     string(uid),
+			Source: *cetypes.ParseURLRef(refLink),
+			Time:   &cetypes.Timestamp{Time: now},
 		},
 		Data: event,
 	}

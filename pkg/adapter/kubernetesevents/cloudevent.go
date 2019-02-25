@@ -83,11 +83,11 @@ func createSelfLink(o corev1.ObjectReference) string {
 //	}
 func cloudEventFrom(m *corev1.Event) cloudevents.Event {
 	return cloudevents.Event{
-		Context: cloudevents.EventContextV01{
-			EventID:   string(m.ObjectMeta.UID),
-			EventType: eventType,
-			Source:    *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
-			EventTime: &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
+		Context: cloudevents.EventContextV02{
+			ID:     string(m.ObjectMeta.UID),
+			Type:   eventType,
+			Source: *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
+			Time:   &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
 		},
 		Data: m,
 	}
