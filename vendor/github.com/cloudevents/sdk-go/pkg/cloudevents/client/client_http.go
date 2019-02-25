@@ -6,52 +6,37 @@ import (
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"log"
 	"net/http"
-	"net/url"
 )
 
-func NewHttpClient(ctx context.Context, targetUrl string, encoding cloudeventshttp.Encoding) (*Client, error) {
-	var target *url.URL
-	if targetUrl != "" {
-		var err error
-		target, err = url.Parse(targetUrl)
-		if err != nil {
-			return nil, err
-		}
+func NewHTTPClient(opts ...Option) (Client, error) {
+	c := &ceClient{
+		transport: &cloudeventshttp.Transport{
+			// Default the request method.
+			Req: &http.Request{
+				Method: http.MethodPost,
+			},
+		},
 	}
 
-	// TODO: context is added to overload the http Method and others. Plumb this.
-	req := http.Request{
-		Method: http.MethodPost,
-		URL:    target,
-	}
-	ctx = cloudeventshttp.ContextWithRequest(ctx, req)
-
-	transport := cloudeventshttp.Transport{Encoding: encoding}
-
-	c := &Client{
-		ctx:       ctx,
-		transport: &transport,
+	if err := c.applyOptions(opts...); err != nil {
+		return nil, err
 	}
 	return c, nil
 }
 
-func StartHttpReceiver(ctx *context.Context, fn Receiver) error {
-	if ctx == nil {
-		return fmt.Errorf("context object required for Client.StartReceiver")
-	}
-	c, err := NewHttpClient(*ctx, "", 0)
+func StartHTTPReceiver(ctx context.Context, fn Receiver, opts ...Option) (Client, error) {
+	c, err := NewHTTPClient(opts...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	*ctx = ContextWithClient(*ctx, c)
 
-	if err := c.StartReceiver(fn); err != nil {
-		return err
+	if err := c.StartReceiver(ctx, fn); err != nil {
+		return nil, err
 	}
-	return nil
+	return c, nil
 }
 
-func (c *Client) startHttpReceiver(t *cloudeventshttp.Transport, fn Receiver) error {
+func (c *ceClient) startHTTPReceiver(ctx context.Context, t *cloudeventshttp.Transport, fn Receiver) error {
 	if c.receiver != nil {
 		return fmt.Errorf("client already has a receiver")
 	}
@@ -60,10 +45,9 @@ func (c *Client) startHttpReceiver(t *cloudeventshttp.Transport, fn Receiver) er
 	}
 	c.receiver = fn
 	t.Receiver = c
-	port := PortFromContext(c.ctx)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), t))
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", t.GetPort()), t))
 	}()
 
 	return nil

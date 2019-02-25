@@ -69,11 +69,11 @@ and run the end-to-end tests against the Knative Eventing Sources built from
 source.
 
 If you already have the `KO_DOCKER_REPO` environment variable set and a cluster
-setup and currently selected in your kubeconfig, call the script
-with the `--run-tests` argument and it will use the cluster and run the tests.
-Note that this requires you to have Serving and Istio installed and configured
-to your particular configuration setup. Knative Eventing Sources will still
-built and deployed from source.
+setup and currently selected in your kubeconfig, call the script with the
+`--run-tests` argument and it will use the cluster and run the tests. Note that
+this requires you to have Serving and Istio installed and configured to your
+particular configuration setup. Knative Eventing Sources will still built and
+deployed from source.
 
 Otherwise, calling this script without arguments will create a new cluster in
 project `$PROJECT_ID`, start Knative Serving and the eventing system, upload
