@@ -200,6 +200,16 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 }
 
 func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain, accessToken, secretToken, alternateGitHubAPIURL string) (string, error) {
+	// TODO: Modify function args to shorten method signature ... something like
+	// func (r *reconciler) createWebhook(ctx context.Context, args createWebhookArgs) (string, error) {...}
+	// where createWebhookArgs is a struct like....
+	// type createWebhookArgs struct {
+	//  source *sourcesv1alpha1.GitHubSource
+	//  domain string
+	//  accessToken string
+	//  secretToken string
+	//  alternateGitHubAPIURL string
+	// }
 	logger := logging.FromContext(ctx)
 
 	logger.Info("creating GitHub webhook")
@@ -217,7 +227,7 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 		repo:        repo,
 		events:      source.Spec.EventTypes,
 	}
-	hookID, err := r.webhookClient.CreateWithGitHubBaseURL(ctx, hookOptions, alternateGitHubAPIURL)
+	hookID, err := r.webhookClient.Create(ctx, hookOptions, alternateGitHubAPIURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to create webhook: %v", err)
 	}
@@ -225,6 +235,16 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 }
 
 func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, accessToken, hookID, alternateGitHubAPIURL string) error {
+	// TODO: Modify function args to shorten method signature ... something like
+	// func (r *reconciler) createWebhook(ctx context.Context, args createWebhookArgs) (string, error) {...}
+	// where createWebhookArgs is a struct like....
+	// type createWebhookArgs struct {
+	//  source *sourcesv1alpha1.GitHubSource
+	//  domain string
+	//  accessToken string
+	//  secretToken string
+	//  alternateGitHubAPIURL string
+	// }
 	logger := logging.FromContext(ctx)
 
 	logger.Info("deleting GitHub webhook")
@@ -240,7 +260,7 @@ func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.
 		repo:        repo,
 		events:      source.Spec.EventTypes,
 	}
-	err = r.webhookClient.DeleteWithGitHubBaseURL(ctx, hookOptions, hookID, alternateGitHubAPIURL)
+	err = r.webhookClient.Delete(ctx, hookOptions, hookID, alternateGitHubAPIURL)
 	if err != nil {
 		return fmt.Errorf("failed to delete webhook: %v", err)
 	}

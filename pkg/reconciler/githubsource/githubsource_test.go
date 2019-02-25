@@ -768,11 +768,7 @@ type mockWebhookClient struct {
 	data webhookCreatorData
 }
 
-func (client mockWebhookClient) Create(ctx context.Context, options *webhookOptions) (string, error) {
-	return client.CreateWithGitHubBaseURL(ctx, options, "")
-}
-
-func (client mockWebhookClient) CreateWithGitHubBaseURL(ctx context.Context, options *webhookOptions, altGHURL string) (string, error) {
+func (client mockWebhookClient) Create(ctx context.Context, options *webhookOptions, altGHURL string) (string, error) {
 	data := client.data
 	if data.clientCreateErr != nil {
 		return "", data.clientCreateErr
@@ -788,11 +784,7 @@ func (client mockWebhookClient) CreateWithGitHubBaseURL(ctx context.Context, opt
 	return data.hookID, nil
 }
 
-func (client mockWebhookClient) Delete(ctx context.Context, options *webhookOptions, hookID string) error {
-	return client.DeleteWithGitHubBaseURL(ctx, options, hookID, "")
-}
-
-func (client mockWebhookClient) DeleteWithGitHubBaseURL(ctx context.Context, options *webhookOptions, hookID, altGHURL string) error {
+func (client mockWebhookClient) Delete(ctx context.Context, options *webhookOptions, hookID, altGHURL string) error {
 	data := client.data
 	if data.expectedOwner != options.owner {
 		return fmt.Errorf(`expected webhook owner of "%s", got "%s"`,
