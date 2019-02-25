@@ -51,8 +51,8 @@ func (client gitHubWebhookClient) Create(ctx context.Context, options *webhookOp
 		//This is to support GitHub Enterprise, this might be something like https://github.company.com/api/v3/
 		baseURL, err := url.Parse(alternateGitHubAPIURL)
 		if err != nil {
-			logger.Infof("Failed to create webhook - Error occured parsing githubAPIURL %s, error was %v", alternateGitHubAPIURL, err)
-			return "", fmt.Errorf("Error occured parsing githubAPIURL: %v", err)
+			logger.Infof("failed to create webhook - error occured parsing githubAPIURL %s, error was %v", alternateGitHubAPIURL, err)
+			return "", fmt.Errorf("error occured parsing githubAPIURL: %v", err)
 		}
 		ghClient.BaseURL = baseURL
 	}
@@ -88,8 +88,8 @@ func (client gitHubWebhookClient) Delete(ctx context.Context, options *webhookOp
 	if alternateGitHubAPIURL != "" {
 		baseURL, err := url.Parse(alternateGitHubAPIURL)
 		if err != nil {
-			logger.Infof("Failed to delete webhook - Error occured parsing githubAPIURL %s, error was %v", alternateGitHubAPIURL, err)
-			return fmt.Errorf("Error occured parsing githubAPIURL: %v", err)
+			logger.Infof("failed to delete webhook - error occured parsing githubAPIURL %s, error was %v", alternateGitHubAPIURL, err)
+			return fmt.Errorf("error occured parsing githubAPIURL: %v", err)
 		}
 		ghClient.BaseURL = baseURL
 	}

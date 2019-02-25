@@ -201,14 +201,15 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 
 func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain, accessToken, secretToken, alternateGitHubAPIURL string) (string, error) {
 	// TODO: Modify function args to shorten method signature ... something like
-	// func (r *reconciler) createWebhook(ctx context.Context, args createWebhookArgs) (string, error) {...}
-	// where createWebhookArgs is a struct like....
-	// type createWebhookArgs struct {
+	// func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (string, error) {...}
+	// where webhookArgs is a struct like....
+	// type webhookArgs struct {
 	//  source *sourcesv1alpha1.GitHubSource
 	//  domain string
 	//  accessToken string
 	//  secretToken string
 	//  alternateGitHubAPIURL string
+	//  hookID string
 	// }
 	logger := logging.FromContext(ctx)
 
@@ -236,14 +237,15 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 
 func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, accessToken, hookID, alternateGitHubAPIURL string) error {
 	// TODO: Modify function args to shorten method signature ... something like
-	// func (r *reconciler) createWebhook(ctx context.Context, args createWebhookArgs) (string, error) {...}
-	// where createWebhookArgs is a struct like....
-	// type createWebhookArgs struct {
+	// func (r *reconciler) deleteWebhook(ctx context.Context, args webhookArgs) (string, error) {...}
+	// where webhookArgs is a struct like....
+	// type webhookArgs struct {
 	//  source *sourcesv1alpha1.GitHubSource
 	//  domain string
 	//  accessToken string
 	//  secretToken string
 	//  alternateGitHubAPIURL string
+	//  hookID string
 	// }
 	logger := logging.FromContext(ctx)
 
