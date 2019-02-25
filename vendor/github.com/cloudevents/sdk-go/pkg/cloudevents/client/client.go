@@ -11,37 +11,52 @@ import (
 
 type Receiver func(event cloudevents.Event)
 
-type Client struct {
-	ctx       context.Context
+type Client interface {
+	Send(ctx context.Context, event cloudevents.Event) error
+	StartReceiver(ctx context.Context, fn Receiver) error
+
+	Receive(event cloudevents.Event)
+}
+
+type ceClient struct {
 	transport transport.Sender
 	receiver  Receiver
 }
 
-func (c *Client) Send(event cloudevents.Event) error {
+func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initalized")
 	}
-	return c.transport.Send(c.ctx, event)
+	return c.transport.Send(ctx, event)
 }
 
-func (c *Client) Receive(event cloudevents.Event) {
+func (c *ceClient) Receive(event cloudevents.Event) {
 	if c.receiver != nil {
 		c.receiver(event)
 	}
 }
 
-func (c *Client) StartReceiver(fn Receiver) error {
+func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initalized")
 	}
 
 	if t, ok := c.transport.(*http.Transport); ok {
-		return c.startHttpReceiver(t, fn)
+		return c.startHTTPReceiver(ctx, t, fn)
 	}
 
 	if t, ok := c.transport.(*nats.Transport); ok {
-		return c.startNatsReceiver(t, fn)
+		return c.startNATSReceiver(ctx, t, fn)
 	}
 
 	return fmt.Errorf("unknown transport type: %T", c.transport)
+}
+
+func (c *ceClient) applyOptions(opts ...Option) error {
+	for _, fn := range opts {
+		if err := fn(c); err != nil {
+			return err
+		}
+	}
+	return nil
 }
