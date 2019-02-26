@@ -44,24 +44,23 @@ type webhookClient interface {
 type gitHubWebhookClient struct{}
 
 func (client gitHubWebhookClient) Create(ctx context.Context, options *webhookOptions, alternateGitHubAPIURL string) (string, error) {
+	var err error
 	logger := logging.FromContext(ctx)
 
 	ghClient := client.createGitHubClient(ctx, options)
 	if alternateGitHubAPIURL != "" {
 		//This is to support GitHub Enterprise, this might be something like https://github.company.com/api/v3/
-		baseURL, err := url.Parse(alternateGitHubAPIURL)
+		ghClient.BaseURL, err = url.Parse(alternateGitHubAPIURL)
 		if err != nil {
 			logger.Infof("Failed to create webhook because an error occured parsing githubAPIURL %q, error was: %v", alternateGitHubAPIURL, err)
 			return "", fmt.Errorf("error occured parsing githubAPIURL: %v", err)
 		}
-		ghClient.BaseURL = baseURL
 	}
 
 	hook := client.hookConfig(ctx, options)
 
 	var h *ghclient.Hook
 	var resp *ghclient.Response
-	var err error
 	if options.repo != "" {
 		h, resp, err = ghClient.Repositories.CreateHook(ctx, options.owner, options.repo, &hook)
 	} else {
