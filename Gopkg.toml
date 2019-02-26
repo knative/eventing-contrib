@@ -69,8 +69,6 @@ required = [
   name = "github.com/knative/serving"
   version = "v0.2.1"
 
-# STANZAS BELOW ARE GENERATED AND MAY BE WRITTEN - DO NOT MODIFY BELOW THIS LINE.
-
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
   revision = "0f0740db56812f732d90ff7df3520a291a9f04c9"
@@ -95,8 +93,8 @@ required = [
   name = "github.com/gorilla/websocket"
   version = "1.4.0"
 
-# Use CloudEvents, master as of Feb 21, 2019
+# Use CloudEvents, master as of Feb 25, 2019
 # Will use releases as soon as they get releases going.
 [[override]]
   name = "github.com/cloudevents/sdk-go"
-  revision = "35a5e9427340482bd5f078747b629e4d9b4ab418"
+  revision = "0ad07eed0bed90a02b52767cee062dcaa5573179"

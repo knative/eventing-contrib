@@ -44,7 +44,7 @@ func receive(event cloudevents.Event) {
 func main() {
 	ctx := context.TODO()
 
-	if err := client.StartHttpReceiver(&ctx, receive); err != nil {
+	if _, err := client.StartHTTPReceiver(ctx, receive); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 
