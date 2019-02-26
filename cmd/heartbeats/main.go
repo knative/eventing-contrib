@@ -110,7 +110,7 @@ func main() {
 			Data: hb,
 		}
 
-		if err := c.Send(context.TODO(), event); err != nil {
+		if err := c.Send(context.Background(), event); err != nil {
 			log.Printf("failed to send cloudevent: %s", err.Error())
 		}
 		// Wait for next tick
