@@ -88,7 +88,7 @@ func cloudEventFrom(m *corev1.Event) cloudevents.Event {
 			Type:   eventType,
 			Source: *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
 			Time:   &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
-		},
+		}.AsV02(),
 		Data: m,
 	}
 }
