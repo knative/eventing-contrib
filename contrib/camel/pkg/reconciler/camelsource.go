@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,6 +44,9 @@ const (
 	// controllerAgentName is the string used by this controller to identify
 	// itself when creating events.
 	controllerAgentName = "camel-source-controller"
+
+	// integrationPlatformName is the standard name of the Camel K IntegrationPlatform resource
+	integrationPlatformName = "camel-k"
 )
 
 // Add creates a new CamelSource Controller and adds it to the Manager with
@@ -264,7 +267,7 @@ func (r *reconciler) getPlatform(ctx context.Context, namespace string) (*camelv
 	platform := camelv1alpha1.IntegrationPlatform{}
 	key := client.ObjectKey{
 		Namespace: namespace,
-		Name:      "camel-k",
+		Name:      integrationPlatformName,
 	}
 	if err := r.client.Get(ctx, key, &platform); err != nil {
 		return nil, err
@@ -282,9 +285,8 @@ func (r *reconciler) reconcileIntegrationContext(ctx context.Context, namespace 
 				return nil, err
 			}
 			return r.getIntegrationContext(ctx, namespace, image)
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 	return ct, err
 }
