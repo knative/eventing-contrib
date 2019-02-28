@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -101,7 +100,7 @@ func (a *Adapter) addEvent(new interface{}) {
 
 	if a.ceClient == nil {
 		var err error
-		a.ceClient, err = client.NewHTTPClient(client.WithTarget(a.SinkURI), client.WithHTTPEncoding(http.BinaryV02))
+		a.ceClient, err = client.NewHTTPClient(client.WithTarget(a.SinkURI), client.WithHTTPBinaryEncoding())
 		if err != nil {
 			logger.Errorf("failed to create cloudevent client: %s", err.Error())
 			return
