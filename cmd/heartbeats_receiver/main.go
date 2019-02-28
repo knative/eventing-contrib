@@ -31,13 +31,13 @@ type Heartbeat struct {
 }
 
 func receive(event cloudevents.Event) {
-	ec := event.Context.AsV01()
+	ec := event.Context.AsV02()
 	hb := &Heartbeat{}
 	if err := event.DataAs(hb); err != nil {
 		fmt.Printf("got data error: %s\n", err.Error())
 	}
 	log.Printf("CloudEvent:\n%s", event)
-	log.Printf("[%s] %s %s: ", ec.EventTime, ec.ContentType, ec.Source.String())
+	log.Printf("[%s] %s %s: ", ec.Time, ec.ContentType, ec.Source.String())
 	log.Printf("\t%d, %q", hb.Sequence, hb.Label)
 }
 

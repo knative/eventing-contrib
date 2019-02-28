@@ -27,9 +27,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -74,7 +72,12 @@ func main() {
 		sink = env.Sink
 	}
 
-	c, err := client.NewHTTPClient(client.WithTarget(sink), client.WithHTTPEncoding(http.BinaryV02))
+	c, err := client.NewHTTPClient(
+		client.WithTarget(sink),
+		client.WithHTTPBinaryEncoding(),
+		client.WithTimeNow(),
+		client.WithUUIDs(),
+	)
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())
 	}
@@ -103,7 +106,6 @@ func main() {
 
 		event := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
-				ID:     uuid.New().String(),
 				Type:   "dev.knative.eventing.samples.heartbeat",
 				Source: *source,
 			},
