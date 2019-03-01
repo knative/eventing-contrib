@@ -17,11 +17,15 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/gorilla/websocket"
-	"github.com/knative/pkg/cloudevents"
 )
 
 var (
@@ -53,10 +57,15 @@ func main() {
 		eventSource = source
 	}
 
-	client := cloudevents.NewClient(sink, cloudevents.Builder{
-		EventType: eventType,
-		Source:    eventSource,
-	})
+	ce, err := client.NewHTTPClient(
+		client.WithTarget(sink),
+		client.WithHTTPBinaryEncoding(),
+		client.WithUUIDs(),
+		client.WithTimeNow(),
+	)
+	if err != nil {
+		log.Fatalf("Failed to create a http cloudevent client: %s", err.Error())
+	}
 
 	ws, _, err := websocket.DefaultDialer.Dial(source, nil)
 	if err != nil {
@@ -71,7 +80,14 @@ func main() {
 			return
 		}
 
-		if err := client.Send(message); err != nil {
+		event := cloudevents.Event{
+			Context: cloudevents.EventContextV02{
+				Type:   eventType,
+				Source: *types.ParseURLRef(eventSource),
+			}.AsV02(),
+			Data: message,
+		}
+		if err := ce.Send(context.TODO(), event); err != nil {
 			log.Printf("sending event to channel failed: %v", err)
 		}
 	}
