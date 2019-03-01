@@ -25,7 +25,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/knative/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -53,7 +55,7 @@ type Adapter struct {
 	OnFailedPollWaitSecs time.Duration
 
 	// Client sends cloudevents to the target.
-	client *cloudevents.Client
+	client client.Client
 }
 
 // getRegion takes an AWS SQS URL and extracts the region from it
@@ -154,7 +156,16 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 // postMessage sends an SQS event to the SinkURI
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
 	if a.client == nil {
-		a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{EventType: eventType})
+
+		var err error
+		if a.client, err = client.NewHTTPClient(
+			client.WithTarget(a.SinkURI),
+			client.WithHTTPBinaryEncoding(),
+			client.WithUUIDs(),
+			client.WithTimeNow(),
+		); err != nil {
+			return err
+		}
 	}
 
 	// TODO verify the timestamp conversion
@@ -163,12 +174,17 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		logger.Errorw("Failed to unmarshal the message.", zap.Error(err), zap.Any("message", m.Body))
 		timestamp = time.Now().UnixNano()
 	}
+	event := cloudevents.Event{
+		Context: cloudevents.EventContextV02{
+			ID:     *m.MessageId,
+			Type:   eventType,
+			Source: *types.ParseURLRef(a.QueueURL),
+			Time:   &types.Timestamp{Time: time.Unix(timestamp, 0)},
+		}.AsV02(),
+		Data: m,
+	}
 
-	return a.client.Send(m, cloudevents.V01EventContext{
-		EventID:   *m.MessageId,
-		EventTime: time.Unix(timestamp, 0),
-		Source:    a.QueueURL,
-	})
+	return a.client.Send(context.TODO(), event)
 }
 
 // poll reads messages from the queue in batches of a given maximum size.
