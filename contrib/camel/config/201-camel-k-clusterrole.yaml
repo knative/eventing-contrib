@@ -67,14 +67,6 @@ rules:
   - update
   - watch
 - apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
   - serving.knative.dev
   resources:
   - '*'

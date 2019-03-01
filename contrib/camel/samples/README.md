@@ -11,12 +11,11 @@ These steps assume that you have checked out the repo and have a shell in this
 
 ### Prerequisites
 
-1. Install the
-   [Camel Source from this yaml](../config/default-camel.yaml) from
+1. Install the Camel Source from the [yaml files in the config dir](../config/) from
    source:
 
    ```shell
-   ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/camel/config/default-camel.yaml
+   ko apply -f ../config/
    ```
 
    Or install a release version (TODO: link to released component).
@@ -34,7 +33,7 @@ Deploy `dumper_resources.yaml`, building it from source:
 ko apply -f dumper_resources.yaml
 ```
 
-### Run a CamelSource
+### Run a CamelSource using the Timer component
 
 The samples directory contains some sample sources that can be used to generate events.
 
@@ -47,10 +46,8 @@ All Camel components are documented in the [Apache Camel github repository](http
 Install the [timer CamelSource](source_timer.yaml) from source:
 
    ```shell
-   ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/camel/samples/source_timer.yaml
+   ko apply -f source_timer.yaml
    ```
-
-### Verify
 
 We will verify that the published message was sent into the Knative eventing
 system by looking at what is downstream of the `CamelSource`.
@@ -63,3 +60,36 @@ system by looking at what is downstream of the `CamelSource`.
 
 If you've deployed the timer source, you should see log lines appearing every 3 seconds.
 
+### Run a CamelSource using the Telegram component
+
+Another useful component available with Camel is the Telegram component. It can be used to forward messages of
+a [Telegram](https://telegram.org/) chat into Knative channels as events.
+
+Before using the provided Telegram CamelSource example, you need to follow the instructions on the Telegram website for
+creating a [Telegram Bot](https://core.telegram.org/bots).
+The quickest way to create a bot is to contact the [Bot Father](https://telegram.me/botfather), another Telegram Bot,
+using your preferred Telegram client (mobile or web).
+After you create the bot, you'll receive an **authorization token** that is needed for the source to work.
+
+First, edit the [telegram CamelSource](source_telegram.yaml) and put the authorization token, replacing the `<put-your-token-here>` placeholder.
+
+To reduce noise in the message dumper, you can remove the previously created timer CamelSource from the namespace:
+
+   ```shell
+   kubectl delete camelsource camel-timer-source
+   ```
+
+Install the [telegram CamelSource](source_telegram.yaml) from source:
+
+   ```shell
+   ko apply -f source_telegram.yaml
+   ```
+
+Start again kail and keep it open on the message dumper:
+
+   ```shell
+   kail -d camel-message-dumper --since=10m
+   ```
+
+Now, you can contact your bot with any Telegram client. Each message you'll send to the bot will be
+printed by the message dumper as cloudevent.

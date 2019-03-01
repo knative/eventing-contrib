@@ -87,7 +87,7 @@ type CamelSourceOriginSpec struct {
 }
 
 type CamelSourceOriginComponentSpec struct {
-	// URI is a Camel component URI to use as starting point
+	// URI is a Camel component URI to use as starting point (e.g. "timer:tick?period=2s")
 	// +kubebuilder:validation:MinLength=1
 	URI        string            `json:"uri,omitempty"`
 	Properties map[string]string `json:"properties,omitempty"`

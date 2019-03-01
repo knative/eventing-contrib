@@ -22,7 +22,11 @@ import (
 )
 
 const (
+	// CamelVersion is the version of the Apache Camel core library to use
 	CamelVersion = "2.23.1"
+
+	// IntegrationPlatformName is the standard name of the Camel K IntegrationPlatform resource
+	IntegrationPlatformName = "camel-k"
 )
 
 func MakePlatform(namespace string) *camelv1alpha1.IntegrationPlatform {
@@ -32,10 +36,10 @@ func MakePlatform(namespace string) *camelv1alpha1.IntegrationPlatform {
 			APIVersion: "camel.apache.org/v1alpha1",
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      "camel-k",
+			Name:      IntegrationPlatformName,
 			Namespace: namespace,
 			Labels: map[string]string{
-				"app": "camel-k",
+				"app": IntegrationPlatformName,
 			},
 		},
 		Spec: camelv1alpha1.IntegrationPlatformSpec{
