@@ -51,7 +51,7 @@ type BitBucketSourceSpec struct {
 
 	// EventType is the type of event to receive from BitBucket. These
 	// correspond to the "Webhook event name" values listed at
-	// https://api.bitbucket.org/2.0/hook_events/repository - ie
+	// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html - ie
 	// "pullrequest:created"
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:Enum=repo:push,repo:fork,repo:updated,repo:commit_comment_created,repo:commit_status_created,repo:commit_status_updated,pullrequest:created,pullrequest:updated,pullrequest:approved,pullrequest:unapproved,pullrequest:fulfilled,pullrequest:rejected,pullrequest:comment_created,pullrequest:comment_updated,pullrequest:comment_deleted,issue:created,issue:updated,issue:comment_created
@@ -69,7 +69,6 @@ type BitBucketSourceSpec struct {
 	// name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
-
 }
 
 // SecretValueSource represents the source of a secret value
@@ -110,8 +109,8 @@ type BitBucketSourceStatus struct {
 	// +patchStrategy=merge
 	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	// WebhookIDKey is the ID of the webhook registered with BitBucket
-	WebhookIDKey string `json:"webhookIDKey,omitempty"`
+	// WebhookUUIDKey is the UUID of the webhook registered with BitBucket.
+	WebhookUUIDKey string `json:"webhookUUIDKey,omitempty"`
 
 	// SinkURI is the current active sink URI that has been configured
 	// for the BitBucketSource.

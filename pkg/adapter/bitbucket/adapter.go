@@ -34,8 +34,8 @@ import (
 )
 
 const (
-	BBHookUUID    = "Hook-UUID"
-	BBEventKey = "Event-Key"
+	BBRequestUUID = "Request-UUID"
+	BBEventKey    = "Event-Key"
 )
 
 // Adapter converts incoming BitBucket webhook events to CloudEvents and
@@ -68,10 +68,10 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	}
 
 	bitBucketEventType := hdr.Get("X-" + BBEventKey)
-	eventID := hdr.Get("X-" + BBHookUUID)
+	eventID := hdr.Get("X-" + BBRequestUUID)
 	extensions := map[string]interface{}{
 		BBEventKey:    bitBucketEventType,
-		BBHookUUID: eventID,
+		BBRequestUUID: eventID,
 	}
 
 	log.Printf("Handling %s", bitBucketEventType)
@@ -99,58 +99,59 @@ func sourceFromBitBucketEvent(bitBucketEvent bb.Event, payload interface{}) (*ty
 	switch bitBucketEvent {
 	case bb.RepoPushEvent:
 		p := payload.(bb.RepoPushPayload)
-		url = p.Repository.FullName
+		// Assuming there is at least 1 change in a push.
+		url = p.Push.Changes[0].Links.Commits.Href
 	case bb.RepoForkEvent:
 		f := payload.(bb.RepoForkPayload)
-		url = f.Repository.FullName
+		url = f.Repository.Links.Self.Href
 	case bb.RepoUpdatedEvent:
 		u := payload.(bb.RepoUpdatedPayload)
-		url = u.Repository.FullName
+		url = u.Repository.Links.Self.Href
 	case bb.RepoCommitCommentCreatedEvent:
 		ccc := payload.(bb.RepoCommitCommentCreatedPayload)
-		url = ccc.Repository.FullName
+		url = ccc.Comment.Links.Self.Href
 	case bb.RepoCommitStatusCreatedEvent:
 		csc := payload.(bb.RepoCommitStatusCreatedPayload)
-		url = csc.Repository.FullName
+		url = csc.CommitStatus.Links.Self.Href
 	case bb.RepoCommitStatusUpdatedEvent:
 		csu := payload.(bb.RepoCommitStatusUpdatedPayload)
-		url = csu.Repository.FullName
+		url = csu.CommitStatus.Links.Self.Href
 	case bb.IssueCreatedEvent:
 		ic := payload.(bb.IssueCreatedPayload)
-		url = ic.Repository.FullName
+		url = ic.Issue.Links.Self.Href
 	case bb.IssueUpdatedEvent:
 		iu := payload.(bb.IssueUpdatedPayload)
-		url = iu.Repository.FullName
+		url = iu.Issue.Links.Self.Href
 	case bb.IssueCommentCreatedEvent:
 		icc := payload.(bb.IssueCommentCreatedPayload)
-		url = icc.Repository.FullName
+		url = icc.Issue.Links.Self.Href
 	case bb.PullRequestCreatedEvent:
 		prc := payload.(bb.PullRequestCreatedPayload)
-		url = prc.Repository.FullName
+		url = prc.PullRequest.Links.Self.Href
 	case bb.PullRequestUpdatedEvent:
 		pru := payload.(bb.PullRequestUpdatedPayload)
-		url = pru.Repository.FullName
+		url = pru.PullRequest.Links.Self.Href
 	case bb.PullRequestApprovedEvent:
 		pra := payload.(bb.PullRequestApprovedPayload)
-		url = pra.Repository.FullName
+		url = pra.PullRequest.Links.Self.Href
 	case bb.PullRequestUnapprovedEvent:
 		pru := payload.(bb.PullRequestUnapprovedPayload)
-		url = pru.Repository.FullName
+		url = pru.PullRequest.Links.Self.Href
 	case bb.PullRequestMergedEvent:
 		prm := payload.(bb.PullRequestMergedPayload)
-		url = prm.Repository.FullName
+		url = prm.PullRequest.Links.Self.Href
 	case bb.PullRequestDeclinedEvent:
 		prd := payload.(bb.PullRequestDeclinedPayload)
-		url = prd.Repository.FullName
+		url = prd.PullRequest.Links.Self.Href
 	case bb.PullRequestCommentCreatedEvent:
 		prcc := payload.(bb.PullRequestCommentCreatedPayload)
-		url = prcc.Repository.FullName
+		url = prcc.PullRequest.Links.Self.Href
 	case bb.PullRequestCommentUpdatedEvent:
 		prcu := payload.(bb.PullRequestCommentUpdatedPayload)
-		url = prcu.Repository.FullName
+		url = prcu.PullRequest.Links.Self.Href
 	case bb.PullRequestCommentDeletedEvent:
 		prcd := payload.(bb.PullRequestCommentDeletedPayload)
-		url = prcd.Repository.FullName
+		url = prcd.PullRequest.Links.Self.Href
 	}
 	if url != "" {
 		source := types.ParseURLRef(url)
