@@ -28,6 +28,7 @@ import (
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AwsSqsSourcesGetter
+	BitBucketSourcesGetter
 	ContainerSourcesGetter
 	CronJobSourcesGetter
 	GitHubSourcesGetter
@@ -41,6 +42,10 @@ type SourcesV1alpha1Client struct {
 
 func (c *SourcesV1alpha1Client) AwsSqsSources(namespace string) AwsSqsSourceInterface {
 	return newAwsSqsSources(c, namespace)
+}
+
+func (c *SourcesV1alpha1Client) BitBucketSources(namespace string) BitBucketSourceInterface {
+	return newBitBucketSources(c, namespace)
 }
 
 func (c *SourcesV1alpha1Client) ContainerSources(namespace string) ContainerSourceInterface {

@@ -26,6 +26,14 @@ type AwsSqsSourceListerExpansion interface{}
 // AwsSqsSourceNamespaceLister.
 type AwsSqsSourceNamespaceListerExpansion interface{}
 
+// BitBucketSourceListerExpansion allows custom methods to be added to
+// BitBucketSourceLister.
+type BitBucketSourceListerExpansion interface{}
+
+// BitBucketSourceNamespaceListerExpansion allows custom methods to be added to
+// BitBucketSourceNamespaceLister.
+type BitBucketSourceNamespaceListerExpansion interface{}
+
 // ContainerSourceListerExpansion allows custom methods to be added to
 // ContainerSourceLister.
 type ContainerSourceListerExpansion interface{}

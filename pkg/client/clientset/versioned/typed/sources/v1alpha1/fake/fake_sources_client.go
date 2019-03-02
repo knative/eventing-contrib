@@ -32,6 +32,10 @@ func (c *FakeSourcesV1alpha1) AwsSqsSources(namespace string) v1alpha1.AwsSqsSou
 	return &FakeAwsSqsSources{c, namespace}
 }
 
+func (c *FakeSourcesV1alpha1) BitBucketSources(namespace string) v1alpha1.BitBucketSourceInterface {
+	return &FakeBitBucketSources{c, namespace}
+}
+
 func (c *FakeSourcesV1alpha1) ContainerSources(namespace string) v1alpha1.ContainerSourceInterface {
 	return &FakeContainerSources{c, namespace}
 }
