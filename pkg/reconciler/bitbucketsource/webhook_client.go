@@ -25,6 +25,7 @@ import (
 )
 
 type webhookOptions struct {
+	uuid        string
 	accessToken string
 	secretToken string
 	domain      string
@@ -35,7 +36,7 @@ type webhookOptions struct {
 
 type webhookClient interface {
 	Create(ctx context.Context, options *webhookOptions) (string, error)
-	Delete(ctx context.Context, hookUUID, options *webhookOptions) error
+	Delete(ctx context.Context, options *webhookOptions) error
 }
 
 type bitBucketWebhookClient struct{}
@@ -62,7 +63,7 @@ func (client bitBucketWebhookClient) Create(ctx context.Context, options *webhoo
 	return h.UUID, nil
 }
 
-func (client bitBucketWebhookClient) Delete(ctx context.Context, hookUUID string, options *webhookOptions) error {
+func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhookOptions) error {
 	var err error
 	logger := logging.FromContext(ctx)
 
@@ -71,7 +72,7 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, hookUUID string
 	hook := client.hookConfig(ctx, options)
 
 	var resp *bbclient.Response
-	resp, err = bbClient.DeleteHook(ctx, hookUUID, options.owner, options.repo)
+	resp, err = bbClient.DeleteHook(ctx, options.uuid, options.owner, options.repo)
 
 	if err != nil {
 		logger.Infof("delete webhook error response:\n%+v", resp)

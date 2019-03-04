@@ -59,11 +59,11 @@ type BitBucketSourceSpec struct {
 
 	// AccessToken is the Kubernetes secret containing the BitBucket
 	// access token
-	AccessToken SecretValueSource `json:"accessToken"`
+	AccessToken BitBucketSecretValueFromSource `json:"accessToken"`
 
 	// SecretToken is the Kubernetes secret containing the BitBucket
 	// secret token
-	SecretToken SecretValueSource `json:"secretToken"`
+	SecretToken BitBucketSecretValueFromSource `json:"secretToken"`
 
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.
@@ -71,8 +71,8 @@ type BitBucketSourceSpec struct {
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 }
 
-// SecretValueSource represents the source of a secret value
-type SecretValueSource struct {
+// BitBucketSecretValueFromSource represents the source of a secret value
+type BitBucketSecretValueFromSource struct {
 	// The Secret key to select from.
 	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
