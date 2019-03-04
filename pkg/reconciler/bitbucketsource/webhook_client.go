@@ -47,12 +47,12 @@ func (client bitBucketWebhookClient) Create(ctx context.Context, options *webhoo
 
 	bbClient := client.createBitBucketClient(ctx, options)
 
-	hook := client.hookConfig(ctx, options)
+	hook := client.hookConfig(options)
 
 	var h *bbclient.Hook
 	var resp *bbclient.Response
 
-	h, resp, err = bbClient.CreateHook(ctx, options.owner, options.repo, &hook)
+	h, resp, err = bbClient.CreateHook(options.owner, options.repo, &hook)
 
 	if err != nil {
 		logger.Infof("create webhook error response:\n%+v", resp)
@@ -69,10 +69,10 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhoo
 
 	bbClient := client.createBitBucketClient(ctx, options)
 
-	hook := client.hookConfig(ctx, options)
+	hook := client.hookConfig(options)
 
 	var resp *bbclient.Response
-	resp, err = bbClient.DeleteHook(ctx, options.uuid, options.owner, options.repo)
+	resp, err = bbClient.DeleteHook(options.uuid, options.owner, options.repo)
 
 	if err != nil {
 		logger.Infof("delete webhook error response:\n%+v", resp)
@@ -91,13 +91,13 @@ func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, 
 	return bbclient.NewClient(tc)
 }
 
-func (client bitBucketWebhookClient) hookConfig(ctx context.Context, options *webhookOptions) bbclient.Hook {
-	hookname := "knative-sources"
+func (client bitBucketWebhookClient) hookConfig(options *webhookOptions) bbclient.Hook {
 	hook := bbclient.Hook{
-		Name:   hookname,
-		URL:    fmt.Sprintf("http://%s", options.domain),
-		Events: options.events,
-		Secret: options.secretToken,
+		Name:        "knative-sources",
+		Description: "",
+		URL:         fmt.Sprintf("http://%s", options.domain),
+		Events:      options.events,
+		Secret:      options.secretToken,
 	}
 	return hook
 }
