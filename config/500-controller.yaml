@@ -39,6 +39,8 @@ spec:
           value: github.com/knative/eventing-sources/cmd/github_receive_adapter
         - name: CRONJOB_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/cronjob_receive_adapter
+        - name: BB_RA_IMAGE
+          value: github.com/knative/eventing-sources/cmd/bitbucket_receive_adapter
         resources:
           limits:
             cpu: 100m

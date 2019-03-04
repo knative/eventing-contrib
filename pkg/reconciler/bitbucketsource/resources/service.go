@@ -35,10 +35,8 @@ func MakeService(source *sourcesv1alpha1.BitBucketSource, receiveAdapterImage st
 	sinkURI := source.Status.SinkURI
 	env := []corev1.EnvVar{
 		{
-			Name: "BITBUCKET_SECRET_TOKEN",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: source.Spec.SecretToken.SecretKeyRef,
-			},
+			Name:  "BITBUCKET_UUID",
+			Value: source.Status.WebhookUUIDKey,
 		},
 		{
 			Name:  "SINK",
