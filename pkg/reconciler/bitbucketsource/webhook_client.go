@@ -21,7 +21,8 @@ import (
 	"fmt"
 	bbclient "github.com/knative/eventing-sources/pkg/reconciler/bitbucketsource/resources"
 	"github.com/knative/pkg/logging"
-	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/bitbucket"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 type webhookOptions struct {
@@ -42,20 +43,24 @@ type webhookClient interface {
 type bitBucketWebhookClient struct{}
 
 func (client bitBucketWebhookClient) Create(ctx context.Context, options *webhookOptions) (string, error) {
-	var err error
 	logger := logging.FromContext(ctx)
 
-	bbClient := client.createBitBucketClient(ctx, options)
+	bbClient, err := client.createBitBucketClient(ctx, options)
+
+	if err != nil {
+		logger.Errorf("create bitbucket client error: %v", err)
+		return "", err
+	}
 
 	hook := client.hookConfig(options)
 
 	var h *bbclient.Hook
 	var resp *bbclient.Response
 
-	h, resp, err = bbClient.CreateHook(options.owner, options.repo, &hook)
+	h, resp, err = bbClient.CreateHook(ctx, options.owner, options.repo, &hook)
 
 	if err != nil {
-		logger.Infof("create webhook error response:\n%+v", resp)
+		logger.Errorf("create webhook error response: %v", resp)
 		return "", fmt.Errorf("failed to create the webhook: %v", err)
 	}
 	logger.Infof("created hook: %+v", h)
@@ -64,10 +69,14 @@ func (client bitBucketWebhookClient) Create(ctx context.Context, options *webhoo
 }
 
 func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhookOptions) error {
-	var err error
 	logger := logging.FromContext(ctx)
 
-	bbClient := client.createBitBucketClient(ctx, options)
+	bbClient, err := client.createBitBucketClient(ctx, options)
+
+	if err != nil {
+		logger.Errorf("create bitbucket client error: %v", err)
+		return err
+	}
 
 	hook := client.hookConfig(options)
 
@@ -75,29 +84,38 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhoo
 	resp, err = bbClient.DeleteHook(options.uuid, options.owner, options.repo)
 
 	if err != nil {
-		logger.Infof("delete webhook error response:\n%+v", resp)
+		logger.Errorf("delete webhook error response: %v", resp)
 		return fmt.Errorf("failed to delete the webhook: %v", err)
 	}
 
-	logger.Infof("deleted hook: %s", hook.Name)
+	logger.Infof("deleted hook: %s", hook.Description)
 	return nil
 }
 
-func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, options *webhookOptions) *bbclient.Client {
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: options.accessToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	return bbclient.NewClient(tc)
+func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, options *webhookOptions) (*bbclient.Client, error) {
+	logger := logging.FromContext(ctx)
+
+	conf := &clientcredentials.Config{
+		ClientID:     options.accessToken,
+		ClientSecret: options.secretToken,
+		TokenURL:     bitbucket.Endpoint.TokenURL,
+	}
+
+	token, err := conf.Token(ctx)
+	if err != nil {
+		logger.Errorf("Error retrieving token: %v", err)
+		return nil, err
+	}
+
+	return bbclient.NewClient(token.AccessToken), nil
 }
 
 func (client bitBucketWebhookClient) hookConfig(options *webhookOptions) bbclient.Hook {
 	hook := bbclient.Hook{
-		Name:        "knative-sources",
-		Description: "",
+		Description: "knative-sources",
 		URL:         fmt.Sprintf("http://%s", options.domain),
 		Events:      options.events,
-		Secret:      options.secretToken,
+		Active:      true,
 	}
 	return hook
 }

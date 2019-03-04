@@ -742,10 +742,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b0fef33b00740f7eeb5198f67ee1642d8d2560e9b428df7fb5f69fb140f5c4d0"
+  digest = "1:b3914f594d26e5e8eabd0cfbd07bdb4b3562bed632db3b552810beb2f32adf4b"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
+    "bitbucket",
+    "clientcredentials",
     "google",
     "internal",
     "jws",
@@ -1311,6 +1313,8 @@
     "go.uber.org/zap/zapcore",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
+    "golang.org/x/oauth2/bitbucket",
+    "golang.org/x/oauth2/clientcredentials",
     "gopkg.in/go-playground/webhooks.v3",
     "gopkg.in/go-playground/webhooks.v3/bitbucket",
     "gopkg.in/go-playground/webhooks.v3/github",

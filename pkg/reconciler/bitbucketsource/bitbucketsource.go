@@ -219,7 +219,7 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 
 	logger := logging.FromContext(ctx)
 
-	logger.Info("creating GitHub webhook")
+	logger.Info("creating BitBucket webhook")
 
 	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
 	if err != nil {
@@ -234,17 +234,18 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 		repo:        repo,
 		events:      args.source.Spec.EventTypes,
 	}
-	hookID, err := r.webhookClient.Create(ctx, hookOptions)
+	hookUUID, err := r.webhookClient.Create(ctx, hookOptions)
 	if err != nil {
 		return "", fmt.Errorf("failed to create webhook: %v", err)
 	}
-	return hookID, nil
+	logger.Infof("Hook ID %s", hookUUID)
+	return hookUUID, nil
 }
 
 func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error {
 	logger := logging.FromContext(ctx)
 
-	logger.Info("deleting GitHub webhook")
+	logger.Info("deleting BitBucket webhook")
 
 	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
 	if err != nil {
