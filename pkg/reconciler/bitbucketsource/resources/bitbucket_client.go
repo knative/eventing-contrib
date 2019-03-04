@@ -32,12 +32,13 @@ const (
 )
 
 type Hook struct {
-	Name        string
-	URL         string
-	Description string
-	Events      []string
-	Secret      string
-	UUID        string
+	Name        string   `json:"name,omitempty"`
+	URL         string   `json:"url,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Events      []string `json:"events,omitempty"`
+	Active      bool     `json:"active,omitempty"`
+	UUID        string   `json:"uuid,omitempty"`
+	Secret      string   `json:"secret,omitempty"`
 }
 
 type Client struct {
@@ -62,7 +63,7 @@ func NewClient(client *http.Client) *Client {
 	return &Client{client: client, baseUrl: baseUrl, userAgent: defaultUserAgent}
 }
 
-func (client *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, error) {
+func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, error) {
 	body, err := createHookBody(hook)
 	if err != nil {
 		return nil, nil, err
@@ -71,18 +72,18 @@ func (client *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Respon
 	urlStr := fmt.Sprintf("repositories/%v/%v/hooks", owner, repo)
 
 	h := new(Hook)
-	resp, err := client.doRequest("POST", urlStr, body, h)
+	resp, err := c.doRequest("POST", urlStr, body, h)
 	if err != nil {
 		return nil, resp, err
 	}
 	return h, resp, nil
 }
 
-func (client *Client) DeleteHook(hookUUID, owner, repo string) (*Response, error) {
+func (c *Client) DeleteHook(hookUUID, owner, repo string) (*Response, error) {
 
 	urlStr := fmt.Sprintf("repositories/%v/%v/hooks", owner, repo)
 
-	resp, err := client.doRequest("DELETE", urlStr, nil, nil)
+	resp, err := c.doRequest("DELETE", urlStr, nil, nil)
 	if err != nil {
 		return resp, err
 	}
@@ -96,6 +97,7 @@ func createHookBody(hook *Hook) (string, error) {
 	body["url"] = hook.URL
 	body["active"] = true
 	body["events"] = hook.Events
+	body["secret"] = hook.Secret
 	data, err := json.Marshal(body)
 	if err != nil {
 		return "", err
