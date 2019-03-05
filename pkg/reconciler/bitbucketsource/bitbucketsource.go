@@ -19,6 +19,7 @@ package bitbucketsouce
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"os"
 	"strings"
 
@@ -122,43 +123,19 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) error {
 	source.Status.InitializeConditions()
 
-	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	accessToken, secretToken, err := r.secretsFrom(ctx, source)
 	if err != nil {
-		source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
-		return err
-	}
-	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
-	if err != nil {
-		source.Status.MarkNoSecrets("SecretTokenNotFound", "%s", err)
 		return err
 	}
 	source.Status.MarkSecrets()
 
-	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
+	uri, err := r.sinkURIFrom(ctx, source)
 	if err != nil {
-		source.Status.MarkNoSink("SinkNotFound", "%s", err)
 		return err
 	}
 	source.Status.MarkSink(uri)
 
-	ksvc, err := r.getOwnedService(ctx, source)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			ksvc = resources.MakeService(source, r.receiveAdapterImage)
-			if err = controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
-				return err
-			}
-			if err = r.client.Create(ctx, ksvc); err != nil {
-				return err
-			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
-			// TODO: Mark Deploying for the ksvc
-			// Wait for the Service to get a status
-			return nil
-		}
-		// Error was something other than NotFound
-		return err
-	}
+	ksvc, err := r.reconcileService(ctx, source)
 
 	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
 	receiveAdapterDomain := ksvc.Status.Domain
@@ -265,6 +242,77 @@ func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 	return nil
 }
 
+func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {
+	current, err := r.getService(ctx, source)
+
+	// If the resource doesn't exist, we'll create it.
+	if apierrors.IsNotFound(err) {
+		ksvc, err := r.newService(source)
+		if err != nil {
+			return nil, err
+		}
+		err = r.client.Create(ctx, ksvc)
+		if err != nil {
+			return nil, err
+		}
+		r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
+		return ksvc, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	expected, err := r.newService(source)
+	if err != nil {
+		return nil, err
+	}
+
+	env := []corev1.EnvVar{
+		{
+			Name:  "BITBUCKET_UUID",
+			Value: source.Status.WebhookUUIDKey,
+		},
+		{
+			Name:  "SINK",
+			Value: source.Status.SinkURI,
+		},
+	}
+
+	expected.Spec.RunLatest.Configuration.RevisionTemplate.Spec.Container.Env = env
+	if !equality.Semantic.DeepDerivative(expected.Spec, current.Spec) {
+		current.Spec = expected.Spec
+		err := r.client.Update(ctx, current)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return current, nil
+}
+
+func (r *reconciler) sinkURIFrom(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (string, error) {
+	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
+	if err != nil {
+		source.Status.MarkNoSink("SinkNotFound", "%s", err)
+		return "", err
+	}
+	return uri, err
+}
+
+func (r *reconciler) secretsFrom(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (string, string, error) {
+
+	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	if err != nil {
+		source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
+		return "", "", err
+	}
+	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	if err != nil {
+		source.Status.MarkNoSecrets("SecretTokenNotFound", "%s", err)
+		return accessToken, "", err
+	}
+
+	return accessToken, secretToken, err
+}
+
 func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
 	secret := &corev1.Secret{}
 	err := r.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretKeySelector.Name}, secret)
@@ -295,7 +343,7 @@ func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 	return owner, repo, nil
 }
 
-func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {
+func (r *reconciler) getService(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {
 	list := &servingv1alpha1.ServiceList{}
 	err := r.client.List(ctx, &client.ListOptions{
 		Namespace:     source.Namespace,
@@ -315,11 +363,18 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 	}
 	for _, ksvc := range list.Items {
 		if metav1.IsControlledBy(&ksvc, source) {
-			//TODO if there are >1 controlled, delete all but first?
 			return &ksvc, nil
 		}
 	}
 	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
+}
+
+func (r *reconciler) newService(source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {
+	ksvc := resources.MakeService(source, r.receiveAdapterImage)
+	if err := controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
+		return nil, err
+	}
+	return ksvc, nil
 }
 
 func (r *reconciler) addFinalizer(s *sourcesv1alpha1.BitBucketSource) {
