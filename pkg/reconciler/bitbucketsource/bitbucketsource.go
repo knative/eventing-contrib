@@ -136,27 +136,17 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitB
 	source.Status.MarkSink(uri)
 
 	ksvc, err := r.reconcileService(ctx, source)
-
-	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
-	receiveAdapterDomain := ksvc.Status.Domain
-	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
-		// TODO: Mark Deployed for the ksvc
-		// TODO: Mark some condition for the webhook status?
-		r.addFinalizer(source)
-		if source.Status.WebhookUUIDKey == "" {
-			webhookArgs := webhookArgs{
-				source:      source,
-				domain:      receiveAdapterDomain,
-				accessToken: accessToken,
-				secretToken: secretToken,
-			}
-			hookID, err := r.createWebhook(ctx, webhookArgs)
-			if err != nil {
-				return err
-			}
-			source.Status.WebhookUUIDKey = hookID
-		}
+	if err != nil {
+		return err
 	}
+	source.Status.MarkService()
+
+	hookUUID, err := r.reconcileWebHook(ctx, source, ksvc, accessToken, secretToken)
+	if err != nil {
+		return err
+	}
+	source.Status.MarkWebHookUUID(hookUUID)
+
 	return nil
 }
 
@@ -167,19 +157,19 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 	r.removeFinalizer(source)
 
 	// If a webhook was created, try to delete it
-	if source.Status.WebhookUUIDKey != "" {
-		// Get access token
-		accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	if source.Status.IsWebHook() {
+		// Get tokens
+		accessToken, secretToken, err := r.secretsFrom(ctx, source)
 		if err != nil {
-			source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
 			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
 		}
 
-		// Delete the webhook using the access token and stored webhook ID
+		// Delete the webhook using the access and secret token, and the stored webhook ID.
 		webhookArgs := &webhookArgs{
 			source:      source,
 			accessToken: accessToken,
+			secretToken: secretToken,
 		}
 		err = r.deleteWebhook(ctx, webhookArgs)
 		if err != nil {
@@ -187,59 +177,31 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 			return err
 		}
 		// Webhook deleted, clear ID
-		source.Status.WebhookUUIDKey = ""
+		source.Status.MarkWebHookUUID("")
 	}
 	return nil
 }
 
-func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (string, error) {
-
-	logger := logging.FromContext(ctx)
-
-	logger.Info("creating BitBucket webhook")
-
-	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
-	if err != nil {
-		return "", err
+func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, ksvc *servingv1alpha1.Service, accessToken, secretToken string) (string, error) {
+	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
+	receiveAdapterDomain := ksvc.Status.Domain
+	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
+		r.addFinalizer(source)
+		if source.Status.WebhookUUIDKey == "" {
+			webhookArgs := webhookArgs{
+				source:      source,
+				domain:      receiveAdapterDomain,
+				accessToken: accessToken,
+				secretToken: secretToken,
+			}
+			hookID, err := r.createWebhook(ctx, webhookArgs)
+			if err != nil {
+				return "", err
+			}
+			source.Status.WebhookUUIDKey = hookID
+		}
 	}
-
-	hookOptions := &webhookOptions{
-		accessToken: args.accessToken,
-		secretToken: args.secretToken,
-		domain:      args.domain,
-		owner:       owner,
-		repo:        repo,
-		events:      args.source.Spec.EventTypes,
-	}
-	hookUUID, err := r.webhookClient.Create(ctx, hookOptions)
-	if err != nil {
-		return "", fmt.Errorf("failed to create webhook: %v", err)
-	}
-	logger.Infof("Hook ID %s", hookUUID)
-	return hookUUID, nil
-}
-
-func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error {
-	logger := logging.FromContext(ctx)
-
-	logger.Info("deleting BitBucket webhook")
-
-	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
-	if err != nil {
-		return err
-	}
-
-	hookOptions := &webhookOptions{
-		uuid:        args.source.Status.WebhookUUIDKey,
-		owner:       owner,
-		repo:        repo,
-		accessToken: args.accessToken,
-	}
-	err = r.webhookClient.Delete(ctx, hookOptions)
-	if err != nil {
-		return fmt.Errorf("failed to delete webhook: %v", err)
-	}
-	return nil
+	return source.Status.WebhookUUIDKey, nil
 }
 
 func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {
@@ -286,6 +248,57 @@ func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alph
 		}
 	}
 	return current, nil
+}
+
+func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (string, error) {
+
+	logger := logging.FromContext(ctx)
+
+	logger.Info("creating BitBucket webhook")
+
+	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
+	if err != nil {
+		return "", err
+	}
+
+	hookOptions := &webhookOptions{
+		accessToken: args.accessToken,
+		secretToken: args.secretToken,
+		domain:      args.domain,
+		owner:       owner,
+		repo:        repo,
+		events:      args.source.Spec.EventTypes,
+	}
+	hookUUID, err := r.webhookClient.Create(ctx, hookOptions)
+	if err != nil {
+		return "", fmt.Errorf("failed to create webhook: %v", err)
+	}
+	logger.Infof("Hook ID %s", hookUUID)
+	return hookUUID, nil
+}
+
+func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error {
+	logger := logging.FromContext(ctx)
+
+	logger.Info("deleting BitBucket webhook")
+
+	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
+	if err != nil {
+		return err
+	}
+
+	hookOptions := &webhookOptions{
+		uuid:        args.source.Status.WebhookUUIDKey,
+		owner:       owner,
+		repo:        repo,
+		accessToken: args.accessToken,
+		secretToken: args.secretToken,
+	}
+	err = r.webhookClient.Delete(ctx, hookOptions)
+	if err != nil {
+		return fmt.Errorf("failed to delete webhook: %v", err)
+	}
+	return nil
 }
 
 func (r *reconciler) sinkURIFrom(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (string, error) {

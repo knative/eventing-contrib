@@ -41,10 +41,10 @@ type Hook struct {
 }
 
 type Client struct {
-	client    *http.Client
+	client      *http.Client
 	accessToken string
-	baseUrl   *url.URL
-	userAgent string
+	baseUrl     *url.URL
+	userAgent   string
 }
 
 type Response struct {
@@ -73,13 +73,12 @@ func (c *Client) CreateHook(ctx context.Context, owner, repo string, hook *Hook)
 	}
 	logger.Infof("Request body %s", body)
 
-
 	urlStr := fmt.Sprintf("repositories/%v/%v/hooks", owner, repo)
 
 	logger.Infof("Request URL %s", urlStr)
 
 	h := new(Hook)
-	resp, err := c.doRequest(ctx,"POST", urlStr, body, h)
+	resp, err := c.doRequest(ctx, "POST", urlStr, body, h)
 	if err != nil {
 		return nil, resp, err
 	}
@@ -124,7 +123,7 @@ func (c *Client) doRequest(ctx context.Context, method, urlStr string, body stri
 	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Content-Type", mediaTypeJson)
 	req.Header.Set("Accept", mediaTypeJson)
-	req.Header.Set("Authorization", "Bearer " + c.accessToken)
+	req.Header.Set("Authorization", "Bearer "+c.accessToken)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -136,7 +135,7 @@ func (c *Client) doRequest(ctx context.Context, method, urlStr string, body stri
 		defer resp.Body.Close()
 	}
 
-	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusCreated) {
+	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusCreated) && (resp.StatusCode != http.StatusNoContent) {
 		logger.Errorf("Response %v", resp)
 		return nil, fmt.Errorf(resp.Status)
 	}
