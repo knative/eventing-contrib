@@ -135,17 +135,27 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitB
 	}
 	source.Status.MarkSink(uri)
 
+	// Need to create a Service to be able to get the domain
+	// so that we can create the webhook.
 	ksvc, err := r.reconcileService(ctx, source)
 	if err != nil {
 		return err
 	}
-	source.Status.MarkService()
 
 	hookUUID, err := r.reconcileWebHook(ctx, source, ksvc, accessToken, secretToken)
 	if err != nil {
 		return err
 	}
 	source.Status.MarkWebHookUUID(hookUUID)
+
+	// Need to reconcile the Service again to set up
+	// the webHookUUID properly.
+	ksvc, err = r.reconcileService(ctx, source)
+	if err != nil {
+		return err
+	}
+
+	source.Status.MarkService()
 
 	return nil
 }
@@ -187,7 +197,7 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 	receiveAdapterDomain := ksvc.Status.Domain
 	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
 		r.addFinalizer(source)
-		if source.Status.WebhookUUIDKey == "" {
+		if !source.Status.IsWebHook() {
 			webhookArgs := webhookArgs{
 				source:      source,
 				domain:      receiveAdapterDomain,
@@ -198,7 +208,7 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 			if err != nil {
 				return "", err
 			}
-			source.Status.WebhookUUIDKey = hookID
+			return hookID, nil
 		}
 	}
 	return source.Status.WebhookUUIDKey, nil
