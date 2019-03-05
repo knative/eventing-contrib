@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/knative/pkg/logging"
+	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 	"strings"
@@ -42,6 +43,7 @@ type Hook struct {
 
 type Client struct {
 	client      *http.Client
+	logger      *zap.SugaredLogger
 	accessToken string
 	baseUrl     *url.URL
 	userAgent   string
@@ -58,38 +60,37 @@ func newResponse(r *http.Response) *Response {
 	return response
 }
 
-func NewClient(accessToken string) *Client {
+func NewClient(ctx context.Context, accessToken string) *Client {
 	httpClient := http.DefaultClient
+	logger := logging.FromContext(ctx)
 	baseUrl, _ := url.Parse(defaultBaseUrl)
-	return &Client{client: httpClient, accessToken: accessToken, baseUrl: baseUrl, userAgent: defaultUserAgent}
+	return &Client{client: httpClient, logger: logger, accessToken: accessToken, baseUrl: baseUrl, userAgent: defaultUserAgent}
 }
 
-func (c *Client) CreateHook(ctx context.Context, owner, repo string, hook *Hook) (*Hook, *Response, error) {
-	logger := logging.FromContext(ctx)
-
+func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, error) {
 	body, err := createHookBody(hook)
 	if err != nil {
 		return nil, nil, err
 	}
-	logger.Infof("Request body %s", body)
+	c.logger.Infof("Request body %s", body)
 
 	urlStr := fmt.Sprintf("repositories/%v/%v/hooks", owner, repo)
 
-	logger.Infof("Request URL %s", urlStr)
+	c.logger.Infof("Request URL %s", urlStr)
 
 	h := new(Hook)
-	resp, err := c.doRequest(ctx, "POST", urlStr, body, h)
+	resp, err := c.doRequest("POST", urlStr, body, h)
 	if err != nil {
 		return nil, resp, err
 	}
 	return h, resp, nil
 }
 
-func (c *Client) DeleteHook(hookUUID, owner, repo string) (*Response, error) {
+func (c *Client) DeleteHook(owner, repo, hookUUID string) (*Response, error) {
 
 	urlStr := fmt.Sprintf("repositories/%v/%v/hooks/%s", owner, repo, hookUUID)
 
-	resp, err := c.doRequest(nil, "DELETE", urlStr, "", nil)
+	resp, err := c.doRequest("DELETE", urlStr, "", nil)
 	if err != nil {
 		return resp, err
 	}
@@ -109,14 +110,13 @@ func createHookBody(hook *Hook) (string, error) {
 	return string(data), nil
 }
 
-func (c *Client) doRequest(ctx context.Context, method, urlStr string, body string, v interface{}) (*Response, error) {
-	logger := logging.FromContext(ctx)
+func (c *Client) doRequest(method, urlStr string, body string, v interface{}) (*Response, error) {
 	u, err := c.baseUrl.Parse(urlStr)
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Infof("Request URL %s", u.String())
+	c.logger.Infof("Request URL %s", u.String())
 
 	b := strings.NewReader(body)
 	req, err := http.NewRequest(method, u.String(), b)
@@ -127,7 +127,7 @@ func (c *Client) doRequest(ctx context.Context, method, urlStr string, body stri
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		logger.Errorf("Error doing request %v", err)
+		c.logger.Errorf("Error doing request %v", err)
 		return nil, err
 	}
 
@@ -136,7 +136,7 @@ func (c *Client) doRequest(ctx context.Context, method, urlStr string, body stri
 	}
 
 	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusCreated) && (resp.StatusCode != http.StatusNoContent) {
-		logger.Errorf("Response %v", resp)
+		c.logger.Errorf("Response %v", resp)
 		return nil, fmt.Errorf(resp.Status)
 	}
 

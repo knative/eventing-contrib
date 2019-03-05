@@ -57,7 +57,7 @@ func (client bitBucketWebhookClient) Create(ctx context.Context, options *webhoo
 	var h *bbclient.Hook
 	var resp *bbclient.Response
 
-	h, resp, err = bbClient.CreateHook(ctx, options.owner, options.repo, &hook)
+	h, resp, err = bbClient.CreateHook(options.owner, options.repo, &hook)
 
 	if err != nil {
 		logger.Errorf("create webhook error response: %v", resp)
@@ -81,7 +81,7 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhoo
 	hook := client.hookConfig(options)
 
 	var resp *bbclient.Response
-	resp, err = bbClient.DeleteHook(options.uuid, options.owner, options.repo)
+	resp, err = bbClient.DeleteHook(options.owner, options.repo, options.uuid)
 
 	if err != nil {
 		logger.Errorf("delete webhook error response: %v", resp)
@@ -107,7 +107,7 @@ func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, 
 		return nil, err
 	}
 
-	return bbclient.NewClient(token.AccessToken), nil
+	return bbclient.NewClient(ctx, token.AccessToken), nil
 }
 
 func (client bitBucketWebhookClient) hookConfig(options *webhookOptions) bbclient.Hook {
