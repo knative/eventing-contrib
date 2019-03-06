@@ -163,6 +163,11 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitB
 	}
 	source.Status.MarkWebHook(hookUUID)
 
+	// If the webhook was created, but there's a failure updating its status in the sdk/reconciler.go,
+	// we might end up creating another webhook. We record the webhook creation event so that it can be
+	// removed manually by the operator.
+	// TODO any other way to avoid this?
+
 	return nil
 }
 
@@ -225,8 +230,8 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 			r.recorder.Eventf(source, corev1.EventTypeWarning, webhookCreateFailed, "Could not create webhook: %v", err)
 			return "", err
 		}
+		source.Status.WebhookUUIDKey = hookID
 		r.recorder.Eventf(source, corev1.EventTypeNormal, webhookCreated, "Created webhook: %q", hookID)
-		return hookID, nil
 	}
 	return source.Status.WebhookUUIDKey, nil
 }
