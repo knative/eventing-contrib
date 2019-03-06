@@ -234,7 +234,7 @@ func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alph
 		if err != nil {
 			return nil, err
 		}
-		r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
+		r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created service %q", ksvc.Name)
 		return ksvc, nil
 	} else if err != nil {
 		return nil, err
