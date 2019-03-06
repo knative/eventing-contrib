@@ -169,21 +169,21 @@ func (s *BitBucketSourceStatus) MarkSink(uri string) {
 	}
 }
 
-// MarkSink sets the condition that the source has a sink configured.
-func (s *BitBucketSourceStatus) MarkWebHookUUID(uuid string) {
+// MarkWebHook sets the condition that the source has a webhook configured.
+func (s *BitBucketSourceStatus) MarkWebHook(uuid string) {
 	s.WebhookUUIDKey = uuid
 	if len(uuid) > 0 {
 		bitBucketSourceCondSet.Manage(s).MarkTrue(BitBucketSourceConditionWebHookUUIDProvided)
 	} else {
 		bitBucketSourceCondSet.Manage(s).MarkUnknown(BitBucketSourceConditionWebHookUUIDProvided,
-			"WebHookUUIDEmpty", "WebHookID is empty.")
+			"WebHookUUIDEmpty", "WebHookUUID is empty.")
 	}
 }
 
-// IsWebHook returns true if the BitBucketSourceConditionWebHookUUIDProvided condition is true.
-func (s *BitBucketSourceStatus) IsWebHook() bool {
+// IsWebHookReady returns true if the BitBucketSourceConditionWebHookUUIDProvided condition is true.
+func (s *BitBucketSourceStatus) IsWebHookReady() bool {
 	condition := bitBucketSourceCondSet.Manage(s).GetCondition(BitBucketSourceConditionWebHookUUIDProvided)
-	return condition.Status == corev1.ConditionTrue
+	return condition != nil && condition.Status == corev1.ConditionTrue
 }
 
 // MarkNoSink sets the condition that the source does not have a sink configured.

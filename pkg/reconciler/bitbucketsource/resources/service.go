@@ -26,18 +26,15 @@ import (
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 )
 
-// MakeService generates, but does not create, a Service for the given
-// BitBucketSource.
+// MakeService generates, but does not create, a Service for the given BitBucketSource.
 func MakeService(source *sourcesv1alpha1.BitBucketSource, receiveAdapterImage string) *servingv1alpha1.Service {
 	labels := map[string]string{
 		"receive-adapter": "bitbucket",
 	}
 	sinkURI := source.Status.SinkURI
 	env := []corev1.EnvVar{
-		{
-			Name:  "BITBUCKET_UUID",
-			Value: source.Status.WebhookUUIDKey,
-		},
+		// TODO should also pass the UUID of the webhook so that the receive adapter can validate that the
+		// incoming events correspond to that particular webhook, and discard them otherwise.
 		{
 			Name:  "SINK",
 			Value: sinkURI,

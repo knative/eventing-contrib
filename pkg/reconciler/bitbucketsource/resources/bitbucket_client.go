@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"
 	"strings"
@@ -33,6 +34,7 @@ const (
 	mediaTypeJson    = "application/json"
 )
 
+// Hook struct to marshal/unmarshal BitBucket requests/responses.
 type Hook struct {
 	URL         string   `json:"url,omitempty"`
 	Description string   `json:"description,omitempty"`
@@ -41,14 +43,16 @@ type Hook struct {
 	UUID        string   `json:"uuid,omitempty"`
 }
 
+// Client struct used to send http.Requests to BitBucket.
 type Client struct {
-	client      *http.Client
-	logger      *zap.SugaredLogger
-	accessToken string
-	baseUrl     *url.URL
-	userAgent   string
+	client    *http.Client
+	logger    *zap.SugaredLogger
+	token     *oauth2.Token
+	baseUrl   *url.URL
+	userAgent string
 }
 
+// Wrapper struct in case we want to add extra validations here.
 type Response struct {
 	*http.Response
 }
@@ -58,25 +62,33 @@ type Response struct {
 func newResponse(r *http.Response) *Response {
 	response := &Response{Response: r}
 	return response
+
 }
 
-func NewClient(ctx context.Context, accessToken string) *Client {
-	httpClient := http.DefaultClient
+// NewClient creates a new Client for sending http.Requests to BitBucket.
+func NewClient(ctx context.Context, token *oauth2.Token) *Client {
 	logger := logging.FromContext(ctx)
+	httpClient := http.DefaultClient
 	baseUrl, _ := url.Parse(defaultBaseUrl)
-	return &Client{client: httpClient, logger: logger, accessToken: accessToken, baseUrl: baseUrl, userAgent: defaultUserAgent}
+	return &Client{client: httpClient, logger: logger, token: token, baseUrl: baseUrl, userAgent: defaultUserAgent}
 }
 
+// CreateHook creates a WebHook for 'owner' and 'repo'.
 func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, error) {
 	body, err := createHookBody(hook)
 	if err != nil {
 		return nil, nil, err
 	}
-	c.logger.Infof("Request body %s", body)
+	var urlStr string
+	if repo == "" {
+		// For every repo of the owner.
+		urlStr = fmt.Sprintf("repositories/%s/hooks", owner)
+	} else {
+		// For a specific repo of the owner.
+		urlStr = fmt.Sprintf("repositories/%s/%s/hooks", owner, repo)
+	}
 
-	urlStr := fmt.Sprintf("repositories/%v/%v/hooks", owner, repo)
-
-	c.logger.Infof("Request URL %s", urlStr)
+	c.logger.Infof("BitBucket CreateHook URL %s", urlStr)
 
 	h := new(Hook)
 	resp, err := c.doRequest("POST", urlStr, body, h)
@@ -86,17 +98,27 @@ func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, e
 	return h, resp, nil
 }
 
+// DeleteHook deletes the WebHook 'hookUUID' previously registered for 'owner' and 'repo'.
 func (c *Client) DeleteHook(owner, repo, hookUUID string) (*Response, error) {
 
-	urlStr := fmt.Sprintf("repositories/%v/%v/hooks/%s", owner, repo, hookUUID)
+	var urlStr string
+	if repo == "" {
+		urlStr = fmt.Sprintf("repositories/%v/hooks/%s", owner, hookUUID)
+	} else {
+		urlStr = fmt.Sprintf("repositories/%v/%v/hooks/%s", owner, repo, hookUUID)
+	}
+
+	c.logger.Infof("BitBucket DeleteHook URL %s", urlStr)
 
 	resp, err := c.doRequest("DELETE", urlStr, "", nil)
+
 	if err != nil {
 		return resp, err
 	}
 	return resp, nil
 }
 
+// createHookBody marshals the WebHook body into json format.
 func createHookBody(hook *Hook) (string, error) {
 	body := map[string]interface{}{}
 	body["description"] = hook.Description
@@ -110,24 +132,26 @@ func createHookBody(hook *Hook) (string, error) {
 	return string(data), nil
 }
 
+// doRequest performs an http.Request to BitBucket. If v is not nil, it attempts to unmarshal the response to
+// that particular struct.
 func (c *Client) doRequest(method, urlStr string, body string, v interface{}) (*Response, error) {
 	u, err := c.baseUrl.Parse(urlStr)
 	if err != nil {
 		return nil, err
 	}
 
-	c.logger.Infof("Request URL %s", u.String())
+	c.logger.Infof("BitBucket Request URL %s", u.String())
 
 	b := strings.NewReader(body)
 	req, err := http.NewRequest(method, u.String(), b)
 	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Content-Type", mediaTypeJson)
 	req.Header.Set("Accept", mediaTypeJson)
-	req.Header.Set("Authorization", "Bearer "+c.accessToken)
+	// Add the Oauth2 accessToken in the Authorization header.
+	req.Header.Set("Authorization", "Bearer "+c.token.AccessToken)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		c.logger.Errorf("Error doing request %v", err)
 		return nil, err
 	}
 
@@ -135,9 +159,9 @@ func (c *Client) doRequest(method, urlStr string, body string, v interface{}) (*
 		defer resp.Body.Close()
 	}
 
+	// Just checking for 200, 201, and 204 status codes as those are the success status codes for creating and deleting hooks.
 	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusCreated) && (resp.StatusCode != http.StatusNoContent) {
-		c.logger.Errorf("Response %v", resp)
-		return nil, fmt.Errorf(resp.Status)
+		return nil, fmt.Errorf("invalid status %q: %v", resp.Status, resp)
 	}
 
 	response := newResponse(resp)

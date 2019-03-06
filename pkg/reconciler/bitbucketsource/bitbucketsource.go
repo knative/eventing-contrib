@@ -19,7 +19,6 @@ package bitbucketsouce
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/api/equality"
 	"os"
 	"strings"
 
@@ -141,21 +140,13 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitB
 	if err != nil {
 		return err
 	}
+	source.Status.MarkService()
 
 	hookUUID, err := r.reconcileWebHook(ctx, source, ksvc, accessToken, secretToken)
 	if err != nil {
 		return err
 	}
-	source.Status.MarkWebHookUUID(hookUUID)
-
-	// Need to reconcile the Service again to set up
-	// the webHookUUID properly.
-	ksvc, err = r.reconcileService(ctx, source)
-	if err != nil {
-		return err
-	}
-
-	source.Status.MarkService()
+	source.Status.MarkWebHook(hookUUID)
 
 	return nil
 }
@@ -167,7 +158,7 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 	r.removeFinalizer(source)
 
 	// If a webhook was created, try to delete it
-	if source.Status.IsWebHook() {
+	if source.Status.IsWebHookReady() {
 		// Get tokens
 		accessToken, secretToken, err := r.secretsFrom(ctx, source)
 		if err != nil {
@@ -187,7 +178,7 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 			return err
 		}
 		// Webhook deleted, clear ID
-		source.Status.MarkWebHookUUID("")
+		source.Status.MarkWebHook("")
 	}
 	return nil
 }
@@ -197,7 +188,7 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 	receiveAdapterDomain := ksvc.Status.Domain
 	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
 		r.addFinalizer(source)
-		if !source.Status.IsWebHook() {
+		if !source.Status.IsWebHookReady() {
 			webhookArgs := webhookArgs{
 				source:      source,
 				domain:      receiveAdapterDomain,
@@ -206,12 +197,16 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 			}
 			hookID, err := r.createWebhook(ctx, webhookArgs)
 			if err != nil {
+				r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedCreateWebhook", "Could not create webhook: %v", err)
 				return "", err
 			}
 			return hookID, nil
+		} else {
+			return source.Status.WebhookUUIDKey, nil
 		}
 	}
-	return source.Status.WebhookUUIDKey, nil
+	// Return an error so that we trigger the reconcile loop again.
+	return "", fmt.Errorf("service %q route not ready, domain: %q", ksvc.Name, receiveAdapterDomain)
 }
 
 func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {
@@ -233,30 +228,6 @@ func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alph
 		return nil, err
 	}
 
-	expected, err := r.newService(source)
-	if err != nil {
-		return nil, err
-	}
-
-	env := []corev1.EnvVar{
-		{
-			Name:  "BITBUCKET_UUID",
-			Value: source.Status.WebhookUUIDKey,
-		},
-		{
-			Name:  "SINK",
-			Value: source.Status.SinkURI,
-		},
-	}
-
-	expected.Spec.RunLatest.Configuration.RevisionTemplate.Spec.Container.Env = env
-	if !equality.Semantic.DeepDerivative(expected.Spec, current.Spec) {
-		current.Spec = expected.Spec
-		err := r.client.Update(ctx, current)
-		if err != nil {
-			return nil, err
-		}
-	}
 	return current, nil
 }
 
@@ -264,7 +235,7 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 
 	logger := logging.FromContext(ctx)
 
-	logger.Info("creating BitBucket webhook")
+	logger.Info("Creating BitBucket WebHook")
 
 	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
 	if err != nil {
@@ -281,16 +252,16 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 	}
 	hookUUID, err := r.webhookClient.Create(ctx, hookOptions)
 	if err != nil {
-		return "", fmt.Errorf("failed to create webhook: %v", err)
+		return "", fmt.Errorf("failed to create BitBucket WebHook: %v", err)
 	}
-	logger.Infof("Hook ID %s", hookUUID)
+	logger.Infof("Created BitBucket WebHook %s", hookUUID)
 	return hookUUID, nil
 }
 
 func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error {
 	logger := logging.FromContext(ctx)
 
-	logger.Info("deleting BitBucket webhook")
+	logger.Info("Deleting BitBucket WebHook")
 
 	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
 	if err != nil {
@@ -306,8 +277,9 @@ func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 	}
 	err = r.webhookClient.Delete(ctx, hookOptions)
 	if err != nil {
-		return fmt.Errorf("failed to delete webhook: %v", err)
+		return fmt.Errorf("failed to delete BitBucket WebHook: %v", err)
 	}
+	logger.Infof("Deleted BitBucket WebHook %s", args.source.Status.WebhookUUIDKey)
 	return nil
 }
 
@@ -325,12 +297,14 @@ func (r *reconciler) secretsFrom(ctx context.Context, source *sourcesv1alpha1.Bi
 	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 	if err != nil {
 		source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, "AccessTokenNotFound", "Could not find access token: %v", err)
 		return "", "", err
 	}
 	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
 	if err != nil {
 		source.Status.MarkNoSecrets("SecretTokenNotFound", "%s", err)
-		return accessToken, "", err
+		r.recorder.Eventf(source, corev1.EventTypeWarning, "SecretTokenNotFound", "Could not find secret token: %v", err)
+		return "", "", err
 	}
 
 	return accessToken, secretToken, err

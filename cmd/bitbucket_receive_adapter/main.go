@@ -51,7 +51,10 @@ func main() {
 
 	uuid := os.Getenv(envUUID)
 	if uuid == "" {
-		log.Fatalf("No UUID given")
+		// TODO validate WebHook UUID is given, otherwise fail.
+		// This should be done for security issues, as the library will validate the incoming events
+		// correspond to this particular WebHook, or discard them otherwise.
+		log.Printf("No UUID given")
 	}
 
 	log.Printf("Sink is: %q", *sink)
@@ -84,6 +87,6 @@ func main() {
 	addr := fmt.Sprintf(":%s", port)
 	err := webhooks.Run(hook, addr, "/")
 	if err != nil {
-		log.Fatalf("Failed to run the webhook")
+		log.Fatalf("Failed to run the BitBucket WebHook")
 	}
 }

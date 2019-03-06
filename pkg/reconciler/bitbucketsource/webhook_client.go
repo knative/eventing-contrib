@@ -93,8 +93,8 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhoo
 }
 
 func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, options *webhookOptions) (*bbclient.Client, error) {
-	logger := logging.FromContext(ctx)
-
+	// Retrieve an accessToken based on the Oauth Consumer credentials we set in the BitBucket account.
+	// It cannot be a static one as it can expire.
 	conf := &clientcredentials.Config{
 		ClientID:     options.accessToken,
 		ClientSecret: options.secretToken,
@@ -103,11 +103,10 @@ func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, 
 
 	token, err := conf.Token(ctx)
 	if err != nil {
-		logger.Errorf("Error retrieving token: %v", err)
 		return nil, err
 	}
 
-	return bbclient.NewClient(ctx, token.AccessToken), nil
+	return bbclient.NewClient(ctx, token), nil
 }
 
 func (client bitBucketWebhookClient) hookConfig(options *webhookOptions) bbclient.Hook {
