@@ -173,9 +173,9 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 	r.removeFinalizer(source)
 
 	// If a webhook was created, try to delete it.
-	if source.Status.IsWebHookReady() {
+	if source.Status.WebhookUUIDKey != "" {
 		// Get tokens.
-		accessToken, secretToken, err := r.secretsFrom(ctx, source)
+		consumerKey, consumerSecret, err := r.secretsFrom(ctx, source)
 		if err != nil {
 			r.recorder.Eventf(source, corev1.EventTypeWarning, finalizeFailed, "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
@@ -184,14 +184,16 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 		// Delete the webhook using the access and secret tokens, and the stored webhook UUID in the source.Status.
 		webhookArgs := &webhookArgs{
 			source:         source,
-			consumerKey:    accessToken,
-			consumerSecret: secretToken,
+			consumerKey:    consumerKey,
+			consumerSecret: consumerSecret,
 		}
 		err = r.deleteWebhook(ctx, webhookArgs)
 		if err != nil {
 			r.recorder.Eventf(source, corev1.EventTypeWarning, finalizeFailed, "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
 		}
+		// Clear the UUID.
+		source.Status.WebhookUUIDKey = ""
 	}
 	return nil
 }
@@ -210,7 +212,7 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 
 func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, domain, consumerKey, consumerSecret string) (string, error) {
 	// If webhook doesn't exist, then create it.
-	if !source.Status.IsWebHookReady() {
+	if source.Status.WebhookUUIDKey == "" {
 		// Add a finalizer to be able to delete it.
 		r.addFinalizer(source)
 
@@ -227,10 +229,10 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 			return "", err
 		}
 		r.recorder.Eventf(source, corev1.EventTypeNormal, webhookCreated, "Created webhook: %q", hookID)
-		return hookID, nil
-	} else {
-		return source.Status.WebhookUUIDKey, nil
+		// Setting the value here in case the status update fails afterwards, so that we do not create another webhook.
+		source.Status.WebhookUUIDKey = hookID
 	}
+	return source.Status.WebhookUUIDKey, nil
 }
 
 func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {

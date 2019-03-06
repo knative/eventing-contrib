@@ -196,12 +196,6 @@ func (s *BitBucketSourceStatus) MarkNoWebHook(reason, messageFormat string, mess
 	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionWebHookUUIDProvided, reason, messageFormat, messageA...)
 }
 
-// IsWebHookReady returns true if the webhook is configured.
-func (s *BitBucketSourceStatus) IsWebHookReady() bool {
-	condition := bitBucketSourceCondSet.Manage(s).GetCondition(BitBucketSourceConditionWebHookUUIDProvided)
-	return condition != nil && condition.Status == corev1.ConditionTrue
-}
-
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
