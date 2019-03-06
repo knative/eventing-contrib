@@ -204,10 +204,8 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
 		return receiveAdapterDomain, nil
 	}
-	err := fmt.Errorf("domain not found for service %q", ksvc.Name)
-	source.Status.MarkNoService(svcDomainNotFound, "%s", err)
 	r.recorder.Eventf(source, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
-	return "", err
+	return "", fmt.Errorf("domain not found for service %q", ksvc.Name)
 }
 
 func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, domain, consumerKey, consumerSecret string) (string, error) {
@@ -225,12 +223,10 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 		hookID, err := r.createWebhook(ctx, webhookArgs)
 		if err != nil {
 			r.recorder.Eventf(source, corev1.EventTypeWarning, webhookCreateFailed, "Could not create webhook: %v", err)
-			source.Status.MarkNoWebHook(webhookCreateFailed, "%s", err)
 			return "", err
 		}
 		r.recorder.Eventf(source, corev1.EventTypeNormal, webhookCreated, "Created webhook: %q", hookID)
-		// Setting the value here in case the status update fails afterwards, so that we do not create another webhook.
-		source.Status.WebhookUUIDKey = hookID
+		return hookID, nil
 	}
 	return source.Status.WebhookUUIDKey, nil
 }
@@ -313,7 +309,6 @@ func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 func (r *reconciler) sinkURIFrom(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (string, error) {
 	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
-		source.Status.MarkNoSink(sinkNotFound, "%s", err)
 		r.recorder.Eventf(source, corev1.EventTypeWarning, sinkNotFound, "Could not find sink: %v", err)
 		return "", err
 	}
@@ -324,13 +319,11 @@ func (r *reconciler) secretsFrom(ctx context.Context, source *sourcesv1alpha1.Bi
 
 	consumerKey, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerKey.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets(consumerKeyNotFound, "%s", err)
 		r.recorder.Eventf(source, corev1.EventTypeWarning, consumerKeyNotFound, "Could not find consumer key: %v", err)
 		return "", "", err
 	}
 	consumerSecret, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerSecret.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets(consumerSecretNotFound, "%s", err)
 		r.recorder.Eventf(source, corev1.EventTypeWarning, consumerSecretNotFound, "Could not find consumer secret: %v", err)
 		return "", "", err
 	}
