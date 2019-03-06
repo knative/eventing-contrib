@@ -48,6 +48,18 @@ const (
 	controllerAgentName = "bitbucket-source-controller"
 	raImageEnvVar       = "BB_RA_IMAGE"
 	finalizerName       = controllerAgentName
+
+	// Name of the corev1.Events emitted from the reconciliation process.
+	finalizeFailed         = "FinalizeFailed"
+	sinkNotFound           = "SinkNotFound"
+	consumerKeyNotFound    = "ConsumerKeyNotFound"
+	consumerSecretNotFound = "ConsumerSecretNotFound"
+	ownerAndRepoInvalid    = "OwnerAndRepositoryInvalid"
+	svcDomainNotFound      = "ServiceDomainNotFound"
+	webhookCreated         = "WebHookCreated"
+	webhookCreateFailed    = "WebHookCreateFailed"
+	serviceCreated         = "ServiceCreated"
+	serviceCreateFailed    = "ServiceCreateFailed"
 )
 
 type webhookArgs struct {
@@ -165,7 +177,7 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 		// Get tokens.
 		accessToken, secretToken, err := r.secretsFrom(ctx, source)
 		if err != nil {
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "FinalizeFailed", "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, finalizeFailed, "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
 		}
 
@@ -177,7 +189,7 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 		}
 		err = r.deleteWebhook(ctx, webhookArgs)
 		if err != nil {
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "FinalizeFailed", "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, finalizeFailed, "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
 		}
 		source.Status.MarkNoWebHook("WebHookDeleted", "%s", source.Status.WebhookUUIDKey)
@@ -192,8 +204,8 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 		return receiveAdapterDomain, nil
 	}
 	err := fmt.Errorf("domain not found for service %q", ksvc.Name)
-	source.Status.MarkNoService("DomainNotFound", "%s", err)
-	r.recorder.Eventf(ksvc, corev1.EventTypeWarning, "DomainNotFound", "Could not find domain for service %q", ksvc.Name)
+	source.Status.MarkNoService(svcDomainNotFound, "%s", err)
+	r.recorder.Eventf(ksvc, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
 	return "", err
 }
 
@@ -211,10 +223,11 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 		}
 		hookID, err := r.createWebhook(ctx, webhookArgs)
 		if err != nil {
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "WebHookCreateFailed", "Could not create webhook: %v", err)
-			source.Status.MarkNoWebHook("WebHookCreateFailed", "%s", err)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, webhookCreateFailed, "Could not create webhook: %v", err)
+			source.Status.MarkNoWebHook(webhookCreateFailed, "%s", err)
 			return "", err
 		}
+		r.recorder.Eventf(source, corev1.EventTypeNormal, webhookCreated, "Created webhook: %q", hookID)
 		return hookID, nil
 	} else {
 		return source.Status.WebhookUUIDKey, nil
@@ -232,9 +245,10 @@ func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alph
 		}
 		err = r.client.Create(ctx, ksvc)
 		if err != nil {
+			r.recorder.Eventf(source, corev1.EventTypeWarning, serviceCreateFailed, "Could not create service: %v", err)
 			return nil, err
 		}
-		r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created service %q", ksvc.Name)
+		r.recorder.Eventf(source, corev1.EventTypeNormal, serviceCreated, "Created service: %q", ksvc.Name)
 		return ksvc, nil
 	} else if err != nil {
 		return nil, err
@@ -249,7 +263,7 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 
 	logger.Info("Creating BitBucket WebHook")
 
-	owner, repo, err := ownerRepoFrom(args.source.Spec.OwnerAndRepository)
+	owner, repo, err := r.ownerRepoFrom(args.source)
 	if err != nil {
 		return "", err
 	}
@@ -275,7 +289,7 @@ func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 
 	logger.Infof("Deleting BitBucket WebHook %q", args.source.Status.WebhookUUIDKey)
 
-	owner, repo, err := ownerRepoFrom(args.source.Spec.OwnerAndRepository)
+	owner, repo, err := r.ownerRepoFrom(args.source)
 	if err != nil {
 		return err
 	}
@@ -298,8 +312,8 @@ func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 func (r *reconciler) sinkURIFrom(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (string, error) {
 	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
-		source.Status.MarkNoSink("SinkNotFound", "%s", err)
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "SinkNotFound", "Could not find sink: %v", err)
+		source.Status.MarkNoSink(sinkNotFound, "%s", err)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, sinkNotFound, "Could not find sink: %v", err)
 		return "", err
 	}
 	return uri, err
@@ -309,14 +323,14 @@ func (r *reconciler) secretsFrom(ctx context.Context, source *sourcesv1alpha1.Bi
 
 	consumerKey, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerKey.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets("ConsumerKeyNotFound", "%s", err)
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "ConsumerKeyNotFound", "Could not find consumer key: %v", err)
+		source.Status.MarkNoSecrets(consumerKeyNotFound, "%s", err)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, consumerKeyNotFound, "Could not find consumer key: %v", err)
 		return "", "", err
 	}
 	consumerSecret, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerSecret.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets("ConsumerSecretNotFound", "%s", err)
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "ConsumerSecretNotFound", "Could not find consumer secret: %v", err)
+		source.Status.MarkNoSecrets(consumerSecretNotFound, "%s", err)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, consumerSecretNotFound, "Could not find consumer secret: %v", err)
 		return "", "", err
 	}
 
@@ -336,14 +350,19 @@ func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKey
 	return string(secretVal), nil
 }
 
-func ownerRepoFrom(ownerAndRepository string) (string, string, error) {
+func (r *reconciler) ownerRepoFrom(source *sourcesv1alpha1.BitBucketSource) (string, string, error) {
+	ownerAndRepository := source.Spec.OwnerAndRepository
 	components := strings.Split(ownerAndRepository, "/")
 	if len(components) > 2 {
-		return "", "", fmt.Errorf("ownerAndRepository is malformatted, expected 'owner/repository' but found %q", ownerAndRepository)
+		err := fmt.Errorf("ownerAndRepository is malformatted, expected 'owner/repository' but found %q", ownerAndRepository)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, ownerAndRepoInvalid, "Invalid owner and repository: %v", err)
+		return "", "", err
 	}
 	owner := components[0]
 	if len(owner) == 0 && len(components) > 1 {
-		return "", "", fmt.Errorf("owner is empty, expected 'owner/repository' but found %q", ownerAndRepository)
+		err := fmt.Errorf("owner is empty, expected 'owner/repository' but found %q", ownerAndRepository)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, ownerAndRepoInvalid, "Invalid owner and repository: %v", err)
+		return "", "", err
 	}
 	repo := ""
 	if len(components) > 1 {

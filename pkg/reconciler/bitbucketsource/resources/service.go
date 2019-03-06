@@ -35,6 +35,13 @@ func MakeService(source *sourcesv1alpha1.BitBucketSource, receiveAdapterImage st
 	env := []corev1.EnvVar{
 		// TODO should also pass the UUID of the webhook so that the receive adapter can validate that the
 		// incoming events correspond to that particular webhook, and discard them otherwise.
+		// There is a chicken and egg problem: in order to create the webhook, we need the service domain, but
+		// the service container image needs the webhook UUID that we get when the webhook is created.
+		// We need to properly populate this in a reconcile loop.
+		{
+			Name:  "BITBUCKET_UUID",
+			Value: source.Status.WebhookUUIDKey,
+		},
 		{
 			Name:  "SINK",
 			Value: sinkURI,
