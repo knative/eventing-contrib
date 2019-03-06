@@ -82,7 +82,7 @@ func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, e
 	var urlStr string
 	if repo == "" {
 		// For every repo of the owner.
-		urlStr = fmt.Sprintf("repositories/%s/hooks", owner)
+		urlStr = fmt.Sprintf("teams/%s/hooks", owner)
 	} else {
 		// For a specific repo of the owner.
 		urlStr = fmt.Sprintf("repositories/%s/%s/hooks", owner, repo)
@@ -103,7 +103,7 @@ func (c *Client) DeleteHook(owner, repo, hookUUID string) (*Response, error) {
 
 	var urlStr string
 	if repo == "" {
-		urlStr = fmt.Sprintf("repositories/%v/hooks/%s", owner, hookUUID)
+		urlStr = fmt.Sprintf("teams/%v/hooks/%s", owner, hookUUID)
 	} else {
 		urlStr = fmt.Sprintf("repositories/%v/%v/hooks/%s", owner, repo, hookUUID)
 	}
