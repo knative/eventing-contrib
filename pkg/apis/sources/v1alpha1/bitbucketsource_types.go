@@ -30,7 +30,7 @@ var _ runtime.Object = (*BitBucketSource)(nil)
 // Check that BitBucketSource implements the Conditions duck type.
 var _ = duck.VerifyType(&BitBucketSource{}, &duckv1alpha1.Conditions{})
 
-// BitBucketSourceSpec defines the desired state of BitBucketSource
+// BitBucketSourceSpec defines the desired state of BitBucketSource.
 // +kubebuilder:categories=all,knative,eventing,sources
 type BitBucketSourceSpec struct {
 	// ServiceAccountName holds the name of the Kubernetes service account
@@ -50,19 +50,19 @@ type BitBucketSourceSpec struct {
 	OwnerAndRepository string `json:"ownerAndRepository"`
 
 	// EventType is the type of event to receive from BitBucket. These
-	// correspond to the "Webhook event name" values listed at
-	// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html - ie
+	// correspond to the event names listed at
+	// https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html - e.g.,
 	// "pullrequest:created"
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:Enum=repo:push,repo:fork,repo:updated,repo:commit_comment_created,repo:commit_status_created,repo:commit_status_updated,pullrequest:created,pullrequest:updated,pullrequest:approved,pullrequest:unapproved,pullrequest:fulfilled,pullrequest:rejected,pullrequest:comment_created,pullrequest:comment_updated,pullrequest:comment_deleted,issue:created,issue:updated,issue:comment_created
 	EventTypes []string `json:"eventTypes"`
 
 	// AccessToken is the Kubernetes secret containing the BitBucket
-	// access token
+	// access token, i.e., the key generated when creating an Oauth consumer.
 	AccessToken BitBucketSecretValueFromSource `json:"accessToken"`
 
 	// SecretToken is the Kubernetes secret containing the BitBucket
-	// secret token
+	// secret token, i.e., the secret generated when creating an Oauth consumer.
 	SecretToken BitBucketSecretValueFromSource `json:"secretToken"`
 
 	// Sink is a reference to an object that will resolve to a domain
@@ -71,7 +71,7 @@ type BitBucketSourceSpec struct {
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 }
 
-// BitBucketSecretValueFromSource represents the source of a secret value
+// BitBucketSecretValueFromSource represents the source of a secret value.
 type BitBucketSecretValueFromSource struct {
 	// The Secret key to select from.
 	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
@@ -89,7 +89,7 @@ const (
 	BitBucketSourceConditionReady = duckv1alpha1.ConditionReady
 
 	// BitBucketSourceConditionSecretsProvided has status True when the
-	// BitBucketSource has valid secret references
+	// BitBucketSource has valid secret references.
 	BitBucketSourceConditionSecretsProvided duckv1alpha1.ConditionType = "SecretsProvided"
 
 	// BitBucketSourceConditionSinkProvided has status True when the
@@ -97,7 +97,7 @@ const (
 	BitBucketSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
 
 	// BitBucketSourceConditionServiceProvided has status True when the
-	// BitBucketSource has valid service references
+	// BitBucketSource has valid service references.
 	BitBucketSourceConditionServiceProvided duckv1alpha1.ConditionType = "ServiceProvided"
 
 	// BitBucketSourceConditionWebHookUUIDProvided has status True when the
@@ -143,17 +143,22 @@ func (s *BitBucketSourceStatus) InitializeConditions() {
 	bitBucketSourceCondSet.Manage(s).InitializeConditions()
 }
 
-// MarkSecrets sets the condition that the source has a valid spec.
-func (s *BitBucketSourceStatus) MarkSecrets() {
-	bitBucketSourceCondSet.Manage(s).MarkTrue(BitBucketSourceConditionSecretsProvided)
-}
-
-// MarkService sets the condition that the service has a valid spec.
+// MarkService sets the condition that the source has a service configured.
 func (s *BitBucketSourceStatus) MarkService() {
 	bitBucketSourceCondSet.Manage(s).MarkTrue(BitBucketSourceConditionServiceProvided)
 }
 
-// MarkNoSecrets sets the condition that the source does not have a valid spec.
+// MarkNoService sets the condition that the source does not have a valid service.
+func (s *BitBucketSourceStatus) MarkNoService(reason, messageFormat string, messageA ...interface{}) {
+	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionServiceProvided, reason, messageFormat, messageA...)
+}
+
+// MarkSecrets sets the condition that the source has a valid secret.
+func (s *BitBucketSourceStatus) MarkSecrets() {
+	bitBucketSourceCondSet.Manage(s).MarkTrue(BitBucketSourceConditionSecretsProvided)
+}
+
+// MarkNoSecrets sets the condition that the source does not have a valid secret.
 func (s *BitBucketSourceStatus) MarkNoSecrets(reason, messageFormat string, messageA ...interface{}) {
 	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionSecretsProvided, reason, messageFormat, messageA...)
 }
@@ -169,6 +174,11 @@ func (s *BitBucketSourceStatus) MarkSink(uri string) {
 	}
 }
 
+// MarkNoSink sets the condition that the source does not have a sink configured.
+func (s *BitBucketSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
 // MarkWebHook sets the condition that the source has a webhook configured.
 func (s *BitBucketSourceStatus) MarkWebHook(uuid string) {
 	s.WebhookUUIDKey = uuid
@@ -180,15 +190,16 @@ func (s *BitBucketSourceStatus) MarkWebHook(uuid string) {
 	}
 }
 
-// IsWebHookReady returns true if the BitBucketSourceConditionWebHookUUIDProvided condition is true.
+// MarkNoWebHook sets the condition that the source does not have a webhook configured.
+func (s *BitBucketSourceStatus) MarkNoWebHook(reason, messageFormat string, messageA ...interface{}) {
+	s.WebhookUUIDKey = ""
+	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionWebHookUUIDProvided, reason, messageFormat, messageA...)
+}
+
+// IsWebHookReady returns true if the webhook is configured.
 func (s *BitBucketSourceStatus) IsWebHookReady() bool {
 	condition := bitBucketSourceCondSet.Manage(s).GetCondition(BitBucketSourceConditionWebHookUUIDProvided)
 	return condition != nil && condition.Status == corev1.ConditionTrue
-}
-
-// MarkNoSink sets the condition that the source does not have a sink configured.
-func (s *BitBucketSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
 // +genclient

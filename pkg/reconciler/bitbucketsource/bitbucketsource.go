@@ -134,15 +134,18 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitB
 	}
 	source.Status.MarkSink(uri)
 
-	// Need to create a Service to be able to get the domain
-	// so that we can create the webhook.
 	ksvc, err := r.reconcileService(ctx, source)
+	if err != nil {
+		return err
+	}
+
+	domain, err := r.domainFrom(ksvc, source)
 	if err != nil {
 		return err
 	}
 	source.Status.MarkService()
 
-	hookUUID, err := r.reconcileWebHook(ctx, source, ksvc, accessToken, secretToken)
+	hookUUID, err := r.reconcileWebHook(ctx, source, domain, accessToken, secretToken)
 	if err != nil {
 		return err
 	}
@@ -157,16 +160,16 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 	// operator.
 	r.removeFinalizer(source)
 
-	// If a webhook was created, try to delete it
+	// If a webhook was created, try to delete it.
 	if source.Status.IsWebHookReady() {
-		// Get tokens
+		// Get tokens.
 		accessToken, secretToken, err := r.secretsFrom(ctx, source)
 		if err != nil {
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, "FinalizeFailed", "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
 		}
 
-		// Delete the webhook using the access and secret token, and the stored webhook ID.
+		// Delete the webhook using the access and secret tokens, and the stored webhook UUID in the source.Status.
 		webhookArgs := &webhookArgs{
 			source:      source,
 			accessToken: accessToken,
@@ -174,39 +177,48 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 		}
 		err = r.deleteWebhook(ctx, webhookArgs)
 		if err != nil {
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
+			r.recorder.Eventf(source, corev1.EventTypeWarning, "FinalizeFailed", "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
 		}
-		// Webhook deleted, clear ID
-		source.Status.MarkWebHook("")
+		source.Status.MarkNoWebHook("WebHookDeleted", "%s", source.Status.WebhookUUIDKey)
 	}
 	return nil
 }
 
-func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, ksvc *servingv1alpha1.Service, accessToken, secretToken string) (string, error) {
+func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1alpha1.BitBucketSource) (string, error) {
 	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
 	receiveAdapterDomain := ksvc.Status.Domain
 	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
-		r.addFinalizer(source)
-		if !source.Status.IsWebHookReady() {
-			webhookArgs := webhookArgs{
-				source:      source,
-				domain:      receiveAdapterDomain,
-				accessToken: accessToken,
-				secretToken: secretToken,
-			}
-			hookID, err := r.createWebhook(ctx, webhookArgs)
-			if err != nil {
-				r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedCreateWebhook", "Could not create webhook: %v", err)
-				return "", err
-			}
-			return hookID, nil
-		} else {
-			return source.Status.WebhookUUIDKey, nil
-		}
+		return receiveAdapterDomain, nil
 	}
-	// Return an error so that we trigger the reconcile loop again.
-	return "", fmt.Errorf("service %q route not ready, domain: %q", ksvc.Name, receiveAdapterDomain)
+	err := fmt.Errorf("domain not found for service %q", ksvc.Name)
+	source.Status.MarkNoService("DomainNotFound", "%s", err)
+	r.recorder.Eventf(ksvc, corev1.EventTypeWarning, "DomainNotFound", "Could not find domain for service %q", ksvc.Name)
+	return "", err
+}
+
+func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, domain, accessToken, secretToken string) (string, error) {
+	// If webhook doesn't exist, then create it.
+	if !source.Status.IsWebHookReady() {
+		// Add a finalizer to be able to delete it.
+		r.addFinalizer(source)
+
+		webhookArgs := webhookArgs{
+			source:      source,
+			domain:      domain,
+			accessToken: accessToken,
+			secretToken: secretToken,
+		}
+		hookID, err := r.createWebhook(ctx, webhookArgs)
+		if err != nil {
+			r.recorder.Eventf(source, corev1.EventTypeWarning, "WebHookCreateFailed", "Could not create webhook: %v", err)
+			source.Status.MarkNoWebHook("WebHookCreateFailed", "%s", err)
+			return "", err
+		}
+		return hookID, nil
+	} else {
+		return source.Status.WebhookUUIDKey, nil
+	}
 }
 
 func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (*servingv1alpha1.Service, error) {
@@ -237,7 +249,7 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 
 	logger.Info("Creating BitBucket WebHook")
 
-	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
+	owner, repo, err := ownerRepoFrom(args.source.Spec.OwnerAndRepository)
 	if err != nil {
 		return "", err
 	}
@@ -261,9 +273,9 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error {
 	logger := logging.FromContext(ctx)
 
-	logger.Info("Deleting BitBucket WebHook")
+	logger.Infof("Deleting BitBucket WebHook %q", args.source.Status.WebhookUUIDKey)
 
-	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
+	owner, repo, err := ownerRepoFrom(args.source.Spec.OwnerAndRepository)
 	if err != nil {
 		return err
 	}
@@ -287,6 +299,7 @@ func (r *reconciler) sinkURIFrom(ctx context.Context, source *sourcesv1alpha1.Bi
 	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		source.Status.MarkNoSink("SinkNotFound", "%s", err)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, "SinkNotFound", "Could not find sink: %v", err)
 		return "", err
 	}
 	return uri, err
@@ -318,12 +331,12 @@ func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKey
 	}
 	secretVal, ok := secret.Data[secretKeySelector.Key]
 	if !ok {
-		return "", fmt.Errorf(`key "%s" not found in secret "%s"`, secretKeySelector.Key, secretKeySelector.Name)
+		return "", fmt.Errorf("key %q not found in secret %q", secretKeySelector.Key, secretKeySelector.Name)
 	}
 	return string(secretVal), nil
 }
 
-func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
+func ownerRepoFrom(ownerAndRepository string) (string, string, error) {
 	components := strings.Split(ownerAndRepository, "/")
 	if len(components) > 2 {
 		return "", "", fmt.Errorf("ownerAndRepository is malformatted, expected 'owner/repository' but found %q", ownerAndRepository)
