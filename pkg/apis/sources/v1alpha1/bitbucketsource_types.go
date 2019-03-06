@@ -59,11 +59,11 @@ type BitBucketSourceSpec struct {
 
 	// ConsumerKey is the Kubernetes secret containing the BitBucket
 	// consumer key, i.e., the key generated when creating an Oauth consumer.
-	ConsumerKey BitBucketSecretValueFromSource `json:"consumerKey"`
+	ConsumerKey BitBucketConsumerValue `json:"consumerKey"`
 
 	// ConsumerSecret is the Kubernetes secret containing the BitBucket
 	// secret token, i.e., the secret generated when creating an Oauth consumer.
-	ConsumerSecret BitBucketSecretValueFromSource `json:"consumerSecret"`
+	ConsumerSecret BitBucketConsumerValue `json:"consumerSecret"`
 
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.
@@ -71,8 +71,8 @@ type BitBucketSourceSpec struct {
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 }
 
-// BitBucketSecretValueFromSource represents the source of a secret value.
-type BitBucketSecretValueFromSource struct {
+// BitBucketConsumerValue represents a consumer value secret for the source.
+type BitBucketConsumerValue struct {
 	// The Secret key to select from.
 	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }

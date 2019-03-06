@@ -192,7 +192,6 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 			r.recorder.Eventf(source, corev1.EventTypeWarning, finalizeFailed, "Could not delete webhook %q: %v", source.Status.WebhookUUIDKey, err)
 			return err
 		}
-		source.Status.MarkNoWebHook("WebHookDeleted", "%s", source.Status.WebhookUUIDKey)
 	}
 	return nil
 }
@@ -205,7 +204,7 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 	}
 	err := fmt.Errorf("domain not found for service %q", ksvc.Name)
 	source.Status.MarkNoService(svcDomainNotFound, "%s", err)
-	r.recorder.Eventf(ksvc, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
+	r.recorder.Eventf(source, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
 	return "", err
 }
 
@@ -338,6 +337,10 @@ func (r *reconciler) secretsFrom(ctx context.Context, source *sourcesv1alpha1.Bi
 }
 
 func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
+	if secretKeySelector == nil {
+		return "", fmt.Errorf("nil secret key selector")
+	}
+
 	secret := &corev1.Secret{}
 	err := r.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretKeySelector.Name}, secret)
 	if err != nil {

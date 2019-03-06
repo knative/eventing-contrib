@@ -42,7 +42,7 @@ spec:
           type: object
         spec:
           properties:
-            accessToken:
+            consumerKey:
               properties:
                 secretKeyRef:
                   type: object
@@ -74,7 +74,7 @@ spec:
             ownerAndRepository:
               minLength: 1
               type: string
-            secretToken:
+            consumerSecret:
               properties:
                 secretKeyRef:
                   type: object
@@ -86,8 +86,8 @@ spec:
           required:
           - ownerAndRepository
           - eventTypes
-          - accessToken
-          - secretToken
+          - consumerKey
+          - consumerSecret
           type: object
         status:
           properties:
