@@ -26,13 +26,13 @@ import (
 )
 
 type webhookOptions struct {
-	uuid        string
-	accessToken string
-	secretToken string
-	domain      string
-	owner       string
-	repo        string
-	events      []string
+	uuid           string
+	consumerKey    string
+	consumerSecret string
+	domain         string
+	owner          string
+	repo           string
+	events         []string
 }
 
 type webhookClient interface {
@@ -93,14 +93,13 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhoo
 }
 
 func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, options *webhookOptions) (*bbclient.Client, error) {
-	// Retrieve an accessToken based on the Oauth Consumer credentials we set in the BitBucket account.
+	// Retrieve an access token based on the Oauth Consumer credentials we set in the BitBucket account.
 	// It cannot be a static one as it can expire.
 	conf := &clientcredentials.Config{
-		ClientID:     options.accessToken,
-		ClientSecret: options.secretToken,
+		ClientID:     options.consumerKey,
+		ClientSecret: options.consumerSecret,
 		TokenURL:     bitbucket.Endpoint.TokenURL,
 	}
-
 	token, err := conf.Token(ctx)
 	if err != nil {
 		return nil, err

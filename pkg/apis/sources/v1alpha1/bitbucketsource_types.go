@@ -57,13 +57,13 @@ type BitBucketSourceSpec struct {
 	// +kubebuilder:validation:Enum=repo:push,repo:fork,repo:updated,repo:commit_comment_created,repo:commit_status_created,repo:commit_status_updated,pullrequest:created,pullrequest:updated,pullrequest:approved,pullrequest:unapproved,pullrequest:fulfilled,pullrequest:rejected,pullrequest:comment_created,pullrequest:comment_updated,pullrequest:comment_deleted,issue:created,issue:updated,issue:comment_created
 	EventTypes []string `json:"eventTypes"`
 
-	// AccessToken is the Kubernetes secret containing the BitBucket
-	// access token, i.e., the key generated when creating an Oauth consumer.
-	AccessToken BitBucketSecretValueFromSource `json:"accessToken"`
+	// ConsumerKey is the Kubernetes secret containing the BitBucket
+	// consumer key, i.e., the key generated when creating an Oauth consumer.
+	ConsumerKey BitBucketSecretValueFromSource `json:"consumerKey"`
 
-	// SecretToken is the Kubernetes secret containing the BitBucket
+	// ConsumerSecret is the Kubernetes secret containing the BitBucket
 	// secret token, i.e., the secret generated when creating an Oauth consumer.
-	SecretToken BitBucketSecretValueFromSource `json:"secretToken"`
+	ConsumerSecret BitBucketSecretValueFromSource `json:"consumerSecret"`
 
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.

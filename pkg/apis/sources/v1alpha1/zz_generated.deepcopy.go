@@ -222,8 +222,8 @@ func (in *BitBucketSourceSpec) DeepCopyInto(out *BitBucketSourceSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	in.AccessToken.DeepCopyInto(&out.AccessToken)
-	in.SecretToken.DeepCopyInto(&out.SecretToken)
+	in.ConsumerKey.DeepCopyInto(&out.ConsumerKey)
+	in.ConsumerSecret.DeepCopyInto(&out.ConsumerSecret)
 	if in.Sink != nil {
 		in, out := &in.Sink, &out.Sink
 		*out = new(v1.ObjectReference)

@@ -51,10 +51,10 @@ const (
 )
 
 type webhookArgs struct {
-	source      *sourcesv1alpha1.BitBucketSource
-	domain      string
-	accessToken string
-	secretToken string
+	source         *sourcesv1alpha1.BitBucketSource
+	domain         string
+	consumerKey    string
+	consumerSecret string
 }
 
 // Add creates a new BitBucketSource Controller and adds it to the
@@ -122,7 +122,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) error {
 	source.Status.InitializeConditions()
 
-	accessToken, secretToken, err := r.secretsFrom(ctx, source)
+	consumerKey, consumerSecret, err := r.secretsFrom(ctx, source)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitB
 	}
 	source.Status.MarkService()
 
-	hookUUID, err := r.reconcileWebHook(ctx, source, domain, accessToken, secretToken)
+	hookUUID, err := r.reconcileWebHook(ctx, source, domain, consumerKey, consumerSecret)
 	if err != nil {
 		return err
 	}
@@ -171,9 +171,9 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.BitBu
 
 		// Delete the webhook using the access and secret tokens, and the stored webhook UUID in the source.Status.
 		webhookArgs := &webhookArgs{
-			source:      source,
-			accessToken: accessToken,
-			secretToken: secretToken,
+			source:         source,
+			consumerKey:    accessToken,
+			consumerSecret: secretToken,
 		}
 		err = r.deleteWebhook(ctx, webhookArgs)
 		if err != nil {
@@ -197,17 +197,17 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 	return "", err
 }
 
-func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, domain, accessToken, secretToken string) (string, error) {
+func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, domain, consumerKey, consumerSecret string) (string, error) {
 	// If webhook doesn't exist, then create it.
 	if !source.Status.IsWebHookReady() {
 		// Add a finalizer to be able to delete it.
 		r.addFinalizer(source)
 
 		webhookArgs := webhookArgs{
-			source:      source,
-			domain:      domain,
-			accessToken: accessToken,
-			secretToken: secretToken,
+			source:         source,
+			domain:         domain,
+			consumerKey:    consumerKey,
+			consumerSecret: consumerSecret,
 		}
 		hookID, err := r.createWebhook(ctx, webhookArgs)
 		if err != nil {
@@ -255,12 +255,12 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 	}
 
 	hookOptions := &webhookOptions{
-		accessToken: args.accessToken,
-		secretToken: args.secretToken,
-		domain:      args.domain,
-		owner:       owner,
-		repo:        repo,
-		events:      args.source.Spec.EventTypes,
+		consumerKey:    args.consumerKey,
+		consumerSecret: args.consumerSecret,
+		domain:         args.domain,
+		owner:          owner,
+		repo:           repo,
+		events:         args.source.Spec.EventTypes,
 	}
 	hookUUID, err := r.webhookClient.Create(ctx, hookOptions)
 	if err != nil {
@@ -281,11 +281,11 @@ func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 	}
 
 	hookOptions := &webhookOptions{
-		uuid:        args.source.Status.WebhookUUIDKey,
-		owner:       owner,
-		repo:        repo,
-		accessToken: args.accessToken,
-		secretToken: args.secretToken,
+		uuid:           args.source.Status.WebhookUUIDKey,
+		owner:          owner,
+		repo:           repo,
+		consumerKey:    args.consumerKey,
+		consumerSecret: args.consumerSecret,
 	}
 	err = r.webhookClient.Delete(ctx, hookOptions)
 	if err != nil {
@@ -307,20 +307,20 @@ func (r *reconciler) sinkURIFrom(ctx context.Context, source *sourcesv1alpha1.Bi
 
 func (r *reconciler) secretsFrom(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (string, string, error) {
 
-	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	consumerKey, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerKey.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "AccessTokenNotFound", "Could not find access token: %v", err)
+		source.Status.MarkNoSecrets("ConsumerKeyNotFound", "%s", err)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, "ConsumerKeyNotFound", "Could not find consumer key: %v", err)
 		return "", "", err
 	}
-	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	consumerSecret, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerSecret.SecretKeyRef)
 	if err != nil {
-		source.Status.MarkNoSecrets("SecretTokenNotFound", "%s", err)
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "SecretTokenNotFound", "Could not find secret token: %v", err)
+		source.Status.MarkNoSecrets("ConsumerSecretNotFound", "%s", err)
+		r.recorder.Eventf(source, corev1.EventTypeWarning, "ConsumerSecretNotFound", "Could not find consumer secret: %v", err)
 		return "", "", err
 	}
 
-	return accessToken, secretToken, err
+	return consumerKey, consumerSecret, err
 }
 
 func (r *reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
