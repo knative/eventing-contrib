@@ -76,7 +76,7 @@ func (a *Adapter) cronTick() {
 			client.WithUUIDs(),
 			client.WithTimeNow(),
 		); err != nil {
-			logger.Info("Failed to create cloudevent client.")
+			logger.Info("Failed to create cloudevent client", err)
 			return
 		}
 	}
