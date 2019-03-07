@@ -217,8 +217,11 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 		return receiveAdapterDomain, nil
 	}
 	r.recorder.Eventf(source, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
-	err := fmt.Errorf("domain not found for service %q, waiting %.f seconds", ksvc.Name, waitTimeForDomain.Seconds())
+	err := fmt.Errorf("domain not found for svc %q", ksvc.Name)
 	source.Status.MarkNoService(svcDomainNotFound, "%s", err)
+	// Will wait for a bit so that we don't trigger another reconciliation immediately.
+	// Ideally we should have returned the ReconcileResult.EnqueueAfter, but that is handled by the sdk
+	// and we don't want to change much the API.
 	time.Sleep(waitTimeForDomain)
 	return "", err
 }
