@@ -76,7 +76,7 @@ func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, error) {
 	}
 
 	h := new(Hook)
-	err := c.doRequest("POST", urlStr, body, h)
+	err = c.doRequest("POST", urlStr, body, h)
 	return h, err
 }
 

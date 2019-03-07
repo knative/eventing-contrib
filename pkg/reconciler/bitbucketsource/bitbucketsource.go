@@ -217,7 +217,7 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 		return receiveAdapterDomain, nil
 	}
 	r.recorder.Eventf(source, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
-	err := fmt.Errorf("domain not found for service %q, waiting %f seconds", ksvc.Name, waitTimeForDomain.Seconds())
+	err := fmt.Errorf("domain not found for service %q, waiting %.f seconds", ksvc.Name, waitTimeForDomain.Seconds())
 	source.Status.MarkNoService(svcDomainNotFound, "%s", err)
 	time.Sleep(waitTimeForDomain)
 	return "", err
