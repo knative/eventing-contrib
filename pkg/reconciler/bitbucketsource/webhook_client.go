@@ -45,50 +45,44 @@ type bitBucketWebhookClient struct{}
 func (client bitBucketWebhookClient) Create(ctx context.Context, options *webhookOptions) (string, error) {
 	logger := logging.FromContext(ctx)
 
+	logger.Info("Creating BitBucket WebHook")
+
 	bbClient, err := client.createBitBucketClient(ctx, options)
 
 	if err != nil {
-		logger.Errorf("create bitbucket client error: %v", err)
 		return "", err
 	}
 
 	hook := client.hookConfig(options)
 
 	var h *bbclient.Hook
-	var resp *bbclient.Response
-
-	h, resp, err = bbClient.CreateHook(options.owner, options.repo, &hook)
+	h, err = bbClient.CreateHook(options.owner, options.repo, &hook)
 
 	if err != nil {
-		logger.Errorf("create webhook error response: %v", resp)
-		return "", fmt.Errorf("failed to create the webhook: %v", err)
+		return "", fmt.Errorf("failed to Create the BitBucket Webhook: %v", err)
 	}
-	logger.Infof("created hook: %+v", h)
-
+	logger.Infof("Created BitBucket WebHook: %+v", h)
 	return h.UUID, nil
 }
 
 func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhookOptions) error {
 	logger := logging.FromContext(ctx)
 
+	logger.Info("Deleting BitBucket WebHook: %q", options.uuid)
+
 	bbClient, err := client.createBitBucketClient(ctx, options)
 
 	if err != nil {
-		logger.Errorf("create bitbucket client error: %v", err)
 		return err
 	}
 
-	hook := client.hookConfig(options)
-
-	var resp *bbclient.Response
-	resp, err = bbClient.DeleteHook(options.owner, options.repo, options.uuid)
+	err = bbClient.DeleteHook(options.owner, options.repo, options.uuid)
 
 	if err != nil {
-		logger.Errorf("delete webhook error response: %v", resp)
-		return fmt.Errorf("failed to delete the webhook: %v", err)
+		return fmt.Errorf("failed to Delete the BitBucket Webhook: %v", err)
 	}
 
-	logger.Infof("deleted hook: %s", hook.Description)
+	logger.Infof("Deleted BitBucket Webhook: %s", options.uuid)
 	return nil
 }
 

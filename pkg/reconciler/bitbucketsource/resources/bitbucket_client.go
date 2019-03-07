@@ -52,19 +52,6 @@ type Client struct {
 	userAgent string
 }
 
-// Wrapper struct in case we want to add extra validations here.
-type Response struct {
-	*http.Response
-}
-
-// newResponse creates a new Response for the provided http.Response.
-// r must not be nil.
-func newResponse(r *http.Response) *Response {
-	response := &Response{Response: r}
-	return response
-
-}
-
 // NewClient creates a new Client for sending http.Requests to BitBucket.
 func NewClient(ctx context.Context, token *oauth2.Token) *Client {
 	logger := logging.FromContext(ctx)
@@ -74,10 +61,10 @@ func NewClient(ctx context.Context, token *oauth2.Token) *Client {
 }
 
 // CreateHook creates a WebHook for 'owner' and 'repo'.
-func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, error) {
+func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, error) {
 	body, err := createHookBody(hook)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	var urlStr string
 	if repo == "" {
@@ -88,18 +75,13 @@ func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, *Response, e
 		urlStr = fmt.Sprintf("repositories/%s/%s/hooks", owner, repo)
 	}
 
-	c.logger.Infof("BitBucket CreateHook URL %s", urlStr)
-
 	h := new(Hook)
-	resp, err := c.doRequest("POST", urlStr, body, h)
-	if err != nil {
-		return nil, resp, err
-	}
-	return h, resp, nil
+	err := c.doRequest("POST", urlStr, body, h)
+	return h, err
 }
 
 // DeleteHook deletes the WebHook 'hookUUID' previously registered for 'owner' and 'repo'.
-func (c *Client) DeleteHook(owner, repo, hookUUID string) (*Response, error) {
+func (c *Client) DeleteHook(owner, repo, hookUUID string) error {
 
 	var urlStr string
 	if repo == "" {
@@ -108,14 +90,7 @@ func (c *Client) DeleteHook(owner, repo, hookUUID string) (*Response, error) {
 		urlStr = fmt.Sprintf("repositories/%v/%v/hooks/%s", owner, repo, hookUUID)
 	}
 
-	c.logger.Infof("BitBucket DeleteHook URL %s", urlStr)
-
-	resp, err := c.doRequest("DELETE", urlStr, "", nil)
-
-	if err != nil {
-		return resp, err
-	}
-	return resp, nil
+	return c.doRequest("DELETE", urlStr, "", nil)
 }
 
 // createHookBody marshals the WebHook body into json format.
@@ -134,10 +109,10 @@ func createHookBody(hook *Hook) (string, error) {
 
 // doRequest performs an http.Request to BitBucket. If v is not nil, it attempts to unmarshal the response to
 // that particular struct.
-func (c *Client) doRequest(method, urlStr string, body string, v interface{}) (*Response, error) {
+func (c *Client) doRequest(method, urlStr string, body string, v interface{}) error {
 	u, err := c.baseUrl.Parse(urlStr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	c.logger.Infof("BitBucket Request URL %s", u.String())
@@ -152,7 +127,7 @@ func (c *Client) doRequest(method, urlStr string, body string, v interface{}) (*
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if resp.Body != nil {
@@ -161,10 +136,8 @@ func (c *Client) doRequest(method, urlStr string, body string, v interface{}) (*
 
 	// Just checking for 200, 201, and 204 status codes as those are the success status codes for creating and deleting hooks.
 	if (resp.StatusCode != http.StatusOK) && (resp.StatusCode != http.StatusCreated) && (resp.StatusCode != http.StatusNoContent) {
-		return nil, fmt.Errorf("invalid status %q: %v", resp.Status, resp)
+		return fmt.Errorf("invalid status %q: %v", resp.Status, resp)
 	}
-
-	response := newResponse(resp)
 
 	if v != nil {
 		if resp.Body != nil {
@@ -172,8 +145,8 @@ func (c *Client) doRequest(method, urlStr string, body string, v interface{}) (*
 			if decErr != nil {
 				err = decErr
 			}
-			return response, err
+			return err
 		}
 	}
-	return response, nil
+	return nil
 }

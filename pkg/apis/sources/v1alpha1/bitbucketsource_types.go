@@ -148,9 +148,19 @@ func (s *BitBucketSourceStatus) MarkService() {
 	bitBucketSourceCondSet.Manage(s).MarkTrue(BitBucketSourceConditionServiceProvided)
 }
 
+// MarkNoService sets the condition that the source does not have a valid service.
+func (s *BitBucketSourceStatus) MarkNoService(reason, messageFormat string, messageA ...interface{}) {
+	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionServiceProvided, reason, messageFormat, messageA...)
+}
+
 // MarkSecrets sets the condition that the source has a valid secret.
 func (s *BitBucketSourceStatus) MarkSecrets() {
 	bitBucketSourceCondSet.Manage(s).MarkTrue(BitBucketSourceConditionSecretsProvided)
+}
+
+// MarkNoSecrets sets the condition that the source does not have a valid secret.
+func (s *BitBucketSourceStatus) MarkNoSecrets(reason, messageFormat string, messageA ...interface{}) {
+	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionSecretsProvided, reason, messageFormat, messageA...)
 }
 
 // MarkSink sets the condition that the source has a sink configured.
@@ -164,6 +174,11 @@ func (s *BitBucketSourceStatus) MarkSink(uri string) {
 	}
 }
 
+// MarkNoSink sets the condition that the source does not have a sink configured.
+func (s *BitBucketSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
 // MarkWebHook sets the condition that the source has a webhook configured.
 func (s *BitBucketSourceStatus) MarkWebHook(uuid string) {
 	s.WebhookUUIDKey = uuid
@@ -173,6 +188,12 @@ func (s *BitBucketSourceStatus) MarkWebHook(uuid string) {
 		bitBucketSourceCondSet.Manage(s).MarkUnknown(BitBucketSourceConditionWebHookUUIDProvided,
 			"WebHookUUIDEmpty", "WebHookUUID is empty.")
 	}
+}
+
+// MarkNoWebHook sets the condition that the source does not have a webhook configured.
+func (s *BitBucketSourceStatus) MarkNoWebHook(reason, messageFormat string, messageA ...interface{}) {
+	s.WebhookUUIDKey = ""
+	bitBucketSourceCondSet.Manage(s).MarkFalse(BitBucketSourceConditionWebHookUUIDProvided, reason, messageFormat, messageA...)
 }
 
 // +genclient

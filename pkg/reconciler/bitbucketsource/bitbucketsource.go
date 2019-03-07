@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
@@ -60,6 +61,12 @@ const (
 	webhookCreateFailed    = "WebHookCreateFailed"
 	serviceCreated         = "ServiceCreated"
 	serviceCreateFailed    = "ServiceCreateFailed"
+
+	// waitTimeForDomain is the amount of time to wait after the service domain was not found,
+	// in order to trigger another reconciliation process. From creating a Knative Service until
+	// it is ready it takes some time, and we don't want to be calling the reconciler many unnecessary times.
+	// The value has been picked arbitrarily.
+	waitTimeForDomain = 2 * time.Second
 )
 
 type webhookArgs struct {
@@ -210,7 +217,10 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 		return receiveAdapterDomain, nil
 	}
 	r.recorder.Eventf(source, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
-	return "", fmt.Errorf("domain not found for service %q", ksvc.Name)
+	err := fmt.Errorf("domain not found for service %q, waiting %f seconds", ksvc.Name, waitTimeForDomain.Seconds())
+	source.Status.MarkNoService(svcDomainNotFound, "%s", err)
+	time.Sleep(waitTimeForDomain)
+	return "", err
 }
 
 func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alpha1.BitBucketSource, domain, consumerKey, consumerSecret string) (string, error) {
@@ -228,6 +238,7 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 		hookID, err := r.createWebhook(ctx, webhookArgs)
 		if err != nil {
 			r.recorder.Eventf(source, corev1.EventTypeWarning, webhookCreateFailed, "Could not create webhook: %v", err)
+			source.Status.MarkNoWebHook(webhookCreateFailed, "%s", err)
 			return "", err
 		}
 		source.Status.WebhookUUIDKey = hookID
@@ -248,6 +259,7 @@ func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alph
 		err = r.client.Create(ctx, ksvc)
 		if err != nil {
 			r.recorder.Eventf(source, corev1.EventTypeWarning, serviceCreateFailed, "Could not create service: %v", err)
+			source.Status.MarkNoService(serviceCreateFailed, "%s", err)
 			return nil, err
 		}
 		r.recorder.Eventf(source, corev1.EventTypeNormal, serviceCreated, "Created service: %q", ksvc.Name)
@@ -260,10 +272,6 @@ func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alph
 }
 
 func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (string, error) {
-
-	logger := logging.FromContext(ctx)
-
-	logger.Info("Creating BitBucket WebHook")
 
 	owner, repo, err := r.ownerRepoFrom(args.source)
 	if err != nil {
@@ -280,17 +288,12 @@ func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (strin
 	}
 	hookUUID, err := r.webhookClient.Create(ctx, hookOptions)
 	if err != nil {
-		return "", fmt.Errorf("failed to create BitBucket WebHook: %v", err)
+		return "", err
 	}
-	logger.Infof("Created BitBucket WebHook %s", hookUUID)
 	return hookUUID, nil
 }
 
 func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error {
-	logger := logging.FromContext(ctx)
-
-	logger.Infof("Deleting BitBucket WebHook %q", args.source.Status.WebhookUUIDKey)
-
 	owner, repo, err := r.ownerRepoFrom(args.source)
 	if err != nil {
 		return err
@@ -303,18 +306,14 @@ func (r *reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 		consumerKey:    args.consumerKey,
 		consumerSecret: args.consumerSecret,
 	}
-	err = r.webhookClient.Delete(ctx, hookOptions)
-	if err != nil {
-		return fmt.Errorf("failed to delete BitBucket WebHook: %v", err)
-	}
-	logger.Infof("Deleted BitBucket WebHook %s", args.source.Status.WebhookUUIDKey)
-	return nil
+	return r.webhookClient.Delete(ctx, hookOptions)
 }
 
 func (r *reconciler) sinkURIFrom(ctx context.Context, source *sourcesv1alpha1.BitBucketSource) (string, error) {
 	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
 		r.recorder.Eventf(source, corev1.EventTypeWarning, sinkNotFound, "Could not find sink: %v", err)
+		source.Status.MarkNoSink(sinkNotFound, "%s", err)
 		return "", err
 	}
 	return uri, err
@@ -325,11 +324,13 @@ func (r *reconciler) secretsFrom(ctx context.Context, source *sourcesv1alpha1.Bi
 	consumerKey, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerKey.SecretKeyRef)
 	if err != nil {
 		r.recorder.Eventf(source, corev1.EventTypeWarning, consumerKeyNotFound, "Could not find consumer key: %v", err)
+		source.Status.MarkNoSecrets(consumerKeyNotFound, "%s", err)
 		return "", "", err
 	}
 	consumerSecret, err := r.secretFrom(ctx, source.Namespace, source.Spec.ConsumerSecret.SecretKeyRef)
 	if err != nil {
 		r.recorder.Eventf(source, corev1.EventTypeWarning, consumerSecretNotFound, "Could not find consumer secret: %v", err)
+		source.Status.MarkNoSecrets(consumerSecretNotFound, "%s", err)
 		return "", "", err
 	}
 

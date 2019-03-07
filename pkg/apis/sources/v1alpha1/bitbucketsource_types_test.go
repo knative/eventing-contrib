@@ -94,6 +94,19 @@ func TestBitBucketSourceStatusIsReady(t *testing.T) {
 		}(),
 		want: true,
 	}, {
+		name: "mark sink, secrets, service, and webhook, then no service",
+		s: func() *BitBucketSourceStatus {
+			s := &BitBucketSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecrets()
+			s.MarkService()
+			s.MarkWebHook("uri://webhook")
+			s.MarkNoService("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
 		name: "mark sink, secrets, service, and empty webhook",
 		s: func() *BitBucketSourceStatus {
 			s := &BitBucketSourceStatus{}
@@ -217,22 +230,23 @@ func TestBitBucketSourceStatusGetCondition(t *testing.T) {
 			Message: "WebHookUUID is empty.",
 		},
 	}, {
-		name: "mark empty sink, secrets, service, and webhook",
+		name: "mark sink, secrets, service, webhook, and the no sink",
 		s: func() *BitBucketSourceStatus {
 			s := &BitBucketSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkService()
 			s.MarkWebHook("uri://webhook")
+			s.MarkNoSink("Testing", "%s", "")
 			return s
 		}(),
 		condQuery: BitBucketSourceConditionReady,
 		want: &duckv1alpha1.Condition{
 			Type:    BitBucketSourceConditionReady,
-			Status:  corev1.ConditionUnknown,
-			Reason:  "SinkEmpty",
-			Message: "Sink has resolved to empty.",
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "",
 		},
 	}}
 
