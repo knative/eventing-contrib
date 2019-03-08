@@ -177,7 +177,6 @@ var testCases = []controllertesting.TestCase{
 				return s
 			}(),
 		},
-		WantErrMsg:  `domain not found for svc ""`,
 		IgnoreTimes: true,
 	}, {
 		Name:       "invalid bitbucketsource, sink is empty",

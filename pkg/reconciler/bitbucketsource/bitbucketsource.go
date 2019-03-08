@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
@@ -61,12 +60,6 @@ const (
 	webhookCreateFailed    = "WebHookCreateFailed"
 	serviceCreated         = "ServiceCreated"
 	serviceCreateFailed    = "ServiceCreateFailed"
-
-	// waitTimeForDomain is the amount of time to wait after the service domain was not found,
-	// in order to trigger another reconciliation process. From creating a Knative Service until
-	// it is ready it takes some time, and we don't want to be calling the reconciler many unnecessary times.
-	// The value has been picked arbitrarily.
-	waitTimeForDomain = 2 * time.Second
 )
 
 type webhookArgs struct {
@@ -160,7 +153,10 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.BitB
 
 	domain, err := r.domainFrom(ksvc, source)
 	if err != nil {
-		return err
+		// Returning nil on purpose as we will wait until the next reconciliation process is triggered.
+		// Noticed that when triggering it right away (or after few seconds), it always fails to
+		// update the status after we create a webhook, thus two webhooks are created.
+		return nil
 	}
 	source.Status.MarkService()
 
@@ -219,10 +215,6 @@ func (r *reconciler) domainFrom(ksvc *servingv1alpha1.Service, source *sourcesv1
 	r.recorder.Eventf(source, corev1.EventTypeWarning, svcDomainNotFound, "Could not find domain for service %q", ksvc.Name)
 	err := fmt.Errorf("domain not found for svc %q", ksvc.Name)
 	source.Status.MarkNoService(svcDomainNotFound, "%s", err)
-	// Will wait for a bit so that we don't trigger another reconciliation immediately.
-	// Ideally we should have returned the ReconcileResult.EnqueueAfter, but that is handled by the sdk
-	// and we don't want to change much the API.
-	time.Sleep(waitTimeForDomain)
 	return "", err
 }
 
