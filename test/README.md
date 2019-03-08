@@ -4,7 +4,7 @@ This directory contains tests and testing docs for `Knative Eventing Sources`.
 
 - [Unit tests](#running-unit-tests) reside in the codebase alongside the code
   they test
-- [End-to-end tests](#running-end-to-end-tests) reside in [`/test/e2e`](./e2e)
+- [End-to-end tests](#running-end-to-end-tests) reside in `/test/e2e`.
 
 ## Running unit tests
 
@@ -35,7 +35,9 @@ have a running environment that meets
 
 ## Running end-to-end tests
 
-To run [the e2e tests](./e2e), you need to have a running environment that meets
+_NOTE: This repo currently has no E2E tests._
+
+To run the e2e tests, you need to have a running environment that meets
 [the e2e test environment requirements](#environment-requirements), and you need
 to specify the build tag `e2e`.
 
