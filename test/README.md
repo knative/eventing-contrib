@@ -64,9 +64,9 @@ There's couple of things you need to install before running e2e tests locally.
    go get -u k8s.io/test-infra/kubetest
    ```
 
-2. [A running `Knative Serving` cluster.]
+1. [A running `Knative Serving` cluster.]
 
-3. A docker repo containing [the test images](#test-images)
+1. A docker repo containing [the test images](#test-images)
 
 Simply run the `./test/e2e-tests.sh` script. It will create a GKE cluster,
 install Knative Serving stack with Istio, upload test images to your Docker repo
