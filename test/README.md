@@ -59,10 +59,13 @@ go test -v -tags=e2e -count=1 ./test/e2e -run ^TestKubernetesEvents$
 There's couple of things you need to install before running e2e tests locally.
 
 1. `kubetest` installed:
+
    ```bash
    go get -u k8s.io/test-infra/kubetest
    ```
+
 2. [A running `Knative Serving` cluster.]
+
 3. A docker repo containing [the test images](#test-images)
 
 Simply run the `./test/e2e-tests.sh` script. It will create a GKE cluster,
