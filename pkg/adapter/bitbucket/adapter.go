@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,23 +19,20 @@ package bitbucket
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-
-	"log"
-	"net/http"
-
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-
-	webhooks "gopkg.in/go-playground/webhooks.v3"
+	"gopkg.in/go-playground/webhooks.v3"
 	bb "gopkg.in/go-playground/webhooks.v3/bitbucket"
 )
 
 const (
-	BBRequestUUID = "Request-UUID"
-	BBEventKey    = "Event-Key"
+	bbRequestUUID = "Request-UUID"
+	bbEventKey    = "Event-Key"
 )
 
 // Adapter converts incoming BitBucket webhook events to CloudEvents and
@@ -67,11 +64,11 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 		}
 	}
 
-	bitBucketEventType := hdr.Get("X-" + BBEventKey)
-	eventID := hdr.Get("X-" + BBRequestUUID)
+	bitBucketEventType := hdr.Get("X-" + bbEventKey)
+	eventID := hdr.Get("X-" + bbRequestUUID)
 	extensions := map[string]interface{}{
-		BBEventKey:    bitBucketEventType,
-		BBRequestUUID: eventID,
+		bbEventKey:    bitBucketEventType,
+		bbRequestUUID: eventID,
 	}
 
 	log.Printf("Handling %s", bitBucketEventType)
@@ -98,60 +95,78 @@ func sourceFromBitBucketEvent(bitBucketEvent bb.Event, payload interface{}) (*ty
 	var url string
 	switch bitBucketEvent {
 	case bb.RepoPushEvent:
-		p := payload.(bb.RepoPushPayload)
-		// Assuming there is at least 1 change in a push.
-		url = p.Push.Changes[0].Links.Commits.Href
+		if p, ok := payload.(bb.RepoPushPayload); ok {
+			// Assuming there is at least 1 change in a push.
+			url = p.Push.Changes[0].Links.Commits.Href
+		}
 	case bb.RepoForkEvent:
-		f := payload.(bb.RepoForkPayload)
-		url = f.Repository.Links.Self.Href
+		if f, ok := payload.(bb.RepoForkPayload); ok {
+			url = f.Repository.Links.Self.Href
+		}
 	case bb.RepoUpdatedEvent:
-		u := payload.(bb.RepoUpdatedPayload)
-		url = u.Repository.Links.Self.Href
+		if u, ok := payload.(bb.RepoUpdatedPayload); ok {
+			url = u.Repository.Links.Self.Href
+		}
 	case bb.RepoCommitCommentCreatedEvent:
-		ccc := payload.(bb.RepoCommitCommentCreatedPayload)
-		url = ccc.Comment.Links.Self.Href
+		if ccc, ok := payload.(bb.RepoCommitCommentCreatedPayload); ok {
+			url = ccc.Comment.Links.Self.Href
+		}
 	case bb.RepoCommitStatusCreatedEvent:
-		csc := payload.(bb.RepoCommitStatusCreatedPayload)
-		url = csc.CommitStatus.Links.Self.Href
+		if csc, ok := payload.(bb.RepoCommitStatusCreatedPayload); ok {
+			url = csc.CommitStatus.Links.Self.Href
+		}
 	case bb.RepoCommitStatusUpdatedEvent:
-		csu := payload.(bb.RepoCommitStatusUpdatedPayload)
-		url = csu.CommitStatus.Links.Self.Href
+		if csu, ok := payload.(bb.RepoCommitStatusUpdatedPayload); ok {
+			url = csu.CommitStatus.Links.Self.Href
+		}
 	case bb.IssueCreatedEvent:
-		ic := payload.(bb.IssueCreatedPayload)
-		url = ic.Issue.Links.Self.Href
+		if ic, ok := payload.(bb.IssueCreatedPayload); ok {
+			url = ic.Issue.Links.Self.Href
+		}
 	case bb.IssueUpdatedEvent:
-		iu := payload.(bb.IssueUpdatedPayload)
-		url = iu.Issue.Links.Self.Href
+		if iu, ok := payload.(bb.IssueUpdatedPayload); ok {
+			url = iu.Issue.Links.Self.Href
+		}
 	case bb.IssueCommentCreatedEvent:
-		icc := payload.(bb.IssueCommentCreatedPayload)
-		url = icc.Issue.Links.Self.Href
+		if icc, ok := payload.(bb.IssueCommentCreatedPayload); ok {
+			url = icc.Issue.Links.Self.Href
+		}
 	case bb.PullRequestCreatedEvent:
-		prc := payload.(bb.PullRequestCreatedPayload)
-		url = prc.PullRequest.Links.Self.Href
+		if prc, ok := payload.(bb.PullRequestCreatedPayload); ok {
+			url = prc.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestUpdatedEvent:
-		pru := payload.(bb.PullRequestUpdatedPayload)
-		url = pru.PullRequest.Links.Self.Href
+		if pru, ok := payload.(bb.PullRequestUpdatedPayload); ok {
+			url = pru.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestApprovedEvent:
-		pra := payload.(bb.PullRequestApprovedPayload)
-		url = pra.PullRequest.Links.Self.Href
+		if pra, ok := payload.(bb.PullRequestApprovedPayload); ok {
+			url = pra.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestUnapprovedEvent:
-		pru := payload.(bb.PullRequestUnapprovedPayload)
-		url = pru.PullRequest.Links.Self.Href
+		if pru, ok := payload.(bb.PullRequestUnapprovedPayload); ok {
+			url = pru.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestMergedEvent:
-		prm := payload.(bb.PullRequestMergedPayload)
-		url = prm.PullRequest.Links.Self.Href
+		if prm, ok := payload.(bb.PullRequestMergedPayload); ok {
+			url = prm.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestDeclinedEvent:
-		prd := payload.(bb.PullRequestDeclinedPayload)
-		url = prd.PullRequest.Links.Self.Href
+		if prd, ok := payload.(bb.PullRequestDeclinedPayload); ok {
+			url = prd.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestCommentCreatedEvent:
-		prcc := payload.(bb.PullRequestCommentCreatedPayload)
-		url = prcc.PullRequest.Links.Self.Href
+		if prcc, ok := payload.(bb.PullRequestCommentCreatedPayload); ok {
+			url = prcc.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestCommentUpdatedEvent:
-		prcu := payload.(bb.PullRequestCommentUpdatedPayload)
-		url = prcu.PullRequest.Links.Self.Href
+		if prcu, ok := payload.(bb.PullRequestCommentUpdatedPayload); ok {
+			url = prcu.PullRequest.Links.Self.Href
+		}
 	case bb.PullRequestCommentDeletedEvent:
-		prcd := payload.(bb.PullRequestCommentDeletedPayload)
-		url = prcd.PullRequest.Links.Self.Href
+		if prcd, ok := payload.(bb.PullRequestCommentDeletedPayload); ok {
+			url = prcd.PullRequest.Links.Self.Href
+		}
 	}
 	if url != "" {
 		source := types.ParseURLRef(url)

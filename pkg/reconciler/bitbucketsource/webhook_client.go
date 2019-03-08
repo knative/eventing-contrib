@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package bitbucketsource
 import (
 	"context"
 	"fmt"
+
 	bbclient "github.com/knative/eventing-sources/pkg/reconciler/bitbucketsource/resources"
 	"github.com/knative/pkg/logging"
 	"golang.org/x/oauth2/bitbucket"
