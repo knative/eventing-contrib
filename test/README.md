@@ -20,7 +20,7 @@ which need [`-tags=e2e`](#running-end-to-end-tests) to be enabled._
 ## Presubmit tests
 
 [`presubmit-tests.sh`](./presubmit-tests.sh) is the entry point for the
-[end-to-end tests](/test/e2e).
+end-to-end tests.
 
 This script, and consequently, the e2e tests will be run before every code
 submission. You can run these tests manually with:
