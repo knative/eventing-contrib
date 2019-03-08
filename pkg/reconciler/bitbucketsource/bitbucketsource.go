@@ -274,7 +274,7 @@ func (r *reconciler) reconcileService(ctx context.Context, source *sourcesv1alph
 	return current, nil
 }
 
-func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (string, error) {
+func (r *reconciler) createWebhook(ctx context.Context, args *webhookArgs) (string, error) {
 
 	owner, repo, err := r.ownerRepoFrom(args.source)
 	if err != nil {

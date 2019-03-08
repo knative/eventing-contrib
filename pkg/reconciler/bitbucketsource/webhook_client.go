@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	bbclient "github.com/knative/eventing-sources/pkg/reconciler/bitbucketsource/resources"
+	bbclient "github.com/knative/eventing-sources/pkg/bitbucket/client"
 	"github.com/knative/pkg/logging"
 	"golang.org/x/oauth2/bitbucket"
 	"golang.org/x/oauth2/clientcredentials"
@@ -48,13 +48,13 @@ func (client bitBucketWebhookClient) Create(ctx context.Context, options *webhoo
 
 	logger.Info("Creating BitBucket WebHook")
 
-	bbClient, err := client.createBitBucketClient(ctx, options)
+	bbClient, err := createBitBucketClient(ctx, options)
 
 	if err != nil {
 		return "", err
 	}
 
-	hook := client.hookConfig(options)
+	hook := hookConfig(options)
 
 	var h *bbclient.Hook
 	h, err = bbClient.CreateHook(options.owner, options.repo, &hook)
@@ -71,7 +71,7 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhoo
 
 	logger.Info("Deleting BitBucket WebHook: %q", options.uuid)
 
-	bbClient, err := client.createBitBucketClient(ctx, options)
+	bbClient, err := createBitBucketClient(ctx, options)
 
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (client bitBucketWebhookClient) Delete(ctx context.Context, options *webhoo
 	return nil
 }
 
-func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, options *webhookOptions) (*bbclient.Client, error) {
+func createBitBucketClient(ctx context.Context, options *webhookOptions) (*bbclient.Client, error) {
 	// Retrieve an access token based on the Oauth Consumer credentials we set in the BitBucket account.
 	// It cannot be a static one as it can expire.
 	conf := &clientcredentials.Config{
@@ -103,7 +103,7 @@ func (client bitBucketWebhookClient) createBitBucketClient(ctx context.Context, 
 	return bbclient.NewClient(ctx, token), nil
 }
 
-func (client bitBucketWebhookClient) hookConfig(options *webhookOptions) bbclient.Hook {
+func hookConfig(options *webhookOptions) bbclient.Hook {
 	hook := bbclient.Hook{
 		Description: "knative-sources",
 		URL:         fmt.Sprintf("http://%s", options.domain),

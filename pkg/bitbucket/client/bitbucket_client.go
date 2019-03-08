@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resources
+package client
 
 import (
 	"context"
@@ -58,11 +58,20 @@ func NewClient(ctx context.Context, token *oauth2.Token) *Client {
 	logger := logging.FromContext(ctx)
 	httpClient := http.DefaultClient
 	baseUrl, _ := url.Parse(defaultBaseUrl)
-	return &Client{client: httpClient, logger: logger, token: token, baseUrl: baseUrl, userAgent: defaultUserAgent}
+	return &Client{
+		client:    httpClient,
+		logger:    logger,
+		token:     token,
+		baseUrl:   baseUrl,
+		userAgent: defaultUserAgent,
+	}
 }
 
 // CreateHook creates a WebHook for 'owner' and 'repo'.
 func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, error) {
+	if hook == nil {
+		return nil, fmt.Errorf("hook is nil")
+	}
 	body, err := createHookBody(hook)
 	if err != nil {
 		return nil, err
@@ -83,12 +92,11 @@ func (c *Client) CreateHook(owner, repo string, hook *Hook) (*Hook, error) {
 
 // DeleteHook deletes the WebHook 'hookUUID' previously registered for 'owner' and 'repo'.
 func (c *Client) DeleteHook(owner, repo, hookUUID string) error {
-
 	var urlStr string
 	if repo == "" {
-		urlStr = fmt.Sprintf("teams/%v/hooks/%s", owner, hookUUID)
+		urlStr = fmt.Sprintf("teams/%s/hooks/%s", owner, hookUUID)
 	} else {
-		urlStr = fmt.Sprintf("repositories/%v/%v/hooks/%s", owner, repo, hookUUID)
+		urlStr = fmt.Sprintf("repositories/%s/%s/hooks/%s", owner, repo, hookUUID)
 	}
 
 	return c.doRequest("DELETE", urlStr, "", nil)
