@@ -232,7 +232,7 @@ func (r *reconciler) reconcileWebHook(ctx context.Context, source *sourcesv1alph
 		// Add a finalizer to be able to delete it.
 		r.addFinalizer(source)
 
-		webhookArgs := webhookArgs{
+		webhookArgs := &webhookArgs{
 			source:         source,
 			domain:         domain,
 			consumerKey:    consumerKey,
