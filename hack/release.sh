@@ -25,30 +25,12 @@ COMPONENTS=(
 )
 readonly COMPONENTS
 
-# Yaml files that are combinations of the above components. Release files must
-# not have the same name as any component files.
-declare -A RELEASES
-RELEASES=(
-)
-readonly RELEASES
-
 function build_release() {
   local all_yamls=()
   for yaml in "${!COMPONENTS[@]}"; do
   local config="${COMPONENTS[${yaml}]}"
     echo "Building Knative Eventing Sources - ${config}"
     ko resolve ${KO_FLAGS} -f ${config}/ > ${yaml}
-    all_yamls+=(${yaml})
-  done
-  # Assemble the release
-  for yaml in "${!RELEASES[@]}"; do
-    echo "Assembling Knative Eventing Sources - ${yaml}"
-    echo "" > ${yaml}
-    for component in ${RELEASES[${yaml}]}; do
-      echo "---" >> ${yaml}
-      echo "# ${component}" >> ${yaml}
-      cat ${component} >> ${yaml}
-    done
     all_yamls+=(${yaml})
   done
   YAMLS_TO_PUBLISH="${all_yamls[@]}"
