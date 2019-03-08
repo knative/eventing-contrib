@@ -92,12 +92,13 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 }
 
 func sourceFromBitBucketEvent(bitBucketEvent bb.Event, payload interface{}) (*types.URLRef, error) {
+	// There are many choices to extract the source from. Herein, we try to extract the most informative one.
+	// TODO check that these are actually the best places to extract the source from.
 	var url string
 	switch bitBucketEvent {
 	case bb.RepoPushEvent:
 		if p, ok := payload.(bb.RepoPushPayload); ok {
-			// Assuming there is at least 1 change in a push.
-			url = p.Push.Changes[0].Links.Commits.Href
+			url = p.Repository.Links.Self.Href
 		}
 	case bb.RepoForkEvent:
 		if f, ok := payload.(bb.RepoForkPayload); ok {
@@ -175,5 +176,5 @@ func sourceFromBitBucketEvent(bitBucketEvent bb.Event, payload interface{}) (*ty
 		}
 	}
 
-	return nil, fmt.Errorf("no source found in bitbucket event")
+	return nil, fmt.Errorf("no source found in bitbucket event %q", bitBucketEvent)
 }
