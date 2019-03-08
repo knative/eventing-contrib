@@ -406,14 +406,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b1ddfad908ceb161ca5e28bb24300b5f80834da688317cfb55ab649919eb0dea"
+  digest = "1:b049ec7fe983f49c52a19fbb511bc1621cc614b36dfed87cd18c67f363008057"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "e15222dc039e4fe569a35f9a068b54ba2da9bfd2"
+  revision = "bbeed9e1ca511c9355ffb0d955fe685cb1a25117"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -1287,13 +1287,11 @@
     "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/cloudevents/sdk-go/pkg/cloudevents",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/client",
-    "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/types",
     "github.com/emicklei/go-restful",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
-    "github.com/google/uuid",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
     "github.com/knative/pkg/apis",
