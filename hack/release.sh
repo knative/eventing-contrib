@@ -19,17 +19,16 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(
-  ["sources.yaml"]="config"
+  ["release.yaml"]="config"
   ["gcppubsub.yaml"]="contrib/gcppubsub/config"
   ["message-dumper.yaml"]="config/tools/message-dumper"
 )
 readonly COMPONENTS
 
+# Yaml files that are combinations of the above components. Release files must
+# not have the same name as any component files.
 declare -A RELEASES
 RELEASES=(
-  ["release.yaml"]="sources.yaml"
-  ["gcppubsub.yaml"]="gcppubsub.yaml"
-  ["message-dumper.yaml"]="message-dumper.yaml"
 )
 readonly RELEASES
 
