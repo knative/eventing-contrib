@@ -21,6 +21,7 @@ type eventsourceconfig struct {
 	ConsumerMaxWaitTime           int64
 	ConsumerMaxProcessingTime     int64
 	ConsumerOffsetsCommitInterval int64
+	ConsumerOffsetsAutoCommit     bool
 	ConsumerOffsetsInitial        string
 	ConsumerOffsetsRetention      int64
 	ConsumerOffsetsRetryMax       int64
@@ -48,6 +49,7 @@ func GetConfig() eventsourceconfig {
 		ConsumerMaxWaitTime:           getIntEnv("CONSUMER_MAX_WAIT_TIME", 250000000),
 		ConsumerMaxProcessingTime:     getIntEnv("CONSUMER_MAX_PROCESSING_TIME", 100000000),
 		ConsumerOffsetsCommitInterval: getIntEnv("CONSUMER_OFFSETS_COMMIT_INTERVAL", 1000000000),
+		ConsumerOffsetsAutoCommit:     getBoolEnv("CONSUMER_OFFSETS_AUTO_COMMIT", true),
 		ConsumerOffsetsInitial:        getStrEnv("CONSUMER_OFFSETS_INITIAL", "OffsetNewest"),
 		ConsumerOffsetsRetention:      getIntEnv("CONSUMER_OFFSETS_RETENTION", 0),
 		ConsumerOffsetsRetryMax:       getIntEnv("CONSUMER_OFFSETS_RETRY_MAX", 3),
