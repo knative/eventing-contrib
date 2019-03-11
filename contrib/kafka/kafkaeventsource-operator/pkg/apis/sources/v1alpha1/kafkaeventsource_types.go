@@ -82,7 +82,7 @@ type KafkaEventSourceOffsets struct {
 	//+optional
 	CommitInterval *int64 `json:"commitInterval,omitempty"`
 	//+optional
-	CommitInterval *bool `json:"autoCommit,omitempty"`
+	AutoCommit *bool `json:"autoCommit,omitempty"`
 	//+optional
 	InitialOffset *string `json:"initial,omitempty"`
 	//+optional
