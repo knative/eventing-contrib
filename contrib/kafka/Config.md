@@ -36,6 +36,8 @@ See the underlying docs for further information.
 
 * consumer.offsets.commitInterval (int64): How frequently to commit updated offsets. (default 1000000000)
 
+* consumer.offsets.autoCommit (bool): If the message are automatically committed or manually. (default true)
+
 * consumer.offsets.retention (int): The retention duration for committed offsets. If zero, disabled in which case the `offsets.retention.minutes` option on the broker will be used. (default 0 therefore disabled)
 
 * consumer.offsets.retry.max (int): The total number of times to retry failing commit requests during OffsetManager shutdown (default 3)
@@ -77,6 +79,7 @@ spec:
     maxProcessingTime: 100000000
     offsets:  
       commitInterval: 1000000000
+      autoCommit: true
       initial: OffsetNewest
       retention: 0
       retry:

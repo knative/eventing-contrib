@@ -111,7 +111,11 @@ func main() {
 				go func() {
 					posterr := postMessage(eventsourceconfig.KafkaTopic, eventsourceconfig.Target, msg, payload)
 					if posterr == nil {
-						consumer.MarkOffset(msg, "") // mark message as processed
+
+						if eventsourceconfig.ConsumerOffsetsAutoCommit != true {
+							consumer.MarkOffset(msg, "") // mark message as processed
+						}
+
 					} else {
 						log.Printf("Error posting message: %s", err)
 					}

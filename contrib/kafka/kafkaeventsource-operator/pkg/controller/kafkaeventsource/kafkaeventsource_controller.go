@@ -7,24 +7,22 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	"k8s.io/client-go/rest"
-
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/kafkaeventsource-operator/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -217,9 +215,9 @@ func deploymentForKafka(kes *sourcesv1alpha1.KafkaEventSource) *appsv1.Deploymen
 			Kind:       "Deployment",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: 	      kes.Name,
-			Namespace:    kes.Namespace,
-			Labels:       labels,
+			Name:      kes.Name,
+			Namespace: kes.Namespace,
+			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: replicas,
@@ -264,6 +262,7 @@ func getEnvVars(kes *sourcesv1alpha1.KafkaEventSource) []corev1.EnvVar {
 	addIntIfNotEmpty(&ev, kes.Spec.Consumer.MaxWaitTime, "CONSUMER_MAX_WAIT_TIME")
 	addIntIfNotEmpty(&ev, kes.Spec.Consumer.MaxProcessingTime, "CONSUMER_MAX_PROCESSING_TIME")
 	addIntIfNotEmpty(&ev, kes.Spec.Consumer.Offsets.CommitInterval, "CONSUMER_OFFSETS_COMMIT_INTERVAL")
+	addBoolIfNotEmpty(&ev, kes.Spec.Consumer.Offsets.AutoCommit, "CONSUMER_OFFSETS_AUTO_COMMIT")
 	addIntIfNotEmpty(&ev, kes.Spec.Consumer.Offsets.Retention, "CONSUMER_OFFSETS_RETENTION")
 	addStrIfNotEmpty(&ev, kes.Spec.Consumer.Offsets.InitialOffset, "CONSUMER_OFFSETS_INITIAL")
 	addIntIfNotEmpty(&ev, kes.Spec.Consumer.Offsets.Retry.Max, "CONSUMER_OFFSETS_RETRY_MAX")
