@@ -38,8 +38,8 @@ required = [
 
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2019-02-12
-  revision = "1982208dd91a4cc4fea9612e4e72fb109c77ab22"
+  # HEAD as of 2019-03-08
+  revision = "f8007289b228598dfdf7e6de67ee5f5c391c9d34"
 
 [[override]]
   name = "k8s.io/api"

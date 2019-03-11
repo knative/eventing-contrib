@@ -373,7 +373,7 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:4cffc82f78980821bff4a0cb9874b93b87214a39e997639ce3aa67ed931c3b8d"
+  digest = "1:c02c220729f04356b3541a9ab4dbffba6cd6da2303eeef09edb759fa3ed7eaa0"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -388,7 +388,7 @@
     "signals",
   ]
   pruneopts = "NUT"
-  revision = "1982208dd91a4cc4fea9612e4e72fb109c77ab22"
+  revision = "f8007289b228598dfdf7e6de67ee5f5c391c9d34"
 
 [[projects]]
   digest = "1:5d4ddd664e297c3453b40e94e69ea3d1aaa8efbff3c4fe0d892f9a588c499770"
