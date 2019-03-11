@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafkaeventsource-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: kafkaeventsource-operator
+  template:
+    metadata:
+      labels:
+        name: kafkaeventsource-operator
+    spec:
+      serviceAccountName: kafkaeventsource-operator
+      containers:
+        - name: kafkaeventsource-operator
+          image: docker.io/sjwoodman/kafkaeventsource-operator:latest
+          ports:
+          - containerPort: 60000
+            name: metrics
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "kafkaeventsource-operator"
