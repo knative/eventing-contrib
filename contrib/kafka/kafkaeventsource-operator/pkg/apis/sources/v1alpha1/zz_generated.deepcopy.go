@@ -170,6 +170,11 @@ func (in *KafkaEventSourceOffsets) DeepCopyInto(out *KafkaEventSourceOffsets) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.AutoCommit != nil {
+		in, out := &in.AutoCommit, &out.AutoCommit
+		*out = new(bool)
+		**out = **in
+	}
 	if in.InitialOffset != nil {
 		in, out := &in.InitialOffset, &out.InitialOffset
 		*out = new(string)
