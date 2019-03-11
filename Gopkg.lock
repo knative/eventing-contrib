@@ -1263,7 +1263,8 @@
     "pkg/webhook/types",
   ]
   pruneopts = "NUT"
-  revision = "v0.1.9"
+  revision = "f6f0bc9611363b43664d08fb097ab13243ef621d"
+  version = "v0.1.9"
 
 [[projects]]
   digest = "1:41e7c89bdceb653e2235a7b5627d23af65fa22fb4dad368bf49eb2857e23bac2"
