@@ -58,18 +58,19 @@ func (ra *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
 }
 
 func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
+	ra.initClientOnce.Do(func() {
+		var err error
+		if ra.client, err = client.NewHTTPClient(
+			client.WithTarget(ra.Sink),
+			client.WithHTTPBinaryEncoding(),
+			client.WithUUIDs(),
+			client.WithTimeNow(),
+		); err != nil {
+			log.Printf("failed to create cloudevent client: %s", err)
+		}
+	})
 	if ra.client == nil {
-		ra.initClientOnce.Do(func() {
-			var err error
-			if ra.client, err = client.NewHTTPClient(
-				client.WithTarget(ra.Sink),
-				client.WithHTTPBinaryEncoding(),
-				client.WithUUIDs(),
-				client.WithTimeNow(),
-			); err != nil {
-				log.Printf("failed to create cloudevent client: %s", err)
-			}
-		})
+		return fmt.Errorf("failed to create cloudevent client")
 	}
 
 	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
