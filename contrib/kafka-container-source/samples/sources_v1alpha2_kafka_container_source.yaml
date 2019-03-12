@@ -1,0 +1,14 @@
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: ContainerSource
+metadata:
+  name: my-kafka-source
+spec:
+  image: github.com/knative/eventing-sources/contrib/kafka-container-source/cmd
+  args: 
+    - '--bootstrap=kafkabroker.kafka:9092'
+    - '--topic=my-topic'
+    - '--groupId=foobar'
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: testchannel
