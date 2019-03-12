@@ -25,7 +25,7 @@
    controller.
 
    ```shell
-   ko -n default apply -f config/
+   ko apply -f config/
    ```
 
    - Note that if the `Source` Service Account secret is in a non-default

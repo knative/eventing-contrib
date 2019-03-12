@@ -19,19 +19,11 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(
-  ["sources.yaml"]="config"
+  ["release.yaml"]="config"
   ["gcppubsub.yaml"]="contrib/gcppubsub/config"
   ["message-dumper.yaml"]="config/tools/message-dumper"
 )
 readonly COMPONENTS
-
-declare -A RELEASES
-RELEASES=(
-  ["release.yaml"]="sources.yaml"
-  ["gcppubsub.yaml"]="gcppubsub.yaml"
-  ["message-dumper.yaml"]="message-dumper.yaml"
-)
-readonly RELEASES
 
 function build_release() {
   local all_yamls=()
@@ -39,17 +31,6 @@ function build_release() {
   local config="${COMPONENTS[${yaml}]}"
     echo "Building Knative Eventing Sources - ${config}"
     ko resolve ${KO_FLAGS} -f ${config}/ > ${yaml}
-    all_yamls+=(${yaml})
-  done
-  # Assemble the release
-  for yaml in "${!RELEASES[@]}"; do
-    echo "Assembling Knative Eventing Sources - ${yaml}"
-    echo "" > ${yaml}
-    for component in ${RELEASES[${yaml}]}; do
-      echo "---" >> ${yaml}
-      echo "# ${component}" >> ${yaml}
-      cat ${component} >> ${yaml}
-    done
     all_yamls+=(${yaml})
   done
   YAMLS_TO_PUBLISH="${all_yamls[@]}"
