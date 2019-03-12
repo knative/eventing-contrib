@@ -77,11 +77,32 @@ func getRegion(url string) (string, error) {
 	return parts[1], nil
 }
 
+// Initialize cloudevent client
+func (a *Adapter) initClient() error {
+	if a.client == nil {
+		var err error
+		if a.client, err = client.NewHTTPClient(
+			client.WithTarget(a.SinkURI),
+			client.WithHTTPBinaryEncoding(),
+			client.WithUUIDs(),
+			client.WithTimeNow(),
+		); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger := logging.FromContext(ctx)
 
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
+
+	if err := a.initClient(); err != nil {
+		logger.Error("Failed to create cloudevent client", zap.Error(err))
+		return err
+	}
 
 	region, err := getRegion(a.QueueURL)
 	if err != nil {
@@ -155,18 +176,6 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 
 // postMessage sends an SQS event to the SinkURI
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
-	if a.client == nil {
-
-		var err error
-		if a.client, err = client.NewHTTPClient(
-			client.WithTarget(a.SinkURI),
-			client.WithHTTPBinaryEncoding(),
-			client.WithUUIDs(),
-			client.WithTimeNow(),
-		); err != nil {
-			return err
-		}
-	}
 
 	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)

@@ -61,6 +61,10 @@ func TestStart_ServeHTTP(t *testing.T) {
 				SinkURI:  sinkServer.URL,
 			}
 
+			if err := a.initClient(); err != nil {
+				t.Errorf("failed to create cloudevent client, %v", err)
+			}
+
 			stop := make(chan struct{})
 			go func() {
 				if err := a.Start(context.TODO(), stop); err != nil {
@@ -124,6 +128,10 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				Data:    "data",
 				SinkURI: sinkServer.URL,
+			}
+
+			if err := a.initClient(); err != nil {
+				t.Errorf("failed to create cloudevent client, %v", err)
 			}
 
 			a.cronTick()

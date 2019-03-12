@@ -59,6 +59,10 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				OnFailedPollWaitSecs: 1,
 			}
 
+			if err := a.initClient(); err != nil {
+				t.Errorf("failed to create cloudevent client, %v", err)
+			}
+
 			body := "The body"
 			messageId := "ABC01"
 			attrs := map[string]*string{
@@ -132,6 +136,10 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				QueueURL: "https://sqs.us-east-2.amazonaws.com/123123/MyQueue",
 				SinkURI:  sinkServer.URL,
+			}
+
+			if err := a.initClient(); err != nil {
+				t.Errorf("failed to create cloudevent client, %v", err)
 			}
 
 			ack := new(bool)
