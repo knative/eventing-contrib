@@ -71,9 +71,6 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 			}
 		})
 	}
-	if ra.client == nil {
-		return fmt.Errorf("failed to create cloudevent client")
-	}
 
 	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
 	eventID := hdr.Get("X-" + GHHeaderDelivery)

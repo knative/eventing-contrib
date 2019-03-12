@@ -61,8 +61,7 @@ func TestStart_ServeHTTP(t *testing.T) {
 				SinkURI:  sinkServer.URL,
 			}
 
-			err := a.initClient()
-			if err != nil {
+			if err := a.initClient(); err != nil {
 				t.Errorf("failed to create cloudevent client, %v", err)
 			}
 
@@ -131,8 +130,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				SinkURI: sinkServer.URL,
 			}
 
-			err := a.initClient()
-			if err != nil {
+			if err := a.initClient(); err != nil {
 				t.Errorf("failed to create cloudevent client, %v", err)
 			}
 

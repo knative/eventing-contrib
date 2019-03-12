@@ -74,8 +74,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		return err
 	}
 
-	err = a.initClient()
-	if err != nil {
+	if err = a.initClient(); err != nil {
 		logger.Error("Failed to create cloudevent client", zap.Error(err))
 		return err
 	}

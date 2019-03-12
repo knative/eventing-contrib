@@ -59,8 +59,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				OnFailedPollWaitSecs: 1,
 			}
 
-			err := a.initClient()
-			if err != nil {
+			if err := a.initClient(); err != nil {
 				t.Errorf("failed to create cloudevent client, %v", err)
 			}
 
@@ -74,7 +73,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Body:       &body,
 				Attributes: attrs,
 			}
-			err = a.postMessage(context.TODO(), zap.S(), m)
+			err := a.postMessage(context.TODO(), zap.S(), m)
 
 			if tc.error && err == nil {
 				t.Errorf("expected error, but got %v", err)
@@ -139,8 +138,7 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 				SinkURI:  sinkServer.URL,
 			}
 
-			err := a.initClient()
-			if err != nil {
+			if err := a.initClient(); err != nil {
 				t.Errorf("failed to create cloudevent client, %v", err)
 			}
 
