@@ -69,7 +69,7 @@ ko apply -f config/
 This command is idempotent, so you can run it at any time to update your
 deployment.
 
-_See [contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md) for instructions on installing the
+_See [config/README.md](./config/README.md) for instructions on installing the
 gcppubsub source._
 
 You can see things running with:
