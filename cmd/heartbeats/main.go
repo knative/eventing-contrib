@@ -49,7 +49,7 @@ func init() {
 }
 
 type envConfig struct {
-	// Sink URL where to send heartbeat kncloudevents
+	// Sink URL where to send heartbeat cloudevents
 	Sink string `envconfig:"SINK"`
 
 	// Name of this pod.
