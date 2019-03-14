@@ -19,12 +19,15 @@ package bitbucket
 import (
 	"context"
 	"fmt"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"log"
 	"net/http"
+	"sync"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"gopkg.in/go-playground/webhooks.v3"
 	bb "gopkg.in/go-playground/webhooks.v3/bitbucket"
@@ -40,28 +43,26 @@ const (
 type Adapter struct {
 	Sink   string
 	client client.Client
+
+	initClientOnce sync.Once
 }
 
 // HandleEvent is invoked whenever an event comes in from BitBucket.
-func (ra *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
+func (a *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
 	hdr := http.Header(header)
-	err := ra.handleEvent(payload, hdr)
+	err := a.handleEvent(payload, hdr)
 	if err != nil {
 		log.Printf("unexpected error handling BitBucket event: %s", err)
 	}
 }
 
-func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
-	if ra.client == nil {
-		var err error
-		if ra.client, err = client.NewHTTPClient(
-			client.WithTarget(ra.Sink),
-			client.WithHTTPBinaryEncoding(),
-			client.WithUUIDs(),
-			client.WithTimeNow(),
-		); err != nil {
-			return err
-		}
+func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
+	var err error
+	a.initClientOnce.Do(func() {
+		a.client, err = kncloudevents.NewDefaultClient(a.Sink)
+	})
+	if a.client == nil {
+		return fmt.Errorf("failed to create cloudevent client: %s", err)
 	}
 
 	bitBucketEventType := hdr.Get("X-" + bbEventKey)
@@ -88,7 +89,8 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 		}.AsV02(),
 		Data: payload,
 	}
-	return ra.client.Send(context.TODO(), event)
+	_, err = a.client.Send(context.TODO(), event)
+	return err
 }
 
 func sourceFromBitBucketEvent(bitBucketEvent bb.Event, payload interface{}) (*types.URLRef, error) {
