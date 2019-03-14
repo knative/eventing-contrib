@@ -25,8 +25,8 @@ import (
 )
 
 func handler(ctx context.Context, e *corev1.Event) {
-	metadata := cloudevents.FromContext(ctx)
-	log.Printf("[%s] %s : %q", metadata.EventTime.Format(time.RFC3339), metadata.Source, e.Message)
+	metadata := cloudevents.FromContext(ctx).AsV02()
+	log.Printf("[%s] %s : %q", metadata.Time.Format(time.RFC3339), metadata.Source, e.Message)
 }
 
 func main() {
