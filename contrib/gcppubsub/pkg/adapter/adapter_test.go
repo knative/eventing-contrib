@@ -19,6 +19,8 @@ package gcppubsub
 import (
 	"context"
 	"encoding/json"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -63,6 +65,10 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				SinkURI: sinkServer.URL,
 				source:  "test",
+				ceClient: func() client.Client {
+					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
+					return c
+				}(),
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})
@@ -126,6 +132,10 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				SinkURI: sinkServer.URL,
 				source:  "test",
+				ceClient: func() client.Client {
+					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
+					return c
+				}(),
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})
