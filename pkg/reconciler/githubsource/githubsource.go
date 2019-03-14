@@ -227,6 +227,7 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 		owner:       owner,
 		repo:        repo,
 		events:      source.Spec.EventTypes,
+		secure:      source.Spec.Secure,
 	}
 	hookID, err := r.webhookClient.Create(ctx, hookOptions, alternateGitHubAPIURL)
 	if err != nil {
@@ -261,6 +262,7 @@ func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.
 		owner:       owner,
 		repo:        repo,
 		events:      source.Spec.EventTypes,
+		secure:      source.Spec.Secure,
 	}
 	err = r.webhookClient.Delete(ctx, hookOptions, hookID, alternateGitHubAPIURL)
 	if err != nil {
