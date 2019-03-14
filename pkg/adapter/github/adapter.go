@@ -19,6 +19,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -43,6 +44,8 @@ const (
 type Adapter struct {
 	Sink   string
 	client client.Client
+
+	initClientOnce sync.Once
 }
 
 // HandleEvent is invoked whenever an event comes in from GitHub
@@ -55,7 +58,7 @@ func (ra *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
 }
 
 func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
-	if ra.client == nil {
+	ra.initClientOnce.Do(func() {
 		var err error
 		if ra.client, err = client.NewHTTPClient(
 			client.WithTarget(ra.Sink),
@@ -63,8 +66,11 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 			client.WithUUIDs(),
 			client.WithTimeNow(),
 		); err != nil {
-			return err
+			log.Printf("failed to create cloudevent client: %s", err)
 		}
+	})
+	if ra.client == nil {
+		return fmt.Errorf("failed to create cloudevent client")
 	}
 
 	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)

@@ -4,7 +4,7 @@ This directory contains tests and testing docs for `Knative Eventing Sources`.
 
 - [Unit tests](#running-unit-tests) reside in the codebase alongside the code
   they test
-- [End-to-end tests](#running-end-to-end-tests) reside in [`/test/e2e`](./e2e)
+- [End-to-end tests](#running-end-to-end-tests) reside in `/test/e2e`.
 
 ## Running unit tests
 
@@ -20,7 +20,7 @@ which need [`-tags=e2e`](#running-end-to-end-tests) to be enabled._
 ## Presubmit tests
 
 [`presubmit-tests.sh`](./presubmit-tests.sh) is the entry point for the
-[end-to-end tests](/test/e2e).
+end-to-end tests.
 
 This script, and consequently, the e2e tests will be run before every code
 submission. You can run these tests manually with:
@@ -35,7 +35,9 @@ have a running environment that meets
 
 ## Running end-to-end tests
 
-To run [the e2e tests](./e2e), you need to have a running environment that meets
+_NOTE: This repo currently has no E2E tests._
+
+To run the e2e tests, you need to have a running environment that meets
 [the e2e test environment requirements](#environment-requirements), and you need
 to specify the build tag `e2e`.
 
@@ -57,11 +59,14 @@ go test -v -tags=e2e -count=1 ./test/e2e -run ^TestKubernetesEvents$
 There's couple of things you need to install before running e2e tests locally.
 
 1. `kubetest` installed:
+
    ```bash
    go get -u k8s.io/test-infra/kubetest
    ```
-2. [A running `Knative Serving` cluster.]
-3. A docker repo containing [the test images](#test-images)
+
+1. [A running `Knative Serving` cluster.]
+
+1. A docker repo containing [the test images](#test-images)
 
 Simply run the `./test/e2e-tests.sh` script. It will create a GKE cluster,
 install Knative Serving stack with Istio, upload test images to your Docker repo
@@ -84,7 +89,7 @@ test images, run the tests and delete the cluster.
 ### Building the test images
 
 Note: this is only required when you run e2e tests locally with `go test`
-commands. Running tests throught e2e-tests.sh will publish the images
+commands. Running tests through e2e-tests.sh will publish the images
 automatically.
 
 The [`upload-test-images.sh`](./upload-test-images.sh) script can be used to

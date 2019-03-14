@@ -66,11 +66,11 @@ func main() {
 		SinkURI:  getRequiredEnv(envSinkURI),
 	}
 
-	logger.Info("Starting Receive Adapter. %v", zap.Reflect("adapter", adapter))
+	logger.Info("Starting Receive Adapter", zap.Reflect("adapter", adapter))
 
 	stopCh := signals.SetupSignalHandler()
 
 	if err := adapter.Start(ctx, stopCh); err != nil {
-		logger.Fatal("Failed to start adapter: ", zap.Error(err))
+		logger.Fatal("Failed to start adapter", zap.Error(err))
 	}
 }
