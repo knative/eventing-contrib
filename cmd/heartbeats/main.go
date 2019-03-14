@@ -103,6 +103,11 @@ func main() {
 			Context: cloudevents.EventContextV02{
 				Type:   "dev.knative.eventing.samples.heartbeat",
 				Source: *source,
+				Extensions: map[string]interface{}{
+					"the":   42,
+					"heart": "yes",
+					"beats": true,
+				},
 			},
 			Data: hb,
 		}

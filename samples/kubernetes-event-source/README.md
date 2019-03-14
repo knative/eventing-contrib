@@ -59,7 +59,7 @@ kubectl apply -f samples/kubernetes-event-source/k8s-events.yaml
 ### Subscriber
 
 In order to check the `KubernetesEventSource` is fully working, we will create a
-simple Knative Service that dumps incoming messages to its log and create a
+simple Knative Service that displays incoming eventings in its log and create a
 `Subscription` from the `Channel` to that Knative Service.
 
 1. Setup [Knative Serving](https://github.com/knative/docs/tree/master/serving).
@@ -92,30 +92,25 @@ We will verify that the Kubernetes events were sent into the Knative eventing
 system by looking the subscriber's logs.
 
 ```shell
-kubectl logs --tail=50 -l serving.knative.dev/service=message-dumper -c user-container
+kubectl logs --tail=50 -l serving.knative.dev/service=event-display -c user-container
 ```
 
 Here's an example of a logged message:
 
-```
-2018/12/10 19:29:26 Message Dumper received a message: POST / HTTP/1.1
-Host: message-dumper.default.svc.cluster.local
-Accept-Encoding: gzip
-Ce-Cloudeventsversion: 0.1
-Ce-Eventid: e7b38edf-fcb1-11e8-9cff-42010a8a0ff6
-Ce-Eventtime: 2018-12-10T19:29:26Z
-Ce-Eventtype: dev.knative.k8s.event
-Ce-Source: /apis/v1/namespaces/default/pods/busybox
-Content-Length: 755
-Content-Type: application/json
-User-Agent: Go-http-client/1.1
-X-B3-Parentspanid: 3d7f2e4800b8e76a
-X-B3-Sampled: 1
-X-B3-Spanid: 23cc0ad030fb2342
-X-B3-Traceid: 3d7f2e4800b8e76a
-X-Forwarded-For: 127.0.0.1
-X-Forwarded-Proto: http
-X-Request-Id: d7dcc028-7a38-9775-9c76-41afe92db055
+```bash
 
-{"metadata":{"name":"busybox.156f0f6ee38d17b9","namespace":"default","selfLink":"/api/v1/namespaces/default/events/busybox.156f0f6ee38d17b9","uid":"e7b38edf-fcb1-11e8-9cff-42010a8a0ff6","resourceVersion":"4838","creationTimestamp":"2018-12-10T19:29:26Z"},"involvedObject":{"kind":"Pod","namespace":"default","name":"busybox","uid":"e69f8eee-fcb1-11e8-9cff-42010a8a0ff6","apiVersion":"v1","resourceVersion":"1092975","fieldPath":"spec.containers{busybox}"},"reason":"Started","message":"Started container","source":{"component":"kubelet","host":"default-pool-910b35a0-ftph"},"firstTimestamp":"2018-12-10T19:29:26Z","lastTimestamp":"2018-12-10T19:29:26Z","count":1,"type":"Normal","eventTime":null,"reportingComponent":"","reportingInstance":""}
+☁  CloudEvent: valid ✅
+Context Attributes,
+  CloudEventsVersion: 0.1
+  EventType: dev.knative.k8s.event
+  Source: /apis/v1/namespaces/default/pods/busybox
+  EventID: dbb798ae-46a2-11e9-b199-42010a8a017e
+  EventTime: 2019-03-14T21:48:09Z
+  ContentType: application/json
+Transport Context,
+  URI: /
+  Host: event-display.default.svc.cluster.local
+  Method: POST
+Data,
+  {"metadata":{"name":"busybox.158bf18e32e236e3","namespace":"default","selfLink":"/api/v1/namespaces/default/events/busybox.158bf18e32e236e3","uid":"dbb798ae-46a2-11e9-b199-42010a8a017e","resourceVersion":"298237","creationTimestamp":"2019-03-14T21:48:09Z"},"involvedObject":{"kind":"Pod","namespace":"default","name":"busybox","uid":"dabf6cbe-46a2-11e9-b199-42010a8a017e","apiVersion":"v1","resourceVersion":"11083989","fieldPath":"spec.containers{busybox}"},"reason":"Started","message":"Started container","source":{"component":"kubelet","host":"gke-knative-auto-cluster-default-pool-23c23c4f-0drf"},"firstTimestamp":"2019-03-14T21:48:09Z","lastTimestamp":"2019-03-14T21:48:09Z","count":1,"type":"Normal","eventTime":null,"reportingComponent":"","reportingInstance":""}
 ```
