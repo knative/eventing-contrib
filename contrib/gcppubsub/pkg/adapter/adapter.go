@@ -18,15 +18,15 @@ package gcppubsub
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
-
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 
 	// Imports the Google Cloud Pub/Sub client package.
 	"cloud.google.com/go/pubsub"
-	"github.com/knative/pkg/cloudevents"
 	"golang.org/x/net/context"
 )
 
@@ -53,6 +53,8 @@ type Adapter struct {
 	source       string
 	client       *pubsub.Client
 	subscription *pubsub.Subscription
+
+	ceClient client.Client
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
@@ -62,6 +64,12 @@ func (a *Adapter) Start(ctx context.Context) error {
 	// Make the client to pubsub
 	if a.client, err = pubsub.NewClient(ctx, a.ProjectID); err != nil {
 		return err
+	}
+
+	if a.ceClient == nil {
+		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return fmt.Errorf("failed to create cloudevent client: %s", err.Error())
+		}
 	}
 
 	// Set the subscription from the client
@@ -89,40 +97,25 @@ func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 	}
 }
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m PubSubMessage) error {
+	// TODO: this will break when the upstream sender updates cloudevents versions.
+	// The correct thing to do would be to convert the message to a cloudevent if it is one.
 	et := eventType
 	if override, ok := m.Message().Attributes[eventTypeOverrideKey]; ok {
 		et = override
 		logger.Infof("overriding the cloud event type with %q", et)
 	}
 
-	event := cloudevents.V01EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          et,
-		EventID:            m.ID(),
-		EventTime:          m.PublishTime(),
-		Source:             a.source,
-		ContentType:        "application/json",
-	}
-	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m.Message(), event)
-	if err != nil {
-		return fmt.Errorf("Failed to marshal the message: %s", err)
+	event := cloudevents.Event{
+		Context: cloudevents.EventContextV02{
+			Type:        et,
+			ID:          m.ID(),
+			Time:        &types.Timestamp{Time: m.PublishTime()},
+			Source:      *types.ParseURLRef(a.source),
+			ContentType: cloudevents.StringOfApplicationJSON(),
+		}.AsV02(),
+		Data: m.Message(),
 	}
 
-	logger.Debug("Posting message")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugw("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
-
-	// If the response is not within the 2xx range, return an error.
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("[%d] unexpected response %s", resp.StatusCode, body)
-	}
-
-	return nil
+	_, err := a.ceClient.Send(ctx, event)
+	return err // err could be nil or an error
 }

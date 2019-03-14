@@ -19,10 +19,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"log"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 )
 
 type Heartbeat struct {
@@ -44,7 +44,12 @@ func receive(event cloudevents.Event) {
 func main() {
 	ctx := context.TODO()
 
-	if _, err := client.StartHTTPReceiver(ctx, receive); err != nil {
+	c, err := kncloudevents.NewDefaultClient()
+	if err != nil {
+		log.Fatalf("failed to create client: %s", err.Error())
+	}
+
+	if err := c.StartReceiver(ctx, receive); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 

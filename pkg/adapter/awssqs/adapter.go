@@ -18,6 +18,7 @@ package awssqs
 
 import (
 	"fmt"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"strconv"
 	"strings"
 	"time"
@@ -81,12 +82,7 @@ func getRegion(url string) (string, error) {
 func (a *Adapter) initClient() error {
 	if a.client == nil {
 		var err error
-		if a.client, err = client.NewHTTPClient(
-			client.WithTarget(a.SinkURI),
-			client.WithHTTPBinaryEncoding(),
-			client.WithUUIDs(),
-			client.WithTimeNow(),
-		); err != nil {
+		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
 			return err
 		}
 	}
@@ -193,7 +189,8 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		Data: m,
 	}
 
-	return a.client.Send(context.TODO(), event)
+	_, err = a.client.Send(context.TODO(), event)
+	return err
 }
 
 // poll reads messages from the queue in batches of a given maximum size.
