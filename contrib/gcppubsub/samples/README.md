@@ -24,11 +24,11 @@ These steps assume that you have checked out the repo and have a shell in this
    ```
 
 1. Install the
-   [GCP PubSub Source from this yaml](../config/default-gcppubsub.yaml) from
+   [GCP PubSub Source from this directory](../config/) from
    source:
 
    ```shell
-   ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/gcppubsub/config/default-gcppubsub.yaml
+   ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/gcppubsub/config/
    ```
 
    Or install a release version (TODO: link to released component).
