@@ -18,11 +18,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"net/http"
-	"time"
 
-	"github.com/knative/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 )
 
 type Heartbeat struct {
@@ -30,12 +30,24 @@ type Heartbeat struct {
 	Label    string `json:"label"`
 }
 
-func handler(ctx context.Context, hb *Heartbeat) {
-	metadata := cloudevents.FromContext(ctx)
-	log.Printf("[%s] %s %s: %d,%q", metadata.EventTime.Format(time.RFC3339), metadata.ContentType, metadata.Source, hb.Sequence, hb.Label)
+func receive(event cloudevents.Event) {
+	ec := event.Context.AsV02()
+	hb := &Heartbeat{}
+	if err := event.DataAs(hb); err != nil {
+		fmt.Printf("got data error: %s\n", err.Error())
+	}
+	log.Printf("CloudEvent:\n%s", event)
+	log.Printf("[%s] %s %s: ", ec.Time, event.DataContentType(), ec.Source.String())
+	log.Printf("\t%d, %q", hb.Sequence, hb.Label)
 }
 
 func main() {
-	log.Print("Ready and listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", cloudevents.Handler(handler)))
+	ctx := context.TODO()
+
+	if _, err := client.StartHTTPReceiver(ctx, receive); err != nil {
+		log.Fatalf("failed to start receiver: %s", err.Error())
+	}
+
+	log.Printf("listening on port %d\n", 8080)
+	<-ctx.Done()
 }

@@ -17,13 +17,18 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
+	"log"
+	"os"
 	"strconv"
 	"time"
 
-	log "github.com/mgutz/logxi/v1"
-
-	"github.com/knative/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Heartbeat struct {
@@ -43,13 +48,39 @@ func init() {
 	flag.StringVar(&periodStr, "period", "5", "the number of seconds between heartbeats")
 }
 
+type envConfig struct {
+	// Sink URL where to send heartbeat cloudevents
+	Sink string `envconfig:"SINK"`
+
+	// Name of this pod.
+	Name string `envconfig:"POD_NAME" required:"true"`
+
+	// Namespace this pod exists in.
+	Namespace string `envconfig:"POD_NAMESPACE" required:"true"`
+}
+
 func main() {
 	flag.Parse()
 
-	client := cloudevents.NewClient(sink, cloudevents.Builder{
-		EventType: "dev.knative.source.heartbeats",
-		Source:    "heartbeats-demo",
-	})
+	var env envConfig
+	if err := envconfig.Process("", &env); err != nil {
+		log.Printf("[ERROR] Failed to process env var: %s", err)
+		os.Exit(1)
+	}
+
+	if env.Sink != "" {
+		sink = env.Sink
+	}
+
+	c, err := client.NewHTTPClient(
+		client.WithTarget(sink),
+		client.WithHTTPBinaryEncoding(),
+		client.WithTimeNow(),
+		client.WithUUIDs(),
+	)
+	if err != nil {
+		log.Fatalf("failed to create client: %s", err.Error())
+	}
 
 	var period time.Duration
 	if p, err := strconv.Atoi(periodStr); err != nil {
@@ -58,6 +89,13 @@ func main() {
 		period = time.Duration(p) * time.Second
 	}
 
+	source := types.ParseURLRef(
+		fmt.Sprintf("https://github.com/knative/eventing-sources/cmd/heartbeats/#%s/%s", env.Namespace, env.Name))
+	log.Printf("Heartbeats Source: %s", source)
+
+	if len(label) > 0 && label[0] == '"' {
+		label, _ = strconv.Unquote(label)
+	}
 	hb := &Heartbeat{
 		Sequence: 0,
 		Label:    label,
@@ -65,8 +103,17 @@ func main() {
 	ticker := time.NewTicker(period)
 	for {
 		hb.Sequence++
-		if err := client.Send(hb); err != nil {
-			log.Error("failed to send cloudevent", err)
+
+		event := cloudevents.Event{
+			Context: cloudevents.EventContextV02{
+				Type:   "dev.knative.eventing.samples.heartbeat",
+				Source: *source,
+			},
+			Data: hb,
+		}
+
+		if err := c.Send(context.Background(), event); err != nil {
+			log.Printf("failed to send cloudevent: %s", err.Error())
 		}
 		// Wait for next tick
 		<-ticker.C

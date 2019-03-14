@@ -33,8 +33,6 @@ function upload_test_images() {
   done
 }
 
-: ${DOCKER_REPO_OVERRIDE:?"You must set 'DOCKER_REPO_OVERRIDE', see DEVELOPMENT.md"}
-
-export KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
+: ${KO_DOCKER_REPO:?"You must set 'KO_DOCKER_REPO', see DEVELOPMENT.md"}
 
 upload_test_images $@

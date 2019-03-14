@@ -73,7 +73,7 @@ var testCases = []testCase{
 		name:       "no source",
 		payload:    gh.PullRequestPayload{},
 		eventType:  "pull_request",
-		wantErrMsg: `ctx.Source resolved empty`,
+		wantErrMsg: `no source found in github event`,
 	}, {
 		name: "valid commit_comment",
 		payload: func() interface{} {
@@ -452,7 +452,8 @@ func (tc *testCase) runner(t *testing.T, ra Adapter) func(t *testing.T) {
 }
 
 func (tc *testCase) handleRequest(req *http.Request) (*http.Response, error) {
-	cloudEvent, err := cloudevents.Binary.FromRequest(nil, req)
+	rawContext, err := cloudevents.Binary.FromRequest(nil, req)
+	cloudEvent := rawContext.AsV01()
 	if err != nil {
 		return nil, fmt.Errorf("unexpected error decoding cloudevent: %s", err)
 	}
@@ -501,7 +502,7 @@ var (
 		"accept-encoding": {},
 		"content-length":  {},
 		"user-agent":      {},
-		"ce-eventtime":    {},
+		"ce-time":         {},
 	}
 )
 
@@ -517,13 +518,13 @@ func TestHandleEvent(t *testing.T) {
 
 	expectedRequest := requestValidation{
 		Headers: map[string][]string{
-			"ce-cloudeventsversion": {"0.1"},
-			"ce-eventid":            {"12345"},
-			"ce-eventtime":          {"2019-01-29T09:35:10.69383396-08:00"},
-			"ce-eventtype":          {"dev.knative.source.github.pull_request"},
-			"ce-source":             {"http://github.com/a/b"},
-			"ce-x-github-delivery":  {"12345"},
-			"ce-x-github-event":     {"pull_request"},
+			"ce-specversion":     {"0.2"},
+			"ce-id":              {"12345"},
+			"ce-time":            {"2019-01-29T09:35:10.69383396-08:00"},
+			"ce-type":            {"dev.knative.source.github.pull_request"},
+			"ce-source":          {"http://github.com/a/b"},
+			"ce-github-delivery": {`"12345"`},
+			"ce-github-event":    {`"pull_request"`},
 
 			"content-type": {"application/json"},
 		},
