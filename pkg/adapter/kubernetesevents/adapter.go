@@ -19,6 +19,8 @@ package kubernetesevents
 import (
 	"context"
 	"fmt"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
+	"sync"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 
@@ -39,7 +41,8 @@ type Adapter struct {
 	SinkURI string
 
 	// ceClient is a client that sends cloudevents.
-	ceClient client.Client
+	ceClient       client.Client
+	initClientOnce sync.Once
 
 	kubeClient kubernetes.Interface
 }
@@ -98,16 +101,16 @@ func (a *Adapter) addEvent(new interface{}) {
 	logger := logging.FromContext(context.TODO()).With(zap.Any("eventID", event.ObjectMeta.UID), zap.Any("sink", a.SinkURI))
 	logger.Debug("GOT EVENT", event)
 
+	var err error
+	a.initClientOnce.Do(func() {
+		a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI)
+	})
 	if a.ceClient == nil {
-		var err error
-		a.ceClient, err = client.NewHTTPClient(client.WithTarget(a.SinkURI), client.WithHTTPBinaryEncoding())
-		if err != nil {
-			logger.Errorf("failed to create cloudevent client: %s", err.Error())
-			return
-		}
+		logger.Infof("failed to create cloudevent client: %s", err)
+		return
 	}
 
-	if err := a.ceClient.Send(context.TODO(), cloudEventFrom(event)); err != nil {
+	if _, err := a.ceClient.Send(context.TODO(), cloudEventFrom(event)); err != nil {
 		logger.Infof("Event delivery failed: %s", err)
 	}
 }

@@ -428,7 +428,7 @@ func TestAllCases(t *testing.T) {
 		defer sinkServer.Close()
 
 		ra := Adapter{
-			Sink: sinkServer.URL,
+			SinkURI: sinkServer.URL,
 		}
 		t.Run(tc.name, tc.runner(t, ra))
 	}
@@ -539,7 +539,7 @@ func TestHandleEvent(t *testing.T) {
 	defer sinkServer.Close()
 
 	ra := Adapter{
-		Sink: sinkServer.URL,
+		SinkURI: sinkServer.URL,
 	}
 
 	payload := gh.PullRequestPayload{}
