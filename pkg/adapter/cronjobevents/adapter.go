@@ -19,6 +19,7 @@ package cronjobevents
 import (
 	"context"
 	"encoding/json"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -53,12 +54,7 @@ type Adapter struct {
 func (a *Adapter) initClient() error {
 	if a.client == nil {
 		var err error
-		if a.client, err = client.NewHTTPClient(
-			client.WithTarget(a.SinkURI),
-			client.WithHTTPBinaryEncoding(),
-			client.WithUUIDs(),
-			client.WithTimeNow(),
-		); err != nil {
+		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
 			return err
 		}
 	}
@@ -98,7 +94,7 @@ func (a *Adapter) cronTick() {
 		}.AsV02(),
 		Data: message(a.Data),
 	}
-	if err := a.client.Send(context.TODO(), event); err != nil {
+	if _, err := a.client.Send(context.TODO(), event); err != nil {
 		logger.Error("failed to send cloudevent", err)
 	}
 }

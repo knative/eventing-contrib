@@ -19,12 +19,12 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"log"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/gorilla/websocket"
 )
 
@@ -57,12 +57,7 @@ func main() {
 		eventSource = source
 	}
 
-	ce, err := client.NewHTTPClient(
-		client.WithTarget(sink),
-		client.WithHTTPBinaryEncoding(),
-		client.WithUUIDs(),
-		client.WithTimeNow(),
-	)
+	ce, err := kncloudevents.NewDefaultClient(sink)
 	if err != nil {
 		log.Fatalf("Failed to create a http cloudevent client: %s", err.Error())
 	}
@@ -87,7 +82,7 @@ func main() {
 			}.AsV02(),
 			Data: message,
 		}
-		if err := ce.Send(context.TODO(), event); err != nil {
+		if _, err := ce.Send(context.TODO(), event); err != nil {
 			log.Printf("sending event to channel failed: %v", err)
 		}
 	}

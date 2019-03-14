@@ -57,7 +57,7 @@ func main() {
 	log.Printf("Sink is: %q", *sink)
 
 	ra := &github.Adapter{
-		Sink: *sink,
+		SinkURI: *sink,
 	}
 
 	hook := gh.New(&gh.Config{Secret: secretToken})
