@@ -427,10 +427,12 @@ func TestAllCases(t *testing.T) {
 		sinkServer := httptest.NewServer(h)
 		defer sinkServer.Close()
 
-		ra := Adapter{
-			SinkURI: sinkServer.URL,
+		ra, err := New(sinkServer.URL)
+		if err != nil {
+			t.Fatal(err)
 		}
-		t.Run(tc.name, tc.runner(t, ra))
+
+		t.Run(tc.name, tc.runner(t, *ra))
 	}
 }
 
@@ -551,8 +553,9 @@ func TestHandleEvent(t *testing.T) {
 	sinkServer := httptest.NewServer(h)
 	defer sinkServer.Close()
 
-	ra := Adapter{
-		SinkURI: sinkServer.URL,
+	ra, err := New(sinkServer.URL)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	payload := gh.PullRequestPayload{}
