@@ -15,4 +15,4 @@ designed.
 The e2e tests **MUST**:
 
 1. Provide frequent output describing what actions they are undertaking, especially before performing long running operations.
-2. Follow Golang best practices.
+1. Follow Golang best practices.
