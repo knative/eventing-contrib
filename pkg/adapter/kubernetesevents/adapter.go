@@ -70,6 +70,13 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 		}
 	}
 
+	if a.ceClient == nil {
+		var err error
+		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return fmt.Errorf("failed to create cloudevent client: %s", err.Error())
+		}
+	}
+
 	eventsInformer := coreinformers.NewFilteredEventInformer(
 		a.kubeClient, a.Namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
 
@@ -100,15 +107,6 @@ func (a *Adapter) addEvent(new interface{}) {
 	event := new.(*corev1.Event)
 	logger := logging.FromContext(context.TODO()).With(zap.Any("eventID", event.ObjectMeta.UID), zap.Any("sink", a.SinkURI))
 	logger.Debug("GOT EVENT", event)
-
-	var err error
-	a.initClientOnce.Do(func() {
-		a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI)
-	})
-	if a.ceClient == nil {
-		logger.Infof("failed to create cloudevent client: %s", err)
-		return
-	}
 
 	if _, err := a.ceClient.Send(context.TODO(), cloudEventFrom(event)); err != nil {
 		logger.Infof("Event delivery failed: %s", err)

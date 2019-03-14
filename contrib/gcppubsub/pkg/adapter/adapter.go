@@ -22,8 +22,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
-	"sync"
-
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 
@@ -56,8 +54,7 @@ type Adapter struct {
 	client       *pubsub.Client
 	subscription *pubsub.Subscription
 
-	ceClient       client.Client
-	initClientOnce sync.Once
+	ceClient client.Client
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
@@ -67,6 +64,12 @@ func (a *Adapter) Start(ctx context.Context) error {
 	// Make the client to pubsub
 	if a.client, err = pubsub.NewClient(ctx, a.ProjectID); err != nil {
 		return err
+	}
+
+	if a.ceClient == nil {
+		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return fmt.Errorf("failed to create cloudevent client: %s", err.Error())
+		}
 	}
 
 	// Set the subscription from the client
@@ -94,15 +97,6 @@ func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 	}
 }
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m PubSubMessage) error {
-	var err error
-	a.initClientOnce.Do(func() {
-		a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI)
-	})
-	if a.ceClient == nil {
-		logger.Infof("failed to create cloudevent client: %s", err)
-		return err
-	}
-
 	// TODO: this will break when the upstream sender updates cloudevents versions.
 	// The correct thing to do would be to convert the message to a cloudevent if it is one.
 	et := eventType
@@ -122,6 +116,6 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		Data: m.Message(),
 	}
 
-	_, err = a.ceClient.Send(ctx, event)
+	_, err := a.ceClient.Send(ctx, event)
 	return err // err could be nil or an error
 }
