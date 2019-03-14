@@ -84,12 +84,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected error, but got %v", err)
 			}
 
-			et := ""
-			if eth, ok := h.header["Ce-Eventtype"]; ok {
-				if len(eth) > 0 {
-					et = eth[0]
-				}
-			}
+			et := h.header.Get("Ce-Type") // bad bad bad.
 
 			expectedEventType := eventType
 			if tc.expectedEventType != "" {
