@@ -58,7 +58,7 @@ func main() {
 
 	ra, err := github.New(*sink)
 	if err != nil {
-		log.Fatalf("Failed to create github adaptor: %s", err.Error())
+		log.Fatalf("Failed to create github adapter: %s", err.Error())
 	}
 
 	hook := gh.New(&gh.Config{Secret: secretToken})
