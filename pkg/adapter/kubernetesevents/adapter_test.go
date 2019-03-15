@@ -18,6 +18,8 @@ package kubernetesevents
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -57,6 +59,10 @@ func TestUpdateEvent_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				SinkURI:   sinkServer.URL,
 				Namespace: "default",
+				ceClient: func() client.Client {
+					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
+					return c
+				}(),
 			}
 
 			uid := types.UID("ABC")
@@ -95,6 +101,10 @@ func TestUpdateEvent_NonExistentSink(t *testing.T) {
 	a := &Adapter{
 		SinkURI:   "http://localhost:50/",
 		Namespace: "default",
+		ceClient: func() client.Client {
+			c, _ := kncloudevents.NewDefaultClient("http://localhost:50/")
+			return c
+		}(),
 	}
 
 	uid := types.UID("ABC")

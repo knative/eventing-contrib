@@ -27,9 +27,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/knative/pkg/cloudevents"
 
-	webhooks "gopkg.in/go-playground/webhooks.v3"
+	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 
@@ -73,7 +73,7 @@ var testCases = []testCase{
 		name:       "no source",
 		payload:    gh.PullRequestPayload{},
 		eventType:  "pull_request",
-		wantErrMsg: `ctx.Source resolved empty`,
+		wantErrMsg: `no source found in github event`,
 	}, {
 		name: "valid commit_comment",
 		payload: func() interface{} {
@@ -428,7 +428,7 @@ func TestAllCases(t *testing.T) {
 		defer sinkServer.Close()
 
 		ra := Adapter{
-			Sink: sinkServer.URL,
+			SinkURI: sinkServer.URL,
 		}
 		t.Run(tc.name, tc.runner(t, ra))
 	}
@@ -452,19 +452,33 @@ func (tc *testCase) runner(t *testing.T, ra Adapter) func(t *testing.T) {
 }
 
 func (tc *testCase) handleRequest(req *http.Request) (*http.Response, error) {
-	cloudEvent, err := cloudevents.Binary.FromRequest(nil, req)
+
+	codec := cehttp.Codec{}
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+	msg := &cehttp.Message{
+		Header: req.Header,
+		Body:   body,
+	}
+
+	event, err := codec.Decode(msg)
 	if err != nil {
 		return nil, fmt.Errorf("unexpected error decoding cloudevent: %s", err)
 	}
 
-	if tc.wantCloudEventType != "" && tc.wantCloudEventType != cloudEvent.EventType {
+	if tc.wantCloudEventType != "" && tc.wantCloudEventType != event.Type() {
 		return nil, fmt.Errorf("want cloud event type %s, got %s",
-			tc.wantCloudEventType, cloudEvent.EventType)
+			tc.wantCloudEventType, event.Type())
 	}
 
-	if tc.wantCloudEventSource != "" && tc.wantCloudEventSource != cloudEvent.Source {
+	gotSource := event.Context.AsV02().Source
+
+	if tc.wantCloudEventSource != "" && tc.wantCloudEventSource != gotSource.String() {
 		return nil, fmt.Errorf("want source %s, got %s",
-			tc.wantCloudEventSource, cloudEvent.Source)
+			tc.wantCloudEventSource, gotSource.String())
 	}
 
 	return &http.Response{
@@ -501,7 +515,7 @@ var (
 		"accept-encoding": {},
 		"content-length":  {},
 		"user-agent":      {},
-		"ce-eventtime":    {},
+		"ce-time":         {},
 	}
 )
 
@@ -517,13 +531,13 @@ func TestHandleEvent(t *testing.T) {
 
 	expectedRequest := requestValidation{
 		Headers: map[string][]string{
-			"ce-cloudeventsversion": {"0.1"},
-			"ce-eventid":            {"12345"},
-			"ce-eventtime":          {"2019-01-29T09:35:10.69383396-08:00"},
-			"ce-eventtype":          {"dev.knative.source.github.pull_request"},
-			"ce-source":             {"http://github.com/a/b"},
-			"ce-x-github-delivery":  {"12345"},
-			"ce-x-github-event":     {"pull_request"},
+			"ce-specversion":     {"0.2"},
+			"ce-id":              {"12345"},
+			"ce-time":            {"2019-01-29T09:35:10.69383396-08:00"},
+			"ce-type":            {"dev.knative.source.github.pull_request"},
+			"ce-source":          {"http://github.com/a/b"},
+			"ce-github-delivery": {`"12345"`},
+			"ce-github-event":    {`"pull_request"`},
 
 			"content-type": {"application/json"},
 		},
@@ -538,7 +552,7 @@ func TestHandleEvent(t *testing.T) {
 	defer sinkServer.Close()
 
 	ra := Adapter{
-		Sink: sinkServer.URL,
+		SinkURI: sinkServer.URL,
 	}
 
 	payload := gh.PullRequestPayload{}

@@ -19,20 +19,19 @@ package kubernetesevents
 import (
 	"context"
 	"fmt"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
+	"sync"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 
-	"github.com/knative/pkg/cloudevents"
 	corev1 "k8s.io/api/core/v1"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-)
-
-const (
-	eventType = "dev.knative.k8s.event"
 )
 
 type Adapter struct {
@@ -41,8 +40,9 @@ type Adapter struct {
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
 
-	// client sends cloudevents.
-	client *cloudevents.Client
+	// ceClient is a client that sends cloudevents.
+	ceClient       client.Client
+	initClientOnce sync.Once
 
 	kubeClient kubernetes.Interface
 }
@@ -67,6 +67,13 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	if a.kubeClient == nil {
 		if err := a.makeKubeClient(); err != nil {
 			return err
+		}
+	}
+
+	if a.ceClient == nil {
+		var err error
+		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return fmt.Errorf("failed to create cloudevent client: %s", err.Error())
 		}
 	}
 
@@ -101,11 +108,7 @@ func (a *Adapter) addEvent(new interface{}) {
 	logger := logging.FromContext(context.TODO()).With(zap.Any("eventID", event.ObjectMeta.UID), zap.Any("sink", a.SinkURI))
 	logger.Debug("GOT EVENT", event)
 
-	if a.client == nil {
-		a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{EventType: eventType})
-	}
-
-	if err := a.client.Send(event, cloudEventOverrides(event)); err != nil {
+	if _, err := a.ceClient.Send(context.TODO(), cloudEventFrom(event)); err != nil {
 		logger.Infof("Event delivery failed: %s", err)
 	}
 }

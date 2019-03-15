@@ -161,7 +161,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		r.addFinalizer(source)
 		if source.Status.WebhookIDKey == "" {
 			hookID, err := r.createWebhook(ctx, source,
-				receiveAdapterDomain, accessToken, secretToken)
+				receiveAdapterDomain, accessToken, secretToken, source.Spec.GitHubAPIURL)
 			if err != nil {
 				return err
 			}
@@ -188,7 +188,7 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 		}
 
 		// Delete the webhook using the access token and stored webhook ID
-		err = r.deleteWebhook(ctx, source, accessToken, source.Status.WebhookIDKey)
+		err = r.deleteWebhook(ctx, source, accessToken, source.Status.WebhookIDKey, source.Spec.GitHubAPIURL)
 		if err != nil {
 			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
 			return err
@@ -199,7 +199,18 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 	return nil
 }
 
-func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain, accessToken, secretToken string) (string, error) {
+func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, domain, accessToken, secretToken, alternateGitHubAPIURL string) (string, error) {
+	// TODO: Modify function args to shorten method signature ... something like
+	// func (r *reconciler) createWebhook(ctx context.Context, args webhookArgs) (string, error) {...}
+	// where webhookArgs is a struct like....
+	// type webhookArgs struct {
+	//  source *sourcesv1alpha1.GitHubSource
+	//  domain string
+	//  accessToken string
+	//  secretToken string
+	//  alternateGitHubAPIURL string
+	//  hookID string
+	// }
 	logger := logging.FromContext(ctx)
 
 	logger.Info("creating GitHub webhook")
@@ -216,15 +227,27 @@ func (r *reconciler) createWebhook(ctx context.Context, source *sourcesv1alpha1.
 		owner:       owner,
 		repo:        repo,
 		events:      source.Spec.EventTypes,
+		secure:      source.Spec.Secure,
 	}
-	hookID, err := r.webhookClient.Create(ctx, hookOptions)
+	hookID, err := r.webhookClient.Create(ctx, hookOptions, alternateGitHubAPIURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to create webhook: %v", err)
 	}
 	return hookID, nil
 }
 
-func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, accessToken, hookID string) error {
+func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.GitHubSource, accessToken, hookID, alternateGitHubAPIURL string) error {
+	// TODO: Modify function args to shorten method signature ... something like
+	// func (r *reconciler) deleteWebhook(ctx context.Context, args webhookArgs) (string, error) {...}
+	// where webhookArgs is a struct like....
+	// type webhookArgs struct {
+	//  source *sourcesv1alpha1.GitHubSource
+	//  domain string
+	//  accessToken string
+	//  secretToken string
+	//  alternateGitHubAPIURL string
+	//  hookID string
+	// }
 	logger := logging.FromContext(ctx)
 
 	logger.Info("deleting GitHub webhook")
@@ -239,8 +262,9 @@ func (r *reconciler) deleteWebhook(ctx context.Context, source *sourcesv1alpha1.
 		owner:       owner,
 		repo:        repo,
 		events:      source.Spec.EventTypes,
+		secure:      source.Spec.Secure,
 	}
-	err = r.webhookClient.Delete(ctx, hookOptions, hookID)
+	err = r.webhookClient.Delete(ctx, hookOptions, hookID, alternateGitHubAPIURL)
 	if err != nil {
 		return fmt.Errorf("failed to delete webhook: %v", err)
 	}

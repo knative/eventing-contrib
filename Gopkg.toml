@@ -38,28 +38,28 @@ required = [
 
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2019-01-29
-  revision = "cc3cc546fee76ddbb55cdb2c90e0a2871c9eef78"
+  # HEAD as of 2019-02-12
+  revision = "1982208dd91a4cc4fea9612e4e72fb109c77ab22"
 
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.11.3"
+  version = "kubernetes-1.12.5"
 
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.11.3"
+  version = "kubernetes-1.12.5"
 
 [[override]]
   name = "k8s.io/code-generator"
-  version = "kubernetes-1.11.3"
+  version = "kubernetes-1.12.5"
 
 [[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.11.3"
+  version = "kubernetes-1.12.5"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.11.3"
+  version = "kubernetes-1.12.5"
 
 [[override]]
   name = "cloud.google.com/go"
@@ -67,13 +67,11 @@ required = [
 
 [[constraint]]
   name = "github.com/knative/serving"
-  version = "v0.2.1"
-
-# STANZAS BELOW ARE GENERATED AND MAY BE WRITTEN - DO NOT MODIFY BELOW THIS LINE.
+  version = "v0.3.0"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
-  revision = "0f0740db56812f732d90ff7df3520a291a9f04c9"
+  version = "=0.1.9"
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]
@@ -94,3 +92,8 @@ required = [
 [[constraint]]
   name = "github.com/gorilla/websocket"
   version = "1.4.0"
+
+# Use CloudEvents release 0.4.0, happened March 12, 2019
+[[override]]
+  name = "github.com/cloudevents/sdk-go"
+  version = "0.4.0"

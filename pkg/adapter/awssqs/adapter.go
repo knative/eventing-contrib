@@ -18,6 +18,7 @@ package awssqs
 
 import (
 	"fmt"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"strconv"
 	"strings"
 	"time"
@@ -25,7 +26,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/knative/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -53,7 +56,7 @@ type Adapter struct {
 	OnFailedPollWaitSecs time.Duration
 
 	// Client sends cloudevents to the target.
-	client *cloudevents.Client
+	client client.Client
 }
 
 // getRegion takes an AWS SQS URL and extracts the region from it
@@ -75,11 +78,27 @@ func getRegion(url string) (string, error) {
 	return parts[1], nil
 }
 
+// Initialize cloudevent client
+func (a *Adapter) initClient() error {
+	if a.client == nil {
+		var err error
+		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger := logging.FromContext(ctx)
 
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
+
+	if err := a.initClient(); err != nil {
+		logger.Error("Failed to create cloudevent client", zap.Error(err))
+		return err
+	}
 
 	region, err := getRegion(a.QueueURL)
 	if err != nil {
@@ -153,9 +172,6 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 
 // postMessage sends an SQS event to the SinkURI
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
-	if a.client == nil {
-		a.client = cloudevents.NewClient(a.SinkURI, cloudevents.Builder{EventType: eventType})
-	}
 
 	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)
@@ -163,12 +179,18 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		logger.Errorw("Failed to unmarshal the message.", zap.Error(err), zap.Any("message", m.Body))
 		timestamp = time.Now().UnixNano()
 	}
+	event := cloudevents.Event{
+		Context: cloudevents.EventContextV02{
+			ID:     *m.MessageId,
+			Type:   eventType,
+			Source: *types.ParseURLRef(a.QueueURL),
+			Time:   &types.Timestamp{Time: time.Unix(timestamp, 0)},
+		}.AsV02(),
+		Data: m,
+	}
 
-	return a.client.Send(m, cloudevents.V01EventContext{
-		EventID:   *m.MessageId,
-		EventTime: time.Unix(timestamp, 0),
-		Source:    a.QueueURL,
-	})
+	_, err = a.client.Send(context.TODO(), event)
+	return err
 }
 
 // poll reads messages from the queue in batches of a given maximum size.

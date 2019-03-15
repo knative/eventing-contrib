@@ -218,6 +218,60 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 	}, {
+		Name:       "valid githubsource, secure repo webhook created",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Secure = true
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Conditions: duckv1alpha1.Conditions{{
+							Type:   servingv1alpha1.ServiceConditionRoutesReady,
+							Status: corev1.ConditionTrue,
+						}},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+			getAddressable(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner:  "myuser",
+				expectedRepo:   "myproject",
+				expectedSecure: true,
+				hookID:         "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Secure = true
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(addressableURI)
+				s.Status.MarkSecrets()
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
 		Name:       "valid githubsource, org webhook created",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
@@ -441,6 +495,109 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 		WantErrMsg:  fmt.Sprintf("secrets %q not found", secretName),
+	}, {
+		Name:       "valid githubsource with specified baseURL, repo webhook created",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Conditions: duckv1alpha1.Conditions{{
+							Type:   servingv1alpha1.ServiceConditionRoutesReady,
+							Status: corev1.ConditionTrue,
+						}},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+			getAddressable(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(addressableURI)
+				s.Status.MarkSecrets()
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid githubsource with specified baseURL, deleted",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Conditions: duckv1alpha1.Conditions{{
+							Type:   servingv1alpha1.ServiceConditionRoutesReady,
+							Status: corev1.ConditionTrue,
+						}},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+			getAddressable(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				s.DeletionTimestamp = &now
+				s.Status.WebhookIDKey = ""
+				s.Finalizers = nil
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
 	},
 }
 
@@ -496,6 +653,43 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 				Kind:       addressableKind,
 				APIVersion: addressableAPIVersion,
 			},
+		},
+	}
+	obj.Finalizers = []string{finalizerName}
+	// selflink is not filled in when we create the object, so clear it
+	obj.ObjectMeta.SelfLink = ""
+	return obj
+}
+
+func getGitHubEnterpriseSource() *sourcesv1alpha1.GitHubSource {
+	obj := &sourcesv1alpha1.GitHubSource{
+		TypeMeta:   gitHubSourceType(),
+		ObjectMeta: om(testNS, gitHubSourceName),
+		Spec: sourcesv1alpha1.GitHubSourceSpec{
+			OwnerAndRepository: "myuser/myproject",
+			EventTypes:         []string{"pull_request"},
+			AccessToken: sourcesv1alpha1.SecretValueFromSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secretName,
+					},
+					Key: accessTokenKey,
+				},
+			},
+			SecretToken: sourcesv1alpha1.SecretValueFromSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: secretName,
+					},
+					Key: secretTokenKey,
+				},
+			},
+			Sink: &corev1.ObjectReference{
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
+			},
+			GitHubAPIURL: "https://github.somecompany.com/api/v3/",
 		},
 	}
 	obj.Finalizers = []string{finalizerName}
@@ -628,7 +822,7 @@ type mockWebhookClient struct {
 	data webhookCreatorData
 }
 
-func (client mockWebhookClient) Create(ctx context.Context, options *webhookOptions) (string, error) {
+func (client mockWebhookClient) Create(ctx context.Context, options *webhookOptions, altGHURL string) (string, error) {
 	data := client.data
 	if data.clientCreateErr != nil {
 		return "", data.clientCreateErr
@@ -641,10 +835,14 @@ func (client mockWebhookClient) Create(ctx context.Context, options *webhookOpti
 		return "", fmt.Errorf(`expected webhook repository of "%s", got "%s"`,
 			data.expectedRepo, options.repo)
 	}
+	if data.expectedSecure != options.secure {
+		return "", fmt.Errorf(`expected webhook secure of "%v", got "%v"`,
+			data.expectedSecure, options.secure)
+	}
 	return data.hookID, nil
 }
 
-func (client mockWebhookClient) Delete(ctx context.Context, options *webhookOptions, hookID string) error {
+func (client mockWebhookClient) Delete(ctx context.Context, options *webhookOptions, hookID, altGHURL string) error {
 	data := client.data
 	if data.expectedOwner != options.owner {
 		return fmt.Errorf(`expected webhook owner of "%s", got "%s"`,
@@ -653,6 +851,10 @@ func (client mockWebhookClient) Delete(ctx context.Context, options *webhookOpti
 	if data.expectedRepo != options.repo {
 		return fmt.Errorf(`expected webhook repository of "%s", got "%s"`,
 			data.expectedRepo, options.repo)
+	}
+	if data.expectedSecure != options.secure {
+		return fmt.Errorf(`expected webhook secure of "%v", got "%v"`,
+			data.expectedSecure, options.secure)
 	}
 	if data.hookID != hookID {
 		return fmt.Errorf(`expected webhook ID of "%s", got "%s"`,
@@ -665,6 +867,7 @@ type webhookCreatorData struct {
 	clientCreateErr error
 	expectedOwner   string
 	expectedRepo    string
+	expectedSecure  bool
 	hookID          string
 }
 

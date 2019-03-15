@@ -69,6 +69,14 @@ type GitHubSourceSpec struct {
 	// name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+
+	// API URL if using github enterprise (default https://api.github.com)
+	// +optional
+	GitHubAPIURL string `json:"githubAPIURL,omitempty"`
+
+	// Secure can be set to true to configure the webhook to use https.
+	// +optional
+	Secure bool `json:"secure,omitempty"`
 }
 
 // SecretValueFromSource represents the source of a secret value
