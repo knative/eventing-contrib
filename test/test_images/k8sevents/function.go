@@ -33,7 +33,7 @@ func receive(event cloudevents.Event) {
 	if err := event.DataAs(k8sEvent); err != nil {
 		fmt.Printf("got data error: %s\n", err.Error())
 	}
-	log.Printf("[%s] %s : %q", metadata.Time.Format(time.RFC3339), metadata.Source, k8sEvent.Message)
+	log.Printf("[%s] %s : %q", metadata.Time.Format(time.RFC3339), metadata.Source.String(), k8sEvent.Message)
 }
 
 func main() {
