@@ -218,6 +218,60 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 	}, {
+		Name:       "valid githubsource, secure repo webhook created",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Secure = true
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Conditions: duckv1alpha1.Conditions{{
+							Type:   servingv1alpha1.ServiceConditionRoutesReady,
+							Status: corev1.ConditionTrue,
+						}},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+			getAddressable(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner:  "myuser",
+				expectedRepo:   "myproject",
+				expectedSecure: true,
+				hookID:         "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Secure = true
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(addressableURI)
+				s.Status.MarkSecrets()
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
 		Name:       "valid githubsource, org webhook created",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
 		InitialState: []runtime.Object{
@@ -781,6 +835,10 @@ func (client mockWebhookClient) Create(ctx context.Context, options *webhookOpti
 		return "", fmt.Errorf(`expected webhook repository of "%s", got "%s"`,
 			data.expectedRepo, options.repo)
 	}
+	if data.expectedSecure != options.secure {
+		return "", fmt.Errorf(`expected webhook secure of "%v", got "%v"`,
+			data.expectedSecure, options.secure)
+	}
 	return data.hookID, nil
 }
 
@@ -794,6 +852,10 @@ func (client mockWebhookClient) Delete(ctx context.Context, options *webhookOpti
 		return fmt.Errorf(`expected webhook repository of "%s", got "%s"`,
 			data.expectedRepo, options.repo)
 	}
+	if data.expectedSecure != options.secure {
+		return fmt.Errorf(`expected webhook secure of "%v", got "%v"`,
+			data.expectedSecure, options.secure)
+	}
 	if data.hookID != hookID {
 		return fmt.Errorf(`expected webhook ID of "%s", got "%s"`,
 			data.hookID, hookID)
@@ -805,6 +867,7 @@ type webhookCreatorData struct {
 	clientCreateErr error
 	expectedOwner   string
 	expectedRepo    string
+	expectedSecure  bool
 	hookID          string
 }
 

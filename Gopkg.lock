@@ -63,22 +63,23 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
-  digest = "1:d9cc48e9d4caa22c2af5b18f404d3e4a34b05e6723b002c0c18a39762a14777d"
+  digest = "1:70a8e5f09e19aba14064648751abc86f20484e25476866b03ce711007e96f339"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "pkg/cloudevents",
     "pkg/cloudevents/client",
     "pkg/cloudevents/codec",
+    "pkg/cloudevents/context",
     "pkg/cloudevents/datacodec",
     "pkg/cloudevents/datacodec/json",
     "pkg/cloudevents/datacodec/xml",
     "pkg/cloudevents/transport",
     "pkg/cloudevents/transport/http",
-    "pkg/cloudevents/transport/nats",
     "pkg/cloudevents/types",
   ]
   pruneopts = "NUT"
-  revision = "d50361a5655081514f406b4e672d72e9886c17ad"
+  revision = "c1a6fb0cc8226884014fb5063ab406ed9504a663"
+  version = "0.4.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -395,14 +396,13 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:97c17ee9920101a6cbd7de93d928a2b2268dfc854b60c11a05c7a9ea2de8db5d"
+  digest = "1:d951073d24e8f3dd365db6eb2193dd2d555c787a797f33b7847057592e027332"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
     "apis/duck",
     "apis/duck/v1alpha1",
     "changeset",
-    "cloudevents",
     "kmeta",
     "kmp",
     "logging",
@@ -487,34 +487,6 @@
   pruneopts = "NUT"
   revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
   version = "1.0.1"
-
-[[projects]]
-  digest = "1:b780caf0852c73e7ec312b473fb9d482b36778c6f4c7a60aec9aca24f93405a1"
-  name = "github.com/nats-io/go-nats"
-  packages = [
-    ".",
-    "encoders/builtin",
-    "util",
-  ]
-  pruneopts = "NUT"
-  revision = "13c7fc7590db68b18f2015600f8765a02d705b5d"
-  version = "v1.7.0"
-
-[[projects]]
-  digest = "1:bf3b29bcf1276cfa19bc22910eac8d8582fe0d4d2a43e8f01f2242d8dfba7965"
-  name = "github.com/nats-io/nkeys"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "1546a3320a8f195a5b5c84aef8309377c2e411d5"
-  version = "v0.0.2"
-
-[[projects]]
-  digest = "1:552100985450eaa4a8fa8d18fe8b6b1a04997c4d2ac24f154cc9471430cc4e1c"
-  name = "github.com/nats-io/nuid"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "289cccf02c178dc782430d534e3c1f5b72af807f"
-  version = "v1.0.0"
 
 [[projects]]
   digest = "1:cdc5cfc04dd0b98f86433207fe6d9879757c46734441a08886acc11251c7ed4a"
@@ -743,13 +715,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:583f2f436bab7b59a7bd3e759f1375b06f460760ed1f9235604d143eaab83009"
+  digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
   name = "golang.org/x/crypto"
-  packages = [
-    "ed25519",
-    "ed25519/internal/edwards25519",
-    "ssh/terminal",
-  ]
+  packages = ["ssh/terminal"]
   pruneopts = "NUT"
   revision = "0c41d7ab0a0ee717d4590a44bcb987dfd9e183eb"
 
@@ -1329,6 +1297,7 @@
     "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/cloudevents/sdk-go/pkg/cloudevents",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/client",
+    "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/types",
     "github.com/emicklei/go-restful",
     "github.com/google/go-cmp/cmp",
@@ -1341,7 +1310,6 @@
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
-    "github.com/knative/pkg/cloudevents",
     "github.com/knative/pkg/logging",
     "github.com/knative/pkg/signals",
     "github.com/knative/pkg/test",

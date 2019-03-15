@@ -20,13 +20,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"log"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -72,12 +72,7 @@ func main() {
 		sink = env.Sink
 	}
 
-	c, err := client.NewHTTPClient(
-		client.WithTarget(sink),
-		client.WithHTTPBinaryEncoding(),
-		client.WithTimeNow(),
-		client.WithUUIDs(),
-	)
+	c, err := kncloudevents.NewDefaultClient(sink)
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())
 	}
@@ -112,7 +107,7 @@ func main() {
 			Data: hb,
 		}
 
-		if err := c.Send(context.Background(), event); err != nil {
+		if _, err := c.Send(context.Background(), event); err != nil {
 			log.Printf("failed to send cloudevent: %s", err.Error())
 		}
 		// Wait for next tick
