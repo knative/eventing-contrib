@@ -59,6 +59,7 @@ rules:
   - eventing.knative.dev
   resources:
   - channels
+  - brokers
   verbs: *readOnly
 
 - apiGroups:

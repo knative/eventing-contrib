@@ -56,11 +56,12 @@ rules:
   - deployments
   verbs: *everything
 
-# Channels read
+# Channels and Brokers read
 - apiGroups:
   - eventing.knative.dev
   resources:
   - channels
+  - brokers
   verbs: &readOnly
   - get
   - list
@@ -86,10 +87,3 @@ rules:
   resources:
   - events
   verbs: *everything
-
-# Brokers read
-- apiGroups:
-  - eventing.knative.dev
-  resources:
-  - brokers
-  verbs: *readOnly
