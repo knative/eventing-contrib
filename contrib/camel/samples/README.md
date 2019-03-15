@@ -11,6 +11,13 @@ These steps assume that you have checked out the repo and have a shell in this
 
 ### Prerequisites
 
+1. Install the [Apache Camel K](https://github.com/apache/camel-k) Operator in any namespace where you want to run Camel sources.
+
+   The preferred version that is compatible with Camel sources is [Camel K v0.2.0](https://github.com/apache/camel-k/releases/tag/0.2.0).
+
+   Installation instruction are provided on the [Apache Camel K Github repository](https://github.com/apache/camel-k#installation).
+   Documentation includes specific instructions for common Kubernetes environments, including development clusters.
+
 1. Install the Camel Source from the [yaml files in the config dir](../config/) from
    source:
 

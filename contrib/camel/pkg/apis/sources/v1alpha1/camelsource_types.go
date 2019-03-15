@@ -82,8 +82,11 @@ type CamelSourceSpec struct {
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 }
 
+// CamelSourceOriginSpec is the integration flow to run
 type CamelSourceOriginSpec struct {
+	// Component is a kind of source that directly references a Camel component
 	Component *CamelSourceOriginComponentSpec `json:"component,omitempty"`
+	// Other kind of sources, such as Camel K integrations will be added here
 }
 
 type CamelSourceOriginComponentSpec struct {
