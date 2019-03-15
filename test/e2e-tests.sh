@@ -27,16 +27,23 @@
 
 source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.sh
 
-readonly KNATIVE_EVENTING_RELEASE=https://knative-releases.storage.googleapis.com/eventing/latest/release.yaml
-
 # Names of the Resources used in the tests.
 readonly E2E_TEST_NAMESPACE=e2etest
 readonly E2E_TEST_FUNCTION_NAMESPACE=e2etestfn3
 
 # Helper functions.
 
+function knative_setup() {
+  start_latest_knative_serving || return 1
+  start_latest_knative_eventing || return 1
+
+  header "Standing up Knative Eventing Sources"
+  ko apply -f config/ || return 1
+  wait_until_pods_running knative-sources || fail_test "Eventing Sources did not come up"
+}
+
 # Install the latest stable Knative/eventing in the current cluster.
-function start_latest_eventing() {
+function start_latest_knative_eventing() {
   header "Starting Knative Eventing"
   subheader "Installing Knative Eventing"
   kubectl apply -f ${KNATIVE_EVENTING_RELEASE} || return 1
@@ -44,8 +51,7 @@ function start_latest_eventing() {
 }
 
 
-function teardown() {
-  teardown_events_test_resources
+function knative_teardown() {
   ko delete --ignore-not-found=true -f config/
   ko delete --ignore-not-found=true -f ${KNATIVE_EVENTING_RELEASE}
 
@@ -57,17 +63,19 @@ function teardown() {
   wait_until_object_does_not_exist customresourcedefinitions kuberneteseventsources.sources.knative.dev
 }
 
-function setup_events_test_resources() {
-  kubectl create namespace $E2E_TEST_NAMESPACE
-  kubectl label namespace $E2E_TEST_NAMESPACE istio-injection=enabled --overwrite
-  kubectl create namespace $E2E_TEST_FUNCTION_NAMESPACE
+function test_setup() {
+  kubectl create namespace $E2E_TEST_NAMESPACE || return 1
+  kubectl label namespace $E2E_TEST_NAMESPACE istio-injection=enabled --overwrite || return 1
+  kubectl create namespace $E2E_TEST_FUNCTION_NAMESPACE || return 1
+  # Publish test images
+  $(dirname $0)/upload-test-images.sh e2e || fail_test "Error uploading test images"
 }
 
-function teardown_events_test_resources() {
+function test_teardown() {
   # Delete the function namespace
   echo "Deleting namespace $E2E_TEST_FUNCTION_NAMESPACE"
   kubectl --ignore-not-found=true delete namespace $E2E_TEST_FUNCTION_NAMESPACE
-  wait_until_object_does_not_exist namespaces $E2E_TEST_FUNCTION_NAMESPACE || return 1
+  wait_until_object_does_not_exist namespaces $E2E_TEST_FUNCTION_NAMESPACE
 
   # Delete the test namespace
   echo "Deleting namespace $E2E_TEST_NAMESPACE"
@@ -75,36 +83,26 @@ function teardown_events_test_resources() {
   wait_until_object_does_not_exist namespaces $E2E_TEST_NAMESPACE
 }
 
+function dump_extra_cluster_state() {
+  # Collecting logs from all knative's eventing and eventing-sources pods
+  echo "============================================================"
+  for namespace in "knative-eventing" "knative-sources" "$E2E_TEST_NAMESPACE" "$E2E_TEST_FUNCTION_NAMESPACE"; do
+    for pod in $(kubectl get pod -n $namespace | grep Running | awk '{print $1}' ); do
+      for container in $(kubectl get pod "${pod}" -n $namespace -ojsonpath='{.spec.containers[*].name}'); do
+        echo "Namespace, Pod, Container: ${namespace}, ${pod}, ${container}"
+        kubectl logs -n $namespace "${pod}" -c "${container}" || true
+        echo "----------------------------------------------------------"
+        echo "Namespace, Pod, Container (Previous instance): ${namespace}, ${pod}, ${container}"
+        kubectl logs -p -n $namespace "${pod}" -c "${container}" || true
+        echo "============================================================"
+      done
+    done
+  done
+}
+
 # Script entry point.
 
 initialize $@
-
-# Install Knative Serving if not using an existing cluster
-if (( ! USING_EXISTING_CLUSTER )); then
-  start_latest_knative_serving || fail_test
-fi
-
-# Install Knative Eventing
-start_latest_eventing || fail_test
-
-# Clean up anything that might still be around
-teardown_events_test_resources
-
-# Fail fast during setup.
-set -o errexit
-set -o pipefail
-
-header "Standing up Knative Eventing Sources"
-export KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
-ko resolve -f config/
-ko apply -f config/
-wait_until_pods_running knative-sources
-
-# Publish test images
-$(dirname $0)/upload-test-images.sh e2e
-
-# Setup resources common to all eventing tests
-setup_events_test_resources
 
 go_test_e2e ./test/e2e || fail_test
 
