@@ -396,7 +396,7 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:d951073d24e8f3dd365db6eb2193dd2d555c787a797f33b7847057592e027332"
+  digest = "1:3e6dae494ab98c77d2430c545c05a9822494068460eaaf3a09a438ca9e5e4535"
   name = "github.com/knative/pkg"
   packages = [
     "apis",

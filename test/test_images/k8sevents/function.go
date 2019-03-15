@@ -17,21 +17,37 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"net/http"
 	"time"
 
-	"github.com/knative/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	corev1 "k8s.io/api/core/v1"
 )
 
-func handler(ctx context.Context, e *corev1.Event) {
-	metadata := cloudevents.FromContext(ctx).AsV02()
-	log.Printf("[%s] %s : %q", metadata.Time.Format(time.RFC3339), metadata.Source, e.Message)
+func receive(event cloudevents.Event) {
+	metadata := event.Context.AsV02()
+	k8sEvent := &corev1.Event{}
+	if err := event.DataAs(k8sEvent); err != nil {
+		fmt.Printf("got data error: %s\n", err.Error())
+	}
+	log.Printf("[%s] %s : %q", metadata.Time.Format(time.RFC3339), metadata.Source, k8sEvent.Message)
 }
 
 func main() {
+	ctx := context.TODO()
+
+	c, err := kncloudevents.NewDefaultClient()
+	if err != nil {
+		log.Fatalf("failed to create client: %s", err.Error())
+	}
+
+	if err := c.StartReceiver(ctx, receive); err != nil {
+		log.Fatalf("failed to start receiver: %s", err.Error())
+	}
+
 	log.Print("Ready and listening on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", cloudevents.Handler(handler)))
+	<-ctx.Done()
 }
