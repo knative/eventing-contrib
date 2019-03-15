@@ -21,6 +21,7 @@ declare -A COMPONENTS
 COMPONENTS=(
   ["release.yaml"]="config"
   ["gcppubsub.yaml"]="contrib/gcppubsub/config"
+  ["camel.yaml"]="contrib/camel/config"
   ["message-dumper.yaml"]="config/tools/message-dumper"
 )
 readonly COMPONENTS
