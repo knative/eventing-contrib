@@ -19,16 +19,14 @@ package github
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-
-	"log"
-	"net/http"
-
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
@@ -38,35 +36,33 @@ const (
 	GHHeaderDelivery = "GitHub-Delivery"
 )
 
-// Adapter converts incoming GitHub webhook events to CloudEvents and
-// then sends them to the specified Sink
+// Adapter converts incoming GitHub webhook events to CloudEvents
 type Adapter struct {
-	Sink   string
 	client client.Client
 }
 
+// New creates an adapter to convert incoming GitHub webhook events to CloudEvents and
+// then sends them to the specified Sink
+func New(sinkURI string) (*Adapter, error) {
+	a := new(Adapter)
+	var err error
+	a.client, err = kncloudevents.NewDefaultClient(sinkURI)
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
 // HandleEvent is invoked whenever an event comes in from GitHub
-func (ra *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
+func (a *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
 	hdr := http.Header(header)
-	err := ra.handleEvent(payload, hdr)
+	err := a.handleEvent(payload, hdr)
 	if err != nil {
 		log.Printf("unexpected error handling GitHub event: %s", err)
 	}
 }
 
-func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
-	if ra.client == nil {
-		var err error
-		if ra.client, err = client.NewHTTPClient(
-			client.WithTarget(ra.Sink),
-			client.WithHTTPBinaryEncoding(),
-			client.WithUUIDs(),
-			client.WithTimeNow(),
-		); err != nil {
-			return err
-		}
-	}
-
+func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
 	eventID := hdr.Get("X-" + GHHeaderDelivery)
 	extensions := map[string]interface{}{
@@ -91,7 +87,8 @@ func (ra *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 		}.AsV02(),
 		Data: payload,
 	}
-	return ra.client.Send(context.TODO(), event)
+	_, err = a.client.Send(context.TODO(), event)
+	return err
 }
 
 func sourceFromGitHubEvent(gitHubEvent gh.Event, payload interface{}) (*types.URLRef, error) {

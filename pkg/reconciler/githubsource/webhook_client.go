@@ -34,6 +34,7 @@ type webhookOptions struct {
 	owner       string
 	repo        string
 	events      []string
+	secure      bool
 }
 
 type webhookClient interface {
@@ -122,7 +123,11 @@ func (client gitHubWebhookClient) hookConfig(ctx context.Context, options *webho
 	domain := options.domain
 	active := true
 	config := make(map[string]interface{})
-	config["url"] = fmt.Sprintf("http://%s", domain)
+	protocol := "http"
+	if options.secure {
+		protocol = "https"
+	}
+	config["url"] = fmt.Sprintf("%s://%s", protocol, domain)
 	config["content_type"] = "json"
 	config["secret"] = options.secretToken
 

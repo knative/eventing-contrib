@@ -19,6 +19,7 @@ package cronjobevents
 import (
 	"context"
 	"encoding/json"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -49,6 +50,17 @@ type Adapter struct {
 	client client.Client
 }
 
+// Initialize cloudevent client
+func (a *Adapter) initClient() error {
+	if a.client == nil {
+		var err error
+		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	logger := logging.FromContext(ctx)
 
@@ -57,6 +69,12 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		logger.Error("Unparseable schedule: ", a.Schedule, zap.Error(err))
 		return err
 	}
+
+	if err = a.initClient(); err != nil {
+		logger.Error("Failed to create cloudevent client", zap.Error(err))
+		return err
+	}
+
 	c := cron.New()
 	c.Schedule(sched, cron.FuncJob(a.cronTick))
 	c.Start()
@@ -68,18 +86,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 func (a *Adapter) cronTick() {
 	logger := logging.FromContext(context.TODO())
-	if a.client == nil {
-		var err error
-		if a.client, err = client.NewHTTPClient(
-			client.WithTarget(a.SinkURI),
-			client.WithHTTPBinaryEncoding(),
-			client.WithUUIDs(),
-			client.WithTimeNow(),
-		); err != nil {
-			logger.Info("Failed to create cloudevent client.")
-			return
-		}
-	}
+
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			Type:   eventType,
@@ -87,7 +94,7 @@ func (a *Adapter) cronTick() {
 		}.AsV02(),
 		Data: message(a.Data),
 	}
-	if err := a.client.Send(context.TODO(), event); err != nil {
+	if _, err := a.client.Send(context.TODO(), event); err != nil {
 		logger.Error("failed to send cloudevent", err)
 	}
 }
