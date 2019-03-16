@@ -24,6 +24,7 @@ COMPONENTS=(
   ["event-display.yaml"]="config/tools/event-display"
   ["camel.yaml"]="contrib/camel/config"
   ["kafka.yaml"]="contrib/kafka/config"
+  ["awssqs.yaml"]="contrib/awssqs/config"
 )
 readonly COMPONENTS
 
