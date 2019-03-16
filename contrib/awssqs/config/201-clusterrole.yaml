@@ -15,15 +15,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: eventing-sources-controller
+  name: awssqs-controller
 rules:
-# Sources admin
 - apiGroups:
-  - sources.eventing.knative.dev
+  - apps
   resources:
-  - githubsources
-  - kuberneteseventsources
-  verbs: &everything
+  - deployments
+  verbs:
   - get
   - list
   - watch
@@ -31,50 +29,55 @@ rules:
   - update
   - patch
   - delete
-
-  # ContainerSource from eventing
 - apiGroups:
-    - sources.eventing.knative.dev
+  - ""
   resources:
-    - containersources
-    - containersources/status
-    - containersources/finalizers
-  verbs: *everything
-
-# Sources finalizer
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
+  - awssqssources
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - awssqssources/status
   - awssqssources/finalizers
-  - githubsources/finalizers
-  - kuberneteseventsources/finalizers
-  verbs: *everything
-
-# Source statuses update
-- apiGroups:
-  - sources.eventing.knative.dev
-  resources:
-  - githubsources/status
-  - kuberneteseventsources/status
   verbs:
   - get
   - update
   - patch
-
-# Deployments admin
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs: *everything
-
-# Knative Services admin
 - apiGroups:
   - serving.knative.dev
   resources:
   - services
-  verbs: *everything
-
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - channels
+  verbs:
+  - get
+  - list
+  - watch
 # Secrets read
 - apiGroups:
   - ""
@@ -83,18 +86,3 @@ rules:
   verbs:
   - get
   - list
-  - watch
-
-# Events admin
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs: *everything
-
-# EventTypes admin
-- apiGroups:
-  - eventing.knative.dev
-  resources:
-  - eventtypes
-  verbs: *everything

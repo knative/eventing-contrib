@@ -47,7 +47,7 @@ import (
 const (
 	// controllerAgentName is the string used by this controller to
 	// identify itself when creating events.
-	controllerAgentName = "aws-sqs-source-controller"
+	controllerAgentName = "awssqs-source-controller"
 
 	// awsSqsEnabledEnvVar is used to determine if the AWS SQS Source's
 	// controller should run.  It will only run if the environment
