@@ -19,15 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	internalinterfaces "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/knative/eventing-sources/contrib/awssqs/pkg/client/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// GitHubSources returns a GitHubSourceInformer.
-	GitHubSources() GitHubSourceInformer
-	// KubernetesEventSources returns a KubernetesEventSourceInformer.
-	KubernetesEventSources() KubernetesEventSourceInformer
+	// AwsSqsSources returns a AwsSqsSourceInformer.
+	AwsSqsSources() AwsSqsSourceInformer
 }
 
 type version struct {
@@ -41,12 +39,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// GitHubSources returns a GitHubSourceInformer.
-func (v *version) GitHubSources() GitHubSourceInformer {
-	return &gitHubSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// KubernetesEventSources returns a KubernetesEventSourceInformer.
-func (v *version) KubernetesEventSources() KubernetesEventSourceInformer {
-	return &kubernetesEventSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// AwsSqsSources returns a AwsSqsSourceInformer.
+func (v *version) AwsSqsSources() AwsSqsSourceInformer {
+	return &awsSqsSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
