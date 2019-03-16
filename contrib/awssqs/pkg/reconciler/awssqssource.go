@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package awssqssource
+package reconciler
 
 import (
 	"context"
@@ -49,11 +49,6 @@ const (
 	// identify itself when creating events.
 	controllerAgentName = "awssqs-source-controller"
 
-	// awsSqsEnabledEnvVar is used to determine if the AWS SQS Source's
-	// controller should run.  It will only run if the environment
-	// variable is defined and has the value 'true'.
-	awsSqsEnabledEnvVar = "ENABLE_AWSSQS_SOURCE"
-
 	// raImageEnvVar is the name of the environment variable that
 	// contains the receive adapter's image. It must be defined.
 	raImageEnvVar = "AWSSQS_RA_IMAGE"
@@ -65,10 +60,6 @@ const (
 // default RBAC. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
 func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
-	if enabled, defined := os.LookupEnv(awsSqsEnabledEnvVar); !defined || enabled != "true" {
-		log.Println("Skipping the AWS SQS Source controller.")
-		return nil
-	}
 	raImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
