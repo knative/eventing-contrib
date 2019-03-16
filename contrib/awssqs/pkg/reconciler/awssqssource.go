@@ -22,10 +22,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/contrib/awssqs/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/contrib/awssqs/pkg/reconciler/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	"github.com/knative/eventing-sources/pkg/reconciler/awssqssource/resources"
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
