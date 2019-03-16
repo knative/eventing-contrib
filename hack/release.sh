@@ -23,6 +23,8 @@ COMPONENTS=(
   ["gcppubsub.yaml"]="contrib/gcppubsub/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["camel.yaml"]="contrib/camel/config"
+  ["kafka.yaml"]="contrib/kafka/config"
+  ["message-dumper.yaml"]="config/tools/message-dumper"
 )
 readonly COMPONENTS
 
