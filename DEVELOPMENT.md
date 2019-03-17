@@ -69,8 +69,9 @@ ko apply -f config/
 This command is idempotent, so you can run it at any time to update your
 deployment.
 
-_See [contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md) for instructions on installing the
-gcppubsub source._
+_See
+[contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md) for
+instructions on installing the gcppubsub source._
 
 You can see things running with:
 
@@ -99,9 +100,14 @@ As you make changes to the code-base:
 These are both idempotent, and we expect that running these in the `master`
 branch to produce no diffs.
 
-To verify that your generated code is correct with the new type definition you can run [`./hack/verify-codegen.sh`](./hack/verify-codegen.sh). On OSX you will need GNU `diff` version 3.7 that you can install from `brew` with `brew install diffutils`.
+To verify that your generated code is correct with the new type definition you
+can run [`./hack/verify-codegen.sh`](./hack/verify-codegen.sh). On OSX you will
+need GNU `diff` version 3.7 that you can install from `brew` with
+`brew install diffutils`.
 
-To check that the build and tests passes please see the test [documentation](#tests) or simply run [`./test/presubmit-tests.sh](./test/presubmit-tests.sh)
+To check that the build and tests passes please see the test
+[documentation](#tests) or simply run
+[`./test/presubmit-tests.sh](./test/presubmit-tests.sh)
 
 Once the codegen and dependency information is correct, redeploy using the same
 `ko apply` command you used [Installing a Source](#installing-a-source).
