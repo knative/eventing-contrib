@@ -29,7 +29,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"gopkg.in/go-playground/webhooks.v3"
+	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 

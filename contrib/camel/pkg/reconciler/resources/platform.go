@@ -18,7 +18,7 @@ package resources
 
 import (
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
