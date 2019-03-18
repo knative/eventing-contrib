@@ -23,12 +23,10 @@ These steps assume that you have checked out the repo and have a shell in this
    gcloud services enable pubsub.googleapis.com
    ```
 
-1. Install the
-   [GCP PubSub Source from this yaml](../config/default-gcppubsub.yaml) from
-   source:
+1. Install the [GCP PubSub Source from this directory](../config/) from source:
 
    ```shell
-   ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/gcppubsub/config/default-gcppubsub.yaml
+   ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/gcppubsub/config/
    ```
 
    Or install a release version (TODO: link to released component).
@@ -111,9 +109,9 @@ These steps assume that you have checked out the repo and have a shell in this
      should be the unique portion within the project. E.g. `laconia`, not
      `projects/my-gcp-project/topics/laconia`.
 
-   - `message-dumper` should be replaced with the name of the `Addressable` you
-     want messages sent to. If you deployed the message dumper Service as the
-     destination for messages, you can leave this as `message-dumper`.
+   - `event-display` should be replaced with the name of the `Addressable` you
+     want messages sent to. If you deployed the event display Service as the
+     destination for messages, you can leave this as `event-display`.
 
    - `gcpCredsSecret` should be replaced if you are using a non-default secret
      or key name for the receive adapter's credentials.
@@ -127,14 +125,14 @@ These steps assume that you have checked out the repo and have a shell in this
 ### Subscriber
 
 In order to check the `GcpPubSubSource` is fully working, we will create a
-simple Knative Service that dumps incoming messages to its log, and direct the
+simple Knative Service that displays incoming events to its log, and direct the
 PubSub source to send messages directly (i.e. without buffering or fanout within
 the cluster).
 
-Deploy `dumper.yaml`, building it from source:
+Deploy `event-display.yaml`, building it from source:
 
 ```shell
-ko apply -f dumper.yaml
+ko apply -f event-display.yaml
 ```
 
 ### Publish
@@ -155,7 +153,7 @@ not, then you will need to look downstream yourself.
 1. Use [`kail`](https://github.com/boz/kail) to tail the logs of the subscriber.
 
    ```shell
-   kail -d message-dumper --since=10m
+   kail -d event-display --since=10m
    ```
 
 You should see log lines similar to:

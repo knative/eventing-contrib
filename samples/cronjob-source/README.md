@@ -46,7 +46,7 @@
 ### Subscriber
 
 In order to check the `CronJobSource` is fully working, we will create a simple
-Knative Service that dumps incoming messages to its log and create a
+Knative Service that displays incoming events io its log and create a
 `Subscription` from the `Channel` to that Knative Service.
 
 1. Setup [Knative Serving](https://github.com/knative/docs/tree/master/serving).
@@ -68,7 +68,7 @@ will need to look downstream yourself.
 1. Use [`kail`](https://github.com/boz/kail) to tail the logs of the subscriber.
 
    ```shell
-   kail -d message-dumper -c user-container --since=10m
+   kail -d event-display -c user-container --since=10m
    ```
 
 You should see log lines similar to:

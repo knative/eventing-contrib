@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is a very simple Knative Service that writes the input request to its log.
+# This is a very simple Knative Service that writes the incoming CloudEvent to its log.
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
-  name: message-dumper
+  name: event-display
 spec:
   runLatest:
     configuration:
       revisionTemplate:
         spec:
           container:
-            image: github.com/knative/eventing-sources/cmd/message_dumper
+            image: github.com/knative/eventing-sources/cmd/event_display
