@@ -38,8 +38,8 @@ required = [
 
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2019-02-12
-  revision = "1982208dd91a4cc4fea9612e4e72fb109c77ab22"
+  # HEAD as of 2019-03-17
+  revision = "374ae9eb1f97d495ec55b5f0178d6e6b05f3ae18"
 
 [[override]]
   name = "k8s.io/api"
@@ -67,7 +67,7 @@ required = [
 
 [[constraint]]
   name = "github.com/knative/serving"
-  version = "v0.3.0"
+  version = "v0.4.0"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
