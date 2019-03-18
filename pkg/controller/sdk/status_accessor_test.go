@@ -74,8 +74,10 @@ func TestNewReflectedStatusAccessor(t *testing.T) {
 				},
 			},
 			initial: v1alpha1.ContainerSourceStatus{
-				SinkURI:    "preset",
-				Conditions: duckv1alpha1.Conditions(nil),
+				SinkURI: "preset",
+				Status: duckv1alpha1.Status{
+					Conditions: duckv1alpha1.Conditions(nil),
+				},
 			},
 			update: func() v1alpha1.ContainerSourceStatus {
 				s := v1alpha1.ContainerSourceStatus{

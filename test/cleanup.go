@@ -30,7 +30,7 @@ import (
 // Cleaner holds resources that will be cleaned after test
 type Cleaner struct {
 	resourcesToClean []ResourceDeleter
-	logger           *logging.BaseLogger
+	logger           logging.FormatLogger
 	dynamicClient    dynamic.Interface
 }
 
@@ -41,7 +41,7 @@ type ResourceDeleter struct {
 }
 
 // NewCleaner creates a new Cleaner
-func NewCleaner(log *logging.BaseLogger, client dynamic.Interface) *Cleaner {
+func NewCleaner(log logging.FormatLogger, client dynamic.Interface) *Cleaner {
 	cleaner := &Cleaner{
 		resourcesToClean: make([]ResourceDeleter, 0, 10),
 		logger:           log,
@@ -84,21 +84,21 @@ func (c *Cleaner) Clean(awaitDeletion bool) error {
 	for _, deleter := range c.resourcesToClean {
 		r, err := deleter.Resource.Get(deleter.Name, metav1.GetOptions{})
 		if err != nil {
-			c.logger.Errorf("Failed to get to-be cleaned resource %q : %s", deleter.Name, err)
+			c.logger("Failed to get to-be cleaned resource %q : %s", deleter.Name, err)
 		} else {
-			c.logger.Infof("Cleaning resource: %q\n%+v", deleter.Name, r)
+			c.logger("Cleaning resource: %q\n%+v", deleter.Name, r)
 		}
 		if err := deleter.Resource.Delete(deleter.Name, nil); err != nil {
-			c.logger.Errorf("Error: %v", err)
+			c.logger("Error: %v", err)
 		} else if awaitDeletion {
-			c.logger.Debugf("Waiting for %s to be deleted", deleter.Name)
+			c.logger("Waiting for %s to be deleted", deleter.Name)
 			if err := wait.PollImmediate(interval, timeout, func() (bool, error) {
 				if _, err := deleter.Resource.Get(deleter.Name, metav1.GetOptions{}); err != nil {
 					return true, nil
 				}
 				return false, nil
 			}); err != nil {
-				c.logger.Errorf("Error: %v", err)
+				c.logger("Error: %v", err)
 			}
 		}
 	}
