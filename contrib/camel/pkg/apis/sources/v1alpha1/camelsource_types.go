@@ -98,11 +98,7 @@ type CamelSourceOriginComponentSpec struct {
 
 // CamelSourceStatus defines the observed state of CamelSource
 type CamelSourceStatus struct {
-	// Conditions holds the state of a source at a point in time.
-	// +optional
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	duckv1alpha1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the CamelSource.
 	// +optional
