@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	sources_v1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	versioned "github.com/knative/eventing-sources/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/knative/eventing-sources/pkg/client/listers/sources/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredContainerSourceInformer(client versioned.Interface, namespace st
 				return client.SourcesV1alpha1().ContainerSources(namespace).Watch(options)
 			},
 		},
-		&sources_v1alpha1.ContainerSource{},
+		&sourcesv1alpha1.ContainerSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *containerSourceInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *containerSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sources_v1alpha1.ContainerSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&sourcesv1alpha1.ContainerSource{}, f.defaultInformer)
 }
 
 func (f *containerSourceInformer) Lister() v1alpha1.ContainerSourceLister {

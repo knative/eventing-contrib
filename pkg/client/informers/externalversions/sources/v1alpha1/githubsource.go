@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	sources_v1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	versioned "github.com/knative/eventing-sources/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/knative/eventing-sources/pkg/client/listers/sources/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredGitHubSourceInformer(client versioned.Interface, namespace strin
 				return client.SourcesV1alpha1().GitHubSources(namespace).Watch(options)
 			},
 		},
-		&sources_v1alpha1.GitHubSource{},
+		&sourcesv1alpha1.GitHubSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *gitHubSourceInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *gitHubSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sources_v1alpha1.GitHubSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&sourcesv1alpha1.GitHubSource{}, f.defaultInformer)
 }
 
 func (f *gitHubSourceInformer) Lister() v1alpha1.GitHubSourceLister {

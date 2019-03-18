@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	sources_v1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	versioned "github.com/knative/eventing-sources/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/knative/eventing-sources/pkg/client/listers/sources/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredCronJobSourceInformer(client versioned.Interface, namespace stri
 				return client.SourcesV1alpha1().CronJobSources(namespace).Watch(options)
 			},
 		},
-		&sources_v1alpha1.CronJobSource{},
+		&sourcesv1alpha1.CronJobSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *cronJobSourceInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *cronJobSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sources_v1alpha1.CronJobSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&sourcesv1alpha1.CronJobSource{}, f.defaultInformer)
 }
 
 func (f *cronJobSourceInformer) Lister() v1alpha1.CronJobSourceLister {
