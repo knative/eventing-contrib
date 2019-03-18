@@ -36,6 +36,8 @@ required = [
   unused-packages = false
   non-go = false
 
+# Constrain the version of knative/pkg we would like to import.
+# This controls when we upgrade apis independently of Serving.
 [[override]]
   name = "github.com/knative/pkg"
   # HEAD as of 2019-03-18
