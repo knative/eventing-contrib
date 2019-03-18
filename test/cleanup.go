@@ -19,9 +19,6 @@ limitations under the License.
 package test
 
 import (
-	"os"
-	"os/signal"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -106,17 +103,4 @@ func (c *Cleaner) Clean(awaitDeletion bool) error {
 		}
 	}
 	return nil
-}
-
-// CleanupOnInterrupt will execute the function cleanup if an interrupt signal is caught
-func CleanupOnInterrupt(cleanup func(), logger *logging.BaseLogger) {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			logger.Infof("Test interrupted, cleaning up.")
-			cleanup()
-			os.Exit(1)
-		}
-	}()
 }

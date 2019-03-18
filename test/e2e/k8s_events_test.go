@@ -40,7 +40,7 @@ func TestKubernetesEvents(t *testing.T) {
 
 	clients, cleaner := Setup(t, logger)
 
-	test.CleanupOnInterrupt(func() { TearDown(clients, cleaner, logger) }, logger)
+	pkgTest.CleanupOnInterrupt(func() { TearDown(clients, cleaner, logger) }, logger)
 	defer TearDown(clients, cleaner, logger)
 
 	logger.Infof("Creating ServiceAccount and Binding")
