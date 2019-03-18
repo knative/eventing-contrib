@@ -43,23 +43,23 @@ required = [
 
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.12.5"
+  version = "kubernetes-1.12.6"
 
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.12.5"
+  version = "kubernetes-1.12.6"
 
 [[override]]
   name = "k8s.io/code-generator"
-  version = "kubernetes-1.12.5"
+  version = "kubernetes-1.12.6"
 
 [[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.12.5"
+  version = "kubernetes-1.12.6"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.12.5"
+  version = "kubernetes-1.12.6"
 
 [[override]]
   name = "cloud.google.com/go"
