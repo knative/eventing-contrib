@@ -111,6 +111,9 @@ var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {
+	// inherits duck/v1alpha1 Status, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
+	// * Conditions - the latest available observations of a resource's current state.
 	duckv1alpha1.Status `json:",inline"`
 
 	// WebhookIDKey is the ID of the webhook registered with GitHub

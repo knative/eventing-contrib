@@ -98,6 +98,9 @@ type CamelSourceOriginComponentSpec struct {
 
 // CamelSourceStatus defines the observed state of CamelSource
 type CamelSourceStatus struct {
+	// inherits duck/v1alpha1 Status, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
+	// * Conditions - the latest available observations of a resource's current state.
 	duckv1alpha1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the CamelSource.
