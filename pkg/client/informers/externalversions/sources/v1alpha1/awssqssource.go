@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	sources_v1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	versioned "github.com/knative/eventing-sources/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/knative/eventing-sources/pkg/client/listers/sources/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredAwsSqsSourceInformer(client versioned.Interface, namespace strin
 				return client.SourcesV1alpha1().AwsSqsSources(namespace).Watch(options)
 			},
 		},
-		&sourcesv1alpha1.AwsSqsSource{},
+		&sources_v1alpha1.AwsSqsSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *awsSqsSourceInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *awsSqsSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sourcesv1alpha1.AwsSqsSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&sources_v1alpha1.AwsSqsSource{}, f.defaultInformer)
 }
 
 func (f *awsSqsSourceInformer) Lister() v1alpha1.AwsSqsSourceLister {

@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	sources_v1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	versioned "github.com/knative/eventing-sources/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/knative/eventing-sources/pkg/client/listers/sources/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredKubernetesEventSourceInformer(client versioned.Interface, namesp
 				return client.SourcesV1alpha1().KubernetesEventSources(namespace).Watch(options)
 			},
 		},
-		&sourcesv1alpha1.KubernetesEventSource{},
+		&sources_v1alpha1.KubernetesEventSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *kubernetesEventSourceInformer) defaultInformer(client versioned.Interfa
 }
 
 func (f *kubernetesEventSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sourcesv1alpha1.KubernetesEventSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&sources_v1alpha1.KubernetesEventSource{}, f.defaultInformer)
 }
 
 func (f *kubernetesEventSourceInformer) Lister() v1alpha1.KubernetesEventSourceLister {

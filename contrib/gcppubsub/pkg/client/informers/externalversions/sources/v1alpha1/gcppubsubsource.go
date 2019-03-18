@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	sources_v1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
 	versioned "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/listers/sources/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredGcpPubSubSourceInformer(client versioned.Interface, namespace st
 				return client.SourcesV1alpha1().GcpPubSubSources(namespace).Watch(options)
 			},
 		},
-		&sourcesv1alpha1.GcpPubSubSource{},
+		&sources_v1alpha1.GcpPubSubSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *gcpPubSubSourceInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *gcpPubSubSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sourcesv1alpha1.GcpPubSubSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&sources_v1alpha1.GcpPubSubSource{}, f.defaultInformer)
 }
 
 func (f *gcpPubSubSourceInformer) Lister() v1alpha1.GcpPubSubSourceLister {
