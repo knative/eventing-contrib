@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is a very simple Knative Service that writes the input request to its log.
-apiVersion: serving.knative.dev/v1alpha1
-kind: Service
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
 metadata:
-  name: message-dumper
-spec:
-  runLatest:
-    configuration:
-      revisionTemplate:
-        spec:
-          container:
-            image: github.com/knative/eventing-sources/cmd/message_dumper
+  name: camel-controller-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: camel-controller
+subjects:
+- kind: ServiceAccount
+  name: camel-controller-manager
+  namespace: knative-sources

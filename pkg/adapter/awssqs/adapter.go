@@ -18,10 +18,11 @@ package awssqs
 
 import (
 	"fmt"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

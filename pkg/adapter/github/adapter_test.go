@@ -29,7 +29,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"gopkg.in/go-playground/webhooks.v3"
+	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 
@@ -427,10 +427,12 @@ func TestAllCases(t *testing.T) {
 		sinkServer := httptest.NewServer(h)
 		defer sinkServer.Close()
 
-		ra := Adapter{
-			SinkURI: sinkServer.URL,
+		ra, err := New(sinkServer.URL)
+		if err != nil {
+			t.Fatal(err)
 		}
-		t.Run(tc.name, tc.runner(t, ra))
+
+		t.Run(tc.name, tc.runner(t, *ra))
 	}
 }
 
@@ -551,8 +553,9 @@ func TestHandleEvent(t *testing.T) {
 	sinkServer := httptest.NewServer(h)
 	defer sinkServer.Close()
 
-	ra := Adapter{
-		SinkURI: sinkServer.URL,
+	ra, err := New(sinkServer.URL)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	payload := gh.PullRequestPayload{}

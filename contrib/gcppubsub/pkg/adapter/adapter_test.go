@@ -19,12 +19,13 @@ package gcppubsub
 import (
 	"context"
 	"encoding/json"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	"cloud.google.com/go/pubsub"
 	"go.uber.org/zap"

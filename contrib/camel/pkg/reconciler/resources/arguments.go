@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,26 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package resources
 
-import (
-	"log"
-	"net/http"
-	"net/http/httputil"
-)
-
-type MessageDumper struct{}
-
-func (md *MessageDumper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if reqBytes, err := httputil.DumpRequest(r, true); err == nil {
-		log.Printf("Message Dumper received a message: %+v", string(reqBytes))
-		w.Write(reqBytes)
-	} else {
-		log.Printf("Error dumping the request: %+v :: %+v", err, r)
-	}
+type CamelArguments struct {
+	Name               string
+	Namespace          string
+	Source             CamelArgumentsSource
+	ServiceAccountName string
+	Context            string
+	Sink               string
 }
 
-func main() {
-	http.ListenAndServe(":8080", &MessageDumper{})
+type CamelArgumentsSource struct {
+	Name       string
+	Content    string
+	Properties map[string]string
 }

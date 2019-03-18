@@ -56,8 +56,9 @@ func main() {
 
 	log.Printf("Sink is: %q", *sink)
 
-	ra := &github.Adapter{
-		SinkURI: *sink,
+	ra, err := github.New(*sink)
+	if err != nil {
+		log.Fatalf("Failed to create github adapter: %s", err.Error())
 	}
 
 	hook := gh.New(&gh.Config{Secret: secretToken})
@@ -97,7 +98,7 @@ func main() {
 		gh.WatchEvent)
 
 	addr := fmt.Sprintf(":%s", port)
-	err := webhooks.Run(hook, addr, "/")
+	err = webhooks.Run(hook, addr, "/")
 	if err != nil {
 		log.Fatalf("Failed to run the webhook")
 	}
