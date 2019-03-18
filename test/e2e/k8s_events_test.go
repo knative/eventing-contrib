@@ -23,7 +23,6 @@ import (
 
 	"github.com/knative/eventing-sources/test"
 	pkgTest "github.com/knative/pkg/test"
-	"github.com/knative/pkg/test/logging"
 )
 
 const (
@@ -36,45 +35,44 @@ const (
 )
 
 func TestKubernetesEvents(t *testing.T) {
-	logger := logging.GetContextLogger("TestKubernetesEvents")
 
-	clients, cleaner := Setup(t, logger)
+	clients, cleaner := Setup(t, t.Logf)
 
-	pkgTest.CleanupOnInterrupt(func() { TearDown(clients, cleaner, logger) }, logger)
-	defer TearDown(clients, cleaner, logger)
+	pkgTest.CleanupOnInterrupt(func() { TearDown(clients, cleaner, t.Logf) }, t.Logf)
+	defer TearDown(clients, cleaner, t.Logf)
 
-	logger.Infof("Creating ServiceAccount and Binding")
+	t.Log("Creating ServiceAccount and Binding")
 
-	err := CreateServiceAccountAndBinding(clients, serviceAccount, logger, cleaner)
+	err := CreateServiceAccountAndBinding(clients, serviceAccount, t.Logf, cleaner)
 	if err != nil {
 		t.Fatalf("Failed to create ServiceAccount or Binding: %v", err)
 	}
 
-	logger.Infof("Creating Channel")
+	t.Logf("Creating Channel")
 	channel := test.Channel(channelName, pkgTest.Flags.Namespace, test.ClusterChannelProvisioner(provisionerName))
-	err = CreateChannel(clients, channel, logger, cleaner)
+	err = CreateChannel(clients, channel, t.Logf, cleaner)
 	if err != nil {
 		t.Fatalf("Failed to create Channel: %v", err)
 	}
 
-	logger.Infof("Creating EventSource")
+	t.Logf("Creating EventSource")
 	k8sSource := test.KubernetesEventSource(eventSource, pkgTest.Flags.Namespace, testNamespace, serviceAccount, test.ChannelRef(channelName))
-	err = CreateKubernetesEventSource(clients, k8sSource, logger, cleaner)
+	err = CreateKubernetesEventSource(clients, k8sSource, t.Logf, cleaner)
 	if err != nil {
 		t.Fatalf("Failed to create KubernetesEventSource: %v", err)
 	}
 
-	logger.Infof("Creating Route and Config")
+	t.Logf("Creating Route and Config")
 	// The receiver of events which is accessible through Route
 	configImagePath := ImagePath("k8sevents")
-	err = WithRouteReady(clients, logger, cleaner, routeName, configImagePath)
+	err = WithRouteReady(clients, t.Logf, cleaner, routeName, configImagePath)
 	if err != nil {
 		t.Fatalf("The Route was not marked as Ready to serve traffic: %v", err)
 	}
 
-	logger.Infof("Creating Subscription")
+	t.Logf("Creating Subscription")
 	subscription := test.Subscription(subscriptionName, pkgTest.Flags.Namespace, test.ChannelRef(channelName), test.SubscriberSpecForRoute(routeName), nil)
-	err = CreateSubscription(clients, subscription, logger, cleaner)
+	err = CreateSubscription(clients, subscription, t.Logf, cleaner)
 	if err != nil {
 		t.Fatalf("Failed to create Subscription: %v", err)
 	}
@@ -82,23 +80,23 @@ func TestKubernetesEvents(t *testing.T) {
 	//Work around for: https://github.com/knative/eventing/issues/125
 	//and the fact that even after pods are up, due to Istio slowdown, there's
 	//about 5-6 seconds that traffic won't be passed through.
-	WaitForAllPodsRunning(clients, logger, pkgTest.Flags.Namespace)
+	WaitForAllPodsRunning(clients, t.Logf, pkgTest.Flags.Namespace)
 	time.Sleep(10 * time.Second)
 
-	logger.Infof("Creating Pod")
+	t.Logf("Creating Pod")
 
-	err = CreatePod(clients, test.NGinxPod(testNamespace), logger, cleaner)
+	err = CreatePod(clients, test.NGinxPod(testNamespace), t.Logf, cleaner)
 	if err != nil {
 		t.Fatalf("Failed to create Pod: %v", err)
 	}
 
-	WaitForAllPodsRunning(clients, logger, testNamespace)
+	WaitForAllPodsRunning(clients, t.Logf, testNamespace)
 
-	err = WaitForLogContent(clients, logger, routeName, "user-container", "Created container")
+	err = WaitForLogContent(clients, t.Logf, routeName, "user-container", "Created container")
 	if err != nil {
 		t.Fatalf("Events for container created not received: %v", err)
 	}
-	err = WaitForLogContent(clients, logger, routeName, "user-container", "Started container")
+	err = WaitForLogContent(clients, t.Logf, routeName, "user-container", "Started container")
 	if err != nil {
 		t.Fatalf("Events for container started not received: %v", err)
 	}
