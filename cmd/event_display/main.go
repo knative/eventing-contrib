@@ -17,7 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
@@ -145,7 +147,17 @@ func display(ctx context.Context, event cloudevents.Event) {
 	b.WriteString("  Method: " + tx.Method + "\n")
 
 	b.WriteString("Data,\n  ")
-	b.Write(event.Data.([]byte))
+	if strings.HasPrefix(event.DataContentType(), "application/json") {
+		var prettyJSON bytes.Buffer
+		error := json.Indent(&prettyJSON, event.Data.([]byte), "  ", "  ")
+		if error != nil {
+			b.Write(event.Data.([]byte))
+		} else {
+			b.Write(prettyJSON.Bytes())
+		}
+	} else {
+		b.Write(event.Data.([]byte))
+	}
 	b.WriteString("\n")
 
 	fmt.Print(b.String())
