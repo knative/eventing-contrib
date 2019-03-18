@@ -39,12 +39,12 @@ In order to check a `CamelSource` is fully working, we will create:
 - a simple Knative Service that dumps incoming messages to its log
 - a in-memory channel named `camel-test` that will buffer messages created by
   the event source
-- a subscription to direct messages on the test channel to the dumper service
+- a subscription to direct messages on the test channel to the event display
 
-Deploy `dumper_resources.yaml`, building it from source:
+Deploy `display_resources.yaml`, building it from source:
 
 ```shell
-ko apply -f dumper_resources.yaml
+ko apply -f display_resources.yaml
 ```
 
 ### Run a CamelSource using the Timer component
@@ -73,7 +73,7 @@ system by looking at what is downstream of the `CamelSource`.
 1. Use [`kail`](https://github.com/boz/kail) to tail the logs of the subscriber.
 
    ```shell
-   kail -d camel-message-dumper --since=10m
+   kail -d camel-event-display --since=10m
    ```
 
 If you've deployed the timer source, you should see log lines appearing every 3
@@ -96,7 +96,7 @@ work.
 First, edit the [telegram CamelSource](source_telegram.yaml) and put the
 authorization token, replacing the `<put-your-token-here>` placeholder.
 
-To reduce noise in the message dumper, you can remove the previously created
+To reduce noise in the event display, you can remove the previously created
 timer CamelSource from the namespace:
 
 ```shell
@@ -109,11 +109,11 @@ Install the [telegram CamelSource](source_telegram.yaml) from source:
 ko apply -f source_telegram.yaml
 ```
 
-Start again kail and keep it open on the message dumper:
+Start again kail and keep it open on the event display:
 
 ```shell
-kail -d camel-message-dumper --since=10m
+kail -d camel-event-display --since=10m
 ```
 
 Now, you can contact your bot with any Telegram client. Each message you'll send
-to the bot will be printed by the message dumper as cloudevent.
+to the bot will be printed by the event display as cloudevent.
