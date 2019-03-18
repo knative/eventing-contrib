@@ -23,9 +23,7 @@ These steps assume that you have checked out the repo and have a shell in this
    gcloud services enable pubsub.googleapis.com
    ```
 
-1. Install the
-   [GCP PubSub Source from this directory](../config/) from
-   source:
+1. Install the [GCP PubSub Source from this directory](../config/) from source:
 
    ```shell
    ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/gcppubsub/config/
