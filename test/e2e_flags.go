@@ -49,7 +49,7 @@ func initializeEventingSourcesFlags() *EventingSourcesEnvironmentFlags {
 	logging.InitializeLogger(pkgTest.Flags.LogVerbose)
 
 	if pkgTest.Flags.EmitMetrics {
-		logging.InitializeMetricExporter()
+		logging.InitializeMetricExporter("eventing-sources")
 	}
 
 	return &f
