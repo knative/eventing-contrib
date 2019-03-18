@@ -35,8 +35,6 @@ have a running environment that meets
 
 ## Running end-to-end tests
 
-_NOTE: This repo currently has no E2E tests._
-
 To run the e2e tests, you need to have a running environment that meets
 [the e2e test environment requirements](#environment-requirements), and you need
 to specify the build tag `e2e`.
@@ -112,7 +110,11 @@ deployed in GCR.
 
 ### Adding new test images
 
-New test image paths should be placed in `./test/image_paths.txt`.
+New test images should be placed in `./test/test_images`. For each image create
+a new sub-folder and include a Go file that will be an entry point to the
+application. This Go file should use the package "main" and include the function
+main(). It is a good practice to include a readme file as well. When uploading
+test images, `ko` will build an image from this folder.
 
 ## Flags
 

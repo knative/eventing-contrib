@@ -1,1 +1,0 @@
-# TODO(#8): Write E2E tests.
