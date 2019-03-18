@@ -408,7 +408,7 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:3e6dae494ab98c77d2430c545c05a9822494068460eaaf3a09a438ca9e5e4535"
+  digest = "1:ca2d9c56d706f868f57501e4cb4eb6816ee80195a3291f79b279c5b59665159d"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -430,7 +430,7 @@
   revision = "587fb819f44ff27a38a8ceb172058c5214a47911"
 
 [[projects]]
-  digest = "1:9a3d5c1186e9299dc3c3b9f28c3521abdf6abf0834f8ddd169ab005762097378"
+  digest = "1:7d2f7e373d3265017ff21f605e7ad4aa710adc2698eadcc317b30d4f9c2c4ab3"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
