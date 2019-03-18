@@ -22,6 +22,7 @@ COMPONENTS=(
   ["release.yaml"]="config"
   ["gcppubsub.yaml"]="contrib/gcppubsub/config"
   ["event-display.yaml"]="config/tools/event-display"
+  ["camel.yaml"]="contrib/camel/config"
 )
 readonly COMPONENTS
 
