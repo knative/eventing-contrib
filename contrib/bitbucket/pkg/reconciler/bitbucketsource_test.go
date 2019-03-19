@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/bitbucket/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
