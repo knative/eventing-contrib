@@ -107,7 +107,7 @@ need GNU `diff` version 3.7 that you can install from `brew` with
 
 To check that the build and tests passes please see the test
 [documentation](#tests) or simply run
-[`./test/presubmit-tests.sh](./test/presubmit-tests.sh)
+[`./test/presubmit-tests.sh`](./test/presubmit-tests.sh).
 
 Once the codegen and dependency information is correct, redeploy using the same
 `ko apply` command you used [Installing a Source](#installing-a-source).
