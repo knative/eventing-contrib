@@ -20,6 +20,7 @@ package test
 
 import (
 	"flag"
+
 	pkgTest "github.com/knative/pkg/test"
 	"github.com/knative/pkg/test/logging"
 )
@@ -29,19 +30,13 @@ var EventingSourcesFlags = initializeEventingSourcesFlags()
 
 // EventingSourcesEnvironmentFlags holds the e2e flags needed only by the eventing-sources repo
 type EventingSourcesEnvironmentFlags struct {
-	DockerRepo string // Docker repo (defaults to $KO_DOCKER_REPO)
-	Tag        string // Tag for test images
 }
 
 func initializeEventingSourcesFlags() *EventingSourcesEnvironmentFlags {
 	var f EventingSourcesEnvironmentFlags
 
 	flag.Parse()
-
 	logging.InitializeLogger(pkgTest.Flags.LogVerbose)
-
-	f.DockerRepo = pkgTest.Flags.DockerRepo
-	f.Tag = pkgTest.Flags.Tag
 
 	if pkgTest.Flags.EmitMetrics {
 		logging.InitializeMetricExporter("eventing-sources")

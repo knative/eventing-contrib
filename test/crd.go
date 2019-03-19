@@ -20,10 +20,14 @@ package test
 import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
+	pkgTest "github.com/knative/pkg/test"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	apiVersion = "eventing.knative.dev/v1alpha1"
 )
 
 // Route returns a Route object in namespace
@@ -67,53 +71,14 @@ func Configuration(name string, namespace string, imagePath string) *servingv1al
 	}
 }
 
-// ServiceAccount returns ServiceAccount object in given namespace
-func ServiceAccount(name string, namespace string) *corev1.ServiceAccount {
-	return &corev1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-}
-
-// ClusterRoleBinding returns ClusterRoleBinding for given subject and role
-func ClusterRoleBinding(name string, namespace string, serviceAccount string, role string) *rbacv1.ClusterRoleBinding {
-	return &rbacv1.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      serviceAccount,
-				Namespace: namespace,
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-			Name:     role,
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-	}
-}
-
 // ClusterChannelProvisioner returns a ClusterChannelProvisioner for a given name
 func ClusterChannelProvisioner(name string) *corev1.ObjectReference {
-	return &corev1.ObjectReference{
-		Kind:       "ClusterChannelProvisioner",
-		APIVersion: "eventing.knative.dev/v1alpha1",
-		Name:       name,
-	}
+	return pkgTest.CoreV1ObjectReference("ClusterChannelProvisioner", apiVersion, name)
 }
 
 // ChannelRef returns an ObjectReference for a given Channel Name
 func ChannelRef(name string) *corev1.ObjectReference {
-	return &corev1.ObjectReference{
-		Kind:       "Channel",
-		APIVersion: "eventing.knative.dev/v1alpha1",
-		Name:       name,
-	}
+	return pkgTest.CoreV1ObjectReference("Channel", apiVersion, name)
 }
 
 // Channel returns a Channel with the specified provisioner
@@ -166,30 +131,6 @@ func Subscription(name string, namespace string, channel *corev1.ObjectReference
 			Channel:    *channel,
 			Subscriber: subscriber,
 			Reply:      reply,
-		},
-	}
-}
-
-// NGinxPod returns nginx pod defined in given namespace
-func NGinxPod(namespace string) *corev1.Pod {
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        "nginx",
-			Namespace:   namespace,
-			Annotations: map[string]string{"sidecar.istio.io/inject": "true"},
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  "nginx",
-					Image: "nginx:1.7.9",
-					Ports: []corev1.ContainerPort{
-						{
-							ContainerPort: 80,
-						},
-					},
-				},
-			},
 		},
 	}
 }
