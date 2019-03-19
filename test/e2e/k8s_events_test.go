@@ -80,23 +80,23 @@ func TestKubernetesEvents(t *testing.T) {
 	//Work around for: https://github.com/knative/eventing/issues/125
 	//and the fact that even after pods are up, due to Istio slowdown, there's
 	//about 5-6 seconds that traffic won't be passed through.
-	pkgTest.WaitForAllPodsRunning(clients, pkgTest.Flags.Namespace)
+	pkgTest.WaitForAllPodsRunning(clients.Kube, pkgTest.Flags.Namespace)
 	time.Sleep(10 * time.Second)
 
 	t.Logf("Creating Pod")
 
-	err = CreatePod(clients, pkgTest.NGinxPod(testNamespace), t.Logf, cleaner)
+	err = CreatePod(clients, pkgTest.NginxPod(testNamespace), t.Logf, cleaner)
 	if err != nil {
 		t.Fatalf("Failed to create Pod: %v", err)
 	}
 
-	pkgTest.WaitForAllPodsRunning(clients, testNamespace)
+	pkgTest.WaitForAllPodsRunning(clients.Kube, testNamespace)
 
-	err = pkgTest.WaitForLogContent(clients, routeName, "user-container", "Created container")
+	err = pkgTest.WaitForLogContent(clients.Kube, routeName, "user-container", "Created container")
 	if err != nil {
 		t.Fatalf("Events for container created not received: %v", err)
 	}
-	err = pkgTest.WaitForLogContent(clients, routeName, "user-container", "Started container")
+	err = pkgTest.WaitForLogContent(clients.Kube, routeName, "user-container", "Started container")
 	if err != nil {
 		t.Fatalf("Events for container started not received: %v", err)
 	}
