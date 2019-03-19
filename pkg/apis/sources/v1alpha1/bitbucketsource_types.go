@@ -113,11 +113,10 @@ var bitBucketSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 
 // BitBucketSourceStatus defines the observed state of BitBucketSource.
 type BitBucketSourceStatus struct {
-	// Conditions holds the state of a source at a point in time.
-	// +optional
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	// inherits duck/v1alpha1 Status, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
+	// * Conditions - the latest available observations of a resource's current state.
+	duckv1alpha1.Status `json:",inline"`
 
 	// WebhookUUIDKey is the UUID of the webhook registered with BitBucket.
 	WebhookUUIDKey string `json:"webhookUUIDKey,omitempty"`
