@@ -26,8 +26,6 @@ import (
 type Interface interface {
 	// AwsSqsSources returns a AwsSqsSourceInformer.
 	AwsSqsSources() AwsSqsSourceInformer
-	// BitBucketSources returns a BitBucketSourceInformer.
-	BitBucketSources() BitBucketSourceInformer
 	// ContainerSources returns a ContainerSourceInformer.
 	ContainerSources() ContainerSourceInformer
 	// CronJobSources returns a CronJobSourceInformer.
@@ -52,11 +50,6 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // AwsSqsSources returns a AwsSqsSourceInformer.
 func (v *version) AwsSqsSources() AwsSqsSourceInformer {
 	return &awsSqsSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// BitBucketSources returns a BitBucketSourceInformer.
-func (v *version) BitBucketSources() BitBucketSourceInformer {
-	return &bitBucketSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ContainerSources returns a ContainerSourceInformer.
