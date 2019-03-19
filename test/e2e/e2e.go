@@ -16,8 +16,6 @@ limitations under the License.
 package e2e
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -30,7 +28,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacV1beta1 "k8s.io/api/rbac/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	// Mysteriously required to support GCP auth (required by k8s libs).
 	// Apparently just importing it is enough. @_@ side effects @_@.
@@ -196,54 +193,11 @@ func CreateServiceAccountAndBinding(clients *test.Clients, name string, logger l
 
 // CreatePod will create a Pod
 func CreatePod(clients *test.Clients, pod *corev1.Pod, logger logging.FormatLogger, cleaner *test.Cleaner) error {
-	pods := clients.Kube.Kube.CoreV1().Pods(pod.GetNamespace())
-	res, err := pods.Create(pod)
+	res, err := clients.Kube.CreatePod(pod)
 	if err != nil {
 		return err
 	}
+
 	cleaner.Add(corev1.SchemeGroupVersion.Group, corev1.SchemeGroupVersion.Version, "pods", res.ObjectMeta.Namespace, res.ObjectMeta.Name)
 	return nil
-}
-
-// PodLogs returns Pod logs for given Pod and Container
-func PodLogs(clients *test.Clients, podName string, containerName string, logger logging.FormatLogger) ([]byte, error) {
-	pods := clients.Kube.Kube.CoreV1().Pods(pkgTest.Flags.Namespace)
-	podList, err := pods.List(metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	for _, pod := range podList.Items {
-		if strings.Contains(pod.Name, podName) {
-			result := pods.GetLogs(pod.Name, &corev1.PodLogOptions{
-				Container: containerName,
-			}).Do()
-			return result.Raw()
-		}
-	}
-	return nil, fmt.Errorf("Could not find logs for %s/%s", podName, containerName)
-}
-
-// WaitForLogContent waits until logs for given Pod/Container include the given content.
-// If the content is not present within timeout it returns error.
-func WaitForLogContent(clients *test.Clients, logger logging.FormatLogger, podName string, containerName string, content string) error {
-	return wait.PollImmediate(interval, timeout, func() (bool, error) {
-		logs, err := PodLogs(clients, podName, containerName, logger)
-		if err != nil {
-			return true, err
-		}
-		return strings.Contains(string(logs), content), nil
-	})
-}
-
-// WaitForAllPodsRunning will wait until all pods in the given namespace are running
-func WaitForAllPodsRunning(clients *test.Clients, logger logging.FormatLogger, namespace string) error {
-	if err := pkgTest.WaitForPodListState(clients.Kube, test.PodsRunning, "PodsAreRunning", namespace); err != nil {
-		return err
-	}
-	return nil
-}
-
-// ImagePath is a helper function to prefix image name with repo and suffix with tag
-func ImagePath(name string) string {
-	return fmt.Sprintf("%s/%s:%s", test.EventingSourcesFlags.DockerRepo, name, test.EventingSourcesFlags.Tag)
 }
