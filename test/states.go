@@ -17,7 +17,6 @@ package test
 
 import (
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // states contains functions for asserting against the state of Knative Serving
@@ -41,14 +40,4 @@ func IsServiceReady(s *v1alpha1.Service) (bool, error) {
 // ready.
 func IsRouteReady(r *v1alpha1.Route) (bool, error) {
 	return r.Status.IsReady(), nil
-}
-
-// PodsRunning will check the status conditions of the pod list and return true all pods are Running
-func PodsRunning(podList *corev1.PodList) (bool, error) {
-	for _, pod := range podList.Items {
-		if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodSucceeded {
-			return false, nil
-		}
-	}
-	return true, nil
 }
