@@ -24,7 +24,7 @@ run the commands from contrib/awssqs.
 ### Create a channel and subscriber
 
 ```shell
-ko apply -f samples/dumper-resources.yaml
+ko apply -f samples/display-resources.yaml
 ```
 
 The sample provided will configure an in-memory channel (named
