@@ -33,7 +33,7 @@ spec:
         - image: github.com/knative/eventing-sources/contrib/bitbucket/cmd/controller
           name: manager
           env:
-            - name: BITBUCKET_RA_IMAGE
+            - name: BB_RA_IMAGE
               value: github.com/knative/eventing-sources/contrib/bitbucket/cmd/receive_adapter
           resources:
             limits:
