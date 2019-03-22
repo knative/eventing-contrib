@@ -25,6 +25,84 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func TestMakeDeployment_sinknolabelsandannotations(t *testing.T) {
+	got := MakeDeployment(nil, &ContainerArguments{
+		Name:      "test-name",
+		Namespace: "test-namespace",
+		Image:     "test-image",
+		Args:      []string{"--test1=args1", "--test2=args2"},
+		Env: []corev1.EnvVar{{
+			Name:  "test1",
+			Value: "arg1",
+		}, {
+			Name: "test2",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "test2-secret",
+				},
+			},
+		}},
+		ServiceAccountName: "test-service-account",
+		SinkInArgs:         false,
+		Sink:               "test-sink",
+	})
+
+	want := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-name-",
+			Namespace:    "test-namespace",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"source": "test-name",
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "test-service-account",
+					Containers: []corev1.Container{
+						{
+							Name:  "source",
+							Image: "test-image",
+							Args: []string{
+								"--test1=args1",
+								"--test2=args2",
+								"--sink=test-sink",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "test1",
+									Value: "arg1",
+								}, {
+									Name: "test2",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											Key: "test2-secret",
+										},
+									},
+								}, {
+									Name:  "SINK",
+									Value: "test-sink",
+								}},
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
+	}
+}
+
 func TestMakeDeployment_sink(t *testing.T) {
 	got := MakeDeployment(nil, &ContainerArguments{
 		Name:      "test-name",
@@ -45,6 +123,8 @@ func TestMakeDeployment_sink(t *testing.T) {
 		ServiceAccountName: "test-service-account",
 		SinkInArgs:         false,
 		Sink:               "test-sink",
+		Labels:             map[string]string{"source": "test-name"},
+		Annotations:        map[string]string{"sidecar.istio.io/inject": "true"},
 	})
 
 	want := &appsv1.Deployment{
@@ -129,6 +209,8 @@ func TestMakeDeployment_sinkinargs(t *testing.T) {
 		}},
 		ServiceAccountName: "test-service-account",
 		SinkInArgs:         true,
+		Labels:             map[string]string{"source": "test-name"},
+		Annotations:        map[string]string{"sidecar.istio.io/inject": "true"},
 	})
 
 	want := &appsv1.Deployment{

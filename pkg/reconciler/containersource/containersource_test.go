@@ -195,6 +195,35 @@ var testCases = []controllertesting.TestCase{
 		},
 		IgnoreTimes: true,
 	}, {
+		Name:       "valid containersource, labels and annotations given",
+		Reconciles: &sourcesv1alpha1.ContainerSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Sink = nil
+				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
+				s.ObjectMeta.Annotations = map[string]string{"annotation": "solid"}
+				s.ObjectMeta.Labels = map[string]string{"label": "soliderer"}
+				return s
+			}(),
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getContainerSource()
+				s.Spec.Sink = nil
+				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
+				s.Status.InitializeConditions()
+				s.Status.MarkDeploying("Deploying", "Created deployment %s", deployGeneratedName)
+				s.Status.MarkSink(targetURI)
+				s.ObjectMeta.Annotations = map[string]string{"annotation": "solid"}
+				s.ObjectMeta.Labels = map[string]string{"label": "soliderer"}
+				return s
+			}(),
+		},
+		IgnoreTimes: true,
+	}, {
 		Name:       "valid containersource, sink, and deployment",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{

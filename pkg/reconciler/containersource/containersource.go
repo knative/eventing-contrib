@@ -96,6 +96,22 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 	source.Status.InitializeConditions()
 
+	// These are the annotations / labels we always apply
+	labels := map[string]string{"source": source.Name}
+	annotations := map[string]string{"sidecar.istio.io/inject": "true"}
+
+	// Then wire through any annotations / labels from the Source
+	if source.ObjectMeta.Annotations != nil {
+		for k, v := range source.ObjectMeta.Annotations {
+			annotations[k] = v
+		}
+	}
+	if source.ObjectMeta.Labels != nil {
+		for k, v := range source.ObjectMeta.Labels {
+			labels[k] = v
+		}
+	}
+
 	args := &resources.ContainerArguments{
 		Name:               source.Name,
 		Namespace:          source.Namespace,
@@ -103,6 +119,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		Args:               source.Spec.Args,
 		Env:                source.Spec.Env,
 		ServiceAccountName: source.Spec.ServiceAccountName,
+		Annotations:        annotations,
+		Labels:             labels,
 	}
 
 	err = r.setSinkURIArg(ctx, source, args)
