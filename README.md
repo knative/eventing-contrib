@@ -19,9 +19,9 @@ The Knative Eventing Sources project provides source implementations that:
 
 For complete documentation about Knative Eventing, see the following repos:
 
-- [Knative Eventing](https://github.com/knative/docs/tree/master/docs/eventing) for
+- [Knative Eventing](https://www.knative.dev/docs/eventing/) for
   the Knative Eventing spec.
-- [Knative docs](https://github.com/knative/docs) for an overview of Knative and
+- [Knative docs](https://www.knative.dev/docs/) for an overview of Knative and
   to view user documentation.
 
 If you are interested in contributing, see [CONTRIBUTING.md](./CONTRIBUTING.md)

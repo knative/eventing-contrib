@@ -6,13 +6,15 @@
 
 1.  Create an [AWS SQS queue](https://aws.amazon.com/sqs/).
 
-1.  Setup
-    [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
-1.  Install the
-    [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel).
-    - Note that you can skip this if you choose to use a different type of
-      `Channel`. If so, you will need to modify `channel.yaml` before deploying
-      it.
+1. Setup
+   [Knative Eventing](https://www.knative.dev/docs/eventing/).
+1. If your installed version of Eventing did not include the in-memory channel
+   provisioner, install the [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel) now.
+   If you installed Eventing using the `release.yaml` file, the channel provisioner was included.
+   (See the [Custom install guide](https://www.knative.dev/docs/install/knative-custom-install/) for information about what is include in each install file.)
+   - Note that you can skip this if you choose to use a different type of
+     `Channel`. If so, you will need to modify `channel.yaml` before deploying
+     it.
 1.  Create a `Channel`. You can use your own `Channel` or use the provided
     sample, which creates `qux-1`. If you use your own `Channel` with a
     different name, then you will need to alter other commands later.
@@ -86,7 +88,7 @@ In order to check the `AwsSqsSource` is fully working, we will create a simple
 Knative Service that displays incoming events in its log and create a
 `Subscription` from the `Channel` to that Knative Service.
 
-1. Setup [Knative Serving](https://github.com/knative/docs/tree/master/serving).
+1. Set up [Knative Serving](https://www.knative.dev/docs/install/).
 1. If the deployed `AwsSqsSource` is pointing at a `Channel` other than `qux-1`,
    modify `subscriber.yaml` by replacing `qux-1` with that `Channel`'s name.
 1. Deploy `subscriber.yaml`.
