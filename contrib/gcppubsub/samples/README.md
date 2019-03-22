@@ -1,6 +1,6 @@
 # GCP Cloud Pub/Sub - Source
 
-[See the Knative documentation for a full example of this source.](https://github.com/knative/docs/tree/master/eventing/samples/gcp-pubsub-source)
+[See the Knative documentation for a full example of this source.](https://github.com/knative/docs/tree/master/docs/eventing/samples/gcp-pubsub-source)
 
 This sample shows how to configure the GCP PubSub event source. This event
 source is most useful as a bridge from other GCP services, such as
