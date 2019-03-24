@@ -1,6 +1,6 @@
 # End to end tests
 
-* [Running e2e tests](../README.md#running-e2e-tests)
+- [Running e2e tests](../README.md#running-e2e-tests)
 
 ## Adding end to end tests
 
@@ -14,5 +14,6 @@ designed.
 
 The e2e tests **MUST**:
 
-1. Provide frequent output describing what actions they are undertaking, especially before performing long running operations.
+1. Provide frequent output describing what actions they are undertaking,
+   especially before performing long running operations.
 1. Follow Golang best practices.
