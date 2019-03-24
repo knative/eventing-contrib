@@ -4,12 +4,14 @@
 
 ### Prerequisites
 
-1. Setup
-   [Knative Eventing](https://www.knative.dev/docs/eventing/).
+1. Setup [Knative Eventing](https://www.knative.dev/docs/eventing/).
 1. If your installed version of Eventing did not include the in-memory channel
-   provisioner, install the [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel) now.
-   If you installed Eventing using the `release.yaml` file, the channel provisioner was included.
-   (See the [Custom install guide](https://www.knative.dev/docs/install/knative-custom-install/) for information about what is include in each install file.)
+   provisioner, install the
+   [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel)
+   now. If you installed Eventing using the `release.yaml` file, the channel
+   provisioner was included. (See the
+   [Custom install guide](https://www.knative.dev/docs/install/knative-custom-install/)
+   for information about what is include in each install file.)
    - Note that you can skip this if you choose to use a different type of
      `Channel`. If so, you will need to modify `channel.yaml` before deploying
      it.
