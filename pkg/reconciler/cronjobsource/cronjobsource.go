@@ -131,6 +131,12 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	err = r.reconcileEventTypes(ctx, src)
+	if err != nil {
+		return err
+	}
+	// TODO mark event types
 	return nil
 }
 

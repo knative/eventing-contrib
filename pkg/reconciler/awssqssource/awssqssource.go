@@ -22,6 +22,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/knative/eventing-sources/pkg/eventtype"
+
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
@@ -72,30 +74,38 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 
+	scheme := mgr.GetScheme()
+	r := &reconciler{
+		scheme:              mgr.GetScheme(),
+		receiveAdapterImage: raImage,
+		eventTypeReconciler: eventtype.EventTypeReconciler{
+			Scheme: scheme,
+		},
+	}
+
 	log.Println("Adding the AWS SQS Source controller.")
 	p := &sdk.Provider{
-		AgentName: controllerAgentName,
-		Parent:    &v1alpha1.AwsSqsSource{},
-		Owns:      []runtime.Object{&v1.Deployment{}},
-		Reconciler: &reconciler{
-			scheme:              mgr.GetScheme(),
-			receiveAdapterImage: raImage,
-		},
+		AgentName:  controllerAgentName,
+		Parent:     &v1alpha1.AwsSqsSource{},
+		Owns:       []runtime.Object{&v1.Deployment{}},
+		Reconciler: r,
 	}
 
 	return p.Add(mgr)
 }
 
 type reconciler struct {
-	client        client.Client
-	dynamicClient dynamic.Interface
-	scheme        *runtime.Scheme
+	client              client.Client
+	dynamicClient       dynamic.Interface
+	scheme              *runtime.Scheme
+	eventTypeReconciler eventtype.EventTypeReconciler
 
 	receiveAdapterImage string
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }
 
@@ -147,6 +157,11 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	err = r.reconcileEventTypes(ctx, src)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -204,6 +219,26 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.AwsSqs
 		}
 	}
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
+}
+
+func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsSqsSource) error {
+	args := r.newEventTypesArgs(src)
+	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
+}
+
+func (r *reconciler) newEventTypesArgs(src *v1alpha1.AwsSqsSource) *eventtype.EventTypesArgs {
+	arg := &eventtype.EventTypeArgs{
+		Type:   v1alpha1.AwsSqsSourceEventType,
+		Source: src.Spec.QueueURL,
+		Broker: src.Spec.Sink.Name,
+	}
+	args := make([]*eventtype.EventTypeArgs, 0, 1)
+	args = append(args, arg)
+	return &eventtype.EventTypesArgs{
+		Args:      args,
+		Namespace: src.Namespace,
+		Labels:    getLabels(src),
+	}
 }
 
 func (r *reconciler) getLabelSelector(src *v1alpha1.AwsSqsSource) labels.Selector {

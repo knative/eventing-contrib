@@ -125,7 +125,7 @@ func (m *mapEventTypeToGitHubSource) Map(o handler.MapObject) []reconcile.Reques
 		}
 
 		for _, et := range etl.Items {
-			if label, ok := et.Labels[eventTypeControllerLabelKey]; ok {
+			if label, ok := et.Labels["knative-eventing-source"]; ok {
 				if label == controllerAgentName && et.Spec.Sink.Kind == "Broker" {
 					gitHubSources = append(gitHubSources, reconcile.Request{
 						NamespacedName: types.NamespacedName{
@@ -421,14 +421,14 @@ func (r *reconciler) newEventTypesArgs(source *sourcesv1alpha1.GitHubSource) *ev
 	return &eventtype.EventTypesArgs{
 		Args:      args,
 		Namespace: source.Namespace,
-		Labels:    getEventTypeSourceLabels(source),
+		Labels:    getLabels(source),
 	}
 }
 
-func getEventTypeSourceLabels(src *sourcesv1alpha1.GitHubSource) map[string]string {
+func getLabels(src *sourcesv1alpha1.GitHubSource) map[string]string {
 	return map[string]string{
-		eventTypeControllerLabelKey: controllerAgentName,
-		eventTypeSourceLabelKey:     src.Name,
+		"knative-eventing-source":      controllerAgentName,
+		"knative-eventing-source-name": src.Name,
 	}
 }
 
