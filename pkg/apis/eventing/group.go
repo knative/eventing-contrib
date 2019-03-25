@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,22 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
-
-import (
-	"context"
-
-	"github.com/knative/pkg/apis"
-)
-
-// Validate validates the ClusterChannelProvisioner resource.
-func (p *ClusterChannelProvisioner) Validate(ctx context.Context) *apis.FieldError {
-	return p.Spec.Validate(ctx).ViaField("spec")
-}
-
-// Validate validates the ClusterChannelProvisioner spec
-func (ps *ClusterChannelProvisionerSpec) Validate(ctx context.Context) *apis.FieldError {
-	var errs *apis.FieldError
-
-	return errs
-}
+// Package eventing contains eventing API versions
+package eventing

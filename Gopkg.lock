@@ -382,18 +382,18 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:345bbba667abadd6263391c915251ede8d9fa6f6852839c60bb6738b6122b89c"
+  digest = "1:0836bde83bdc49aae7710e22d04e2555d9bd25cd133fbb78508c492307081aea"
   name = "github.com/knative/build"
   packages = [
     "pkg/apis/build",
     "pkg/apis/build/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "94859753e2c6724df2be86f6a254f810895fa3eb"
-  version = "v0.2.0"
+  revision = "dd3ceb3323922b899a0a913f885fcf59943e7b59"
 
 [[projects]]
-  digest = "1:2eb648d2ff990646fead56b6b10f6326354e7dd0173698819de24c25f4deca3f"
+  branch = "registry-namespace"
+  digest = "1:97f9ffec9ab5994cf962dd6c09af800dcfa74250a4f1f03f0089d3dcec8b5e9e"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
@@ -404,11 +404,11 @@
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "4712e3a42fccad12a37f3ee07fc407fa5b0c4506"
-  version = "v0.3.0"
+  revision = "af1934b23a2a04164f523c293477c67c86f1dd98"
+  source = "github.com/nachocano/eventing"
 
 [[projects]]
-  digest = "1:71ba7728a1469a9f5c751e8aa2f55033bd51da087d75bd685811dc5e88ce34e7"
+  digest = "1:fe33dfe9a96d8ccc2fe70c7df43a00e648cfc066339ed362dd2f235dc1868df8"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -428,10 +428,10 @@
     "webhook",
   ]
   pruneopts = "NUT"
-  revision = "915415e7be67bf8fb05249fe3f1bad25fcaf7f50"
+  revision = "60fdcbcabd2faeb34328d8b2725dc76c59189453"
 
 [[projects]]
-  digest = "1:7d2f7e373d3265017ff21f605e7ad4aa710adc2698eadcc317b30d4f9c2c4ab3"
+  digest = "1:edcf99e561b63d758646ca9d9dee0f6c81c3eed617af1120645c9d5c0d80d8c7"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -447,8 +447,7 @@
     "pkg/client/clientset/versioned/typed/serving/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "4913b81a4305b174ed07c54298be6ddeb3dd874e"
-  version = "v0.4.1"
+  revision = "9a44df0e64edcb943c7edfe2d3eac2be41aa2316"
 
 [[projects]]
   branch = "master"
@@ -1364,7 +1363,6 @@
     "gopkg.in/go-playground/webhooks.v3/github",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
-    "k8s.io/api/rbac/v1",
     "k8s.io/api/rbac/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",

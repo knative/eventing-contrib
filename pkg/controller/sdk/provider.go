@@ -40,6 +40,8 @@ type Provider struct {
 	// those resources cause the Parent to be re-reconciled. This is a list of
 	// resources of kind with empty content. i.e. [&v1.Child{}]
 	Owns []runtime.Object
+	// Mappers used to enqueue a reconciliation process using transformation functions.
+	Mappers map[runtime.Object]handler.Mapper
 
 	Reconciler KnativeReconciler
 }
@@ -66,6 +68,13 @@ func (p *Provider) Add(mgr manager.Manager) error {
 	for _, t := range p.Owns {
 		if err := c.Watch(&source.Kind{Type: t},
 			&handler.EnqueueRequestForOwner{OwnerType: p.Parent, IsController: true}); err != nil {
+			return err
+		}
+	}
+
+	// Watch and enqueue using transformation functions.
+	for t, mapper := range p.Mappers {
+		if err = c.Watch(&source.Kind{Type: t}, &handler.EnqueueRequestsFromMapFunc{ToRequests: mapper}); err != nil {
 			return err
 		}
 	}

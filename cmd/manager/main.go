@@ -20,6 +20,7 @@ import (
 	"log"
 
 	"github.com/knative/eventing-sources/pkg/apis"
+	_ "github.com/knative/eventing-sources/pkg/apis/eventing/v1alpha1"
 	_ "github.com/knative/eventing-sources/pkg/apis/serving/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
