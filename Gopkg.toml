@@ -75,12 +75,6 @@ required = [
   # See: https://github.com/knative/pkg/commit/60fdcbcabd2faeb34328d8b2725dc76c59189453
   # version = "v0.5.0"
 
-# Bring build along for serving.
-[[override]]
-  name = "github.com/knative/build"
-  # HEAD as of 2019-03-21
-  revision = "dd3ceb3323922b899a0a913f885fcf59943e7b59"
-
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
   version = "=0.1.9"

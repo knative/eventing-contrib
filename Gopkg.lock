@@ -393,7 +393,7 @@
 
 [[projects]]
   branch = "registry-namespace"
-  digest = "1:97f9ffec9ab5994cf962dd6c09af800dcfa74250a4f1f03f0089d3dcec8b5e9e"
+  digest = "1:60f23179cf76f3c98f12bc3ce1f0289042b842ae15adec9b44b818c2f9983cd9"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
@@ -402,6 +402,7 @@
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
+    "pkg/utils",
   ]
   pruneopts = "NUT"
   revision = "af1934b23a2a04164f523c293477c67c86f1dd98"
@@ -1339,6 +1340,7 @@
     "github.com/kelseyhightower/envconfig",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
+    "github.com/knative/eventing/pkg/utils",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",

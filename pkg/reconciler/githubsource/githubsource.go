@@ -19,6 +19,7 @@ package githubsource
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -73,6 +74,7 @@ func Add(mgr manager.Manager) error {
 		webhookClient:       gitHubWebhookClient{},
 	}
 
+	log.Println("Adding the GitHub Source controller.")
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &sourcesv1alpha1.GitHubSource{},

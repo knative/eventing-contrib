@@ -19,6 +19,7 @@ package containersource
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
@@ -61,7 +62,7 @@ func Add(mgr manager.Manager) error {
 			scheme:   mgr.GetScheme(),
 		},
 	}
-
+	log.Println("Adding the Container Source controller.")
 	return p.Add(mgr)
 }
 

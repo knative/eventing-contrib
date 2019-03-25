@@ -19,6 +19,7 @@ package kuberneteseventsource
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
@@ -64,7 +65,7 @@ func Add(mgr manager.Manager) error {
 	if !defined {
 		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
-
+	log.Println("Adding the Kubernetes Event Source controller.")
 	return add(mgr, newReconciler(mgr, receiveAdapterImage))
 }
 
