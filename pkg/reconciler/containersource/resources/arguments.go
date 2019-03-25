@@ -29,4 +29,6 @@ type ContainerArguments struct {
 	ServiceAccountName string
 	SinkInArgs         bool
 	Sink               string
+	Annotations        map[string]string
+	Labels             map[string]string
 }
