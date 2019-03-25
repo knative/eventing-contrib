@@ -108,7 +108,7 @@ type mapEventTypeToGitHubSource struct {
 	r *reconciler
 }
 
-func (b *mapEventTypeToGitHubSource) Map(o handler.MapObject) []reconcile.Request {
+func (m *mapEventTypeToGitHubSource) Map(o handler.MapObject) []reconcile.Request {
 	ctx := context.Background()
 	gitHubSources := make([]reconcile.Request, 0)
 
@@ -120,13 +120,13 @@ func (b *mapEventTypeToGitHubSource) Map(o handler.MapObject) []reconcile.Reques
 	}
 	for {
 		etl := &sourcesv1alpha1.GitHubSourceList{}
-		if err := b.r.client.List(ctx, opts, etl); err != nil {
+		if err := m.r.client.List(ctx, opts, etl); err != nil {
 			return gitHubSources
 		}
 
 		for _, et := range etl.Items {
 			if label, ok := et.Labels[eventTypeControllerLabelKey]; ok {
-				if label == controllerAgentName && et.Spec.Sink != nil && et.Spec.Sink.Kind == "Broker" {
+				if label == controllerAgentName && et.Spec.Sink.Kind == "Broker" {
 					gitHubSources = append(gitHubSources, reconcile.Request{
 						NamespacedName: types.NamespacedName{
 							Namespace: et.Namespace,

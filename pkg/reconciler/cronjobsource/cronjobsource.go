@@ -22,6 +22,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/knative/eventing-sources/pkg/eventtype"
+
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
@@ -60,16 +62,21 @@ func Add(mgr manager.Manager) error {
 	if !defined {
 		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
+	scheme := mgr.GetScheme()
+	r := &reconciler{
+		scheme:              scheme,
+		receiveAdapterImage: raImage,
+		eventTypeReconciler: eventtype.EventTypeReconciler{
+			Scheme: scheme,
+		},
+	}
 
 	log.Println("Adding the Cron Job Source controller.")
 	p := &sdk.Provider{
-		AgentName: controllerAgentName,
-		Parent:    &v1alpha1.CronJobSource{},
-		Owns:      []runtime.Object{&v1.Deployment{}},
-		Reconciler: &reconciler{
-			scheme:              mgr.GetScheme(),
-			receiveAdapterImage: raImage,
-		},
+		AgentName:  controllerAgentName,
+		Parent:     &v1alpha1.CronJobSource{},
+		Owns:       []runtime.Object{&v1.Deployment{}},
+		Reconciler: r,
 	}
 
 	return p.Add(mgr)
@@ -79,10 +86,12 @@ type reconciler struct {
 	client              client.Client
 	scheme              *runtime.Scheme
 	receiveAdapterImage string
+	eventTypeReconciler eventtype.EventTypeReconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }
 
@@ -162,7 +171,23 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cro
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.CronJobSource) error {
-	return nil
+	args := r.newEventTypesArgs(src)
+	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
+}
+
+func (r *reconciler) newEventTypesArgs(src *v1alpha1.CronJobSource) *eventtype.EventTypesArgs {
+	arg := &eventtype.EventTypeArgs{
+		Type:   v1alpha1.CronJobSourceEventType,
+		Source: src.Spec.Schedule,
+		Broker: src.Spec.Sink.Name,
+	}
+	args := make([]*eventtype.EventTypeArgs, 0, 1)
+	args = append(args, arg)
+	return &eventtype.EventTypesArgs{
+		Args:      args,
+		Namespace: src.Namespace,
+		Labels:    getLabels(src),
+	}
 }
 
 func (r *reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
