@@ -103,11 +103,16 @@ const (
 	// GitHubSourceConditionSinkProvided has status True when the
 	// GitHubSource has been configured with a sink target.
 	GitHubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+
+	// GitHubSourceConditionEventTypesProvided has status True when the
+	// GitHubSource has been configured with its event types.
+	GitHubSourceConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypeProvided"
 )
 
 var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
-	GitHubSourceConditionSinkProvided)
+	GitHubSourceConditionSinkProvided,
+	GitHubSourceConditionEventTypesProvided)
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {
@@ -164,6 +169,16 @@ func (s *GitHubSourceStatus) MarkSink(uri string) {
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *GitHubSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
+// MarkEventTypes sets the condition that the source has set its event types.
+func (s *GitHubSourceStatus) MarkEventTypes() {
+	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionEventTypesProvided)
+}
+
+// MarkNoEventTypes sets the condition that the source does not have configured its event types.
+func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
+	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 // +genclient
