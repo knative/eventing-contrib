@@ -56,6 +56,9 @@ const (
 	controllerAgentName = "github-source-controller"
 	raImageEnvVar       = "GH_RA_IMAGE"
 	finalizerName       = controllerAgentName
+
+	eventTypeControllerLabelKey = "eventing.knative.dev/eventtype-source"
+	eventTypeSourceLabelKey     = "eventing.knative.dev/eventtype-source-name"
 )
 
 // Add creates a new GitHubSource Controller and adds it to the
@@ -118,16 +121,15 @@ func (b *mapEventTypeToGitHubSource) Map(o handler.MapObject) []reconcile.Reques
 		}
 
 		for _, et := range etl.Items {
-			if label, ok := et.Labels["eventing.knative.dev/eventtype-source"]; ok {
-				if et.Spec.Sink != nil && et.Spec.Sink.Kind == "Broker" {
-					if label == o.Meta.GetName() {
-						gitHubSources = append(gitHubSources, reconcile.Request{
-							NamespacedName: types.NamespacedName{
-								Namespace: et.Namespace,
-								Name:      et.Name,
-							},
-						})
-					}
+			if label, ok := et.Labels[eventTypeControllerLabelKey]; ok {
+				if label == controllerAgentName && et.Spec.Sink != nil && et.Spec.Sink.Kind == "Broker" {
+					gitHubSources = append(gitHubSources, reconcile.Request{
+						NamespacedName: types.NamespacedName{
+							Namespace: et.Namespace,
+							Name:      et.Name,
+						},
+					})
+
 				}
 			}
 		}
@@ -222,18 +224,18 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
-		}
-	}
 
-	// Only create EventTypes for Broker sinks.
-	if source.Spec.Sink.Kind == "Broker" {
-		err = r.reconcileEventTypes(ctx, source)
-		if err != nil {
-			return err
+			// Only create EventTypes for Broker sinks.
+			if source.Spec.Sink.Kind == "Broker" {
+				err = r.reconcileEventTypes(ctx, source)
+				if err != nil {
+					return err
+				}
+			}
+			// We mark the event types in order to have the source Ready.
+			source.Status.MarkEventTypes()
 		}
 	}
-	// We mark the event types in order to have the source Ready.
-	source.Status.MarkEventTypes()
 
 	return nil
 }
@@ -264,11 +266,6 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 		source.Status.WebhookIDKey = ""
 	}
 
-	// if eventTypes were created, then try to delete them.
-	err := r.deleteEventTypes(ctx, source)
-	if err != nil {
-		r.recorder.Event(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete event types")
-	}
 	return nil
 }
 
@@ -406,7 +403,11 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1a
 	if err != nil {
 		return err
 	}
-	expected := r.newEventTypes(source)
+	expected, err := r.newEventTypes(source)
+	if err != nil {
+		return err
+	}
+
 	diff := eventtype.Difference(current, expected)
 	if len(diff) > 0 {
 		// As EventTypes are immutable, if we have any diff it means that something was deleted or not even created
@@ -438,7 +439,9 @@ func (r *reconciler) getEventTypes(ctx context.Context, source *sourcesv1alpha1.
 		}
 
 		for _, e := range el.Items {
-			eventTypes = append(eventTypes, &e)
+			if metav1.IsControlledBy(&e, source) {
+				eventTypes = append(eventTypes, &e)
+			}
 		}
 		if el.Continue != "" {
 			opts.Raw.Continue = el.Continue
@@ -448,11 +451,11 @@ func (r *reconciler) getEventTypes(ctx context.Context, source *sourcesv1alpha1.
 	}
 }
 
-func (r *reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) []*eventingv1alpha1.EventType {
+func (r *reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) ([]*eventingv1alpha1.EventType, error) {
 	eventTypes := make([]*eventingv1alpha1.EventType, 0)
 	for _, et := range source.Spec.EventTypes {
 		args := &eventtype.EventTypeArgs{
-			Type:      et,
+			Type:      fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, et),
 			Source:    source.Spec.OwnerAndRepository,
 			Broker:    source.Spec.Sink.Name,
 			Namespace: source.Namespace,
@@ -461,30 +464,19 @@ func (r *reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) []*even
 			Schema: "",
 		}
 		eventType := eventtype.MakeEventType(args)
+		// Setting the reference to delete the EventType upon uninstallation of the source.
+		if err := controllerutil.SetControllerReference(source, eventType, r.scheme); err != nil {
+			return nil, err
+		}
 		eventTypes = append(eventTypes, eventType)
 	}
-	return eventTypes
-}
-
-func (r *reconciler) deleteEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	current, err := r.getEventTypes(ctx, source)
-	if err != nil {
-		return err
-	}
-	if len(current) > 0 {
-		for _, eventType := range current {
-			err = r.client.Delete(ctx, eventType)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return eventTypes, nil
 }
 
 func getEventTypeSourceLabels(src *sourcesv1alpha1.GitHubSource) map[string]string {
 	return map[string]string{
-		"eventing.knative.dev/eventtype-source-name": src.Name,
+		eventTypeControllerLabelKey: controllerAgentName,
+		eventTypeSourceLabelKey:     src.Name,
 	}
 }
 
