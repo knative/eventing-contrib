@@ -64,6 +64,11 @@ type AwsSqsSourceSpec struct {
 }
 
 const (
+	// AwsSqsSourceEventType is the AWS SQS CloudEvent type.
+	AwsSqsSourceEventType = "dev.knative.source.awssqs"
+)
+
+const (
 	// AwsSqsSourceConditionReady has status True when the source is
 	// ready to send events.
 	AwsSqsSourceConditionReady = duckv1alpha1.ConditionReady

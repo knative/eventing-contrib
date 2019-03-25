@@ -24,6 +24,7 @@ import (
 	cetypes "github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
 	"github.com/google/go-cmp/cmp"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -45,20 +46,27 @@ func TestCloudEventFrom(t *testing.T) {
 
 	now := time.Now()
 
+	reason := "test-reason"
+
 	event := &corev1.Event{
 		ObjectMeta: metav1.ObjectMeta{
 			UID:               uid,
 			CreationTimestamp: metav1.Time{Time: now},
 		},
 		InvolvedObject: ref,
+		Reason:         reason,
 	}
 
+	extensions := map[string]interface{}{
+		K8sHeaderFrom: reason,
+	}
 	want := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
-			Type:   eventType,
-			ID:     string(uid),
-			Source: *cetypes.ParseURLRef(refLink),
-			Time:   &cetypes.Timestamp{Time: now},
+			Type:       sourcesv1alpha1.KubernetesEventSourceEventType,
+			ID:         string(uid),
+			Source:     *cetypes.ParseURLRef(refLink),
+			Time:       &cetypes.Timestamp{Time: now},
+			Extensions: extensions,
 		}.AsV02(),
 		Data: event,
 	}

@@ -23,11 +23,12 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 const (
-	eventType = "dev.knative.k8s.event"
+	K8sHeaderFrom = "From"
 )
 
 // Creates a URI of the form found in object metadata selfLinks
@@ -82,12 +83,16 @@ func createSelfLink(o corev1.ObjectReference) string {
 //		EventTime:0001-01-01 00:00:00 +0000 UTC,
 //	}
 func cloudEventFrom(m *corev1.Event) cloudevents.Event {
+	extensions := map[string]interface{}{
+		K8sHeaderFrom: m.Reason,
+	}
 	return cloudevents.Event{
 		Context: cloudevents.EventContextV02{
-			ID:     string(m.ObjectMeta.UID),
-			Type:   eventType,
-			Source: *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
-			Time:   &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
+			ID:         string(m.ObjectMeta.UID),
+			Type:       sourcesv1alpha1.KubernetesEventSourceEventType,
+			Source:     *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
+			Time:       &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
+			Extensions: extensions,
 		}.AsV02(),
 		Data: m,
 	}

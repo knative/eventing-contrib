@@ -27,29 +27,32 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
-	webhooks "gopkg.in/go-playground/webhooks.v3"
+	"gopkg.in/go-playground/webhooks.v3"
 	gh "gopkg.in/go-playground/webhooks.v3/github"
 )
 
 const (
 	GHHeaderEvent    = "GitHub-Event"
 	GHHeaderDelivery = "GitHub-Delivery"
+	GHHeaderFrom     = "From"
 )
 
 // Adapter converts incoming GitHub webhook events to CloudEvents
 type Adapter struct {
-	client client.Client
+	client    client.Client
+	ownerRepo string
 }
 
 // New creates an adapter to convert incoming GitHub webhook events to CloudEvents and
 // then sends them to the specified Sink
-func New(sinkURI string) (*Adapter, error) {
+func New(sinkURI, ownerRepo string) (*Adapter, error) {
 	a := new(Adapter)
 	var err error
 	a.client, err = kncloudevents.NewDefaultClient(sinkURI)
 	if err != nil {
 		return nil, err
 	}
+	a.ownerRepo = ownerRepo
 	return a, nil
 }
 
@@ -68,6 +71,7 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	extensions := map[string]interface{}{
 		GHHeaderEvent:    gitHubEventType,
 		GHHeaderDelivery: eventID,
+		GHHeaderFrom:     a.ownerRepo,
 	}
 
 	log.Printf("Handling %s", gitHubEventType)

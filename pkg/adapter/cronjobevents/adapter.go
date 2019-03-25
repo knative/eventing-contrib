@@ -30,10 +30,12 @@ import (
 
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
+
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 )
 
 const (
-	eventType = "dev.knative.cronjob.event"
+	CJHeaderFrom = "From"
 )
 
 // Adapter implements the Cron Job adapter to trigger a Sink.
@@ -88,10 +90,14 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 func (a *Adapter) cronTick() {
 	logger := logging.FromContext(context.TODO())
 
+	extensions := map[string]interface{}{
+		CJHeaderFrom: a.Schedule,
+	}
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
-			Type:   eventType,
-			Source: *types.ParseURLRef("/CronJob"),
+			Type:       sourcesv1alpha1.CronJobSourceEventType,
+			Source:     *types.ParseURLRef("/CronJob"),
+			Extensions: extensions,
 		}.AsV02(),
 		Data: message(a.Data),
 	}

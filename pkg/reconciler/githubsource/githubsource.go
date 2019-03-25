@@ -99,7 +99,7 @@ type reconciler struct {
 	webhookClient       webhookClient
 }
 
-// mapEventTypeToGitHubSource maps EventTypes changes to the GitHub source that created it.
+// mapEventTypeToGitHubSource maps EventTypes changes to GitHub sources.
 type mapEventTypeToGitHubSource struct {
 	r *reconciler
 }
@@ -265,7 +265,6 @@ func (r *reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 		// Webhook deleted, clear ID
 		source.Status.WebhookIDKey = ""
 	}
-
 	return nil
 }
 

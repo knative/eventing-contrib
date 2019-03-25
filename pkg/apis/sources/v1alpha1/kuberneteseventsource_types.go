@@ -47,6 +47,11 @@ type KubernetesEventSourceSpec struct {
 }
 
 const (
+	// KubernetesEventSourceEventType is the Kubernetes CloudEvent type.
+	KubernetesEventSourceEventType = "dev.knative.source.k8s"
+)
+
+const (
 	// KubernetesEventSourceConditionReady has status True when the
 	// source is ready to send events.
 	KubernetesEventSourceConditionReady = duckv1alpha1.ConditionReady

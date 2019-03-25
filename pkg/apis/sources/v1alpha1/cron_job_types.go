@@ -65,6 +65,11 @@ type CronJobSourceSpec struct {
 }
 
 const (
+	// CronJobSourceEventType is the CronJob CloudEvent type.
+	CronJobSourceEventType = "dev.knative.source.cronjob"
+)
+
+const (
 	// CronJobConditionReady has status True when the CronJobSource is ready to send events.
 	CronJobConditionReady = duckv1alpha1.ConditionReady
 

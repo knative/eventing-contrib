@@ -33,6 +33,9 @@ const (
 
 	// Environment variable containing GitHub secret token
 	envSecret = "GITHUB_SECRET_TOKEN"
+
+	// Environment variable containing information about the origin of the event
+	envOwnerRepo = "GITHUB_OWNER_REPO"
 )
 
 func main() {
@@ -54,9 +57,14 @@ func main() {
 		log.Fatalf("No secret token given")
 	}
 
-	log.Printf("Sink is: %q", *sink)
+	ownerRepo := os.Getenv(envOwnerRepo)
+	if ownerRepo == "" {
+		log.Fatalf("No ownerRepo given")
+	}
 
-	ra, err := github.New(*sink)
+	log.Printf("Sink is: %q, OwnerRepo is: %q", *sink, ownerRepo)
+
+	ra, err := github.New(*sink, ownerRepo)
 	if err != nil {
 		log.Fatalf("Failed to create github adapter: %s", err.Error())
 	}
