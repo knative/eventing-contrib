@@ -161,6 +161,10 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cro
 	return expected, err
 }
 
+func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.CronJobSource) error {
+	return nil
+}
+
 func (r *reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
 	if !equality.Semantic.DeepDerivative(newPodSpec, oldPodSpec) {
 		return true

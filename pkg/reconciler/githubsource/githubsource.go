@@ -31,8 +31,8 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/knative/eventing-sources/pkg/eventtype"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
-	eventtype "github.com/knative/eventing-sources/pkg/resources"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
@@ -69,12 +69,15 @@ func Add(mgr manager.Manager) error {
 	if !defined {
 		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
-
+	scheme := mgr.GetScheme()
 	r := &reconciler{
 		recorder:            mgr.GetRecorder(controllerAgentName),
-		scheme:              mgr.GetScheme(),
+		scheme:              scheme,
 		receiveAdapterImage: receiveAdapterImage,
 		webhookClient:       gitHubWebhookClient{},
+		eventTypeReconciler: eventtype.EventTypeReconciler{
+			Scheme: scheme,
+		},
 	}
 
 	log.Println("Adding the GitHub Source controller.")
@@ -97,6 +100,7 @@ type reconciler struct {
 	recorder            record.EventRecorder
 	receiveAdapterImage string
 	webhookClient       webhookClient
+	eventTypeReconciler eventtype.EventTypeReconciler
 }
 
 // mapEventTypeToGitHubSource maps EventTypes changes to GitHub sources.
@@ -398,78 +402,27 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	current, err := r.getEventTypes(ctx, source)
-	if err != nil {
-		return err
-	}
-	expected, err := r.newEventTypes(source)
-	if err != nil {
-		return err
-	}
-
-	diff := eventtype.Difference(current, expected)
-	if len(diff) > 0 {
-		// As EventTypes are immutable, if we have any diff it means that something was deleted or not even created
-		// in the first place. We should create them.
-		for _, eventType := range diff {
-			err = r.client.Create(ctx, eventType)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	args := r.newEventTypesArgs(source)
+	return r.eventTypeReconciler.ReconcileEventTypes(ctx, source, args)
 }
 
-func (r *reconciler) getEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) ([]*eventingv1alpha1.EventType, error) {
-	eventTypes := make([]*eventingv1alpha1.EventType, 0)
-
-	opts := &client.ListOptions{
-		Namespace:     source.Namespace,
-		LabelSelector: labels.SelectorFromSet(getEventTypeSourceLabels(source)),
-		// Set Raw because if we need to get more than one page, then we will put the continue token
-		// into opts.Raw.Continue.
-		Raw: &metav1.ListOptions{},
-	}
-	for {
-		el := &eventingv1alpha1.EventTypeList{}
-		if err := r.client.List(ctx, opts, el); err != nil {
-			return nil, err
-		}
-
-		for _, e := range el.Items {
-			if metav1.IsControlledBy(&e, source) {
-				eventTypes = append(eventTypes, &e)
-			}
-		}
-		if el.Continue != "" {
-			opts.Raw.Continue = el.Continue
-		} else {
-			return eventTypes, nil
-		}
-	}
-}
-
-func (r *reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) ([]*eventingv1alpha1.EventType, error) {
-	eventTypes := make([]*eventingv1alpha1.EventType, 0)
+func (r *reconciler) newEventTypesArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.EventTypesArgs {
+	args := make([]*eventtype.EventTypeArgs, 0)
 	for _, et := range source.Spec.EventTypes {
-		args := &eventtype.EventTypeArgs{
-			Type:      fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, et),
-			Source:    source.Spec.OwnerAndRepository,
-			Broker:    source.Spec.Sink.Name,
-			Namespace: source.Namespace,
-			Labels:    getEventTypeSourceLabels(source),
+		arg := &eventtype.EventTypeArgs{
+			Type:   fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, et),
+			Source: source.Spec.OwnerAndRepository,
+			Broker: source.Spec.Sink.Name,
 			// TODO change CRD to set the schema.
 			Schema: "",
 		}
-		eventType := eventtype.MakeEventType(args)
-		// Setting the reference to delete the EventType upon uninstallation of the source.
-		if err := controllerutil.SetControllerReference(source, eventType, r.scheme); err != nil {
-			return nil, err
-		}
-		eventTypes = append(eventTypes, eventType)
+		args = append(args, arg)
 	}
-	return eventTypes, nil
+	return &eventtype.EventTypesArgs{
+		Args:      args,
+		Namespace: source.Namespace,
+		Labels:    getEventTypeSourceLabels(source),
+	}
 }
 
 func getEventTypeSourceLabels(src *sourcesv1alpha1.GitHubSource) map[string]string {
@@ -493,5 +446,6 @@ func (r *reconciler) removeFinalizer(s *sourcesv1alpha1.GitHubSource) {
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }
