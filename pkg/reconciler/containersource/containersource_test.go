@@ -543,7 +543,7 @@ func getDeployment(source *sourcesv1alpha1.ContainerSource) *appsv1.Deployment {
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"source": source.Name,
+					"eventing.knative.dev/source": source.Name,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
@@ -552,7 +552,7 @@ func getDeployment(source *sourcesv1alpha1.ContainerSource) *appsv1.Deployment {
 						"sidecar.istio.io/inject": "true",
 					},
 					Labels: map[string]string{
-						"source": source.Name,
+						"eventing.knative.dev/source": source.Name,
 					},
 				},
 				Spec: corev1.PodSpec{

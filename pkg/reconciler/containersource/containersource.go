@@ -96,16 +96,14 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 	source.Status.InitializeConditions()
 
-	// These are the annotations / labels we always apply
-	labels := map[string]string{"source": source.Name}
-	annotations := map[string]string{"sidecar.istio.io/inject": "true"}
-
+	annotations := make(map[string]string)
 	// Then wire through any annotations / labels from the Source
 	if source.ObjectMeta.Annotations != nil {
 		for k, v := range source.ObjectMeta.Annotations {
 			annotations[k] = v
 		}
 	}
+	labels := make(map[string]string)
 	if source.ObjectMeta.Labels != nil {
 		for k, v := range source.ObjectMeta.Labels {
 			labels[k] = v
