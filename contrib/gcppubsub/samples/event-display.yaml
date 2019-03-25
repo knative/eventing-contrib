@@ -1,0 +1,45 @@
+# Copyright 2019 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This is a very simple Knative Service that writes the incoming CloudEvent to its log.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-display
+spec:
+  selector:
+    matchLabels:
+      app: event-display
+  template:
+    metadata:
+      labels:
+        app: event-display
+    spec:
+      containers:
+      - name: user-container
+        image: github.com/knative/eventing-sources/cmd/event_display
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-display
+spec:
+  selector:
+    app: event-display
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

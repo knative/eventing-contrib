@@ -18,6 +18,7 @@ package resources
 
 import (
 	"errors"
+
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
 )

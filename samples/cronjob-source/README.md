@@ -4,10 +4,14 @@
 
 ### Prerequisites
 
-1. Setup
-   [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
-1. Install the
-   [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel).
+1. Setup [Knative Eventing](https://www.knative.dev/docs/eventing/).
+1. If your installed version of Eventing did not include the in-memory channel
+   provisioner, install the
+   [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel)
+   now. If you installed Eventing using the `release.yaml` file, the channel
+   provisioner was included. (See the
+   [Custom install guide](https://www.knative.dev/docs/install/knative-custom-install/)
+   for information about what is include in each install file.)
    - Note that you can skip this if you choose to use a different type of
      `Channel`. If so, you will need to modify `channel.yaml` before deploying
      it.
@@ -46,10 +50,10 @@
 ### Subscriber
 
 In order to check the `CronJobSource` is fully working, we will create a simple
-Knative Service that dumps incoming messages to its log and create a
+Knative Service that displays incoming events io its log and create a
 `Subscription` from the `Channel` to that Knative Service.
 
-1. Setup [Knative Serving](https://github.com/knative/docs/tree/master/serving).
+1. Set up [Knative Serving](https://www.knative.dev/docs/install/).
 1. If the deployed `CronJobSource` is pointing at a `Channel` other than `cj-1`,
    modify `subscriber.yaml` by replacing `cj-1` with that `Channel`'s name.
 1. Deploy `subscriber.yaml`.
@@ -68,7 +72,7 @@ will need to look downstream yourself.
 1. Use [`kail`](https://github.com/boz/kail) to tail the logs of the subscriber.
 
    ```shell
-   kail -d message-dumper -c user-container --since=10m
+   kail -d event-display -c user-container --since=10m
    ```
 
 You should see log lines similar to:

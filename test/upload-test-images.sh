@@ -16,19 +16,21 @@
 
 set -o errexit
 
+# TODO(https://github.com/knative/test-infra/issues/590): Create a common way of uploading images
+function upload_test_images() {
+  echo ">> Publishing test images"
+  local image_dir="$(dirname $0)/test_images"
+  local docker_tag=$1
+  local tag_option=""
+  if [ -n "${docker_tag}" ]; then
+    tag_option="--tags $docker_tag,latest"
+  fi
+
+  # ko resolve is being used for the side-effect of publishing images,
+  # so the resulting yaml produced is ignored.
+  ko resolve ${tag_option} -RBf "${image_dir}" > /dev/null
+}
+
 : ${KO_DOCKER_REPO:?"You must set 'KO_DOCKER_REPO', see DEVELOPMENT.md"}
 
-IMAGE_PATHS_FILE="$(dirname $0)/image_paths.txt"
-DOCKER_TAG=$1
-
-while read -r IMAGE || [[ -n "$IMAGE" ]]; do
-    if [ $(echo "$IMAGE" | grep -v -e "^#") ]; then
-        ko publish -P $IMAGE
-        if [ -n "$DOCKER_TAG" ]; then
-            IMAGE=$KO_DOCKER_REPO/$IMAGE
-            DIGEST=$(gcloud container images list-tags --filter="tags:latest" --format='get(digest)' $IMAGE)
-            echo "Tagging $IMAGE@$DIGEST with $DOCKER_TAG"
-            gcloud -q container images add-tag $IMAGE@$DIGEST $IMAGE:$DOCKER_TAG
-        fi
-    fi
-done < "$IMAGE_PATHS_FILE"
+upload_test_images $@

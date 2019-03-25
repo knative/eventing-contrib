@@ -19,8 +19,9 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"log"
+
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
