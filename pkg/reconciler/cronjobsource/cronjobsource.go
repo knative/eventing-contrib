@@ -66,7 +66,7 @@ func Add(mgr manager.Manager) error {
 	r := &reconciler{
 		scheme:              scheme,
 		receiveAdapterImage: raImage,
-		eventTypeReconciler: eventtype.EventTypeReconciler{
+		eventTypeReconciler: eventtype.Reconciler{
 			Scheme: scheme,
 		},
 	}
@@ -86,7 +86,7 @@ type reconciler struct {
 	client              client.Client
 	scheme              *runtime.Scheme
 	receiveAdapterImage string
-	eventTypeReconciler eventtype.EventTypeReconciler
+	eventTypeReconciler eventtype.Reconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -136,7 +136,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	if err != nil {
 		return err
 	}
-	// TODO mark event types
+	src.Status.MarkEventTypes()
 	return nil
 }
 

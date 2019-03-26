@@ -105,7 +105,7 @@ const (
 	GitHubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
 
 	// GitHubSourceConditionEventTypesProvided has status True when the
-	// GitHubSource has been configured with its event types.
+	// GitHubSource has been configured with event types.
 	GitHubSourceConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypeProvided"
 )
 
@@ -176,7 +176,7 @@ func (s *GitHubSourceStatus) MarkEventTypes() {
 	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionEventTypesProvided)
 }
 
-// MarkNoEventTypes sets the condition that the source does not have configured its event types.
+// MarkNoEventTypes sets the condition that the source does not its event types configured.
 func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }

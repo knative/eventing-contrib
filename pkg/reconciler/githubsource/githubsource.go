@@ -72,7 +72,7 @@ func Add(mgr manager.Manager) error {
 		scheme:              scheme,
 		receiveAdapterImage: receiveAdapterImage,
 		webhookClient:       gitHubWebhookClient{},
-		eventTypeReconciler: eventtype.EventTypeReconciler{
+		eventTypeReconciler: eventtype.Reconciler{
 			Scheme: scheme,
 		},
 	}
@@ -97,10 +97,10 @@ type reconciler struct {
 	recorder            record.EventRecorder
 	receiveAdapterImage string
 	webhookClient       webhookClient
-	eventTypeReconciler eventtype.EventTypeReconciler
+	eventTypeReconciler eventtype.Reconciler
 }
 
-// mapEventTypeToGitHubSource maps EventTypes changes to GitHub sources.
+// mapEventTypeToGitHubSource maps EventTypes changes to the GitHub that created it.
 type mapEventTypeToGitHubSource struct {
 	r *reconciler
 }
@@ -109,33 +109,37 @@ func (m *mapEventTypeToGitHubSource) Map(o handler.MapObject) []reconcile.Reques
 	ctx := context.Background()
 	gitHubSources := make([]reconcile.Request, 0)
 
+	et, ok := o.Object.(*eventingv1alpha1.EventType)
+	if !ok {
+		return gitHubSources
+	}
+
 	opts := &client.ListOptions{
-		Namespace: o.Meta.GetNamespace(),
+		Namespace: et.Namespace,
 		// Set Raw because if we need to get more than one page, then we will put the continue token
 		// into opts.Raw.Continue.
 		Raw: &metav1.ListOptions{},
 	}
 	for {
-		etl := &sourcesv1alpha1.GitHubSourceList{}
-		if err := m.r.client.List(ctx, opts, etl); err != nil {
+		gsl := &sourcesv1alpha1.GitHubSourceList{}
+		if err := m.r.client.List(ctx, opts, gsl); err != nil {
 			return gitHubSources
 		}
 
-		for _, et := range etl.Items {
-			if label, ok := et.Labels["knative-eventing-source"]; ok {
-				if label == controllerAgentName && et.Spec.Sink.Kind == "Broker" {
+		for _, gs := range gsl.Items {
+			if label, ok := et.Labels["knative-eventing-source-name"]; ok {
+				if label == gs.Name {
 					gitHubSources = append(gitHubSources, reconcile.Request{
 						NamespacedName: types.NamespacedName{
 							Namespace: et.Namespace,
 							Name:      et.Name,
 						},
 					})
-
 				}
 			}
 		}
-		if etl.Continue != "" {
-			opts.Raw.Continue = etl.Continue
+		if gsl.Continue != "" {
+			opts.Raw.Continue = gsl.Continue
 		} else {
 			return gitHubSources
 		}
@@ -233,7 +237,7 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 				return err
 			}
 		}
-		// We mark the event types in order to have the source Ready.
+		// We mark EventTypes in order to have the source Ready.
 		source.Status.MarkEventTypes()
 	}
 

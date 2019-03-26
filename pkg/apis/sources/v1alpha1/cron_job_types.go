@@ -47,7 +47,6 @@ var _ = duck.VerifyType(&CronJobSource{}, &duckv1alpha1.Conditions{})
 
 // CronJobSourceSpec defines the desired state of the CronJobSource.
 type CronJobSourceSpec struct {
-
 	// Schedule is the cronjob schedule.
 	// +required
 	Schedule string `json:"schedule"`
@@ -81,12 +80,16 @@ const (
 
 	// CronJobConditionDeployed has status True when the CronJobSource has had it's receive adapter deployment created.
 	CronJobConditionDeployed duckv1alpha1.ConditionType = "Deployed"
+
+	// CronJobConditionEventTypesProvided has status True when the CronJobSource has been configured with event types.
+	CronJobConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypesProvided"
 )
 
 var cronJobSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	CronJobConditionValidSchedule,
 	CronJobConditionSinkProvided,
-	CronJobConditionDeployed)
+	CronJobConditionDeployed,
+	CronJobConditionEventTypesProvided)
 
 // CronJobSourceStatus defines the observed state of CronJobSource.
 type CronJobSourceStatus struct {
@@ -153,6 +156,16 @@ func (s *CronJobSourceStatus) MarkDeploying(reason, messageFormat string, messag
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *CronJobSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
 	cronJobSourceCondSet.Manage(s).MarkFalse(CronJobConditionDeployed, reason, messageFormat, messageA...)
+}
+
+// MarkEventTypes sets the condition that the source has created its event types.
+func (s *CronJobSourceStatus) MarkEventTypes() {
+	cronJobSourceCondSet.Manage(s).MarkTrue(CronJobConditionEventTypesProvided)
+}
+
+// MarkNoEventTypes sets the condition that the source does not its event types configured.
+func (s *CronJobSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
+	cronJobSourceCondSet.Manage(s).MarkFalse(CronJobConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

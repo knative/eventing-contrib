@@ -29,12 +29,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type EventTypeReconciler struct {
+type Reconciler struct {
 	Client client.Client
 	Scheme *runtime.Scheme
 }
 
-// EventTypeArgs are the arguments needed to create an EventType.
+// EventTypeArgs are the arguments needed to reconcile EventTypes.
 type EventTypesArgs struct {
 	Args      []*EventTypeArgs
 	Namespace string
@@ -49,7 +49,7 @@ type EventTypeArgs struct {
 	Broker string
 }
 
-func (r *EventTypeReconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Object, args *EventTypesArgs) error {
+func (r *Reconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Object, args *EventTypesArgs) error {
 	current, err := r.getEventTypes(ctx, args.Namespace, args.Labels, owner)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (r *EventTypeReconciler) ReconcileEventTypes(ctx context.Context, owner met
 	return nil
 }
 
-func (r *EventTypeReconciler) getEventTypes(ctx context.Context, namespace string, lbs map[string]string, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
+func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs map[string]string, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
 	eventTypes := make([]*eventingv1alpha1.EventType, 0)
 
 	opts := &client.ListOptions{
@@ -103,7 +103,7 @@ func (r *EventTypeReconciler) getEventTypes(ctx context.Context, namespace strin
 	}
 }
 
-func (r *EventTypeReconciler) newEventTypes(args *EventTypesArgs, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
+func (r *Reconciler) newEventTypes(args *EventTypesArgs, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
 	eventTypes := make([]*eventingv1alpha1.EventType, 0)
 	for _, arg := range args.Args {
 		eventType := r.makeEventType(arg, args.Namespace, args.Labels)
@@ -116,7 +116,7 @@ func (r *EventTypeReconciler) newEventTypes(args *EventTypesArgs, owner metav1.O
 	return eventTypes, nil
 }
 
-func (r *EventTypeReconciler) makeEventType(args *EventTypeArgs, namespace string, lbl map[string]string) *eventingv1alpha1.EventType {
+func (r *Reconciler) makeEventType(args *EventTypeArgs, namespace string, lbl map[string]string) *eventingv1alpha1.EventType {
 	return &eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(args.Type)),
@@ -134,7 +134,7 @@ func (r *EventTypeReconciler) makeEventType(args *EventTypeArgs, namespace strin
 
 // Computes the difference between 'current' and 'expected' based on the EventType.Spec fields. As EventTypes are
 // immutable, a difference means that something got deleted or not created.
-func (r *EventTypeReconciler) difference(current []*eventingv1alpha1.EventType, expected []*eventingv1alpha1.EventType) []*eventingv1alpha1.EventType {
+func (r *Reconciler) difference(current []*eventingv1alpha1.EventType, expected []*eventingv1alpha1.EventType) []*eventingv1alpha1.EventType {
 	difference := make([]*eventingv1alpha1.EventType, 0)
 	nameFunc := func(eventType *eventingv1alpha1.EventType) string {
 		return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
