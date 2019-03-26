@@ -56,9 +56,6 @@ const (
 	controllerAgentName = "github-source-controller"
 	raImageEnvVar       = "GH_RA_IMAGE"
 	finalizerName       = controllerAgentName
-
-	eventTypeControllerLabelKey = "eventing.knative.dev/eventtype-source"
-	eventTypeSourceLabelKey     = "eventing.knative.dev/eventtype-source-name"
 )
 
 // Add creates a new GitHubSource Controller and adds it to the
@@ -228,17 +225,16 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
-
-			// Only create EventTypes for Broker sinks.
-			if source.Spec.Sink.Kind == "Broker" {
-				err = r.reconcileEventTypes(ctx, source)
-				if err != nil {
-					return err
-				}
-			}
-			// We mark the event types in order to have the source Ready.
-			source.Status.MarkEventTypes()
 		}
+		// Only create EventTypes for Broker sinks.
+		if source.Spec.Sink.Kind == "Broker" {
+			err = r.reconcileEventTypes(ctx, source)
+			if err != nil {
+				return err
+			}
+		}
+		// We mark the event types in order to have the source Ready.
+		source.Status.MarkEventTypes()
 	}
 
 	return nil
