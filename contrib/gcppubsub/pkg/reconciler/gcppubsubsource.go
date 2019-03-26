@@ -22,6 +22,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -66,16 +68,22 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 
+	scheme := mgr.GetScheme()
+	r := &reconciler{
+		scheme:              scheme,
+		pubSubClientCreator: gcpPubSubClientCreator,
+		receiveAdapterImage: raImage,
+		eventTypeReconciler: eventtype.Reconciler{
+			Scheme: scheme,
+		},
+	}
+
 	log.Println("Adding the GCP PubSub Source controller.")
 	p := &sdk.Provider{
-		AgentName: controllerAgentName,
-		Parent:    &v1alpha1.GcpPubSubSource{},
-		Owns:      []runtime.Object{&v1.Deployment{}},
-		Reconciler: &reconciler{
-			scheme:              mgr.GetScheme(),
-			pubSubClientCreator: gcpPubSubClientCreator,
-			receiveAdapterImage: raImage,
-		},
+		AgentName:  controllerAgentName,
+		Parent:     &v1alpha1.GcpPubSubSource{},
+		Owns:       []runtime.Object{&v1.Deployment{}},
+		Reconciler: r,
 	}
 
 	return p.Add(mgr)
@@ -100,12 +108,13 @@ type reconciler struct {
 	scheme *runtime.Scheme
 
 	pubSubClientCreator pubSubClientCreator
-
 	receiveAdapterImage string
+	eventTypeReconciler eventtype.Reconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }
 
@@ -164,6 +173,13 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	err = r.reconcileEventTypes(ctx, src)
+	if err != nil {
+		logger.Error("Unable to reconcile the event types", zap.Error(err))
+		return err
+	}
+	src.Status.MarkEventTypes()
 
 	return nil
 }
@@ -279,6 +295,26 @@ func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPu
 		return nil
 	}
 	return sub.Delete(ctx)
+}
+
+func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
+	args := r.newEventTypesReconcilerArgs(src)
+	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
+}
+
+func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
+	arg := &eventtype.EventTypeArgs{
+		Type:   v1alpha1.GcpPubSubSourceEventType,
+		Source: fmt.Sprintf("%s/%s", src.Spec.GoogleCloudProject, src.Spec.Topic),
+		Broker: src.Spec.Sink.Name,
+	}
+	args := make([]*eventtype.EventTypeArgs, 0, 1)
+	args = append(args, arg)
+	return &eventtype.ReconcilerArgs{
+		EventTypes: args,
+		Namespace:  src.Namespace,
+		Labels:     getLabels(src),
+	}
 }
 
 func generateSubName(src *v1alpha1.GcpPubSubSource) string {

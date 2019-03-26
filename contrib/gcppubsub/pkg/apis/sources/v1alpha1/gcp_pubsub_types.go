@@ -92,12 +92,16 @@ const (
 
 	// GcpPubSubConditionSubscribed has status True when a GCP PubSub Subscription has been created pointing at the created receive adapter deployment.
 	GcpPubSubConditionSubscribed duckv1alpha1.ConditionType = "Subscribed"
+
+	// GcpPubSubConditionEventTypesProvided has status True when the GcpPubSubSource has been configured with event types.
+	GcpPubSubConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypesProvided"
 )
 
 var gcpPubSubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	GcpPubSubConditionSinkProvided,
 	GcpPubSubConditionDeployed,
-	GcpPubSubConditionSubscribed)
+	GcpPubSubConditionSubscribed,
+	GcpPubSubConditionEventTypesProvided)
 
 // GcpPubSubSourceStatus defines the observed state of GcpPubSubSource.
 type GcpPubSubSourceStatus struct {
@@ -158,6 +162,16 @@ func (s *GcpPubSubSourceStatus) MarkNotDeployed(reason, messageFormat string, me
 
 func (s *GcpPubSubSourceStatus) MarkSubscribed() {
 	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubConditionSubscribed)
+}
+
+// MarkEventTypes sets the condition that the source has created its event types.
+func (s *GcpPubSubSourceStatus) MarkEventTypes() {
+	gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubConditionEventTypesProvided)
+}
+
+// MarkNoEventTypes sets the condition that the source does not its event types configured.
+func (s *GcpPubSubSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
+	gcpPubSubSourceCondSet.Manage(s).MarkFalse(GcpPubSubConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
