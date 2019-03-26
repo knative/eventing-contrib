@@ -61,8 +61,8 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 							ImagePullPolicy: "Always",
 							Env: []corev1.EnvVar{
 								{
-									Name:  "KAFKA_BROKERS",
-									Value: args.Source.Spec.Brokers,
+									Name:  "KAFKA_BOOTSTRAP_SERVERS",
+									Value: args.Source.Spec.BootstrapServers,
 								},
 								{
 									Name:  "KAFKA_TOPICS",

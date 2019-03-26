@@ -8,7 +8,7 @@ This sample demonstrates how to configure, deploy, and use the Apache Kafka Even
 ### Prerequisites
 1. An existing instance of Apache Kafka must be running to use the Apache Kafka Event Source.
     - In order to consume and produce messages, a topic must be created on the Apache Kafka instance.
-    - A list of brokers corresponding to Apache Kafka instance must be obtained.
+    - A list of bootstrap servers corresponding to Apache Kafka instance must be obtained.
 2. Install the `ko` CLI for building and deploying purposes.
     ```
     go get github.com/google/go-containerregistry/cmd/ko
@@ -51,7 +51,7 @@ The following steps build and deploy the Apache Kafka Event Controller, Source, 
     ```
 
 #### Apache Kafka Event Source
-1. Modify `contrib/kafka/samples/event-source.yaml` accordingly with brokers, topic, etc... 
+1. Modify `contrib/kafka/samples/event-source.yaml` accordingly with bootstrap servers, topics, etc... 
 2. Build and deploy the event source.
     ```
     $ ko apply -f contrib/kafka/samples/event-source.yaml
@@ -67,7 +67,7 @@ The following steps build and deploy the Apache Kafka Event Controller, Source, 
 4.  Ensure the Apache Kafka Event Source started with the necessary configuration.
     ```
     $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
-    {"level":"info","ts":"2019-03-19T22:31:52.689Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","adapter":{"Brokers":"...","Topic":"...","ConsumerGroup":"...","Net":{"SASL":{"Enable":true,"User":"...","Password":"..."},"TLS":{"Enable":true}},"SinkURI":"http://event-display.default.svc.cluster.local/"}}
+    {"level":"info","ts":"2019-03-19T22:31:52.689Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","adapter":{"BootstrapServers":"...","Topic":"...","ConsumerGroup":"...","Net":{"SASL":{"Enable":true,"User":"...","Password":"..."},"TLS":{"Enable":true}},"SinkURI":"http://event-display.default.svc.cluster.local/"}}
     ```
 
 #### Event Display 

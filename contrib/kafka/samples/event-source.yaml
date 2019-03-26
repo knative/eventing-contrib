@@ -14,7 +14,7 @@
 
 # Replace the following before applying this file:
 #   KAFKA_CONSUMER_GROUP_NAME: Name of Kafka consumer group
-#   KAFKA_BROKERS: Comma-separated list of brokers
+#   KAFKA_BOOTSTRAP_SERVERS: Comma-separated list of bootstrap servers
 #   KAFKA_TOPICS: Comma-separated list of topics
 #   KAFKA_SASL_ENABLE: Truthy value to enable/disable SASL, disabled by default (optional)
 #   KAFKA_SASL_USERNAME: Username for SASL authentication (optional)
@@ -27,7 +27,7 @@ metadata:
   name: kafka-source
 spec:
   consumerGroup: KAFKA_CONSUMER_GROUP_NAME
-  brokers: KAFKA_BROKERS
+  bootstrapServers: KAFKA_BOOTSTRAP_SERVERS
   topics: KAFKA_TOPICS
   net:
     sasl:

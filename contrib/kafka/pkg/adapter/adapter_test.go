@@ -57,10 +57,10 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			defer sinkServer.Close()
 
 			a := &Adapter{
-				Topics:        "topic1,topic2",
-				Brokers:       "broker1,broker2",
-				ConsumerGroup: "group",
-				SinkURI:       sinkServer.URL,
+				Topics:           "topic1,topic2",
+				BootstrapServers: "server1,server2",
+				ConsumerGroup:    "group",
+				SinkURI:          sinkServer.URL,
 				client: func() client.Client {
 					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 					return c

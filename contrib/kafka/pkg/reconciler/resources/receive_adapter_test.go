@@ -34,7 +34,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		Spec: v1alpha1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
 			Topics:             "topic1,topic2",
-			Brokers:            "broker1,broker2",
+			BootstrapServers:   "server1,server2",
 			ConsumerGroup:      "group",
 			Net: v1alpha1.KafkaSourceNetSpec{
 				SASL: v1alpha1.KafkaSourceSASLSpec{
@@ -96,8 +96,8 @@ func TestMakeReceiveAdapter(t *testing.T) {
 							ImagePullPolicy: "Always",
 							Env: []corev1.EnvVar{
 								{
-									Name:  "KAFKA_BROKERS",
-									Value: "broker1,broker2",
+									Name:  "KAFKA_BOOTSTRAP_SERVERS",
+									Value: "server1,server2",
 								},
 								{
 									Name:  "KAFKA_TOPICS",
