@@ -158,9 +158,13 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 	src.Status.MarkDeployed()
 
-	err = r.reconcileEventTypes(ctx, src)
-	if err != nil {
-		return err
+	// Only create EventTypes for Broker sinks.
+	// TODO typed way of doing this?
+	if src.Spec.Sink.Kind == "Broker" {
+		err = r.reconcileEventTypes(ctx, src)
+		if err != nil {
+			return err
+		}
 	}
 	src.Status.MarkEventTypes()
 

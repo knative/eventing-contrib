@@ -230,16 +230,19 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 			}
 			source.Status.WebhookIDKey = hookID
 		}
-		// Only create EventTypes for Broker sinks.
-		if source.Spec.Sink.Kind == "Broker" {
-			err = r.reconcileEventTypes(ctx, source)
-			if err != nil {
-				return err
-			}
-		}
-		// We mark EventTypes in order to have the source Ready.
-		source.Status.MarkEventTypes()
+		return nil
 	}
+
+	// Only create EventTypes for Broker sinks.
+	// TODO typed way of doing this?
+	if source.Spec.Sink.Kind == "Broker" {
+		err = r.reconcileEventTypes(ctx, source)
+		if err != nil {
+			return err
+		}
+	}
+	// We mark EventTypes in order to have the source Ready.
+	source.Status.MarkEventTypes()
 
 	return nil
 }
