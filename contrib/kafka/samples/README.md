@@ -1,14 +1,14 @@
-# Kafka - Source
-The Kafka Event source enables Knative Eventing integration with Kafka. When an message is produced to Kafka, the
-Kafka Event Source will consume the produced message and post that message the corresponding event sink.
+# Apache Kafka - Source
+The Apache Kafka Event source enables Knative Eventing integration with Apache Kafka. When an message is produced to Apache Kafka, the
+Apache Kafka Event Source will consume the produced message and post that message the corresponding event sink.
   
-This sample demonstrates how to configure, deploy, and use the Kafka Event Source with a Knative Service.
+This sample demonstrates how to configure, deploy, and use the Apache Kafka Event Source with a Knative Service.
 
 ## Build and Deploy Steps
 ### Prerequisites
-1. An existing instance of Kafka must be running to use the Kafka Event Source.
-    - In order to consume and produce messages, a topic must be created on the Kafka instance.
-    - A list of brokers corresponding to Kafka instance must be obtained.
+1. An existing instance of Apache Kafka must be running to use the Apache Kafka Event Source.
+    - In order to consume and produce messages, a topic must be created on the Apache Kafka instance.
+    - A list of brokers corresponding to Apache Kafka instance must be obtained.
 2. Install the `ko` CLI for building and deploying purposes.
     ```
     go get github.com/google/go-containerregistry/cmd/ko
@@ -20,11 +20,11 @@ This sample demonstrates how to configure, deploy, and use the Kafka Event Sourc
       ```
 
 ### Build and Deployment
-The following steps build and deploy the Kafka Event Controller, Source, and an Event Display Service.
+The following steps build and deploy the Apache Kafka Event Controller, Source, and an Event Display Service.
 - Assuming current working directory is the project root `eventing-sources`.
 
-#### Kafka Event Controller
-1. Build the Kafka Event Controller and configure a Service Account, Cluster Role, Controller, and Source.
+#### Apache Kafka Event Controller
+1. Build the Apache Kafka Event Controller and configure a Service Account, Cluster Role, Controller, and Source.
     ```
     $ ko apply -f contrib/kafka/config
     ...
@@ -46,11 +46,11 @@ The following steps build and deploy the Kafka Event Controller, Source, and an 
     $ kubectl logs kafka-controller-manager-0 -n knative-sources
     2019/03/19 22:25:54 Registering Components.
     2019/03/19 22:25:54 Setting up Controller.
-    2019/03/19 22:25:54 Adding the Kafka Source controller.
-    2019/03/19 22:25:54 Starting Kafka controller.
+    2019/03/19 22:25:54 Adding the Apache Kafka Source controller.
+    2019/03/19 22:25:54 Starting Apache Kafka controller.
     ```
 
-#### Kafka Event Source
+#### Apache Kafka Event Source
 1. Modify `contrib/kafka/samples/event-source.yaml` accordingly with brokers, topic, etc... 
 2. Build and deploy the event source.
     ```
@@ -64,10 +64,10 @@ The following steps build and deploy the Kafka Event Controller, Source, and an 
     NAME                                  READY     STATUS    RESTARTS   AGE
     kafka-source-xlnhq-5544766765-dnl5s   1/1       Running   0          40m
     ```
-4.  Ensure the Kafka Event Source started with the necessary configuration.
+4.  Ensure the Apache Kafka Event Source started with the necessary configuration.
     ```
     $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
-    {"level":"info","ts":"2019-03-19T22:31:52.689Z","caller":"receive_adapter/main.go:97","msg":"Starting Kafka Receive Adapter...","adapter":{"Brokers":"...","Topic":"...","ConsumerGroup":"...","Net":{"SASL":{"Enable":true,"User":"...","Password":"..."},"TLS":{"Enable":true}},"SinkURI":"http://event-display.default.svc.cluster.local/"}}
+    {"level":"info","ts":"2019-03-19T22:31:52.689Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","adapter":{"Brokers":"...","Topic":"...","ConsumerGroup":"...","Net":{"SASL":{"Enable":true,"User":"...","Password":"..."},"TLS":{"Enable":true}},"SinkURI":"http://event-display.default.svc.cluster.local/"}}
     ```
 
 #### Event Display 
@@ -86,11 +86,11 @@ The following steps build and deploy the Kafka Event Controller, Source, and an 
     ```
 
 ### Verify
-1. Produce the message shown below to Kafka.
+1. Produce the message shown below to Apache Kafka.
     ```
     {"msg": "This is a test!"}
     ```
-2. Check that the Kafka Event Source consumed the message and sent it to its sink properly.
+2. Check that the Apache Kafka Event Source consumed the message and sent it to its sink properly.
     ```
     $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
     ...
@@ -122,7 +122,7 @@ The following steps build and deploy the Kafka Event Controller, Source, and an 
     ```
 
 ## Teardown Steps
-1. Remove the Kafka Event Source
+1. Remove the Apache Kafka Event Source
     ```
     $ ko delete -f contrib/kafka/samples/source.yaml
     kafkasource.sources.eventing.knative.dev "kafka-source" deleted
@@ -132,7 +132,7 @@ The following steps build and deploy the Kafka Event Controller, Source, and an 
     $ ko delete -f contrib/kafka/samples/event-display.yaml
     service.serving.knative.dev "event-display" deleted
     ```
-3. Remove the Kafka Event Controller
+3. Remove the Apache Kafka Event Controller
     ```
     $ ko delete -f contrib/kafka/config
     serviceaccount "kafka-controller-manager" deleted
