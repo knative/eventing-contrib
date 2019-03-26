@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	AWSSQSHeaderFrom = "From"
+	awsSQSHeaderFrom = "From"
 )
 
 // Adapter implements the AWS SQS adapter to deliver SQS messages from
@@ -181,7 +181,7 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 	}
 
 	extensions := map[string]interface{}{
-		AWSSQSHeaderFrom: a.QueueURL,
+		awsSQSHeaderFrom: a.QueueURL,
 	}
 
 	event := cloudevents.Event{

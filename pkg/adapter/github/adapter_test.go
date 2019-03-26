@@ -562,8 +562,8 @@ func TestHandleEvent(t *testing.T) {
 	payload := gh.PullRequestPayload{}
 	payload.PullRequest.HTMLURL = testSource
 	header := http.Header{}
-	header.Set("X-"+GHHeaderEvent, eventType)
-	header.Set("X-"+GHHeaderDelivery, eventID)
+	header.Set("X-"+ghHeaderEvent, eventType)
+	header.Set("X-"+ghHeaderDelivery, eventID)
 	ra.HandleEvent(payload, webhooks.Header(header))
 
 	// TODO(https://github.com/knative/pkg/issues/250): clean this up when there is a shared test client.

@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	CJHeaderFrom = "From"
+	cronJobHeaderFrom = "From"
 )
 
 // Adapter implements the Cron Job adapter to trigger a Sink.
@@ -91,7 +91,7 @@ func (a *Adapter) cronTick() {
 	logger := logging.FromContext(context.TODO())
 
 	extensions := map[string]interface{}{
-		CJHeaderFrom: a.Schedule,
+		cronJobHeaderFrom: a.Schedule,
 	}
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{

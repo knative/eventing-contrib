@@ -32,9 +32,9 @@ import (
 )
 
 const (
-	GHHeaderEvent    = "GitHub-Event"
-	GHHeaderDelivery = "GitHub-Delivery"
-	GHHeaderFrom     = "From"
+	ghHeaderEvent    = "GitHub-Event"
+	ghHeaderDelivery = "GitHub-Delivery"
+	ghHeaderFrom     = "From"
 )
 
 // Adapter converts incoming GitHub webhook events to CloudEvents
@@ -66,12 +66,12 @@ func (a *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
 }
 
 func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
-	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
-	eventID := hdr.Get("X-" + GHHeaderDelivery)
+	gitHubEventType := hdr.Get("X-" + ghHeaderEvent)
+	eventID := hdr.Get("X-" + ghHeaderDelivery)
 	extensions := map[string]interface{}{
-		GHHeaderEvent:    gitHubEventType,
-		GHHeaderDelivery: eventID,
-		GHHeaderFrom:     a.ownerRepo,
+		ghHeaderEvent:    gitHubEventType,
+		ghHeaderDelivery: eventID,
+		ghHeaderFrom:     a.ownerRepo,
 	}
 
 	log.Printf("Handling %s", gitHubEventType)

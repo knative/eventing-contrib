@@ -28,15 +28,17 @@ import (
 
 	// Imports the Google Cloud Pub/Sub client package.
 	"cloud.google.com/go/pubsub"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
 	"golang.org/x/net/context"
 )
 
 const (
-	eventType = "google.pubsub.topic.publish"
 	// If in the PubSub message attributes this header is set, use
 	// it as the Cloud Event type so as to preserve types that flow
 	// through the Receive Adapter.
 	eventTypeOverrideKey = "ce-type"
+
+	gcpHeaderFrom = "From"
 )
 
 // Adapter implements the GCP Pub/Sub adapter to deliver Pub/Sub messages from
@@ -100,10 +102,14 @@ func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m PubSubMessage) error {
 	// TODO: this will break when the upstream sender updates cloudevents versions.
 	// The correct thing to do would be to convert the message to a cloudevent if it is one.
-	et := eventType
+	et := sourcesv1alpha1.GcpPubSubSourceEventType
 	if override, ok := m.Message().Attributes[eventTypeOverrideKey]; ok {
 		et = override
 		logger.Infof("overriding the cloud event type with %q", et)
+	}
+
+	extensions := map[string]interface{}{
+		gcpHeaderFrom: fmt.Sprintf("%s/%s", a.ProjectID, a.TopicID),
 	}
 
 	event := cloudevents.Event{
@@ -113,6 +119,7 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 			Time:        &types.Timestamp{Time: m.PublishTime()},
 			Source:      *types.ParseURLRef(a.source),
 			ContentType: cloudevents.StringOfApplicationJSON(),
+			Extensions:  extensions,
 		}.AsV02(),
 		Data: m.Message(),
 	}

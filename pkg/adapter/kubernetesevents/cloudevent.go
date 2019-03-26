@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	K8sHeaderFrom = "From"
+	k8sHeaderFrom = "From"
 )
 
 // Creates a URI of the form found in object metadata selfLinks
@@ -83,8 +83,9 @@ func createSelfLink(o corev1.ObjectReference) string {
 //		EventTime:0001-01-01 00:00:00 +0000 UTC,
 //	}
 func cloudEventFrom(m *corev1.Event) cloudevents.Event {
+	// TODO should use reason?
 	extensions := map[string]interface{}{
-		K8sHeaderFrom: m.Reason,
+		k8sHeaderFrom: m.Reason,
 	}
 	return cloudevents.Event{
 		Context: cloudevents.EventContextV02{

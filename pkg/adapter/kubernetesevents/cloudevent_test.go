@@ -58,7 +58,7 @@ func TestCloudEventFrom(t *testing.T) {
 	}
 
 	extensions := map[string]interface{}{
-		K8sHeaderFrom: reason,
+		k8sHeaderFrom: reason,
 	}
 	want := cloudevents.Event{
 		Context: cloudevents.EventContextV02{

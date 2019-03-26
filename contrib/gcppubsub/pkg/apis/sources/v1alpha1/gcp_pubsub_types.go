@@ -75,6 +75,12 @@ type GcpPubSubSourceSpec struct {
 }
 
 const (
+	// GcpPubSubSourceEventType is the GcpPubSub CloudEvent type, in case PubSub doesn't send a
+	// CloudEvent itself.
+	GcpPubSubSourceEventType = "dev.knative.source.gcppubsub"
+)
+
+const (
 	// GcpPubSubConditionReady has status True when the GcpPubSubSource is ready to send events.
 	GcpPubSubConditionReady = duckv1alpha1.ConditionReady
 
