@@ -31,7 +31,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 	if args != nil {
 		containerArgs = args.Args
 	}
-	// if sink is already in the provided args.Args, don't attempt to add
+	// if sink is already in the provided args.EventTypes, don't attempt to add
 	if !args.SinkInArgs {
 		remote := fmt.Sprintf("--sink=%s", args.Sink)
 		containerArgs = append(containerArgs, remote)

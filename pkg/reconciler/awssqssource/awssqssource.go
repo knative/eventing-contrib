@@ -22,7 +22,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/eventtype"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
@@ -223,11 +223,11 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.AwsSqs
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsSqsSource) error {
-	args := r.newEventTypesArgs(src)
+	args := r.newEventTypesReconcilerArgs(src)
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
 }
 
-func (r *reconciler) newEventTypesArgs(src *v1alpha1.AwsSqsSource) *eventtype.EventTypesArgs {
+func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
 		Type:   v1alpha1.AwsSqsSourceEventType,
 		Source: src.Spec.QueueURL,
@@ -235,10 +235,10 @@ func (r *reconciler) newEventTypesArgs(src *v1alpha1.AwsSqsSource) *eventtype.Ev
 	}
 	args := make([]*eventtype.EventTypeArgs, 0, 1)
 	args = append(args, arg)
-	return &eventtype.EventTypesArgs{
-		Args:      args,
-		Namespace: src.Namespace,
-		Labels:    getLabels(src),
+	return &eventtype.ReconcilerArgs{
+		EventTypes: args,
+		Namespace:  src.Namespace,
+		Labels:     getLabels(src),
 	}
 }
 

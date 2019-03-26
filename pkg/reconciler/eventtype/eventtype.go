@@ -34,11 +34,11 @@ type Reconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// EventTypeArgs are the arguments needed to reconcile EventTypes.
-type EventTypesArgs struct {
-	Args      []*EventTypeArgs
-	Namespace string
-	Labels    map[string]string
+// ReconcilerArgs are the arguments needed to reconcile EventTypes.
+type ReconcilerArgs struct {
+	EventTypes []*EventTypeArgs
+	Namespace  string
+	Labels     map[string]string
 }
 
 // EventTypeArgs are the arguments needed to create an EventType.
@@ -49,7 +49,7 @@ type EventTypeArgs struct {
 	Broker string
 }
 
-func (r *Reconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Object, args *EventTypesArgs) error {
+func (r *Reconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Object, args *ReconcilerArgs) error {
 	current, err := r.getEventTypes(ctx, args.Namespace, args.Labels, owner)
 	if err != nil {
 		return err
@@ -103,9 +103,9 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 	}
 }
 
-func (r *Reconciler) newEventTypes(args *EventTypesArgs, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
+func (r *Reconciler) newEventTypes(args *ReconcilerArgs, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
 	eventTypes := make([]*eventingv1alpha1.EventType, 0)
-	for _, arg := range args.Args {
+	for _, arg := range args.EventTypes {
 		eventType := r.makeEventType(arg, args.Namespace, args.Labels)
 		// Setting the reference to delete the EventType upon uninstallation of the source.
 		if err := controllerutil.SetControllerReference(owner, eventType, r.Scheme); err != nil {
@@ -116,18 +116,18 @@ func (r *Reconciler) newEventTypes(args *EventTypesArgs, owner metav1.Object) ([
 	return eventTypes, nil
 }
 
-func (r *Reconciler) makeEventType(args *EventTypeArgs, namespace string, lbl map[string]string) *eventingv1alpha1.EventType {
+func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map[string]string) *eventingv1alpha1.EventType {
 	return &eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(args.Type)),
+			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(arg.Type)),
 			Labels:       lbl,
 			Namespace:    namespace,
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
-			Type:   args.Type,
-			Source: args.Source,
-			Schema: args.Schema,
-			Broker: args.Broker,
+			Type:   arg.Type,
+			Source: arg.Source,
+			Schema: arg.Schema,
+			Broker: arg.Broker,
 		},
 	}
 }

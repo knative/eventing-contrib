@@ -31,7 +31,7 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	"github.com/knative/eventing-sources/pkg/eventtype"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
@@ -402,11 +402,11 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	args := r.newEventTypesArgs(source)
+	args := r.newEventTypesReconcilerArgs(source)
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, source, args)
 }
 
-func (r *reconciler) newEventTypesArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.EventTypesArgs {
+func (r *reconciler) newEventTypesReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.ReconcilerArgs {
 	args := make([]*eventtype.EventTypeArgs, 0)
 	for _, et := range source.Spec.EventTypes {
 		arg := &eventtype.EventTypeArgs{
@@ -418,10 +418,10 @@ func (r *reconciler) newEventTypesArgs(source *sourcesv1alpha1.GitHubSource) *ev
 		}
 		args = append(args, arg)
 	}
-	return &eventtype.EventTypesArgs{
-		Args:      args,
-		Namespace: source.Namespace,
-		Labels:    getLabels(source),
+	return &eventtype.ReconcilerArgs{
+		EventTypes: args,
+		Namespace:  source.Namespace,
+		Labels:     getLabels(source),
 	}
 }
 
