@@ -94,7 +94,7 @@ func main() {
 
 	stopCh := signals.SetupSignalHandler()
 
-	logger.Info("Starting Kafka Receive Adapter...", zap.Reflect("adapter", adapter))
+	logger.Info("Starting Apache Kafka Receive Adapter...", zap.Reflect("adapter", adapter))
 	if err := adapter.Start(ctx, stopCh); err != nil {
 		logger.Fatal("failed to start adapter: ", zap.Error(err))
 	}

@@ -54,7 +54,7 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 
-	log.Println("Adding the Kafka Source controller.")
+	log.Println("Adding the Apache Kafka Source controller.")
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.KafkaSource{},
@@ -84,7 +84,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 	src, ok := object.(*v1alpha1.KafkaSource)
 	if !ok {
-		logger.Error("could not find Kafka source", zap.Any("object", object))
+		logger.Error("could not find Apache Kafka source", zap.Any("object", object))
 		return nil
 	}
 

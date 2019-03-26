@@ -53,7 +53,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Starting Kafka controller.")
+	log.Printf("Starting Apache Kafka controller.")
 
 	// Start the Cmd
 	log.Fatal(mgr.Start(signals.SetupSignalHandler()))
