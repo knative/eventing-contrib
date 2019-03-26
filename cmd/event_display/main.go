@@ -21,11 +21,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
-	"log"
-	"strings"
 )
 
 /*
