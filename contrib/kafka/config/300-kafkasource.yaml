@@ -42,7 +42,7 @@ spec:
           type: object
         spec:
           properties:
-            brokers:
+            bootstrapServers:
               type: string
             topics:
               type: string

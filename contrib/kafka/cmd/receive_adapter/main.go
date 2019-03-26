@@ -33,14 +33,14 @@ import (
 )
 
 const (
-	envBrokers         = "KAFKA_BROKERS"
-	envTopics          = "KAFKA_TOPICS"
-	envConsumerGroup   = "KAFKA_CONSUMER_GROUP"
-	envNetSASLEnable   = "KAFKA_NET_SASL_ENABLE"
-	envNetSASLUser     = "KAFKA_NET_SASL_USER"
-	envNetSASLPassword = "KAFKA_NET_SASL_PASSWORD"
-	envNetTLSEnable    = "KAFKA_NET_TLS_ENABLE"
-	envSinkURI         = "SINK_URI"
+	envBootstrapServers = "KAFKA_BOOTSTRAP_SERVERS"
+	envTopics           = "KAFKA_TOPICS"
+	envConsumerGroup    = "KAFKA_CONSUMER_GROUP"
+	envNetSASLEnable    = "KAFKA_NET_SASL_ENABLE"
+	envNetSASLUser      = "KAFKA_NET_SASL_USER"
+	envNetSASLPassword  = "KAFKA_NET_SASL_PASSWORD"
+	envNetTLSEnable     = "KAFKA_NET_TLS_ENABLE"
+	envSinkURI          = "SINK_URI"
 )
 
 func getRequiredEnv(key string) string {
@@ -76,10 +76,10 @@ func main() {
 	}
 
 	adapter := &kafka.Adapter{
-		Brokers:       getRequiredEnv(envBrokers),
-		Topics:        getRequiredEnv(envTopics),
-		ConsumerGroup: getRequiredEnv(envConsumerGroup),
-		SinkURI:       getRequiredEnv(envSinkURI),
+		BootstrapServers: getRequiredEnv(envBootstrapServers),
+		Topics:           getRequiredEnv(envTopics),
+		ConsumerGroup:    getRequiredEnv(envConsumerGroup),
+		SinkURI:          getRequiredEnv(envSinkURI),
 		Net: kafka.AdapterNet{
 			SASL: kafka.AdapterSASL{
 				Enable:   getOptionalBoolEnv(envNetSASLEnable),

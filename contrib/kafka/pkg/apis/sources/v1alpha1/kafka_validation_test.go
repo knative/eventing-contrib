@@ -24,9 +24,9 @@ import (
 
 var (
 	fullSpec = KafkaSourceSpec{
-		Brokers:       "brokers",
-		Topics:        "topic",
-		ConsumerGroup: "group",
+		BootstrapServers: "servers",
+		Topics:           "topics",
+		ConsumerGroup:    "group",
 		Sink: &corev1.ObjectReference{
 			APIVersion: "foo",
 			Kind:       "bar",
@@ -56,10 +56,10 @@ func TestKafkaSourceCheckImmutableFields(t *testing.T) {
 			},
 			allowed: false,
 		},
-		"Brokers changed": {
+		"Bootstrap servers changed": {
 			orig: &fullSpec,
 			updated: KafkaSourceSpec{
-				Topics:             "broker1,broker2",
+				BootstrapServers:   "server1,server2",
 				Sink:               fullSpec.Sink,
 				ServiceAccountName: fullSpec.ServiceAccountName,
 			},

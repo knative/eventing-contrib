@@ -50,12 +50,12 @@ type AdapterNet struct {
 }
 
 type Adapter struct {
-	Brokers       string
-	Topics        string
-	ConsumerGroup string
-	Net           AdapterNet
-	SinkURI       string
-	client        client.Client
+	BootstrapServers string
+	Topics           string
+	ConsumerGroup    string
+	Net              AdapterNet
+	SinkURI          string
+	client           client.Client
 }
 
 // --------------------------------------------------------------------
@@ -101,7 +101,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	kafkaConfig.Net.TLS.Enable = a.Net.TLS.Enable
 
 	// Start with a client
-	client, err := sarama.NewClient(strings.Split(a.Brokers, ","), kafkaConfig)
+	client, err := sarama.NewClient(strings.Split(a.BootstrapServers, ","), kafkaConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -124,9 +124,8 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	// Handle session
 	go func() {
 		for {
-			cerr := group.Consume(ctx, strings.Split(a.Topics, ","), a)
-			if cerr != nil {
-				panic(cerr)
+			if err := group.Consume(ctx, strings.Split(a.Topics, ","), a); err != nil {
+				panic(err)
 			}
 		}
 	}()

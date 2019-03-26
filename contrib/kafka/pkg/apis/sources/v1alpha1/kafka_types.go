@@ -66,9 +66,9 @@ type KafkaSourceNetSpec struct {
 
 // KafkaSourceSpec defines the desired state of the KafkaSource.
 type KafkaSourceSpec struct {
-	// Brokers are the Kafka servers the consumer will connect to.
+	// Bootstrap servers are the Kafka servers the consumer will connect to.
 	// +required
-	Brokers string `json:"brokers"`
+	BootstrapServers string `json:"bootstrapServers"`
 
 	// Topic topics to consume messages from
 	// +required
