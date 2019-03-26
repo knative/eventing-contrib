@@ -25,6 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const sourceLabelKey = "eventing.knative.dev/source"
+
 func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.Deployment {
 
 	containerArgs := []string(nil)
@@ -51,7 +53,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"source": args.Name,
+					sourceLabelKey: args.Name,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
@@ -60,7 +62,7 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 						"sidecar.istio.io/inject": "true",
 					},
 					Labels: map[string]string{
-						"source": args.Name,
+						sourceLabelKey: args.Name,
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -79,6 +81,25 @@ func MakeDeployment(org *appsv1.Deployment, args *ContainerArguments) *appsv1.De
 		},
 	}
 
+	// Then wire through any annotations from the source. Not a bug by allowing
+	// the container to override Istio injection.
+	if args.Annotations != nil {
+		for k, v := range args.Annotations {
+			deploy.Spec.Template.ObjectMeta.Annotations[k] = v
+		}
+	}
+
+	// Then wire through any labels from the source. Do not allow to override
+	// our source name. This seems like it would be way errorprone by allowing
+	// the matchlabels then to not match, or we'd have to force them to match, etc.
+	// just don't allow it.
+	if args.Labels != nil {
+		for k, v := range args.Labels {
+			if k != sourceLabelKey {
+				deploy.Spec.Template.ObjectMeta.Labels[k] = v
+			}
+		}
+	}
 	return deploy
 }
 

@@ -25,6 +25,101 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func TestMakeDeployment_sinkoverrideannotationlabelnotallowed(t *testing.T) {
+	got := MakeDeployment(nil, &ContainerArguments{
+		Name:      "test-name",
+		Namespace: "test-namespace",
+		Image:     "test-image",
+		Args:      []string{"--test1=args1", "--test2=args2"},
+		Env: []corev1.EnvVar{{
+			Name:  "test1",
+			Value: "arg1",
+		}, {
+			Name: "test2",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "test2-secret",
+				},
+			},
+		}},
+		ServiceAccountName: "test-service-account",
+		SinkInArgs:         false,
+		Sink:               "test-sink",
+		Labels: map[string]string{
+			"eventing.knative.dev/source": "not-allowed",
+			"anotherlabel":                "extra-label",
+		},
+		Annotations: map[string]string{
+			"sidecar.istio.io/inject": "false",
+			"anotherannotation":       "extra-annotation",
+		},
+	})
+
+	want := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-name-",
+			Namespace:    "test-namespace",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"eventing.knative.dev/source": "test-name",
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar.istio.io/inject": "false",
+						"anotherannotation":       "extra-annotation",
+					},
+					Labels: map[string]string{
+						"eventing.knative.dev/source": "test-name",
+						"anotherlabel":                "extra-label",
+					},
+				},
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "test-service-account",
+					Containers: []corev1.Container{
+						{
+							Name:  "source",
+							Image: "test-image",
+							Args: []string{
+								"--test1=args1",
+								"--test2=args2",
+								"--sink=test-sink",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "test1",
+									Value: "arg1",
+								}, {
+									Name: "test2",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											Key: "test2-secret",
+										},
+									},
+								}, {
+									Name:  "SINK",
+									Value: "test-sink",
+								}},
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
+	}
+}
+
 func TestMakeDeployment_sink(t *testing.T) {
 	got := MakeDeployment(nil, &ContainerArguments{
 		Name:      "test-name",
@@ -59,7 +154,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"source": "test-name",
+					"eventing.knative.dev/source": "test-name",
 				},
 			},
 			Template: corev1.PodTemplateSpec{
@@ -68,7 +163,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 						"sidecar.istio.io/inject": "true",
 					},
 					Labels: map[string]string{
-						"source": "test-name",
+						"eventing.knative.dev/source": "test-name",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -129,6 +224,8 @@ func TestMakeDeployment_sinkinargs(t *testing.T) {
 		}},
 		ServiceAccountName: "test-service-account",
 		SinkInArgs:         true,
+		Labels:             map[string]string{"eventing.knative.dev/source": "test-name"},
+		Annotations:        map[string]string{"sidecar.istio.io/inject": "true"},
 	})
 
 	want := &appsv1.Deployment{
@@ -143,7 +240,7 @@ func TestMakeDeployment_sinkinargs(t *testing.T) {
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"source": "test-name",
+					"eventing.knative.dev/source": "test-name",
 				},
 			},
 			Template: corev1.PodTemplateSpec{
@@ -152,7 +249,7 @@ func TestMakeDeployment_sinkinargs(t *testing.T) {
 						"sidecar.istio.io/inject": "true",
 					},
 					Labels: map[string]string{
-						"source": "test-name",
+						"eventing.knative.dev/source": "test-name",
 					},
 				},
 				Spec: corev1.PodSpec{
