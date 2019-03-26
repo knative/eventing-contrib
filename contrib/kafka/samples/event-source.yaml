@@ -28,7 +28,7 @@ metadata:
 spec:
   consumerGroup: KAFKA_CONSUMER_GROUP_NAME
   brokers: KAFKA_BROKERS
-  topic: KAFKA_TOPICS
+  topics: KAFKA_TOPICS
   net:
     sasl:
       enable: KAFKA_SASL_ENABLE
