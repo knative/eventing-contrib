@@ -19,15 +19,16 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"github.com/Shopify/sarama"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/Shopify/sarama"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
