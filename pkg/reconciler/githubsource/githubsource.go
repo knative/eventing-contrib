@@ -260,7 +260,7 @@ func (r *reconciler) createWebhook(ctx context.Context, args *webhookArgs) (stri
 		events:      args.source.Spec.EventTypes,
 		secure:      args.source.Spec.Secure,
 	}
-	hookID, err := r.webhookClient.Create(ctx, hookOptions, args.domain)
+	hookID, err := r.webhookClient.Create(ctx, hookOptions, args.alternateGitHubAPIURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to create webhook: %v", err)
 	}
