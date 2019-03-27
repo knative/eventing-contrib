@@ -118,7 +118,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	// Track errors
 	go func() {
 		for err := range group.Errors() {
-			logger.Error("ERROR", err)
+			logger.Error("A consumer group error occurred: ", zap.Error(err))
 		}
 	}()
 
