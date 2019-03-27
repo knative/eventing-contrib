@@ -17,10 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"log"
+
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis"
 	controller "github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
