@@ -96,6 +96,20 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 	source.Status.InitializeConditions()
 
+	annotations := make(map[string]string)
+	// Then wire through any annotations / labels from the Source
+	if source.ObjectMeta.Annotations != nil {
+		for k, v := range source.ObjectMeta.Annotations {
+			annotations[k] = v
+		}
+	}
+	labels := make(map[string]string)
+	if source.ObjectMeta.Labels != nil {
+		for k, v := range source.ObjectMeta.Labels {
+			labels[k] = v
+		}
+	}
+
 	args := &resources.ContainerArguments{
 		Name:               source.Name,
 		Namespace:          source.Namespace,
@@ -103,6 +117,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		Args:               source.Spec.Args,
 		Env:                source.Spec.Env,
 		ServiceAccountName: source.Spec.ServiceAccountName,
+		Annotations:        annotations,
+		Labels:             labels,
 	}
 
 	err = r.setSinkURIArg(ctx, source, args)

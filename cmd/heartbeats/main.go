@@ -20,11 +20,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -103,6 +104,11 @@ func main() {
 			Context: cloudevents.EventContextV02{
 				Type:   "dev.knative.eventing.samples.heartbeat",
 				Source: *source,
+				Extensions: map[string]interface{}{
+					"the":   42,
+					"heart": "yes",
+					"beats": true,
+				},
 			},
 			Data: hb,
 		}

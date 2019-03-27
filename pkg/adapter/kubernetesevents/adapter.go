@@ -19,8 +19,9 @@ package kubernetesevents
 import (
 	"context"
 	"fmt"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"sync"
+
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 
