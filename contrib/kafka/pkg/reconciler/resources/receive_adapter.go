@@ -18,18 +18,20 @@ package resources
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strconv"
 )
 
 type ReceiveAdapterArgs struct {
-	Image   string
-	Source  *v1alpha1.KafkaSource
-	Labels  map[string]string
-	SinkURI string
+	Image           string
+	ImagePullPolicy corev1.PullPolicy
+	Source          *v1alpha1.KafkaSource
+	Labels          map[string]string
+	SinkURI         string
 }
 
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
@@ -58,7 +60,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 						{
 							Name:            "receive-adapter",
 							Image:           args.Image,
-							ImagePullPolicy: "Always",
+							ImagePullPolicy: args.ImagePullPolicy,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "KAFKA_BOOTSTRAP_SERVERS",

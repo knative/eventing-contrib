@@ -34,7 +34,8 @@ import (
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	"k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -44,8 +45,9 @@ import (
 )
 
 const (
-	controllerAgentName = "kafka-source-controller"
-	raImageEnvVar       = "KAFKA_RA_IMAGE"
+	controllerAgentName     = "kafka-source-controller"
+	raImageEnvVar           = "KAFKA_RA_IMAGE"
+	raImagePullPolicyEnvVar = "KAFKA_RA_IMAGE_PULL_POLLICY"
 )
 
 func Add(mgr manager.Manager) error {
@@ -53,15 +55,33 @@ func Add(mgr manager.Manager) error {
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
+	raImagePullPolicyStr, defined := os.LookupEnv(raImagePullPolicyEnvVar)
+	var raImagePullPolicy corev1.PullPolicy
+	if defined {
+		switch raImagePullPolicyStr {
+		case string(corev1.PullAlways):
+			raImagePullPolicy = corev1.PullAlways
+		case string(corev1.PullIfNotPresent):
+			raImagePullPolicy = corev1.PullIfNotPresent
+		case string(corev1.PullNever):
+			raImagePullPolicy = corev1.PullNever
+		default:
+			return fmt.Errorf("unsupported value %s for environment variable '%s'", raImagePullPolicyStr, raImagePullPolicyEnvVar)
+		}
+	} else {
+		raImagePullPolicy = corev1.PullIfNotPresent
+	}
 
 	log.Println("Adding the Apache Kafka Source controller.")
+	log.Printf("%s is %s\n", raImagePullPolicyEnvVar, string(raImagePullPolicy))
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.KafkaSource{},
 		Owns:      []runtime.Object{&v1.Deployment{}},
 		Reconciler: &reconciler{
-			scheme:              mgr.GetScheme(),
-			receiveAdapterImage: raImage,
+			scheme:                        mgr.GetScheme(),
+			receiveAdapterImage:           raImage,
+			receiveAdapterImagePullPolicy: raImagePullPolicy,
 		},
 	}
 
@@ -69,9 +89,10 @@ func Add(mgr manager.Manager) error {
 }
 
 type reconciler struct {
-	client              client.Client
-	scheme              *runtime.Scheme
-	receiveAdapterImage string
+	client                        client.Client
+	scheme                        *runtime.Scheme
+	receiveAdapterImage           string
+	receiveAdapterImagePullPolicy corev1.PullPolicy
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -121,10 +142,11 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 		return ra, nil
 	}
 	svc := resources.MakeReceiveAdapter(&resources.ReceiveAdapterArgs{
-		Image:   r.receiveAdapterImage,
-		Source:  src,
-		Labels:  getLabels(src),
-		SinkURI: sinkURI,
+		Image:           r.receiveAdapterImage,
+		ImagePullPolicy: r.receiveAdapterImagePullPolicy,
+		Source:          src,
+		Labels:          getLabels(src),
+		SinkURI:         sinkURI,
 	})
 
 	if err := controllerutil.SetControllerReference(src, svc, r.scheme); err != nil {
