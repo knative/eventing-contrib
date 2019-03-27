@@ -83,6 +83,7 @@ func Add(mgr manager.Manager) error {
 		AgentName:  controllerAgentName,
 		Parent:     &v1alpha1.GcpPubSubSource{},
 		Owns:       []runtime.Object{&v1.Deployment{}},
+		// TODO watch the EventTypes that it creates and reconcile them if needed
 		Reconciler: r,
 	}
 
@@ -134,6 +135,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	//     - Will be garbage collected by K8s when this GcpPubSubSource is deleted.
 	// 3. Register that receive adapter as a Pull endpoint for the specified GCP PubSub Topic.
 	//     - This needs to deregister during deletion.
+	// 4. Create the EventTypes that it can emit.
+	//     - Will be garbage collected by K8s when this GcpPubSubSource is deleted.
 	// Because there is something that must happen during deletion, we add this controller as a
 	// finalizer to every GcpPubSubSource.
 
@@ -175,7 +178,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	src.Status.MarkDeployed()
 
 	// Only create EventTypes for Broker sinks.
-	// TODO typed way of doing this?
 	if src.Spec.Sink.Kind == "Broker" {
 		err = r.reconcileEventTypes(ctx, src)
 		if err != nil {
@@ -183,6 +185,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 			return err
 		}
 	}
+	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
 	src.Status.MarkEventTypes()
 
 	return nil
@@ -309,6 +312,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpP
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
 		Type:   v1alpha1.GcpPubSubSourceEventType,
+		// Using the google cloud project and the topic as source.
 		Source: fmt.Sprintf("%s/%s", src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,
 	}

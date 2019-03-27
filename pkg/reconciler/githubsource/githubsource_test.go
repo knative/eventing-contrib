@@ -183,10 +183,12 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
 						Domain: serviceDNS,
 					},
 				}
@@ -213,6 +215,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -235,10 +238,12 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
 						Domain: serviceDNS,
 					},
 				}
@@ -267,6 +272,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -289,10 +295,12 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
 						Domain: serviceDNS,
 					},
 				}
@@ -319,6 +327,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "orghookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -391,10 +400,12 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
 						Domain: serviceDNS,
 					},
 				}
@@ -512,10 +523,12 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
 						Domain: serviceDNS,
 					},
 				}
@@ -542,6 +555,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -565,10 +579,12 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
 						Domain: serviceDNS,
 					},
 				}

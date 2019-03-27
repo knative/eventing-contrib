@@ -241,6 +241,7 @@ func getSourceWithSink() *sourcesv1alpha1.KafkaSource {
 func getReadySource() *sourcesv1alpha1.KafkaSource {
 	src := getSourceWithSink()
 	src.Status.MarkDeployed()
+	src.Status.MarkEventTypes()
 	return src
 }
 

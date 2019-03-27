@@ -23,17 +23,11 @@ import (
 	"os"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"go.uber.org/zap"
@@ -79,11 +73,10 @@ func Add(mgr manager.Manager) error {
 
 	log.Println("Adding the GitHub Source controller.")
 	p := &sdk.Provider{
-		AgentName: controllerAgentName,
-		Parent:    &sourcesv1alpha1.GitHubSource{},
-		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
-		Mappers: map[runtime.Object]handler.Mapper{
-			&eventingv1alpha1.EventType{}: &mapEventTypeToGitHubSource{r: r}},
+		AgentName:  controllerAgentName,
+		Parent:     &sourcesv1alpha1.GitHubSource{},
+		Owns:       []runtime.Object{&servingv1alpha1.Service{}},
+		// TODO watch the EventTypes that it creates and reconcile them if needed
 		Reconciler: r,
 	}
 
@@ -98,52 +91,6 @@ type reconciler struct {
 	receiveAdapterImage string
 	webhookClient       webhookClient
 	eventTypeReconciler eventtype.Reconciler
-}
-
-// mapEventTypeToGitHubSource maps EventTypes changes to the GitHub that created it.
-type mapEventTypeToGitHubSource struct {
-	r *reconciler
-}
-
-func (m *mapEventTypeToGitHubSource) Map(o handler.MapObject) []reconcile.Request {
-	ctx := context.Background()
-	gitHubSources := make([]reconcile.Request, 0)
-
-	et, ok := o.Object.(*eventingv1alpha1.EventType)
-	if !ok {
-		return gitHubSources
-	}
-
-	opts := &client.ListOptions{
-		Namespace: et.Namespace,
-		// Set Raw because if we need to get more than one page, then we will put the continue token
-		// into opts.Raw.Continue.
-		Raw: &metav1.ListOptions{},
-	}
-	for {
-		gsl := &sourcesv1alpha1.GitHubSourceList{}
-		if err := m.r.client.List(ctx, opts, gsl); err != nil {
-			return gitHubSources
-		}
-
-		for _, gs := range gsl.Items {
-			if label, ok := et.Labels["knative-eventing-source-name"]; ok {
-				if label == gs.Name {
-					gitHubSources = append(gitHubSources, reconcile.Request{
-						NamespacedName: types.NamespacedName{
-							Namespace: et.Namespace,
-							Name:      et.Name,
-						},
-					})
-				}
-			}
-		}
-		if gsl.Continue != "" {
-			opts.Raw.Continue = gsl.Continue
-		} else {
-			return gitHubSources
-		}
-	}
 }
 
 // Reconcile reads that state of the cluster for a GitHubSource
@@ -229,20 +176,18 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
-		}
-		return nil
-	}
 
-	// Only create EventTypes for Broker sinks.
-	// TODO typed way of doing this?
-	if source.Spec.Sink.Kind == "Broker" {
-		err = r.reconcileEventTypes(ctx, source)
-		if err != nil {
-			return err
+			// Only create EventTypes for Broker sinks.
+			if source.Spec.Sink.Kind == "Broker" {
+				err = r.reconcileEventTypes(ctx, source)
+				if err != nil {
+					return err
+				}
+			}
+			// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
+			source.Status.MarkEventTypes()
 		}
 	}
-	// We mark EventTypes in order to have the source Ready.
-	source.Status.MarkEventTypes()
 
 	return nil
 }
@@ -414,10 +359,10 @@ func (r *reconciler) newEventTypesReconcilerArgs(source *sourcesv1alpha1.GitHubS
 	for _, et := range source.Spec.EventTypes {
 		arg := &eventtype.EventTypeArgs{
 			Type:   fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, et),
+			// Using the owner and repository as source.
 			Source: source.Spec.OwnerAndRepository,
 			Broker: source.Spec.Sink.Name,
 			// TODO change CRD to set the schema.
-			Schema: "",
 		}
 		args = append(args, arg)
 	}

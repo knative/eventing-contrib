@@ -88,6 +88,7 @@ func Add(mgr manager.Manager) error {
 		AgentName:  controllerAgentName,
 		Parent:     &v1alpha1.AwsSqsSource{},
 		Owns:       []runtime.Object{&v1.Deployment{}},
+		// TODO watch the EventTypes that it creates and reconcile them if needed
 		Reconciler: r,
 	}
 
@@ -132,6 +133,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	// 2. Create a receive adapter in the form of a Deployment.
 	//     - Will be garbage collected by K8s when this AwsSqsSource is deleted.
 	// 3. Register that receive adapter as a Pull endpoint for the specified AWS SQS queue.
+	// 4. Create the EventTypes that it can emit.
+	//     - Will be garbage collected by K8s when this AwsSqsSource is deleted.
 
 	// See if the source has been deleted.
 	deletionTimestamp := src.DeletionTimestamp
@@ -159,13 +162,14 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	src.Status.MarkDeployed()
 
 	// Only create EventTypes for Broker sinks.
-	// TODO typed way of doing this?
 	if src.Spec.Sink.Kind == "Broker" {
 		err = r.reconcileEventTypes(ctx, src)
 		if err != nil {
+			logger.Error("Unable to reconcile the event types", zap.Error(err))
 			return err
 		}
 	}
+	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
 	src.Status.MarkEventTypes()
 
 	return nil
@@ -234,6 +238,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsS
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
 		Type:   v1alpha1.AwsSqsSourceEventType,
+		// Using the queue URL as source.
 		Source: src.Spec.QueueURL,
 		Broker: src.Spec.Sink.Name,
 	}

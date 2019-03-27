@@ -380,6 +380,7 @@ func getSourceWithFinalizerAndSinkAndSubscribed() *sourcesv1alpha1.GcpPubSubSour
 func getReadySource() *sourcesv1alpha1.GcpPubSubSource {
 	src := getSourceWithFinalizerAndSinkAndSubscribed()
 	src.Status.MarkDeployed()
+	src.Status.MarkEventTypes()
 	return src
 }
 

@@ -87,7 +87,6 @@ const (
 )
 
 var condSet = duckv1alpha1.NewLivingConditionSet(
-	AwsSqsSourceConditionReady,
 	AwsSqsSourceConditionSinkProvided,
 	AwsSqsSourceConditionDeployed,
 	AwsSqsSourceConditionEventTypesProvided)

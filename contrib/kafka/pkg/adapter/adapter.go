@@ -18,10 +18,12 @@ package kafka
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -31,7 +33,7 @@ import (
 )
 
 const (
-	eventType = "dev.knative.kafka.event"
+	kafkaHeaderFrom = "From"
 )
 
 type AdapterSASL struct {
@@ -143,12 +145,13 @@ func (a *Adapter) postMessage(ctx context.Context, msg *sarama.ConsumerMessage) 
 	logger := logging.FromContext(ctx)
 
 	extensions := map[string]interface{}{
-		"key": string(msg.Key),
+		"key":           string(msg.Key),
+		kafkaHeaderFrom: fmt.Sprintf("%s/%s", a.ConsumerGroup, msg.Topic),
 	}
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			SpecVersion: cloudevents.CloudEventsVersionV02,
-			Type:        eventType,
+			Type:        sourcesv1alpha1.KafkaSourceEventType,
 			ID:          "partition:" + strconv.Itoa(int(msg.Partition)) + "/offset:" + strconv.FormatInt(msg.Offset, 10),
 			Time:        &types.Timestamp{Time: msg.Timestamp},
 			Source:      *types.ParseURLRef(msg.Topic),

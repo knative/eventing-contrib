@@ -19,19 +19,12 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
-
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
-
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler/resources"
-
-	"github.com/knative/eventing-sources/pkg/controller/sinks"
 
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler/resources"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
+	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"k8s.io/api/apps/v1"
@@ -40,7 +33,12 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"log"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"strings"
 )
 
 const (
@@ -54,15 +52,22 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 
+	scheme := mgr.GetScheme()
+	r := &reconciler{
+		scheme:              scheme,
+		receiveAdapterImage: raImage,
+		eventTypeReconciler: eventtype.Reconciler{
+			Scheme: scheme,
+		},
+	}
+
 	log.Println("Adding the Apache Kafka Source controller.")
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.KafkaSource{},
 		Owns:      []runtime.Object{&v1.Deployment{}},
-		Reconciler: &reconciler{
-			scheme:              mgr.GetScheme(),
-			receiveAdapterImage: raImage,
-		},
+		// TODO watch the EventTypes that it creates and reconcile them if needed
+		Reconciler: r,
 	}
 
 	return p.Add(mgr)
@@ -72,10 +77,12 @@ type reconciler struct {
 	client              client.Client
 	scheme              *runtime.Scheme
 	receiveAdapterImage string
+	eventTypeReconciler eventtype.Reconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }
 
@@ -106,6 +113,17 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	// Only create EventTypes for Broker sinks.
+	if src.Spec.Sink.Kind == "Broker" {
+		err = r.reconcileEventTypes(ctx, src)
+		if err != nil {
+			logger.Error("Unable to reconcile the event types", zap.Error(err))
+			return err
+		}
+	}
+	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
+	src.Status.MarkEventTypes()
 
 	return nil
 }
@@ -162,6 +180,30 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaS
 		}
 	}
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
+}
+
+func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.KafkaSource) error {
+	args := r.newEventTypesReconcilerArgs(src)
+	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
+}
+
+func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *eventtype.ReconcilerArgs {
+	args := make([]*eventtype.EventTypeArgs, 0)
+	topics := strings.Split(src.Spec.Topics, ",")
+	for _, topic := range topics {
+		arg := &eventtype.EventTypeArgs{
+			Type:   v1alpha1.KafkaSourceEventType,
+			// Using the consumer group and the topic as source.
+			Source: fmt.Sprintf("%s/%s", src.Spec.ConsumerGroup, topic),
+			Broker: src.Spec.Sink.Name,
+		}
+		args = append(args, arg)
+	}
+	return &eventtype.ReconcilerArgs{
+		EventTypes: args,
+		Namespace:  src.Namespace,
+		Labels:     getLabels(src),
+	}
 }
 
 func (r *reconciler) getLabelSelector(src *v1alpha1.KafkaSource) labels.Selector {

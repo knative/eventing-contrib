@@ -249,6 +249,7 @@ func getSourceWithSink() *sourcesv1alpha1.CronJobSource {
 func getReadySource() *sourcesv1alpha1.CronJobSource {
 	src := getSourceWithSink()
 	src.Status.MarkDeployed()
+	src.Status.MarkEventTypes()
 	return src
 }
 

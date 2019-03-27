@@ -61,6 +61,15 @@ func TestAwsSqsSourceStatusIsReady(t *testing.T) {
 		}(),
 		want: false,
 	}, {
+		name: "mark event types",
+		s: func() *AwsSqsSourceStatus {
+			s := &AwsSqsSourceStatus{}
+			s.InitializeConditions()
+			s.MarkEventTypes()
+			return s
+		}(),
+		want: false,
+	}, {
 		name: "mark sink and deployed",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
@@ -69,42 +78,56 @@ func TestAwsSqsSourceStatusIsReady(t *testing.T) {
 			s.MarkDeployed()
 			return s
 		}(),
-		want: true,
+		want: false,
 	}, {
-		name: "mark sink and deployed then no sink",
+		name: "mark sink, deployed, and event types",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkDeployed()
+			s.MarkEventTypes()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink, deployed, event types, and then no sink",
+		s: func() *AwsSqsSourceStatus {
+			s := &AwsSqsSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkEventTypes()
 			s.MarkNoSink("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink and deployed then deploying",
+		name: "mark sink, deployed, event types, and then deploying",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			s.MarkDeploying("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink and deployed then not deployed",
+		name: "mark sink, deployed, event types, and then not deployed",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			s.MarkNotDeployed("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink and not deployed then deploying then deployed",
+		name: "mark sink and not deployed, then deploying, then deployed, then no event types, then event types",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
@@ -112,26 +135,30 @@ func TestAwsSqsSourceStatusIsReady(t *testing.T) {
 			s.MarkNotDeployed("MarkNotDeployed", "")
 			s.MarkDeploying("MarkDeploying", "")
 			s.MarkDeployed()
+			s.MarkNoEventTypes("MarkNoEventTypes", "")
+			s.MarkEventTypes()
 			return s
 		}(),
 		want: true,
 	}, {
-		name: "mark sink empty and deployed",
+		name: "mark sink empty, deployed, and event types",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty and deployed then sink",
+		name: "mark sink empty, deployed, and event types, then sink",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			s.MarkSink("uri://example")
 			return s
 		}(),
@@ -198,12 +225,26 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink and deployed",
+		name: "mark event types",
+		s: func() *AwsSqsSourceStatus {
+			s := &AwsSqsSourceStatus{}
+			s.InitializeConditions()
+			s.MarkEventTypes()
+			return s
+		}(),
+		condQuery: AwsSqsSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   AwsSqsSourceConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink, deployed, and event types",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
@@ -212,12 +253,13 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark sink and deployed then no sink",
+		name: "mark sink, deployed, event types, and then no sink",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
 		}(),
@@ -229,12 +271,13 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and deployed then deploying",
+		name: "mark sink, deployed, event types, and then deploying",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			s.MarkDeploying("Testing", "hi%s", "")
 			return s
 		}(),
@@ -246,12 +289,13 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and deployed then not deployed",
+		name: "mark sink, deployed, event types, then not deployed",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			s.MarkNotDeployed("Testing", "hi%s", "")
 			return s
 		}(),
@@ -263,14 +307,34 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and not deployed then deploying then deployed",
+		name: "mark sink, deployed, event types, then no event types",
+		s: func() *AwsSqsSourceStatus {
+			s := &AwsSqsSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkEventTypes()
+			s.MarkNoEventTypes("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: AwsSqsSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:    AwsSqsSourceConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink, not deployed and no event types, then deploying, then deployed, then event types",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkNotDeployed("MarkNotDeployed", "%s", "")
+			s.MarkNoEventTypes("MarkNoEventTypes", "%s", "")
 			s.MarkDeploying("MarkDeploying", "%s", "")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
@@ -279,12 +343,13 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark sink empty and deployed",
+		name: "mark sink empty, deployed, and event types",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkDeployed()
+			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
@@ -295,13 +360,14 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			Message: "Sink has resolved to empty.",
 		},
 	}, {
-		name: "mark sink empty and deployed then sink",
+		name: "mark sink empty, deployed, and event types, then sink",
 		s: func() *AwsSqsSourceStatus {
 			s := &AwsSqsSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkDeployed()
 			s.MarkSink("uri://example")
+			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,

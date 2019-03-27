@@ -76,6 +76,7 @@ func Add(mgr manager.Manager) error {
 		AgentName:  controllerAgentName,
 		Parent:     &v1alpha1.CronJobSource{},
 		Owns:       []runtime.Object{&v1.Deployment{}},
+		// TODO watch the EventTypes that it creates and reconcile them if needed
 		Reconciler: r,
 	}
 
@@ -109,6 +110,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	//     - Nothing to delete.
 	// 2. Create a receive adapter in the form of a Deployment.
 	//     - Will be garbage collected by K8s when this CronJobSource is deleted.
+	// 3. Create the EventTypes that it can emit.
+	//     - Will be garbage collected by K8s when this CronJobSource is deleted.
 
 	src.Status.InitializeConditions()
 
@@ -133,13 +136,14 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	src.Status.MarkDeployed()
 
 	// Only create EventTypes for Broker sinks.
-	// TODO typed way of doing this?
 	if src.Spec.Sink.Kind == "Broker" {
 		err = r.reconcileEventTypes(ctx, src)
 		if err != nil {
+			logger.Error("Unable to reconcile the event types", zap.Error(err))
 			return err
 		}
 	}
+	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
 	src.Status.MarkEventTypes()
 	return nil
 }
@@ -188,6 +192,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.Cron
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.CronJobSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
 		Type:   v1alpha1.CronJobSourceEventType,
+		// Using the schedule as source.
 		Source: src.Spec.Schedule,
 		Broker: src.Spec.Sink.Name,
 	}
