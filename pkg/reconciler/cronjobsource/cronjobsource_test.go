@@ -24,6 +24,8 @@ import (
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -54,6 +56,7 @@ const (
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
+	brokerKind            = "Broker"
 	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 	addressableDNS        = "sinkable.sink.svc.cluster.local"
 	addressableURI        = "http://sinkable.sink.svc.cluster.local/"
@@ -65,6 +68,7 @@ func init() {
 	corev1.AddToScheme(scheme.Scheme)
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
+	eventingv1alpha1.AddToScheme(scheme.Scheme)
 }
 
 func TestReconcile(t *testing.T) {
@@ -152,6 +156,39 @@ func TestReconcile(t *testing.T) {
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
+		}, {
+			Name: "successful create event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+			},
+			WantPresent: []runtime.Object{
+				getReadySourceWithKind(brokerKind),
+				getEventType(),
+			},
+		}, {
+			Name: "cannot create event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+			},
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+						if _, ok := obj.(*eventingv1alpha1.EventType); ok {
+							return controllertesting.Handled, errors.New("test-induced-error")
+						}
+						return controllertesting.Unhandled, nil
+					},
+				},
+			},
+			WantAbsent: []runtime.Object{
+				getEventType(),
+			},
+			WantPresent: []runtime.Object{
+				getSourceWithSinkAndScheduledAndDeployedAndKind(brokerKind),
+			},
+			WantErrMsg: "test-induced-error",
 		},
 	}
 	for _, tc := range testCases {
@@ -168,6 +205,9 @@ func TestReconcile(t *testing.T) {
 			scheme: tc.Scheme,
 
 			receiveAdapterImage: raImage,
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: tc.Scheme,
+			},
 		}
 		r.InjectClient(c)
 		t.Run(tc.Name, tc.Runner(t, r, c))
@@ -197,6 +237,10 @@ func getNonCronJobSource() *sourcesv1alpha1.ContainerSource {
 }
 
 func getSource() *sourcesv1alpha1.CronJobSource {
+	return getSourceWithKind(addressableKind)
+}
+
+func getSourceWithKind(kind string) *sourcesv1alpha1.CronJobSource {
 	obj := &sourcesv1alpha1.CronJobSource{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
@@ -208,7 +252,7 @@ func getSource() *sourcesv1alpha1.CronJobSource {
 			Data:     testData,
 			Sink: &corev1.ObjectReference{
 				Name:       addressableName,
-				Kind:       addressableKind,
+				Kind:       kind,
 				APIVersion: addressableAPIVersion,
 			},
 		},
@@ -216,6 +260,35 @@ func getSource() *sourcesv1alpha1.CronJobSource {
 	// selflink is not filled in when we create the object, so clear it
 	obj.ObjectMeta.SelfLink = ""
 	return obj
+}
+
+func getEventType() *eventingv1alpha1.EventType {
+	return &eventingv1alpha1.EventType{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+			Kind:       "EventType",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         sourcesv1alpha1.SchemeGroupVersion.String(),
+					Kind:               "CronJobSource",
+					Name:               sourceName,
+					Controller:         &trueVal,
+					BlockOwnerDeletion: &trueVal,
+					UID:                sourceUID,
+				},
+			},
+			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.CronJobSourceEventType),
+			Namespace:    testNS,
+			Labels:       getLabels(getSourceWithKind(brokerKind)),
+		},
+		Spec: eventingv1alpha1.EventTypeSpec{
+			Type:   sourcesv1alpha1.CronJobSourceEventType,
+			Source: testSchedule,
+			Broker: addressableName,
+		},
+	}
 }
 
 func getDeletingSource() *sourcesv1alpha1.CronJobSource {
@@ -253,6 +326,21 @@ func getReadySource() *sourcesv1alpha1.CronJobSource {
 	return src
 }
 
+func getSourceWithSinkAndScheduledAndDeployedAndKind(kind string) *sourcesv1alpha1.CronJobSource {
+	src := getSourceWithKind(kind)
+	src.Status.InitializeConditions()
+	src.Status.MarkSchedule()
+	src.Status.MarkSink(addressableURI)
+	src.Status.MarkDeployed()
+	return src
+}
+
+func getReadySourceWithKind(kind string) *sourcesv1alpha1.CronJobSource {
+	src := getReadySource()
+	src.Spec.Sink.Kind = kind
+	return src
+}
+
 func om(namespace, name string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Namespace: namespace,
@@ -263,10 +351,14 @@ func om(namespace, name string) metav1.ObjectMeta {
 }
 
 func getAddressable() *unstructured.Unstructured {
+	return getAddressableWithKind(addressableKind)
+}
+
+func getAddressableWithKind(kind string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,
-			"kind":       addressableKind,
+			"kind":       kind,
 			"metadata": map[string]interface{}{
 				"namespace": testNS,
 				"name":      addressableName,
