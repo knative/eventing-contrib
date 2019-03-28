@@ -50,6 +50,7 @@ spec:
             eventTypes:
               items:
                 enum:
+                - check_suite
                 - commit_comment
                 - create
                 - delete
