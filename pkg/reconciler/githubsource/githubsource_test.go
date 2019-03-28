@@ -18,12 +18,19 @@ package githubsource
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
+
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/knative/eventing/pkg/utils"
 
 	"github.com/google/go-cmp/cmp"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -50,6 +57,7 @@ const (
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
+	brokerKind            = "Broker"
 	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 
 	unaddressableName       = "testunaddressable"
@@ -71,6 +79,7 @@ func init() {
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
 	servingv1alpha1.AddToScheme(scheme.Scheme)
+	eventingv1alpha1.AddToScheme(scheme.Scheme)
 }
 
 var testCases = []controllertesting.TestCase{
@@ -614,6 +623,132 @@ var testCases = []controllertesting.TestCase{
 			}(),
 		},
 		IgnoreTimes: true,
+	}, {
+		Name:       "valid githubsource with event types created",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Sink.Kind = brokerKind
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+			getAddressableWithKind(brokerKind),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Sink.Kind = brokerKind
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(addressableURI)
+				s.Status.MarkSecrets()
+				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
+				return s
+			}(),
+			getEventType(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "githubsource cannot create event types",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Sink.Kind = brokerKind
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						Domain: serviceDNS,
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+			getAddressableWithKind(brokerKind),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		Mocks: controllertesting.Mocks{
+			MockCreates: []controllertesting.MockCreate{
+				func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+					if _, ok := obj.(*eventingv1alpha1.EventType); ok {
+						return controllertesting.Handled, errors.New("test-induced-error")
+					}
+					return controllertesting.Unhandled, nil
+				},
+			},
+		},
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubEnterpriseSource()
+				s.UID = gitHubSourceUID
+				s.Spec.Sink.Kind = brokerKind
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(addressableURI)
+				s.Status.MarkSecrets()
+				s.Status.WebhookIDKey = "repohookid"
+				return s
+			}(),
+		},
+		WantAbsent: []runtime.Object{
+			getEventType(),
+		},
+		WantErrMsg:  "test-induced-error",
+		IgnoreTimes: true,
 	},
 }
 
@@ -634,6 +769,9 @@ func TestAllCases(t *testing.T) {
 			recorder: recorder,
 			webhookClient: &mockWebhookClient{
 				data: hookData,
+			},
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: tc.Scheme,
 			},
 		}
 		r.InjectClient(c)
@@ -749,6 +887,36 @@ func getGitHubSourceUnaddressable() *sourcesv1alpha1.GitHubSource {
 	return obj
 }
 
+func getEventType() *eventingv1alpha1.EventType {
+	et := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, "pull_request")
+	return &eventingv1alpha1.EventType{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+			Kind:       "EventType",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         sourcesv1alpha1.SchemeGroupVersion.String(),
+					Kind:               "GitHubSource",
+					Name:               gitHubSourceName,
+					Controller:         &trueVal,
+					BlockOwnerDeletion: &trueVal,
+					UID:                gitHubSourceUID,
+				},
+			},
+			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(et)),
+			Namespace:    testNS,
+			Labels:       getLabels(getGitHubSource()),
+		},
+		Spec: eventingv1alpha1.EventTypeSpec{
+			Type:   et,
+			Source: "myuser/myproject",
+			Broker: addressableName,
+		},
+	}
+}
+
 func gitHubSourceType() metav1.TypeMeta {
 	return metav1.TypeMeta{
 		APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
@@ -775,10 +943,14 @@ func getOwnerReferences() []metav1.OwnerReference {
 }
 
 func getAddressable() *unstructured.Unstructured {
+	return getAddressableWithKind(addressableKind)
+}
+
+func getAddressableWithKind(kind string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,
-			"kind":       addressableKind,
+			"kind":       kind,
 			"metadata": map[string]interface{}{
 				"namespace": testNS,
 				"name":      addressableName,
