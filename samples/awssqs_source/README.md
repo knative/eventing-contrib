@@ -10,7 +10,7 @@
 1.  If your installed version of Eventing did not include the in-memory channel
     provisioner, install the
     [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel)
-    now. If you installed Eventing using the `release.yaml` file, the channel
+    now. If you installed Eventing using the `eventing.yaml` file, the channel
     provisioner was included. (See the
     [Custom install guide](https://www.knative.dev/docs/install/knative-custom-install/)
     for information about what is include in each install file.)
