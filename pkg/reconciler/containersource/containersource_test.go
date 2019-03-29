@@ -89,8 +89,8 @@ var testCases = []controllertesting.TestCase{
 		Name:       "valid containersource, but sink is not addressable",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
-			getContainerSource_unaddressable(),
-			getAddressable_noStatus(),
+			getContainerSourceUnaddressable(),
+			getAddressableNoStatus(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
@@ -118,13 +118,13 @@ var testCases = []controllertesting.TestCase{
 		Name:       "valid containersource, sink is addressable, fields filled in",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
-			getContainerSource_filledIn(),
+			getContainerSourceFilledIn(),
 			getAddressable(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
 		WantPresent: []runtime.Object{
-			getDeployment(getContainerSource_filledIn()),
+			getDeployment(getContainerSourceFilledIn()),
 		},
 		IgnoreTimes: true,
 	}, {
@@ -132,7 +132,7 @@ var testCases = []controllertesting.TestCase{
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 		InitialState: []runtime.Object{
 			getContainerSource(),
-			getAddressable_nilAddress(),
+			getAddressableNilAddress(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
@@ -382,7 +382,7 @@ var testCases = []controllertesting.TestCase{
 		Name:       "valid containersource, sink is a k8s service",
 		Reconciles: &sourcesv1alpha1.ContainerSource{},
 	    InitialState: []runtime.Object{
-			getContainerSource_sinkService(),
+			getContainerSourceSinkService(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, containerSourceName),
 		Scheme:       scheme.Scheme,
@@ -435,7 +435,7 @@ func getContainerSource() *sourcesv1alpha1.ContainerSource {
 	return obj
 }
 
-func getContainerSource_filledIn() *sourcesv1alpha1.ContainerSource {
+func getContainerSourceFilledIn() *sourcesv1alpha1.ContainerSource {
 	obj := getContainerSource()
 	obj.ObjectMeta.UID = containerSourceUID
 	obj.Spec.Args = []string{"--foo", "bar"}
@@ -444,7 +444,7 @@ func getContainerSource_filledIn() *sourcesv1alpha1.ContainerSource {
 	return obj
 }
 
-func getContainerSource_sinkService() *sourcesv1alpha1.ContainerSource {
+func getContainerSourceSinkService() *sourcesv1alpha1.ContainerSource {
 	obj := &sourcesv1alpha1.ContainerSource{
 		TypeMeta:   containerSourceType(),
 		ObjectMeta: om(testNS, containerSourceName),
@@ -463,7 +463,7 @@ func getContainerSource_sinkService() *sourcesv1alpha1.ContainerSource {
 	return obj
 }
 
-func getContainerSource_unaddressable() *sourcesv1alpha1.ContainerSource {
+func getContainerSourceUnaddressable() *sourcesv1alpha1.ContainerSource {
 	obj := &sourcesv1alpha1.ContainerSource{
 		TypeMeta:   containerSourceType(),
 		ObjectMeta: om(testNS, containerSourceName),
@@ -500,7 +500,7 @@ func getAddressable() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_noStatus() *unstructured.Unstructured {
+func getAddressableNoStatus() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": unaddressableAPIVersion,
@@ -513,7 +513,7 @@ func getAddressable_noStatus() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_nilAddress() *unstructured.Unstructured {
+func getAddressableNilAddress() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,
@@ -619,9 +619,8 @@ func TestObjectNotContainerSource(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected returned object (-want, +got) = %v", diff)
 	}
-	var wantErr error = nil
-	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
-		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	if gotErr != nil {
+		t.Errorf("unexpected returned error %v", gotErr)
 	}
 }
 
@@ -637,8 +636,7 @@ func TestObjectHasDeleteTimestamp(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected returned object (-want, +got) = %v", diff)
 	}
-	var wantErr error = nil
-	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
-		t.Errorf("unexpected returned error (-want, +got) = %v", diff)
+	if gotErr != nil {
+		t.Errorf("unexpected returned error %v", gotErr)
 	}
 }
