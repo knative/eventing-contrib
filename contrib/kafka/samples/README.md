@@ -1,9 +1,9 @@
 # Apache Kafka - Source
 
 The Apache Kafka Event source enables Knative Eventing integration with Apache
-Kafka. When an message is produced to Apache Kafka, the Apache Kafka Event
-Source will consume the produced message and post that message the corresponding
-event sink.
+Kafka. When a message is produced to Apache Kafka, the Apache Kafka Event Source
+will consume the produced message and post that message the corresponding event
+sink.
 
 This sample demonstrates how to configure, deploy, and use the Apache Kafka
 Event Source with a Knative Service.
@@ -56,13 +56,30 @@ and an Event Display Service.
    NAME                         READY     STATUS    RESTARTS   AGE
    kafka-controller-manager-0   1/1       Running   0          42m
    ```
-3. Check the `controller-manager-0` pod logs.
+3. Check the `kafka-controller-manager-0` pod logs.
    ```
    $ kubectl logs kafka-controller-manager-0 -n knative-sources
    2019/03/19 22:25:54 Registering Components.
    2019/03/19 22:25:54 Setting up Controller.
    2019/03/19 22:25:54 Adding the Apache Kafka Source controller.
    2019/03/19 22:25:54 Starting Apache Kafka controller.
+   ```
+
+#### Event Display
+
+1. Build and deploy the Event Display Service.
+   ```
+   $ ko apply -f contrib/kafka/samples/event-display.yaml
+   ...
+   service.serving.knative.dev/event-display created
+   ```
+2. Ensure that the Service pod is running. The pod name will be prefixed with
+   `event-display`.
+   ```
+   $ kubectl get pods
+   NAME                                            READY     STATUS    RESTARTS   AGE
+   event-display-00001-deployment-5d5df6c7-gv2j4   2/2       Running   0          72s
+   ...
    ```
 
 #### Apache Kafka Event Source
@@ -87,23 +104,6 @@ and an Event Display Service.
    ```
    $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
    {"level":"info","ts":"2019-03-19T22:31:52.689Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","adapter":{"BootstrapServers":"...","Topic":"...","ConsumerGroup":"...","Net":{"SASL":{"Enable":true,"User":"...","Password":"..."},"TLS":{"Enable":true}},"SinkURI":"http://event-display.default.svc.cluster.local/"}}
-   ```
-
-#### Event Display
-
-1. Build and deploy the Event Display Service.
-   ```
-   $ ko apply -f contrib/kafka/samples/event-display.yaml
-   ...
-   service.serving.knative.dev/event-display created
-   ```
-2. Ensure that the Service pod is running. The pod name will be prefixed with
-   `event-display`.
-   ```
-   $ kubectl get pods
-   NAME                                            READY     STATUS    RESTARTS   AGE
-   event-display-00001-deployment-5d5df6c7-gv2j4   2/2       Running   0          72s
-   ...
    ```
 
 ### Verify
