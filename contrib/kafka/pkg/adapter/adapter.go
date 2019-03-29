@@ -80,7 +80,7 @@ func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Co
 		logger.Info("Received: ", zap.Any("value", string(msg.Value)))
 
 		go func(msg *sarama.ConsumerMessage) {
-			// send and mark message if post was successfull
+			// send and mark message if post was successful
 			if err := a.postMessage(context.TODO(), msg); err == nil {
 				sess.MarkMessage(msg, "")
 				logger.Debug("Successfully sent event to sink")
