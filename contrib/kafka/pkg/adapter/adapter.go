@@ -81,8 +81,15 @@ func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Co
 	for msg := range claim.Messages() {
 		logger.Info("Received: ", zap.Any("value", string(msg.Value)))
 
-		go a.postMessage(context.TODO(), msg)
-		sess.MarkMessage(msg, "")
+		go func(msg *sarama.ConsumerMessage) {
+			// send and mark message if post was successfull
+			if err := a.postMessage(context.TODO(), msg); err == nil {
+				sess.MarkMessage(msg, "")
+				logger.Debug("Successfully sent event to sink")
+			} else {
+				logger.Error("Sending event to sink failed: ", zap.Error(err))
+			}
+		}(msg)
 	}
 	return nil
 }
@@ -143,7 +150,6 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 }
 
 func (a *Adapter) postMessage(ctx context.Context, msg *sarama.ConsumerMessage) error {
-	logger := logging.FromContext(ctx)
 
 	extensions := map[string]interface{}{
 		"key":           string(msg.Key),
@@ -162,13 +168,8 @@ func (a *Adapter) postMessage(ctx context.Context, msg *sarama.ConsumerMessage) 
 		Data: a.jsonEncode(ctx, msg.Value),
 	}
 
-	if _, err := a.client.Send(ctx, event); err != nil {
-		logger.Error("Sending event to sink failed: ", zap.Error(err))
-		return err
-	} else {
-		logger.Info("Successfully sent event to sink")
-		return nil
-	}
+	_, err := a.client.Send(ctx, event)
+	return err
 }
 
 func (a *Adapter) jsonEncode(ctx context.Context, value []byte) interface{} {
