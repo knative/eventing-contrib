@@ -36,8 +36,6 @@ spec:
         env:
         - name: KAFKA_RA_IMAGE
           value: github.com/knative/eventing-sources/contrib/kafka/cmd/receive_adapter
-        - name: KAFKA_RA_IMAGE_PULL_POLLICY
-          value: IfNotPresent
         volumeMounts:
         resources:
           limits:

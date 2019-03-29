@@ -57,24 +57,26 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 	raImagePullPolicyStr, defined := os.LookupEnv(raImagePullPolicyEnvVar)
-	var raImagePullPolicy corev1.PullPolicy
+	var raImagePullPolicy *corev1.PullPolicy
 	if defined {
 		switch raImagePullPolicyStr {
 		case string(corev1.PullAlways):
-			raImagePullPolicy = corev1.PullAlways
+			raImagePullPolicy = new(corev1.PullPolicy)
+			*raImagePullPolicy = corev1.PullAlways
 		case string(corev1.PullIfNotPresent):
-			raImagePullPolicy = corev1.PullIfNotPresent
+			raImagePullPolicy = new(corev1.PullPolicy)
+			*raImagePullPolicy = corev1.PullIfNotPresent
 		case string(corev1.PullNever):
-			raImagePullPolicy = corev1.PullNever
+			raImagePullPolicy = new(corev1.PullPolicy)
+			*raImagePullPolicy = corev1.PullNever
 		default:
 			return fmt.Errorf("unsupported value %s for environment variable '%s'", raImagePullPolicyStr, raImagePullPolicyEnvVar)
 		}
-	} else {
-		raImagePullPolicy = corev1.PullIfNotPresent
 	}
-
 	log.Println("Adding the Apache Kafka Source controller.")
-	log.Printf("%s is %s\n", raImagePullPolicyEnvVar, string(raImagePullPolicy))
+	if raImagePullPolicy != nil {
+		log.Printf("%s is %s\n", raImagePullPolicyEnvVar, string(*raImagePullPolicy))
+	}
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.KafkaSource{},
@@ -93,7 +95,7 @@ type reconciler struct {
 	client                        client.Client
 	scheme                        *runtime.Scheme
 	receiveAdapterImage           string
-	receiveAdapterImagePullPolicy corev1.PullPolicy
+	receiveAdapterImagePullPolicy *corev1.PullPolicy
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {

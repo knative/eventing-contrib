@@ -28,7 +28,7 @@ import (
 
 type ReceiveAdapterArgs struct {
 	Image           string
-	ImagePullPolicy corev1.PullPolicy
+	ImagePullPolicy *corev1.PullPolicy
 	Source          *v1alpha1.KafkaSource
 	Labels          map[string]string
 	SinkURI         string
@@ -36,7 +36,7 @@ type ReceiveAdapterArgs struct {
 
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	replicas := int32(1)
-	return &v1.Deployment{
+	d := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    args.Source.Namespace,
 			GenerateName: fmt.Sprintf("%s-", args.Source.Name),
@@ -58,9 +58,8 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 					ServiceAccountName: args.Source.Spec.ServiceAccountName,
 					Containers: []corev1.Container{
 						{
-							Name:            "receive-adapter",
-							Image:           args.Image,
-							ImagePullPolicy: args.ImagePullPolicy,
+							Name:  "receive-adapter",
+							Image: args.Image,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "KAFKA_BOOTSTRAP_SERVERS",
@@ -101,4 +100,9 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 			},
 		},
 	}
+	if args.ImagePullPolicy != nil {
+		d.Spec.Template.Spec.Containers[0].ImagePullPolicy = *args.ImagePullPolicy
+	}
+	return d
+
 }
