@@ -24,9 +24,10 @@ import (
 
 var (
 	fullSpec = KafkaSourceSpec{
-		BootstrapServers: "servers",
-		Topics:           "topics",
-		ConsumerGroup:    "group",
+		BootstrapServers:        "servers",
+		Topics:                  "topics",
+		ConsumerGroup:           "group",
+		ConcurrencyPerPartition: 50,
 		Sink: &corev1.ObjectReference{
 			APIVersion: "foo",
 			Kind:       "bar",
@@ -131,6 +132,15 @@ func TestKafkaSourceCheckImmutableFields(t *testing.T) {
 					Namespace:  fullSpec.Sink.Namespace,
 					Name:       "some-other-name",
 				},
+				ServiceAccountName: fullSpec.ServiceAccountName,
+			},
+			allowed: false,
+		},
+		"ConcurrencyPerPartition changed": {
+			orig: &fullSpec,
+			updated: KafkaSourceSpec{
+				ConcurrencyPerPartition: 1,
+				Sink:               fullSpec.Sink,
 				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
 			allowed: false,

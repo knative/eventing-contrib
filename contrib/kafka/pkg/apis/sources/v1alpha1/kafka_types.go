@@ -78,6 +78,12 @@ type KafkaSourceSpec struct {
 	// +required
 	ConsumerGroup string `json:"consumerGroup"`
 
+	// ConcurrencyPerPartition is the maximum concurrency to use when
+	// processing messages from a single partition. A value of 0 (the
+	// default) means unbounded.
+	// +optional
+	ConcurrencyPerPartition int `json:"concurrencyPerPartition"`
+
 	Net KafkaSourceNetSpec `json:"net,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.

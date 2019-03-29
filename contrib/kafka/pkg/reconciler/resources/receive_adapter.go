@@ -90,6 +90,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 									Value: strconv.FormatBool(args.Source.Spec.Net.TLS.Enable),
 								},
 								{
+									Name:  "CONCURRENCY_PER_PARTITION",
+									Value: strconv.Itoa(args.Source.Spec.ConcurrencyPerPartition),
+								},
+								{
 									Name:  "SINK_URI",
 									Value: args.SinkURI,
 								},

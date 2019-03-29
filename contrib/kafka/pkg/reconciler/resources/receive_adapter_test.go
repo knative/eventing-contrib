@@ -33,10 +33,11 @@ func TestMakeReceiveAdapter(t *testing.T) {
 			Namespace: "source-namespace",
 		},
 		Spec: v1alpha1.KafkaSourceSpec{
-			ServiceAccountName: "source-svc-acct",
-			Topics:             "topic1,topic2",
-			BootstrapServers:   "server1,server2",
-			ConsumerGroup:      "group",
+			ServiceAccountName:      "source-svc-acct",
+			Topics:                  "topic1,topic2",
+			BootstrapServers:        "server1,server2",
+			ConsumerGroup:           "group",
+			ConcurrencyPerPartition: 5,
 			Net: v1alpha1.KafkaSourceNetSpec{
 				SASL: v1alpha1.KafkaSourceSASLSpec{
 					Enable:   true,
@@ -123,6 +124,10 @@ func TestMakeReceiveAdapter(t *testing.T) {
 								{
 									Name:  "KAFKA_NET_TLS_ENABLE",
 									Value: "true",
+								},
+								{
+									Name:  "CONCURRENCY_PER_PARTITION",
+									Value: "5",
 								},
 								{
 									Name:  "SINK_URI",

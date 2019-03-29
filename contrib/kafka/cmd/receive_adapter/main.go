@@ -33,14 +33,15 @@ import (
 )
 
 const (
-	envBootstrapServers = "KAFKA_BOOTSTRAP_SERVERS"
-	envTopics           = "KAFKA_TOPICS"
-	envConsumerGroup    = "KAFKA_CONSUMER_GROUP"
-	envNetSASLEnable    = "KAFKA_NET_SASL_ENABLE"
-	envNetSASLUser      = "KAFKA_NET_SASL_USER"
-	envNetSASLPassword  = "KAFKA_NET_SASL_PASSWORD"
-	envNetTLSEnable     = "KAFKA_NET_TLS_ENABLE"
-	envSinkURI          = "SINK_URI"
+	envBootstrapServers        = "KAFKA_BOOTSTRAP_SERVERS"
+	envTopics                  = "KAFKA_TOPICS"
+	envConsumerGroup           = "KAFKA_CONSUMER_GROUP"
+	envNetSASLEnable           = "KAFKA_NET_SASL_ENABLE"
+	envNetSASLUser             = "KAFKA_NET_SASL_USER"
+	envNetSASLPassword         = "KAFKA_NET_SASL_PASSWORD"
+	envNetTLSEnable            = "KAFKA_NET_TLS_ENABLE"
+	envConcurrencyPerPartition = "CONCURRENCY_PER_PARTITION"
+	envSinkURI                 = "SINK_URI"
 )
 
 func getRequiredEnv(key string) string {
@@ -49,6 +50,15 @@ func getRequiredEnv(key string) string {
 		log.Fatalf("Required environment variable not defined for key '%s'.", key)
 	}
 
+	return val
+}
+
+func getRequiredIntEnv(key string) int {
+	stringVal := getRequiredEnv(key)
+	val, err := strconv.Atoi(stringVal)
+	if err != nil {
+		log.Fatalf("Required environment variable '%s' was not an int.", key)
+	}
 	return val
 }
 
@@ -76,10 +86,11 @@ func main() {
 	}
 
 	adapter := &kafka.Adapter{
-		BootstrapServers: getRequiredEnv(envBootstrapServers),
-		Topics:           getRequiredEnv(envTopics),
-		ConsumerGroup:    getRequiredEnv(envConsumerGroup),
-		SinkURI:          getRequiredEnv(envSinkURI),
+		BootstrapServers:        getRequiredEnv(envBootstrapServers),
+		Topics:                  getRequiredEnv(envTopics),
+		ConsumerGroup:           getRequiredEnv(envConsumerGroup),
+		ConcurrencyPerPartition: getRequiredIntEnv(envConcurrencyPerPartition),
+		SinkURI:                 getRequiredEnv(envSinkURI),
 		Net: kafka.AdapterNet{
 			SASL: kafka.AdapterSASL{
 				Enable:   getOptionalBoolEnv(envNetSASLEnable),

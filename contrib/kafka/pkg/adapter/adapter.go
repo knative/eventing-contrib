@@ -51,12 +51,13 @@ type AdapterNet struct {
 }
 
 type Adapter struct {
-	BootstrapServers string
-	Topics           string
-	ConsumerGroup    string
-	Net              AdapterNet
-	SinkURI          string
-	client           client.Client
+	BootstrapServers        string
+	Topics                  string
+	ConsumerGroup           string
+	Net                     AdapterNet
+	SinkURI                 string
+	client                  client.Client
+	ConcurrencyPerPartition int
 }
 
 // --------------------------------------------------------------------
@@ -76,7 +77,16 @@ func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Co
 
 	logger := logging.FromContext(context.TODO())
 
+	limitConcurrency := a.ConcurrencyPerPartition > 0
+	var guard chan struct{}
+	if limitConcurrency {
+		guard = make(chan struct{}, a.ConcurrencyPerPartition)
+	}
+
 	for msg := range claim.Messages() {
+		if limitConcurrency {
+			guard <- struct{}{}
+		}
 		logger.Info("Received: ", zap.Any("value", string(msg.Value)))
 
 		go func(msg *sarama.ConsumerMessage) {
@@ -86,6 +96,9 @@ func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Co
 				logger.Debug("Successfully sent event to sink")
 			} else {
 				logger.Error("Sending event to sink failed: ", zap.Error(err))
+			}
+			if limitConcurrency {
+				<-guard
 			}
 		}(msg)
 	}
