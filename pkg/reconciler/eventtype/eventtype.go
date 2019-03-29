@@ -17,16 +17,14 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/eventing/pkg/utils"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // Reconciler reconciles EventTypes of different sources.
@@ -50,6 +48,12 @@ type EventTypeArgs struct {
 	Broker string
 }
 
+// syncEventTypes is a helper struct used to sync EventTypes during the reconciliation process.
+type syncEventTypes struct {
+	ToCreate []eventingv1alpha1.EventType
+	ToDelete []eventingv1alpha1.EventType
+}
+
 // ReconcileEventTypes reconciles the EventTypes taken from 'args', and sets 'owner' as the controller.
 func (r *Reconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Object, args *ReconcilerArgs) error {
 	current, err := r.getEventTypes(ctx, args.Namespace, args.Labels, owner)
@@ -61,24 +65,27 @@ func (r *Reconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Objec
 	if err != nil {
 		return err
 	}
-	// TODO may need to take care of deduping here as well.
-	diff := r.difference(current, expected)
-	if len(diff) > 0 {
-		// As EventTypes are immutable, if we have any diff it means that something was deleted or not even created
-		// in the first place. We create them.
-		for _, eventType := range diff {
-			err = r.Client.Create(ctx, eventType)
-			if err != nil {
-				return err
-			}
+	sync := r.getEventTypesToSync(current, expected)
+	for _, eventType := range sync.ToCreate {
+		err = r.Client.Create(ctx, &eventType)
+		if err != nil {
+			return err
+		}
+	}
+	// Deletion might not be needed, but just to make sure we dedupe EventTypes
+	// in case some source controller has a bug.
+	for _, eventType := range sync.ToDelete {
+		err = r.Client.Delete(ctx, &eventType)
+		if err != nil && !errors.IsNotFound(err) {
+			return err
 		}
 	}
 	return nil
 }
 
 // getEventTypes returns the EventTypes controlled by 'owner'.
-func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs map[string]string, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
-	eventTypes := make([]*eventingv1alpha1.EventType, 0)
+func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs map[string]string, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
+	eventTypes := make([]eventingv1alpha1.EventType, 0)
 
 	opts := &client.ListOptions{
 		Namespace:     namespace,
@@ -95,7 +102,7 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 
 		for _, e := range el.Items {
 			if metav1.IsControlledBy(&e, owner) {
-				eventTypes = append(eventTypes, &e)
+				eventTypes = append(eventTypes, e)
 			}
 		}
 		if el.Continue != "" {
@@ -107,12 +114,12 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 }
 
 // makeEventTypes creates the in-memory representation of the EventTypes.
-func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) ([]*eventingv1alpha1.EventType, error) {
-	eventTypes := make([]*eventingv1alpha1.EventType, 0)
+func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
+	eventTypes := make([]eventingv1alpha1.EventType, 0)
 	for _, arg := range args.EventTypes {
 		eventType := r.makeEventType(arg, args.Namespace, args.Labels)
 		// Setting the reference to delete the EventType upon uninstalling the source.
-		if err := controllerutil.SetControllerReference(owner, eventType, r.Scheme); err != nil {
+		if err := controllerutil.SetControllerReference(owner, &eventType, r.Scheme); err != nil {
 			return nil, err
 		}
 		eventTypes = append(eventTypes, eventType)
@@ -121,8 +128,8 @@ func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) (
 }
 
 // makeEventType creates the in-memory representation of the EventType.
-func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map[string]string) *eventingv1alpha1.EventType {
-	return &eventingv1alpha1.EventType{
+func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map[string]string) eventingv1alpha1.EventType {
+	return eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(arg.Type)),
 			Labels:       lbl,
@@ -137,28 +144,41 @@ func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map
 	}
 }
 
-// difference computes the diff between 'current' and 'expected' based on all the EventType.Spec fields.
-// As EventTypes are immutable, a difference means that something got deleted or not created.
-func (r *Reconciler) difference(current []*eventingv1alpha1.EventType, expected []*eventingv1alpha1.EventType) []*eventingv1alpha1.EventType {
-	difference := make([]*eventingv1alpha1.EventType, 0)
-	nameFunc := func(eventType *eventingv1alpha1.EventType) string {
+// getSyncEventTypes computes the EventTypes that need to be created and/or deleted based on the difference between
+// 'expected' and 'current'. It does so using all the EventType.Spec fields.
+func (r *Reconciler) getEventTypesToSync(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) *syncEventTypes {
+	eventTypesToSync := &syncEventTypes{
+		ToCreate: make([]eventingv1alpha1.EventType, 0),
+		ToDelete: make([]eventingv1alpha1.EventType, 0),
+	}
+	keyFunc := func(eventType *eventingv1alpha1.EventType) string {
 		return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
 	}
-	// O(n) time, O(n) space.
-	currentSet := asSet(current, nameFunc)
+
+	currentMap := groupByKey(current, keyFunc)
 	for _, e := range expected {
-		if !currentSet.Has(nameFunc(e)) {
-			difference = append(difference, e)
+		if et, ok := currentMap[keyFunc(&e)]; !ok {
+			// If it's not in the currentMap, we need to create it.
+			eventTypesToSync.ToCreate = append(eventTypesToSync.ToCreate, e)
+		} else {
+			// If it's in the currentMap and there are more than one,
+			// then we just keep the first one, and delete the others.
+			if len(et) > 1 {
+				for i := 1; i < len(et); i++ {
+					eventTypesToSync.ToDelete = append(eventTypesToSync.ToDelete, et[i])
+				}
+			}
 		}
 	}
-	return difference
+	return eventTypesToSync
 }
 
-// asSet returns a set representation of 'eventTypes'.
-func asSet(eventTypes []*eventingv1alpha1.EventType, nameFunc func(*eventingv1alpha1.EventType) string) *sets.String {
-	set := &sets.String{}
+// groupByKey groups 'eventTypes' by key, where the key is given by 'keyFunc'.
+func groupByKey(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv1alpha1.EventType) string) map[string][]eventingv1alpha1.EventType {
+	eventTypesAsMap := make(map[string][]eventingv1alpha1.EventType, 0)
 	for _, eventType := range eventTypes {
-		set.Insert(nameFunc(eventType))
+		key := keyFunc(&eventType)
+		eventTypesAsMap[key] = append(eventTypesAsMap[key], eventType)
 	}
-	return set
+	return eventTypesAsMap
 }

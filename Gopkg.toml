@@ -99,10 +99,10 @@ required = [
   name = "github.com/gorilla/websocket"
   version = "1.4.0"
 
-# Use CloudEvents release 0.4.0, happened March 12, 2019
+# Use CloudEvents release 0.4.4, happened March 27, 2019
 [[override]]
   name = "github.com/cloudevents/sdk-go"
-  version = "0.4.0"
+  version = "=0.4.4"
 
 [[constraint]]
   name = "github.com/apache/camel-k"

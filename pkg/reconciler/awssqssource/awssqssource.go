@@ -22,15 +22,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
-
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/eventing-sources/pkg/reconciler/awssqssource/resources"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -87,8 +87,7 @@ func Add(mgr manager.Manager) error {
 	p := &sdk.Provider{
 		AgentName:  controllerAgentName,
 		Parent:     &v1alpha1.AwsSqsSource{},
-		Owns:       []runtime.Object{&v1.Deployment{}},
-		// TODO watch the EventTypes that it creates and reconcile them if needed
+		Owns:       []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
 		Reconciler: r,
 	}
 
@@ -237,7 +236,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsS
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
-		Type:   v1alpha1.AwsSqsSourceEventType,
+		Type: v1alpha1.AwsSqsSourceEventType,
 		// Using the queue URL as source.
 		Source: src.Spec.QueueURL,
 		Broker: src.Spec.Sink.Name,

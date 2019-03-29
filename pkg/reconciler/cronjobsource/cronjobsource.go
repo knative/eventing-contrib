@@ -22,16 +22,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
-
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/eventing-sources/pkg/reconciler/cronjobsource/resources"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"github.com/robfig/cron"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -75,8 +75,7 @@ func Add(mgr manager.Manager) error {
 	p := &sdk.Provider{
 		AgentName:  controllerAgentName,
 		Parent:     &v1alpha1.CronJobSource{},
-		Owns:       []runtime.Object{&v1.Deployment{}},
-		// TODO watch the EventTypes that it creates and reconcile them if needed
+		Owns:       []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
 		Reconciler: r,
 	}
 
@@ -191,7 +190,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.Cron
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.CronJobSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
-		Type:   v1alpha1.CronJobSourceEventType,
+		Type: v1alpha1.CronJobSourceEventType,
 		// Using the schedule as source.
 		Source: src.Spec.Schedule,
 		Broker: src.Spec.Sink.Name,

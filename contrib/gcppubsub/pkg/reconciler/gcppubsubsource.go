@@ -22,22 +22,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
-
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
-
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler/resources"
-
-	"github.com/knative/eventing-sources/pkg/controller/sinks"
-
 	"cloud.google.com/go/pubsub"
 	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler/resources"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
+	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -45,6 +39,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 const (
@@ -82,8 +78,7 @@ func Add(mgr manager.Manager) error {
 	p := &sdk.Provider{
 		AgentName:  controllerAgentName,
 		Parent:     &v1alpha1.GcpPubSubSource{},
-		Owns:       []runtime.Object{&v1.Deployment{}},
-		// TODO watch the EventTypes that it creates and reconcile them if needed
+		Owns:       []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
 		Reconciler: r,
 	}
 
@@ -311,7 +306,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpP
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
-		Type:   v1alpha1.GcpPubSubSourceEventType,
+		Type: v1alpha1.GcpPubSubSourceEventType,
 		// Using the google cloud project and the topic as source.
 		Source: fmt.Sprintf("%s/%s", src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,

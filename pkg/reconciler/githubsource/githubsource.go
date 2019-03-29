@@ -28,6 +28,7 @@ import (
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"go.uber.org/zap"
@@ -73,10 +74,9 @@ func Add(mgr manager.Manager) error {
 
 	log.Println("Adding the GitHub Source controller.")
 	p := &sdk.Provider{
-		AgentName: controllerAgentName,
-		Parent:    &sourcesv1alpha1.GitHubSource{},
-		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
-		// TODO watch the EventTypes that it creates and reconcile them if needed
+		AgentName:  controllerAgentName,
+		Parent:     &sourcesv1alpha1.GitHubSource{},
+		Owns:       []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
 		Reconciler: r,
 	}
 
@@ -192,18 +192,20 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
+		}
+	} else {
+		return nil
+	}
 
-			// Only create EventTypes for Broker sinks.
-			if source.Spec.Sink.Kind == "Broker" {
-				err = r.reconcileEventTypes(ctx, source)
-				if err != nil {
-					return err
-				}
-			}
-			// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
-			source.Status.MarkEventTypes()
+	// Only create EventTypes for Broker sinks.
+	if source.Spec.Sink.Kind == "Broker" {
+		err = r.reconcileEventTypes(ctx, source)
+		if err != nil {
+			return err
 		}
 	}
+	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
+	source.Status.MarkEventTypes()
 
 	return nil
 }

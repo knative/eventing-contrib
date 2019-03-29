@@ -19,26 +19,28 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"strings"
 
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"log"
-	"os"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"strings"
 )
 
 const (
@@ -63,10 +65,9 @@ func Add(mgr manager.Manager) error {
 
 	log.Println("Adding the Apache Kafka Source controller.")
 	p := &sdk.Provider{
-		AgentName: controllerAgentName,
-		Parent:    &v1alpha1.KafkaSource{},
-		Owns:      []runtime.Object{&v1.Deployment{}},
-		// TODO watch the EventTypes that it creates and reconcile them if needed
+		AgentName:  controllerAgentName,
+		Parent:     &v1alpha1.KafkaSource{},
+		Owns:       []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
 		Reconciler: r,
 	}
 
