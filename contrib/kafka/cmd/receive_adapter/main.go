@@ -95,10 +95,10 @@ func main() {
 	stopCh := signals.SetupSignalHandler()
 
 	logger.Info("Starting Apache Kafka Receive Adapter...",
-		zap.String("Bootstrap Server", string(adapter.BootstrapServers)),
-		zap.String("Topics", string(adapter.Topics)),
-		zap.String("ConsumerGroup", string(adapter.ConsumerGroup)),
-		zap.String("SinkURI", string(adapter.SinkURI)),
+		zap.String("bootstrapServer", adapter.BootstrapServers),
+		zap.String("Topics", adapter.Topics),
+		zap.String("ConsumerGroup", adapter.ConsumerGroup),
+		zap.String("SinkURI", adapter.SinkURI),
 		zap.Bool("TLS", adapter.Net.SASL.Enable))
 	if err := adapter.Start(ctx, stopCh); err != nil {
 		logger.Fatal("failed to start adapter: ", zap.Error(err))
