@@ -117,7 +117,7 @@ and an Event Display Service.
    ```
    $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
    ...
-   {"level":"info","ts":1554145778.9344022,"logger":"fallback","caller":"adapter/adapter.go:80","msg":"Received: {topic 15 0 ... <nil>} {partition 11 2  <nil>} {offset: 11 0  <nil>}"}
+   {"level":"info","ts":1554145778.9344022,"logger":"fallback","caller":"adapter/adapter.go:80","msg":"Received: {topic: 15 0 ... <nil>} {partition: 11 2  <nil>} {offset: 11 0  <nil>}"}
    {"level":"info","ts":1553034726.546107,"logger":"fallback","caller":"adapter/adapter.go:154","msg":"Successfully sent event to sink"}
    ```
 3. Ensure the Event Display received the message sent to it by the Event Source.
