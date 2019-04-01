@@ -13,51 +13,14 @@
 # limitations under the License.
 
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: ClusterRoleBinding
 metadata:
-  name: eventing-sources-gcppubsub-controller
-rules:
-
-- apiGroups:
-  - sources.eventing.knative.dev
-  resources:
-  - gcppubsubsources
-  verbs: &everything
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-
-- apiGroups:
-  - sources.eventing.knative.dev
-  resources:
-  - gcppubsubsources/status
-  verbs:
-  - get
-  - update
-  - patch
-
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs: *everything
-
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs: &readOnly
-  - get
-  - list
-  - watch
-
-- apiGroups:
-  - serving.knative.dev
-  resources:
-  - services
-  - routes
-  verbs: *readOnly
+  name: eventing-sources-gcppubsub-resolver
+subjects:
+- kind: ServiceAccount
+  name: gcppubsub-controller-manager
+  namespace: knative-sources
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: addressable-resolver
