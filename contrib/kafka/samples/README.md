@@ -8,9 +8,10 @@ sink.
 This sample demonstrates how to configure, deploy, and use the Apache Kafka
 Event Source with a Knative Service.
 
-For kubernetes, a simple Kafka installation can be done with Strimzi, check out their
-[Quickstart](https://strimzi.io/quickstarts/) for both Minikube and Openshift guides.
-You can also install Kafka on the host.
+For kubernetes, a simple Apache Kafka installation can be done with
+Strimzi, check out their [Quickstart](https://strimzi.io/quickstarts/)
+for both Minikube and Openshift guides.  You can also install Kafka on
+the host.
 
 ## Build and Deploy Steps
 
@@ -69,7 +70,7 @@ and an Event Display Service.
    2019/03/19 22:25:54 Starting Apache Kafka controller.
    ```
 
-#### Kafka Topic (Optional)
+#### Apache Kafka Topic (Optional)
 
 1. If using Strimzi, you can can set a topic modifying
 `contrib/kafka/samples/kafka-topic.yaml` with your desired:
@@ -129,8 +130,8 @@ and an Event Display Service.
 1. Modify `contrib/kafka/samples/event-source.yaml` accordingly with bootstrap
    servers, topics, etc...
 
-   NOTE: If using an internal kafka cluster, you may need to ensure
-you've specified the correct variables set in any Kafka Topic and Event Source:
+   NOTE: If using an internal Apache Kafka cluster, you may need to ensure
+you've specified the correct variables set in any `KafkaTopic` and `event-source`:
 
     ``` shell
     $ cat contrib/kafka/samples/kafka-event-source.yaml
@@ -233,7 +234,7 @@ you've specified the correct variables set in any Kafka Topic and Event Source:
    service "kafka-controller" deleted
    statefulset.apps "kafka-controller-manager" deleted
    ```
-4. (Optional) Remove the Kafka Topic
+4. (Optional) Remove the Apache Kafka Topic
 
     ``` shell
     $ kubectl delete -f contrib/kafka/samples/kafka-topic.yaml
