@@ -130,13 +130,9 @@ and an Event Display Service.
 1. Modify `contrib/kafka/samples/event-source.yaml` accordingly with bootstrap
    servers, topics, etc...
 
-   NOTE: If using an internal Apache Kafka cluster, you may need to ensure
-you've specified the correct variables set in any `KafkaTopic` and `event-source`:
-
-    ``` shell
-    $ cat contrib/kafka/samples/kafka-event-source.yaml
-
-    ```
+   NOTE: If using an internal Apache Kafka cluster, you may need to
+   ensure you've specified the correct variables set in any `KafkaTopic`
+   and `event-source`.  For example, the following source could be used:
 
     ``` yaml
     apiVersion: sources.eventing.knative.dev/v1alpha1
