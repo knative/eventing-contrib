@@ -82,6 +82,14 @@ func TestGetSinkURI(t *testing.T) {
 			ref:       nil,
 			wantErr:   fmt.Errorf(`sink ref is nil`),
 		},
+		"nil address": {
+			objects: []runtime.Object{
+				getAddressable_nilAddress(),
+			},
+			namespace: testNS,
+			ref:       nil,
+			wantErr:   fmt.Errorf(`sink ref is nil`),
+		},
 		"notSink": {
 			objects: []runtime.Object{
 				getAddressable_noStatus(),
