@@ -8,7 +8,7 @@ sink.
 This sample demonstrates how to configure, deploy, and use the Apache Kafka
 Event Source with a Knative Service.
 
-For kubernetes, a simple Apache Kafka installation can be done with
+For Kubernetes, a simple Apache Kafka installation can be done with
 Strimzi, check out their [Quickstart](https://strimzi.io/quickstarts/)
 for both Minikube and Openshift guides.  You can also install Kafka on
 the host.
@@ -166,7 +166,7 @@ and an Event Display Service.
    configuration.
    ```
    $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
-   {"level":"info","ts":"2019-04-01T19:09:32.164Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","Bootstrap Server":"...","Topics":".","ConsumerGroup":"...","SinkURI":"http://event-display.default.svc.cluster.local/","TLS":false}
+   {"level":"info","ts":"2019-04-01T19:09:32.164Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","Bootstrap Server":"...","Topics":".","ConsumerGroup":"...","SinkURI":"...","TLS":false}
    ```
 
 ### Verify
