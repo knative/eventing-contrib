@@ -87,16 +87,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		logger.Error("could not find Apache Kafka source", zap.Any("object", object))
 		return nil
 	}
-	logger.Info("Source bootstrap servers:", zap.Any("BootstrapServers", src.Spec.BootstrapServers))
-	if src.Spec.BootstrapServers == "" {
-		logger.Error("Apache Kafka source missing bootstrapServers", zap.Any("BootstrapServers", src.Spec.BootstrapServers))
-		return nil
-	}
-	logger.Info("Source topics:", zap.Any("Topics", src.Spec.Topics))
-	if src.Spec.Topics == "" {
-		logger.Error("Apache Kafka source missing topics", zap.Any("Topics", src.Spec.Topics))
-		return nil
-	}
 
 	logger.Info("Reconciling new source: ", zap.Any("source", src))
 
