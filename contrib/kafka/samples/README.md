@@ -103,7 +103,7 @@ and an Event Display Service.
    configuration.
    ```
    $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
-   {"level":"info","ts":"2019-03-19T22:31:52.689Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","adapter":{"BootstrapServers":"...","Topic":"...","ConsumerGroup":"...","Net":{"SASL":{"Enable":true,"User":"...","Password":"..."},"TLS":{"Enable":true}},"SinkURI":"http://event-display.default.svc.cluster.local/"}}
+   {"level":"info","ts":"2019-04-01T19:09:32.164Z","caller":"receive_adapter/main.go:97","msg":"Starting Apache Kafka Receive Adapter...","Bootstrap Server":"...","Topics":".","ConsumerGroup":"...","SinkURI":"http://event-display.default.svc.cluster.local/","TLS":false}
    ```
 
 ### Verify
@@ -117,7 +117,7 @@ and an Event Display Service.
    ```
    $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
    ...
-   {"level":"info","ts":1553034726.5351956,"logger":"fallback","caller":"adapter/adapter.go:121","msg":"Received: {value 15 0 {\"msg\": \"This is a test!\"} <nil>}"}
+   {"level":"info","ts":1554145778.9344022,"logger":"fallback","caller":"adapter/adapter.go:80","msg":"Received: {topic: 15 0 ... <nil>} {partition: 11 2  <nil>} {offset: 11 0  <nil>}"}
    {"level":"info","ts":1553034726.546107,"logger":"fallback","caller":"adapter/adapter.go:154","msg":"Successfully sent event to sink"}
    ```
 3. Ensure the Event Display received the message sent to it by the Event Source.

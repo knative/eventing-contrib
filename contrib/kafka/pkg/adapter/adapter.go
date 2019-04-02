@@ -77,7 +77,9 @@ func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Co
 	logger := logging.FromContext(context.TODO())
 
 	for msg := range claim.Messages() {
-		logger.Info("Received: ", zap.Any("value", string(msg.Value)))
+		logger.Debug("Received: ", zap.String("topic:", msg.Topic),
+			zap.Int32("partition:", msg.Partition),
+			zap.Int64("offset:", msg.Offset))
 
 		// send and mark message if post was successful
 		if err := a.postMessage(context.TODO(), msg); err == nil {
