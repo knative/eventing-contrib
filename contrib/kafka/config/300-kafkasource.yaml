@@ -44,8 +44,10 @@ spec:
           properties:
             bootstrapServers:
               type: string
+              minLength: 1
             topics:
               type: string
+              minLength: 1
             consumerGroup:
               type: string
             serviceAccountName:
@@ -53,6 +55,9 @@ spec:
             sink:
               type: object
           type: object
+          required:
+              - bootstrapServers
+              - topics
         status:
           properties:
             conditions:
