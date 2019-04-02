@@ -15,11 +15,28 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  name: eventing-sources-gcppubsub-controller
+subjects:
+- kind: ServiceAccount
+  name: gcppubsub-controller-manager
+  namespace: knative-sources
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: eventing-sources-gcppubsub-controller
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
   name: eventing-sources-gcppubsub-resolver
 subjects:
 - kind: ServiceAccount
   name: gcppubsub-controller-manager
   namespace: knative-sources
+# An aggregated ClusterRole for all Addressable CRDs. 
+# Ref: https://github.com/knative/eventing/blob/master/config/200-addressable-resolvers-clusterrole.yaml
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
