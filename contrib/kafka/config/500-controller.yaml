@@ -32,7 +32,6 @@ spec:
       containers:
       - name: manager
         image: github.com/knative/eventing-sources/contrib/kafka/cmd/controller
-        imagePullPolicy: IfNotPresent
         env:
         - name: KAFKA_RA_IMAGE
           value: github.com/knative/eventing-sources/contrib/kafka/cmd/receive_adapter
