@@ -68,7 +68,7 @@ func TestGetSinkURI(t *testing.T) {
 		},
 		"nil hostname": {
 			objects: []runtime.Object{
-				getAddressable_nilHostname(),
+				getAddressableNilHostname(),
 			},
 			namespace: testNS,
 			ref:       getUnaddressableRef(),
@@ -76,7 +76,7 @@ func TestGetSinkURI(t *testing.T) {
 		},
 		"nil sink": {
 			objects: []runtime.Object{
-				getAddressable_nilHostname(),
+				getAddressableNilHostname(),
 			},
 			namespace: testNS,
 			ref:       nil,
@@ -84,7 +84,7 @@ func TestGetSinkURI(t *testing.T) {
 		},
 		"nil address": {
 			objects: []runtime.Object{
-				getAddressable_nilAddress(),
+				getAddressableNilAddress(),
 			},
 			namespace: testNS,
 			ref:       nil,
@@ -92,7 +92,7 @@ func TestGetSinkURI(t *testing.T) {
 		},
 		"notSink": {
 			objects: []runtime.Object{
-				getAddressable_noStatus(),
+				getAddressableNoStatus(),
 			},
 			namespace: testNS,
 			ref:       getUnaddressableRef(),
@@ -146,7 +146,7 @@ func getAddressable() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_noStatus() *unstructured.Unstructured {
+func getAddressableNoStatus() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": unaddressableAPIVersion,
@@ -159,7 +159,7 @@ func getAddressable_noStatus() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_nilAddress() *unstructured.Unstructured {
+func getAddressableNilAddress() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": unaddressableAPIVersion,
@@ -175,7 +175,7 @@ func getAddressable_nilAddress() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_nilHostname() *unstructured.Unstructured {
+func getAddressableNilHostname() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": unaddressableAPIVersion,
