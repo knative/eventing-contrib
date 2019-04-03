@@ -27,16 +27,15 @@ import (
 )
 
 type ReceiveAdapterArgs struct {
-	Image           string
-	ImagePullPolicy *corev1.PullPolicy
-	Source          *v1alpha1.KafkaSource
-	Labels          map[string]string
-	SinkURI         string
+	Image   string
+	Source  *v1alpha1.KafkaSource
+	Labels  map[string]string
+	SinkURI string
 }
 
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	replicas := int32(1)
-	d := &v1.Deployment{
+	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    args.Source.Namespace,
 			GenerateName: fmt.Sprintf("%s-", args.Source.Name),
@@ -100,9 +99,4 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 			},
 		},
 	}
-	if args.ImagePullPolicy != nil {
-		d.Spec.Template.Spec.Containers[0].ImagePullPolicy = *args.ImagePullPolicy
-	}
-	return d
-
 }
