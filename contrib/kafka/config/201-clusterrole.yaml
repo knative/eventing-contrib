@@ -22,6 +22,7 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - kafkasources
+  - kafkasources/finalizers
   - services
   verbs: &everything
   - get

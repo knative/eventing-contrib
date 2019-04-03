@@ -34,7 +34,6 @@ required = [
 [[prune.project]]
   name = "k8s.io/gengo"
   unused-packages = false
-  non-go = false
 
 # Constrain the version of knative/pkg we would like to import.
 # This controls when we upgrade apis independently of Serving.
