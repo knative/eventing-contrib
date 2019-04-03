@@ -64,12 +64,12 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			}
 
 			body := "The body"
-			messageId := "ABC01"
+			messageID := "ABC01"
 			attrs := map[string]*string{
 				"SentTimestamp": &timestamp,
 			}
 			m := &sqs.Message{
-				MessageId:  &messageId,
+				MessageId:  &messageID,
 				Body:       &body,
 				Attributes: attrs,
 			}

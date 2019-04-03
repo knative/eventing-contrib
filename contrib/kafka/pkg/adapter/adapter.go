@@ -77,17 +77,17 @@ func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Co
 	logger := logging.FromContext(context.TODO())
 
 	for msg := range claim.Messages() {
-		logger.Info("Received: ", zap.Any("value", string(msg.Value)))
+		logger.Debug("Received: ", zap.String("topic:", msg.Topic),
+			zap.Int32("partition:", msg.Partition),
+			zap.Int64("offset:", msg.Offset))
 
-		go func(msg *sarama.ConsumerMessage) {
-			// send and mark message if post was successfull
-			if err := a.postMessage(context.TODO(), msg); err == nil {
-				sess.MarkMessage(msg, "")
-				logger.Debug("Successfully sent event to sink")
-			} else {
-				logger.Error("Sending event to sink failed: ", zap.Error(err))
-			}
-		}(msg)
+		// send and mark message if post was successful
+		if err := a.postMessage(context.TODO(), msg); err == nil {
+			sess.MarkMessage(msg, "")
+			logger.Debug("Successfully sent event to sink")
+		} else {
+			logger.Error("Sending event to sink failed: ", zap.Error(err))
+		}
 	}
 	return nil
 }
