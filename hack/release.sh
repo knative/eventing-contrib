@@ -27,12 +27,30 @@ COMPONENTS=(
 )
 readonly COMPONENTS
 
+declare -A RELEASES
+RELEASES=(
+  ["release.yaml"]="eventing-sources.yaml event-display.yaml"
+)
+readonly RELEASES
+
 function build_release() {
+  # Build the components
   local all_yamls=()
   for yaml in "${!COMPONENTS[@]}"; do
-  local config="${COMPONENTS[${yaml}]}"
+    local config="${COMPONENTS[${yaml}]}"
     echo "Building Knative Eventing Sources - ${config}"
     ko resolve ${KO_FLAGS} -f ${config}/ > ${yaml}
+    all_yamls+=(${yaml})
+  done
+  # Assemble the release
+  for yaml in "${!RELEASES[@]}"; do
+    echo "Assembling Knative Eventing Sources- ${yaml}"
+    echo "" > ${yaml}
+    for component in ${RELEASES[${yaml}]}; do
+      echo "---" >> ${yaml}
+      echo "# ${component}" >> ${yaml}
+      cat ${component} >> ${yaml}
+    done
     all_yamls+=(${yaml})
   done
   YAMLS_TO_PUBLISH="${all_yamls[@]}"
