@@ -35,7 +35,6 @@ import (
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -54,6 +53,7 @@ func Add(mgr manager.Manager) error {
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
+
 	log.Println("Adding the Apache Kafka Source controller.")
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
