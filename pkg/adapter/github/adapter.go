@@ -27,8 +27,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
-	webhooks "gopkg.in/go-playground/webhooks.v3"
-	gh "gopkg.in/go-playground/webhooks.v3/github"
+	gh "gopkg.in/go-playground/webhooks.v5/github"
 )
 
 const (
@@ -54,7 +53,7 @@ func New(sinkURI string) (*Adapter, error) {
 }
 
 // HandleEvent is invoked whenever an event comes in from GitHub
-func (a *Adapter) HandleEvent(payload interface{}, header webhooks.Header) {
+func (a *Adapter) HandleEvent(payload interface{}, header http.Header) {
 	hdr := http.Header(header)
 	err := a.handleEvent(payload, hdr)
 	if err != nil {
@@ -94,6 +93,9 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 func sourceFromGitHubEvent(gitHubEvent gh.Event, payload interface{}) (*types.URLRef, error) {
 	var url string
 	switch gitHubEvent {
+	case gh.CheckSuiteEvent:
+		cs := payload.(gh.CheckSuitePayload)
+		url = cs.Repository.HTMLURL
 	case gh.CommitCommentEvent:
 		cc := payload.(gh.CommitCommentPayload)
 		url = cc.Comment.HTMLURL
