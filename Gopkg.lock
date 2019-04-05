@@ -456,6 +456,84 @@
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:69edfd59c076dedf7306f48169be1cb50e0a0ac6866281c58ca28e6f3ccd4aa8"
+  name = "github.com/knative/eventing-sources"
+  packages = [
+    "contrib/camel/pkg/apis",
+    "contrib/camel/pkg/apis/sources/v1alpha1",
+    "contrib/camel/pkg/client/clientset/versioned",
+    "contrib/camel/pkg/client/clientset/versioned/scheme",
+    "contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "contrib/camel/pkg/client/informers/externalversions/internalinterfaces",
+    "contrib/camel/pkg/client/informers/externalversions/sources",
+    "contrib/camel/pkg/client/informers/externalversions/sources/v1alpha1",
+    "contrib/camel/pkg/client/listers/sources/v1alpha1",
+    "contrib/camel/pkg/reconciler",
+    "contrib/camel/pkg/reconciler/resources",
+    "contrib/gcppubsub/pkg/adapter",
+    "contrib/gcppubsub/pkg/apis",
+    "contrib/gcppubsub/pkg/apis/sources/v1alpha1",
+    "contrib/gcppubsub/pkg/client/clientset/versioned",
+    "contrib/gcppubsub/pkg/client/clientset/versioned/scheme",
+    "contrib/gcppubsub/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "contrib/gcppubsub/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "contrib/gcppubsub/pkg/client/informers/externalversions/internalinterfaces",
+    "contrib/gcppubsub/pkg/client/informers/externalversions/sources",
+    "contrib/gcppubsub/pkg/client/informers/externalversions/sources/v1alpha1",
+    "contrib/gcppubsub/pkg/client/listers/sources/v1alpha1",
+    "contrib/gcppubsub/pkg/reconciler",
+    "contrib/gcppubsub/pkg/reconciler/resources",
+    "contrib/kafka/pkg/adapter",
+    "contrib/kafka/pkg/apis",
+    "contrib/kafka/pkg/apis/sources/v1alpha1",
+    "contrib/kafka/pkg/client/clientset/versioned",
+    "contrib/kafka/pkg/client/clientset/versioned/scheme",
+    "contrib/kafka/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "contrib/kafka/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "contrib/kafka/pkg/client/informers/externalversions/internalinterfaces",
+    "contrib/kafka/pkg/client/informers/externalversions/sources",
+    "contrib/kafka/pkg/client/informers/externalversions/sources/v1alpha1",
+    "contrib/kafka/pkg/client/listers/sources/v1alpha1",
+    "contrib/kafka/pkg/reconciler",
+    "contrib/kafka/pkg/reconciler/resources",
+    "pkg/adapter/awssqs",
+    "pkg/adapter/cronjobevents",
+    "pkg/adapter/github",
+    "pkg/adapter/kubernetesevents",
+    "pkg/apis",
+    "pkg/apis/serving/v1alpha1",
+    "pkg/apis/sources/v1alpha1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "pkg/client/informers/externalversions/internalinterfaces",
+    "pkg/client/informers/externalversions/sources",
+    "pkg/client/informers/externalversions/sources/v1alpha1",
+    "pkg/client/listers/sources/v1alpha1",
+    "pkg/controller",
+    "pkg/controller/sdk",
+    "pkg/controller/sinks",
+    "pkg/controller/testing",
+    "pkg/kncloudevents",
+    "pkg/reconciler/awssqssource",
+    "pkg/reconciler/awssqssource/resources",
+    "pkg/reconciler/containersource",
+    "pkg/reconciler/containersource/resources",
+    "pkg/reconciler/cronjobsource",
+    "pkg/reconciler/cronjobsource/resources",
+    "pkg/reconciler/githubsource",
+    "pkg/reconciler/githubsource/resources",
+    "pkg/reconciler/kuberneteseventsource",
+    "pkg/reconciler/kuberneteseventsource/resources",
+    "test",
+  ]
+  pruneopts = "NUT"
+  revision = "32ce3778fa1bc46ed0b0ade16d5c57f343cafa4d"
+  version = "v0.5.0"
+
+[[projects]]
   digest = "1:71ba7728a1469a9f5c751e8aa2f55033bd51da087d75bd685811dc5e88ce34e7"
   name = "github.com/knative/pkg"
   packages = [
@@ -500,14 +578,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b049ec7fe983f49c52a19fbb511bc1621cc614b36dfed87cd18c67f363008057"
+  digest = "1:921c8888ac7bf7240bc5473d029201b3eb19f9592c7647c4c29f96b6c901b1bb"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "bbeed9e1ca511c9355ffb0d955fe685cb1a25117"
+  revision = "582b6fbee8ae00260baf916b0f9db2aa5f3483d9"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -1028,6 +1106,17 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:d98a45237ffb67adfb77bf618a164407d476ecd925a9a987e2fa1cda9137db5e"
+  name = "gopkg.in/go-playground/webhooks.v3"
+  packages = [
+    ".",
+    "github",
+  ]
+  pruneopts = "NUT"
+  revision = "8ffb2ffc32b7af2c7e940944eccba4dcd66c692a"
+  version = "v3.13.0"
+
+[[projects]]
   digest = "1:d424e1da4f56fdb1ca8fdc6ec34ea9ac46690ce117bd52bf44997344a11a66a7"
   name = "gopkg.in/go-playground/webhooks.v5"
   packages = ["github"]
@@ -1411,6 +1500,75 @@
     "github.com/google/go-github/github",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/apis",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned/scheme",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/informers/externalversions/internalinterfaces",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/informers/externalversions/sources",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/informers/externalversions/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/client/listers/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/reconciler",
+    "github.com/knative/eventing-sources/contrib/camel/pkg/reconciler/resources",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/clientset/versioned",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/clientset/versioned/scheme",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/informers/externalversions/internalinterfaces",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/informers/externalversions/sources",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/informers/externalversions/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/client/listers/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler",
+    "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler/resources",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/adapter",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/apis",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/clientset/versioned",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/clientset/versioned/scheme",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/informers/externalversions/internalinterfaces",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/informers/externalversions/sources",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/informers/externalversions/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/client/listers/sources/v1alpha1",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler",
+    "github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler/resources",
+    "github.com/knative/eventing-sources/pkg/adapter/awssqs",
+    "github.com/knative/eventing-sources/pkg/adapter/cronjobevents",
+    "github.com/knative/eventing-sources/pkg/adapter/github",
+    "github.com/knative/eventing-sources/pkg/adapter/kubernetesevents",
+    "github.com/knative/eventing-sources/pkg/apis",
+    "github.com/knative/eventing-sources/pkg/apis/serving/v1alpha1",
+    "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1",
+    "github.com/knative/eventing-sources/pkg/client/clientset/versioned",
+    "github.com/knative/eventing-sources/pkg/client/clientset/versioned/scheme",
+    "github.com/knative/eventing-sources/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "github.com/knative/eventing-sources/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces",
+    "github.com/knative/eventing-sources/pkg/client/informers/externalversions/sources",
+    "github.com/knative/eventing-sources/pkg/client/informers/externalversions/sources/v1alpha1",
+    "github.com/knative/eventing-sources/pkg/client/listers/sources/v1alpha1",
+    "github.com/knative/eventing-sources/pkg/controller",
+    "github.com/knative/eventing-sources/pkg/controller/sdk",
+    "github.com/knative/eventing-sources/pkg/controller/sinks",
+    "github.com/knative/eventing-sources/pkg/controller/testing",
+    "github.com/knative/eventing-sources/pkg/kncloudevents",
+    "github.com/knative/eventing-sources/pkg/reconciler/awssqssource",
+    "github.com/knative/eventing-sources/pkg/reconciler/awssqssource/resources",
+    "github.com/knative/eventing-sources/pkg/reconciler/containersource",
+    "github.com/knative/eventing-sources/pkg/reconciler/containersource/resources",
+    "github.com/knative/eventing-sources/pkg/reconciler/cronjobsource",
+    "github.com/knative/eventing-sources/pkg/reconciler/cronjobsource/resources",
+    "github.com/knative/eventing-sources/pkg/reconciler/githubsource",
+    "github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources",
+    "github.com/knative/eventing-sources/pkg/reconciler/kuberneteseventsource",
+    "github.com/knative/eventing-sources/pkg/reconciler/kuberneteseventsource/resources",
+    "github.com/knative/eventing-sources/test",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
     "github.com/knative/pkg/apis",
