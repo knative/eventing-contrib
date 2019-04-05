@@ -24,7 +24,7 @@ and Openshift guides. You can also install Kafka on the host.
      obtained.
 2. Install the `ko` CLI for building and deploying purposes.
    ```
-   go get github.com/google/go-containerregistry/cmd/ko
+   go get github.com/google/ko/cmd/ko
    ```
 3. A container registry, such as a Docker Hub account, is required.
    - Export the `KO_DOCKER_REPO` environment variable with a value denoting the
