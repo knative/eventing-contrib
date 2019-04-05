@@ -103,7 +103,7 @@ var testCases = []controllertesting.TestCase{
 		InitialState: []runtime.Object{
 			getGitHubSourceUnaddressable(),
 			getGitHubSecrets(),
-			getAddressable_noStatus(),
+			getAddressableNoStatus(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
@@ -134,7 +134,7 @@ var testCases = []controllertesting.TestCase{
 		InitialState: []runtime.Object{
 			getGitHubSource(),
 			getGitHubSecrets(),
-			getAddressable_nilAddress(),
+			getAddressableNilAddress(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
@@ -964,7 +964,7 @@ func getAddressableWithKind(kind string) *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_noStatus() *unstructured.Unstructured {
+func getAddressableNoStatus() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": unaddressableAPIVersion,
@@ -977,7 +977,7 @@ func getAddressable_noStatus() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_nilAddress() *unstructured.Unstructured {
+func getAddressableNilAddress() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,

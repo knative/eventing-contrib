@@ -18,13 +18,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/knative/eventing-sources/pkg/adapter/github"
-	webhooks "gopkg.in/go-playground/webhooks.v3"
-	gh "gopkg.in/go-playground/webhooks.v3/github"
+	gh "gopkg.in/go-playground/webhooks.v5/github"
 )
 
 const (
@@ -37,6 +36,44 @@ const (
 	// Environment variable containing information about the origin of the event
 	envOwnerRepo = "GITHUB_OWNER_REPO"
 )
+
+var validEvents = []gh.Event{
+	gh.CheckSuiteEvent,
+	gh.CommitCommentEvent,
+	gh.CommitCommentEvent,
+	gh.CreateEvent,
+	gh.DeleteEvent,
+	gh.DeploymentEvent,
+	gh.DeploymentStatusEvent,
+	gh.ForkEvent,
+	gh.GollumEvent,
+	gh.InstallationEvent,
+	gh.IntegrationInstallationEvent,
+	gh.IssueCommentEvent,
+	gh.IssuesEvent,
+	gh.LabelEvent,
+	gh.MemberEvent,
+	gh.MembershipEvent,
+	gh.MilestoneEvent,
+	gh.OrganizationEvent,
+	gh.OrgBlockEvent,
+	gh.PageBuildEvent,
+	gh.PingEvent,
+	gh.ProjectCardEvent,
+	gh.ProjectColumnEvent,
+	gh.ProjectEvent,
+	gh.PublicEvent,
+	gh.PullRequestEvent,
+	gh.PullRequestReviewEvent,
+	gh.PullRequestReviewCommentEvent,
+	gh.PushEvent,
+	gh.ReleaseEvent,
+	gh.RepositoryEvent,
+	gh.StatusEvent,
+	gh.TeamEvent,
+	gh.TeamAddEvent,
+	gh.WatchEvent,
+}
 
 func main() {
 	sink := flag.String("sink", "", "uri to send events to")
@@ -69,45 +106,20 @@ func main() {
 		log.Fatalf("Failed to create github adapter: %s", err.Error())
 	}
 
-	hook := gh.New(&gh.Config{Secret: secretToken})
-	hook.RegisterEvents(ra.HandleEvent,
-		gh.CommitCommentEvent,
-		gh.CreateEvent,
-		gh.DeleteEvent,
-		gh.DeploymentEvent,
-		gh.DeploymentStatusEvent,
-		gh.ForkEvent,
-		gh.GollumEvent,
-		gh.InstallationEvent,
-		gh.IntegrationInstallationEvent,
-		gh.IssueCommentEvent,
-		gh.IssuesEvent,
-		gh.LabelEvent,
-		gh.MemberEvent,
-		gh.MembershipEvent,
-		gh.MilestoneEvent,
-		gh.OrganizationEvent,
-		gh.OrgBlockEvent,
-		gh.PageBuildEvent,
-		gh.PingEvent,
-		gh.ProjectCardEvent,
-		gh.ProjectColumnEvent,
-		gh.ProjectEvent,
-		gh.PublicEvent,
-		gh.PullRequestEvent,
-		gh.PullRequestReviewEvent,
-		gh.PullRequestReviewCommentEvent,
-		gh.PushEvent,
-		gh.ReleaseEvent,
-		gh.RepositoryEvent,
-		gh.StatusEvent,
-		gh.TeamEvent,
-		gh.TeamAddEvent,
-		gh.WatchEvent)
+	hook, _ := gh.New(gh.Options.Secret(secretToken))
 
-	addr := fmt.Sprintf(":%s", port)
-	err = webhooks.Run(hook, addr, "/")
-	if err != nil {
-		log.Fatalf("Failed to run the webhook")
-	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		event, err := hook.Parse(r, validEvents...)
+		if err != nil {
+			if err == gh.ErrEventNotFound {
+				w.WriteHeader(http.StatusNotFound)
+
+				log.Print("Event not found")
+				return
+			}
+		}
+
+		ra.HandleEvent(event, r.Header)
+	})
+	http.ListenAndServe(port, nil)
 }

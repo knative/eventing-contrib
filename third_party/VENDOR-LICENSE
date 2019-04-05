@@ -7046,7 +7046,7 @@ Import: github.com/knative/eventing-sources/vendor/google.golang.org/grpc
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/gopkg.in/go-playground/webhooks.v3
+Import: github.com/knative/eventing-sources/vendor/gopkg.in/go-playground/webhooks.v5
 
 The MIT License (MIT)
 

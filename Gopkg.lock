@@ -501,14 +501,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b049ec7fe983f49c52a19fbb511bc1621cc614b36dfed87cd18c67f363008057"
+  digest = "1:921c8888ac7bf7240bc5473d029201b3eb19f9592c7647c4c29f96b6c901b1bb"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "bbeed9e1ca511c9355ffb0d955fe685cb1a25117"
+  revision = "582b6fbee8ae00260baf916b0f9db2aa5f3483d9"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -1029,15 +1029,12 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:d98a45237ffb67adfb77bf618a164407d476ecd925a9a987e2fa1cda9137db5e"
-  name = "gopkg.in/go-playground/webhooks.v3"
-  packages = [
-    ".",
-    "github",
-  ]
+  digest = "1:d424e1da4f56fdb1ca8fdc6ec34ea9ac46690ce117bd52bf44997344a11a66a7"
+  name = "gopkg.in/go-playground/webhooks.v5"
+  packages = ["github"]
   pruneopts = "NUT"
-  revision = "8ffb2ffc32b7af2c7e940944eccba4dcd66c692a"
-  version = "v3.13.0"
+  revision = "a1e2052ae0ab4278c6d45f062228413f7a710c00"
+  version = "v5.7.0"
 
 [[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
@@ -1298,7 +1295,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f90b6152db4c5ee920eda292be42f4103498429d4238ea3e4003972b0dc5cfdd"
+  digest = "1:be219f9a8b4ec4488dc55bb2b321e801193f37b8b0825c015ec389a7de011a90"
   name = "k8s.io/gengo"
   packages = [
     "args",
@@ -1309,8 +1306,16 @@
     "parser",
     "types",
   ]
-  pruneopts = "T"
-  revision = "7338e4bfd6915369a1375890db1bbda0158c9863"
+  pruneopts = "NT"
+  revision = "e17681d19d3ac4837a019ece36c2a0ec31ffe985"
+
+[[projects]]
+  digest = "1:c263611800c3a97991dbcf9d3bc4de390f6224aaa8ca0a7226a9d734f65a416a"
+  name = "k8s.io/klog"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "71442cd4037d612096940ceb0f3fec3f7fff66e0"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
@@ -1430,8 +1435,7 @@
     "go.uber.org/zap/zapcore",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
-    "gopkg.in/go-playground/webhooks.v3",
-    "gopkg.in/go-playground/webhooks.v3/github",
+    "gopkg.in/go-playground/webhooks.v5/github",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1beta1",

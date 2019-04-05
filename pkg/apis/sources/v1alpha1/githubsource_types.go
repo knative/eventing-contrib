@@ -54,7 +54,7 @@ type GitHubSourceSpec struct {
 	// https://developer.github.com/v3/activity/events/types/ - ie
 	// "pull_request"
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:Enum=commit_comment,create,delete,deployment,deployment_status,fork,gollum,installation,integration_installation,issue_comment,issues,label,member,membership,milestone,organization,org_block,page_build,ping,project_card,project_column,project,public,pull_request,pull_request_review,pull_request_review_comment,push,release,repository,status,team,team_add,watch
+	// +kubebuilder:validation:Enum=check_suite,commit_comment,create,delete,deployment,deployment_status,fork,gollum,installation,integration_installation,issue_comment,issues,label,member,membership,milestone,organization,org_block,page_build,ping,project_card,project_column,project,public,pull_request,pull_request_review,pull_request_review_comment,push,release,repository,status,team,team_add,watch
 	EventTypes []string `json:"eventTypes"`
 
 	// AccessToken is the Kubernetes secret containing the GitHub
