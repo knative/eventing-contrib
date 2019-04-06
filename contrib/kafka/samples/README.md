@@ -2,8 +2,8 @@
 
 The Apache Kafka Event source enables Knative Eventing integration with Apache
 Kafka. When a message is produced to Apache Kafka, the Apache Kafka Event Source
-will consume the produced message and post that message to the corresponding event
-sink.
+will consume the produced message and post that message to the corresponding
+event sink.
 
 This sample demonstrates how to configure, deploy, and use the Apache Kafka
 Event Source with a Knative Service.
