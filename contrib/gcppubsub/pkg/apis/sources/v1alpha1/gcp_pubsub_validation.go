@@ -17,11 +17,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"github.com/google/go-cmp/cmp"
 	"github.com/knative/pkg/apis"
 )
 
-func (current *GcpPubSubSource) CheckImmutableFields(og apis.Immutable) *apis.FieldError {
+func (current *GcpPubSubSource) CheckImmutableFields(ctx context.Context, og apis.Immutable) *apis.FieldError {
 	original, ok := og.(*GcpPubSubSource)
 	if !ok {
 		return &apis.FieldError{Message: "The provided original was not a GcpPubSubSource"}
