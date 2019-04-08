@@ -17,8 +17,10 @@
 #   KAFKA_BOOTSTRAP_SERVERS: Comma-separated list of bootstrap servers
 #   KAFKA_TOPICS: Comma-separated list of topics
 #   KAFKA_SASL_ENABLE: Truthy value to enable/disable SASL, disabled by default (optional)
-#   KAFKA_SASL_USERNAME: Username for SASL authentication (optional)
-#   KAFKA_SASL_PASSWORD: Password for SASL authentication (optional)
+#   KAFKA_SASL_USER_SECRET_NAME: Name of secret containing SASL user (optional)
+#   KAFKA_SASL_USER_SECRET_KEY: Key within secret containing SASL user (optional)
+#   KAFKA_SASL_PASSWORD_SECRET_NAME: Name of secret containing SASL password (optional)
+#   KAFKA_SASL_PASSWORD_SECRET_KEY: Key within secret containing SASL password (optional)
 #   KAFKA_TLS_ENABLE: Truthy to enable TLS, disabled by default (optional)
 
 apiVersion: sources.eventing.knative.dev/v1alpha1
@@ -32,8 +34,14 @@ spec:
   net:
     sasl:
       enable: KAFKA_SASL_ENABLE
-      user: KAFKA_SASL_USERNAME
-      password: KAFKA_SASL_PASSWORD
+      user:
+        secretKeyRef:
+          name: KAFKA_SASL_USER_SECRET_NAME
+          key: KAFKA_SASL_USER_SECRET_KEY
+      password:
+        secretKeyRef:
+          name: KAFKA_SASL_PASSWORD_SECRET_NAME
+          key: KAFKA_SASL_PASSWORD_SECRET_KEY
     tls:
       enable: KAFKA_TLS_ENABLE
   sink:
