@@ -39,8 +39,8 @@ required = [
 # This controls when we upgrade apis independently of Serving.
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2019-03-29
-  revision = "1d9d8f8871250649adab16e3369e1a09e5595b04"
+  # HEAD as of 2019-04-08
+  revision = "2b574edcd712e848556c69cc95a2622145284882"
 
 [[override]]
   name = "k8s.io/api"
