@@ -52,10 +52,37 @@ spec:
             consumerGroup:
               type: string
               minLength: 1
+            consumerGroup:
+              type: string
+            net:
+              properties:
+                sasl:
+                  properties:
+                    enable:
+                      type: boolean
+                    password:
+                      properties:
+                        secretKeyRef:
+                          type: object
+                      type: object
+                    user:
+                      properties:
+                        secretKeyRef:
+                          type: object
+                      type: object
+                  type: object
+                tls:
+                  properties:
+                    enable:
+                      type: boolean
+                  type: object
+              type: object
             serviceAccountName:
               type: string
             sink:
               type: object
+            topics:
+              type: string
           type: object
           required:
               - bootstrapServers
@@ -83,6 +110,9 @@ spec:
                 - status
                 type: object
               type: array
+            observedGeneration:
+              format: int64
+              type: integer
             sinkUri:
               type: string
           type: object
