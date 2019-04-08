@@ -500,14 +500,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b049ec7fe983f49c52a19fbb511bc1621cc614b36dfed87cd18c67f363008057"
+  digest = "1:921c8888ac7bf7240bc5473d029201b3eb19f9592c7647c4c29f96b6c901b1bb"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "bbeed9e1ca511c9355ffb0d955fe685cb1a25117"
+  revision = "582b6fbee8ae00260baf916b0f9db2aa5f3483d9"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -1028,15 +1028,12 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:d98a45237ffb67adfb77bf618a164407d476ecd925a9a987e2fa1cda9137db5e"
-  name = "gopkg.in/go-playground/webhooks.v3"
-  packages = [
-    ".",
-    "github",
-  ]
+  digest = "1:d424e1da4f56fdb1ca8fdc6ec34ea9ac46690ce117bd52bf44997344a11a66a7"
+  name = "gopkg.in/go-playground/webhooks.v5"
+  packages = ["github"]
   pruneopts = "NUT"
-  revision = "8ffb2ffc32b7af2c7e940944eccba4dcd66c692a"
-  version = "v3.13.0"
+  revision = "a1e2052ae0ab4278c6d45f062228413f7a710c00"
+  version = "v5.7.0"
 
 [[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
@@ -1436,8 +1433,7 @@
     "go.uber.org/zap/zapcore",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
-    "gopkg.in/go-playground/webhooks.v3",
-    "gopkg.in/go-playground/webhooks.v3/github",
+    "gopkg.in/go-playground/webhooks.v5/github",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1beta1",

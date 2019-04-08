@@ -2,16 +2,15 @@
 
 The Apache Kafka Event source enables Knative Eventing integration with Apache
 Kafka. When a message is produced to Apache Kafka, the Apache Kafka Event Source
-will consume the produced message and post that message the corresponding event
+will consume the produced message and post that message to the corresponding event
 sink.
 
 This sample demonstrates how to configure, deploy, and use the Apache Kafka
 Event Source with a Knative Service.
 
-For Kubernetes, a simple Apache Kafka installation can be done with
-Strimzi, check out their [Quickstart](https://strimzi.io/quickstarts/)
-for both Minikube and Openshift guides.  You can also install Kafka on
-the host.
+For Kubernetes, a simple Apache Kafka installation can be done with Strimzi,
+check out their [Quickstart](https://strimzi.io/quickstarts/) for both Minikube
+and Openshift guides. You can also install Kafka on the host.
 
 ## Build and Deploy Steps
 
@@ -25,7 +24,7 @@ the host.
      obtained.
 2. Install the `ko` CLI for building and deploying purposes.
    ```
-   go get github.com/google/go-containerregistry/cmd/ko
+   go get github.com/google/ko/cmd/ko
    ```
 3. A container registry, such as a Docker Hub account, is required.
    - Export the `KO_DOCKER_REPO` environment variable with a value denoting the
@@ -73,41 +72,44 @@ and an Event Display Service.
 #### Apache Kafka Topic (Optional)
 
 1. If using Strimzi, you can can set a topic modifying
-`contrib/kafka/samples/kafka-topic.yaml` with your desired:
+   `contrib/kafka/samples/kafka-topic.yaml` with your desired:
+
 - Topic
 - Cluster Name
 - Partitions
 - Replicas
 
-    ``` yaml
-    apiVersion: kafka.strimzi.io/v1alpha1
-    kind: KafkaTopic
-    metadata:
-        name: knative-demo-topic
-        namespace: kafka
-        labels:
-            strimzi.io/cluster: my-cluster
-    spec:
-        partitions: 3
-        replicas: 1
-        config:
-            retention.ms: 7200000
-            segment.bytes: 1073741824
+  ```yaml
+  apiVersion: kafka.strimzi.io/v1alpha1
+  kind: KafkaTopic
+  metadata:
+    name: knative-demo-topic
+    namespace: kafka
+    labels:
+      strimzi.io/cluster: my-cluster
+  spec:
+    partitions: 3
+    replicas: 1
+    config:
+      retention.ms: 7200000
+      segment.bytes: 1073741824
+  ```
 
-    ```
 2. Deploy the `KafkaTopic`
 
-    ``` shell
-    $ kubectl apply -f contrib/kafka/samples/strimzi-topic.yaml
-    kafkatopic.kafka.strimzi.io/knative-demo-topic created
-    ```
+   ```shell
+   $ kubectl apply -f contrib/kafka/samples/strimzi-topic.yaml
+   kafkatopic.kafka.strimzi.io/knative-demo-topic created
+   ```
+
 3. Ensure the `KafkaTopic` is running.
 
-    ``` shell
-    $ kubectl -n kafka get kafkatopics.kafka.strimzi.io
-    NAME                 AGE
-    knative-demo-topic   16s
-    ```
+   ```shell
+   $ kubectl -n kafka get kafkatopics.kafka.strimzi.io
+   NAME                 AGE
+   knative-demo-topic   16s
+   ```
+
 #### Event Display
 
 1. Build and deploy the Event Display Service.
@@ -130,24 +132,24 @@ and an Event Display Service.
 1. Modify `contrib/kafka/samples/event-source.yaml` accordingly with bootstrap
    servers, topics, etc...
 
-   NOTE: If using an internal Apache Kafka cluster, you may need to
-   ensure you've specified the correct variables set in any `KafkaTopic`
-   and `event-source`.  For example, the following source could be used:
+   NOTE: If using an internal Apache Kafka cluster, you may need to ensure
+   you've specified the correct variables set in any `KafkaTopic` and
+   `event-source`. For example, the following source could be used:
 
-    ``` yaml
-    apiVersion: sources.eventing.knative.dev/v1alpha1
-    kind: KafkaSource
-    metadata:
-        name: kafka-source
-    spec:
-        consumerGroup: knative-group
-        bootstrapServers: my-cluster-kafka-bootstrap.kafka:9092 #note the kafka namespace
-        topics: knative-demo-topic
-        sink:
-            apiVersion: serving.knative.dev/v1alpha1
-            kind: Service
-            name: event-display
-    ```
+   ```yaml
+   apiVersion: sources.eventing.knative.dev/v1alpha1
+   kind: KafkaSource
+   metadata:
+     name: kafka-source
+   spec:
+     consumerGroup: knative-group
+     bootstrapServers: my-cluster-kafka-bootstrap.kafka:9092 #note the kafka namespace
+     topics: knative-demo-topic
+     sink:
+       apiVersion: serving.knative.dev/v1alpha1
+       kind: Service
+       name: event-display
+   ```
 
 2. Build and deploy the event source.
    ```
@@ -232,7 +234,7 @@ and an Event Display Service.
    ```
 4. (Optional) Remove the Apache Kafka Topic
 
-    ``` shell
-    $ kubectl delete -f contrib/kafka/samples/kafka-topic.yaml
-    kafkatopic.kafka.strimzi.io "knative-demo-topic" deleted
-    ```
+   ```shell
+   $ kubectl delete -f contrib/kafka/samples/kafka-topic.yaml
+   kafkatopic.kafka.strimzi.io "knative-demo-topic" deleted
+   ```
