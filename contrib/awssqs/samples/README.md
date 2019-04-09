@@ -109,7 +109,9 @@ Where the `QUEUE_URL` variable contains the full AWS SQS URL (e.g.
 
 ### Verify
 
-Your logs should now be displaying log lines similar to:
+The window with subscriber logs (in the window where you executed `kail
+-d event-display --since=10m` before) should now be displaying log lines
+similar to:)
 
 ```
 {"ID":"284375451531353","Data":"Hello World!","Attributes":null,"PublishTime":"2018-10-31T00:00:00.00Z"}
