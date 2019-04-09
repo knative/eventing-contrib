@@ -94,7 +94,7 @@ var testCases = []controllertesting.TestCase{
 		InitialState: []runtime.Object{
 			getGitHubSourceUnaddressable(),
 			getGitHubSecrets(),
-			getAddressable_noStatus(),
+			getAddressableNoStatus(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
@@ -125,7 +125,7 @@ var testCases = []controllertesting.TestCase{
 		InitialState: []runtime.Object{
 			getGitHubSource(),
 			getGitHubSecrets(),
-			getAddressable_nilAddress(),
+			getAddressableNilAddress(),
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
@@ -183,11 +183,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -235,11 +239,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -289,11 +297,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -391,11 +403,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -512,11 +528,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -565,11 +585,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -776,7 +800,7 @@ func getAddressable() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_noStatus() *unstructured.Unstructured {
+func getAddressableNoStatus() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": unaddressableAPIVersion,
@@ -789,7 +813,7 @@ func getAddressable_noStatus() *unstructured.Unstructured {
 	}
 }
 
-func getAddressable_nilAddress() *unstructured.Unstructured {
+func getAddressableNilAddress() *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,
