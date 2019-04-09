@@ -7,7 +7,7 @@ events from an AWS SQS queue.
 
 The steps below assume that you have cloned the
 [eventing-sources](https://github.com/knative/eventing-sources) repo and
-run the commands from contrib/awssqs.
+run the commands from the root.
 
 ### Prerequisites
 
@@ -24,7 +24,7 @@ run the commands from contrib/awssqs.
 ### Create a channel and subscriber
 
 ```shell
-ko apply -f samples/display-resources.yaml
+ko apply -f contrib/awssqs/samples/display-resources.yaml
 ```
 
 The sample provided will configure an in-memory channel (named
@@ -55,7 +55,7 @@ Then create a secret for the downloaded key:
 Deploy the `AwsSqsSource` controller as part of eventing-source's controller.
 
    ```shell
-   ko -n default apply -f config/
+   ko -n default apply -f contrib/awssqs/config/
    ```
 
 Note that if the `Source` Service Account secret is in a non-default
@@ -86,7 +86,7 @@ Replace the place holders in `samples/awssqs-source.yaml`.
 Now deploy `awssqs-source.yaml`.
 
 ```shell
-ko apply -f samples/awssqs-source.yaml
+ko apply -f contrib/awssqs/samples/awssqs-source.yaml
 ```
 
 You can use [kail](https://github.com/boz/kail/) to tail the logs of the
