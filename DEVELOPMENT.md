@@ -12,7 +12,7 @@ This doc explains how to setup a development environment so you can get started
 1. [Create and checkout a repo fork](#checkout-your-fork)
 
 Once you meet these requirements, you can
-[install a source](#installing-a-source)!
+[install sources](#installing-sources)!
 
 Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -55,23 +55,23 @@ _Adding the `upstream` remote sets you up nicely for regularly
 Once you reach this point you are ready to do a full build and deploy as
 follows.
 
-## Installing a Source
+## Installing Sources
 
-Once you've [setup your development environment](#getting-started), install all
-sources _except gcppubsub_ with:
-
-<!-- TODO(n3wscott): Update to show how to install a single source. -->
+Once you've [setup your development environment](#getting-started), install 
+sources _Container Source_, _Cron Job Source_, _Github Source_, _Kubernetes Event Source_ and _AWS SQS Source_ with:
 
 ```shell
 ko apply -f config/
 ```
 
-This command is idempotent, so you can run it at any time to update your
-deployment.
+or install a single source _Camel Source_, _Gcppubsub Source_, _Kafka Source_ with
 
-_See
-[contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md) for
-instructions on installing the gcppubsub source._
+```
+ko apply -f contrib/<source_name>/
+```
+
+These commands are idempotent, so you can run them at any time to update your
+deployment.
 
 You can see things running with:
 
@@ -86,6 +86,9 @@ You can access the Eventing Manager's logs with:
 ```shell
 kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=controller-manager -o name)
 ```
+_See
+[contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md), [contrib/camel/samples/README.md](./contrib/camel/samples/README.md), [contrib/kafka/samples/README.md](./contrib/kafka/samples/README.md) for
+instructions on installing the Gcppubsub Source, Camel Source and Kafka Source._
 
 ## Iterating
 

@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -153,7 +154,7 @@ func TestKafkaSourceCheckImmutableFields(t *testing.T) {
 			updated := &KafkaSource{
 				Spec: tc.updated,
 			}
-			err := updated.CheckImmutableFields(orig)
+			err := updated.CheckImmutableFields(context.TODO(), orig)
 			if tc.allowed != (err == nil) {
 				t.Fatalf("Unexpected immutable field check. Expected %v. Actual %v", tc.allowed, err)
 			}

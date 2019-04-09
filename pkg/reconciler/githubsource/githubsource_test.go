@@ -183,11 +183,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -235,11 +239,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -289,11 +297,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -391,11 +403,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -512,11 +528,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())
@@ -565,11 +585,15 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Conditions: duckv1alpha1.Conditions{{
-							Type:   servingv1alpha1.ServiceConditionRoutesReady,
-							Status: corev1.ConditionTrue,
-						}},
-						Domain: serviceDNS,
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
 					},
 				}
 				svc.SetOwnerReferences(getOwnerReferences())

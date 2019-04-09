@@ -56,17 +56,6 @@ rules:
   - deployments
   verbs: *everything
 
-# Channels and Brokers read
-- apiGroups:
-  - eventing.knative.dev
-  resources:
-  - channels
-  - brokers
-  verbs: &readOnly
-  - get
-  - list
-  - watch
-
 # Knative Services admin
 - apiGroups:
   - serving.knative.dev
@@ -79,7 +68,10 @@ rules:
   - ""
   resources:
   - secrets
-  verbs: *readOnly
+  verbs:
+  - get
+  - list
+  - watch
 
 # Events admin
 - apiGroups:
