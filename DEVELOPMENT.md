@@ -57,14 +57,16 @@ follows.
 
 ## Installing Sources
 
-Once you've [setup your development environment](#getting-started), install 
-sources _Container Source_, _Cron Job Source_, _Github Source_, _Kubernetes Event Source_ and _AWS SQS Source_ with:
+Once you've [setup your development environment](#getting-started), install
+sources _Container Source_, _Cron Job Source_, _Github Source_, _Kubernetes
+Event Source_ and _AWS SQS Source_ with:
 
 ```shell
 ko apply -f config/
 ```
 
-or install a single source _Camel Source_, _Gcppubsub Source_, _Kafka Source_ with
+or install a single source _Camel Source_, _Gcppubsub Source_, _Kafka Source_
+with
 
 ```
 ko apply -f contrib/<source_name>/
@@ -86,8 +88,11 @@ You can access the Eventing Manager's logs with:
 ```shell
 kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=controller-manager -o name)
 ```
+
 _See
-[contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md), [contrib/camel/samples/README.md](./contrib/camel/samples/README.md), [contrib/kafka/samples/README.md](./contrib/kafka/samples/README.md) for
+[contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md),
+[contrib/camel/samples/README.md](./contrib/camel/samples/README.md),
+[contrib/kafka/samples/README.md](./contrib/kafka/samples/README.md) for
 instructions on installing the Gcppubsub Source, Camel Source and Kafka Source._
 
 ## Iterating
