@@ -57,9 +57,8 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 					ServiceAccountName: args.Source.Spec.ServiceAccountName,
 					Containers: []corev1.Container{
 						{
-							Name:            "receive-adapter",
-							Image:           args.Image,
-							ImagePullPolicy: "Always",
+							Name:  "receive-adapter",
+							Image: args.Image,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "KAFKA_BOOTSTRAP_SERVERS",
