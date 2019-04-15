@@ -39,9 +39,19 @@ rules:
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
-  - '*/finalizers'
-  verbs:
-  - '*'
+  - awssqssources/finalizers
+  - containersources/finalizers
+  - cronjobsources/finalizers
+  - githubsources/finalizers
+  - kuberneteseventsources/finalizers
+  verbs: &everything
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 
 # Source statuses update
 - apiGroups:
