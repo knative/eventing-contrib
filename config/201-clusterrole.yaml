@@ -35,6 +35,14 @@ rules:
   - patch
   - delete
 
+# Sources finalizer
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - '*/finalizers'
+  verbs:
+  - '*'
+
 # Source statuses update
 - apiGroups:
   - sources.eventing.knative.dev
