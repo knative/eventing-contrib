@@ -17,22 +17,19 @@ limitations under the License.
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 )
 
 /*
 Example Output:
 
-☁  CloudEvent: valid ✅
+☁  cloudevents.Event:
+Validation: valid
 Context Attributes,
   SpecVersion: 0.2
   Type: dev.knative.eventing.samples.heartbeat
@@ -49,119 +46,14 @@ Transport Context,
   Host: localhost:8080
   Method: POST
 Data,
-  {"id":162,"label":""}
+  {
+    "id":162,
+    "label":""
+  }
 */
 
-func display(ctx context.Context, event cloudevents.Event) {
-
-	valid := event.Validate()
-
-	b := strings.Builder{}
-	b.WriteString("\n")
-	b.WriteString("☁️  CloudEvent: ")
-
-	if valid == nil {
-		b.WriteString("valid ✅\n")
-	} else {
-		b.WriteString("invalid ❌\n")
-	}
-	if valid != nil {
-		b.WriteString(fmt.Sprintf("Validation Error: %s\n", valid.Error()))
-	}
-
-	b.WriteString("Context Attributes,\n")
-
-	var extensions map[string]interface{}
-
-	switch event.SpecVersion() {
-	case cloudevents.CloudEventsVersionV01:
-		if ec, ok := event.Context.(cloudevents.EventContextV01); ok {
-			b.WriteString("  CloudEventsVersion: " + ec.CloudEventsVersion + "\n")
-			b.WriteString("  EventType: " + ec.EventType + "\n")
-			if ec.EventTypeVersion != nil {
-				b.WriteString("  EventTypeVersion: " + *ec.EventTypeVersion + "\n")
-			}
-			b.WriteString("  Source: " + ec.Source.String() + "\n")
-			b.WriteString("  EventID: " + ec.EventID + "\n")
-			if ec.EventTime != nil {
-				b.WriteString("  EventTime: " + ec.EventTime.String() + "\n")
-			}
-			if ec.SchemaURL != nil {
-				b.WriteString("  SchemaURL: " + ec.SchemaURL.String() + "\n")
-			}
-			if ec.ContentType != nil {
-				b.WriteString("  ContentType: " + *ec.ContentType + "\n")
-			}
-			extensions = ec.Extensions
-		}
-
-	case cloudevents.CloudEventsVersionV02:
-		if ec, ok := event.Context.(cloudevents.EventContextV02); ok {
-			b.WriteString("  SpecVersion: " + ec.SpecVersion + "\n")
-			b.WriteString("  Type: " + ec.Type + "\n")
-			b.WriteString("  Source: " + ec.Source.String() + "\n")
-			b.WriteString("  ID: " + ec.ID + "\n")
-			if ec.Time != nil {
-				b.WriteString("  Time: " + ec.Time.String() + "\n")
-			}
-			if ec.SchemaURL != nil {
-				b.WriteString("  SchemaURL: " + ec.SchemaURL.String() + "\n")
-			}
-			if ec.ContentType != nil {
-				b.WriteString("  ContentType: " + *ec.ContentType + "\n")
-			}
-			extensions = ec.Extensions
-		}
-
-	case cloudevents.CloudEventsVersionV03:
-		if ec, ok := event.Context.(cloudevents.EventContextV03); ok {
-			b.WriteString("  SpecVersion: " + ec.SpecVersion + "\n")
-			b.WriteString("  Type: " + ec.Type + "\n")
-			b.WriteString("  Source: " + ec.Source.String() + "\n")
-			b.WriteString("  ID: " + ec.ID + "\n")
-			if ec.Time != nil {
-				b.WriteString("  Time: " + ec.Time.String() + "\n")
-			}
-			if ec.SchemaURL != nil {
-				b.WriteString("  SchemaURL: " + ec.SchemaURL.String() + "\n")
-			}
-			if ec.DataContentType != nil {
-				b.WriteString("  DataContentType: " + *ec.DataContentType + "\n")
-			}
-			extensions = ec.Extensions
-		}
-	default:
-		b.WriteString(event.String() + "\n")
-	}
-
-	if extensions != nil && len(extensions) > 0 {
-		b.WriteString("  Extensions: \n")
-		for k, v := range extensions {
-			b.WriteString(fmt.Sprintf("    %s: %v\n", k, v))
-		}
-	}
-
-	tx := http.TransportContextFrom(ctx)
-	b.WriteString("Transport Context,\n")
-	b.WriteString("  URI: " + tx.URI + "\n")
-	b.WriteString("  Host: " + tx.Host + "\n")
-	b.WriteString("  Method: " + tx.Method + "\n")
-
-	b.WriteString("Data,\n  ")
-	if strings.HasPrefix(event.DataContentType(), "application/json") {
-		var prettyJSON bytes.Buffer
-		error := json.Indent(&prettyJSON, event.Data.([]byte), "  ", "  ")
-		if error != nil {
-			b.Write(event.Data.([]byte))
-		} else {
-			b.Write(prettyJSON.Bytes())
-		}
-	} else {
-		b.Write(event.Data.([]byte))
-	}
-	b.WriteString("\n")
-
-	fmt.Print(b.String())
+func display(event cloudevents.Event) {
+	fmt.Printf("☁️  cloudevents.Event\n%s", event.String())
 }
 
 func main() {
