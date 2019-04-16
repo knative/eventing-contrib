@@ -18,7 +18,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis"
 	controller "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler"
@@ -31,15 +30,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
-const (
-	ConfigMapNameEnv = "CONFIG_LOGGING_NAME"
-)
-
 func main() {
 	logCfg := zap.NewProductionConfig()
 	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, err := logCfg.Build()
-	logger = logger.With(zap.String(logkey.ControllerType, os.Getenv(ConfigMapNameEnv)))
+	logger = logger.With(zap.String(logkey.ControllerType, "gcppubsub-controller"))
 	if err != nil {
 		log.Fatal(err)
 	}
