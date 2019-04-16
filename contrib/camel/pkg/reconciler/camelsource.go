@@ -49,7 +49,7 @@ const (
 // Add creates a new CamelSource Controller and adds it to the Manager with
 // default RBAC. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
-func Add(mgr manager.Manager) error {
+func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	log.Println("Adding the Camel Source controller.")
 
 	// Register Camel specific types
@@ -68,7 +68,7 @@ func Add(mgr manager.Manager) error {
 		},
 	}
 
-	return p.Add(mgr)
+	return p.Add(mgr, logger)
 }
 
 type reconciler struct {

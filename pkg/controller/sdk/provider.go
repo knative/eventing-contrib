@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -45,12 +46,13 @@ type Provider struct {
 }
 
 // ProvideController returns a controller for controller-runtime.
-func (p *Provider) Add(mgr manager.Manager) error {
+func (p *Provider) Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	// Setup a new controller to Reconcile Subscriptions.
 	c, err := controller.New(p.AgentName, mgr, controller.Options{
 		Reconciler: &Reconciler{
 			provider: *p,
 			recorder: mgr.GetRecorder(p.AgentName),
+			logger:   *logger,
 		},
 	})
 	if err != nil {

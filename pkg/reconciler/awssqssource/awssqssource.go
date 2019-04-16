@@ -62,7 +62,7 @@ const (
 // Add creates a new AwsSqsSource Controller and adds it to the Manager with
 // default RBAC. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
-func Add(mgr manager.Manager) error {
+func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	if enabled, defined := os.LookupEnv(awsSqsEnabledEnvVar); !defined || enabled != "true" {
 		log.Println("Skipping the AWS SQS Source controller.")
 		return nil
@@ -83,7 +83,7 @@ func Add(mgr manager.Manager) error {
 		},
 	}
 
-	return p.Add(mgr)
+	return p.Add(mgr, logger)
 }
 
 type reconciler struct {

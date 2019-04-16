@@ -97,7 +97,12 @@ func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.Co
 func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	logger := logging.FromContext(ctx)
 
-	logger.Info("Starting with config: ", zap.Any("adapter", a))
+	logger.Infow("Starting with config: ",
+		zap.String("bootstrap_server", a.BootstrapServers),
+		zap.String("Topics", a.Topics),
+		zap.String("ConsumerGroup", a.ConsumerGroup),
+		zap.String("SinkURI", a.SinkURI),
+		zap.Bool("TLS", a.Net.SASL.Enable))
 
 	kafkaConfig := sarama.NewConfig()
 	kafkaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -141,7 +146,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	for {
 		select {
 		case <-stopCh:
-			logger.Info("Shutting down...")
+			logger.Infow("Shutting down...")
 			return nil
 		}
 	}
