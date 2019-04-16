@@ -48,7 +48,7 @@ var _ reconcile.Reconciler = &Reconciler{}
 // converge the two.
 func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := logging.WithLogger(context.TODO(), r.logger.With(zap.Any("request", request)))
-	logger := r.logger
+	logger := logging.FromContext(ctx)
 
 	logger.Infof("Reconciling %s %v", r.provider.Parent.GetObjectKind(), request)
 
