@@ -36,6 +36,7 @@ type Reconciler struct {
 	client   client.Client
 	recorder record.EventRecorder
 	scheme   *runtime.Scheme
+	logger   zap.SugaredLogger
 
 	provider Provider
 }
@@ -46,8 +47,8 @@ var _ reconcile.Reconciler = &Reconciler{}
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two.
 func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.TODO()
-	logger := logging.FromContext(ctx)
+	ctx := logging.WithLogger(context.TODO(), r.logger.With(zap.Any("request", request)))
+	logger := r.logger
 
 	logger.Infof("Reconciling %s %v", r.provider.Parent.GetObjectKind(), request)
 

@@ -52,6 +52,7 @@ type reconciler struct {
 	recorder            record.EventRecorder
 	scheme              *runtime.Scheme
 	receiveAdapterImage string
+	logger              *zap.SugaredLogger
 }
 
 var _ reconcile.Reconciler = &reconciler{}
@@ -59,21 +60,22 @@ var _ reconcile.Reconciler = &reconciler{}
 // Add creates a new KubernetesEventSource Controller and adds it to the Manager
 // with default RBAC. The Manager will set fields on the Controller and Start it
 // when the Manager is Started.
-func Add(mgr manager.Manager) error {
+func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	receiveAdapterImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
 		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
 
-	return add(mgr, newReconciler(mgr, receiveAdapterImage))
+	return add(mgr, newReconciler(mgr, receiveAdapterImage, logger))
 }
 
-func newReconciler(mgr manager.Manager, receiveAdapterImage string) reconcile.Reconciler {
+func newReconciler(mgr manager.Manager, receiveAdapterImage string, logger *zap.SugaredLogger) reconcile.Reconciler {
 	return &reconciler{
 		Client:              mgr.GetClient(),
 		scheme:              mgr.GetScheme(),
 		recorder:            mgr.GetRecorder(controllerAgentName),
 		receiveAdapterImage: receiveAdapterImage,
+		logger:              logger,
 	}
 }
 
