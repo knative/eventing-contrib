@@ -19,7 +19,6 @@ package containersource
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
@@ -52,7 +51,7 @@ const (
 // Add creates a new ContainerSource Controller and adds it to the Manager with
 // default RBAC. The Manager will set fields on the Controller and Start it when
 // the Manager is Started.
-func Add(mgr manager.Manager) error {
+func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.ContainerSource{},
@@ -62,8 +61,8 @@ func Add(mgr manager.Manager) error {
 			scheme:   mgr.GetScheme(),
 		},
 	}
-	log.Println("Adding the Container Source controller.")
-	return p.Add(mgr)
+
+	return p.Add(mgr, logger)
 }
 
 type reconciler struct {

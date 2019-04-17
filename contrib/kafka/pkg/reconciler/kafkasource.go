@@ -48,7 +48,7 @@ const (
 	raImageEnvVar       = "KAFKA_RA_IMAGE"
 )
 
-func Add(mgr manager.Manager) error {
+func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	raImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
@@ -71,7 +71,7 @@ func Add(mgr manager.Manager) error {
 		Reconciler: r,
 	}
 
-	return p.Add(mgr)
+	return p.Add(mgr, logger)
 }
 
 type reconciler struct {

@@ -35,6 +35,17 @@ rules:
   - patch
   - delete
 
+# Sources finalizer
+- apiGroups:
+  - sources.eventing.knative.dev
+  resources:
+  - awssqssources/finalizers
+  - containersources/finalizers
+  - cronjobsources/finalizers
+  - githubsources/finalizers
+  - kuberneteseventsources/finalizers
+  verbs: *everything
+
 # Source statuses update
 - apiGroups:
   - sources.eventing.knative.dev
@@ -56,17 +67,6 @@ rules:
   - deployments
   verbs: *everything
 
-# Channels and Brokers read
-- apiGroups:
-  - eventing.knative.dev
-  resources:
-  - channels
-  - brokers
-  verbs: &readOnly
-  - get
-  - list
-  - watch
-
 # Knative Services admin
 - apiGroups:
   - serving.knative.dev
@@ -79,7 +79,10 @@ rules:
   - ""
   resources:
   - secrets
-  verbs: *readOnly
+  verbs:
+  - get
+  - list
+  - watch
 
 # Events admin
 - apiGroups:

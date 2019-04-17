@@ -2,8 +2,8 @@
 
 The Apache Kafka Event source enables Knative Eventing integration with Apache
 Kafka. When a message is produced to Apache Kafka, the Apache Kafka Event Source
-will consume the produced message and post that message to the corresponding event
-sink.
+will consume the produced message and post that message to the corresponding
+event sink.
 
 This sample demonstrates how to configure, deploy, and use the Apache Kafka
 Event Source with a Knative Service.
@@ -24,7 +24,7 @@ and Openshift guides. You can also install Kafka on the host.
      obtained.
 2. Install the `ko` CLI for building and deploying purposes.
    ```
-   go get github.com/google/go-containerregistry/cmd/ko
+   go get github.com/google/ko/cmd/ko
    ```
 3. A container registry, such as a Docker Hub account, is required.
    - Export the `KO_DOCKER_REPO` environment variable with a value denoting the
@@ -179,12 +179,15 @@ and an Event Display Service.
    ```
 2. Check that the Apache Kafka Event Source consumed the message and sent it to
    its sink properly.
+
    ```
    $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
    ...
-   {"level":"info","ts":1554145778.9344022,"logger":"fallback","caller":"adapter/adapter.go:80","msg":"Received: {topic: 15 0 ... <nil>} {partition: 11 2  <nil>} {offset: 11 0  <nil>}"}
-   {"level":"info","ts":1553034726.546107,"logger":"fallback","caller":"adapter/adapter.go:154","msg":"Successfully sent event to sink"}
+   {"level":"info","ts":"2019-04-15T20:37:24.702Z","caller":"receive_adapter/main.go:99","msg":"Starting Apache Kafka Receive Adapter...","bootstrap_server":"...","Topics":"knative-demo-topic","ConsumerGroup":"knative-group","SinkURI":"...","TLS":false}
+   {"level":"info","ts":"2019-04-15T20:37:24.702Z","caller":"adapter/adapter.go:100","msg":"Starting with config: ","bootstrap_server":"...","Topics":"knative-demo-topic","ConsumerGroup":"knative-group","SinkURI":"...","TLS":false}
+   {"level":"info","ts":1553034726.546107,"caller":"adapter/adapter.go:154","msg":"Successfully sent event to sink"}
    ```
+
 3. Ensure the Event Display received the message sent to it by the Event Source.
 
    ```

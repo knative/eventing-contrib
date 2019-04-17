@@ -81,6 +81,11 @@ type TrafficTarget struct {
 	// Percent specifies percent of the traffic to this Revision or Configuration.
 	// This defaults to zero if unspecified.
 	Percent int `json:"percent"`
+
+	// URL displays the URL for accessing named traffic targets. URL is displayed in
+	// status, and is disallowed on spec. URL must contain a scheme (e.g. http://) and
+	// a hostname, but may not contain anything else (e.g. basic auth, url path, etc.)
+	URL string `json:"url,omitempty"`
 }
 
 // RouteSpec holds the desired state of the Route (from the client).
@@ -116,10 +121,10 @@ const (
 	RouteConditionIngressReady duckv1alpha1.ConditionType = "IngressReady"
 )
 
-// RouteStatus communicates the observed state of the Route (from the controller).
-type RouteStatus struct {
-	duckv1alpha1.Status `json:",inline"`
-
+// RouteStatusFields holds all of the non-duckv1alpha1.Status status fields of a Route.
+// These are defined outline so that we can also inline them into Service, and more easily
+// copy them.
+type RouteStatusFields struct {
 	// Domain holds the top-level domain that will distribute traffic over the provided targets.
 	// It generally has the form {route-name}.{route-namespace}.{cluster-level-suffix}
 	// +optional
@@ -142,6 +147,13 @@ type RouteStatus struct {
 	// LatestReadyRevisionName that we last observed.
 	// +optional
 	Traffic []TrafficTarget `json:"traffic,omitempty"`
+}
+
+// RouteStatus communicates the observed state of the Route (from the controller).
+type RouteStatus struct {
+	duckv1alpha1.Status `json:",inline"`
+
+	RouteStatusFields `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

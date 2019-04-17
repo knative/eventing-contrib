@@ -29,6 +29,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/knative/pkg/logging"
 	"github.com/knative/pkg/signals"
 )
 
@@ -71,6 +72,8 @@ func main() {
 	logCfg := zap.NewProductionConfig()
 	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, err := logCfg.Build()
+	ctx = logging.WithLogger(ctx, logger.Sugar())
+
 	if err != nil {
 		log.Fatalf("Unable to create logger: %v", err)
 	}

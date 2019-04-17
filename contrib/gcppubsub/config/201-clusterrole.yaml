@@ -58,19 +58,5 @@ rules:
 - apiGroups:
   - eventing.knative.dev
   resources:
-  - channels
-  - brokers
-  verbs: *readOnly
-
-- apiGroups:
-  - eventing.knative.dev
-  resources:
   - eventtypes
   verbs: *everything
-
-- apiGroups:
-  - serving.knative.dev
-  resources:
-  - services
-  - routes
-  verbs: *readOnly

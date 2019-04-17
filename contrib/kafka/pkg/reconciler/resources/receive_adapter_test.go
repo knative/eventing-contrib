@@ -92,9 +92,8 @@ func TestMakeReceiveAdapter(t *testing.T) {
 					ServiceAccountName: "source-svc-acct",
 					Containers: []corev1.Container{
 						{
-							Name:            "receive-adapter",
-							Image:           "test-image",
-							ImagePullPolicy: "Always",
+							Name:  "receive-adapter",
+							Image: "test-image",
 							Env: []corev1.EnvVar{
 								{
 									Name:  "KAFKA_BOOTSTRAP_SERVERS",
