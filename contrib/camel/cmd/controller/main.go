@@ -21,6 +21,9 @@ import (
 
 	"github.com/knative/eventing-sources/contrib/camel/pkg/apis"
 	"github.com/knative/eventing-sources/contrib/camel/pkg/reconciler"
+	"github.com/knative/pkg/logging/logkey"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -28,6 +31,14 @@ import (
 
 func main() {
 	// Get a config to talk to the apiserver
+	logCfg := zap.NewProductionConfig()
+	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	logger, err := logCfg.Build()
+	logger = logger.With(zap.String(logkey.ControllerType, "camel-controller"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
@@ -49,7 +60,7 @@ func main() {
 	log.Printf("Setting up Controllers.")
 
 	// Setup all Controllers
-	if err := reconciler.Add(mgr); err != nil {
+	if err := reconciler.Add(mgr, logger.Sugar()); err != nil {
 		log.Fatal(err)
 	}
 

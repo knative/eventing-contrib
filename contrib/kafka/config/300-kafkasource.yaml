@@ -45,15 +45,22 @@ spec:
           properties:
             bootstrapServers:
               type: string
+              minLength: 1
             topics:
               type: string
+              minLength: 1
             consumerGroup:
               type: string
+              minLength: 1
             serviceAccountName:
               type: string
             sink:
               type: object
           type: object
+          required:
+              - bootstrapServers
+              - topics
+              - consumerGroup
         status:
           properties:
             conditions:

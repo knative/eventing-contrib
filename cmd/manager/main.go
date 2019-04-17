@@ -22,6 +22,9 @@ import (
 	"github.com/knative/eventing-sources/pkg/apis"
 	_ "github.com/knative/eventing-sources/pkg/apis/serving/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller"
+	"github.com/knative/pkg/logging/logkey"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -29,6 +32,14 @@ import (
 )
 
 func main() {
+	logCfg := zap.NewProductionConfig()
+	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	logger, err := logCfg.Build()
+	logger = logger.With(zap.String(logkey.ControllerType, "controller-manager"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
@@ -49,7 +60,7 @@ func main() {
 	}
 
 	// Setup all Controllers
-	if err := controller.AddToManager(mgr); err != nil {
+	if err := controller.AddToManager(mgr, logger.Sugar()); err != nil {
 		log.Fatal(err)
 	}
 

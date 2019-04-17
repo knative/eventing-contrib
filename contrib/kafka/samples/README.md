@@ -2,8 +2,8 @@
 
 The Apache Kafka Event source enables Knative Eventing integration with Apache
 Kafka. When a message is produced to Apache Kafka, the Apache Kafka Event Source
-will consume the produced message and post that message to the corresponding event
-sink.
+will consume the produced message and post that message to the corresponding
+event sink.
 
 This sample demonstrates how to configure, deploy, and use the Apache Kafka
 Event Source with a Knative Service.
@@ -179,12 +179,15 @@ and an Event Display Service.
    ```
 2. Check that the Apache Kafka Event Source consumed the message and sent it to
    its sink properly.
+
    ```
    $ kubectl logs kafka-source-xlnhq-5544766765-dnl5s
    ...
-   {"level":"info","ts":1554145778.9344022,"logger":"fallback","caller":"adapter/adapter.go:80","msg":"Received: {topic: 15 0 ... <nil>} {partition: 11 2  <nil>} {offset: 11 0  <nil>}"}
-   {"level":"info","ts":1553034726.546107,"logger":"fallback","caller":"adapter/adapter.go:154","msg":"Successfully sent event to sink"}
+   {"level":"info","ts":"2019-04-15T20:37:24.702Z","caller":"receive_adapter/main.go:99","msg":"Starting Apache Kafka Receive Adapter...","bootstrap_server":"...","Topics":"knative-demo-topic","ConsumerGroup":"knative-group","SinkURI":"...","TLS":false}
+   {"level":"info","ts":"2019-04-15T20:37:24.702Z","caller":"adapter/adapter.go:100","msg":"Starting with config: ","bootstrap_server":"...","Topics":"knative-demo-topic","ConsumerGroup":"knative-group","SinkURI":"...","TLS":false}
+   {"level":"info","ts":1553034726.546107,"caller":"adapter/adapter.go:154","msg":"Successfully sent event to sink"}
    ```
+
 3. Ensure the Event Display received the message sent to it by the Event Source.
 
    ```
