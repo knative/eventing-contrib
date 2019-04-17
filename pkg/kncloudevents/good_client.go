@@ -1,26 +1,29 @@
 package kncloudevents
 
 import (
+	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 )
 
 func NewDefaultClient(target ...string) (client.Client, error) {
-	tOpts := []http.Option{http.WithBinaryEncoding()}
+	tOpts := []http.Option{cloudevents.WithBinaryEncoding()}
 	if len(target) > 0 && target[0] != "" {
-		tOpts = append(tOpts, http.WithTarget(target[0]))
+		tOpts = append(tOpts, cloudevents.WithTarget(target[0]))
 	}
 
 	// Make an http transport for the CloudEvents client.
-	t, err := http.New(tOpts...)
+	t, err := cloudevents.NewHTTPTransport(tOpts...)
 	if err != nil {
 		return nil, err
 	}
+
 	// Use the transport to make a new CloudEvents client.
-	c, err := client.New(t,
+	c, err := cloudevents.NewClient(t,
 		client.WithUUIDs(),
 		client.WithTimeNow(),
 	)
+
 	if err != nil {
 		return nil, err
 	}
