@@ -90,14 +90,12 @@ func TestReconcile(t *testing.T) {
 				getDeletedSource(),
 			},
 			WantAbsent: []runtime.Object{
-				getPlatform(),
 				getContext(),
 			},
 		},
 		{
 			Name: "Cannot get sink URI",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 			},
 			WantPresent: []runtime.Object{
@@ -111,7 +109,6 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Creating integration",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 				getAddressable(),
 			},
@@ -125,7 +122,6 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source Deployed",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 				getAddressable(),
 				getRunningIntegration(t),
@@ -141,7 +137,6 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source changed",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 				getAddressable(),
 				getWrongIntegration(t),
@@ -157,7 +152,6 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source with image",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				withAlternativeImage(getSource()),
 				getAddressable(),
 				getRunningIntegration(t),
@@ -171,7 +165,6 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source with image and existing context",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				withAlternativeImage(getSource()),
 				getAddressable(),
 				getRunningIntegrationWithAlternativeContext(t),
@@ -186,7 +179,6 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source with image and unbound existing context",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				withAlternativeImage(getSource()),
 				getAddressable(),
 				getRunningIntegration(t),
@@ -208,7 +200,6 @@ func TestReconcile(t *testing.T) {
 			WantPresent: []runtime.Object{
 				getDeployedSource(),
 				getRunningIntegration(t),
-				getPlatform(),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -234,10 +225,6 @@ func TestReconcile(t *testing.T) {
 
 		t.Run(tc.Name, tc.Runner(t, r, c))
 	}
-}
-
-func getPlatform() runtime.Object {
-	return resources.MakePlatform(testNS)
 }
 
 func getSource() *sourcesv1alpha1.CamelSource {

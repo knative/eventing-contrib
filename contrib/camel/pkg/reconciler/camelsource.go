@@ -128,12 +128,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 
-	// Create the platform if not present
-	if err := r.reconcilePlatform(ctx, source.Namespace); err != nil {
-		logger.Error("Error occurred when trying to reconcile the camel platform")
-		return err
-	}
-
 	// Update source status
 	if integration != nil && integration.Status.Phase == camelv1alpha1.IntegrationPhaseRunning {
 		source.Status.MarkDeployed()
@@ -248,28 +242,6 @@ func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.Cam
 		return nil, err
 	}
 	return integration, nil
-}
-
-func (r *reconciler) reconcilePlatform(ctx context.Context, namespace string) error {
-	_, err := r.getPlatform(ctx, namespace)
-	if err != nil && k8serrors.IsNotFound(err) {
-		// Create a platform with default configuration if not present
-		platform := resources.MakePlatform(namespace)
-		return r.client.Create(ctx, platform)
-	}
-	return err
-}
-
-func (r *reconciler) getPlatform(ctx context.Context, namespace string) (*camelv1alpha1.IntegrationPlatform, error) {
-	platform := camelv1alpha1.IntegrationPlatform{}
-	key := client.ObjectKey{
-		Namespace: namespace,
-		Name:      resources.IntegrationPlatformName,
-	}
-	if err := r.client.Get(ctx, key, &platform); err != nil {
-		return nil, err
-	}
-	return &platform, nil
 }
 
 func (r *reconciler) reconcileIntegrationContext(ctx context.Context, namespace string, image string) (*camelv1alpha1.IntegrationContext, error) {

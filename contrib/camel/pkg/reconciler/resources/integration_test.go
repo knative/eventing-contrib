@@ -74,7 +74,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 					Value: "k2=v2",
 				},
 			},
-			Traits: map[string]camelv1alpha1.IntegrationTraitSpec{
+			Traits: map[string]camelv1alpha1.TraitSpec{
 				"knative": {
 					Configuration: map[string]string{
 						"configuration": `{"services":[{"type":"endpoint","protocol":"http","name":"sink","host":"test-sink","port":80,"metadata":{"service.path":"/"}}]}`,
