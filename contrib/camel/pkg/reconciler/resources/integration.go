@@ -50,7 +50,7 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 					},
 				},
 			},
-			Traits: map[string]camelv1alpha1.IntegrationTraitSpec{
+			Traits: map[string]camelv1alpha1.TraitSpec{
 				"knative": {
 					Configuration: map[string]string{
 						"configuration": environment,
