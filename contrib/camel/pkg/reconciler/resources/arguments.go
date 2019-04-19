@@ -16,17 +16,15 @@ limitations under the License.
 
 package resources
 
+import (
+	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
+)
+
 type CamelArguments struct {
 	Name               string
 	Namespace          string
-	Source             CamelArgumentsSource
+	Source             v1alpha1.CamelSourceOriginSpec
 	ServiceAccountName string
 	Context            string
 	Sink               string
-}
-
-type CamelArgumentsSource struct {
-	Name       string
-	Content    string
-	Properties map[string]string
 }

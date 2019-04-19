@@ -138,16 +138,10 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, integrationContextName string, sinkURI string) (*camelv1alpha1.Integration, error) {
 	logger := logging.FromContext(ctx)
-	camelSource, err := resources.BuildSourceCode(source)
-	if err != nil {
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "SourceCodeFailed", "Failed to build camel source: %v", err)
-		return nil, err
-	}
-
 	args := &resources.CamelArguments{
 		Name:               source.Name,
 		Namespace:          source.Namespace,
-		Source:             camelSource,
+		Source:             source.Spec.Source,
 		ServiceAccountName: source.Spec.ServiceAccountName,
 		Context:            integrationContextName,
 		Sink:               sinkURI,

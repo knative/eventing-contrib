@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -115,6 +116,11 @@ func (in *CamelSourceOriginSpec) DeepCopyInto(out *CamelSourceOriginSpec) {
 	if in.Component != nil {
 		in, out := &in.Component, &out.Component
 		*out = new(CamelSourceOriginComponentSpec)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Integration != nil {
+		in, out := &in.Integration, &out.Integration
+		*out = new(camelv1alpha1.IntegrationSpec)
 		(*in).DeepCopyInto(*out)
 	}
 	return

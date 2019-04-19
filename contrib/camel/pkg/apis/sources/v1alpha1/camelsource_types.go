@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -86,7 +87,8 @@ type CamelSourceSpec struct {
 type CamelSourceOriginSpec struct {
 	// Component is a kind of source that directly references a Camel component
 	Component *CamelSourceOriginComponentSpec `json:"component,omitempty"`
-	// Other kind of sources, such as Camel K integrations will be added here
+	// Integration is a kind of source that contains a Camel K integration
+	Integration *v1alpha1.IntegrationSpec `json:"integration,omitempty"`
 }
 
 type CamelSourceOriginComponentSpec struct {

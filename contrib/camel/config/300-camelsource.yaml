@@ -60,6 +60,39 @@ spec:
                       minLength: 1
                       type: string
                   type: object
+                integration:
+                  properties:
+                    configuration:
+                      items:
+                        type: object
+                      type: array
+                    context:
+                      type: string
+                    dependencies:
+                      items:
+                        type: string
+                      type: array
+                    profile:
+                      type: string
+                    replicas:
+                      type: integer
+                    repositories:
+                      items:
+                        type: string
+                      type: array
+                    resources:
+                      items:
+                        type: object
+                      type: array
+                    serviceAccountName:
+                      type: string
+                    sources:
+                      items:
+                        type: object
+                      type: array
+                    traits:
+                      type: object
+                  type: object
               type: object
           required:
           - source

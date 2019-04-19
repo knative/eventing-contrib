@@ -1,0 +1,23 @@
+# Apache Camel Timer Source
+#
+# Timer Component documentation: https://github.com/apache/camel/blob/master/camel-core/src/main/docs/timer-component.adoc
+#
+# List of available Apache Camel components: https://github.com/apache/camel/tree/master/components
+#
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: CamelSource
+metadata:
+  name: camel-k-source
+spec:
+  source:
+    integration:
+      sources:
+      - name: file.groovy
+        content:
+          from("timer:tick?period=5s")
+            .setBody().constant("Hello World")
+            .to("knative:endpoint/sink")
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: camel-test
