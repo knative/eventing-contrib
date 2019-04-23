@@ -24,9 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Important: Run "make" to regenerate code after modifying this file
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // Check that ContainerSource can be validated and can be defaulted.
 var _ runtime.Object = (*ContainerSource)(nil)
 
@@ -76,11 +73,10 @@ var containerCondSet = duckv1alpha1.NewLivingConditionSet(
 
 // ContainerSourceStatus defines the observed state of ContainerSource
 type ContainerSourceStatus struct {
-	// Conditions holds the state of a source at a point in time.
-	// +optional
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	// inherits duck/v1alpha1 Status, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
+	// * Conditions - the latest available observations of a resource's current state.
+	duckv1alpha1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the ContainerSource.
 	// +optional

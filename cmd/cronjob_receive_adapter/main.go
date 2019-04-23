@@ -21,6 +21,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/knative/pkg/signals"
+
 	"github.com/knative/eventing-sources/pkg/adapter/cronjobevents"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -64,8 +66,11 @@ func main() {
 		SinkURI:  getRequiredEnv(envSinkURI),
 	}
 
-	logger.Info("Starting Receive Adapter. %v", zap.Reflect("adapter", adapter))
-	if err := adapter.Start(ctx); err != nil {
-		logger.Fatal("Failed to start adapter: ", zap.Error(err))
+	logger.Info("Starting Receive Adapter", zap.Reflect("adapter", adapter))
+
+	stopCh := signals.SetupSignalHandler()
+
+	if err := adapter.Start(ctx, stopCh); err != nil {
+		logger.Fatal("Failed to start adapter", zap.Error(err))
 	}
 }

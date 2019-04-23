@@ -19,13 +19,15 @@ package kubernetesevents
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"sync"
+
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 
-	"github.com/knative/pkg/cloudevents"
 	corev1 "k8s.io/api/core/v1"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -33,15 +35,29 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-const (
-	eventType = "dev.knative.k8s.event"
-)
-
 type Adapter struct {
 	// Namespace is the kubernetes namespace to watch for events from.
 	Namespace string
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
+
+	// ceClient is a client that sends cloudevents.
+	ceClient       client.Client
+	initClientOnce sync.Once
+
+	kubeClient kubernetes.Interface
+}
+
+func (a *Adapter) makeKubeClient() error {
+	cfg, err := clientcmd.BuildConfigFromFlags("", "")
+	if err != nil {
+		return err
+	}
+	a.kubeClient, err = kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Run starts the kubernetes receive adapter and sends events produced in the
@@ -49,20 +65,21 @@ type Adapter struct {
 func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	logger := logging.FromContext(context.TODO())
 
-	// set up signals so we handle the first shutdown signal gracefully
-
-	cfg, err := clientcmd.BuildConfigFromFlags("", "")
-	if err != nil {
-		return err
+	if a.kubeClient == nil {
+		if err := a.makeKubeClient(); err != nil {
+			return err
+		}
 	}
 
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return err
+	if a.ceClient == nil {
+		var err error
+		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return fmt.Errorf("failed to create cloudevent client: %s", err.Error())
+		}
 	}
 
 	eventsInformer := coreinformers.NewFilteredEventInformer(
-		kubeClient, a.Namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
+		a.kubeClient, a.Namespace, 0, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, nil)
 
 	eventsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    a.addEvent,
@@ -70,7 +87,8 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	})
 
 	logger.Debug("Starting eventsInformer...")
-	go eventsInformer.Run(stopCh)
+	stop := make(chan struct{})
+	go eventsInformer.Run(stop)
 
 	logger.Debug("waiting for caches to sync...")
 	if ok := cache.WaitForCacheSync(stopCh, eventsInformer.HasSynced); !ok {
@@ -78,6 +96,7 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	}
 	logger.Debug("caches synced...")
 	<-stopCh
+	stop <- struct{}{}
 	return nil
 }
 
@@ -89,35 +108,8 @@ func (a *Adapter) addEvent(new interface{}) {
 	event := new.(*corev1.Event)
 	logger := logging.FromContext(context.TODO()).With(zap.Any("eventID", event.ObjectMeta.UID), zap.Any("sink", a.SinkURI))
 	logger.Debug("GOT EVENT", event)
-	if err := a.postMessage(logger, event); err != nil {
-		logger.Info("Event delivery failed: %s", err)
+
+	if _, err := a.ceClient.Send(context.TODO(), cloudEventFrom(event)); err != nil {
+		logger.Infof("Event delivery failed: %s", err)
 	}
-}
-
-func (a *Adapter) postMessage(logger *zap.SugaredLogger, m *corev1.Event) error {
-	ectx := cloudEventsContext(m)
-
-	logger.Debug("posting to sinkURI")
-	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
-	// event metadata.
-	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, *ectx)
-	if err != nil {
-		return fmt.Errorf("Encoding failed: %s", err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("POST failed: %s", err)
-	}
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugw("response", zap.Any("status", resp.Status), zap.Any("body", string(body)))
-
-	// If the response is not within the 2xx range, return an error.
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("[%d] unexpected response %q", resp.StatusCode, body)
-	}
-
-	return nil
 }

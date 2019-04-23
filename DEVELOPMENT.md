@@ -12,7 +12,7 @@ This doc explains how to setup a development environment so you can get started
 1. [Create and checkout a repo fork](#checkout-your-fork)
 
 Once you meet these requirements, you can
-[install a source](#installing-a-source)!
+[install sources](#installing-sources)!
 
 Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -38,7 +38,7 @@ To check out this repository:
 
 1. Create your own
    [fork of this repo](https://help.github.com/articles/fork-a-repo/)
-2. Clone it to your machine:
+1. Clone it to your machine:
 
 ```shell
 mkdir -p ${GOPATH}/src/github.com/knative
@@ -55,22 +55,25 @@ _Adding the `upstream` remote sets you up nicely for regularly
 Once you reach this point you are ready to do a full build and deploy as
 follows.
 
-## Installing a Source
+## Installing Sources
 
-Once you've [setup your development environment](#getting-started), install all
-sources _except gcppubsub_ with:
-
-<!-- TODO(n3wscott): Update to show how to install a single source. -->
+Once you've [setup your development environment](#getting-started), install
+sources _Container Source_, _Cron Job Source_, _Github Source_, _Kubernetes
+Event Source_ and _AWS SQS Source_ with:
 
 ```shell
-ko apply -f config/default.yaml
+ko apply -f config/
 ```
 
-This command is idempotent, so you can run it at any time to update your
-deployment.
+or install a single source _Camel Source_, _Gcppubsub Source_, _Kafka Source_
+with
 
-_See [config/README.md](./config/README.md) for instructions on installing the
-gcppubsub source._
+```
+ko apply -f contrib/<source_name>/
+```
+
+These commands are idempotent, so you can run them at any time to update your
+deployment.
 
 You can see things running with:
 
@@ -86,10 +89,15 @@ You can access the Eventing Manager's logs with:
 kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=controller-manager -o name)
 ```
 
+_See
+[contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md),
+[contrib/camel/samples/README.md](./contrib/camel/samples/README.md),
+[contrib/kafka/samples/README.md](./contrib/kafka/samples/README.md) for
+instructions on installing the Gcppubsub Source, Camel Source and Kafka Source._
+
 ## Iterating
 
-As you make changes to the code-base, there are two special cases to be aware
-of:
+As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
@@ -99,6 +107,15 @@ of:
 
 These are both idempotent, and we expect that running these in the `master`
 branch to produce no diffs.
+
+To verify that your generated code is correct with the new type definition you
+can run [`./hack/verify-codegen.sh`](./hack/verify-codegen.sh). On OSX you will
+need GNU `diff` version 3.7 that you can install from `brew` with
+`brew install diffutils`.
+
+To check that the build and tests passes please see the test
+[documentation](#tests) or simply run
+[`./test/presubmit-tests.sh`](./test/presubmit-tests.sh).
 
 Once the codegen and dependency information is correct, redeploy using the same
 `ko apply` command you used [Installing a Source](#installing-a-source).
@@ -115,7 +132,7 @@ Running tests as you make changes to the code-base is pretty simple. See
 You can delete `Knative Sources` with:
 
 ```shell
-ko delete -f config/default.yaml
+ko delete -f config/
 ```
 
 <!--

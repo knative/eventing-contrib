@@ -24,6 +24,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
+
 	"cloud.google.com/go/pubsub"
 	"go.uber.org/zap"
 )
@@ -63,6 +66,10 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				SinkURI: sinkServer.URL,
 				source:  "test",
+				ceClient: func() client.Client {
+					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
+					return c
+				}(),
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})
@@ -84,12 +91,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected error, but got %v", err)
 			}
 
-			et := ""
-			if eth, ok := h.header["Ce-Eventtype"]; ok {
-				if len(eth) > 0 {
-					et = eth[0]
-				}
-			}
+			et := h.header.Get("Ce-Type") // bad bad bad.
 
 			expectedEventType := eventType
 			if tc.expectedEventType != "" {
@@ -131,6 +133,10 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				SinkURI: sinkServer.URL,
 				source:  "test",
+				ceClient: func() client.Client {
+					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
+					return c
+				}(),
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})

@@ -1,0 +1,55 @@
+# Copyright 2019 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gcppubsub-controller-manager
+  namespace: knative-sources
+  labels:
+    control-plane: gcppubsub-controller-manager
+spec:
+  selector:
+    matchLabels: &labels
+      control-plane: gcppubsub-controller-manager
+  serviceName: gcppubsub-controller-manager
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      serviceAccountName: gcppubsub-controller-manager
+      containers:
+      - name: manager
+        image: github.com/knative/eventing-sources/contrib/gcppubsub/cmd/controller
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name: GCPPUBSUB_RA_IMAGE
+          value: github.com/knative/eventing-sources/contrib/gcppubsub/cmd/receive_adapter
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 20m
+            memory: 20Mi
+      volumes:
+      - name: google-cloud-key
+        secret:
+          secretName: gcppubsub-source-key
+      serviceAccount: gcppubsub-controller-manager
+      terminationGracePeriodSeconds: 10

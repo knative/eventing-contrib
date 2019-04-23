@@ -9,4 +9,3 @@ Knative Eventing Sources.
 - `update-deps.sh` Updates Go dependencies.
 - `verify-codegen.sh` Verifies that auto-generated client libraries are
   up-to-date.
-- `verify-manifests.sh` Verifies that auto-generated manifests are up-to-date.

@@ -16,52 +16,26 @@
 
 source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 
-# TODO(n3wscott): finalize the release packages when we have something to release.
-
 # Yaml files to generate, and the source config dir for them.
-declare -A RELEASES
-RELEASES=(
-  ["release.yaml"]="config/default.yaml"
-  ["release-gcppubsub.yaml"]="contrib/gcppubsub/config/default-gcppubsub.yaml"
-  ["message-dumper.yaml"]="config/tools/message-dumper.yaml"
+declare -A COMPONENTS
+COMPONENTS=(
+  ["eventing-sources.yaml"]="config"
+  ["gcppubsub.yaml"]="contrib/gcppubsub/config"
+  ["event-display.yaml"]="config/tools/event-display"
+  ["camel.yaml"]="contrib/camel/config"
+  ["kafka.yaml"]="contrib/kafka/config"
 )
-readonly RELEASES
+readonly COMPONENTS
 
-# Script entry point.
+function build_release() {
+  local all_yamls=()
+  for yaml in "${!COMPONENTS[@]}"; do
+  local config="${COMPONENTS[${yaml}]}"
+    echo "Building Knative Eventing Sources - ${config}"
+    ko resolve ${KO_FLAGS} -f ${config}/ > ${yaml}
+    all_yamls+=(${yaml})
+  done
+  YAMLS_TO_PUBLISH="${all_yamls[@]}"
+}
 
-initialize $@
-
-set -o errexit
-set -o pipefail
-
-run_validation_tests ./test/presubmit-tests.sh
-
-# Build the release
-
-banner "Building the release"
-
-all_yamls=()
-
-for yaml in "${!RELEASES[@]}"; do
-  config="${RELEASES[${yaml}]}"
-  echo "Building Knative Eventing Sources - ${config}"
-  ko resolve ${KO_FLAGS} -f ${config} > ${yaml}
-  tag_images_in_yaml ${yaml}
-  all_yamls+=(${yaml})
-done
-
-echo "New release built successfully"
-
-if (( ! PUBLISH_RELEASE )); then
- exit 0
-fi
-
-# Publish the release
-
-for yaml in ${all_yamls[@]}; do
-  publish_yaml ${yaml}
-done
-
-branch_release "Knative Eventing Sources" "${all_yamls[*]}"
-
-echo "New release published successfully"
+main $@

@@ -18,16 +18,18 @@ package awssqs
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/knative/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -53,6 +55,9 @@ type Adapter struct {
 	// OnFailedPollWaitSecs determines the interval to wait after a
 	// failed poll before making another one
 	OnFailedPollWaitSecs time.Duration
+
+	// Client sends cloudevents to the target.
+	client client.Client
 }
 
 // getRegion takes an AWS SQS URL and extracts the region from it
@@ -74,11 +79,27 @@ func getRegion(url string) (string, error) {
 	return parts[1], nil
 }
 
+// Initialize cloudevent client
+func (a *Adapter) initClient() error {
+	if a.client == nil {
+		var err error
+		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 	logger := logging.FromContext(ctx)
 
 	logger.Info("Starting with config: ", zap.Any("adapter", a))
+
+	if err := a.initClient(); err != nil {
+		logger.Error("Failed to create cloudevent client", zap.Error(err))
+		return err
+	}
 
 	region, err := getRegion(a.QueueURL)
 	if err != nil {
@@ -159,36 +180,18 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		logger.Errorw("Failed to unmarshal the message.", zap.Error(err), zap.Any("message", m.Body))
 		timestamp = time.Now().UnixNano()
 	}
-
-	event := cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            *m.MessageId,
-		EventTime:          time.Unix(timestamp, 0),
-		Source:             a.QueueURL,
-	}
-	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, event)
-	if err != nil {
-		return fmt.Errorf("Failed to marshall the message: %s", err)
+	event := cloudevents.Event{
+		Context: cloudevents.EventContextV02{
+			ID:     *m.MessageId,
+			Type:   eventType,
+			Source: *types.ParseURLRef(a.QueueURL),
+			Time:   &types.Timestamp{Time: time.Unix(timestamp, 0)},
+		}.AsV02(),
+		Data: m,
 	}
 
-	logger.Debug("Posting message")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugw("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
-
-	// If the response is not within the 2xx range, return an error.
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("[%d] unexpected response %s", resp.StatusCode, body)
-	}
-
-	return nil
+	_, err = a.client.Send(context.TODO(), event)
+	return err
 }
 
 // poll reads messages from the queue in batches of a given maximum size.

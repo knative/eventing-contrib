@@ -17,15 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
-	"time"
 
-	"github.com/knative/eventing-sources/pkg/sources"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 
-	"github.com/google/uuid"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+
 	"github.com/gorilla/websocket"
-	"github.com/knative/pkg/cloudevents"
 )
 
 var (
@@ -57,29 +58,32 @@ func main() {
 		eventSource = source
 	}
 
-	poster := sources.NewEventForwarder(sink)
+	ce, err := kncloudevents.NewDefaultClient(sink)
+	if err != nil {
+		log.Fatalf("Failed to create a http cloudevent client: %s", err.Error())
+	}
 
-	c, _, err := websocket.DefaultDialer.Dial(source, nil)
+	ws, _, err := websocket.DefaultDialer.Dial(source, nil)
 	if err != nil {
 		log.Fatal("error connecting:", err)
 	}
 
 	for {
-		_, message, err := c.ReadMessage()
+		_, message, err := ws.ReadMessage()
 		if err != nil {
 			// TODO(markusthoemmes): Handle failures and reconnect
 			log.Println("error while reading message:", err)
 			return
 		}
 
-		ctx := cloudevents.EventContext{
-			CloudEventsVersion: cloudevents.CloudEventsVersion,
-			EventType:          eventType,
-			EventID:            uuid.New().String(),
-			Source:             eventSource,
-			EventTime:          time.Now(),
+		event := cloudevents.Event{
+			Context: cloudevents.EventContextV02{
+				Type:   eventType,
+				Source: *types.ParseURLRef(eventSource),
+			}.AsV02(),
+			Data: message,
 		}
-		if err := poster.PostEvent(ctx, message); err != nil {
+		if _, err := ce.Send(context.TODO(), event); err != nil {
 			log.Printf("sending event to channel failed: %v", err)
 		}
 	}

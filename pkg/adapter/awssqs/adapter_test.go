@@ -59,13 +59,17 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				OnFailedPollWaitSecs: 1,
 			}
 
+			if err := a.initClient(); err != nil {
+				t.Errorf("failed to create cloudevent client, %v", err)
+			}
+
 			body := "The body"
-			messageId := "ABC01"
+			messageID := "ABC01"
 			attrs := map[string]*string{
 				"SentTimestamp": &timestamp,
 			}
 			m := &sqs.Message{
-				MessageId:  &messageId,
+				MessageId:  &messageID,
 				Body:       &body,
 				Attributes: attrs,
 			}
@@ -134,6 +138,10 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 				SinkURI:  sinkServer.URL,
 			}
 
+			if err := a.initClient(); err != nil {
+				t.Errorf("failed to create cloudevent client, %v", err)
+			}
+
 			ack := new(bool)
 
 			a.receiveMessage(context.TODO(), m, func() { *ack = true })
@@ -161,6 +169,24 @@ func TestPollLoopCancels(t *testing.T) {
 	err := a.pollLoop(ctx, nil, stopCh)
 	if err != nil {
 		t.Error("expected pollLoop to return cleanly, but got", err)
+	}
+}
+
+func TestStart(t *testing.T) {
+
+	a := &Adapter{
+		QueueURL: "https://test.sqs.aws/123123",
+		SinkURI:  "https://sink.server/",
+	}
+
+	ctx := context.Background()
+	stopCh := make(chan struct{}, 1)
+
+	msg := struct{}{}
+	stopCh <- msg
+	err := a.Start(ctx, stopCh)
+	if err != nil {
+		t.Error("expected Start to return cleanly, but got", err)
 	}
 }
 

@@ -17,15 +17,19 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
-	"io/ioutil"
+	"fmt"
 	"log"
-	"net/http"
+	"os"
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/knative/pkg/cloudevents"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Heartbeat struct {
@@ -45,8 +49,35 @@ func init() {
 	flag.StringVar(&periodStr, "period", "5", "the number of seconds between heartbeats")
 }
 
+type envConfig struct {
+	// Sink URL where to send heartbeat cloudevents
+	Sink string `envconfig:"SINK"`
+
+	// Name of this pod.
+	Name string `envconfig:"POD_NAME" required:"true"`
+
+	// Namespace this pod exists in.
+	Namespace string `envconfig:"POD_NAMESPACE" required:"true"`
+}
+
 func main() {
 	flag.Parse()
+
+	var env envConfig
+	if err := envconfig.Process("", &env); err != nil {
+		log.Printf("[ERROR] Failed to process env var: %s", err)
+		os.Exit(1)
+	}
+
+	if env.Sink != "" {
+		sink = env.Sink
+	}
+
+	c, err := kncloudevents.NewDefaultClient(sink)
+	if err != nil {
+		log.Fatalf("failed to create client: %s", err.Error())
+	}
+
 	var period time.Duration
 	if p, err := strconv.Atoi(periodStr); err != nil {
 		period = time.Duration(5) * time.Second
@@ -54,6 +85,13 @@ func main() {
 		period = time.Duration(p) * time.Second
 	}
 
+	source := types.ParseURLRef(
+		fmt.Sprintf("https://github.com/knative/eventing-sources/cmd/heartbeats/#%s/%s", env.Namespace, env.Name))
+	log.Printf("Heartbeats Source: %s", source)
+
+	if len(label) > 0 && label[0] == '"' {
+		label, _ = strconv.Unquote(label)
+	}
 	hb := &Heartbeat{
 		Sequence: 0,
 		Label:    label,
@@ -61,44 +99,24 @@ func main() {
 	ticker := time.NewTicker(period)
 	for {
 		hb.Sequence++
-		postMessage(sink, hb)
+
+		event := cloudevents.Event{
+			Context: cloudevents.EventContextV02{
+				Type:   "dev.knative.eventing.samples.heartbeat",
+				Source: *source,
+				Extensions: map[string]interface{}{
+					"the":   42,
+					"heart": "yes",
+					"beats": true,
+				},
+			}.AsV02(),
+			Data: hb,
+		}
+
+		if _, err := c.Send(context.Background(), event); err != nil {
+			log.Printf("failed to send cloudevent: %s", err.Error())
+		}
 		// Wait for next tick
 		<-ticker.C
 	}
-}
-
-// Creates a CloudEvent Context for a given heartbeat.
-func cloudEventsContext() *cloudevents.EventContext {
-	return &cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          "dev.knative.source.heartbeats",
-		EventID:            uuid.New().String(),
-		Source:             "heartbeats-demo",
-		EventTime:          time.Now(),
-	}
-}
-
-func postMessage(target string, hb *Heartbeat) error {
-	ctx := cloudEventsContext()
-
-	log.Printf("posting to %q", target)
-	// Explicitly using Binary encoding so that Istio, et. al. can better inspect
-	// event metadata.
-	req, err := cloudevents.Binary.NewRequest(target, hb, *ctx)
-	if err != nil {
-		log.Printf("failed to create http request: %s", err)
-		return err
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("Failed to do POST: %v", err)
-		return err
-	}
-	defer resp.Body.Close()
-	log.Printf("response Status: %s", resp.Status)
-	body, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("response Body: %s", string(body))
-	return nil
 }

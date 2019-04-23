@@ -54,7 +54,7 @@ type GitHubSourceSpec struct {
 	// https://developer.github.com/v3/activity/events/types/ - ie
 	// "pull_request"
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:Enum=commit_comment,create,delete,deployment,deployment_status,fork,gollum,installation,integration_installation,issue_comment,issues,label,member,membership,milestone,organization,org_block,page_build,ping,project_card,project_column,project,public,pull_request,pull_request_review,pull_request_review_comment,push,release,repository,status,team,team_add,watch
+	// +kubebuilder:validation:Enum=check_suite,commit_comment,create,delete,deployment,deployment_status,fork,gollum,installation,integration_installation,issue_comment,issues,label,member,membership,milestone,organization,org_block,page_build,ping,project_card,project_column,project,public,pull_request,pull_request_review,pull_request_review_comment,push,release,repository,status,team,team_add,watch
 	EventTypes []string `json:"eventTypes"`
 
 	// AccessToken is the Kubernetes secret containing the GitHub
@@ -69,6 +69,14 @@ type GitHubSourceSpec struct {
 	// name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+
+	// API URL if using github enterprise (default https://api.github.com)
+	// +optional
+	GitHubAPIURL string `json:"githubAPIURL,omitempty"`
+
+	// Secure can be set to true to configure the webhook to use https.
+	// +optional
+	Secure bool `json:"secure,omitempty"`
 }
 
 // SecretValueFromSource represents the source of a secret value
@@ -103,11 +111,10 @@ var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {
-	// Conditions holds the state of a source at a point in time.
-	// +optional
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	// inherits duck/v1alpha1 Status, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
+	// * Conditions - the latest available observations of a resource's current state.
+	duckv1alpha1.Status `json:",inline"`
 
 	// WebhookIDKey is the ID of the webhook registered with GitHub
 	WebhookIDKey string `json:"webhookIDKey,omitempty"`

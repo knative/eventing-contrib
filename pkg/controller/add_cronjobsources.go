@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/knative/eventing-sources/pkg/controller/cronjobsource"
+	"github.com/knative/eventing-sources/pkg/reconciler/cronjobsource"
 )
 
 func init() {

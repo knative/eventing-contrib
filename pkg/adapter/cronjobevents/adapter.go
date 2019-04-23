@@ -18,17 +18,17 @@ package cronjobevents
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"math/rand"
-	"net/http"
-	"time"
+	"encoding/json"
+
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
 	"github.com/robfig/cron"
 
-	"github.com/knative/pkg/cloudevents"
 	"github.com/knative/pkg/logging"
-	"github.com/knative/pkg/signals"
 	"go.uber.org/zap"
 )
 
@@ -46,9 +46,23 @@ type Adapter struct {
 
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
+
+	// client sends cloudevents.
+	client client.Client
 }
 
-func (a *Adapter) Start(ctx context.Context) error {
+// Initialize cloudevent client
+func (a *Adapter) initClient() error {
+	if a.client == nil {
+		var err error
+		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	logger := logging.FromContext(ctx)
 
 	sched, err := cron.ParseStandard(a.Schedule)
@@ -56,18 +70,14 @@ func (a *Adapter) Start(ctx context.Context) error {
 		logger.Error("Unparseable schedule: ", a.Schedule, zap.Error(err))
 		return err
 	}
+
+	if err = a.initClient(); err != nil {
+		logger.Error("Failed to create cloudevent client", zap.Error(err))
+		return err
+	}
+
 	c := cron.New()
-	c.Schedule(sched, cron.FuncJob(func() {
-		m := Message{ID: a.generateMessageId(), EventTime: time.Now().UTC(), Body: a.Data}
-		logger := logger.With(zap.Any("eventID", m.ID), zap.Any("sink", a.SinkURI))
-		err = a.postMessage(ctx, logger, &m)
-		if err != nil {
-			logger.Infof("Failed to post message: %s", err)
-			return
-		}
-		logger.Debug("Finished posting message job.")
-	}))
-	stopCh := signals.SetupSignalHandler()
+	c.Schedule(sched, cron.FuncJob(a.cronTick))
 	c.Start()
 	<-stopCh
 	c.Stop()
@@ -75,44 +85,31 @@ func (a *Adapter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *Message) error {
-	event := cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            m.ID,
-		EventTime:          m.EventTime,
-		Source:             "CronJob",
+func (a *Adapter) cronTick() {
+	logger := logging.FromContext(context.TODO())
+
+	event := cloudevents.Event{
+		Context: cloudevents.EventContextV02{
+			Type:   eventType,
+			Source: *types.ParseURLRef("/CronJob"),
+		}.AsV02(),
+		Data: message(a.Data),
 	}
-	req, err := cloudevents.Binary.NewRequest(a.SinkURI, m, event)
-	if err != nil {
-		return fmt.Errorf("Failed to marshal message: %s", err)
+	if _, err := a.client.Send(context.TODO(), event); err != nil {
+		logger.Error("failed to send cloudevent", err)
 	}
-
-	logger.Debugw("Posting message")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	logger.Debugw("Response", zap.String("status", resp.Status), zap.ByteString("body", body))
-
-	// If the response is not within the 2xx range, return an error.
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("[%d] unexpected response %s", resp.StatusCode, body)
-	}
-
-	return nil
-}
-
-func (a *Adapter) generateMessageId() string {
-	return fmt.Sprintf("%v-%v", time.Now().UnixNano(), rand.Intn(900)+100)
 }
 
 type Message struct {
-	ID        string
-	EventTime time.Time
-	Body      string
+	Body string `json:"body"`
+}
+
+func message(body string) interface{} {
+	// try to marshal the body into an interface.
+	var objmap map[string]*json.RawMessage
+	if err := json.Unmarshal([]byte(body), &objmap); err != nil {
+		//default to a wrapped message.
+		return Message{Body: body}
+	}
+	return objmap
 }
