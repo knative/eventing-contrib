@@ -27,7 +27,7 @@ import (
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -253,7 +253,7 @@ func getSource() *sourcesv1alpha1.CamelSource {
 }
 
 func withAlternativeImage(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
-	src.Spec.Image = alternativeImage
+	src.Spec.DeprecatedImage = alternativeImage
 	return src
 }
 
@@ -268,33 +268,14 @@ func getAlternativeContext() *camelv1alpha1.IntegrationContext {
 }
 
 func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
-	flows := camelv1alpha1.Flows{
-		{
-			Steps: []camelv1alpha1.Step{
-				{
-					Kind: "endpoint",
-					URI:  "timer:tick?period=3s",
-				},
-				{
-					Kind: "endpoint",
-					URI:  "knative:endpoint/sink",
-				},
-			},
-		},
-	}
-	source, err := flows.Serialize()
-	if err != nil {
-		t.Error("failed to serialize source", err)
-		return nil
-	}
-
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
 		Sink:      addressableURI,
-		Source: resources.CamelArgumentsSource{
-			Name:    "source.flow",
-			Content: source,
+		Source: sourcesv1alpha1.CamelSourceOriginSpec{
+			Component: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
+				URI: "timer:tick?period=3s",
+			},
 		},
 	})
 	if err != nil {

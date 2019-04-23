@@ -69,14 +69,16 @@ type CamelSourceSpec struct {
 	// Source is the reference to the integration flow to run.
 	Source CamelSourceOriginSpec `json:"source"`
 
+	// DEPRECATED: moved inside the specific CamelSourceOriginSpec
 	// ServiceAccountName is the name of the ServiceAccount to use to run this
 	// source.
 	// +optional
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+	DeprecatedServiceAccountName string `json:"serviceAccountName,omitempty"`
 
+	// DEPRECATED: use the context field in CamelSourceOriginSpec
 	// Image is an optional base image used to run the source.
 	// +optional
-	Image string `json:"image,omitempty"`
+	DeprecatedImage string `json:"image,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
@@ -94,8 +96,17 @@ type CamelSourceOriginSpec struct {
 type CamelSourceOriginComponentSpec struct {
 	// URI is a Camel component URI to use as starting point (e.g. "timer:tick?period=2s")
 	// +kubebuilder:validation:MinLength=1
-	URI        string            `json:"uri,omitempty"`
+	URI string `json:"uri,omitempty"`
+
 	Properties map[string]string `json:"properties,omitempty"`
+
+	// ServiceAccountName is the name of the ServiceAccount to use to run this source.
+	// +optional
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+
+	// The Camel K context to use when running the source
+	// +optional
+	Context string `json:"context,omitempty"`
 }
 
 // CamelSourceStatus defines the observed state of CamelSource

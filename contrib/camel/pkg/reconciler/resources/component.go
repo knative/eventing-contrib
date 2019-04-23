@@ -31,8 +31,8 @@ func BuildComponentIntegrationSpec(args *CamelArguments) (camelv1alpha1.Integrat
 	}
 
 	spec := camelv1alpha1.IntegrationSpec{
-		Context:            args.Context,
-		ServiceAccountName: args.ServiceAccountName,
+		Context:            args.Source.Component.Context,
+		ServiceAccountName: args.Source.Component.ServiceAccountName,
 		Sources: []camelv1alpha1.SourceSpec{
 			{
 				DataSpec: camelv1alpha1.DataSpec{
@@ -48,6 +48,14 @@ func BuildComponentIntegrationSpec(args *CamelArguments) (camelv1alpha1.Integrat
 				},
 			},
 		},
+	}
+
+	// TODO remove when deprecated fields are removed
+	if args.DeprecatedServiceAccountName != "" {
+		spec.ServiceAccountName = args.DeprecatedServiceAccountName
+	}
+	if args.DeprecatedIntegrationContext != "" {
+		spec.Context = args.DeprecatedIntegrationContext
 	}
 
 	if args.Source.Component.Properties != nil {

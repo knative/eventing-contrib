@@ -36,11 +36,11 @@ func TestMakeDeployment_sink(t *testing.T) {
 					"k":  "v",
 					"k2": "v2",
 				},
+				ServiceAccountName: "test-service-account",
+				Context:            "test-context",
 			},
 		},
-		ServiceAccountName: "test-service-account",
-		Context:            "test-context",
-		Sink:               "http://test-sink",
+		Sink: "http://test-sink",
 	})
 	if err != nil {
 		t.Error(err)

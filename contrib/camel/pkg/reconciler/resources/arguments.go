@@ -21,10 +21,12 @@ import (
 )
 
 type CamelArguments struct {
-	Name               string
-	Namespace          string
-	Source             v1alpha1.CamelSourceOriginSpec
-	ServiceAccountName string
-	Context            string
-	Sink               string
+	Name      string
+	Namespace string
+	Source    v1alpha1.CamelSourceOriginSpec
+	Sink      string
+	// DEPRECATED
+	DeprecatedIntegrationContext string
+	// DEPRECATED
+	DeprecatedServiceAccountName string
 }

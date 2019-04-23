@@ -115,8 +115,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	source.Status.MarkSink(sinkURI)
 
 	integrationContextName := ""
-	if source.Spec.Image != "" {
-		ictx, err := r.reconcileIntegrationContext(ctx, source.Namespace, source.Spec.Image)
+	if source.Spec.DeprecatedImage != "" {
+		ictx, err := r.reconcileIntegrationContext(ctx, source.Namespace, source.Spec.DeprecatedImage)
 		if err != nil {
 			return err
 		}
@@ -136,15 +136,15 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	return nil
 }
 
-func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, integrationContextName string, sinkURI string) (*camelv1alpha1.Integration, error) {
+func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, deprecatedIntegrationContext string, sinkURI string) (*camelv1alpha1.Integration, error) {
 	logger := logging.FromContext(ctx)
 	args := &resources.CamelArguments{
-		Name:               source.Name,
-		Namespace:          source.Namespace,
-		Source:             source.Spec.Source,
-		ServiceAccountName: source.Spec.ServiceAccountName,
-		Context:            integrationContextName,
-		Sink:               sinkURI,
+		Name:      source.Name,
+		Namespace: source.Namespace,
+		Source:    source.Spec.Source,
+		Sink:      sinkURI,
+		DeprecatedIntegrationContext: deprecatedIntegrationContext,
+		DeprecatedServiceAccountName: source.Spec.DeprecatedServiceAccountName,
 	}
 
 	integration, err := r.getIntegration(ctx, source)
