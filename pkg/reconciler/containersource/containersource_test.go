@@ -215,7 +215,7 @@ var testCases = []controllertesting.TestCase{
 				s.Spec.Sink = nil
 				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("Deploying", "Created deployment %s", deployGeneratedName)
+				s.Status.MarkDeploying("DeploymentCreated", "Created deployment %q", deployGeneratedName)
 				s.Status.MarkSink(targetURI)
 				s.ObjectMeta.Annotations = map[string]string{"annotation": "solid"}
 				s.ObjectMeta.Labels = map[string]string{"label": "soliderer"}
