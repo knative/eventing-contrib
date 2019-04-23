@@ -123,6 +123,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 	err = r.setSinkURIArg(ctx, source, args)
 	if err != nil {
+		r.recorder.Eventf(source, corev1.EventTypeWarning, "SetSinkURIFailed", "Failed to set Sink URI: %v", err)
 		return err
 	}
 
@@ -131,16 +132,17 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		if errors.IsNotFound(err) {
 			deploy, err = r.createDeployment(ctx, source, nil, args)
 			if err != nil {
-				r.recorder.Eventf(source, corev1.EventTypeNormal, "DeploymentBlocked", "waiting for %v", err)
+				r.markDeployingAndRecordEvent(source, corev1.EventTypeWarning, "DeploymentCreateFailed", "Could not create deployment: %v", err)
 				return err
 			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "Deployed", "Created deployment %q", deploy.Name)
-			source.Status.MarkDeploying("Deploying", "Created deployment %s", deploy.Name)
+			r.markDeployingAndRecordEvent(source, corev1.EventTypeNormal, "DeploymentCreated", "Created deployment %q", deploy.Name)
 			// Since the Deployment has just been created, there's nothing more
 			// to do until it gets a status. This ContainerSource will be reconciled
 			// again when the Deployment is updated.
 			return nil
 		}
+		// Something unexpected happened getting the deployment.
+		r.markDeployingAndRecordEvent(source, corev1.EventTypeWarning, "DeploymentGetFailed", "Error getting deployment: %v", err)
 		return err
 	}
 
@@ -152,25 +154,29 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	if !equality.Semantic.DeepDerivative(expected.Spec, deploy.Spec) {
 		deploy.Spec = expected.Spec
 		err := r.client.Update(ctx, deploy)
-		// if no error, update the status.
-		if err == nil {
-			source.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", deploy.Name)
+		if err != nil {
+			r.markDeployingAndRecordEvent(source, corev1.EventTypeWarning, "DeploymentUpdateFailed", "Failed to update deployment %q: %v", deploy.Name, err)
 		} else {
-			source.Status.MarkDeploying("DeployNeedsUpdate", "Attempting to update deployment %s", deploy.Name)
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "DeployNeedsUpdate", "Failed to update deployment %q", deploy.Name)
+			r.markDeployingAndRecordEvent(source, corev1.EventTypeNormal, "DeploymentUpdated", "Updated deployment %q", deploy.Name)
 		}
 		// Return after this update or error and reconcile again
 		return err
 	}
 
 	// Update source status
-	if deploy.Status.ReadyReplicas > 0 {
+	if deploy.Status.ReadyReplicas > 0 && !source.Status.IsDeployed() {
 		source.Status.MarkDeployed()
+		r.recorder.Eventf(source, corev1.EventTypeNormal, "DeploymentReady", "Deployment %q has %d ready replicas", deploy.Name, deploy.Status.ReadyReplicas)
 	}
 
 	return nil
 }
 
+// setSinkURIArg attempts to get the sink URI from the sink reference and
+// set it in the source status. On failure, the source's Sink condition is
+// updated to reflect the error.
+// If an error is returned from this function, the caller should also record
+// an Event containing the error string.
 func (r *reconciler) setSinkURIArg(ctx context.Context, source *v1alpha1.ContainerSource, args *resources.ContainerArguments) error {
 	if uri, ok := sinkArg(source); ok {
 		args.SinkInArgs = true
@@ -179,13 +185,13 @@ func (r *reconciler) setSinkURIArg(ctx context.Context, source *v1alpha1.Contain
 	}
 
 	if source.Spec.Sink == nil {
-		source.Status.MarkNoSink("Missing", "")
+		source.Status.MarkNoSink("Missing", "Sink missing from spec")
 		return fmt.Errorf("Sink missing from spec")
 	}
 
 	uri, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
 	if err != nil {
-		source.Status.MarkNoSink("NotFound", "")
+		source.Status.MarkNoSink("NotFound", `Couldn't get Sink URI from "%s/%s": %v"`, source.Spec.Sink.Namespace, source.Spec.Sink.Name, err)
 		return err
 	}
 	source.Status.MarkSink(uri)
@@ -245,6 +251,11 @@ func (r *reconciler) createDeployment(ctx context.Context, source *v1alpha1.Cont
 		return nil, err
 	}
 	return deployment, nil
+}
+
+func (r *reconciler) markDeployingAndRecordEvent(source *v1alpha1.ContainerSource, evType string, reason string, messageFmt string, args ...interface{}) {
+	r.recorder.Eventf(source, evType, reason, messageFmt, args...)
+	source.Status.MarkDeploying(reason, messageFmt, args...)
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {

@@ -98,7 +98,7 @@ func (s *ContainerSourceStatus) InitializeConditions() {
 	containerCondSet.Manage(s).InitializeConditions()
 }
 
-// MarSink sets the condition that the source has a sink configured.
+// MarkSink sets the condition that the source has a sink configured.
 func (s *ContainerSourceStatus) MarkSink(uri string) {
 	s.SinkURI = uri
 	if len(uri) > 0 {
@@ -111,6 +111,16 @@ func (s *ContainerSourceStatus) MarkSink(uri string) {
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *ContainerSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	containerCondSet.Manage(s).MarkFalse(ContainerConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
+// IsDeployed returns true if the Deployed condition has status true, otherwise
+// false.
+func (s *ContainerSourceStatus) IsDeployed() bool {
+	c := containerCondSet.Manage(s).GetCondition(ContainerConditionDeployed)
+	if c != nil {
+		return c.IsTrue()
+	}
+	return false
 }
 
 // MarkDeployed sets the condition that the source has been deployed.
