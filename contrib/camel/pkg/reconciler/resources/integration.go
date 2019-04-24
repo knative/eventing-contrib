@@ -36,8 +36,10 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 		return nil, err
 	}
 
-	spec := args.Source.Integration
-	if spec == nil {
+	var spec *camelv1alpha1.IntegrationSpec
+	if args.Source.Integration != nil {
+		spec = args.Source.Integration.DeepCopy()
+	} else {
 		builtSpec, err := BuildComponentIntegrationSpec(args)
 		if err != nil {
 			return nil, err
