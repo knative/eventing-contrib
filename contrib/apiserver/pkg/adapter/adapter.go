@@ -83,7 +83,7 @@ func Add(mgr manager.Manager) error {
 			return err
 		}
 
-		dependents := make([]source.Kind, 2)
+		dependents := make([]source.Kind, 0)
 		j := 0
 		for {
 			strj := strconv.Itoa(j)
@@ -107,6 +107,8 @@ func Add(mgr manager.Manager) error {
 			u.SetGroupVersionKind(schema.GroupVersionKind{Kind: ownerRefKind, Group: ownerRefGV.Group, Version: ownerRefGV.Version})
 
 			dependents = append(dependents, source.Kind{Type: u})
+
+			j++
 		}
 
 		// don't use the sdk here as we are using unstructured watches
