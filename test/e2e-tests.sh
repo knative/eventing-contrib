@@ -58,9 +58,9 @@ function knative_teardown() {
   wait_until_object_does_not_exist namespaces knative-sources
   wait_until_object_does_not_exist namespaces knative-eventing
 
-  wait_until_object_does_not_exist customresourcedefinitions containersources.sources.knative.dev
-  wait_until_object_does_not_exist customresourcedefinitions githubsources.sources.knative.dev
-  wait_until_object_does_not_exist customresourcedefinitions kuberneteseventsources.sources.knative.dev
+  wait_until_object_does_not_exist customresourcedefinitions containersources.sources.eventing.knative.dev
+  wait_until_object_does_not_exist customresourcedefinitions githubsources.sources.eventing.knative.dev
+  wait_until_object_does_not_exist customresourcedefinitions kuberneteseventsources.eventing.sources.knative.dev
 }
 
 function test_setup() {
