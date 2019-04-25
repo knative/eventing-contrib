@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package resources
-
-import (
-	corev1 "k8s.io/api/core/v1"
-)
-
-type ContainerArguments struct {
-	Name               string
-	Namespace          string
-	Image              string
-	Args               []string
-	Env                []corev1.EnvVar
-	ServiceAccountName string
-	SinkInArgs         bool
-	Sink               string
-	Annotations        map[string]string
-	Labels             map[string]string
-}
+// Package v1alpha1 contains API Schema definitions for the sources v1alpha1 API group
+// +k8s:deepcopy-gen=package
+// +groupName=sources.eventing.knative.dev
+package v1alpha1

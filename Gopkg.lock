@@ -443,19 +443,21 @@
   version = "v0.5.0"
 
 [[projects]]
-  digest = "1:cb18be98985d40a82eb0619af0666e06a9a509c09e88299ef4b08cc11be5755c"
+  digest = "1:8d43f780eb6d10eebce6793294af09b1d3b5d1da1c006030d494f5b92d430427"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing",
     "pkg/apis/eventing/v1alpha1",
+    "pkg/apis/sources",
+    "pkg/apis/sources/v1alpha1",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "d817bf6e94a278e58686cdaf219f8cb403104470"
-  version = "v0.5.0"
+  revision = "a5a24f50c21a77d2c7e0c68c1512ad63f1b23d26"
 
 [[projects]]
   digest = "1:9fecd0611db84395be9eaff06b27c3fa2df2a5682b928c2344fbfdb143c49e06"
@@ -1480,6 +1482,7 @@
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
+    "github.com/knative/eventing/pkg/apis/sources/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",

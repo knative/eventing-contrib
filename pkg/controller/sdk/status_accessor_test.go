@@ -46,21 +46,21 @@ func TestNewReflectedStatusAccessor(t *testing.T) {
 			expectedErr: true,
 		},
 		"no status set": {
-			obj:     &v1alpha1.ContainerSource{},
-			initial: v1alpha1.ContainerSourceStatus{},
+			obj:     &v1alpha1.AwsSqsSource{},
+			initial: v1alpha1.AwsSqsSourceStatus{},
 		},
 		"set status": {
-			obj:     &v1alpha1.ContainerSource{},
-			initial: v1alpha1.ContainerSourceStatus{},
-			update: v1alpha1.ContainerSourceStatus{
+			obj:     &v1alpha1.AwsSqsSource{},
+			initial: v1alpha1.AwsSqsSourceStatus{},
+			update: v1alpha1.AwsSqsSourceStatus{
 				SinkURI: "just testing",
 			},
 		},
 		"set status with conditions": {
-			obj:     &v1alpha1.ContainerSource{},
-			initial: v1alpha1.ContainerSourceStatus{},
-			update: func() v1alpha1.ContainerSourceStatus {
-				s := v1alpha1.ContainerSourceStatus{
+			obj:     &v1alpha1.AwsSqsSource{},
+			initial: v1alpha1.AwsSqsSourceStatus{},
+			update: func() v1alpha1.AwsSqsSourceStatus {
+				s := v1alpha1.AwsSqsSourceStatus{
 					SinkURI: "updated",
 				}
 				s.InitializeConditions()
@@ -68,19 +68,19 @@ func TestNewReflectedStatusAccessor(t *testing.T) {
 			}(),
 		},
 		"replace status": {
-			obj: &v1alpha1.ContainerSource{
-				Status: v1alpha1.ContainerSourceStatus{
+			obj: &v1alpha1.AwsSqsSource{
+				Status: v1alpha1.AwsSqsSourceStatus{
 					SinkURI: "preset",
 				},
 			},
-			initial: v1alpha1.ContainerSourceStatus{
+			initial: v1alpha1.AwsSqsSourceStatus{
 				SinkURI: "preset",
 				Status: duckv1alpha1.Status{
 					Conditions: duckv1alpha1.Conditions(nil),
 				},
 			},
-			update: func() v1alpha1.ContainerSourceStatus {
-				s := v1alpha1.ContainerSourceStatus{
+			update: func() v1alpha1.AwsSqsSourceStatus {
+				s := v1alpha1.AwsSqsSourceStatus{
 					SinkURI: "updated",
 				}
 				s.InitializeConditions()

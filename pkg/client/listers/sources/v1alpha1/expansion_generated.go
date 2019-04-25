@@ -26,14 +26,6 @@ type AwsSqsSourceListerExpansion interface{}
 // AwsSqsSourceNamespaceLister.
 type AwsSqsSourceNamespaceListerExpansion interface{}
 
-// ContainerSourceListerExpansion allows custom methods to be added to
-// ContainerSourceLister.
-type ContainerSourceListerExpansion interface{}
-
-// ContainerSourceNamespaceListerExpansion allows custom methods to be added to
-// ContainerSourceNamespaceLister.
-type ContainerSourceNamespaceListerExpansion interface{}
-
 // GitHubSourceListerExpansion allows custom methods to be added to
 // GitHubSourceLister.
 type GitHubSourceListerExpansion interface{}

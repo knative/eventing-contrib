@@ -77,7 +77,8 @@ required = [
 
 [[constraint]]
   name = "github.com/knative/eventing"
-  version = "v0.5.0"
+  # HEAD as of 2019-04-25
+  revision = "a5a24f50c21a77d2c7e0c68c1512ad63f1b23d26"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
