@@ -254,18 +254,19 @@
   revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
 
 [[projects]]
-  digest = "1:d2754cafcab0d22c13541618a8029a70a8959eb3525ff201fe971637e2274cd0"
+  branch = "master"
+  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
     "cmp/cmpopts",
     "cmp/internal/diff",
+    "cmp/internal/flags",
     "cmp/internal/function",
     "cmp/internal/value",
   ]
   pruneopts = "NUT"
-  revision = "3af367b6b30c263d47e8895973edcca9a49cf029"
-  version = "v0.2.0"
+  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
   digest = "1:c280fbe00363f7c8db868a738b94df33586ce05c10d26578c3adf544d010eb64"
@@ -460,7 +461,7 @@
   revision = "a5a24f50c21a77d2c7e0c68c1512ad63f1b23d26"
 
 [[projects]]
-  digest = "1:9fecd0611db84395be9eaff06b27c3fa2df2a5682b928c2344fbfdb143c49e06"
+  digest = "1:60a1ee206bae79b58dc441e2dc4f63085f14fa162eed1068bb850c233442d662"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -482,7 +483,7 @@
     "webhook",
   ]
   pruneopts = "NUT"
-  revision = "2b574edcd712e848556c69cc95a2622145284882"
+  revision = "6916051a96ae4d87d0e0e557a3c3b887ee4a3cea"
 
 [[projects]]
   digest = "1:877272591f1cdf21c3d9d333c6393c836f22b137b4b24a303814fdf0b706ef7b"
