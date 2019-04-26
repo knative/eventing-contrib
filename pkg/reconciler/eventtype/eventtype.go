@@ -153,7 +153,7 @@ func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map
 }
 
 // getSyncEventTypes computes the EventTypes that need to be created and/or deleted based on the difference between
-// 'expected' and 'current'. It does so using all the EventType.Spec fields.
+// 'expected' and 'current'. It does so using all the EventType.Spec fields but Description.
 func (r *Reconciler) getEventTypesToSync(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) *syncEventTypes {
 	eventTypesToSync := &syncEventTypes{
 		ToCreate: make([]eventingv1alpha1.EventType, 0),
