@@ -35,13 +35,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-const (
-	awsSQSHeaderFrom = "From"
-)
-
 // Adapter implements the AWS SQS adapter to deliver SQS messages from
 // an SQS queue to a Sink.
 type Adapter struct {
+
 	// QueueURL is the AWS SQS URL that we're polling messages from
 	QueueURL string
 
@@ -180,17 +177,13 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		timestamp = time.Now().UnixNano()
 	}
 
-	extensions := map[string]interface{}{
-		awsSQSHeaderFrom: a.QueueURL,
-	}
-
+	// TODO set source and subject properly.
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
-			ID:         *m.MessageId,
-			Type:       sourcesv1alpha1.AwsSqsSourceEventType,
-			Source:     *types.ParseURLRef(a.QueueURL),
-			Time:       &types.Timestamp{Time: time.Unix(timestamp, 0)},
-			Extensions: extensions,
+			ID:     *m.MessageId,
+			Type:   sourcesv1alpha1.AwsSqsSourceEventType,
+			Source: *types.ParseURLRef(a.QueueURL),
+			Time:   &types.Timestamp{Time: time.Unix(timestamp, 0)},
 		}.AsV02(),
 		Data: m,
 	}

@@ -30,7 +30,7 @@ import (
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	"k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -237,7 +237,9 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsS
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
 		Type: v1alpha1.AwsSqsSourceEventType,
-		// Using the queue URL as source.
+		// Using the Queue URL as source.
+		// This should match what is populated in the adapter.
+		// TODO change it in both places once we agree on subject.
 		Source: src.Spec.QueueURL,
 		Broker: src.Spec.Sink.Name,
 	}

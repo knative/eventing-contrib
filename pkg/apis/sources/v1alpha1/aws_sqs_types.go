@@ -65,7 +65,7 @@ type AwsSqsSourceSpec struct {
 
 const (
 	// AwsSqsSourceEventType is the AWS SQS CloudEvent type.
-	AwsSqsSourceEventType = "dev.knative.source.awssqs"
+	AwsSqsSourceEventType = "aws.sqs.message"
 )
 
 const (
