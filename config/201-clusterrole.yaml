@@ -33,6 +33,15 @@ rules:
   - patch
   - delete
 
+  # ContainerSource from eventing
+- apiGroups:
+    - sources.eventing.knative.dev
+  resources:
+    - containersources
+    - containersources/status
+    - containersources/finalizers
+  verbs: *everything
+
 # Sources finalizer
 - apiGroups:
   - sources.eventing.knative.dev
