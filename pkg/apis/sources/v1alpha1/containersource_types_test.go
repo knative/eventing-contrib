@@ -323,3 +323,126 @@ func TestContainerSourceStatusGetCondition(t *testing.T) {
 		})
 	}
 }
+
+func TestContainerSourceStatusIsDeployed(t *testing.T) {
+	tests := []struct {
+		name string
+		s    *ContainerSourceStatus
+		want bool
+	}{{
+		name: "uninitialized",
+		s:    &ContainerSourceStatus{},
+		want: false,
+	}, {
+		name: "initialized",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkDeployed()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink and deployed then no sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkNoSink("Testing", "")
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink and deployed then deploying",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkDeploying("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and deployed then not deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkDeployed()
+			s.MarkNotDeployed("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink and not deployed then deploying then deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkNotDeployed("MarkNotDeployed", "")
+			s.MarkDeploying("MarkDeploying", "")
+			s.MarkDeployed()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink empty and deployed",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkDeployed()
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink empty and deployed then sink",
+		s: func() *ContainerSourceStatus {
+			s := &ContainerSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkDeployed()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: true,
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.s.IsDeployed()
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("%s: unexpected condition (-want, +got) = %v", test.name, diff)
+			}
+		})
+	}
+}

@@ -23,7 +23,6 @@ rules:
   resources:
   - awssqssources
   - containersources
-  - cronjobsources
   - githubsources
   - kuberneteseventsources
   verbs: &everything
@@ -41,7 +40,6 @@ rules:
   resources:
   - awssqssources/finalizers
   - containersources/finalizers
-  - cronjobsources/finalizers
   - githubsources/finalizers
   - kuberneteseventsources/finalizers
   verbs: *everything
@@ -52,7 +50,6 @@ rules:
   resources:
   - awssqssources/status
   - containersources/status
-  - cronjobsources/status
   - githubsources/status
   - kuberneteseventsources/status
   verbs:

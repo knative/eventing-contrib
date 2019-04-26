@@ -108,7 +108,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getContainerSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("Deploying", "Created deployment %s", deployGeneratedName)
+				s.Status.MarkDeploying("DeploymentCreated", "Created deployment %q", deployGeneratedName)
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
@@ -140,7 +140,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getContainerSource()
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("NotFound", "")
+				s.Status.MarkNoSink("NotFound", `Couldn't get Sink URI from "/testsink": sink "testnamespace/testsink" (duck.knative.dev/v1alpha1, Kind=Sink) does not contain address"`)
 				return s
 			}(),
 		},
@@ -163,7 +163,7 @@ var testCases = []controllertesting.TestCase{
 				s := getContainerSource()
 				s.Spec.Sink = nil
 				s.Status.InitializeConditions()
-				s.Status.MarkNoSink("Missing", "")
+				s.Status.MarkNoSink("Missing", "Sink missing from spec")
 				return s
 			}(),
 		},
@@ -188,7 +188,7 @@ var testCases = []controllertesting.TestCase{
 				s.Spec.Sink = nil
 				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("Deploying", "Created deployment %s", deployGeneratedName)
+				s.Status.MarkDeploying("DeploymentCreated", "Created deployment %q", deployGeneratedName)
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
@@ -215,7 +215,7 @@ var testCases = []controllertesting.TestCase{
 				s.Spec.Sink = nil
 				s.Spec.Args = append(s.Spec.Args, fmt.Sprintf("--sink=%s", targetURI))
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("Deploying", "Created deployment %s", deployGeneratedName)
+				s.Status.MarkDeploying("DeploymentCreated", "Created deployment %q", deployGeneratedName)
 				s.Status.MarkSink(targetURI)
 				s.ObjectMeta.Annotations = map[string]string{"annotation": "solid"}
 				s.ObjectMeta.Labels = map[string]string{"label": "soliderer"}
@@ -327,7 +327,7 @@ var testCases = []controllertesting.TestCase{
 				s := getContainerSource()
 				s.UID = containerSourceUID
 				s.Status.InitializeConditions()
-				s.Status.MarkDeploying("DeployUpdated", "Updated deployment %s", containerSourceName+"-abc")
+				s.Status.MarkDeploying("DeploymentUpdated", "Updated deployment %q", containerSourceName+"-abc")
 				s.Status.MarkSink(targetURI)
 				return s
 			}(),
