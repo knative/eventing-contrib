@@ -40,6 +40,10 @@ func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSou
 	return &FakeGitHubSources{c, namespace}
 }
 
+func (c *FakeSourcesV1alpha1) GitLabSources(namespace string) v1alpha1.GitLabSourceInterface {
+	return &FakeGitLabSources{c, namespace}
+}
+
 func (c *FakeSourcesV1alpha1) KubernetesEventSources(namespace string) v1alpha1.KubernetesEventSourceInterface {
 	return &FakeKubernetesEventSources{c, namespace}
 }

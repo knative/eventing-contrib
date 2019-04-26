@@ -42,6 +42,14 @@ type GitHubSourceListerExpansion interface{}
 // GitHubSourceNamespaceLister.
 type GitHubSourceNamespaceListerExpansion interface{}
 
+// GitLabSourceListerExpansion allows custom methods to be added to
+// GitLabSourceLister.
+type GitLabSourceListerExpansion interface{}
+
+// GitLabSourceNamespaceListerExpansion allows custom methods to be added to
+// GitLabSourceNamespaceLister.
+type GitLabSourceNamespaceListerExpansion interface{}
+
 // KubernetesEventSourceListerExpansion allows custom methods to be added to
 // KubernetesEventSourceLister.
 type KubernetesEventSourceListerExpansion interface{}

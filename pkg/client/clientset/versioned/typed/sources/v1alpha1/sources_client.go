@@ -30,6 +30,7 @@ type SourcesV1alpha1Interface interface {
 	AwsSqsSourcesGetter
 	ContainerSourcesGetter
 	GitHubSourcesGetter
+	GitLabSourcesGetter
 	KubernetesEventSourcesGetter
 }
 
@@ -48,6 +49,10 @@ func (c *SourcesV1alpha1Client) ContainerSources(namespace string) ContainerSour
 
 func (c *SourcesV1alpha1Client) GitHubSources(namespace string) GitHubSourceInterface {
 	return newGitHubSources(c, namespace)
+}
+
+func (c *SourcesV1alpha1Client) GitLabSources(namespace string) GitLabSourceInterface {
+	return newGitLabSources(c, namespace)
 }
 
 func (c *SourcesV1alpha1Client) KubernetesEventSources(namespace string) KubernetesEventSourceInterface {

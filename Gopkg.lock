@@ -752,6 +752,14 @@
   version = "v1.0.3"
 
 [[projects]]
+  digest = "1:6ef52d124c3caa2082d7d375ba20decd7a7a93942ac150efe69dba8277388577"
+  name = "github.com/xanzy/go-gitlab"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "be70cf752294cc5c6ee89a18d6ba0caca08aa5c7"
+  version = "v0.16.1"
+
+[[projects]]
   digest = "1:5622c6893f87955f945c430461d41ebf6e26498214559cbaf93d284e2c8e9047"
   name = "go.opencensus.io"
   packages = [
@@ -1025,9 +1033,12 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:d424e1da4f56fdb1ca8fdc6ec34ea9ac46690ce117bd52bf44997344a11a66a7"
+  digest = "1:dee0336237369a5e1bc628f0b365ea9a98c653f8eb224d264b7844222fbf6d82"
   name = "gopkg.in/go-playground/webhooks.v5"
-  packages = ["github"]
+  packages = [
+    "github",
+    "gitlab",
+  ]
   pruneopts = "NUT"
   revision = "a1e2052ae0ab4278c6d45f062228413f7a710c00"
   version = "v5.7.0"
@@ -1496,12 +1507,14 @@
     "github.com/knative/test-infra/tools/dep-collector",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
+    "github.com/xanzy/go-gitlab",
     "go.opencensus.io/trace",
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "gopkg.in/go-playground/webhooks.v5/github",
+    "gopkg.in/go-playground/webhooks.v5/gitlab",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1beta1",

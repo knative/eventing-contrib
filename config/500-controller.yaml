@@ -37,6 +37,8 @@ spec:
           value: github.com/knative/eventing-sources/cmd/kuberneteseventsource
         - name: GH_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/github_receive_adapter
+        - name: GL_RA_IMAGE
+          value: github.com/knative/eventing-sources/cmd/gitlab_receive_adapter
         resources:
           limits:
             cpu: 100m

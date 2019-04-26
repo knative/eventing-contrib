@@ -24,6 +24,7 @@ rules:
   - awssqssources
   - containersources
   - githubsources
+  - gitlabsources
   - kuberneteseventsources
   verbs: &everything
   - get
@@ -41,6 +42,7 @@ rules:
   - awssqssources/finalizers
   - containersources/finalizers
   - githubsources/finalizers
+  - gitlabsources/finalizers
   - kuberneteseventsources/finalizers
   verbs: *everything
 
@@ -51,6 +53,7 @@ rules:
   - awssqssources/status
   - containersources/status
   - githubsources/status
+  - gitlabsources/status
   - kuberneteseventsources/status
   verbs:
   - get
