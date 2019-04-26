@@ -92,11 +92,11 @@ func TestKubernetesEvents(t *testing.T) {
 
 	pkgTest.WaitForAllPodsRunning(clients.Kube, testNamespace)
 
-	err = pkgTest.WaitForLogContent(clients.Kube, routeName, "user-container", "Created container")
+	err = pkgTest.WaitForLogContent(clients.Kube, routeName, "user-container", pkgTest.Flags.Namespace, "Created container")
 	if err != nil {
 		t.Fatalf("Events for container created not received: %v", err)
 	}
-	err = pkgTest.WaitForLogContent(clients.Kube, routeName, "user-container", "Started container")
+	err = pkgTest.WaitForLogContent(clients.Kube, routeName, "user-container", pkgTest.Flags.Namespace, "Started container")
 	if err != nil {
 		t.Fatalf("Events for container started not received: %v", err)
 	}
