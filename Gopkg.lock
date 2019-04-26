@@ -444,7 +444,7 @@
   version = "v0.5.0"
 
 [[projects]]
-  digest = "1:36746d0fdcea0063381d4b3a5a0800001c6f1373851f7d9dd21da5edd3aa5988"
+  digest = "1:585b14b6125e1d4797a33f1b61de00549b83bed26bdbaa04aa21a6842c45a0b1"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
@@ -456,7 +456,6 @@
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
-    "pkg/utils",
   ]
   pruneopts = "NUT"
   revision = "54500a2fe4872243364acb81841fedf3b796267f"
@@ -1485,7 +1484,6 @@
     "github.com/kelseyhightower/envconfig",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
-    "github.com/knative/eventing/pkg/utils",
     "github.com/knative/pkg/apis",
     "github.com/knative/pkg/apis/duck",
     "github.com/knative/pkg/apis/duck/v1alpha1",
@@ -1523,6 +1521,7 @@
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
+    "k8s.io/apimachinery/pkg/util/validation",
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
