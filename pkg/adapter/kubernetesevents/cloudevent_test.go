@@ -46,27 +46,20 @@ func TestCloudEventFrom(t *testing.T) {
 
 	now := time.Now()
 
-	reason := "test-reason"
-
 	event := &corev1.Event{
 		ObjectMeta: metav1.ObjectMeta{
 			UID:               uid,
 			CreationTimestamp: metav1.Time{Time: now},
 		},
 		InvolvedObject: ref,
-		Reason:         reason,
 	}
 
-	extensions := map[string]interface{}{
-		k8sHeaderFrom: reason,
-	}
 	want := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
-			Type:       sourcesv1alpha1.KubernetesEventSourceEventType,
-			ID:         string(uid),
-			Source:     *cetypes.ParseURLRef(refLink),
-			Time:       &cetypes.Timestamp{Time: now},
-			Extensions: extensions,
+			Type:   sourcesv1alpha1.KubernetesEventSourceEventType,
+			ID:     string(uid),
+			Source: *cetypes.ParseURLRef(refLink),
+			Time:   &cetypes.Timestamp{Time: now},
 		}.AsV02(),
 		Data: event,
 	}

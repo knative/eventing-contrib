@@ -33,8 +33,8 @@ import (
 )
 
 const (
-	testSource = "http://github.com/a/b"
-	testFrom   = "test-user/test-repo"
+	testSource    = "http://github.com/a/b"
+	testOwnerRepo = "test-user/test-repo"
 )
 
 // testCase holds a single row of our GitHubSource table tests
@@ -437,7 +437,7 @@ func TestAllCases(t *testing.T) {
 		sinkServer := httptest.NewServer(h)
 		defer sinkServer.Close()
 
-		ra, err := New(sinkServer.URL, testFrom)
+		ra, err := New(sinkServer.URL, testOwnerRepo)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -549,8 +549,7 @@ func TestHandleEvent(t *testing.T) {
 			"ce-type":            {"dev.knative.source.github.pull_request"},
 			"ce-source":          {"http://github.com/a/b"},
 			"ce-github-delivery": {`"12345"`},
-			"ce-github-event":    {`"` + eventType + `"`},
-			"ce-from":            {`"` + testFrom + `"`},
+			"ce-github-event":    {`"pull_request"`},
 
 			"content-type": {"application/json"},
 		},
@@ -564,7 +563,7 @@ func TestHandleEvent(t *testing.T) {
 	sinkServer := httptest.NewServer(h)
 	defer sinkServer.Close()
 
-	ra, err := New(sinkServer.URL, testFrom)
+	ra, err := New(sinkServer.URL, testOwnerRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -572,8 +571,8 @@ func TestHandleEvent(t *testing.T) {
 	payload := gh.PullRequestPayload{}
 	payload.PullRequest.HTMLURL = testSource
 	header := http.Header{}
-	header.Set("X-"+ghHeaderEvent, eventType)
-	header.Set("X-"+ghHeaderDelivery, eventID)
+	header.Set("X-"+GHHeaderEvent, eventType)
+	header.Set("X-"+GHHeaderDelivery, eventID)
 	ra.HandleEvent(payload, http.Header(header))
 
 	// TODO(https://github.com/knative/pkg/issues/250): clean this up when there is a shared test client.

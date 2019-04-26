@@ -27,10 +27,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-const (
-	k8sHeaderFrom = "From"
-)
-
 // Creates a URI of the form found in object metadata selfLinks
 // Format looks like: /apis/feeds.knative.dev/v1alpha1/namespaces/default/feeds/k8s-events-example
 // KNOWN ISSUES:
@@ -83,17 +79,13 @@ func createSelfLink(o corev1.ObjectReference) string {
 //		EventTime:0001-01-01 00:00:00 +0000 UTC,
 //	}
 func cloudEventFrom(m *corev1.Event) cloudevents.Event {
-	// TODO should use reason?
-	extensions := map[string]interface{}{
-		k8sHeaderFrom: m.Reason,
-	}
+	// TODO set source and subject properly.
 	return cloudevents.Event{
 		Context: cloudevents.EventContextV02{
-			ID:         string(m.ObjectMeta.UID),
-			Type:       sourcesv1alpha1.KubernetesEventSourceEventType,
-			Source:     *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
-			Time:       &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
-			Extensions: extensions,
+			ID:     string(m.ObjectMeta.UID),
+			Type:   sourcesv1alpha1.KubernetesEventSourceEventType,
+			Source: *types.ParseURLRef(createSelfLink(m.InvolvedObject)),
+			Time:   &types.Timestamp{Time: m.ObjectMeta.CreationTimestamp.Time},
 		}.AsV02(),
 		Data: m,
 	}

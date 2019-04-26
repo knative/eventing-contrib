@@ -48,7 +48,7 @@ type KubernetesEventSourceSpec struct {
 
 const (
 	// KubernetesEventSourceEventType is the Kubernetes CloudEvent type.
-	KubernetesEventSourceEventType = "dev.knative.source.k8s"
+	KubernetesEventSourceEventType = "dev.knative.k8s.event"
 )
 
 const (
