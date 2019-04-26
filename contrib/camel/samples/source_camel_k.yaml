@@ -1,8 +1,7 @@
-# Apache Camel Timer Source
+# Apache Camel K Source
 #
-# Timer Component documentation: https://github.com/apache/camel/blob/master/camel-core/src/main/docs/timer-component.adoc
+# Camel K documentation: https://github.com/apache/camel-k
 #
-# List of available Apache Camel components: https://github.com/apache/camel/tree/master/components
 #
 apiVersion: sources.eventing.knative.dev/v1alpha1
 kind: CamelSource
@@ -15,8 +14,10 @@ spec:
       - name: file.groovy
         content:
           from("timer:tick?period=5s")
-            .setBody().constant("Hello World")
-            .to("knative:endpoint/sink")
+            .log("Fetching quote of the day")
+            .to("https4://gist.githubusercontent.com/nicolaferraro/e3c72ace3c751f9f88273896611ce5fe/raw/3b6f54060bacb56b6719b7386a4645cb59ad6cc1/quote.json")
+            .setHeader("Content-Type").constant("application/json")
+            .to("knative:endpoint/sink?cloudEventsType=org.apache.camel.quote")
   sink:
     apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel
