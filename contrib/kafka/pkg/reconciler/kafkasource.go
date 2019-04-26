@@ -31,7 +31,7 @@ import (
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	"k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -194,8 +194,10 @@ func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *eve
 	for _, topic := range topics {
 		arg := &eventtype.EventTypeArgs{
 			Type: v1alpha1.KafkaSourceEventType,
-			// Using the consumer group and the topic as source.
-			Source: fmt.Sprintf("%s/%s", src.Spec.ConsumerGroup, topic),
+			// Using the the topic as source. Should probably be consumerGroup as source and topic as subject.
+			// This should match what is populated in the adapter.
+			// TODO change it in both places once we agree on subject.
+			Source: topic,
 			Broker: src.Spec.Sink.Name,
 		}
 		args = append(args, arg)

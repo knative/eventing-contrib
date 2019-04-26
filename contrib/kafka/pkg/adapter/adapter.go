@@ -18,7 +18,6 @@ package kafka
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -31,10 +30,6 @@ import (
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-)
-
-const (
-	kafkaHeaderFrom = "From"
 )
 
 type AdapterSASL struct {
@@ -157,9 +152,10 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 func (a *Adapter) postMessage(ctx context.Context, msg *sarama.ConsumerMessage) error {
 
 	extensions := map[string]interface{}{
-		"key":           string(msg.Key),
-		kafkaHeaderFrom: fmt.Sprintf("%s/%s", a.ConsumerGroup, msg.Topic),
+		"key": string(msg.Key),
 	}
+
+	// TODO set source and subject properly.
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			SpecVersion: cloudevents.CloudEventsVersionV02,

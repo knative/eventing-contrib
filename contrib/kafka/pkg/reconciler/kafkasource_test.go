@@ -311,7 +311,7 @@ func getEventType(name, group, topic string) *eventingv1alpha1.EventType {
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   sourcesv1alpha1.KafkaSourceEventType,
-			Source: fmt.Sprintf("%s/%s", group, topic),
+			Source: topic,
 			Broker: addressableName,
 		},
 	}

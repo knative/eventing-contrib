@@ -91,7 +91,7 @@ type KafkaSourceSpec struct {
 
 const (
 	// KafkaSourceEventType is the Kafka CloudEvent type.
-	KafkaSourceEventType = "dev.knative.source.kafka"
+	KafkaSourceEventType = "dev.knative.kafka.event"
 )
 
 const (
