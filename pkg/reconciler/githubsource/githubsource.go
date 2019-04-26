@@ -361,9 +361,10 @@ func (r *reconciler) newEventTypesReconcilerArgs(source *sourcesv1alpha1.GitHubS
 		arg := &eventtype.EventTypeArgs{
 			Type: fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, et),
 			// Using the owner and repository as source.
+			// This should match what is populated in the adapter. It currently doesn't
+			// TODO change it in both places once we agree on subject.
 			Source: source.Spec.OwnerAndRepository,
 			Broker: source.Spec.Sink.Name,
-			// TODO change CRD to set the schema.
 		}
 		args = append(args, arg)
 	}

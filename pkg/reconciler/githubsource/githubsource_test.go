@@ -25,8 +25,6 @@ import (
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/knative/eventing/pkg/utils"
-
 	"github.com/google/go-cmp/cmp"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
@@ -921,7 +919,7 @@ func getEventType() *eventingv1alpha1.EventType {
 					UID:                gitHubSourceUID,
 				},
 			},
-			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(et)),
+			GenerateName: fmt.Sprintf("%s-", eventtype.ToDNS1123Subdomain(et)),
 			Namespace:    testNS,
 			Labels:       getLabels(getGitHubSource()),
 		},

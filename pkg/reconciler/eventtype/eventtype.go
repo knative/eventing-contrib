@@ -138,7 +138,7 @@ func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) (
 func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map[string]string) eventingv1alpha1.EventType {
 	return eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("%s-", toDNS1123Subdomain(arg.Type)),
+			GenerateName: fmt.Sprintf("%s-", ToDNS1123Subdomain(arg.Type)),
 			Labels:       lbl,
 			Namespace:    namespace,
 		},
@@ -192,7 +192,7 @@ func groupByKey(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv
 }
 
 // Converts 'name' to a valid DNS1123 subdomain, required for object names in K8s.
-func toDNS1123Subdomain(name string) string {
+func ToDNS1123Subdomain(name string) string {
 	// If it is not a valid DNS1123 subdomain, make it a valid one.
 	if msgs := validation.IsDNS1123Subdomain(name); len(msgs) != 0 {
 		// If the length exceeds the max, cut it and leave some room for a potential generated UUID.
