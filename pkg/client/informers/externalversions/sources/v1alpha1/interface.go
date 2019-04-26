@@ -28,8 +28,6 @@ type Interface interface {
 	AwsSqsSources() AwsSqsSourceInformer
 	// ContainerSources returns a ContainerSourceInformer.
 	ContainerSources() ContainerSourceInformer
-	// CronJobSources returns a CronJobSourceInformer.
-	CronJobSources() CronJobSourceInformer
 	// GitHubSources returns a GitHubSourceInformer.
 	GitHubSources() GitHubSourceInformer
 	// KubernetesEventSources returns a KubernetesEventSourceInformer.
@@ -55,11 +53,6 @@ func (v *version) AwsSqsSources() AwsSqsSourceInformer {
 // ContainerSources returns a ContainerSourceInformer.
 func (v *version) ContainerSources() ContainerSourceInformer {
 	return &containerSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// CronJobSources returns a CronJobSourceInformer.
-func (v *version) CronJobSources() CronJobSourceInformer {
-	return &cronJobSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // GitHubSources returns a GitHubSourceInformer.

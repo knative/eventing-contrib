@@ -37,17 +37,13 @@ func receive(event cloudevents.Event) {
 }
 
 func main() {
-	ctx := context.TODO()
-
 	c, err := kncloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())
 	}
 
-	if err := c.StartReceiver(ctx, receive); err != nil {
+	log.Print("listening on port 8080")
+	if err := c.StartReceiver(context.Background(), receive); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
-
-	log.Print("Ready and listening on port 8080")
-	<-ctx.Done()
 }

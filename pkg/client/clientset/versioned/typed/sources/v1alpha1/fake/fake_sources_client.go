@@ -36,10 +36,6 @@ func (c *FakeSourcesV1alpha1) ContainerSources(namespace string) v1alpha1.Contai
 	return &FakeContainerSources{c, namespace}
 }
 
-func (c *FakeSourcesV1alpha1) CronJobSources(namespace string) v1alpha1.CronJobSourceInterface {
-	return &FakeCronJobSources{c, namespace}
-}
-
 func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSourceInterface {
 	return &FakeGitHubSources{c, namespace}
 }
