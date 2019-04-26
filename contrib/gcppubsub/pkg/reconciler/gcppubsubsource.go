@@ -31,7 +31,7 @@ import (
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	"k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -308,7 +308,9 @@ func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) 
 	arg := &eventtype.EventTypeArgs{
 		Type: v1alpha1.GcpPubSubSourceEventType,
 		// Using the google cloud project and the topic as source.
-		Source: fmt.Sprintf("%s/%s", src.Spec.GoogleCloudProject, src.Spec.Topic),
+		// This should match what is populated in the adapter.
+		// TODO change it in both places once we agree on subject.
+		Source: fmt.Sprintf(v1alpha1.GcpPubSubSourceEventSourceFormat, src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,
 	}
 	args := make([]*eventtype.EventTypeArgs, 0, 1)

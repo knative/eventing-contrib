@@ -77,7 +77,9 @@ type GcpPubSubSourceSpec struct {
 const (
 	// GcpPubSubSourceEventType is the GcpPubSub CloudEvent type, in case PubSub doesn't send a
 	// CloudEvent itself.
-	GcpPubSubSourceEventType = "dev.knative.source.gcppubsub"
+	GcpPubSubSourceEventType = "google.pubsub.topic.publish"
+	// GcpPubSubSourceEventSourceTemplate is the GcpPubSub CloudEvent source template.
+	GcpPubSubSourceEventSourceFormat = "//pubsub.googleapis.com/%s/topics/%s"
 )
 
 const (

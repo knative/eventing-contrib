@@ -16,9 +16,12 @@ package eventtype
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
+
+	"k8s.io/apimachinery/pkg/util/validation"
 
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"github.com/knative/eventing/pkg/utils"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -26,6 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+// Only allow alphanumeric, '-' or '.'.
+var validChars = regexp.MustCompile(`[^-\.a-z0-9]+`)
 
 // Reconciler reconciles EventTypes of different sources.
 type Reconciler struct {
@@ -42,10 +48,11 @@ type ReconcilerArgs struct {
 
 // EventTypeArgs are the arguments needed to create an EventType.
 type EventTypeArgs struct {
-	Type   string
-	Source string
-	Schema string
-	Broker string
+	Type        string
+	Source      string
+	Schema      string
+	Broker      string
+	Description string
 }
 
 // syncEventTypes is a helper struct used to sync EventTypes during the reconciliation process.
@@ -131,15 +138,16 @@ func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) (
 func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map[string]string) eventingv1alpha1.EventType {
 	return eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(arg.Type)),
+			GenerateName: fmt.Sprintf("%s-", toDNS1123Subdomain(arg.Type)),
 			Labels:       lbl,
 			Namespace:    namespace,
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
-			Type:   arg.Type,
-			Source: arg.Source,
-			Schema: arg.Schema,
-			Broker: arg.Broker,
+			Type:        arg.Type,
+			Source:      arg.Source,
+			Schema:      arg.Schema,
+			Broker:      arg.Broker,
+			Description: arg.Description,
 		},
 	}
 }
@@ -181,4 +189,20 @@ func groupByKey(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv
 		eventTypesAsMap[key] = append(eventTypesAsMap[key], eventType)
 	}
 	return eventTypesAsMap
+}
+
+// Converts 'name' to a valid DNS1123 subdomain, required for object names in K8s.
+func toDNS1123Subdomain(name string) string {
+	// If it is not a valid DNS1123 subdomain, make it a valid one.
+	if msgs := validation.IsDNS1123Subdomain(name); len(msgs) != 0 {
+		// If the length exceeds the max, cut it and leave some room for a potential generated UUID.
+		if len(name) > validation.DNS1123SubdomainMaxLength {
+			name = name[:validation.DNS1123SubdomainMaxLength-10]
+		}
+		name = strings.ToLower(name)
+		name = validChars.ReplaceAllString(name, "")
+		// Only start/end with alphanumeric.
+		name = strings.Trim(name, "-.")
+	}
+	return name
 }
