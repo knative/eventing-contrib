@@ -444,24 +444,25 @@
   version = "v0.5.0"
 
 [[projects]]
-  branch = "broker-new-model"
-  digest = "1:e9cdb0ed5eb3d37871c5372b00e879313f4fec9c768cabf75366617f8ebb7d4a"
+  digest = "1:36746d0fdcea0063381d4b3a5a0800001c6f1373851f7d9dd21da5edd3aa5988"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing",
     "pkg/apis/eventing/v1alpha1",
+    "pkg/apis/sources",
+    "pkg/apis/sources/v1alpha1",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
     "pkg/utils",
   ]
   pruneopts = "NUT"
-  revision = "004b28a880f8a66d04a5612f5c98219fe0d3bf95"
-  source = "github.com/nachocano/eventing"
+  revision = "54500a2fe4872243364acb81841fedf3b796267f"
 
 [[projects]]
-  digest = "1:b095091450c36e7ebed8ed65693ef45d232e6fe1e474a810e2e5adc8dfb72f02"
+  digest = "1:60a1ee206bae79b58dc441e2dc4f63085f14fa162eed1068bb850c233442d662"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -483,7 +484,7 @@
     "webhook",
   ]
   pruneopts = "NUT"
-  revision = "1095a4eab01cb7f5bbfa4dd5d048d730a00980e3"
+  revision = "52709ba13d9b77473fe37f2481312a62f63a7d6d"
 
 [[projects]]
   digest = "1:877272591f1cdf21c3d9d333c6393c836f22b137b4b24a303814fdf0b706ef7b"

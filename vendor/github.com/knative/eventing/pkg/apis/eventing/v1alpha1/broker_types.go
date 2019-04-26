@@ -55,14 +55,6 @@ type BrokerSpec struct {
 	//
 	// +optional
 	ChannelTemplate *ChannelSpec `json:"channelTemplate,omitempty"`
-
-	// +optional
-	IngressPolicy *IngressPolicySpec `json:"ingressPolicy,omitempty"`
-}
-
-type IngressPolicySpec struct {
-	AllowAny bool `json:"allowAny,omitempty"`
-	AutoAdd  bool `json:"autoAdd,omitempty"`
 }
 
 // BrokerStatus represents the current state of a Broker.
