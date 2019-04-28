@@ -115,7 +115,7 @@ func getSource() *sourcesv1alpha1.ApiServerSource {
 		ObjectMeta: om(testNS, sourceName),
 		Spec: sourcesv1alpha1.ApiServerSourceSpec{
 			Resources: []sourcesv1alpha1.Kind{
-				sourcesv1alpha1.Kind{
+				{
 					APIVersion: "",
 					Kind:       "Namespace",
 				},
