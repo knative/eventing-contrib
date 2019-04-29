@@ -34,7 +34,13 @@ readonly E2E_TEST_FUNCTION_NAMESPACE=e2etestfn3
 # Helper functions.
 
 function knative_setup() {
-  start_latest_knative_serving || return 1
+  echo ">> Enabling Istio"
+  # Enable istio.
+  gcloud beta container clusters update ${E2E_CLUSTER_NAME} --region=${E2E_CLUSTER_REGION} \
+    --update-addons=Istio=ENABLED --istio-config=auth=MTLS_PERMISSIVE
+  kubectl label namespace default istio-injection=enabled || return 1
+
+  #start_latest_knative_serving || return 1
   start_latest_knative_eventing || return 1
 
   header "Standing up Knative Eventing Sources"
