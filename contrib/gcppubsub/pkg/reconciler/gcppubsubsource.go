@@ -306,10 +306,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpP
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
-		Type: v1alpha1.GcpPubSubSourceEventType,
-		// Using the google cloud project and the topic as source.
-		// This should match what is populated in the adapter.
-		// TODO change it in both places once we agree on subject.
+		Type:   v1alpha1.GcpPubSubSourceEventType,
 		Source: fmt.Sprintf(v1alpha1.GcpPubSubSourceEventSourceFormat, src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,
 	}

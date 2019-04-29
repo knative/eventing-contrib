@@ -236,10 +236,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsS
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
-		Type: v1alpha1.AwsSqsSourceEventType,
-		// Using the Queue URL as source.
-		// This should match what is populated in the adapter.
-		// TODO change it in both places once we agree on subject.
+		Type:   v1alpha1.AwsSqsSourceEventType,
 		Source: src.Spec.QueueURL,
 		Broker: src.Spec.Sink.Name,
 	}

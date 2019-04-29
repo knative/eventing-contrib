@@ -194,9 +194,7 @@ func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *eve
 	for _, topic := range topics {
 		arg := &eventtype.EventTypeArgs{
 			Type: v1alpha1.KafkaSourceEventType,
-			// Using the the topic as source. Should probably be consumerGroup as source and topic as subject.
-			// This should match what is populated in the adapter.
-			// TODO change it in both places once we agree on subject.
+			// Should probably be consumerGroup and topic as source.
 			Source: topic,
 			Broker: src.Spec.Sink.Name,
 		}
