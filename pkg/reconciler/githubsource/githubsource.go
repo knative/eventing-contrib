@@ -61,23 +61,21 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	if !defined {
 		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
-	scheme := mgr.GetScheme()
-	r := &reconciler{
-		recorder:            mgr.GetRecorder(controllerAgentName),
-		scheme:              scheme,
-		receiveAdapterImage: receiveAdapterImage,
-		webhookClient:       gitHubWebhookClient{},
-		eventTypeReconciler: eventtype.Reconciler{
-			Scheme: scheme,
-		},
-	}
 
 	log.Println("Adding the GitHub Source controller.")
 	p := &sdk.Provider{
-		AgentName:  controllerAgentName,
-		Parent:     &sourcesv1alpha1.GitHubSource{},
-		Owns:       []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
-		Reconciler: r,
+		AgentName: controllerAgentName,
+		Parent:    &sourcesv1alpha1.GitHubSource{},
+		Owns:      []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
+		Reconciler: &reconciler{
+			recorder:            mgr.GetRecorder(controllerAgentName),
+			scheme:              mgr.GetScheme(),
+			receiveAdapterImage: receiveAdapterImage,
+			webhookClient:       gitHubWebhookClient{},
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: mgr.GetScheme(),
+			},
+		},
 	}
 
 	return p.Add(mgr, logger)
@@ -371,14 +369,7 @@ func (r *reconciler) newEventTypesReconcilerArgs(source *sourcesv1alpha1.GitHubS
 	return &eventtype.ReconcilerArgs{
 		EventTypes: args,
 		Namespace:  source.Namespace,
-		Labels:     getLabels(source),
-	}
-}
-
-func getLabels(src *sourcesv1alpha1.GitHubSource) map[string]string {
-	return map[string]string{
-		"knative-eventing-source":      controllerAgentName,
-		"knative-eventing-source-name": src.Name,
+		Labels:     resources.Labels(source.Name),
 	}
 }
 

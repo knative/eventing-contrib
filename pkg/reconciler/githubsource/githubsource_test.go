@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
+
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -921,7 +923,7 @@ func getEventType() *eventingv1alpha1.EventType {
 			},
 			GenerateName: fmt.Sprintf("%s-", eventtype.ToDNS1123Subdomain(et)),
 			Namespace:    testNS,
-			Labels:       getLabels(getGitHubSource()),
+			Labels:       resources.Labels(gitHubSourceName),
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   et,

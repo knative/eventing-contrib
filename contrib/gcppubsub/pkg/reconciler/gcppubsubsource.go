@@ -64,22 +64,19 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 
-	scheme := mgr.GetScheme()
-	r := &reconciler{
-		scheme:              scheme,
-		pubSubClientCreator: gcpPubSubClientCreator,
-		receiveAdapterImage: raImage,
-		eventTypeReconciler: eventtype.Reconciler{
-			Scheme: scheme,
-		},
-	}
-
 	log.Println("Adding the GCP PubSub Source controller.")
 	p := &sdk.Provider{
-		AgentName:  controllerAgentName,
-		Parent:     &v1alpha1.GcpPubSubSource{},
-		Owns:       []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
-		Reconciler: r,
+		AgentName: controllerAgentName,
+		Parent:    &v1alpha1.GcpPubSubSource{},
+		Owns:      []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
+		Reconciler: &reconciler{
+			scheme:              mgr.GetScheme(),
+			pubSubClientCreator: gcpPubSubClientCreator,
+			receiveAdapterImage: raImage,
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: mgr.GetScheme(),
+			},
+		},
 	}
 
 	return p.Add(mgr, logger)

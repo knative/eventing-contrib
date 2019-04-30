@@ -54,21 +54,18 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 
-	scheme := mgr.GetScheme()
-	r := &reconciler{
-		scheme:              scheme,
-		receiveAdapterImage: raImage,
-		eventTypeReconciler: eventtype.Reconciler{
-			Scheme: scheme,
-		},
-	}
-
 	log.Println("Adding the Apache Kafka Source controller.")
 	p := &sdk.Provider{
-		AgentName:  controllerAgentName,
-		Parent:     &v1alpha1.KafkaSource{},
-		Owns:       []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
-		Reconciler: r,
+		AgentName: controllerAgentName,
+		Parent:    &v1alpha1.KafkaSource{},
+		Owns:      []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
+		Reconciler: &reconciler{
+			scheme:              mgr.GetScheme(),
+			receiveAdapterImage: raImage,
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: mgr.GetScheme(),
+			},
+		},
 	}
 
 	return p.Add(mgr, logger)
