@@ -54,7 +54,7 @@ type testCase struct {
 
 func TestReconcile(t *testing.T) {
 	testCases := []testCase{
-		testCase{
+		{
 			TestCase: controllertesting.TestCase{
 				Name: "Receive Pod creation event",
 				InitialState: []runtime.Object{
