@@ -35,11 +35,11 @@ func main() {
 	logCfg := zap.NewProductionConfig()
 	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, err := logCfg.Build()
-	logger = logger.With(zap.String(logkey.ControllerType, "gitlab-controller"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	logger = logger.With(zap.String(logkey.ControllerType, "gitlab-controller"))
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
