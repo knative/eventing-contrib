@@ -29,7 +29,6 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.s
 
 # Names of the Resources used in the tests.
 readonly E2E_TEST_NAMESPACE=e2etest
-readonly E2E_TEST_FUNCTION_NAMESPACE=e2etest
 
 # Helper functions.
 
@@ -66,17 +65,11 @@ function knative_teardown() {
 function test_setup() {
   kubectl create namespace $E2E_TEST_NAMESPACE || return 1
   kubectl label namespace $E2E_TEST_NAMESPACE istio-injection=enabled --overwrite || return 1
-  kubectl create namespace $E2E_TEST_FUNCTION_NAMESPACE || return 1
   # Publish test images
   $(dirname $0)/upload-test-images.sh e2e || fail_test "Error uploading test images"
 }
 
 function test_teardown() {
-  # Delete the function namespace
-  echo "Deleting namespace $E2E_TEST_FUNCTION_NAMESPACE"
-  kubectl --ignore-not-found=true delete namespace $E2E_TEST_FUNCTION_NAMESPACE
-  wait_until_object_does_not_exist namespaces $E2E_TEST_FUNCTION_NAMESPACE
-
   # Delete the test namespace
   echo "Deleting namespace $E2E_TEST_NAMESPACE"
   kubectl --ignore-not-found=true delete namespace $E2E_TEST_NAMESPACE
@@ -86,7 +79,7 @@ function test_teardown() {
 function dump_extra_cluster_state() {
   # Collecting logs from all knative's eventing and eventing-sources pods
   echo "============================================================"
-  for namespace in "knative-eventing" "knative-sources" "$E2E_TEST_NAMESPACE" "$E2E_TEST_FUNCTION_NAMESPACE"; do
+  for namespace in "knative-eventing" "knative-sources" "$E2E_TEST_NAMESPACE"; do
     for pod in $(kubectl get pod -n $namespace | grep Running | awk '{print $1}' ); do
       for container in $(kubectl get pod "${pod}" -n $namespace -ojsonpath='{.spec.containers[*].name}'); do
         echo "Namespace, Pod, Container: ${namespace}, ${pod}, ${container}"
