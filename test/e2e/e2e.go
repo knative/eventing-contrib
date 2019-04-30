@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	defaultNamespaceName = "e2etestfn3"
+	defaultNamespaceName = "e2etest"
 	testNamespace        = "e2etest"
 	interval             = 1 * time.Second
 	timeout              = 1 * time.Minute
