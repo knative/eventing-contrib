@@ -36,6 +36,9 @@ const (
 
 func TestKubernetesEvents(t *testing.T) {
 
+	// The plan is to remove k8s source. This e2e test is flaky. Works in non-prow cluster.
+	t.Skip()
+
 	clients, cleaner := Setup(t, t.Logf)
 
 	pkgTest.CleanupOnInterrupt(func() { TearDown(clients, cleaner, t.Logf) }, t.Logf)
