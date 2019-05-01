@@ -27,7 +27,7 @@ import (
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	. "github.com/knative/eventing-sources/pkg/reconciler"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -62,7 +62,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		Reconciler: &reconciler{
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: raImage,
-			eventTypeReconciler: eventtype.Reconciler{
+			eventTypeReconciler: EventTypeReconciler{
 				Scheme: mgr.GetScheme(),
 			},
 		},
@@ -75,7 +75,7 @@ type reconciler struct {
 	client              client.Client
 	scheme              *runtime.Scheme
 	receiveAdapterImage string
-	eventTypeReconciler eventtype.Reconciler
+	eventTypeReconciler EventTypeReconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -184,7 +184,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.Kafk
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
 }
 
-func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *eventtype.ReconcilerArgs {
+func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *EventTypeReconcilerArgs {
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	topics := strings.Split(src.Spec.Topics, ",")
 	for _, topic := range topics {
@@ -195,7 +195,7 @@ func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *eve
 		}
 		specs = append(specs, spec)
 	}
-	return &eventtype.ReconcilerArgs{
+	return &EventTypeReconcilerArgs{
 		EventTypeSpecs: specs,
 		Namespace:      src.Namespace,
 		Labels:         getLabels(src),

@@ -25,8 +25,8 @@ import (
 	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	. "github.com/knative/eventing-sources/pkg/reconciler"
 	"github.com/knative/eventing-sources/pkg/reconciler/awssqssource/resources"
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -82,7 +82,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		Reconciler: &reconciler{
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: raImage,
-			eventTypeReconciler: eventtype.Reconciler{
+			eventTypeReconciler: EventTypeReconciler{
 				Scheme: mgr.GetScheme(),
 			},
 		},
@@ -95,7 +95,7 @@ type reconciler struct {
 	client              client.Client
 	dynamicClient       dynamic.Interface
 	scheme              *runtime.Scheme
-	eventTypeReconciler eventtype.Reconciler
+	eventTypeReconciler EventTypeReconciler
 
 	receiveAdapterImage string
 }
@@ -230,7 +230,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsS
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
 }
 
-func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
+func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *EventTypeReconcilerArgs {
 	spec := eventingv1alpha1.EventTypeSpec{
 		Type:   v1alpha1.AwsSqsSourceEventType,
 		Source: src.Spec.QueueURL,
@@ -238,7 +238,7 @@ func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *ev
 	}
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0, 1)
 	specs = append(specs, spec)
-	return &eventtype.ReconcilerArgs{
+	return &EventTypeReconcilerArgs{
 		EventTypeSpecs: specs,
 		Namespace:      src.Namespace,
 		Labels:         getLabels(src),

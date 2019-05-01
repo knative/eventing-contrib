@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package eventtype
+package reconciler
 
 import (
 	"context"
@@ -33,14 +33,14 @@ import (
 // Only allow alphanumeric, '-' or '.'.
 var validChars = regexp.MustCompile(`[^-\.a-z0-9]+`)
 
-// Reconciler reconciles EventTypes of different sources.
-type Reconciler struct {
+// Reconciler is a helper struct that can be used by any source in order to reconcile its EventTypes.
+type EventTypeReconciler struct {
 	Client client.Client
 	Scheme *runtime.Scheme
 }
 
 // ReconcilerArgs are the arguments needed to reconcile EventTypes.
-type ReconcilerArgs struct {
+type EventTypeReconcilerArgs struct {
 	EventTypeSpecs []eventingv1alpha1.EventTypeSpec
 	Namespace      string
 	Labels         map[string]string
@@ -53,7 +53,7 @@ type syncEventTypes struct {
 }
 
 // ReconcileEventTypes reconciles the EventTypes taken from 'args', and sets 'owner' as the controller.
-func (r *Reconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Object, args *ReconcilerArgs) error {
+func (r *EventTypeReconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Object, args *EventTypeReconcilerArgs) error {
 	current, err := r.getEventTypes(ctx, args.Namespace, args.Labels, owner)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (r *Reconciler) ReconcileEventTypes(ctx context.Context, owner metav1.Objec
 }
 
 // getEventTypes returns the EventTypes controlled by 'owner'.
-func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs map[string]string, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
+func (r *EventTypeReconciler) getEventTypes(ctx context.Context, namespace string, lbs map[string]string, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
 
 	opts := &client.ListOptions{
@@ -112,7 +112,7 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 }
 
 // makeEventTypes creates the in-memory representation of the EventTypes.
-func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
+func (r *EventTypeReconciler) makeEventTypes(args *EventTypeReconcilerArgs, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
 	for _, spec := range args.EventTypeSpecs {
 		eventType := r.makeEventType(spec, args.Namespace, args.Labels)
@@ -126,7 +126,7 @@ func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) (
 }
 
 // makeEventType creates the in-memory representation of the EventType.
-func (r *Reconciler) makeEventType(spec eventingv1alpha1.EventTypeSpec, namespace string, lbl map[string]string) eventingv1alpha1.EventType {
+func (r *EventTypeReconciler) makeEventType(spec eventingv1alpha1.EventTypeSpec, namespace string, lbl map[string]string) eventingv1alpha1.EventType {
 	return eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", ToDNS1123Subdomain(spec.Type)),
@@ -139,7 +139,7 @@ func (r *Reconciler) makeEventType(spec eventingv1alpha1.EventTypeSpec, namespac
 
 // getSyncEventTypes computes the EventTypes that need to be created and/or deleted based on the difference between
 // 'expected' and 'current'. It does so using all the EventType.Spec fields but Description.
-func (r *Reconciler) getEventTypesToSync(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) *syncEventTypes {
+func (r *EventTypeReconciler) getEventTypesToSync(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) *syncEventTypes {
 	eventTypesToSync := &syncEventTypes{
 		ToCreate: make([]eventingv1alpha1.EventType, 0),
 		ToDelete: make([]eventingv1alpha1.EventType, 0),
