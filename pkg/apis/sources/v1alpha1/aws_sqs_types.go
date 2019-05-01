@@ -88,8 +88,7 @@ const (
 
 var condSet = duckv1alpha1.NewLivingConditionSet(
 	AwsSqsSourceConditionSinkProvided,
-	AwsSqsSourceConditionDeployed,
-	AwsSqsSourceConditionEventTypesProvided)
+	AwsSqsSourceConditionDeployed)
 
 // AwsSqsSourceStatus defines the observed state of the source.
 type AwsSqsSourceStatus struct {

@@ -127,7 +127,7 @@ func TestKafkaSourceStatusIsReady(t *testing.T) {
 			s.MarkNoEventTypes("Testing", "")
 			return s
 		}(),
-		want: false,
+		want: true,
 	}, {
 		name: "mark sink and not deployed then deploying then deployed then event types",
 		s: func() *KafkaSourceStatus {
@@ -320,10 +320,8 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 		}(),
 		condQuery: KafkaConditionReady,
 		want: &duckv1alpha1.Condition{
-			Type:    KafkaConditionReady,
-			Status:  corev1.ConditionFalse,
-			Reason:  "Testing",
-			Message: "hi",
+			Type:   KafkaConditionReady,
+			Status: corev1.ConditionTrue,
 		},
 	}, {
 		name: "mark sink and not deployed then deploying then deployed then event types",

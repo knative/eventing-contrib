@@ -177,7 +177,6 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		timestamp = time.Now().UnixNano()
 	}
 
-	// TODO set source and subject properly.
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			ID:     *m.MessageId,

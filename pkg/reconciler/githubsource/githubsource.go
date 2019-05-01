@@ -201,9 +201,8 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		if err != nil {
 			return err
 		}
+		source.Status.MarkEventTypes()
 	}
-	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
-	source.Status.MarkEventTypes()
 
 	return nil
 }

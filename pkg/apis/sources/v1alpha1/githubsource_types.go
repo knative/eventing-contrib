@@ -111,8 +111,7 @@ const (
 
 var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
-	GitHubSourceConditionSinkProvided,
-	GitHubSourceConditionEventTypesProvided)
+	GitHubSourceConditionSinkProvided)
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {

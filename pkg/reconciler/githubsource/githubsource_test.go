@@ -226,7 +226,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -285,7 +284,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -342,7 +340,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "orghookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -574,7 +571,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},

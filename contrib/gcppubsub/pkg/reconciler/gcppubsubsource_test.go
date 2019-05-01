@@ -277,7 +277,7 @@ func TestReconcile(t *testing.T) {
 				getAddressableWithKind(brokerKind),
 			},
 			WantPresent: []runtime.Object{
-				getReadySourceWithKind(brokerKind),
+				getReadyAndMarkEventTypeSourceWithKind(brokerKind),
 				getEventType(),
 			},
 		}, {
@@ -407,7 +407,7 @@ func getEventType() *eventingv1alpha1.EventType {
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   sourcesv1alpha1.GcpPubSubSourceEventType,
-			Source: fmt.Sprintf(sourcesv1alpha1.GcpPubSubSourceEventSourceFormat, "my-gcp-project", "laconia"),
+			Source: sourcesv1alpha1.GetGcpPubSubSource("my-gcp-project", "laconia"),
 			Broker: addressableName,
 		},
 	}
@@ -460,13 +460,18 @@ func getSourceWithFinalizerAndSinkAndSubscribedAndDeployedAndKind(kind string) *
 func getReadySource() *sourcesv1alpha1.GcpPubSubSource {
 	src := getSourceWithFinalizerAndSinkAndSubscribed()
 	src.Status.MarkDeployed()
-	src.Status.MarkEventTypes()
 	return src
 }
 
 func getReadySourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
 	src := getReadySource()
 	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadyAndMarkEventTypeSourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
+	src := getReadySourceWithKind(kind)
+	src.Status.MarkEventTypes()
 	return src
 }
 

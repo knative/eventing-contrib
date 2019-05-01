@@ -164,9 +164,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 			logger.Error("Unable to reconcile the event types", zap.Error(err))
 			return err
 		}
+		src.Status.MarkEventTypes()
 	}
-	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
-	src.Status.MarkEventTypes()
 
 	return nil
 }
@@ -233,10 +232,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsS
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
 	arg := &eventtype.EventTypeArgs{
-		Type: v1alpha1.AwsSqsSourceEventType,
-		// Using the Queue URL as source.
-		// This should match what is populated in the adapter.
-		// TODO change it in both places once we agree on subject.
+		Type:   v1alpha1.AwsSqsSourceEventType,
 		Source: src.Spec.QueueURL,
 		Broker: src.Spec.Sink.Name,
 	}

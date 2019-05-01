@@ -183,7 +183,7 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadySourceWithKind(brokerKind),
+				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
 				getEventType("name1", "group", "topic1"),
 				getEventType("name2", "group", "topic2"),
 			},
@@ -342,13 +342,18 @@ func getSourceWithSinkAndDeployedAndKind(kind string) *sourcesv1alpha1.KafkaSour
 func getReadySource() *sourcesv1alpha1.KafkaSource {
 	src := getSourceWithSink()
 	src.Status.MarkDeployed()
-	src.Status.MarkEventTypes()
 	return src
 }
 
 func getReadySourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
 	src := getReadySource()
 	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadyAndMarkEventTypesSourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
+	src := getReadySourceWithKind(kind)
+	src.Status.MarkEventTypes()
 	return src
 }
 

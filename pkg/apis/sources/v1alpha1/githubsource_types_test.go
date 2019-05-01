@@ -115,7 +115,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.MarkNoEventTypes("Testing", "")
 			return s
 		}(),
-		want: false,
+		want: true,
 	}, {
 		name: "mark sink empty, secrets, and event types",
 		s: func() *GitHubSourceStatus {
@@ -277,10 +277,8 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 		}(),
 		condQuery: GitHubSourceConditionReady,
 		want: &duckv1alpha1.Condition{
-			Type:    GitHubSourceConditionReady,
-			Status:  corev1.ConditionFalse,
-			Reason:  "Testing",
-			Message: "hi",
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionTrue,
 		},
 	}, {
 		name: "mark sink empty, secrets, and event types",

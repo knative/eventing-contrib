@@ -110,8 +110,7 @@ const (
 
 var kafkaSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	KafkaConditionSinkProvided,
-	KafkaConditionDeployed,
-	KafkaConditionEventTypesProvided)
+	KafkaConditionDeployed)
 
 // KafkaSourceStatus defines the observed state of KafkaSource.
 type KafkaSourceStatus struct {

@@ -78,7 +78,7 @@ func TestAwsSqsSourceStatusIsReady(t *testing.T) {
 			s.MarkDeployed()
 			return s
 		}(),
-		want: false,
+		want: true,
 	}, {
 		name: "mark sink, deployed, and event types",
 		s: func() *AwsSqsSourceStatus {
@@ -319,10 +319,8 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
 		want: &duckv1alpha1.Condition{
-			Type:    AwsSqsSourceConditionReady,
-			Status:  corev1.ConditionFalse,
-			Reason:  "Testing",
-			Message: "hi",
+			Type:   AwsSqsSourceConditionReady,
+			Status: corev1.ConditionTrue,
 		},
 	}, {
 		name: "mark sink, not deployed and no event types, then deploying, then deployed, then event types",

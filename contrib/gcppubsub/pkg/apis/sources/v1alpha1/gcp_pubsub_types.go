@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
@@ -78,9 +80,12 @@ const (
 	// GcpPubSubSourceEventType is the GcpPubSub CloudEvent type, in case PubSub doesn't send a
 	// CloudEvent itself.
 	GcpPubSubSourceEventType = "google.pubsub.topic.publish"
-	// GcpPubSubSourceEventSourceTemplate is the GcpPubSub CloudEvent source template.
-	GcpPubSubSourceEventSourceFormat = "//pubsub.googleapis.com/%s/topics/%s"
 )
+
+// GetGcpPubSubSource returns the GcpPubSub CloudEvent source value.
+func GetGcpPubSubSource(googleCloudProject, topic string) string {
+	return fmt.Sprintf("//pubsub.googleapis.com/%s/topics/%s", googleCloudProject, topic)
+}
 
 const (
 	// GcpPubSubConditionReady has status True when the GcpPubSubSource is ready to send events.
@@ -102,8 +107,7 @@ const (
 var gcpPubSubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	GcpPubSubConditionSinkProvided,
 	GcpPubSubConditionDeployed,
-	GcpPubSubConditionSubscribed,
-	GcpPubSubConditionEventTypesProvided)
+	GcpPubSubConditionSubscribed)
 
 // GcpPubSubSourceStatus defines the observed state of GcpPubSubSource.
 type GcpPubSubSourceStatus struct {

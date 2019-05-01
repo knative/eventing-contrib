@@ -151,7 +151,7 @@ func TestGcpPubSubSourceStatusIsReady(t *testing.T) {
 			s.MarkNoEventTypes("Testing", "")
 			return s
 		}(),
-		want: false,
+		want: true,
 	}, {
 		name: "mark sink and subscribed and not deployed then deploying then deployed then event types",
 		s: func() *GcpPubSubSourceStatus {

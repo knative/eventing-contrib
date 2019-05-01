@@ -59,7 +59,7 @@ type Adapter struct {
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	a.source = fmt.Sprintf(sourcesv1alpha1.GcpPubSubSourceEventSourceFormat, a.ProjectID, a.TopicID)
+	a.source = sourcesv1alpha1.GetGcpPubSubSource(a.ProjectID, a.TopicID)
 
 	var err error
 	// Make the client to pubsub
@@ -106,7 +106,6 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		logger.Infof("overriding the cloud event type with %q", et)
 	}
 
-	// TODO set source and subject properly.
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			Type:        et,
