@@ -301,17 +301,17 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpP
 }
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
-	arg := &eventtype.EventTypeArgs{
+	spec := eventingv1alpha1.EventTypeSpec{
 		Type:   v1alpha1.GcpPubSubSourceEventType,
 		Source: v1alpha1.GetGcpPubSubSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,
 	}
-	args := make([]*eventtype.EventTypeArgs, 0, 1)
-	args = append(args, arg)
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0, 1)
+	specs = append(specs, spec)
 	return &eventtype.ReconcilerArgs{
-		EventTypes: args,
-		Namespace:  src.Namespace,
-		Labels:     getLabels(src),
+		EventTypeSpecs: specs,
+		Namespace:      src.Namespace,
+		Labels:         getLabels(src),
 	}
 }
 

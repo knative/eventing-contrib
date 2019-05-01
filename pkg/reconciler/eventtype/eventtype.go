@@ -41,18 +41,9 @@ type Reconciler struct {
 
 // ReconcilerArgs are the arguments needed to reconcile EventTypes.
 type ReconcilerArgs struct {
-	EventTypes []*EventTypeArgs
-	Namespace  string
-	Labels     map[string]string
-}
-
-// EventTypeArgs are the arguments needed to create an EventType.
-type EventTypeArgs struct {
-	Type        string
-	Source      string
-	Schema      string
-	Broker      string
-	Description string
+	EventTypeSpecs []eventingv1alpha1.EventTypeSpec
+	Namespace      string
+	Labels         map[string]string
 }
 
 // syncEventTypes is a helper struct used to sync EventTypes during the reconciliation process.
@@ -123,8 +114,8 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 // makeEventTypes creates the in-memory representation of the EventTypes.
 func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	for _, arg := range args.EventTypes {
-		eventType := r.makeEventType(arg, args.Namespace, args.Labels)
+	for _, spec := range args.EventTypeSpecs {
+		eventType := r.makeEventType(spec, args.Namespace, args.Labels)
 		// Setting the reference to delete the EventType upon uninstalling the source.
 		if err := controllerutil.SetControllerReference(owner, &eventType, r.Scheme); err != nil {
 			return nil, err
@@ -135,20 +126,14 @@ func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) (
 }
 
 // makeEventType creates the in-memory representation of the EventType.
-func (r *Reconciler) makeEventType(arg *EventTypeArgs, namespace string, lbl map[string]string) eventingv1alpha1.EventType {
+func (r *Reconciler) makeEventType(spec eventingv1alpha1.EventTypeSpec, namespace string, lbl map[string]string) eventingv1alpha1.EventType {
 	return eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("%s-", ToDNS1123Subdomain(arg.Type)),
+			GenerateName: fmt.Sprintf("%s-", ToDNS1123Subdomain(spec.Type)),
 			Labels:       lbl,
 			Namespace:    namespace,
 		},
-		Spec: eventingv1alpha1.EventTypeSpec{
-			Type:        arg.Type,
-			Source:      arg.Source,
-			Schema:      arg.Schema,
-			Broker:      arg.Broker,
-			Description: arg.Description,
-		},
+		Spec: spec,
 	}
 }
 

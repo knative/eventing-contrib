@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -87,9 +89,14 @@ type SecretValueFromSource struct {
 
 const (
 	// GitHubSourceEventPrefix is what all GitHub event types get
-	// prefixed with when converting to CloudEvent EventType
-	GitHubSourceEventPrefix = "dev.knative.source.github"
+	// prefixed with when converting to CloudEvents.
+	gitHubSourceEventPrefix = "dev.knative.source.github"
 )
+
+// GetGitHubSourceEventType returns the GitHub CloudEvent type value.
+func GetGitHubSourceEventType(ghEventType string) string {
+	return fmt.Sprintf("%s.%s", gitHubSourceEventPrefix, ghEventType)
+}
 
 const (
 	// GitHubSourceConditionReady has status True when the

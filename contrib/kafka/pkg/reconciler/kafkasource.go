@@ -185,20 +185,20 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.Kafk
 }
 
 func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *eventtype.ReconcilerArgs {
-	args := make([]*eventtype.EventTypeArgs, 0)
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	topics := strings.Split(src.Spec.Topics, ",")
 	for _, topic := range topics {
-		arg := &eventtype.EventTypeArgs{
+		spec := eventingv1alpha1.EventTypeSpec{
 			Type:   v1alpha1.KafkaSourceEventType,
 			Source: topic,
 			Broker: src.Spec.Sink.Name,
 		}
-		args = append(args, arg)
+		specs = append(specs, spec)
 	}
 	return &eventtype.ReconcilerArgs{
-		EventTypes: args,
-		Namespace:  src.Namespace,
-		Labels:     getLabels(src),
+		EventTypeSpecs: specs,
+		Namespace:      src.Namespace,
+		Labels:         getLabels(src),
 	}
 }
 

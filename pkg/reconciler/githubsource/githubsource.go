@@ -353,22 +353,22 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1a
 }
 
 func (r *reconciler) newEventTypesReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.ReconcilerArgs {
-	args := make([]*eventtype.EventTypeArgs, 0)
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	for _, et := range source.Spec.EventTypes {
-		arg := &eventtype.EventTypeArgs{
-			Type: fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, et),
+		spec := eventingv1alpha1.EventTypeSpec{
+			Type: sourcesv1alpha1.GetGitHubSourceEventType(et),
 			// Using the owner and repository as source.
 			// This should match what is populated in the adapter. It currently doesn't
-			// TODO change it in both places once we agree on subject.
+			// TODO change it in both places once we agree on source and subject.
 			Source: source.Spec.OwnerAndRepository,
 			Broker: source.Spec.Sink.Name,
 		}
-		args = append(args, arg)
+		specs = append(specs, spec)
 	}
 	return &eventtype.ReconcilerArgs{
-		EventTypes: args,
-		Namespace:  source.Namespace,
-		Labels:     resources.Labels(source.Name),
+		EventTypeSpecs: specs,
+		Namespace:      source.Namespace,
+		Labels:         resources.Labels(source.Name),
 	}
 }
 

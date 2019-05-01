@@ -73,7 +73,7 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 
 	log.Printf("Handling %s", gitHubEventType)
 
-	cloudEventType := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, gitHubEventType)
+	cloudEventType := sourcesv1alpha1.GetGitHubSourceEventType(gitHubEventType)
 	source, err := sourceFromGitHubEvent(gh.Event(gitHubEventType), payload)
 	if err != nil {
 		return err
