@@ -46,16 +46,16 @@ func TestNewReflectedFinalizersAccessor(t *testing.T) {
 			expectedErr: true,
 		},
 		"no finalizers set": {
-			obj:        &v1alpha1.ContainerSource{},
+			obj:        &v1alpha1.AwsSqsSource{},
 			finalizers: sets.NewString(),
 		},
 		"set finalizers": {
-			obj:           &v1alpha1.ContainerSource{},
+			obj:           &v1alpha1.AwsSqsSource{},
 			finalizers:    sets.NewString(),
 			setFinalizers: sets.NewString("newFinalizer"),
 		},
 		"replace finalizers": {
-			obj: &v1alpha1.ContainerSource{
+			obj: &v1alpha1.AwsSqsSource{
 				ObjectMeta: v1.ObjectMeta{
 					Finalizers: []string{
 						"oldFinalizer",

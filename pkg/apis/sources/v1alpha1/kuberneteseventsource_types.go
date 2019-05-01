@@ -81,13 +81,13 @@ func (s *KubernetesEventSourceStatus) InitializeConditions() {
 	kubernetesEventSourceCondSet.Manage(s).InitializeConditions()
 }
 
-// MarkReady sets the condition that the ContainerSource owned by
+// MarkReady sets the condition that the KubernetesEventSource owned by
 // the source has Ready status True.
 func (s *KubernetesEventSourceStatus) MarkReady() {
 	kubernetesEventSourceCondSet.Manage(s).MarkTrue(KubernetesEventSourceConditionReady)
 }
 
-// MarkUnready sets the condition that the ContainerSource owned by
+// MarkUnready sets the condition that the KubernetesEventSource owned by
 // the source does not have Ready status True.
 func (s *KubernetesEventSourceStatus) MarkUnready(reason, messageFormat string, messageA ...interface{}) {
 	kubernetesEventSourceCondSet.Manage(s).MarkFalse(KubernetesEventSourceConditionReady, reason, messageFormat, messageA...)

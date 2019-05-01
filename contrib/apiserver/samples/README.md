@@ -4,7 +4,8 @@ These samples show how to configure a Kubernetes API server source.
 
 ## Prerequisites
 
-1. Install and configure [ko](https://www.knative.dev/v0.3-docs/concepts/resources/)
+1. Install and configure
+   [ko](https://www.knative.dev/v0.3-docs/concepts/resources/)
 
 1. Install the [API server source from this directory](../config/) from source:
 
