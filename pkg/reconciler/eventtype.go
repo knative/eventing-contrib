@@ -30,6 +30,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+const (
+	// Number of characters to keep available just in case the prefix used in generateName
+	// exceeds the maximum allowed for k8s names.
+	generateNameSafety = 10
+)
+
 // Only allow alphanumeric, '-' or '.'.
 var validChars = regexp.MustCompile(`[^-\.a-z0-9]+`)
 
@@ -92,23 +98,18 @@ func (r *EventTypeReconciler) getEventTypes(ctx context.Context, namespace strin
 		// into opts.Raw.Continue.
 		Raw: &metav1.ListOptions{},
 	}
-	for {
-		el := &eventingv1alpha1.EventTypeList{}
-		if err := r.Client.List(ctx, opts, el); err != nil {
-			return nil, err
-		}
 
-		for _, e := range el.Items {
-			if metav1.IsControlledBy(&e, owner) {
-				eventTypes = append(eventTypes, e)
-			}
-		}
-		if el.Continue != "" {
-			opts.Raw.Continue = el.Continue
-		} else {
-			return eventTypes, nil
+	el := &eventingv1alpha1.EventTypeList{}
+	if err := r.Client.List(ctx, opts, el); err != nil {
+		return nil, err
+	}
+
+	for _, e := range el.Items {
+		if metav1.IsControlledBy(&e, owner) {
+			eventTypes = append(eventTypes, e)
 		}
 	}
+	return eventTypes, nil
 }
 
 // makeEventTypes creates the in-memory representation of the EventTypes.
@@ -144,13 +145,10 @@ func (r *EventTypeReconciler) getEventTypesToSync(current []eventingv1alpha1.Eve
 		ToCreate: make([]eventingv1alpha1.EventType, 0),
 		ToDelete: make([]eventingv1alpha1.EventType, 0),
 	}
-	keyFunc := func(eventType *eventingv1alpha1.EventType) string {
-		return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
-	}
 
-	currentMap := groupByKey(current, keyFunc)
+	currentMap := groupByKey(current, keyFromEventType)
 	for _, e := range expected {
-		if et, ok := currentMap[keyFunc(&e)]; !ok {
+		if et, ok := currentMap[keyFromEventType(&e)]; !ok {
 			// If it's not in the currentMap, we need to create it.
 			eventTypesToSync.ToCreate = append(eventTypesToSync.ToCreate, e)
 		} else {
@@ -182,7 +180,7 @@ func ToDNS1123Subdomain(name string) string {
 	if msgs := validation.IsDNS1123Subdomain(name); len(msgs) != 0 {
 		// If the length exceeds the max, cut it and leave some room for a potential generated UUID.
 		if len(name) > validation.DNS1123SubdomainMaxLength {
-			name = name[:validation.DNS1123SubdomainMaxLength-10]
+			name = name[:validation.DNS1123SubdomainMaxLength-generateNameSafety]
 		}
 		name = strings.ToLower(name)
 		name = validChars.ReplaceAllString(name, "")
@@ -190,4 +188,8 @@ func ToDNS1123Subdomain(name string) string {
 		name = strings.Trim(name, "-.")
 	}
 	return name
+}
+
+func keyFromEventType(eventType *eventingv1alpha1.EventType) string {
+	return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
 }
