@@ -20,8 +20,6 @@ package v1alpha1
 
 type AwsSqsSourceExpansion interface{}
 
-type ContainerSourceExpansion interface{}
-
 type GitHubSourceExpansion interface{}
 
 type KubernetesEventSourceExpansion interface{}

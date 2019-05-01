@@ -20,18 +20,19 @@ import (
 	"fmt"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // MakeContainerSource generates, but does not create, a ContainerSource for the
 // given KubernetesEventSource.
-func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource, receiveAdapterImage string) *sourcesv1alpha1.ContainerSource {
-	return &sourcesv1alpha1.ContainerSource{
+func MakeContainerSource(source *sourcesv1alpha1.KubernetesEventSource, receiveAdapterImage string) *eventingsourcesv1alpha1.ContainerSource {
+	return &eventingsourcesv1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),
 			Namespace:    source.Namespace,
 		},
-		Spec: sourcesv1alpha1.ContainerSourceSpec{
+		Spec: eventingsourcesv1alpha1.ContainerSourceSpec{
 			Image:              receiveAdapterImage,
 			Args:               []string{fmt.Sprintf("--namespace=%s", source.Spec.Namespace)},
 			ServiceAccountName: source.Spec.ServiceAccountName,

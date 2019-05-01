@@ -39,8 +39,8 @@ required = [
 # This controls when we upgrade apis independently of Serving.
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2019-04-08
-  revision = "2b574edcd712e848556c69cc95a2622145284882"
+  # HEAD as of 2019-04-23
+  revision = "6916051a96ae4d87d0e0e557a3c3b887ee4a3cea"
 
 [[override]]
   name = "k8s.io/api"
@@ -77,7 +77,8 @@ required = [
 
 [[constraint]]
   name = "github.com/knative/eventing"
-  version = "v0.5.0"
+  # HEAD as of 2019-04-25
+  revision = "a5a24f50c21a77d2c7e0c68c1512ad63f1b23d26"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"

@@ -24,8 +24,8 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	genericv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
+	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -66,7 +66,7 @@ func init() {
 	v1.AddToScheme(scheme.Scheme)
 	corev1.AddToScheme(scheme.Scheme)
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
-	genericv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
+	eventingsourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
 }
 
@@ -290,14 +290,14 @@ func TestReconcile(t *testing.T) {
 	}
 }
 
-func getNonGcpPubSubSource() *genericv1alpha1.ContainerSource {
-	obj := &genericv1alpha1.ContainerSource{
+func getNonGcpPubSubSource() *eventingsourcesv1alpha1.ContainerSource {
+	obj := &eventingsourcesv1alpha1.ContainerSource{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: genericv1alpha1.SchemeGroupVersion.String(),
+			APIVersion: eventingsourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "ContainerSource",
 		},
 		ObjectMeta: om(testNS, sourceName),
-		Spec: genericv1alpha1.ContainerSourceSpec{
+		Spec: eventingsourcesv1alpha1.ContainerSourceSpec{
 			Image: image,
 			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
