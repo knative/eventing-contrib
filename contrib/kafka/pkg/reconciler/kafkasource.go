@@ -180,11 +180,11 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaS
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.KafkaSource) error {
-	args := r.newEventTypesReconcilerArgs(src)
+	args := r.newEventTypeReconcilerArgs(src)
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
 }
 
-func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.KafkaSource) *EventTypeReconcilerArgs {
+func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.KafkaSource) *EventTypeReconcilerArgs {
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	topics := strings.Split(src.Spec.Topics, ",")
 	for _, topic := range topics {

@@ -348,11 +348,11 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	args := r.newEventTypesReconcilerArgs(source)
+	args := r.newEventTypeReconcilerArgs(source)
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, source, args)
 }
 
-func (r *reconciler) newEventTypesReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *EventTypeReconcilerArgs {
+func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *EventTypeReconcilerArgs {
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	for _, et := range source.Spec.EventTypes {
 		spec := eventingv1alpha1.EventTypeSpec{

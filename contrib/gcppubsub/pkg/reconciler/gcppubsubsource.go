@@ -296,11 +296,11 @@ func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPu
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
-	args := r.newEventTypesReconcilerArgs(src)
+	args := r.newEventTypeReconcilerArgs(src)
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
 }
 
-func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) *EventTypeReconcilerArgs {
+func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.GcpPubSubSource) *EventTypeReconcilerArgs {
 	spec := eventingv1alpha1.EventTypeSpec{
 		Type:   v1alpha1.GcpPubSubSourceEventType,
 		Source: v1alpha1.GetGcpPubSubSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
