@@ -19,13 +19,11 @@ import (
 	"regexp"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/util/validation"
-
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -39,23 +37,17 @@ const (
 // Only allow alphanumeric, '-' or '.'.
 var validChars = regexp.MustCompile(`[^-\.a-z0-9]+`)
 
-// Reconciler is a helper struct that can be used by any source in order to reconcile its EventTypes.
+// EventTypeReconciler is a helper struct that can be used by any source in order to reconcile its EventTypes.
 type EventTypeReconciler struct {
 	Client client.Client
 	Scheme *runtime.Scheme
 }
 
-// ReconcilerArgs are the arguments needed to reconcile EventTypes.
+// EventTypeReconcilerArgs are the arguments needed to reconcile EventTypes.
 type EventTypeReconcilerArgs struct {
 	EventTypeSpecs []eventingv1alpha1.EventTypeSpec
 	Namespace      string
 	Labels         map[string]string
-}
-
-// syncEventTypes is a helper struct used to sync EventTypes during the reconciliation process.
-type syncEventTypes struct {
-	ToCreate []eventingv1alpha1.EventType
-	ToDelete []eventingv1alpha1.EventType
 }
 
 // ReconcileEventTypes reconciles the EventTypes taken from 'args', and sets 'owner' as the controller.
@@ -69,18 +61,11 @@ func (r *EventTypeReconciler) ReconcileEventTypes(ctx context.Context, owner met
 	if err != nil {
 		return err
 	}
-	sync := r.getEventTypesToSync(current, expected)
-	for _, eventType := range sync.ToCreate {
+
+	toCreate := r.getEventTypesToCreate(current, expected)
+	for _, eventType := range toCreate {
 		err = r.Client.Create(ctx, &eventType)
 		if err != nil {
-			return err
-		}
-	}
-	// Deletion might not be needed, but just to make sure we dedupe EventTypes
-	// in case some source controller has a bug.
-	for _, eventType := range sync.ToDelete {
-		err = r.Client.Delete(ctx, &eventType)
-		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
 	}
@@ -138,38 +123,26 @@ func (r *EventTypeReconciler) makeEventType(spec eventingv1alpha1.EventTypeSpec,
 	}
 }
 
-// getSyncEventTypes computes the EventTypes that need to be created and/or deleted based on the difference between
+// getEventTypesToCreate computes the EventTypes that need to be created based on the difference between
 // 'expected' and 'current'. It does so using all the EventType.Spec fields but Description.
-func (r *EventTypeReconciler) getEventTypesToSync(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) *syncEventTypes {
-	eventTypesToSync := &syncEventTypes{
-		ToCreate: make([]eventingv1alpha1.EventType, 0),
-		ToDelete: make([]eventingv1alpha1.EventType, 0),
-	}
-
-	currentMap := groupByKey(current, keyFromEventType)
+func (r *EventTypeReconciler) getEventTypesToCreate(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) []eventingv1alpha1.EventType {
+	eventTypes := make([]eventingv1alpha1.EventType, 0)
+	currentMap := asMap(current, keyFromEventType)
 	for _, e := range expected {
-		if et, ok := currentMap[keyFromEventType(&e)]; !ok {
+		if _, ok := currentMap[keyFromEventType(&e)]; !ok {
 			// If it's not in the currentMap, we need to create it.
-			eventTypesToSync.ToCreate = append(eventTypesToSync.ToCreate, e)
-		} else {
-			// If it's in the currentMap and there are more than one,
-			// then we just keep the first one, and delete the others.
-			if len(et) > 1 {
-				for i := 1; i < len(et); i++ {
-					eventTypesToSync.ToDelete = append(eventTypesToSync.ToDelete, et[i])
-				}
-			}
+			eventTypes = append(eventTypes, e)
 		}
 	}
-	return eventTypesToSync
+	return eventTypes
 }
 
-// groupByKey groups 'eventTypes' by key, where the key is given by 'keyFunc'.
-func groupByKey(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv1alpha1.EventType) string) map[string][]eventingv1alpha1.EventType {
-	eventTypesAsMap := make(map[string][]eventingv1alpha1.EventType, 0)
+// asMap returns a map representation of 'eventTypes' list, by using the key given by 'keyFunc'.
+func asMap(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv1alpha1.EventType) string) map[string]eventingv1alpha1.EventType {
+	eventTypesAsMap := make(map[string]eventingv1alpha1.EventType, 0)
 	for _, eventType := range eventTypes {
 		key := keyFunc(&eventType)
-		eventTypesAsMap[key] = append(eventTypesAsMap[key], eventType)
+		eventTypesAsMap[key] = eventType
 	}
 	return eventTypesAsMap
 }
