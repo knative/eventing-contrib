@@ -379,10 +379,8 @@ func TestGcpPubSubSourceStatusGetCondition(t *testing.T) {
 		}(),
 		condQuery: GcpPubSubConditionReady,
 		want: &duckv1alpha1.Condition{
-			Type:    GcpPubSubConditionReady,
-			Status:  corev1.ConditionFalse,
-			Reason:  "Testing",
-			Message: "hi",
+			Type:   GcpPubSubConditionReady,
+			Status: corev1.ConditionTrue,
 		},
 	}, {
 		name: "mark sink and subscribed and not deployed then deploying then deployed then event types",
