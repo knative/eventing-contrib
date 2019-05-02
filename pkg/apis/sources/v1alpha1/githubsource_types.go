@@ -88,7 +88,7 @@ type SecretValueFromSource struct {
 }
 
 const (
-	// GitHubSourceEventPrefix is what all GitHub event types get
+	// gitHubSourceEventPrefix is what all GitHub event types get
 	// prefixed with when converting to CloudEvents.
 	gitHubSourceEventPrefix = "dev.knative.source.github"
 )

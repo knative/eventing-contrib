@@ -25,7 +25,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
-	. "github.com/knative/eventing-sources/pkg/reconciler"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
@@ -321,7 +321,7 @@ func TestReconcile(t *testing.T) {
 			pubSubClientCreator: createPubSubClientCreator(tc.OtherTestData[pscData]),
 
 			receiveAdapterImage: raImage,
-			eventTypeReconciler: EventTypeReconciler{
+			eventTypeReconciler: eventtype.Reconciler{
 				Scheme: tc.Scheme,
 			},
 		}

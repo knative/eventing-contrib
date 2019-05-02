@@ -23,9 +23,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
-	. "github.com/knative/eventing-sources/pkg/reconciler"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
@@ -227,7 +228,7 @@ func TestReconcile(t *testing.T) {
 			client:              c,
 			scheme:              tc.Scheme,
 			receiveAdapterImage: raImage,
-			eventTypeReconciler: EventTypeReconciler{
+			eventTypeReconciler: eventtype.Reconciler{
 				Scheme: tc.Scheme,
 			},
 		}

@@ -27,7 +27,7 @@ import (
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/reconciler/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	. "github.com/knative/eventing-sources/pkg/reconciler"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -62,7 +62,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		Reconciler: &reconciler{
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: raImage,
-			eventTypeReconciler: EventTypeReconciler{
+			eventTypeReconciler: eventtype.Reconciler{
 				Scheme: mgr.GetScheme(),
 			},
 		},
@@ -75,7 +75,7 @@ type reconciler struct {
 	client              client.Client
 	scheme              *runtime.Scheme
 	receiveAdapterImage string
-	eventTypeReconciler EventTypeReconciler
+	eventTypeReconciler eventtype.Reconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -181,10 +181,10 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaS
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.KafkaSource) error {
 	args := r.newEventTypeReconcilerArgs(src)
-	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
+	return r.eventTypeReconciler.Reconcile(ctx, src, args)
 }
 
-func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.KafkaSource) *EventTypeReconcilerArgs {
+func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.KafkaSource) *eventtype.ReconcilerArgs {
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	topics := strings.Split(src.Spec.Topics, ",")
 	for _, topic := range topics {
@@ -195,10 +195,10 @@ func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.KafkaSource) *Even
 		}
 		specs = append(specs, spec)
 	}
-	return &EventTypeReconcilerArgs{
-		EventTypeSpecs: specs,
-		Namespace:      src.Namespace,
-		Labels:         getLabels(src),
+	return &eventtype.ReconcilerArgs{
+		Specs:     specs,
+		Namespace: src.Namespace,
+		Labels:    getLabels(src),
 	}
 }
 
