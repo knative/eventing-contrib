@@ -20,9 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
-	. "github.com/knative/eventing-sources/pkg/reconciler"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -781,7 +782,7 @@ func TestAllCases(t *testing.T) {
 			webhookClient: &mockWebhookClient{
 				data: hookData,
 			},
-			eventTypeReconciler: EventTypeReconciler{
+			eventTypeReconciler: eventtype.Reconciler{
 				Scheme: tc.Scheme,
 			},
 		}
@@ -916,7 +917,7 @@ func getEventType() *eventingv1alpha1.EventType {
 					UID:                gitHubSourceUID,
 				},
 			},
-			GenerateName: fmt.Sprintf("%s-", ToDNS1123Subdomain(et)),
+			GenerateName: fmt.Sprintf("%s-", strings.ReplaceAll(et, "_", "")),
 			Namespace:    testNS,
 			Labels:       resources.Labels(gitHubSourceName),
 		},

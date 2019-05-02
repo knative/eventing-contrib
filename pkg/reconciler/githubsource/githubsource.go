@@ -26,7 +26,7 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	. "github.com/knative/eventing-sources/pkg/reconciler"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
@@ -72,7 +72,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: receiveAdapterImage,
 			webhookClient:       gitHubWebhookClient{},
-			eventTypeReconciler: EventTypeReconciler{
+			eventTypeReconciler: eventtype.Reconciler{
 				Scheme: mgr.GetScheme(),
 			},
 		},
@@ -88,7 +88,7 @@ type reconciler struct {
 	recorder            record.EventRecorder
 	receiveAdapterImage string
 	webhookClient       webhookClient
-	eventTypeReconciler EventTypeReconciler
+	eventTypeReconciler eventtype.Reconciler
 }
 
 type webhookArgs struct {
@@ -349,10 +349,10 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
 	args := r.newEventTypeReconcilerArgs(source)
-	return r.eventTypeReconciler.ReconcileEventTypes(ctx, source, args)
+	return r.eventTypeReconciler.Reconcile(ctx, source, args)
 }
 
-func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *EventTypeReconcilerArgs {
+func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.ReconcilerArgs {
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	for _, et := range source.Spec.EventTypes {
 		spec := eventingv1alpha1.EventTypeSpec{
@@ -362,10 +362,10 @@ func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSo
 		}
 		specs = append(specs, spec)
 	}
-	return &EventTypeReconcilerArgs{
-		EventTypeSpecs: specs,
-		Namespace:      source.Namespace,
-		Labels:         resources.Labels(source.Name),
+	return &eventtype.ReconcilerArgs{
+		Specs:     specs,
+		Namespace: source.Namespace,
+		Labels:    resources.Labels(source.Name),
 	}
 }
 
