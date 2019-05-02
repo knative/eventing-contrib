@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
@@ -50,9 +51,14 @@ var _ apis.Immutable = (*KafkaSource)(nil)
 var _ = duck.VerifyType(&KafkaSource{}, &duckv1alpha1.Conditions{})
 
 type KafkaSourceSASLSpec struct {
-	Enable   bool   `json:"enable,omitempty"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"password,omitempty"`
+	Enable bool `json:"enable,omitempty"`
+
+	// User is the Kubernetes secret containing the SASL username.
+	// +optional
+	User sourcesv1alpha1.SecretValueFromSource `json:"user,omitempty"`
+	// Password is the Kubernetes secret containing the SASL password.
+	// +optional
+	Password sourcesv1alpha1.SecretValueFromSource `json:"password,omitempty"`
 }
 
 type KafkaSourceTLSSpec struct {

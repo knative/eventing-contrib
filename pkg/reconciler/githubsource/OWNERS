@@ -1,0 +1,9 @@
+approvers:
+  - github-approvers
+
+reviewers:
+  - github-reviewers
+
+labels:
+  - area/GitHub
+
