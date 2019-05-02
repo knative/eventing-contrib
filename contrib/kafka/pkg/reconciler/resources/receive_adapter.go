@@ -35,6 +35,52 @@ type ReceiveAdapterArgs struct {
 
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	replicas := int32(1)
+
+	env := []corev1.EnvVar{
+		{
+			Name:  "KAFKA_BOOTSTRAP_SERVERS",
+			Value: args.Source.Spec.BootstrapServers,
+		},
+		{
+			Name:  "KAFKA_TOPICS",
+			Value: args.Source.Spec.Topics,
+		},
+		{
+			Name:  "KAFKA_CONSUMER_GROUP",
+			Value: args.Source.Spec.ConsumerGroup,
+		},
+		{
+			Name:  "KAFKA_NET_SASL_ENABLE",
+			Value: strconv.FormatBool(args.Source.Spec.Net.SASL.Enable),
+		},
+		{
+			Name:  "KAFKA_NET_TLS_ENABLE",
+			Value: strconv.FormatBool(args.Source.Spec.Net.TLS.Enable),
+		},
+		{
+			Name:  "SINK_URI",
+			Value: args.SinkURI,
+		},
+	}
+
+	if args.Source.Spec.Net.SASL.User.SecretKeyRef != nil {
+		env = append(env, corev1.EnvVar{
+			Name: "KAFKA_NET_SASL_USER",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: args.Source.Spec.Net.SASL.User.SecretKeyRef,
+			},
+		})
+	}
+
+	if args.Source.Spec.Net.SASL.Password.SecretKeyRef != nil {
+		env = append(env, corev1.EnvVar{
+			Name: "KAFKA_NET_SASL_PASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: args.Source.Spec.Net.SASL.Password.SecretKeyRef,
+			},
+		})
+	}
+
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    args.Source.Namespace,
@@ -59,40 +105,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 						{
 							Name:  "receive-adapter",
 							Image: args.Image,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "KAFKA_BOOTSTRAP_SERVERS",
-									Value: args.Source.Spec.BootstrapServers,
-								},
-								{
-									Name:  "KAFKA_TOPICS",
-									Value: args.Source.Spec.Topics,
-								},
-								{
-									Name:  "KAFKA_CONSUMER_GROUP",
-									Value: args.Source.Spec.ConsumerGroup,
-								},
-								{
-									Name:  "KAFKA_NET_SASL_ENABLE",
-									Value: strconv.FormatBool(args.Source.Spec.Net.SASL.Enable),
-								},
-								{
-									Name:  "KAFKA_NET_SASL_USER",
-									Value: args.Source.Spec.Net.SASL.User,
-								},
-								{
-									Name:  "KAFKA_NET_SASL_PASSWORD",
-									Value: args.Source.Spec.Net.SASL.Password,
-								},
-								{
-									Name:  "KAFKA_NET_TLS_ENABLE",
-									Value: strconv.FormatBool(args.Source.Spec.Net.TLS.Enable),
-								},
-								{
-									Name:  "SINK_URI",
-									Value: args.SinkURI,
-								},
-							},
+							Env:   env,
 						},
 					},
 				},

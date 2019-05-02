@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,9 +40,23 @@ func TestMakeReceiveAdapter(t *testing.T) {
 			ConsumerGroup:      "group",
 			Net: v1alpha1.KafkaSourceNetSpec{
 				SASL: v1alpha1.KafkaSourceSASLSpec{
-					Enable:   true,
-					User:     "user",
-					Password: "password",
+					Enable: true,
+					User: sourcesv1alpha1.SecretValueFromSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-user-secret",
+							},
+							Key: "user",
+						},
+					},
+					Password: sourcesv1alpha1.SecretValueFromSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-password-secret",
+							},
+							Key: "password",
+						},
+					},
 				},
 				TLS: v1alpha1.KafkaSourceTLSSpec{
 					Enable: true,
@@ -112,20 +127,34 @@ func TestMakeReceiveAdapter(t *testing.T) {
 									Value: "true",
 								},
 								{
-									Name:  "KAFKA_NET_SASL_USER",
-									Value: "user",
-								},
-								{
-									Name:  "KAFKA_NET_SASL_PASSWORD",
-									Value: "password",
-								},
-								{
 									Name:  "KAFKA_NET_TLS_ENABLE",
 									Value: "true",
 								},
 								{
 									Name:  "SINK_URI",
 									Value: "sink-uri",
+								},
+								{
+									Name: "KAFKA_NET_SASL_USER",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "the-user-secret",
+											},
+											Key: "user",
+										},
+									},
+								},
+								{
+									Name: "KAFKA_NET_SASL_PASSWORD",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "the-password-secret",
+											},
+											Key: "password",
+										},
+									},
 								},
 							},
 						},
