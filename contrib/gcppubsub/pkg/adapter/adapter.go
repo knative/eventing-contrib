@@ -59,7 +59,7 @@ type Adapter struct {
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	a.source = fmt.Sprintf(sourcesv1alpha1.GcpPubSubSourceEventSourceFormat, a.ProjectID, a.TopicID)
+	a.source = sourcesv1alpha1.GetGcpPubSubSource(a.ProjectID, a.TopicID)
 
 	var err error
 	// Make the client to pubsub

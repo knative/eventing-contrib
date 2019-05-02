@@ -52,7 +52,7 @@ func New(sinkURI, ownerRepo string) (*Adapter, error) {
 	if err != nil {
 		return nil, err
 	}
-	source := fmt.Sprintf("%s/%s", sourcesv1alpha1.GitHubSourceEventSourcePrefix, ownerRepo)
+	source := sourcesv1alpha1.GitHubEventSource(ownerRepo)
 	a.source = types.ParseURLRef(source)
 	if a.source == nil {
 		return nil, fmt.Errorf("invalid source for github events: %s", source)
@@ -79,7 +79,7 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 
 	log.Printf("Handling %s", gitHubEventType)
 
-	cloudEventType := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventTypePrefix, gitHubEventType)
+	cloudEventType := sourcesv1alpha1.GitHubEventType(gitHubEventType)
 	subject := subjectFromGitHubEvent(gh.Event(gitHubEventType), payload)
 
 	eventContext := cloudevents.EventContextV02{

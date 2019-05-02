@@ -155,7 +155,6 @@ func (a *Adapter) postMessage(ctx context.Context, msg *sarama.ConsumerMessage) 
 		"key": string(msg.Key),
 	}
 
-	// TODO set source and subject properly.
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			SpecVersion: cloudevents.CloudEventsVersionV02,

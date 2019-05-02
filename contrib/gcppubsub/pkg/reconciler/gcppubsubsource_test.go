@@ -24,10 +24,10 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	genericv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	. "github.com/knative/eventing-sources/pkg/reconciler"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
+	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -69,7 +69,7 @@ func init() {
 	v1.AddToScheme(scheme.Scheme)
 	corev1.AddToScheme(scheme.Scheme)
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
-	genericv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
+	eventingsourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
 	eventingv1alpha1.AddToScheme(scheme.Scheme)
 }
@@ -277,7 +277,7 @@ func TestReconcile(t *testing.T) {
 				getAddressableWithKind(brokerKind),
 			},
 			WantPresent: []runtime.Object{
-				getReadySourceWithKind(brokerKind),
+				getReadyAndMarkEventTypeSourceWithKind(brokerKind),
 				getEventType(),
 			},
 		}, {
@@ -321,7 +321,7 @@ func TestReconcile(t *testing.T) {
 			pubSubClientCreator: createPubSubClientCreator(tc.OtherTestData[pscData]),
 
 			receiveAdapterImage: raImage,
-			eventTypeReconciler: eventtype.Reconciler{
+			eventTypeReconciler: EventTypeReconciler{
 				Scheme: tc.Scheme,
 			},
 		}
@@ -330,14 +330,14 @@ func TestReconcile(t *testing.T) {
 	}
 }
 
-func getNonGcpPubSubSource() *genericv1alpha1.ContainerSource {
-	obj := &genericv1alpha1.ContainerSource{
+func getNonGcpPubSubSource() *eventingsourcesv1alpha1.ContainerSource {
+	obj := &eventingsourcesv1alpha1.ContainerSource{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: genericv1alpha1.SchemeGroupVersion.String(),
+			APIVersion: eventingsourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "ContainerSource",
 		},
 		ObjectMeta: om(testNS, sourceName),
-		Spec: genericv1alpha1.ContainerSourceSpec{
+		Spec: eventingsourcesv1alpha1.ContainerSourceSpec{
 			Image: image,
 			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
@@ -407,7 +407,7 @@ func getEventType() *eventingv1alpha1.EventType {
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   sourcesv1alpha1.GcpPubSubSourceEventType,
-			Source: fmt.Sprintf(sourcesv1alpha1.GcpPubSubSourceEventSourceFormat, "my-gcp-project", "laconia"),
+			Source: sourcesv1alpha1.GetGcpPubSubSource("my-gcp-project", "laconia"),
 			Broker: addressableName,
 		},
 	}
@@ -460,13 +460,18 @@ func getSourceWithFinalizerAndSinkAndSubscribedAndDeployedAndKind(kind string) *
 func getReadySource() *sourcesv1alpha1.GcpPubSubSource {
 	src := getSourceWithFinalizerAndSinkAndSubscribed()
 	src.Status.MarkDeployed()
-	src.Status.MarkEventTypes()
 	return src
 }
 
 func getReadySourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
 	src := getReadySource()
 	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadyAndMarkEventTypeSourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
+	src := getReadySourceWithKind(kind)
+	src.Status.MarkEventTypes()
 	return src
 }
 

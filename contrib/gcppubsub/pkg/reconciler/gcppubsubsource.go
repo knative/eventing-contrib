@@ -27,7 +27,7 @@ import (
 	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler/resources"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	. "github.com/knative/eventing-sources/pkg/reconciler"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -64,22 +64,19 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		return fmt.Errorf("required environment variable '%s' not defined", raImageEnvVar)
 	}
 
-	scheme := mgr.GetScheme()
-	r := &reconciler{
-		scheme:              scheme,
-		pubSubClientCreator: gcpPubSubClientCreator,
-		receiveAdapterImage: raImage,
-		eventTypeReconciler: eventtype.Reconciler{
-			Scheme: scheme,
-		},
-	}
-
 	log.Println("Adding the GCP PubSub Source controller.")
 	p := &sdk.Provider{
-		AgentName:  controllerAgentName,
-		Parent:     &v1alpha1.GcpPubSubSource{},
-		Owns:       []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
-		Reconciler: r,
+		AgentName: controllerAgentName,
+		Parent:    &v1alpha1.GcpPubSubSource{},
+		Owns:      []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
+		Reconciler: &reconciler{
+			scheme:              mgr.GetScheme(),
+			pubSubClientCreator: gcpPubSubClientCreator,
+			receiveAdapterImage: raImage,
+			eventTypeReconciler: EventTypeReconciler{
+				Scheme: mgr.GetScheme(),
+			},
+		},
 	}
 
 	return p.Add(mgr, logger)
@@ -105,7 +102,7 @@ type reconciler struct {
 
 	pubSubClientCreator pubSubClientCreator
 	receiveAdapterImage string
-	eventTypeReconciler eventtype.Reconciler
+	eventTypeReconciler EventTypeReconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
@@ -179,9 +176,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 			logger.Error("Unable to reconcile the event types", zap.Error(err))
 			return err
 		}
+		src.Status.MarkEventTypes()
 	}
-	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
-	src.Status.MarkEventTypes()
 
 	return nil
 }
@@ -300,22 +296,22 @@ func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPu
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
-	args := r.newEventTypesReconcilerArgs(src)
+	args := r.newEventTypeReconcilerArgs(src)
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, src, args)
 }
 
-func (r *reconciler) newEventTypesReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
-	arg := &eventtype.EventTypeArgs{
+func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.GcpPubSubSource) *EventTypeReconcilerArgs {
+	spec := eventingv1alpha1.EventTypeSpec{
 		Type:   v1alpha1.GcpPubSubSourceEventType,
-		Source: fmt.Sprintf(v1alpha1.GcpPubSubSourceEventSourceFormat, src.Spec.GoogleCloudProject, src.Spec.Topic),
+		Source: v1alpha1.GetGcpPubSubSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,
 	}
-	args := make([]*eventtype.EventTypeArgs, 0, 1)
-	args = append(args, arg)
-	return &eventtype.ReconcilerArgs{
-		EventTypes: args,
-		Namespace:  src.Namespace,
-		Labels:     getLabels(src),
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0, 1)
+	specs = append(specs, spec)
+	return &EventTypeReconcilerArgs{
+		EventTypeSpecs: specs,
+		Namespace:      src.Namespace,
+		Labels:         getLabels(src),
 	}
 }
 

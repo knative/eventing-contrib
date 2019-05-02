@@ -26,7 +26,7 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	. "github.com/knative/eventing-sources/pkg/reconciler"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
@@ -61,23 +61,21 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	if !defined {
 		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
-	scheme := mgr.GetScheme()
-	r := &reconciler{
-		recorder:            mgr.GetRecorder(controllerAgentName),
-		scheme:              scheme,
-		receiveAdapterImage: receiveAdapterImage,
-		webhookClient:       gitHubWebhookClient{},
-		eventTypeReconciler: eventtype.Reconciler{
-			Scheme: scheme,
-		},
-	}
 
 	log.Println("Adding the GitHub Source controller.")
 	p := &sdk.Provider{
-		AgentName:  controllerAgentName,
-		Parent:     &sourcesv1alpha1.GitHubSource{},
-		Owns:       []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
-		Reconciler: r,
+		AgentName: controllerAgentName,
+		Parent:    &sourcesv1alpha1.GitHubSource{},
+		Owns:      []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
+		Reconciler: &reconciler{
+			recorder:            mgr.GetRecorder(controllerAgentName),
+			scheme:              mgr.GetScheme(),
+			receiveAdapterImage: receiveAdapterImage,
+			webhookClient:       gitHubWebhookClient{},
+			eventTypeReconciler: EventTypeReconciler{
+				Scheme: mgr.GetScheme(),
+			},
+		},
 	}
 
 	return p.Add(mgr, logger)
@@ -90,7 +88,7 @@ type reconciler struct {
 	recorder            record.EventRecorder
 	receiveAdapterImage string
 	webhookClient       webhookClient
-	eventTypeReconciler eventtype.Reconciler
+	eventTypeReconciler EventTypeReconciler
 }
 
 type webhookArgs struct {
@@ -203,9 +201,8 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		if err != nil {
 			return err
 		}
+		source.Status.MarkEventTypes()
 	}
-	// We mark EventTypes in order to have the source Ready, even though the Sink might haven't been a Broker.
-	source.Status.MarkEventTypes()
 
 	return nil
 }
@@ -351,31 +348,24 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	args := r.newEventTypesReconcilerArgs(source)
+	args := r.newEventTypeReconcilerArgs(source)
 	return r.eventTypeReconciler.ReconcileEventTypes(ctx, source, args)
 }
 
-func (r *reconciler) newEventTypesReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.ReconcilerArgs {
-	args := make([]*eventtype.EventTypeArgs, 0)
+func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *EventTypeReconcilerArgs {
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	for _, et := range source.Spec.EventTypes {
-		arg := &eventtype.EventTypeArgs{
-			Type:   fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventTypePrefix, et),
-			Source: fmt.Sprintf("%s/%s", sourcesv1alpha1.GitHubSourceEventSourcePrefix, source.Spec.OwnerAndRepository),
+		spec := eventingv1alpha1.EventTypeSpec{
+			Type:   sourcesv1alpha1.GitHubEventType(et),
+			Source: sourcesv1alpha1.GitHubEventSource(source.Spec.OwnerAndRepository),
 			Broker: source.Spec.Sink.Name,
 		}
-		args = append(args, arg)
+		specs = append(specs, spec)
 	}
-	return &eventtype.ReconcilerArgs{
-		EventTypes: args,
-		Namespace:  source.Namespace,
-		Labels:     getLabels(source),
-	}
-}
-
-func getLabels(src *sourcesv1alpha1.GitHubSource) map[string]string {
-	return map[string]string{
-		"knative-eventing-source":      controllerAgentName,
-		"knative-eventing-source-name": src.Name,
+	return &EventTypeReconcilerArgs{
+		EventTypeSpecs: specs,
+		Namespace:      source.Namespace,
+		Labels:         resources.Labels(source.Name),
 	}
 }
 

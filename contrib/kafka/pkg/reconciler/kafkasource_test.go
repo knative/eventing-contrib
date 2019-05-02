@@ -24,10 +24,10 @@ import (
 	"testing"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
-	genericv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	. "github.com/knative/eventing-sources/pkg/reconciler"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
+	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -69,7 +69,7 @@ func init() {
 	v1.AddToScheme(scheme.Scheme)
 	corev1.AddToScheme(scheme.Scheme)
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
-	genericv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
+	eventingsourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
 	eventingv1alpha1.AddToScheme(scheme.Scheme)
 }
@@ -183,7 +183,7 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadySourceWithKind(brokerKind),
+				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
 				getEventType("name1", "group", "topic1"),
 				getEventType("name2", "group", "topic2"),
 			},
@@ -227,7 +227,7 @@ func TestReconcile(t *testing.T) {
 			client:              c,
 			scheme:              tc.Scheme,
 			receiveAdapterImage: raImage,
-			eventTypeReconciler: eventtype.Reconciler{
+			eventTypeReconciler: EventTypeReconciler{
 				Scheme: tc.Scheme,
 			},
 		}
@@ -236,14 +236,14 @@ func TestReconcile(t *testing.T) {
 	}
 }
 
-func getNonKafkaSource() *genericv1alpha1.ContainerSource {
-	obj := &genericv1alpha1.ContainerSource{
+func getNonKafkaSource() *eventingsourcesv1alpha1.ContainerSource {
+	obj := &eventingsourcesv1alpha1.ContainerSource{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: genericv1alpha1.SchemeGroupVersion.String(),
+			APIVersion: eventingsourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "ContainerSource",
 		},
 		ObjectMeta: om(testNS, sourceName),
-		Spec: genericv1alpha1.ContainerSourceSpec{
+		Spec: eventingsourcesv1alpha1.ContainerSourceSpec{
 			Image: image,
 			Args:  []string(nil),
 			Sink: &corev1.ObjectReference{
@@ -342,13 +342,18 @@ func getSourceWithSinkAndDeployedAndKind(kind string) *sourcesv1alpha1.KafkaSour
 func getReadySource() *sourcesv1alpha1.KafkaSource {
 	src := getSourceWithSink()
 	src.Status.MarkDeployed()
-	src.Status.MarkEventTypes()
 	return src
 }
 
 func getReadySourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
 	src := getReadySource()
 	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadyAndMarkEventTypesSourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
+	src := getReadySourceWithKind(kind)
+	src.Status.MarkEventTypes()
 	return src
 }
 

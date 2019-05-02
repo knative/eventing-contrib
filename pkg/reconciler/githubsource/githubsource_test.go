@@ -22,7 +22,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	. "github.com/knative/eventing-sources/pkg/reconciler"
+	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/google/go-cmp/cmp"
@@ -224,7 +225,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -283,7 +283,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -340,7 +339,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "orghookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -572,7 +570,6 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
-				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -784,7 +781,7 @@ func TestAllCases(t *testing.T) {
 			webhookClient: &mockWebhookClient{
 				data: hookData,
 			},
-			eventTypeReconciler: eventtype.Reconciler{
+			eventTypeReconciler: EventTypeReconciler{
 				Scheme: tc.Scheme,
 			},
 		}
@@ -902,7 +899,7 @@ func getGitHubSourceUnaddressable() *sourcesv1alpha1.GitHubSource {
 }
 
 func getEventType() *eventingv1alpha1.EventType {
-	et := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventTypePrefix, "pull_request")
+	et := sourcesv1alpha1.GitHubEventType("pull_request")
 	return &eventingv1alpha1.EventType{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
@@ -919,13 +916,13 @@ func getEventType() *eventingv1alpha1.EventType {
 					UID:                gitHubSourceUID,
 				},
 			},
-			GenerateName: fmt.Sprintf("%s-", eventtype.ToDNS1123Subdomain(et)),
+			GenerateName: fmt.Sprintf("%s-", ToDNS1123Subdomain(et)),
 			Namespace:    testNS,
-			Labels:       getLabels(getGitHubSource()),
+			Labels:       resources.Labels(gitHubSourceName),
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   et,
-			Source: fmt.Sprintf("%s/%s", sourcesv1alpha1.GitHubSourceEventSourcePrefix, "myuser/myproject"),
+			Source: sourcesv1alpha1.GitHubEventSource("myuser/myproject"),
 			Broker: addressableName,
 		},
 	}

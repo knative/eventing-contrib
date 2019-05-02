@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -86,13 +88,24 @@ type SecretValueFromSource struct {
 }
 
 const (
-	// GitHubSourceEventTypePrefix is what all GitHub event types get
+	// gitHubEventTypePrefix is what all GitHub event types get
 	// prefixed with when converting to CloudEvents.
-	GitHubSourceEventTypePrefix = "dev.knative.source.github"
-	// GitHubSourceEventSourcePrefix is what all GitHub event sources get
+	gitHubEventTypePrefix = "dev.knative.source.github"
+
+	// gitHubEventSourcePrefix is what all GitHub event sources get
 	// prefixed with when converting to CloudEvents.
-	GitHubSourceEventSourcePrefix = "github.com"
+	gitHubEventSourcePrefix = "github.com"
 )
+
+// GitHubEventType returns the GitHub CloudEvent type value.
+func GitHubEventType(ghEventType string) string {
+	return fmt.Sprintf("%s.%s", gitHubEventTypePrefix, ghEventType)
+}
+
+// GitHubEventSource returns the GitHub CloudEvent source value.
+func GitHubEventSource(ownerAndRepo string) string {
+	return fmt.Sprintf("%s/%s", gitHubEventSourcePrefix, ownerAndRepo)
+}
 
 const (
 	// GitHubSourceConditionReady has status True when the
@@ -114,8 +127,7 @@ const (
 
 var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
-	GitHubSourceConditionSinkProvided,
-	GitHubSourceConditionEventTypesProvided)
+	GitHubSourceConditionSinkProvided)
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {

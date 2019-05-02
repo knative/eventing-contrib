@@ -41,7 +41,7 @@ const (
 )
 
 var (
-	testSource = fmt.Sprintf("%s/%s", v1alpha1.GitHubSourceEventSourcePrefix, testOwnerRepo)
+	testSource = v1alpha1.GitHubEventSource(testOwnerRepo)
 )
 
 // testCase holds a single row of our GitHubSource table tests
