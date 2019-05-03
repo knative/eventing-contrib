@@ -1,4 +1,4 @@
-# Channel
+# Channel for testing events.
 
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Channel
@@ -17,7 +17,7 @@ spec:
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Subscription
 metadata:
-  name: awssqs-source-dumper
+  name: awssqs-source-display
 spec:
   channel:
     apiVersion: eventing.knative.dev/v1alpha1
@@ -27,17 +27,16 @@ spec:
     ref:
       apiVersion: serving.knative.dev/v1alpha1
       kind: Service
-      name: event-display
+      name: awssqs-event-display
 
 ---
 
-# This is a very simple Knative Service that writes the incoming CloudEvent to its log.
+# This is a very simple Knative Service that prints the input event to its log.
 
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
-  name: event-display
-  namespace: default
+  name: awssqs-event-display
 spec:
   runLatest:
     configuration:

@@ -28,7 +28,7 @@ ko apply -f contrib/awssqs/samples/display-resources.yaml
 ```
 
 The sample provided will configure an in-memory channel (named
-`awssqs-test` and a subscription to a consumer named `event-display`)
+`awssqs-test` and a subscription to a consumer named `awssqs-event-display`)
 that will simply display incoming events to stdout.
 
 At this point we have a channel and a subscriber ready to receive
@@ -80,7 +80,7 @@ You can use [kail](https://github.com/boz/kail/) to tail the logs of the
 subscriber.
 
 ```shell
-kail -d event-display --since=10m
+kail -d awssqs-event-display --since=10m
 ```
 
 ### Publish messages to the queue
@@ -97,7 +97,7 @@ Where the `QUEUE_URL` variable contains the full AWS SQS URL (e.g.
 ### Verify
 
 The window with subscriber logs (in the window where you executed `kail
--d event-display --since=10m` before) should now be displaying log lines
+-d awssqs-event-display --since=10m` before) should now be displaying log lines
 similar to:)
 
 ```
