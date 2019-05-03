@@ -18,7 +18,7 @@ run the commands from the root.
 
 1.  The [in-memory `ClusterChannelProvisioner`](https://github.com/knative/eventing/tree/master/config/provisioners/in-memory-channel)
     should be installed in your cluster. At the time of writing (release
-    v0.4.0) it is part of the default instructions so you will probably
+    v0.5.0) it is part of the default instructions so you will probably
     have it there already.
 
 ### Create a channel and subscriber
@@ -69,19 +69,6 @@ Replace the place holders in `samples/awssqs-source.yaml`.
   export QUEUE_URL=https://sqs-eu-west-1.amazonaws.com/1234234234/my-queue
   sed -i "s|QUEUE_URL|$QUEUE_URL|" awssqs-source.yaml
   ```
-
-- `QUEUE_NAME` will be used to name the event source, you can choose any
-  value that makes sense to you, although a good choice is the last segment
-  of the URL.
-
-  ```shell
-  export QUEUE_NAME="my-queue"
-  sed -i "s|QUEUE_NAME|$QUEUE_NAME|" awssqs-source.yaml
-  ```
-
-- `awsCredsSecret` should be replaced with the name of the k8s secret that
-  contains the AWS credentials. Change this only if you deployed an altered
-  `config/default-awssqs.yaml` source config.
 
 Now deploy `awssqs-source.yaml`.
 

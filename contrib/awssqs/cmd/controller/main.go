@@ -34,10 +34,10 @@ func main() {
 	logCfg := zap.NewProductionConfig()
 	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, err := logCfg.Build()
-	logger = logger.With(zap.String(logkey.ControllerType, "awssqs-controller"))
 	if err != nil {
 		log.Fatal(err)
 	}
+	logger = logger.With(zap.String(logkey.ControllerType, "awssqs-controller"))
 
 	cfg, err := config.GetConfig()
 	if err != nil {
@@ -54,7 +54,7 @@ func main() {
 		log.Fatal("Unable to setup Scheme for resources", err)
 	}
 
-	log.Printf("Setting up Controllers.")
+	log.Printf("Setting up managers.")
 	if err := reconciler.Add(mgr, logger.Sugar()); err != nil {
 		log.Fatal("Unable to add Manager to the reconciler", err)
 	}
