@@ -72,9 +72,6 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 	opts := &client.ListOptions{
 		Namespace:     namespace,
 		LabelSelector: labels.SelectorFromSet(lbs),
-		// Set Raw because if we need to get more than one page, then we will put the continue token
-		// into opts.Raw.Continue.
-		Raw: &metav1.ListOptions{},
 	}
 
 	el := &eventingv1alpha1.EventTypeList{}
