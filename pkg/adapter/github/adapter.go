@@ -99,6 +99,8 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 }
 
 func subjectFromGitHubEvent(gitHubEvent gh.Event, payload interface{}) string {
+	// The decision of what to put in subject is somewhat arbitrary here (i.e., it's the author's opinion)
+	// TODO check if we should be setting subject to these values.
 	var subject string
 	switch gitHubEvent {
 	case gh.CheckSuiteEvent:

@@ -94,7 +94,7 @@ const (
 
 	// gitHubEventSourcePrefix is what all GitHub event sources get
 	// prefixed with when converting to CloudEvents.
-	gitHubEventSourcePrefix = "github.com"
+	gitHubEventSourcePrefix = "//github.com"
 )
 
 // GitHubEventType returns the GitHub CloudEvent type value.
