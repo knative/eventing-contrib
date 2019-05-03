@@ -22,17 +22,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
-
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler/resources"
-
-	"github.com/knative/eventing-sources/pkg/controller/sinks"
-
 	"cloud.google.com/go/pubsub"
 	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler/resources"
+	"github.com/knative/eventing-sources/pkg/controller/sdk"
+	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
@@ -43,6 +39,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 const (
@@ -70,11 +68,14 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.GcpPubSubSource{},
-		Owns:      []runtime.Object{&v1.Deployment{}},
+		Owns:      []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
 		Reconciler: &reconciler{
 			scheme:              mgr.GetScheme(),
 			pubSubClientCreator: gcpPubSubClientCreator,
 			receiveAdapterImage: raImage,
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: mgr.GetScheme(),
+			},
 		},
 	}
 
@@ -100,12 +101,13 @@ type reconciler struct {
 	scheme *runtime.Scheme
 
 	pubSubClientCreator pubSubClientCreator
-
 	receiveAdapterImage string
+	eventTypeReconciler eventtype.Reconciler
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }
 
@@ -125,6 +127,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	//     - Will be garbage collected by K8s when this GcpPubSubSource is deleted.
 	// 3. Register that receive adapter as a Pull endpoint for the specified GCP PubSub Topic.
 	//     - This needs to deregister during deletion.
+	// 4. Create the EventTypes that it can emit.
+	//     - Will be garbage collected by K8s when this GcpPubSubSource is deleted.
 	// Because there is something that must happen during deletion, we add this controller as a
 	// finalizer to every GcpPubSubSource.
 
@@ -164,6 +168,16 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	// Only create EventTypes for Broker sinks.
+	if src.Spec.Sink.Kind == "Broker" {
+		err = r.reconcileEventTypes(ctx, src)
+		if err != nil {
+			logger.Error("Unable to reconcile the event types", zap.Error(err))
+			return err
+		}
+		src.Status.MarkEventTypes()
+	}
 
 	return nil
 }
@@ -279,6 +293,26 @@ func (r *reconciler) deleteSubscription(ctx context.Context, src *v1alpha1.GcpPu
 		return nil
 	}
 	return sub.Delete(ctx)
+}
+
+func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpPubSubSource) error {
+	args := r.newEventTypeReconcilerArgs(src)
+	return r.eventTypeReconciler.Reconcile(ctx, src, args)
+}
+
+func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
+	spec := eventingv1alpha1.EventTypeSpec{
+		Type:   v1alpha1.GcpPubSubSourceEventType,
+		Source: v1alpha1.GetGcpPubSubSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
+		Broker: src.Spec.Sink.Name,
+	}
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0, 1)
+	specs = append(specs, spec)
+	return &eventtype.ReconcilerArgs{
+		Specs:     specs,
+		Namespace: src.Namespace,
+		Labels:    getLabels(src),
+	}
 }
 
 func generateSubName(src *v1alpha1.GcpPubSubSource) string {

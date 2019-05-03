@@ -66,6 +66,8 @@ rules:
   resources:
   - channels
   - services
+  - brokers
+  - eventtypes
   verbs: *everything
 
 - apiGroups:

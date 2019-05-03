@@ -14,16 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package resources
 
-import (
-	"github.com/knative/eventing-sources/pkg/apis"
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	sourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
+const (
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "github-source-controller"
 )
 
-func init() {
-	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
-	apis.AddToSchemes = append(apis.AddToSchemes, sourcesv1alpha1.SchemeBuilder.AddToScheme)
-	apis.AddToSchemes = append(apis.AddToSchemes, eventingv1alpha1.SchemeBuilder.AddToScheme)
+func Labels(name string) map[string]string {
+	return map[string]string{
+		"knative-eventing-source":      controllerAgentName,
+		"knative-eventing-source-name": name,
+	}
 }

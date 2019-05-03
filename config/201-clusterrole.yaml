@@ -93,3 +93,10 @@ rules:
   resources:
   - events
   verbs: *everything
+
+# EventTypes admin
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - eventtypes
+  verbs: *everything
