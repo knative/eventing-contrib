@@ -1,18 +1,18 @@
 /*
- * Copyright 2018 The Knative Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+Copyright 2019 The Knative Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 
 package v1alpha1
 
@@ -21,6 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // Subscribable is the schema for the subscribable portion of the spec
@@ -28,9 +29,9 @@ import (
 type Subscribable struct {
 	// TODO: What is actually required here for Channel spec.
 	// This is the list of subscriptions for this channel.
-	// +patchMergeKey=ref
+	// +patchMergeKey=uid
 	// +patchStrategy=merge
-	Subscribers []ChannelSubscriberSpec `json:"subscribers,omitempty" patchStrategy:"merge" patchMergeKey:"ref"`
+	Subscribers []ChannelSubscriberSpec `json:"subscribers,omitempty" patchStrategy:"merge" patchMergeKey:"uid"`
 }
 
 // ChannelSubscriberSpec defines a single subscriber to a Channel.
@@ -39,8 +40,12 @@ type Subscribable struct {
 // ReplyURI is the endpoint for the reply
 // At least one of SubscriberURI and ReplyURI must be present
 type ChannelSubscriberSpec struct {
+	// Deprecated: use UID.
 	// +optional
-	Ref *corev1.ObjectReference `json:"ref,omitempty"`
+	DeprecatedRef *corev1.ObjectReference `json:"ref,omitempty" yaml:"ref,omitempty"`
+	// UID is used to understand the origin of the subscriber.
+	// +optional
+	UID types.UID `json:"uid,omitempty"`
 	// +optional
 	SubscriberURI string `json:"subscriberURI,omitempty"`
 	// +optional
@@ -74,23 +79,11 @@ func (c *Channel) Populate() {
 	c.Spec.Subscribable = &Subscribable{
 		// Populate ALL fields
 		Subscribers: []ChannelSubscriberSpec{{
-			Ref: &corev1.ObjectReference{
-				APIVersion: "eventing.knative.dev/v1alpha1",
-				Kind:       "Subscription",
-				Name:       "subscription1",
-				Namespace:  "default",
-				UID:        "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
-			},
+			UID:           "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1",
 			SubscriberURI: "call1",
 			ReplyURI:      "sink2",
 		}, {
-			Ref: &corev1.ObjectReference{
-				APIVersion: "eventing.knative.dev/v1alpha1",
-				Kind:       "Subscription",
-				Name:       "subscription2",
-				Namespace:  "default",
-				UID:        "34c5aec8-deb6-11e8-9f32-f2801f1b9fd1",
-			},
+			UID:           "34c5aec8-deb6-11e8-9f32-f2801f1b9fd1",
 			SubscriberURI: "call2",
 			ReplyURI:      "sink2",
 		}},

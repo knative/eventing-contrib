@@ -44,6 +44,10 @@ func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage strin
 			Name:  "SINK",
 			Value: sinkURI,
 		},
+		{
+			Name:  "GITHUB_OWNER_REPO",
+			Value: source.Spec.OwnerAndRepository,
+		},
 	}
 	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI)}
 	return &servingv1alpha1.Service{

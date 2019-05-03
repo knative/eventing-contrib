@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
@@ -50,9 +51,14 @@ var _ apis.Immutable = (*KafkaSource)(nil)
 var _ = duck.VerifyType(&KafkaSource{}, &duckv1alpha1.Conditions{})
 
 type KafkaSourceSASLSpec struct {
-	Enable   bool   `json:"enable,omitempty"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"password,omitempty"`
+	Enable bool `json:"enable,omitempty"`
+
+	// User is the Kubernetes secret containing the SASL username.
+	// +optional
+	User sourcesv1alpha1.SecretValueFromSource `json:"user,omitempty"`
+	// Password is the Kubernetes secret containing the SASL password.
+	// +optional
+	Password sourcesv1alpha1.SecretValueFromSource `json:"password,omitempty"`
 }
 
 type KafkaSourceTLSSpec struct {
@@ -90,6 +96,11 @@ type KafkaSourceSpec struct {
 }
 
 const (
+	// KafkaSourceEventType is the Kafka CloudEvent type.
+	KafkaSourceEventType = "dev.knative.kafka.event"
+)
+
+const (
 	// KafkaConditionReady has status True when the KafkaSource is ready to send events.
 	KafkaConditionReady = duckv1alpha1.ConditionReady
 
@@ -98,6 +109,9 @@ const (
 
 	// KafkaConditionDeployed has status True when the KafkaSource has had it's receive adapter deployment created.
 	KafkaConditionDeployed duckv1alpha1.ConditionType = "Deployed"
+
+	// KafkaConditionEventTypesProvided has status True when the KafkaSource has been configured with event types.
+	KafkaConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypesProvided"
 )
 
 var kafkaSourceCondSet = duckv1alpha1.NewLivingConditionSet(
@@ -159,6 +173,16 @@ func (s *KafkaSourceStatus) MarkDeploying(reason, messageFormat string, messageA
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *KafkaSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
 	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionDeployed, reason, messageFormat, messageA...)
+}
+
+// MarkEventTypes sets the condition that the source has created its event types.
+func (s *KafkaSourceStatus) MarkEventTypes() {
+	kafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionEventTypesProvided)
+}
+
+// MarkNoEventTypes sets the condition that the source does not its event types configured.
+func (s *KafkaSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
+	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

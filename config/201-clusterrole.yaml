@@ -22,7 +22,6 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - awssqssources
-  - containersources
   - githubsources
   - kuberneteseventsources
   verbs: &everything
@@ -34,12 +33,20 @@ rules:
   - patch
   - delete
 
+  # ContainerSource from eventing
+- apiGroups:
+    - sources.eventing.knative.dev
+  resources:
+    - containersources
+    - containersources/status
+    - containersources/finalizers
+  verbs: *everything
+
 # Sources finalizer
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
   - awssqssources/finalizers
-  - containersources/finalizers
   - githubsources/finalizers
   - kuberneteseventsources/finalizers
   verbs: *everything
@@ -49,7 +56,6 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - awssqssources/status
-  - containersources/status
   - githubsources/status
   - kuberneteseventsources/status
   verbs:
@@ -86,4 +92,11 @@ rules:
   - ""
   resources:
   - events
+  verbs: *everything
+
+# EventTypes admin
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - eventtypes
   verbs: *everything

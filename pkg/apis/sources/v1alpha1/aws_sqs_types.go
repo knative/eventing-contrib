@@ -64,6 +64,11 @@ type AwsSqsSourceSpec struct {
 }
 
 const (
+	// AwsSqsSourceEventType is the AWS SQS CloudEvent type.
+	AwsSqsSourceEventType = "aws.sqs.message"
+)
+
+const (
 	// AwsSqsSourceConditionReady has status True when the source is
 	// ready to send events.
 	AwsSqsSourceConditionReady = duckv1alpha1.ConditionReady
@@ -75,10 +80,13 @@ const (
 	// AwsSqsSourceConditionDeployed has status True when the
 	// AwsSqsSource has had it's receive adapter deployment created.
 	AwsSqsSourceConditionDeployed duckv1alpha1.ConditionType = "Deployed"
+
+	// AwsSqsSourceConditionEventTypesProvided has status True when the
+	// AwsSqsSource has been configured with event types
+	AwsSqsSourceConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypesProvided"
 )
 
 var condSet = duckv1alpha1.NewLivingConditionSet(
-	AwsSqsSourceConditionReady,
 	AwsSqsSourceConditionSinkProvided,
 	AwsSqsSourceConditionDeployed)
 
@@ -138,6 +146,16 @@ func (s *AwsSqsSourceStatus) MarkDeploying(reason, messageFormat string, message
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *AwsSqsSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
 	condSet.Manage(s).MarkFalse(AwsSqsSourceConditionDeployed, reason, messageFormat, messageA...)
+}
+
+// MarkEventTypes sets the condition that the source has set its event types.
+func (s *AwsSqsSourceStatus) MarkEventTypes() {
+	condSet.Manage(s).MarkTrue(AwsSqsSourceConditionEventTypesProvided)
+}
+
+// MarkNoEventTypes sets the condition that the source does not its event types configured.
+func (s *AwsSqsSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
+	condSet.Manage(s).MarkFalse(AwsSqsSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

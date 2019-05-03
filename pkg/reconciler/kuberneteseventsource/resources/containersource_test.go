@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -41,12 +42,12 @@ func TestMakeContainerSource(t *testing.T) {
 		},
 	}, "raimage")
 
-	want := &sourcesv1alpha1.ContainerSource{
+	want := &eventingsourcesv1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "kes-",
 			Namespace:    "ns",
 		},
-		Spec: sourcesv1alpha1.ContainerSourceSpec{
+		Spec: eventingsourcesv1alpha1.ContainerSourceSpec{
 			Image:              "raimage",
 			Args:               []string{"--namespace=watchns"},
 			ServiceAccountName: "serviceaccount",

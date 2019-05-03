@@ -33,7 +33,8 @@ import (
 )
 
 const (
-	testSource = "http://github.com/a/b"
+	testSource    = "http://github.com/a/b"
+	testOwnerRepo = "test-user/test-repo"
 )
 
 // testCase holds a single row of our GitHubSource table tests
@@ -436,7 +437,7 @@ func TestAllCases(t *testing.T) {
 		sinkServer := httptest.NewServer(h)
 		defer sinkServer.Close()
 
-		ra, err := New(sinkServer.URL)
+		ra, err := New(sinkServer.URL, testOwnerRepo)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -562,7 +563,7 @@ func TestHandleEvent(t *testing.T) {
 	sinkServer := httptest.NewServer(h)
 	defer sinkServer.Close()
 
-	ra, err := New(sinkServer.URL)
+	ra, err := New(sinkServer.URL, testOwnerRepo)
 	if err != nil {
 		t.Fatal(err)
 	}

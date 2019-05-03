@@ -23,6 +23,7 @@ import (
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/reconciler/kuberneteseventsource/resources"
+	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -94,7 +95,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to owned ContainerSource
-	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.ContainerSource{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &eventingsourcesv1alpha1.ContainerSource{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &sourcesv1alpha1.KubernetesEventSource{},
 	})
@@ -200,8 +201,8 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.Kube
 	return nil
 }
 
-func (r *reconciler) getOwnedContainerSource(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) (*sourcesv1alpha1.ContainerSource, error) {
-	list := &sourcesv1alpha1.ContainerSourceList{}
+func (r *reconciler) getOwnedContainerSource(ctx context.Context, source *sourcesv1alpha1.KubernetesEventSource) (*eventingsourcesv1alpha1.ContainerSource, error) {
+	list := &eventingsourcesv1alpha1.ContainerSourceList{}
 	err := r.List(ctx, &client.ListOptions{
 		Namespace:     source.Namespace,
 		LabelSelector: labels.Everything(),

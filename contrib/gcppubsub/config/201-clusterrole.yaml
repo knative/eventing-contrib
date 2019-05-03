@@ -54,3 +54,9 @@ rules:
   - get
   - list
   - watch
+
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - eventtypes
+  verbs: *everything

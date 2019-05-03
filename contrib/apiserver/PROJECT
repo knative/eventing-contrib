@@ -1,3 +1,0 @@
-version: "1"
-domain: eventing.knative.dev
-repo: github.com/knative/eventing-sources
