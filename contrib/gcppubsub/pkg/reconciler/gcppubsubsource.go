@@ -162,7 +162,17 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 	src.Status.MarkSubscribed()
 
-	_, err = r.createReceiveAdapter(ctx, src, sub.ID(), sinkURI)
+	var transformerURI string
+	if src.Spec.Transformer != nil {
+		transformerURI, err = sinks.GetSinkURI(ctx, r.client, src.Spec.Transformer, src.Namespace)
+		if err != nil {
+			src.Status.MarkNoTransformer("NotFound", "")
+			return err
+		}
+		src.Status.MarkTransformer(transformerURI)
+	}
+
+	_, err = r.createReceiveAdapter(ctx, src, sub.ID(), sinkURI, transformerURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
 		return err
@@ -194,7 +204,7 @@ func (r *reconciler) removeFinalizer(s *v1alpha1.GcpPubSubSource) {
 	s.Finalizers = finalizers.List()
 }
 
-func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, subscriptionID, sinkURI string) (*v1.Deployment, error) {
+func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, subscriptionID, sinkURI, transformerURI string) (*v1.Deployment, error) {
 	ra, err := r.getReceiveAdapter(ctx, src)
 	if err != nil && !apierrors.IsNotFound(err) {
 		logging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
@@ -210,6 +220,7 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		Labels:         getLabels(src),
 		SubscriptionID: subscriptionID,
 		SinkURI:        sinkURI,
+		TransformerURI: transformerURI,
 	})
 	if err := controllerutil.SetControllerReference(src, svc, r.scheme); err != nil {
 		return nil, err
