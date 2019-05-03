@@ -256,6 +256,9 @@ func subjectFromGitHubEvent(gitHubEvent gh.Event, payload interface{}) string {
 			subject = strconv.FormatInt(w.Repository.ID, 10)
 		}
 	}
+	if subject == "" {
+		log.Printf("No subject found in github event %s", gitHubEvent)
+	}
 	return subject
 }
 
