@@ -41,7 +41,7 @@ func main() {
 
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Fatal("Unable to get API server config", err)
+		log.Fatal("Unable to get API server config: ", err)
 	}
 
 	mgr, err := manager.New(cfg, manager.Options{})
