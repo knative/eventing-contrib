@@ -440,9 +440,13 @@ func (tc *testCase) runner(t *testing.T, ra Adapter) func(t *testing.T) {
 		if tc.eventType == "" {
 			t.Fatal("eventType is required for table tests")
 		}
+		eventID := "12345"
+		if tc.eventID != "" {
+			eventID = tc.eventID
+		}
 		hdr := http.Header{}
 		hdr.Set("X-GitHub-Event", tc.eventType)
-		hdr.Set("X-GitHub-Delivery", tc.eventID)
+		hdr.Set("X-GitHub-Delivery", eventID)
 		evtErr := ra.handleEvent(tc.payload, hdr)
 
 		if err := tc.verifyErr(evtErr); err != nil {

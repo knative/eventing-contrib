@@ -24,9 +24,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
@@ -40,7 +39,7 @@ const (
 // Adapter converts incoming GitHub webhook events to CloudEvents
 type Adapter struct {
 	client client.Client
-	source *types.URLRef
+	source string
 }
 
 // New creates an adapter to convert incoming GitHub webhook events to CloudEvents and
@@ -52,10 +51,11 @@ func New(sinkURI, ownerRepo string) (*Adapter, error) {
 	if err != nil {
 		return nil, err
 	}
-	source := sourcesv1alpha1.GitHubEventSource(ownerRepo)
-	a.source = types.ParseURLRef(source)
-	if a.source == nil {
-		return nil, fmt.Errorf("invalid source for github events: %s", source)
+	a.source = sourcesv1alpha1.GitHubEventSource(ownerRepo)
+	// Check at startup if it's not a URLRef and return an error in that case.
+	source := cloudevents.ParseURLRef(a.source)
+	if source == nil {
+		return nil, fmt.Errorf("invalid source for github events: %s", a.source)
 	}
 	return a, nil
 }
@@ -72,29 +72,23 @@ func (a *Adapter) HandleEvent(payload interface{}, header http.Header) {
 func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	gitHubEventType := hdr.Get("X-" + GHHeaderEvent)
 	eventID := hdr.Get("X-" + GHHeaderDelivery)
-	extensions := map[string]interface{}{
-		GHHeaderEvent:    gitHubEventType,
-		GHHeaderDelivery: eventID,
-	}
 
 	log.Printf("Handling %s", gitHubEventType)
 
 	cloudEventType := sourcesv1alpha1.GitHubEventType(gitHubEventType)
 	subject := subjectFromGitHubEvent(gh.Event(gitHubEventType), payload)
 
-	eventContext := cloudevents.EventContextV02{
-		ID:         eventID,
-		Type:       cloudEventType,
-		Source:     *a.source,
-		Extensions: extensions,
-	}.AsV02()
-	eventContext.SetSubject(subject)
+	event := cloudevents.NewEvent()
+	event.SetSpecVersion(cloudevents.VersionV02)
+	event.SetID(eventID)
+	event.SetType(cloudEventType)
+	event.SetSource(a.source)
+	event.SetExtension(GHHeaderEvent, gitHubEventType)
+	event.SetExtension(GHHeaderDelivery, eventID)
+	event.SetSubject(subject)
+	event.SetData(payload)
 
-	event := cloudevents.Event{
-		Context: eventContext,
-		Data:    payload,
-	}
-	_, err := a.client.Send(context.TODO(), event)
+	_, err := a.client.Send(context.Background(), event)
 	return err
 }
 
@@ -102,41 +96,50 @@ func subjectFromGitHubEvent(gitHubEvent gh.Event, payload interface{}) string {
 	// The decision of what to put in subject is somewhat arbitrary here (i.e., it's the author's opinion)
 	// TODO check if we should be setting subject to these values.
 	var subject string
+	var ok bool
 	switch gitHubEvent {
 	case gh.CheckSuiteEvent:
-		if cs, ok := payload.(gh.CheckSuitePayload); ok {
+		var cs gh.CheckSuitePayload
+		if cs, ok = payload.(gh.CheckSuitePayload); ok {
 			subject = strconv.FormatInt(cs.CheckSuite.ID, 10)
 		}
 	case gh.CommitCommentEvent:
-		if cc, ok := payload.(gh.CommitCommentPayload); ok {
+		var cc gh.CommitCommentPayload
+		if cc, ok = payload.(gh.CommitCommentPayload); ok {
 			// E.g., https://github.com/Codertocat/Hello-World/commit/a10867b14bb761a232cd80139fbd4c0d33264240#commitcomment-29186860
 			// and we keep with a10867b14bb761a232cd80139fbd4c0d33264240#commitcomment-29186860
 			subject = lastPathPortion(cc.Comment.HTMLURL)
 		}
 	case gh.CreateEvent:
-		if c, ok := payload.(gh.CreatePayload); ok {
+		var c gh.CreatePayload
+		if c, ok = payload.(gh.CreatePayload); ok {
 			// The object that was created, can be repository, branch, or tag.
 			subject = c.RefType
 		}
 	case gh.DeleteEvent:
-		if d, ok := payload.(gh.DeletePayload); ok {
+		var d gh.DeletePayload
+		if d, ok = payload.(gh.DeletePayload); ok {
 			// The object that was deleted, can be branch or tag.
 			subject = d.RefType
 		}
 	case gh.DeploymentEvent:
-		if d, ok := payload.(gh.DeploymentPayload); ok {
+		var d gh.DeploymentPayload
+		if d, ok = payload.(gh.DeploymentPayload); ok {
 			subject = strconv.FormatInt(d.Deployment.ID, 10)
 		}
 	case gh.DeploymentStatusEvent:
-		if d, ok := payload.(gh.DeploymentStatusPayload); ok {
+		var d gh.DeploymentStatusPayload
+		if d, ok = payload.(gh.DeploymentStatusPayload); ok {
 			subject = strconv.FormatInt(d.Deployment.ID, 10)
 		}
 	case gh.ForkEvent:
-		if f, ok := payload.(gh.ForkPayload); ok {
+		var f gh.ForkPayload
+		if f, ok = payload.(gh.ForkPayload); ok {
 			subject = strconv.FormatInt(f.Forkee.ID, 10)
 		}
 	case gh.GollumEvent:
-		if g, ok := payload.(gh.GollumPayload); ok {
+		var g gh.GollumPayload
+		if g, ok = payload.(gh.GollumPayload); ok {
 			// The pages that were updated.
 			// E.g., Home, Main.
 			pages := make([]string, 0, len(g.Pages))
@@ -146,117 +149,144 @@ func subjectFromGitHubEvent(gitHubEvent gh.Event, payload interface{}) string {
 			subject = strings.Join(pages, ",")
 		}
 	case gh.InstallationEvent, gh.IntegrationInstallationEvent:
-		if i, ok := payload.(gh.InstallationPayload); ok {
+		var i gh.InstallationPayload
+		if i, ok = payload.(gh.InstallationPayload); ok {
 			subject = strconv.FormatInt(i.Installation.ID, 10)
 		}
 	case gh.IssueCommentEvent:
-		if i, ok := payload.(gh.IssueCommentPayload); ok {
+		var i gh.IssueCommentPayload
+		if i, ok = payload.(gh.IssueCommentPayload); ok {
 			// E.g., https://github.com/Codertocat/Hello-World/issues/2#issuecomment-393304133
 			// and we keep with 2#issuecomment-393304133
 			subject = lastPathPortion(i.Comment.HTMLURL)
 		}
 	case gh.IssuesEvent:
-		if i, ok := payload.(gh.IssuesPayload); ok {
+		var i gh.IssuesPayload
+		if i, ok = payload.(gh.IssuesPayload); ok {
 			subject = strconv.FormatInt(i.Issue.Number, 10)
 		}
 	case gh.LabelEvent:
-		if l, ok := payload.(gh.LabelPayload); ok {
+		var l gh.LabelPayload
+		if l, ok = payload.(gh.LabelPayload); ok {
 			// E.g., :bug: Bugfix
 			subject = l.Label.Name
 		}
 	case gh.MemberEvent:
-		if m, ok := payload.(gh.MemberPayload); ok {
+		var m gh.MemberPayload
+		if m, ok = payload.(gh.MemberPayload); ok {
 			subject = strconv.FormatInt(m.Member.ID, 10)
 		}
 	case gh.MembershipEvent:
-		if m, ok := payload.(gh.MembershipPayload); ok {
+		var m gh.MembershipPayload
+		if m, ok = payload.(gh.MembershipPayload); ok {
 			subject = strconv.FormatInt(m.Member.ID, 10)
 		}
 	case gh.MilestoneEvent:
-		if m, ok := payload.(gh.MilestonePayload); ok {
+		var m gh.MilestonePayload
+		if m, ok = payload.(gh.MilestonePayload); ok {
 			subject = strconv.FormatInt(m.Milestone.Number, 10)
 		}
 	case gh.OrganizationEvent:
-		if o, ok := payload.(gh.OrganizationPayload); ok {
+		var o gh.OrganizationPayload
+		if o, ok = payload.(gh.OrganizationPayload); ok {
 			// The action that was performed, can be member_added, member_removed, or member_invited.
 			subject = o.Action
 		}
 	case gh.OrgBlockEvent:
-		if o, ok := payload.(gh.OrgBlockPayload); ok {
+		var o gh.OrgBlockPayload
+		if o, ok = payload.(gh.OrgBlockPayload); ok {
 			// The action performed, can be blocked or unblocked.
 			subject = o.Action
 		}
 	case gh.PageBuildEvent:
-		if p, ok := payload.(gh.PageBuildPayload); ok {
+		var p gh.PageBuildPayload
+		if p, ok = payload.(gh.PageBuildPayload); ok {
 			subject = strconv.FormatInt(p.ID, 10)
 		}
 	case gh.PingEvent:
-		if p, ok := payload.(gh.PingPayload); ok {
+		var p gh.PingPayload
+		if p, ok = payload.(gh.PingPayload); ok {
 			subject = strconv.Itoa(p.HookID)
 		}
 	case gh.ProjectCardEvent:
-		if p, ok := payload.(gh.ProjectCardPayload); ok {
+		var p gh.ProjectCardPayload
+		if p, ok = payload.(gh.ProjectCardPayload); ok {
 			// The action performed on the project card, can be created, edited, moved, converted, or deleted.
 			subject = p.Action
 		}
 	case gh.ProjectColumnEvent:
-		if p, ok := payload.(gh.ProjectColumnPayload); ok {
+		var p gh.ProjectColumnPayload
+		if p, ok = payload.(gh.ProjectColumnPayload); ok {
 			// The action performed on the project column, can be created, edited, moved, converted, or deleted.
 			subject = p.Action
 		}
 	case gh.ProjectEvent:
-		if p, ok := payload.(gh.ProjectPayload); ok {
+		var p gh.ProjectPayload
+		if p, ok = payload.(gh.ProjectPayload); ok {
 			// The action that was performed on the project, can be created, edited, closed, reopened, or deleted.
 			subject = p.Action
 		}
 	case gh.PublicEvent:
-		if p, ok := payload.(gh.PublicPayload); ok {
+		var p gh.PublicPayload
+		if p, ok = payload.(gh.PublicPayload); ok {
 			subject = strconv.FormatInt(p.Repository.ID, 10)
 		}
 	case gh.PullRequestEvent:
-		if p, ok := payload.(gh.PullRequestPayload); ok {
+		var p gh.PullRequestPayload
+		if p, ok = payload.(gh.PullRequestPayload); ok {
 			subject = strconv.FormatInt(p.PullRequest.Number, 10)
 		}
 	case gh.PullRequestReviewEvent:
-		if p, ok := payload.(gh.PullRequestReviewPayload); ok {
+		var p gh.PullRequestReviewPayload
+		if p, ok = payload.(gh.PullRequestReviewPayload); ok {
 			subject = strconv.FormatInt(p.Review.ID, 10)
 		}
 	case gh.PullRequestReviewCommentEvent:
-		if p, ok := payload.(gh.PullRequestReviewCommentPayload); ok {
+		var p gh.PullRequestReviewCommentPayload
+		if p, ok = payload.(gh.PullRequestReviewCommentPayload); ok {
 			subject = strconv.FormatInt(p.Comment.ID, 10)
 		}
 	case gh.PushEvent:
-		if p, ok := payload.(gh.PushPayload); ok {
+		var p gh.PushPayload
+		if p, ok = payload.(gh.PushPayload); ok {
 			// E.g., https://github.com/Codertocat/Hello-World/compare/a10867b14bb7...000000000000
 			// and we keep with a10867b14bb7...000000000000.
 			subject = lastPathPortion(p.Compare)
 		}
 	case gh.ReleaseEvent:
-		if r, ok := payload.(gh.ReleasePayload); ok {
+		var r gh.ReleasePayload
+		if r, ok = payload.(gh.ReleasePayload); ok {
 			subject = r.Release.TagName
 		}
 	case gh.RepositoryEvent:
-		if r, ok := payload.(gh.RepositoryPayload); ok {
+		var r gh.RepositoryPayload
+		if r, ok = payload.(gh.RepositoryPayload); ok {
 			subject = strconv.FormatInt(r.Repository.ID, 10)
 		}
 	case gh.StatusEvent:
-		if s, ok := payload.(gh.StatusPayload); ok {
+		var s gh.StatusPayload
+		if s, ok = payload.(gh.StatusPayload); ok {
 			subject = s.Sha
 		}
 	case gh.TeamEvent:
-		if t, ok := payload.(gh.TeamPayload); ok {
+		var t gh.TeamPayload
+		if t, ok = payload.(gh.TeamPayload); ok {
 			subject = strconv.FormatInt(t.Team.ID, 10)
 		}
 	case gh.TeamAddEvent:
-		if t, ok := payload.(gh.TeamAddPayload); ok {
+		var t gh.TeamAddPayload
+		if t, ok = payload.(gh.TeamAddPayload); ok {
 			subject = strconv.FormatInt(t.Repository.ID, 10)
 		}
 	case gh.WatchEvent:
-		if w, ok := payload.(gh.WatchPayload); ok {
+		var w gh.WatchPayload
+		if w, ok = payload.(gh.WatchPayload); ok {
 			subject = strconv.FormatInt(w.Repository.ID, 10)
 		}
 	}
-	if subject == "" {
+	if !ok {
+		log.Printf("Invalid payload in github event %s", gitHubEvent)
+	} else if subject == "" {
 		log.Printf("No subject found in github event %s", gitHubEvent)
 	}
 	return subject
