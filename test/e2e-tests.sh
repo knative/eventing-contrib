@@ -95,7 +95,7 @@ function dump_extra_cluster_state() {
 
 # Script entry point.
 
-initialize $@ --skip-istio
+initialize $@
 
 go_test_e2e ./test/e2e || fail_test
 
