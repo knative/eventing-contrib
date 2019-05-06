@@ -356,11 +356,8 @@ func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSo
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
 	for _, et := range source.Spec.EventTypes {
 		spec := eventingv1alpha1.EventTypeSpec{
-			Type: sourcesv1alpha1.GetGitHubSourceEventType(et),
-			// Using the owner and repository as source.
-			// This should match what is populated in the adapter. It currently doesn't
-			// TODO change it in both places once we agree on source and subject.
-			Source: source.Spec.OwnerAndRepository,
+			Type:   sourcesv1alpha1.GitHubEventType(et),
+			Source: sourcesv1alpha1.GitHubEventSource(source.Spec.OwnerAndRepository),
 			Broker: source.Spec.Sink.Name,
 		}
 		specs = append(specs, spec)

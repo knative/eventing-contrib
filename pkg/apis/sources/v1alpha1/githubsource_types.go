@@ -88,14 +88,23 @@ type SecretValueFromSource struct {
 }
 
 const (
-	// gitHubSourceEventPrefix is what all GitHub event types get
+	// gitHubEventTypePrefix is what all GitHub event types get
 	// prefixed with when converting to CloudEvents.
-	gitHubSourceEventPrefix = "dev.knative.source.github"
+	gitHubEventTypePrefix = "dev.knative.source.github"
+
+	// gitHubEventSourcePrefix is what all GitHub event sources get
+	// prefixed with when converting to CloudEvents.
+	gitHubEventSourcePrefix = "https://github.com"
 )
 
-// GetGitHubSourceEventType returns the GitHub CloudEvent type value.
-func GetGitHubSourceEventType(ghEventType string) string {
-	return fmt.Sprintf("%s.%s", gitHubSourceEventPrefix, ghEventType)
+// GitHubEventType returns the GitHub CloudEvent type value.
+func GitHubEventType(ghEventType string) string {
+	return fmt.Sprintf("%s.%s", gitHubEventTypePrefix, ghEventType)
+}
+
+// GitHubEventSource returns the GitHub CloudEvent source value.
+func GitHubEventSource(ownerAndRepo string) string {
+	return fmt.Sprintf("%s/%s", gitHubEventSourcePrefix, ownerAndRepo)
 }
 
 const (

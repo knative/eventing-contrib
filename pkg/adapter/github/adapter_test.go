@@ -23,8 +23,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -33,8 +36,12 @@ import (
 )
 
 const (
-	testSource    = "http://github.com/a/b"
+	testSubject   = "1234"
 	testOwnerRepo = "test-user/test-repo"
+)
+
+var (
+	testSource = v1alpha1.GitHubEventSource(testOwnerRepo)
 )
 
 // testCase holds a single row of our GitHubSource table tests
@@ -64,357 +71,338 @@ type testCase struct {
 	// wantEventType is the expected CloudEvent EventType
 	wantCloudEventType string
 
-	// wantCloudEventSource is the expected CloudEvent source
-	wantCloudEventSource string
+	// wantCloudEventSubject is the expected CloudEvent subject
+	wantCloudEventSubject string
 }
 
 var testCases = []testCase{
 	{
-		name:       "no source",
-		payload:    gh.PullRequestPayload{},
-		eventType:  "pull_request",
-		wantErrMsg: `no source found in github event`,
-	}, {
 		name: "valid check_suite",
 		payload: func() interface{} {
 			pl := gh.CheckSuitePayload{}
-			pl.Repository.HTMLURL = testSource
+			id, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Repository.ID = id
 			return pl
 		}(),
-		eventType:            "check_suite",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "check_suite",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid commit_comment",
 		payload: func() interface{} {
 			pl := gh.CommitCommentPayload{}
-			pl.Comment.HTMLURL = testSource
+			pl.Comment.HTMLURL = fmt.Sprintf("http://test/%s", testSubject)
 			return pl
 		}(),
-		eventType:            "commit_comment",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "commit_comment",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid create",
 		payload: func() interface{} {
 			pl := gh.CreatePayload{}
-			pl.Repository.HTMLURL = testSource
+			pl.RefType = testSubject
 			return pl
 		}(),
-		eventType:            "create",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "create",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid delete",
 		payload: func() interface{} {
 			pl := gh.DeletePayload{}
-			pl.Repository.HTMLURL = testSource
+			pl.RefType = testSubject
 			return pl
 		}(),
-		eventType:            "delete",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "delete",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid deployment",
 		payload: func() interface{} {
 			pl := gh.DeploymentPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Deployment.ID = subject
 			return pl
 		}(),
-		eventType:            "deployment",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "deployment",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid deployment_status",
 		payload: func() interface{} {
 			pl := gh.DeploymentStatusPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Deployment.ID = subject
 			return pl
 		}(),
-		eventType:            "deployment_status",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "deployment_status",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid fork",
 		payload: func() interface{} {
 			pl := gh.ForkPayload{}
-			pl.Forkee.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Forkee.ID = subject
 			return pl
 		}(),
-		eventType:            "fork",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "fork",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid gollum",
 		payload: func() interface{} {
 			pl := gh.GollumPayload{}
-			pl.Repository.HTMLURL = testSource
+			// Leaving the subject as empty.
 			return pl
 		}(),
-		eventType:            "gollum",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "gollum",
+		wantCloudEventSubject: "",
 	}, {
 		name: "valid installation",
 		payload: func() interface{} {
 			pl := gh.InstallationPayload{}
-			pl.Installation.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Installation.ID = subject
 			return pl
 		}(),
-		eventType:            "installation",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "installation",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid integration_installation",
 		payload: func() interface{} {
 			pl := gh.InstallationPayload{}
-			pl.Installation.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Installation.ID = subject
 			return pl
 		}(),
-		eventType:            "integration_installation",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "integration_installation",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid issue_comment",
 		payload: func() interface{} {
 			pl := gh.IssueCommentPayload{}
-			pl.Comment.HTMLURL = testSource
+			pl.Comment.HTMLURL = fmt.Sprintf("http://test/%s", testSubject)
 			return pl
 		}(),
-		eventType:            "issue_comment",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "issue_comment",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid issues",
 		payload: func() interface{} {
 			pl := gh.IssuesPayload{}
-			pl.Issue.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Issue.Number = subject
 			return pl
 		}(),
-		eventType:            "issues",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "issues",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid label",
 		payload: func() interface{} {
 			pl := gh.LabelPayload{}
-			pl.Repository.HTMLURL = testSource
+			pl.Label.Name = testSubject
 			return pl
 		}(),
-		eventType:            "label",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "label",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid member",
 		payload: func() interface{} {
 			pl := gh.MemberPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Member.ID = subject
 			return pl
 		}(),
-		eventType:            "member",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "member",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid membership",
 		payload: func() interface{} {
 			pl := gh.MembershipPayload{}
-			pl.Organization.URL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Member.ID = subject
 			return pl
 		}(),
-		eventType:            "membership",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "membership",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid milestone",
 		payload: func() interface{} {
 			pl := gh.MilestonePayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Milestone.Number = subject
 			return pl
 		}(),
-		eventType:            "milestone",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "milestone",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid organization",
 		payload: func() interface{} {
 			pl := gh.OrganizationPayload{}
-			pl.Organization.URL = testSource
+			pl.Action = testSubject
 			return pl
 		}(),
-		eventType:            "organization",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "organization",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid org_block",
 		payload: func() interface{} {
 			pl := gh.OrgBlockPayload{}
-			pl.Organization.URL = testSource
+			pl.Action = testSubject
 			return pl
 		}(),
-		eventType:            "org_block",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "org_block",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid page_build",
 		payload: func() interface{} {
 			pl := gh.PageBuildPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.ID = subject
 			return pl
 		}(),
-		eventType:            "page_build",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "page_build",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid ping",
 		payload: func() interface{} {
 			pl := gh.PingPayload{}
-			pl.Hook.Config.URL = testSource
+			subject, _ := strconv.Atoi(testSubject)
+			pl.HookID = subject
 			return pl
 		}(),
-		eventType:            "ping",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "ping",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid project_card",
 		payload: func() interface{} {
 			pl := gh.ProjectCardPayload{}
-			pl.Repository.HTMLURL = testSource
+			pl.Action = testSubject
 			return pl
 		}(),
-		eventType:            "project_card",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "project_card",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid project_column",
 		payload: func() interface{} {
 			pl := gh.ProjectColumnPayload{}
-			pl.Repository.HTMLURL = testSource
+			pl.Action = testSubject
 			return pl
 		}(),
-		eventType:            "project_column",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "project_column",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid project",
 		payload: func() interface{} {
 			pl := gh.ProjectPayload{}
-			pl.Repository.HTMLURL = testSource
+			pl.Action = testSubject
 			return pl
 		}(),
-		eventType:            "project",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "project",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid public",
 		payload: func() interface{} {
 			pl := gh.PublicPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Repository.ID = subject
 			return pl
 		}(),
-		eventType:            "public",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "public",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid pull_request",
 		payload: func() interface{} {
 			pl := gh.PullRequestPayload{}
-			pl.PullRequest.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.PullRequest.Number = subject
 			return pl
 		}(),
-		eventType:            "pull_request",
-		wantCloudEventType:   "dev.knative.source.github.pull_request",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "pull_request",
+		wantCloudEventType:    "dev.knative.source.github.pull_request",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid pull_request_review",
 		payload: func() interface{} {
 			pl := gh.PullRequestReviewPayload{}
-			pl.Review.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Review.ID = subject
 			return pl
 		}(),
-		eventType:            "pull_request_review",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "pull_request_review",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid pull_request_review_comment",
 		payload: func() interface{} {
 			pl := gh.PullRequestReviewCommentPayload{}
-			pl.Comment.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Comment.ID = subject
 			return pl
 		}(),
-		eventType:            "pull_request_review_comment",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "pull_request_review_comment",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid push",
 		payload: func() interface{} {
 			pl := gh.PushPayload{}
-			pl.Compare = testSource
+			pl.Compare = fmt.Sprintf("http://test/%s", testSubject)
 			return pl
 		}(),
-		eventType:            "push",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "push",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid release",
 		payload: func() interface{} {
 			pl := gh.ReleasePayload{}
-			pl.Release.HTMLURL = testSource
+			pl.Release.TagName = testSubject
 			return pl
 		}(),
-		eventType:            "release",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "release",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid repository",
 		payload: func() interface{} {
 			pl := gh.RepositoryPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Repository.ID = subject
 			return pl
 		}(),
-		eventType:            "repository",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "repository",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid status",
 		payload: func() interface{} {
 			pl := gh.StatusPayload{}
-			pl.Commit.HTMLURL = testSource
+			pl.Sha = testSubject
 			return pl
 		}(),
-		eventType:            "status",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "status",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid team",
 		payload: func() interface{} {
 			pl := gh.TeamPayload{}
-			pl.Organization.URL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Team.ID = subject
 			return pl
 		}(),
-		eventType:            "team",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "team",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid team_add",
 		payload: func() interface{} {
 			pl := gh.TeamAddPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Repository.ID = subject
 			return pl
 		}(),
-		eventType:            "team_add",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "team_add",
+		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid watch",
 		payload: func() interface{} {
 			pl := gh.WatchPayload{}
-			pl.Repository.HTMLURL = testSource
+			subject, _ := strconv.ParseInt(testSubject, 10, 64)
+			pl.Repository.ID = subject
 			return pl
 		}(),
-		eventType:            "watch",
-		wantCloudEventSource: testSource,
-		wantErr:              false,
+		eventType:             "watch",
+		wantCloudEventSubject: testSubject,
 	},
 }
 
@@ -452,9 +440,13 @@ func (tc *testCase) runner(t *testing.T, ra Adapter) func(t *testing.T) {
 		if tc.eventType == "" {
 			t.Fatal("eventType is required for table tests")
 		}
+		eventID := "12345"
+		if tc.eventID != "" {
+			eventID = tc.eventID
+		}
 		hdr := http.Header{}
 		hdr.Set("X-GitHub-Event", tc.eventType)
-		hdr.Set("X-GitHub-Delivery", tc.eventID)
+		hdr.Set("X-GitHub-Delivery", eventID)
 		evtErr := ra.handleEvent(tc.payload, hdr)
 
 		if err := tc.verifyErr(evtErr); err != nil {
@@ -486,11 +478,14 @@ func (tc *testCase) handleRequest(req *http.Request) (*http.Response, error) {
 			tc.wantCloudEventType, event.Type())
 	}
 
-	gotSource := event.Context.AsV02().Source
+	gotSource := event.Source()
+	if testSource != gotSource {
+		return nil, fmt.Errorf("want source %s, got %s", testSource, gotSource)
+	}
 
-	if tc.wantCloudEventSource != "" && tc.wantCloudEventSource != gotSource.String() {
-		return nil, fmt.Errorf("want source %s, got %s",
-			tc.wantCloudEventSource, gotSource.String())
+	gotSubject := event.Context.GetSubject()
+	if tc.wantCloudEventSubject != "" && tc.wantCloudEventSubject != gotSubject {
+		return nil, fmt.Errorf("want subject %s, got %s", tc.wantCloudEventSubject, gotSubject)
 	}
 
 	return &http.Response{
@@ -547,13 +542,14 @@ func TestHandleEvent(t *testing.T) {
 			"ce-id":              {"12345"},
 			"ce-time":            {"2019-01-29T09:35:10.69383396-08:00"},
 			"ce-type":            {"dev.knative.source.github.pull_request"},
-			"ce-source":          {"http://github.com/a/b"},
+			"ce-source":          {testSource},
 			"ce-github-delivery": {`"12345"`},
 			"ce-github-event":    {`"pull_request"`},
+			"ce-subject":         {`"` + testSubject + `"`},
 
 			"content-type": {"application/json"},
 		},
-		Body: `{"action":"","number":0,"pull_request":{"url":"","id":0,"html_url":"http://github.com/a/b","diff_url":"","patch_url":"","issue_url":"","number":0,"state":"","locked":false,"title":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"body":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","closed_at":null,"merged_at":null,"merge_commit_sha":null,"assignee":null,"assignees":null,"milestone":null,"commits_url":"","review_comments_url":"","review_comment_url":"","comments_url":"","statuses_url":"","labels":null,"head":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"base":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"_links":{"self":{"href":""},"html":{"href":""},"issue":{"href":""},"comments":{"href":""},"review_comments":{"href":""},"review_comment":{"href":""},"commits":{"href":""},"statuses":{"href":""}},"merged":false,"mergeable":null,"mergeable_state":"","merged_by":null,"comments":0,"review_comments":0,"commits":0,"additions":0,"deletions":0,"changed_files":0},"label":{"id":0,"url":"","name":"","color":"","default":false},"repository":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""},"sender":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"assignee":null,"requested_reviewer":null,"installation":{"id":0}}`,
+		Body: `{"action":"","number":0,"pull_request":{"url":"","id":0,"html_url":"","diff_url":"","patch_url":"","issue_url":"","number":1234,"state":"","locked":false,"title":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"body":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","closed_at":null,"merged_at":null,"merge_commit_sha":null,"assignee":null,"assignees":null,"milestone":null,"commits_url":"","review_comments_url":"","review_comment_url":"","comments_url":"","statuses_url":"","labels":null,"head":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"base":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"_links":{"self":{"href":""},"html":{"href":""},"issue":{"href":""},"comments":{"href":""},"review_comments":{"href":""},"review_comment":{"href":""},"commits":{"href":""},"statuses":{"href":""}},"merged":false,"mergeable":null,"mergeable_state":"","merged_by":null,"comments":0,"review_comments":0,"commits":0,"additions":0,"deletions":0,"changed_files":0},"label":{"id":0,"url":"","name":"","color":"","default":false},"repository":{"id":0,"name":"","full_name":"","owner":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""},"sender":{"login":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"assignee":null,"requested_reviewer":null,"installation":{"id":0}}`,
 	}
 
 	h := &fakeHandler{
@@ -569,7 +565,8 @@ func TestHandleEvent(t *testing.T) {
 	}
 
 	payload := gh.PullRequestPayload{}
-	payload.PullRequest.HTMLURL = testSource
+	subject, _ := strconv.ParseInt(testSubject, 10, 64)
+	payload.PullRequest.Number = subject
 	header := http.Header{}
 	header.Set("X-"+GHHeaderEvent, eventType)
 	header.Set("X-"+GHHeaderDelivery, eventID)
