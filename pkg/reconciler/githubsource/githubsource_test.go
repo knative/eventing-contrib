@@ -900,7 +900,7 @@ func getGitHubSourceUnaddressable() *sourcesv1alpha1.GitHubSource {
 }
 
 func getEventType() *eventingv1alpha1.EventType {
-	et := sourcesv1alpha1.GetGitHubSourceEventType("pull_request")
+	et := sourcesv1alpha1.GitHubEventType("pull_request")
 	return &eventingv1alpha1.EventType{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
@@ -923,7 +923,7 @@ func getEventType() *eventingv1alpha1.EventType {
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   et,
-			Source: "myuser/myproject",
+			Source: sourcesv1alpha1.GitHubEventSource("myuser/myproject"),
 			Broker: addressableName,
 		},
 	}
