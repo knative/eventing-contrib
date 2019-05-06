@@ -22,7 +22,7 @@ rules:
   resources:
   - deployments
   verbs:
-  - VerbAll
+  - *
 - apiGroups:
   - ""
   resources:
@@ -30,16 +30,16 @@ rules:
   verbs:
   - VerbAll
 - apiGroups:
-# TODO on these and the eventing ones that this should be replaced with
-# an aggregated role for watching Addressables.
   - sources.eventing.knative.dev
   resources:
   - awssqssources
   verbs:
-  - VerbAll
+  - get
+  - list
+  - watch
+  - update
+  - patch
 - apiGroups:
-# TODO on these and the eventing ones that this should be replaced with
-# an aggregated role for watching Addressables.
   - sources.eventing.knative.dev
   resources:
   - awssqssources/status
