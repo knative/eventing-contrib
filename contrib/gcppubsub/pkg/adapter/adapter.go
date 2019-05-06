@@ -50,12 +50,18 @@ type Adapter struct {
 	SubscriptionID string
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
+	// TransformerURI is the URI messages will be forwarded on to for any transformation
+	// before they are sent to SinkURI.
+	TransformerURI string
 
 	source       string
 	client       *pubsub.Client
 	subscription *pubsub.Subscription
 
 	ceClient client.Client
+
+	transformer       bool
+	transformerClient client.Client
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
@@ -70,6 +76,16 @@ func (a *Adapter) Start(ctx context.Context) error {
 	if a.ceClient == nil {
 		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
 			return fmt.Errorf("failed to create cloudevent client: %s", err.Error())
+		}
+	}
+
+	// Make the transformer client in case the TransformerURI has been set.
+	if a.TransformerURI != "" {
+		a.transformer = true
+		if a.transformerClient == nil {
+			if a.transformerClient, err = kncloudevents.NewDefaultClient(a.TransformerURI); err != nil {
+				return fmt.Errorf("failed to create transformer client: %s", err.Error())
+			}
 		}
 	}
 
