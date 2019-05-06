@@ -36,6 +36,9 @@ const (
 	// Sink for messages.
 	envSinkURI = "SINK_URI"
 
+	// Transformer for messages.
+	envTransformerURI = "TRANSFORMER_URI"
+
 	// envTopic is the name of the environment variable that contains the GCP PubSub Topic being
 	// subscribed to's name. In the form that is unique within the project. E.g. 'laconia', not
 	// 'projects/my-gcp-project/topics/laconia'.
@@ -69,6 +72,7 @@ func main() {
 		TopicID:        getRequiredEnv(envTopic),
 		SinkURI:        getRequiredEnv(envSinkURI),
 		SubscriptionID: getRequiredEnv(envSubscription),
+		TransformerURI: getRequiredEnv(envTransformerURI),
 	}
 
 	logger.Info("Starting GCP Pub/Sub Receive Adapter. %v", zap.Reflect("adapter", adapter))
