@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
@@ -38,7 +37,7 @@ const (
 
 // Adapter converts incoming GitHub webhook events to CloudEvents
 type Adapter struct {
-	client client.Client
+	client cloudevents.Client
 	source string
 }
 
@@ -78,8 +77,7 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	cloudEventType := sourcesv1alpha1.GitHubEventType(gitHubEventType)
 	subject := subjectFromGitHubEvent(gh.Event(gitHubEventType), payload)
 
-	event := cloudevents.NewEvent()
-	event.SetSpecVersion(cloudevents.VersionV02)
+	event := cloudevents.NewEvent(cloudevents.VersionV02)
 	event.SetID(eventID)
 	event.SetType(cloudEventType)
 	event.SetSource(a.source)
