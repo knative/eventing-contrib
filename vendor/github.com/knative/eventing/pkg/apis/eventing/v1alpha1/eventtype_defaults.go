@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2018 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@ limitations under the License.
 
 package v1alpha1
 
-import (
-	"github.com/knative/eventing-sources/pkg/apis"
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	sourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
-)
+import "context"
 
-func init() {
-	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
-	apis.AddToSchemes = append(apis.AddToSchemes, sourcesv1alpha1.SchemeBuilder.AddToScheme)
-	apis.AddToSchemes = append(apis.AddToSchemes, eventingv1alpha1.SchemeBuilder.AddToScheme)
+func (et *EventType) SetDefaults(ctx context.Context) {
+	et.Spec.SetDefaults(ctx)
+}
+
+func (ets *EventTypeSpec) SetDefaults(ctx context.Context) {
+	if ets.Broker == "" {
+		ets.Broker = "default"
+	}
 }

@@ -26,6 +26,8 @@ import (
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
 	"github.com/knative/eventing-sources/pkg/reconciler/awssqssource/resources"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
@@ -76,10 +78,13 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.AwsSqsSource{},
-		Owns:      []runtime.Object{&v1.Deployment{}},
+		Owns:      []runtime.Object{&v1.Deployment{}, &eventingv1alpha1.EventType{}},
 		Reconciler: &reconciler{
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: raImage,
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: mgr.GetScheme(),
+			},
 		},
 	}
 
@@ -87,15 +92,17 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 }
 
 type reconciler struct {
-	client        client.Client
-	dynamicClient dynamic.Interface
-	scheme        *runtime.Scheme
+	client              client.Client
+	dynamicClient       dynamic.Interface
+	scheme              *runtime.Scheme
+	eventTypeReconciler eventtype.Reconciler
 
 	receiveAdapterImage string
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }
 
@@ -122,6 +129,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	// 2. Create a receive adapter in the form of a Deployment.
 	//     - Will be garbage collected by K8s when this AwsSqsSource is deleted.
 	// 3. Register that receive adapter as a Pull endpoint for the specified AWS SQS queue.
+	// 4. Create the EventTypes that it can emit.
+	//     - Will be garbage collected by K8s when this AwsSqsSource is deleted.
 
 	// See if the source has been deleted.
 	deletionTimestamp := src.DeletionTimestamp
@@ -147,6 +156,16 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	// Only create EventTypes for Broker sinks.
+	if src.Spec.Sink.Kind == "Broker" {
+		err = r.reconcileEventTypes(ctx, src)
+		if err != nil {
+			logger.Error("Unable to reconcile the event types", zap.Error(err))
+			return err
+		}
+		src.Status.MarkEventTypes()
+	}
 
 	return nil
 }
@@ -204,6 +223,26 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.AwsSqs
 		}
 	}
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
+}
+
+func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.AwsSqsSource) error {
+	args := r.newEventTypeReconcilerArgs(src)
+	return r.eventTypeReconciler.Reconcile(ctx, src, args)
+}
+
+func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.AwsSqsSource) *eventtype.ReconcilerArgs {
+	spec := eventingv1alpha1.EventTypeSpec{
+		Type:   v1alpha1.AwsSqsSourceEventType,
+		Source: src.Spec.QueueURL,
+		Broker: src.Spec.Sink.Name,
+	}
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0, 1)
+	specs = append(specs, spec)
+	return &eventtype.ReconcilerArgs{
+		Specs:     specs,
+		Namespace: src.Namespace,
+		Labels:    getLabels(src),
+	}
 }
 
 func (r *reconciler) getLabelSelector(src *v1alpha1.AwsSqsSource) labels.Selector {

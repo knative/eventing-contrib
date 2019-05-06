@@ -19,13 +19,16 @@ package githubsource
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/controller/sdk"
 	"github.com/knative/eventing-sources/pkg/controller/sinks"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 	"github.com/knative/eventing-sources/pkg/reconciler/githubsource/resources"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	"go.uber.org/zap"
@@ -59,15 +62,19 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
 	}
 
+	log.Println("Adding the GitHub Source controller.")
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &sourcesv1alpha1.GitHubSource{},
-		Owns:      []runtime.Object{&servingv1alpha1.Service{}},
+		Owns:      []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
 		Reconciler: &reconciler{
 			recorder:            mgr.GetRecorder(controllerAgentName),
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: receiveAdapterImage,
 			webhookClient:       gitHubWebhookClient{},
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: mgr.GetScheme(),
+			},
 		},
 	}
 
@@ -81,6 +88,7 @@ type reconciler struct {
 	recorder            record.EventRecorder
 	receiveAdapterImage string
 	webhookClient       webhookClient
+	eventTypeReconciler eventtype.Reconciler
 }
 
 type webhookArgs struct {
@@ -183,7 +191,19 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 			}
 			source.Status.WebhookIDKey = hookID
 		}
+	} else {
+		return nil
 	}
+
+	// Only create EventTypes for Broker sinks.
+	if source.Spec.Sink.Kind == "Broker" {
+		err = r.reconcileEventTypes(ctx, source)
+		if err != nil {
+			return err
+		}
+		source.Status.MarkEventTypes()
+	}
+
 	return nil
 }
 
@@ -327,6 +347,31 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
 }
 
+func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
+	args := r.newEventTypeReconcilerArgs(source)
+	return r.eventTypeReconciler.Reconcile(ctx, source, args)
+}
+
+func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.ReconcilerArgs {
+	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
+	for _, et := range source.Spec.EventTypes {
+		spec := eventingv1alpha1.EventTypeSpec{
+			Type: sourcesv1alpha1.GetGitHubSourceEventType(et),
+			// Using the owner and repository as source.
+			// This should match what is populated in the adapter. It currently doesn't
+			// TODO change it in both places once we agree on source and subject.
+			Source: source.Spec.OwnerAndRepository,
+			Broker: source.Spec.Sink.Name,
+		}
+		specs = append(specs, spec)
+	}
+	return &eventtype.ReconcilerArgs{
+		Specs:     specs,
+		Namespace: source.Namespace,
+		Labels:    resources.Labels(source.Name),
+	}
+}
+
 func (r *reconciler) addFinalizer(s *sourcesv1alpha1.GitHubSource) {
 	finalizers := sets.NewString(s.Finalizers...)
 	finalizers.Insert(finalizerName)
@@ -341,5 +386,6 @@ func (r *reconciler) removeFinalizer(s *sourcesv1alpha1.GitHubSource) {
 
 func (r *reconciler) InjectClient(c client.Client) error {
 	r.client = c
+	r.eventTypeReconciler.Client = c
 	return nil
 }

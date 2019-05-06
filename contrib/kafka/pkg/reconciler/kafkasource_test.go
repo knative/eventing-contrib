@@ -20,10 +20,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
 
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
@@ -55,6 +59,7 @@ const (
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
+	brokerKind            = "Broker"
 	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 	addressableDNS        = "addressable.sink.svc.cluster.local"
 	addressableURI        = "http://addressable.sink.svc.cluster.local/"
@@ -67,6 +72,7 @@ func init() {
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	eventingsourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
+	eventingv1alpha1.AddToScheme(scheme.Scheme)
 }
 
 // TODO
@@ -155,6 +161,57 @@ func TestReconcile(t *testing.T) {
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
+		}, {
+			Name: "successful create event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+			},
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+						if eventType, ok := obj.(*eventingv1alpha1.EventType); ok {
+							// Hack because the fakeClient does not support GenerateName.
+							if strings.Contains(eventType.Spec.Source, "topic1") {
+								eventType.Name = "name1"
+							} else {
+								eventType.Name = "name2"
+							}
+							return controllertesting.Unhandled, nil
+						}
+						return controllertesting.Unhandled, nil
+					},
+				},
+			},
+			WantPresent: []runtime.Object{
+				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
+				getEventType("name1", "group", "topic1"),
+				getEventType("name2", "group", "topic2"),
+			},
+		}, {
+			Name: "cannot create event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+			},
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+						if _, ok := obj.(*eventingv1alpha1.EventType); ok {
+							return controllertesting.Handled, errors.New("test-induced-error")
+						}
+						return controllertesting.Unhandled, nil
+					},
+				},
+			},
+			WantAbsent: []runtime.Object{
+				getEventType("name1", "group", "topic1"),
+				getEventType("name2", "group", "topic2"),
+			},
+			WantPresent: []runtime.Object{
+				getSourceWithSinkAndDeployedAndKind(brokerKind),
+			},
+			WantErrMsg: "test-induced-error",
 		},
 	}
 
@@ -171,6 +228,9 @@ func TestReconcile(t *testing.T) {
 			client:              c,
 			scheme:              tc.Scheme,
 			receiveAdapterImage: raImage,
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: tc.Scheme,
+			},
 		}
 		r.InjectClient(c)
 		t.Run(tc.Name, tc.Runner(t, r, c))
@@ -202,6 +262,10 @@ func getNonKafkaSource() *eventingsourcesv1alpha1.ContainerSource {
 }
 
 func getSource() *sourcesv1alpha1.KafkaSource {
+	return getSourceWithKind(addressableKind)
+}
+
+func getSourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
 	obj := &sourcesv1alpha1.KafkaSource{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
@@ -214,7 +278,7 @@ func getSource() *sourcesv1alpha1.KafkaSource {
 			ConsumerGroup:    "group",
 			Sink: &corev1.ObjectReference{
 				Name:       addressableName,
-				Kind:       addressableKind,
+				Kind:       kind,
 				APIVersion: addressableAPIVersion,
 			},
 		},
@@ -222,6 +286,36 @@ func getSource() *sourcesv1alpha1.KafkaSource {
 	// selflink is not filled in when we create the object, so clear it
 	obj.ObjectMeta.SelfLink = ""
 	return obj
+}
+
+func getEventType(name, group, topic string) *eventingv1alpha1.EventType {
+	return &eventingv1alpha1.EventType{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+			Kind:       "EventType",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         sourcesv1alpha1.SchemeGroupVersion.String(),
+					Kind:               "KafkaSource",
+					Name:               sourceName,
+					Controller:         &trueVal,
+					BlockOwnerDeletion: &trueVal,
+					UID:                sourceUID,
+				},
+			},
+			Name:         name,
+			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.KafkaSourceEventType),
+			Namespace:    testNS,
+			Labels:       getLabels(getSourceWithKind(brokerKind)),
+		},
+		Spec: eventingv1alpha1.EventTypeSpec{
+			Type:   sourcesv1alpha1.KafkaSourceEventType,
+			Source: topic,
+			Broker: addressableName,
+		},
+	}
 }
 
 func getSourceWithNoSink() *sourcesv1alpha1.KafkaSource {
@@ -238,9 +332,29 @@ func getSourceWithSink() *sourcesv1alpha1.KafkaSource {
 	return src
 }
 
+func getSourceWithSinkAndDeployedAndKind(kind string) *sourcesv1alpha1.KafkaSource {
+	src := getSourceWithKind(kind)
+	src.Status.InitializeConditions()
+	src.Status.MarkSink(addressableURI)
+	src.Status.MarkDeployed()
+	return src
+}
+
 func getReadySource() *sourcesv1alpha1.KafkaSource {
 	src := getSourceWithSink()
 	src.Status.MarkDeployed()
+	return src
+}
+
+func getReadySourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
+	src := getReadySource()
+	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadyAndMarkEventTypesSourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
+	src := getReadySourceWithKind(kind)
+	src.Status.MarkEventTypes()
 	return src
 }
 
@@ -254,10 +368,14 @@ func om(namespace, name string) metav1.ObjectMeta {
 }
 
 func getAddressable() *unstructured.Unstructured {
+	return getAddressableWithKind(addressableKind)
+}
+
+func getAddressableWithKind(kind string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,
-			"kind":       addressableKind,
+			"kind":       kind,
 			"metadata": map[string]interface{}{
 				"namespace": testNS,
 				"name":      addressableName,

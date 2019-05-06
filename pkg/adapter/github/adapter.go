@@ -37,18 +37,20 @@ const (
 
 // Adapter converts incoming GitHub webhook events to CloudEvents
 type Adapter struct {
-	client client.Client
+	client    client.Client
+	ownerRepo string
 }
 
 // New creates an adapter to convert incoming GitHub webhook events to CloudEvents and
 // then sends them to the specified Sink
-func New(sinkURI string) (*Adapter, error) {
+func New(sinkURI, ownerRepo string) (*Adapter, error) {
 	a := new(Adapter)
 	var err error
 	a.client, err = kncloudevents.NewDefaultClient(sinkURI)
 	if err != nil {
 		return nil, err
 	}
+	a.ownerRepo = ownerRepo
 	return a, nil
 }
 
@@ -71,12 +73,13 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 
 	log.Printf("Handling %s", gitHubEventType)
 
-	cloudEventType := fmt.Sprintf("%s.%s", sourcesv1alpha1.GitHubSourceEventPrefix, gitHubEventType)
+	cloudEventType := sourcesv1alpha1.GetGitHubSourceEventType(gitHubEventType)
 	source, err := sourceFromGitHubEvent(gh.Event(gitHubEventType), payload)
 	if err != nil {
 		return err
 	}
 
+	// TODO set source and subject properly.
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			ID:         eventID,

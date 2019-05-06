@@ -27,6 +27,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 )
 
@@ -90,7 +91,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 
 			et := h.header.Get("Ce-Type")
 
-			expectedEventType := eventType
+			expectedEventType := sourcesv1alpha1.KafkaSourceEventType
 			if tc.expectedEventType != "" {
 				expectedEventType = tc.expectedEventType
 			}

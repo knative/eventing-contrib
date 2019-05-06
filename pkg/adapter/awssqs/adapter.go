@@ -22,21 +22,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-)
-
-const (
-	eventType = "aws.sqs.message"
 )
 
 // Adapter implements the AWS SQS adapter to deliver SQS messages from
@@ -180,10 +176,11 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		logger.Errorw("Failed to unmarshal the message.", zap.Error(err), zap.Any("message", m.Body))
 		timestamp = time.Now().UnixNano()
 	}
+
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
 			ID:     *m.MessageId,
-			Type:   eventType,
+			Type:   sourcesv1alpha1.AwsSqsSourceEventType,
 			Source: *types.ParseURLRef(a.QueueURL),
 			Time:   &types.Timestamp{Time: time.Unix(timestamp, 0)},
 		}.AsV02(),

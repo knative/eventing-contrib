@@ -61,54 +61,80 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 		}(),
 		want: false,
 	}, {
-		name: "mark sink and secrets",
+		name: "mark event types",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkEventTypes()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink, secrets, and event types",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			return s
 		}(),
 		want: true,
 	}, {
-		name: "mark sink and secrets then no sink",
+		name: "mark sink, secrets, and event types, then no sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			s.MarkNoSink("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink and secrets then no secrets",
+		name: "mark sink, secrets, event types, then no secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			s.MarkNoSecrets("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty and secrets",
+		name: "mark sink, secrets, event types, then no event types",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecrets()
+			s.MarkEventTypes()
+			s.MarkNoEventTypes("Testing", "")
+			return s
+		}(),
+		want: true,
+	}, {
+		name: "mark sink empty, secrets, and event types",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty and secrets then sink",
+		name: "mark sink empty, secrets, and event types, then sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			s.MarkSink("uri://example")
 			return s
 		}(),
@@ -175,12 +201,26 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink and secrets",
+		name: "mark event types",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkEventTypes()
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink, secrets, and event types",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -189,12 +229,13 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark sink and secrets then no sink",
+		name: "mark sink, secrets, and event types, then no sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
 		}(),
@@ -206,12 +247,13 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and secrets then no secrets",
+		name: "mark sink, secrets, and event types, then no secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			s.MarkNoSecrets("Testing", "hi%s", "")
 			return s
 		}(),
@@ -223,12 +265,29 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink empty and secrets",
+		name: "mark sink, secrets, and event types, then no event types",
+		s: func() *GitHubSourceStatus {
+			s := &GitHubSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecrets()
+			s.MarkEventTypes()
+			s.MarkNoEventTypes("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: GitHubSourceConditionReady,
+		want: &duckv1alpha1.Condition{
+			Type:   GitHubSourceConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}, {
+		name: "mark sink empty, secrets, and event types",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -239,12 +298,13 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "Sink has resolved to empty.",
 		},
 	}, {
-		name: "mark sink empty and secrets then sink",
+		name: "mark sink empty, secrets, and event types, then sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkSecrets()
+			s.MarkEventTypes()
 			s.MarkSink("uri://example")
 			return s
 		}(),

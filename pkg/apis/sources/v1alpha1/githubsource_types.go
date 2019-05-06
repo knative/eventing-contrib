@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -86,10 +88,15 @@ type SecretValueFromSource struct {
 }
 
 const (
-	// GitHubSourceEventPrefix is what all GitHub event types get
-	// prefixed with when converting to CloudEvent EventType
-	GitHubSourceEventPrefix = "dev.knative.source.github"
+	// gitHubSourceEventPrefix is what all GitHub event types get
+	// prefixed with when converting to CloudEvents.
+	gitHubSourceEventPrefix = "dev.knative.source.github"
 )
+
+// GetGitHubSourceEventType returns the GitHub CloudEvent type value.
+func GetGitHubSourceEventType(ghEventType string) string {
+	return fmt.Sprintf("%s.%s", gitHubSourceEventPrefix, ghEventType)
+}
 
 const (
 	// GitHubSourceConditionReady has status True when the
@@ -103,6 +110,10 @@ const (
 	// GitHubSourceConditionSinkProvided has status True when the
 	// GitHubSource has been configured with a sink target.
 	GitHubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+
+	// GitHubSourceConditionEventTypesProvided has status True when the
+	// GitHubSource has been configured with event types.
+	GitHubSourceConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypeProvided"
 )
 
 var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
@@ -164,6 +175,16 @@ func (s *GitHubSourceStatus) MarkSink(uri string) {
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *GitHubSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
+// MarkEventTypes sets the condition that the source has set its event types.
+func (s *GitHubSourceStatus) MarkEventTypes() {
+	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionEventTypesProvided)
+}
+
+// MarkNoEventTypes sets the condition that the source does not its event types configured.
+func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
+	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 // +genclient

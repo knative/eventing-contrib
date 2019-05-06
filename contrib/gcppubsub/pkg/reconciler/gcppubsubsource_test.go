@@ -25,6 +25,8 @@ import (
 	"cloud.google.com/go/pubsub"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
+	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
@@ -56,6 +58,7 @@ const (
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
+	brokerKind            = "Broker"
 	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 	addressableDNS        = "addressable.sink.svc.cluster.local"
 	addressableURI        = "http://addressable.sink.svc.cluster.local/"
@@ -68,6 +71,7 @@ func init() {
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	eventingsourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
+	eventingv1alpha1.AddToScheme(scheme.Scheme)
 }
 
 type pubSubClientCreatorData struct {
@@ -266,6 +270,39 @@ func TestReconcile(t *testing.T) {
 			WantPresent: []runtime.Object{
 				getReadySource(),
 			},
+		}, {
+			Name: "successful create event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+			},
+			WantPresent: []runtime.Object{
+				getReadyAndMarkEventTypeSourceWithKind(brokerKind),
+				getEventType(),
+			},
+		}, {
+			Name: "cannot create event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+			},
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+						if _, ok := obj.(*eventingv1alpha1.EventType); ok {
+							return controllertesting.Handled, errors.New("test-induced-error")
+						}
+						return controllertesting.Unhandled, nil
+					},
+				},
+			},
+			WantAbsent: []runtime.Object{
+				getEventType(),
+			},
+			WantPresent: []runtime.Object{
+				getSourceWithFinalizerAndSinkAndSubscribedAndDeployedAndKind(brokerKind),
+			},
+			WantErrMsg: "test-induced-error",
 		},
 	}
 	for _, tc := range testCases {
@@ -284,6 +321,9 @@ func TestReconcile(t *testing.T) {
 			pubSubClientCreator: createPubSubClientCreator(tc.OtherTestData[pscData]),
 
 			receiveAdapterImage: raImage,
+			eventTypeReconciler: eventtype.Reconciler{
+				Scheme: tc.Scheme,
+			},
 		}
 		r.InjectClient(c)
 		t.Run(tc.Name, tc.Runner(t, r, c))
@@ -313,6 +353,10 @@ func getNonGcpPubSubSource() *eventingsourcesv1alpha1.ContainerSource {
 }
 
 func getSource() *sourcesv1alpha1.GcpPubSubSource {
+	return getSourceWithKind(addressableKind)
+}
+
+func getSourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
 	obj := &sourcesv1alpha1.GcpPubSubSource{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
@@ -330,7 +374,7 @@ func getSource() *sourcesv1alpha1.GcpPubSubSource {
 			Topic:              "laconia",
 			Sink: &corev1.ObjectReference{
 				Name:       addressableName,
-				Kind:       addressableKind,
+				Kind:       kind,
 				APIVersion: addressableAPIVersion,
 			},
 		},
@@ -338,6 +382,35 @@ func getSource() *sourcesv1alpha1.GcpPubSubSource {
 	// selflink is not filled in when we create the object, so clear it
 	obj.ObjectMeta.SelfLink = ""
 	return obj
+}
+
+func getEventType() *eventingv1alpha1.EventType {
+	return &eventingv1alpha1.EventType{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+			Kind:       "EventType",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:         sourcesv1alpha1.SchemeGroupVersion.String(),
+					Kind:               "GcpPubSubSource",
+					Name:               sourceName,
+					Controller:         &trueVal,
+					BlockOwnerDeletion: &trueVal,
+					UID:                sourceUID,
+				},
+			},
+			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.GcpPubSubSourceEventType),
+			Namespace:    testNS,
+			Labels:       getLabels(getSourceWithKind(brokerKind)),
+		},
+		Spec: eventingv1alpha1.EventTypeSpec{
+			Type:   sourcesv1alpha1.GcpPubSubSourceEventType,
+			Source: sourcesv1alpha1.GetGcpPubSubSource("my-gcp-project", "laconia"),
+			Broker: addressableName,
+		},
+	}
 }
 
 func getDeletingSourceWithoutFinalizer() *sourcesv1alpha1.GcpPubSubSource {
@@ -377,9 +450,28 @@ func getSourceWithFinalizerAndSinkAndSubscribed() *sourcesv1alpha1.GcpPubSubSour
 	return src
 }
 
+func getSourceWithFinalizerAndSinkAndSubscribedAndDeployedAndKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
+	src := getSourceWithFinalizerAndSinkAndSubscribed()
+	src.Status.MarkDeployed()
+	src.Spec.Sink.Kind = kind
+	return src
+}
+
 func getReadySource() *sourcesv1alpha1.GcpPubSubSource {
 	src := getSourceWithFinalizerAndSinkAndSubscribed()
 	src.Status.MarkDeployed()
+	return src
+}
+
+func getReadySourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
+	src := getReadySource()
+	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadyAndMarkEventTypeSourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
+	src := getReadySourceWithKind(kind)
+	src.Status.MarkEventTypes()
 	return src
 }
 
@@ -411,10 +503,14 @@ func createPubSubClientCreator(value interface{}) pubSubClientCreator {
 }
 
 func getAddressable() *unstructured.Unstructured {
+	return getAddressableWithKind(addressableKind)
+}
+
+func getAddressableWithKind(kind string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": addressableAPIVersion,
-			"kind":       addressableKind,
+			"kind":       kind,
 			"metadata": map[string]interface{}{
 				"namespace": testNS,
 				"name":      addressableName,

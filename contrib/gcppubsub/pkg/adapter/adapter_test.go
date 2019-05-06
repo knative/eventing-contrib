@@ -24,10 +24,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
-
 	"cloud.google.com/go/pubsub"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"go.uber.org/zap"
 )
 
@@ -93,7 +93,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 
 			et := h.header.Get("Ce-Type") // bad bad bad.
 
-			expectedEventType := eventType
+			expectedEventType := sourcesv1alpha1.GcpPubSubSourceEventType
 			if tc.expectedEventType != "" {
 				expectedEventType = tc.expectedEventType
 			}

@@ -254,7 +254,6 @@
   revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
 
 [[projects]]
-  branch = "master"
   digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
   name = "github.com/google/go-cmp"
   packages = [
@@ -444,7 +443,7 @@
   version = "v0.5.0"
 
 [[projects]]
-  digest = "1:8d43f780eb6d10eebce6793294af09b1d3b5d1da1c006030d494f5b92d430427"
+  digest = "1:585b14b6125e1d4797a33f1b61de00549b83bed26bdbaa04aa21a6842c45a0b1"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck/v1alpha1",
@@ -458,7 +457,7 @@
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
   ]
   pruneopts = "NUT"
-  revision = "a5a24f50c21a77d2c7e0c68c1512ad63f1b23d26"
+  revision = "54500a2fe4872243364acb81841fedf3b796267f"
 
 [[projects]]
   digest = "1:60a1ee206bae79b58dc441e2dc4f63085f14fa162eed1068bb850c233442d662"
@@ -483,7 +482,7 @@
     "webhook",
   ]
   pruneopts = "NUT"
-  revision = "6916051a96ae4d87d0e0e557a3c3b887ee4a3cea"
+  revision = "52709ba13d9b77473fe37f2481312a62f63a7d6d"
 
 [[projects]]
   digest = "1:877272591f1cdf21c3d9d333c6393c836f22b137b4b24a303814fdf0b706ef7b"
@@ -508,14 +507,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f3c8dc03bb88bca90c59550e06b0f27a6ca489b1747ac8e5153686a6752e4d74"
+  digest = "1:f27efa11fb1aec3e502e2ed95d9a1211a93f8a791b7da0a06fdade0d98de5008"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "3a09cd7f5428743509941d116fdee644041a3507"
+  revision = "75f6ca1c4dc3b3ae5dc1a1a433753957a9340e83"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -1521,6 +1520,7 @@
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
+    "k8s.io/apimachinery/pkg/util/validation",
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
