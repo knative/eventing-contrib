@@ -19,11 +19,12 @@ package resources
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/pkg/kmp"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -84,6 +85,16 @@ func TestMakeReceiveAdapter(t *testing.T) {
 							Key: "tls.crt",
 						},
 					},
+				},
+			},
+			Resources: v1alpha1.KafkaResourceSpec{
+				Requests: v1alpha1.KafkaRequestsSpec{
+					ResourceCPU:    "100m",
+					ResourceMemory: "200M",
+				},
+				Limits: v1alpha1.KafkaLimitsSpec{
+					ResourceCPU:    "10m",
+					ResourceMemory: "50Mi",
 				},
 			},
 		},
@@ -326,6 +337,16 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 									Value: "source-namespace",
 								},
 							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("10m"),
+									corev1.ResourceMemory: resource.MustParse("50Mi"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("100m"),
+									corev1.ResourceMemory: resource.MustParse("200Mi"),
+								},
+							},
 						},
 					},
 				},
@@ -333,7 +354,7 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff, err := kmp.SafeDiff(want, got); err != nil {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
 }

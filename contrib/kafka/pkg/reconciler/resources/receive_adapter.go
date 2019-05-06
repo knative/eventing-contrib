@@ -23,6 +23,7 @@ import (
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,9 +75,41 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_USER", args.Source.Spec.Net.SASL.User.SecretKeyRef)
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_PASSWORD", args.Source.Spec.Net.SASL.Password.SecretKeyRef)
 
-	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CERT", args.Source.Spec.Net.TLS.Cert.SecretKeyRef)
-	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_KEY", args.Source.Spec.Net.TLS.Key.SecretKeyRef)
-	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CA_CERT", args.Source.Spec.Net.TLS.CACert.SecretKeyRef)
+	if args.Source.Spec.Net.SASL.Password.SecretKeyRef != nil {
+		env = append(env, corev1.EnvVar{
+			Name: "KAFKA_NET_SASL_PASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: args.Source.Spec.Net.SASL.Password.SecretKeyRef,
+			},
+		})
+	}
+	RequestResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceCPU)
+	if err != nil {
+		RequestResourceCPU = resource.MustParse("100m")
+	}
+	RequestResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceMemory)
+	if err != nil {
+		RequestResourceMemory = resource.MustParse("100M")
+	}
+	LimitResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceCPU)
+	if err != nil {
+		LimitResourceCPU = resource.MustParse("10m")
+	}
+	LimitResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceMemory)
+	if err != nil {
+		LimitResourceMemory = resource.MustParse("10M")
+	}
+
+	res := corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    RequestResourceCPU,
+			corev1.ResourceMemory: RequestResourceMemory,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    LimitResourceCPU,
+			corev1.ResourceMemory: LimitResourceMemory,
+		},
+	}
 
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -100,9 +133,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 					ServiceAccountName: args.Source.Spec.ServiceAccountName,
 					Containers: []corev1.Container{
 						{
-							Name:  "receive-adapter",
-							Image: args.Image,
-							Env:   env,
+							Name:      "receive-adapter",
+							Image:     args.Image,
+							Env:       env,
+							Resources: res,
 						},
 					},
 				},
