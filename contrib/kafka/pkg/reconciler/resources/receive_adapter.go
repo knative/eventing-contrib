@@ -85,19 +85,19 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	}
 	RequestResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceCPU)
 	if err != nil {
-		RequestResourceCPU = resource.MustParse("100m")
+		RequestResourceCPU = resource.MustParse("250m")
 	}
 	RequestResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceMemory)
 	if err != nil {
-		RequestResourceMemory = resource.MustParse("100M")
+		RequestResourceMemory = resource.MustParse("512Mi")
 	}
 	LimitResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceCPU)
 	if err != nil {
-		LimitResourceCPU = resource.MustParse("10m")
+		LimitResourceCPU = resource.MustParse("250m")
 	}
 	LimitResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceMemory)
 	if err != nil {
-		LimitResourceMemory = resource.MustParse("10M")
+		LimitResourceMemory = resource.MustParse("512Mi")
 	}
 
 	res := corev1.ResourceRequirements{

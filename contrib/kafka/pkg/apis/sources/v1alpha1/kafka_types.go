@@ -121,7 +121,7 @@ type KafkaSourceSpec struct {
 	// Adapter Deployment.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
-	// Resource limits and Reqeust specifications of the Recieve Adapter Deployment
+	// Resource limits and Request specifications of the Receive Adapter Deployment
 	Resources KafkaResourceSpec `json:"resources,omitempty"`
 }
 
