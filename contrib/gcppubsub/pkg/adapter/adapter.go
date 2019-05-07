@@ -135,8 +135,10 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 			logger.Errorf("error transforming cloud event %q", event.ID())
 			return err
 		}
-		// Update the event with the transformed one.
-		event = *resp
+		if resp != nil {
+			// Update the event with the transformed one.
+			event = *resp
+		}
 	}
 
 	_, err := a.ceClient.Send(ctx, event)
