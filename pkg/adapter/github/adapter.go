@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
