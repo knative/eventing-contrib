@@ -50,12 +50,13 @@ func New(sinkURI, ownerRepo string) (*Adapter, error) {
 	if err != nil {
 		return nil, err
 	}
-	a.source = sourcesv1alpha1.GitHubEventSource(ownerRepo)
+	source := sourcesv1alpha1.GitHubEventSource(ownerRepo)
 	// Check at startup if it's not a URLRef and return an error in that case.
-	source := cloudevents.ParseURLRef(a.source)
-	if source == nil {
-		return nil, fmt.Errorf("invalid source for github events: %s", a.source)
+	src := cloudevents.ParseURLRef(source)
+	if src == nil {
+		return nil, fmt.Errorf("invalid source for github events: %s", source)
 	}
+	a.source = source
 	return a, nil
 }
 
