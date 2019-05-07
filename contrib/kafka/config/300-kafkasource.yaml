@@ -52,8 +52,6 @@ spec:
             consumerGroup:
               type: string
               minLength: 1
-            consumerGroup:
-              type: string
             net:
               properties:
                 sasl:
@@ -81,8 +79,6 @@ spec:
               type: string
             sink:
               type: object
-            topics:
-              type: string
           type: object
           required:
               - bootstrapServers

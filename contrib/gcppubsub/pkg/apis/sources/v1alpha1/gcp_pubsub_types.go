@@ -87,7 +87,7 @@ const (
 )
 
 // GetGcpPubSubSource returns the GcpPubSub CloudEvent source value.
-func GetGcpPubSubSource(googleCloudProject, topic string) string {
+func GcpPubSubEventSource(googleCloudProject, topic string) string {
 	return fmt.Sprintf("//pubsub.googleapis.com/%s/topics/%s", googleCloudProject, topic)
 }
 

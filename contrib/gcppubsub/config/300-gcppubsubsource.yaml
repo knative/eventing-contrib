@@ -51,6 +51,8 @@ spec:
               type: string
             sink:
               type: object
+            transformer:
+              type: object
             topic:
               type: string
           type: object
@@ -79,6 +81,8 @@ spec:
                 type: object
               type: array
             sinkUri:
+              type: string
+            transformerUri:
               type: string
           type: object
   version: v1alpha1

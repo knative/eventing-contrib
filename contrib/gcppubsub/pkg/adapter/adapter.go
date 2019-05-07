@@ -18,10 +18,7 @@ package gcppubsub
 
 import (
 	"fmt"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -32,11 +29,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-const (
-	// If in the PubSub message attributes this header is set, use
+var (
+	// If in the PubSub message attributes any of these headers are set, use
 	// it as the Cloud Event type so as to preserve types that flow
 	// through the Receive Adapter.
-	eventTypeOverrideKey = "ce-type"
+	eventTypeOverrideKeys = []string{"ce-type", "ce-eventtype"}
 )
 
 // Adapter implements the GCP Pub/Sub adapter to deliver Pub/Sub messages from
@@ -58,14 +55,14 @@ type Adapter struct {
 	client       *pubsub.Client
 	subscription *pubsub.Subscription
 
-	ceClient client.Client
+	ceClient cloudevents.Client
 
 	transformer       bool
-	transformerClient client.Client
+	transformerClient cloudevents.Client
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	a.source = sourcesv1alpha1.GetGcpPubSubSource(a.ProjectID, a.TopicID)
+	a.source = sourcesv1alpha1.GcpPubSubEventSource(a.ProjectID, a.TopicID)
 
 	var err error
 	// Make the client to pubsub
@@ -114,25 +111,50 @@ func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 	}
 }
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m PubSubMessage) error {
-	// TODO: this will break when the upstream sender updates cloudevents versions.
-	// The correct thing to do would be to convert the message to a cloudevent if it is one.
-	et := sourcesv1alpha1.GcpPubSubSourceEventType
-	if override, ok := m.Message().Attributes[eventTypeOverrideKey]; ok {
-		et = override
-		logger.Infof("overriding the cloud event type with %q", et)
+	// Create the CloudEvent.
+	event := cloudevents.NewEvent(cloudevents.VersionV02)
+	event.SetID(m.ID())
+	event.SetTime(m.PublishTime())
+	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
+	event.SetType(sourcesv1alpha1.GcpPubSubSourceEventType)
+	event.SetSource(a.source)
+
+	// If a transformer has been configured, then transform the message.
+	if a.transformer {
+		// Set the data.
+		event.SetData(m.Data())
+		// Save the message attributes as extensions.
+		for k, v := range m.Message().Attributes {
+			event.SetExtension(k, v)
+		}
+		resp, err := a.transformerClient.Send(ctx, event)
+		if err != nil {
+			logger.Errorf("error transforming cloud event %q", event.ID())
+			return err
+		}
+		// Update the event with the transformed one.
+		event = *resp
+	} else {
+		// This maintains previous functionality.
+		// Setting the CloudEvent data to be the entire message.
+		event.SetData(m.Message())
+		// Override the CloudEvent type if present.
+		// TODO: this will break when the upstream sender updates cloudevents versions.
+		// The correct thing to do would be to convert the message to a cloudevent if it is one.
+		overrideTypeIfPresent(logger, m.Message(), &event)
 	}
 
-	event := cloudevents.Event{
-		Context: cloudevents.EventContextV02{
-			Type:        et,
-			ID:          m.ID(),
-			Time:        &types.Timestamp{Time: m.PublishTime()},
-			Source:      *types.ParseURLRef(a.source),
-			ContentType: cloudevents.StringOfApplicationJSON(),
-		}.AsV02(),
-		Data: m.Message(),
-	}
-
+	logger.Debugf("Sending cloudEvent %s", event.String())
 	_, err := a.ceClient.Send(ctx, event)
 	return err // err could be nil or an error
+}
+
+func overrideTypeIfPresent(logger *zap.SugaredLogger, msg *pubsub.Message, event *cloudevents.Event) {
+	for _, key := range eventTypeOverrideKeys {
+		if override, ok := msg.Attributes[key]; ok {
+			event.SetType(override)
+			logger.Infof("overriding the cloud event type with %q", override)
+			return
+		}
+	}
 }

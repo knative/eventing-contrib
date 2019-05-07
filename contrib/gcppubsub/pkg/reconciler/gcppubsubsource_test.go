@@ -407,7 +407,7 @@ func getEventType() *eventingv1alpha1.EventType {
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   sourcesv1alpha1.GcpPubSubSourceEventType,
-			Source: sourcesv1alpha1.GetGcpPubSubSource("my-gcp-project", "laconia"),
+			Source: sourcesv1alpha1.GcpPubSubEventSource("my-gcp-project", "laconia"),
 			Broker: addressableName,
 		},
 	}

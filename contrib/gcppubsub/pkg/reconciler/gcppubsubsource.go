@@ -155,13 +155,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 	src.Status.MarkSink(sinkURI)
 
-	sub, err := r.createSubscription(ctx, src)
-	if err != nil {
-		logger.Error("Unable to create the subscription", zap.Error(err))
-		return err
-	}
-	src.Status.MarkSubscribed()
-
 	var transformerURI string
 	if src.Spec.Transformer != nil {
 		transformerURI, err = sinks.GetSinkURI(ctx, r.client, src.Spec.Transformer, src.Namespace)
@@ -171,6 +164,13 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		}
 		src.Status.MarkTransformer(transformerURI)
 	}
+
+	sub, err := r.createSubscription(ctx, src)
+	if err != nil {
+		logger.Error("Unable to create the subscription", zap.Error(err))
+		return err
+	}
+	src.Status.MarkSubscribed()
 
 	_, err = r.createReceiveAdapter(ctx, src, sub.ID(), sinkURI, transformerURI)
 	if err != nil {
@@ -314,7 +314,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpP
 func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
 	spec := eventingv1alpha1.EventTypeSpec{
 		Type:   v1alpha1.GcpPubSubSourceEventType,
-		Source: v1alpha1.GetGcpPubSubSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
+		Source: v1alpha1.GcpPubSubEventSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,
 	}
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0, 1)
