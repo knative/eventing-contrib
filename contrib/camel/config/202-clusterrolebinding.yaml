@@ -24,3 +24,21 @@ subjects:
 - kind: ServiceAccount
   name: camel-controller-manager
   namespace: knative-sources
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eventing-sources-camel-controller-addressable-resolver
+subjects:
+- kind: ServiceAccount
+  name: camel-controller-manager
+  namespace: knative-sources
+# An aggregated ClusterRole for all Addressable CRDs.
+# Ref: https://github.com/knative/eventing/blob/master/config/200-addressable-resolvers-clusterrole.yaml
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: addressable-resolver
+
