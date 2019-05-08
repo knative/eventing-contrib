@@ -82,11 +82,6 @@ func TestMakeDeployment_sink(t *testing.T) {
 						"configuration": `{"services":[{"type":"endpoint","protocol":"http","name":"sink","host":"test-sink","port":80,"metadata":{"service.path":"/"}}]}`,
 					},
 				},
-				"images": {
-					Configuration: map[string]string{
-						"enabled": "true",
-					},
-				},
 			},
 		},
 	}

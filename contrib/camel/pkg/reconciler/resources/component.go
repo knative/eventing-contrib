@@ -41,13 +41,6 @@ func BuildComponentIntegrationSpec(args *CamelArguments) (camelv1alpha1.Integrat
 				},
 			},
 		},
-		Traits: map[string]camelv1alpha1.TraitSpec{
-			"images": {
-				Configuration: map[string]string{
-					"enabled": "true",
-				},
-			},
-		},
 	}
 
 	// TODO remove when deprecated fields are removed
