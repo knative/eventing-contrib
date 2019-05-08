@@ -138,6 +138,8 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		if resp != nil {
 			// Update the event with the transformed one.
 			event = *resp
+		} else {
+			logger.Warnf("cloud event %q was not transformed", event.ID())
 		}
 	}
 
