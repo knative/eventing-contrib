@@ -33,7 +33,7 @@
   version = "v1.21.0"
 
 [[projects]]
-  digest = "1:010fb9997659cd49b19e0f493670f520fffd944ced05628cfde96395619c150e"
+  digest = "1:12102db6608e5b7ad461798984ca5126080140487acbc1959704a881e3831e76"
   name = "github.com/apache/camel-k"
   packages = [
     "pkg/apis/camel/v1alpha1",
@@ -41,8 +41,8 @@
     "pkg/util",
   ]
   pruneopts = "NUT"
-  revision = "f00c1bfe44fd42039ea7de52cedd08f78adc3b13"
-  version = "0.3.2"
+  revision = "87c0d6fe53978ffd753b2d0c95c02f44b374860e"
+  version = "0.3.3"
 
 [[projects]]
   digest = "1:164a1e6e8407f99696f29dca7b21025c347b5ec47beafc1b8254e4a4ae71cc08"
