@@ -68,7 +68,11 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		},
 	}
 
-	return p.Add(mgr, logger)
+	err := p.Add(mgr, logger)
+	if err != nil {
+		log.Println("Camel K cluster resources not installed correctly. Follow installation instructions at: https://github.com/apache/camel-k")
+	}
+	return err
 }
 
 type reconciler struct {
