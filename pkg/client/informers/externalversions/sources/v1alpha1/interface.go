@@ -28,8 +28,6 @@ type Interface interface {
 	AwsSqsSources() AwsSqsSourceInformer
 	// GitHubSources returns a GitHubSourceInformer.
 	GitHubSources() GitHubSourceInformer
-	// KubernetesEventSources returns a KubernetesEventSourceInformer.
-	KubernetesEventSources() KubernetesEventSourceInformer
 }
 
 type version struct {
@@ -51,9 +49,4 @@ func (v *version) AwsSqsSources() AwsSqsSourceInformer {
 // GitHubSources returns a GitHubSourceInformer.
 func (v *version) GitHubSources() GitHubSourceInformer {
 	return &gitHubSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// KubernetesEventSources returns a KubernetesEventSourceInformer.
-func (v *version) KubernetesEventSources() KubernetesEventSourceInformer {
-	return &kubernetesEventSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

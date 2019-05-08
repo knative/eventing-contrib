@@ -23,7 +23,6 @@ rules:
   resources:
   - awssqssources
   - githubsources
-  - kuberneteseventsources
   verbs: &everything
   - get
   - list
@@ -48,7 +47,6 @@ rules:
   resources:
   - awssqssources/finalizers
   - githubsources/finalizers
-  - kuberneteseventsources/finalizers
   verbs: *everything
 
 # Source statuses update
@@ -57,7 +55,6 @@ rules:
   resources:
   - awssqssources/status
   - githubsources/status
-  - kuberneteseventsources/status
   verbs:
   - get
   - update

@@ -29,7 +29,6 @@ type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AwsSqsSourcesGetter
 	GitHubSourcesGetter
-	KubernetesEventSourcesGetter
 }
 
 // SourcesV1alpha1Client is used to interact with features provided by the sources.eventing.knative.dev group.
@@ -43,10 +42,6 @@ func (c *SourcesV1alpha1Client) AwsSqsSources(namespace string) AwsSqsSourceInte
 
 func (c *SourcesV1alpha1Client) GitHubSources(namespace string) GitHubSourceInterface {
 	return newGitHubSources(c, namespace)
-}
-
-func (c *SourcesV1alpha1Client) KubernetesEventSources(namespace string) KubernetesEventSourceInterface {
-	return newKubernetesEventSources(c, namespace)
 }
 
 // NewForConfig creates a new SourcesV1alpha1Client for the given config.

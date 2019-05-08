@@ -36,10 +36,6 @@ func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSou
 	return &FakeGitHubSources{c, namespace}
 }
 
-func (c *FakeSourcesV1alpha1) KubernetesEventSources(namespace string) v1alpha1.KubernetesEventSourceInterface {
-	return &FakeKubernetesEventSources{c, namespace}
-}
-
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeSourcesV1alpha1) RESTClient() rest.Interface {

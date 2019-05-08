@@ -57,8 +57,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().AwsSqsSources().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("githubsources"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().GitHubSources().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("kuberneteseventsources"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Sources().V1alpha1().KubernetesEventSources().Informer()}, nil
 
 	}
 
