@@ -28,7 +28,7 @@ rules:
   resources:
   - events
   verbs:
-  - VerbAll
+  - *
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
