@@ -34,42 +34,76 @@ import (
 func TestPostMessage_ServeHTTP(t *testing.T) {
 	testCases := map[string]struct {
 		sink              func(http.ResponseWriter, *http.Request)
+		transformer       func(http.ResponseWriter, *http.Request)
 		reqBody           string
+		respBody          string
 		attributes        map[string]string
 		expectedEventType string
 		error             bool
 	}{
 		"happy": {
-			sink:    sinkAccepted,
+			sink:    accepted,
 			reqBody: `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":null,"PublishTime":"0001-01-01T00:00:00Z"}`,
 		},
 		"happyWithCustomEvent": {
-			sink:              sinkAccepted,
+			sink:              accepted,
 			attributes:        map[string]string{"ce-type": "foobar"},
 			reqBody:           `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":{"ce-type":"foobar"},"PublishTime":"0001-01-01T00:00:00Z"}`,
 			expectedEventType: "foobar",
 		},
 		"rejected": {
-			sink:    sinkRejected,
+			sink:    rejected,
 			reqBody: `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":null,"PublishTime":"0001-01-01T00:00:00Z"}`,
 			error:   true,
+		},
+		"happy with transformer": {
+			sink:        accepted,
+			transformer: accepted,
+			reqBody:     `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":null,"PublishTime":"0001-01-01T00:00:00Z"}`,
+		},
+		"rejected transformer": {
+			sink:        accepted,
+			transformer: rejected,
+			reqBody:     `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":null,"PublishTime":"0001-01-01T00:00:00Z"}`,
+			error:       true,
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			h := &fakeHandler{
+			sh := &fakeHandler{
 				handler: tc.sink,
 			}
-			sinkServer := httptest.NewServer(h)
+			sinkServer := httptest.NewServer(sh)
 			defer sinkServer.Close()
 
+			transformerURI := ""
+			var th *fakeHandler
+			var transformerServer *httptest.Server
+			if tc.transformer != nil {
+				th = &fakeHandler{
+					handler: tc.transformer,
+				}
+				transformerServer = httptest.NewServer(th)
+				defer transformerServer.Close()
+				transformerURI = transformerServer.URL
+			}
+
 			a := &Adapter{
-				SinkURI: sinkServer.URL,
-				source:  "test",
+				SinkURI:        sinkServer.URL,
+				TransformerURI: transformerURI,
+				source:         "test",
 				ceClient: func() client.Client {
 					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 					return c
 				}(),
+			}
+
+			if tc.transformer != nil {
+				a.transformer = true
+				a.transformerClient = func() client.Client {
+					c, _ := kncloudevents.NewDefaultClient(transformerURI)
+					return c
+				}()
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})
@@ -91,7 +125,11 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected error, but got %v", err)
 			}
 
-			et := h.header.Get("Ce-Type") // bad bad bad.
+			et := sh.header.Get("Ce-Type") // bad bad bad.
+			// If a transformer was configured, read its header.
+			if tc.transformer != nil {
+				et = th.header.Get("Ce-Type")
+			}
 
 			expectedEventType := sourcesv1alpha1.GcpPubSubSourceEventType
 			if tc.expectedEventType != "" {
@@ -101,8 +139,12 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			if et != expectedEventType {
 				t.Errorf("Expected eventtype %q, but got %q", tc.expectedEventType, et)
 			}
-			if tc.reqBody != string(h.body) {
-				t.Errorf("expected request body %q, but got %q", tc.reqBody, h.body)
+			if tc.transformer != nil {
+				if tc.reqBody != string(th.body) {
+					t.Errorf("expected request body from transformer %q, but got %q", tc.reqBody, th.body)
+				}
+			} else if tc.reqBody != string(sh.body) {
+				t.Errorf("expected request body from sink %q, but got %q", tc.reqBody, sh.body)
 			}
 		})
 	}
@@ -114,11 +156,11 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 		acked bool
 	}{
 		"happy": {
-			sink:  sinkAccepted,
+			sink:  accepted,
 			acked: true,
 		},
 		"rejected": {
-			sink:  sinkRejected,
+			sink:  rejected,
 			acked: false,
 		},
 	}
@@ -188,10 +230,10 @@ func (h *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.handler(w, r)
 }
 
-func sinkAccepted(writer http.ResponseWriter, req *http.Request) {
+func accepted(writer http.ResponseWriter, req *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 }
 
-func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
+func rejected(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusRequestTimeout)
 }

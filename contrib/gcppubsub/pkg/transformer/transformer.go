@@ -26,8 +26,8 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Transformer implements the GCP Pub/Sub transformer that transforms Pub/Sub messages
-// into CloudEvents.
+// Transformer implements the GCP Pub/Sub transformer that transforms Pub/Sub messages wrapped in
+// CloudEvents payloads into CloudEvents.
 type Transformer struct {
 	ceClient cloudevents.Client
 }
@@ -49,11 +49,9 @@ func (t *Transformer) Start(ctx context.Context) error {
 
 func (t *Transformer) transformEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	logger := logging.FromContext(ctx).With(zap.Any("eventID", event.ID()))
+	logger.Debugw("Received wrapped PubSub message in cloudEvent", zap.String("cloudEvent", event.String()))
 
-	logger.Debugw("Received cloudEvent", zap.String("cloudEvent", event.String()))
-
-	// TODO perform the transformation.
-
+	// TODO transform
 	resp.Event = &event
 	return nil
 }

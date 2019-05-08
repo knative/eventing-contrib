@@ -23,7 +23,6 @@ rules:
   resources:
   - kafkasources
   - kafkasources/finalizers
-  - services
   verbs: &everything
   - get
   - list
@@ -37,7 +36,6 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - kafkasources/status
-  - services
   verbs:
   - get
   - update
@@ -64,15 +62,6 @@ rules:
 - apiGroups:
   - eventing.knative.dev
   resources:
-  - channels
-  - services
-  - brokers
   - eventtypes
   verbs: *everything
 
-- apiGroups:
-  - serving.knative.dev
-  resources:
-  - services
-  - routes
-  verbs: *everything
