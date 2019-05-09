@@ -1,0 +1,16 @@
+# Replace the following before applying this file:
+#   QUEUE_URL: Replace with the AWS SQS queue.
+
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: AwsSqsSource
+metadata:
+  name: awssqs-sample-source
+spec:
+  awsCredsSecret:
+    name: aws-credentials
+    key: credentials
+  queueUrl: QUEUE_URL
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: awssqs-test

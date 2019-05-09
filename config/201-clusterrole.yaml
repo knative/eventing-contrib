@@ -21,7 +21,6 @@ rules:
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
-  - awssqssources
   - githubsources
   - kuberneteseventsources
   verbs: &everything
@@ -55,7 +54,6 @@ rules:
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
-  - awssqssources/status
   - githubsources/status
   - kuberneteseventsources/status
   verbs:
