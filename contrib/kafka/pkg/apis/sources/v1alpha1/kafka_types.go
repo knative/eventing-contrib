@@ -63,6 +63,16 @@ type KafkaSourceSASLSpec struct {
 
 type KafkaSourceTLSSpec struct {
 	Enable bool `json:"enable,omitempty"`
+
+	// Cert is the Kubernetes secret containing the client certificate.
+	// +optional
+	Cert sourcesv1alpha1.SecretValueFromSource `json:"cert,omitempty"`
+	// Key is the Kubernetes secret containing the client key.
+	// +optional
+	Key sourcesv1alpha1.SecretValueFromSource `json:"key,omitempty"`
+	// CACert is the Kubernetes secret containing the server CA cert.
+	// +optional
+	CACert sourcesv1alpha1.SecretValueFromSource `json:"caCert,omitempty"`
 }
 
 type KafkaSourceNetSpec struct {
