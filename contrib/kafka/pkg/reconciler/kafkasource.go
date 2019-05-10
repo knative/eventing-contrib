@@ -31,7 +31,7 @@ import (
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -189,8 +189,8 @@ func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.KafkaSource) *even
 	topics := strings.Split(src.Spec.Topics, ",")
 	for _, topic := range topics {
 		spec := eventingv1alpha1.EventTypeSpec{
-			Type:   v1alpha1.KafkaSourceEventType,
-			Source: topic,
+			Type:   v1alpha1.KafkaEventType,
+			Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
 			Broker: src.Spec.Sink.Name,
 		}
 		specs = append(specs, spec)

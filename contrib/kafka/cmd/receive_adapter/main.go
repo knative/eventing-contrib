@@ -42,6 +42,8 @@ const (
 	envNetSASLPassword  = "KAFKA_NET_SASL_PASSWORD"
 	envNetTLSEnable     = "KAFKA_NET_TLS_ENABLE"
 	envSinkURI          = "SINK_URI"
+	envName             = "NAME"
+	envNamespace        = "NAMESPACE"
 )
 
 func getRequiredEnv(key string) string {
@@ -83,6 +85,8 @@ func main() {
 		Topics:           getRequiredEnv(envTopics),
 		ConsumerGroup:    getRequiredEnv(envConsumerGroup),
 		SinkURI:          getRequiredEnv(envSinkURI),
+		Name:             getRequiredEnv(envName),
+		Namespace:        getRequiredEnv(envNamespace),
 		Net: kafka.AdapterNet{
 			SASL: kafka.AdapterSASL{
 				Enable:   getOptionalBoolEnv(envNetSASLEnable),

@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
@@ -96,9 +97,14 @@ type KafkaSourceSpec struct {
 }
 
 const (
-	// KafkaSourceEventType is the Kafka CloudEvent type.
-	KafkaSourceEventType = "dev.knative.kafka.event"
+	// KafkaEventType is the Kafka CloudEvent type.
+	KafkaEventType = "dev.knative.kafka.event"
 )
+
+// KafkaEventSource returns the Kafka CloudEvent source.
+func KafkaEventSource(namespace, kafkaSourceName, topic string) string {
+	return fmt.Sprintf("/apis/v1/namespaces/%s/kafkasources/%s#%s", namespace, kafkaSourceName, topic)
+}
 
 const (
 	// KafkaConditionReady has status True when the KafkaSource is ready to send events.
