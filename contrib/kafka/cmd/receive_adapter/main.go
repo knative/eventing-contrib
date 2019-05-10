@@ -41,6 +41,9 @@ const (
 	envNetSASLUser      = "KAFKA_NET_SASL_USER"
 	envNetSASLPassword  = "KAFKA_NET_SASL_PASSWORD"
 	envNetTLSEnable     = "KAFKA_NET_TLS_ENABLE"
+	envNetTLSCert       = "KAFKA_NET_TLS_CERT"
+	envNetTLSKey        = "KAFKA_NET_TLS_KEY"
+	envNetTLSCACert     = "KAFKA_NET_TLS_CA_CERT"
 	envSinkURI          = "SINK_URI"
 )
 
@@ -91,6 +94,9 @@ func main() {
 			},
 			TLS: kafka.AdapterTLS{
 				Enable: getOptionalBoolEnv(envNetTLSEnable),
+				Cert:   os.Getenv(envNetTLSCert),
+				Key:    os.Getenv(envNetTLSKey),
+				CACert: os.Getenv(envNetTLSCACert),
 			},
 		},
 	}
@@ -98,11 +104,12 @@ func main() {
 	stopCh := signals.SetupSignalHandler()
 
 	logger.Info("Starting Apache Kafka Receive Adapter...",
-		zap.String("bootstrap_server", adapter.BootstrapServers),
+		zap.String("BootstrapServers", adapter.BootstrapServers),
 		zap.String("Topics", adapter.Topics),
 		zap.String("ConsumerGroup", adapter.ConsumerGroup),
 		zap.String("SinkURI", adapter.SinkURI),
-		zap.Bool("TLS", adapter.Net.SASL.Enable))
+		zap.Bool("SASL", adapter.Net.SASL.Enable),
+		zap.Bool("TLS", adapter.Net.TLS.Enable))
 	if err := adapter.Start(ctx, stopCh); err != nil {
 		logger.Fatal("failed to start adapter: ", zap.Error(err))
 	}
