@@ -17,10 +17,13 @@ limitations under the License.
 package kafka
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -40,6 +43,9 @@ type AdapterSASL struct {
 
 type AdapterTLS struct {
 	Enable bool
+	Cert   string
+	Key    string
+	CACert string
 }
 
 type AdapterNet struct {
@@ -97,13 +103,14 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	logger := logging.FromContext(ctx)
 
 	logger.Infow("Starting with config: ",
-		zap.String("bootstrap_server", a.BootstrapServers),
+		zap.String("BootstrapServers", a.BootstrapServers),
 		zap.String("Topics", a.Topics),
 		zap.String("ConsumerGroup", a.ConsumerGroup),
 		zap.String("SinkURI", a.SinkURI),
 		zap.String("Name", a.Name),
 		zap.String("Namespace", a.Namespace),
-		zap.Bool("TLS", a.Net.SASL.Enable))
+		zap.Bool("SASL", a.Net.SASL.Enable),
+		zap.Bool("TLS", a.Net.TLS.Enable))
 
 	kafkaConfig := sarama.NewConfig()
 	kafkaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -113,6 +120,14 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	kafkaConfig.Net.SASL.User = a.Net.SASL.User
 	kafkaConfig.Net.SASL.Password = a.Net.SASL.Password
 	kafkaConfig.Net.TLS.Enable = a.Net.TLS.Enable
+
+	if a.Net.TLS.Enable {
+		tlsConfig, err := newTLSConfig(a.Net.TLS.Cert, a.Net.TLS.Key, a.Net.TLS.CACert)
+		if err != nil {
+			panic(err)
+		}
+		kafkaConfig.Net.TLS.Config = tlsConfig
+	}
 
 	// Start with a client
 	client, err := sarama.NewClient(strings.Split(a.BootstrapServers, ","), kafkaConfig)
@@ -178,5 +193,70 @@ func (a *Adapter) jsonEncode(ctx context.Context, value []byte) interface{} {
 		return value
 	} else {
 		return payload
+	}
+}
+
+// newTLSConfig returns a *tls.Config using the given client cert, client key,
+// and CA certificate. If none are appropriate, a nil *tls.Config is returned.
+func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
+	valid := false
+
+	config := &tls.Config{}
+
+	if clientCert != "" && clientKey != "" {
+		cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
+		if err != nil {
+			return nil, err
+		}
+		config.Certificates = []tls.Certificate{cert}
+		config.BuildNameToCertificate()
+		valid = true
+	}
+
+	if caCert != "" {
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM([]byte(caCert))
+		config.RootCAs = caCertPool
+		// The CN of Heroku Kafka certs do not match the hostname of the
+		// broker, but Go's default TLS behavior requires that they do.
+		config.VerifyPeerCertificate = verifyCertSkipHostname(caCertPool)
+		config.InsecureSkipVerify = true
+		valid = true
+	}
+
+	if !valid {
+		config = nil
+	}
+
+	return config, nil
+}
+
+// verifyCertSkipHostname verifies certificates in the same way that the
+// default TLS handshake does, except it skips hostname verification. It must
+// be used with InsecureSkipVerify.
+func verifyCertSkipHostname(roots *x509.CertPool) func([][]byte, [][]*x509.Certificate) error {
+	return func(certs [][]byte, _ [][]*x509.Certificate) error {
+		opts := x509.VerifyOptions{
+			Roots:         roots,
+			CurrentTime:   time.Now(),
+			Intermediates: x509.NewCertPool(),
+		}
+
+		leaf, err := x509.ParseCertificate(certs[0])
+		if err != nil {
+			return err
+		}
+
+		for _, asn1Data := range certs[1:] {
+			cert, err := x509.ParseCertificate(asn1Data)
+			if err != nil {
+				return err
+			}
+
+			opts.Intermediates.AddCert(cert)
+		}
+
+		_, err = leaf.Verify(opts)
+		return err
 	}
 }

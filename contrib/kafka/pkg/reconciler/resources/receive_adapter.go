@@ -71,23 +71,12 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		},
 	}
 
-	if args.Source.Spec.Net.SASL.User.SecretKeyRef != nil {
-		env = append(env, corev1.EnvVar{
-			Name: "KAFKA_NET_SASL_USER",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: args.Source.Spec.Net.SASL.User.SecretKeyRef,
-			},
-		})
-	}
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_USER", args.Source.Spec.Net.SASL.User.SecretKeyRef)
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_PASSWORD", args.Source.Spec.Net.SASL.Password.SecretKeyRef)
 
-	if args.Source.Spec.Net.SASL.Password.SecretKeyRef != nil {
-		env = append(env, corev1.EnvVar{
-			Name: "KAFKA_NET_SASL_PASSWORD",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: args.Source.Spec.Net.SASL.Password.SecretKeyRef,
-			},
-		})
-	}
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CERT", args.Source.Spec.Net.TLS.Cert.SecretKeyRef)
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_KEY", args.Source.Spec.Net.TLS.Key.SecretKeyRef)
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CA_CERT", args.Source.Spec.Net.TLS.CACert.SecretKeyRef)
 
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -120,4 +109,22 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 			},
 		},
 	}
+}
+
+// appendEnvFromSecretKeyRef returns env with an EnvVar appended
+// setting key to the secret and key described by ref.
+// If ref is nil, env is returned unchanged.
+func appendEnvFromSecretKeyRef(env []corev1.EnvVar, key string, ref *corev1.SecretKeySelector) []corev1.EnvVar {
+	if ref == nil {
+		return env
+	}
+
+	env = append(env, corev1.EnvVar{
+		Name: key,
+		ValueFrom: &corev1.EnvVarSource{
+			SecretKeyRef: ref,
+		},
+	})
+
+	return env
 }

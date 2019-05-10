@@ -18,7 +18,6 @@ package test
 // crd contains functions that construct boilerplate CRD definitions.
 
 import (
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	pkgTest "github.com/knative/pkg/test"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
@@ -90,21 +89,6 @@ func Channel(name string, namespace string, provisioner *corev1.ObjectReference)
 		},
 		Spec: v1alpha1.ChannelSpec{
 			Provisioner: provisioner,
-		},
-	}
-}
-
-// KubernetesEventSource returns a KubernetesEventSource sinking to specified channel
-func KubernetesEventSource(name string, namespace string, targetNamespace string, serviceAccount string, channel *corev1.ObjectReference) *sourcesv1alpha1.KubernetesEventSource {
-	return &sourcesv1alpha1.KubernetesEventSource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: sourcesv1alpha1.KubernetesEventSourceSpec{
-			Namespace:          targetNamespace,
-			ServiceAccountName: serviceAccount,
-			Sink:               channel,
 		},
 	}
 }
