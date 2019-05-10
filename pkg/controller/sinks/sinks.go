@@ -42,6 +42,10 @@ func GetSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReferen
 	}
 
 	objIdentifier := fmt.Sprintf("\"%s/%s\" (%s)", u.GetNamespace(), u.GetName(), u.GroupVersionKind())
+	// Special case v1/Service to allow it be addressable
+	if u.GroupVersionKind().Kind == "Service" && u.GroupVersionKind().Version == "v1" {
+		return fmt.Sprintf("http://%s.%s.svc/", u.GetName(), u.GetNamespace()), nil
+	}
 
 	t := duckv1alpha1.AddressableType{}
 	err = duck.FromUnstructured(u, &t)
