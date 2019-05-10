@@ -22,13 +22,27 @@ rules:
   resources:
   - deployments
   verbs:
-  - *
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+
 - apiGroups:
   - ""
   resources:
   - events
   verbs:
-  - *
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
