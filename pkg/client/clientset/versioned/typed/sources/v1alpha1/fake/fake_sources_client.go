@@ -28,10 +28,6 @@ type FakeSourcesV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeSourcesV1alpha1) AwsSqsSources(namespace string) v1alpha1.AwsSqsSourceInterface {
-	return &FakeAwsSqsSources{c, namespace}
-}
-
 func (c *FakeSourcesV1alpha1) GitHubSources(namespace string) v1alpha1.GitHubSourceInterface {
 	return &FakeGitHubSources{c, namespace}
 }
