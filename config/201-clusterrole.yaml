@@ -45,7 +45,6 @@ rules:
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
-  - awssqssources/finalizers
   - githubsources/finalizers
   - kuberneteseventsources/finalizers
   verbs: *everything
