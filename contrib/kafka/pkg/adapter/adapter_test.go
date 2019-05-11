@@ -98,7 +98,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 
 			et := h.header.Get("Ce-Type")
 
-			expectedEventType := sourcesv1alpha1.KafkaSourceEventType
+			expectedEventType := sourcesv1alpha1.KafkaEventType
 			if tc.expectedEventType != "" {
 				expectedEventType = tc.expectedEventType
 			}

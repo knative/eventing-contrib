@@ -159,6 +159,14 @@ func TestMakeReceiveAdapter(t *testing.T) {
 									Value: "sink-uri",
 								},
 								{
+									Name:  "NAME",
+									Value: "source-name",
+								},
+								{
+									Name:  "NAMESPACE",
+									Value: "source-namespace",
+								},
+								{
 									Name: "KAFKA_NET_SASL_USER",
 									ValueFrom: &corev1.EnvVarSource{
 										SecretKeyRef: &corev1.SecretKeySelector{
@@ -308,6 +316,14 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 								{
 									Name:  "SINK_URI",
 									Value: "sink-uri",
+								},
+								{
+									Name:  "NAME",
+									Value: "source-name",
+								},
+								{
+									Name:  "NAMESPACE",
+									Value: "source-namespace",
 								},
 							},
 						},

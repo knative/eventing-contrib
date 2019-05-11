@@ -306,13 +306,13 @@ func getEventType(name, group, topic string) *eventingv1alpha1.EventType {
 				},
 			},
 			Name:         name,
-			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.KafkaSourceEventType),
+			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.KafkaEventType),
 			Namespace:    testNS,
 			Labels:       getLabels(getSourceWithKind(brokerKind)),
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
-			Type:   sourcesv1alpha1.KafkaSourceEventType,
-			Source: topic,
+			Type:   sourcesv1alpha1.KafkaEventType,
+			Source: sourcesv1alpha1.KafkaEventSource(testNS, sourceName, topic),
 			Broker: addressableName,
 		},
 	}

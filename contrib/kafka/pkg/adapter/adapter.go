@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +28,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
@@ -59,6 +59,8 @@ type Adapter struct {
 	ConsumerGroup    string
 	Net              AdapterNet
 	SinkURI          string
+	Name             string
+	Namespace        string
 	client           client.Client
 }
 
@@ -105,6 +107,8 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		zap.String("Topics", a.Topics),
 		zap.String("ConsumerGroup", a.ConsumerGroup),
 		zap.String("SinkURI", a.SinkURI),
+		zap.String("Name", a.Name),
+		zap.String("Namespace", a.Namespace),
 		zap.Bool("SASL", a.Net.SASL.Enable),
 		zap.Bool("TLS", a.Net.TLS.Enable))
 
@@ -166,22 +170,14 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 
 func (a *Adapter) postMessage(ctx context.Context, msg *sarama.ConsumerMessage) error {
 
-	extensions := map[string]interface{}{
-		"key": string(msg.Key),
-	}
-
-	event := cloudevents.Event{
-		Context: cloudevents.EventContextV02{
-			SpecVersion: cloudevents.CloudEventsVersionV02,
-			Type:        sourcesv1alpha1.KafkaSourceEventType,
-			ID:          "partition:" + strconv.Itoa(int(msg.Partition)) + "/offset:" + strconv.FormatInt(msg.Offset, 10),
-			Time:        &types.Timestamp{Time: msg.Timestamp},
-			Source:      *types.ParseURLRef(msg.Topic),
-			ContentType: cloudevents.StringOfApplicationJSON(),
-			Extensions:  extensions,
-		}.AsV02(),
-		Data: a.jsonEncode(ctx, msg.Value),
-	}
+	event := cloudevents.New(cloudevents.CloudEventsVersionV02)
+	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
+	event.SetTime(msg.Timestamp)
+	event.SetType(sourcesv1alpha1.KafkaEventType)
+	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.Namespace, a.Name, msg.Topic))
+	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
+	event.SetExtension("key", string(msg.Key))
+	event.SetData(a.jsonEncode(ctx, msg.Value))
 
 	_, err := a.client.Send(ctx, event)
 	return err
