@@ -36,10 +36,10 @@ spec:
         - name: GH_RA_IMAGE
           value: github.com/knative/eventing-sources/cmd/github_receive_adapter
         resources:
-          limits:
-            cpu: 100m
-            memory: 30Mi
           requests:
             cpu: 100m
-            memory: 20Mi
+            memory: 100Mi
+          limits:
+            cpu: 1000m
+            memory: 1000Mi
       terminationGracePeriodSeconds: 10

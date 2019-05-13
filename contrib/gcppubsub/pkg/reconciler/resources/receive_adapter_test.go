@@ -54,6 +54,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		},
 		SubscriptionID: "sub-id",
 		SinkURI:        "sink-uri",
+		TransformerURI: "transformer-uri",
 	})
 
 	one := int32(1)
@@ -110,6 +111,10 @@ func TestMakeReceiveAdapter(t *testing.T) {
 								{
 									Name:  "SINK_URI",
 									Value: "sink-uri",
+								},
+								{
+									Name:  "TRANSFORMER_URI",
+									Value: "transformer-uri",
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
