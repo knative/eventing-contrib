@@ -94,8 +94,7 @@ function dump_extra_cluster_state() {
 
 # Script entry point.
 
-# Skip installing istio as an add-on
-initialize $@ --skip-istio-addon
+initialize $@
 
 go_test_e2e ./test/e2e || fail_test
 
