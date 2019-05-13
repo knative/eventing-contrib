@@ -33,7 +33,6 @@ readonly E2E_TEST_NAMESPACE=e2etest
 # Helper functions.
 
 function knative_setup() {
-  start_latest_knative_serving || return 1
   start_latest_knative_eventing || return 1
 
   header "Standing up Knative Eventing Sources"
