@@ -77,8 +77,8 @@ required = [
 
 [[constraint]]
   name = "github.com/knative/eventing"
-  # HEAD as of 2019-04-26. Needed to import EventType API object.
-  revision = "54500a2fe4872243364acb81841fedf3b796267f"
+  # HEAD as of 2019-05-12. Needed to import EventType API object.
+  revision = "53ee52c1292bc6f6807512a9081b9e64055f2bd2"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"

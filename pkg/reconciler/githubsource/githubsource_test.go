@@ -917,7 +917,7 @@ func getEventType() *eventingv1alpha1.EventType {
 					UID:                gitHubSourceUID,
 				},
 			},
-			GenerateName: fmt.Sprintf("%s-", strings.ReplaceAll(et, "_", "")),
+			GenerateName: fmt.Sprintf("%s-", strings.Replace(et, "_", "", -1)),
 			Namespace:    testNS,
 			Labels:       resources.Labels(gitHubSourceName),
 		},

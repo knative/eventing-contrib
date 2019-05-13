@@ -34,10 +34,10 @@ func main() {
 	logCfg := zap.NewProductionConfig()
 	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, err := logCfg.Build()
-	logger = logger.With(zap.String(logkey.ControllerType, "gcppubsub-controller"))
 	if err != nil {
 		log.Fatal(err)
 	}
+	logger = logger.With(zap.String(logkey.ControllerType, "gcppubsub-controller"))
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()

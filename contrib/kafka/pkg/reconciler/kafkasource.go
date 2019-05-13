@@ -189,8 +189,8 @@ func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.KafkaSource) *even
 	topics := strings.Split(src.Spec.Topics, ",")
 	for _, topic := range topics {
 		spec := eventingv1alpha1.EventTypeSpec{
-			Type:   v1alpha1.KafkaSourceEventType,
-			Source: topic,
+			Type:   v1alpha1.KafkaEventType,
+			Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
 			Broker: src.Spec.Sink.Name,
 		}
 		specs = append(specs, spec)

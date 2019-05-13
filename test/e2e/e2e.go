@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-sources/test"
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	pkgTest "github.com/knative/pkg/test"
@@ -96,17 +95,6 @@ func WithRouteReady(clients *test.Clients, logger logging.FormatLogger, cleaner 
 	if err := test.WaitForRouteState(routes, name, test.IsRouteReady, "RouteIsReady"); err != nil {
 		return err
 	}
-	return nil
-}
-
-// CreateKubernetesEventSource creates a KubernetesEventSource
-func CreateKubernetesEventSource(clients *test.Clients, source *sourcesv1alpha1.KubernetesEventSource, logger logging.FormatLogger, cleaner *test.Cleaner) error {
-	k8sSources := clients.Sources.SourcesV1alpha1().KubernetesEventSources(pkgTest.Flags.Namespace)
-	res, err := k8sSources.Create(source)
-	if err != nil {
-		return err
-	}
-	cleaner.Add(sourcesv1alpha1.SchemeGroupVersion.Group, sourcesv1alpha1.SchemeGroupVersion.Version, "kuberneteseventsources", pkgTest.Flags.Namespace, res.ObjectMeta.Name)
 	return nil
 }
 

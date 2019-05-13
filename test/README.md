@@ -45,11 +45,11 @@ go test -v -tags=e2e -count=1 ./test/e2e
 
 ### One test case
 
-To run one e2e test case, e.g. TestKubernetesEvents, use
+To run one e2e test case, e.g. <TODOTEST>, use
 [the `-run` flag with `go test`](https://golang.org/cmd/go/#hdr-Testing_flags):
 
 ```bash
-go test -v -tags=e2e -count=1 ./test/e2e -run ^TestKubernetesEvents$
+go test -v -tags=e2e -count=1 ./test/e2e -run ^TODOTEST
 ```
 
 ### Environment requirements

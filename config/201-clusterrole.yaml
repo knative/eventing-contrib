@@ -22,7 +22,6 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - githubsources
-  - kuberneteseventsources
   verbs: &everything
   - get
   - list
@@ -45,9 +44,7 @@ rules:
 - apiGroups:
   - sources.eventing.knative.dev
   resources:
-  - awssqssources/finalizers
   - githubsources/finalizers
-  - kuberneteseventsources/finalizers
   verbs: *everything
 
 # Source statuses update
@@ -55,7 +52,6 @@ rules:
   - sources.eventing.knative.dev
   resources:
   - githubsources/status
-  - kuberneteseventsources/status
   verbs:
   - get
   - update

@@ -71,8 +71,23 @@ spec:
                   type: object
                 tls:
                   properties:
+                    caCert:
+                      properties:
+                        secretKeyRef:
+                          type: object
+                      type: object
+                    cert:
+                      properties:
+                        secretKeyRef:
+                          type: object
+                      type: object
                     enable:
                       type: boolean
+                    key:
+                      properties:
+                        secretKeyRef:
+                          type: object
+                      type: object
                   type: object
               type: object
             serviceAccountName:
