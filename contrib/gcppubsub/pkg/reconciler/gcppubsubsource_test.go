@@ -251,7 +251,7 @@ func TestReconcile(t *testing.T) {
 				getAddressable(),
 			},
 			WantPresent: []runtime.Object{
-				getReadySource(),
+				getReadyAndMarkEventTypeSource(),
 			},
 		}, {
 			Name: "successful create - reuse existing receive adapter",
@@ -268,7 +268,7 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadySource(),
+				getReadyAndMarkEventTypeSource(),
 			},
 		}, {
 			Name: "successful create event types",
@@ -279,6 +279,19 @@ func TestReconcile(t *testing.T) {
 			WantPresent: []runtime.Object{
 				getReadyAndMarkEventTypeSourceWithKind(brokerKind),
 				getEventType(),
+			},
+		}, {
+			Name: "successful delete event types",
+			InitialState: []runtime.Object{
+				getSource(),
+				getAddressable(),
+				getEventTypeForSource(getSource()),
+			},
+			WantPresent: []runtime.Object{
+				getReadyAndMarkEventTypeSource(),
+			},
+			WantAbsent: []runtime.Object{
+				getEventTypeForSource(getSource()),
 			},
 		}, {
 			Name: "cannot create event types",
@@ -385,6 +398,10 @@ func getSourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
 }
 
 func getEventType() *eventingv1alpha1.EventType {
+	return getEventTypeForSource(getSourceWithKind(brokerKind))
+}
+
+func getEventTypeForSource(src *sourcesv1alpha1.GcpPubSubSource) *eventingv1alpha1.EventType {
 	return &eventingv1alpha1.EventType{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
@@ -403,7 +420,7 @@ func getEventType() *eventingv1alpha1.EventType {
 			},
 			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.GcpPubSubSourceEventType),
 			Namespace:    testNS,
-			Labels:       getLabels(getSourceWithKind(brokerKind)),
+			Labels:       getLabels(src),
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   sourcesv1alpha1.GcpPubSubSourceEventType,
@@ -466,6 +483,12 @@ func getReadySource() *sourcesv1alpha1.GcpPubSubSource {
 func getReadySourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
 	src := getReadySource()
 	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadyAndMarkEventTypeSource() *sourcesv1alpha1.GcpPubSubSource {
+	src := getReadySource()
+	src.Status.MarkEventTypes()
 	return src
 }
 

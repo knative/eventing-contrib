@@ -42,6 +42,7 @@ type ReconcilerArgs struct {
 	Specs     []eventingv1alpha1.EventTypeSpec
 	Namespace string
 	Labels    map[string]string
+	Kind      string
 }
 
 // Reconcile reconciles the EventTypes taken from 'args', and sets 'owner' as the controller.
@@ -100,6 +101,14 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 // makeEventTypes creates the in-memory representation of the EventTypes.
 func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) ([]eventingv1alpha1.EventType, error) {
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
+
+	// Only create EventTypes for Broker sinks.
+	// We add this check here in case the Source was changed from a Broker to non-Broker sink.
+	// If so, we need to delete the existing EventTypes, thus we return empty expected.
+	if args.Kind != "Broker" {
+		return eventTypes, nil
+	}
+
 	for _, spec := range args.Specs {
 		eventType := resources.MakeEventType(spec, args.Namespace, args.Labels)
 		// Setting the reference to delete the EventType upon uninstalling the source.
