@@ -19,6 +19,7 @@ package eventtype
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/equality"
 
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype/resources"
 
@@ -55,13 +56,22 @@ func (r *Reconciler) Reconcile(ctx context.Context, owner metav1.Object, args *R
 		return err
 	}
 
-	toCreate := r.getEventTypesToCreate(current, expected)
+	toCreate, toDelete := r.computeDiff(current, expected)
+
+	for _, eventType := range toDelete {
+		err = r.Client.Delete(ctx, &eventType)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, eventType := range toCreate {
 		err = r.Client.Create(ctx, &eventType)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -101,18 +111,35 @@ func (r *Reconciler) makeEventTypes(args *ReconcilerArgs, owner metav1.Object) (
 	return eventTypes, nil
 }
 
-// getEventTypesToCreate computes the EventTypes that need to be created based on the difference between
-// 'expected' and 'current'. It does so using all the EventType.Spec fields but Description.
-func (r *Reconciler) getEventTypesToCreate(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) []eventingv1alpha1.EventType {
-	eventTypes := make([]eventingv1alpha1.EventType, 0)
+// computeDiff computes the EventTypes that need to be created and/or deleted based on the difference between
+// 'expected' and 'current'. It does so using all the EventType.Spec fields but Description as "primary key" of the EventTypes.
+func (r *Reconciler) computeDiff(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) ([]eventingv1alpha1.EventType, []eventingv1alpha1.EventType) {
+	toCreate := make([]eventingv1alpha1.EventType, 0)
+	toDelete := make([]eventingv1alpha1.EventType, 0)
 	currentMap := asMap(current, keyFromEventType)
+	expectedMap := asMap(expected, keyFromEventType)
+
+	// Iterate over the slices instead of the maps for predictable UT expectations.
 	for _, e := range expected {
-		if _, ok := currentMap[keyFromEventType(&e)]; !ok {
-			// If it's not in the currentMap, we need to create it.
-			eventTypes = append(eventTypes, e)
+		// If it's not in the currentMap, we need to create it.
+		if c, ok := currentMap[keyFromEventType(&e)]; !ok {
+			toCreate = append(toCreate, e)
+		} else {
+			// If it is but the spec differs, then we need to delete it and create it again.
+			if !equality.Semantic.DeepEqual(e.Spec, c.Spec) {
+				toDelete = append(toDelete, c)
+				toCreate = append(toCreate, e)
+			}
 		}
 	}
-	return eventTypes
+	// Need to check whether the current EventTypes are not in the expected map. If so, we have to delete them.
+	// This could happen when sources COs are edited, e.g., changing the topics in a Kafka CO.
+	for _, c := range current {
+		if _, ok := expectedMap[keyFromEventType(&c)]; !ok {
+			toDelete = append(toDelete, c)
+		}
+	}
+	return toCreate, toDelete
 }
 
 // asMap returns a map representation of 'eventTypes' list, by using the key given by 'keyFunc'.
