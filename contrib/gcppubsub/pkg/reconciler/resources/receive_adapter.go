@@ -33,6 +33,7 @@ type ReceiveAdapterArgs struct {
 	Labels         map[string]string
 	SubscriptionID string
 	SinkURI        string
+	TransformerURI string
 }
 
 const (
@@ -89,6 +90,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 								{
 									Name:  "SINK_URI",
 									Value: args.SinkURI,
+								},
+								{
+									Name:  "TRANSFORMER_URI",
+									Value: args.TransformerURI,
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{

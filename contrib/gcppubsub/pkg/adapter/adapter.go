@@ -18,10 +18,7 @@ package gcppubsub
 
 import (
 	"fmt"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -50,16 +47,22 @@ type Adapter struct {
 	SubscriptionID string
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
+	// TransformerURI is the URI messages will be forwarded on to for any transformation
+	// before they are sent to SinkURI.
+	TransformerURI string
 
 	source       string
 	client       *pubsub.Client
 	subscription *pubsub.Subscription
 
-	ceClient client.Client
+	ceClient cloudevents.Client
+
+	transformer       bool
+	transformerClient cloudevents.Client
 }
 
 func (a *Adapter) Start(ctx context.Context) error {
-	a.source = sourcesv1alpha1.GetGcpPubSubSource(a.ProjectID, a.TopicID)
+	a.source = sourcesv1alpha1.GcpPubSubEventSource(a.ProjectID, a.TopicID)
 
 	var err error
 	// Make the client to pubsub
@@ -70,6 +73,16 @@ func (a *Adapter) Start(ctx context.Context) error {
 	if a.ceClient == nil {
 		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
 			return fmt.Errorf("failed to create cloudevent client: %s", err.Error())
+		}
+	}
+
+	// Make the transformer client in case the TransformerURI has been set.
+	if a.TransformerURI != "" {
+		a.transformer = true
+		if a.transformerClient == nil {
+			if a.transformerClient, err = kncloudevents.NewDefaultClient(a.TransformerURI); err != nil {
+				return fmt.Errorf("failed to create transformer client: %s", err.Error())
+			}
 		}
 	}
 
@@ -98,6 +111,14 @@ func (a *Adapter) receiveMessage(ctx context.Context, m PubSubMessage) {
 	}
 }
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m PubSubMessage) error {
+	// Create the CloudEvent.
+	event := cloudevents.NewEvent(cloudevents.VersionV02)
+	event.SetID(m.ID())
+	event.SetTime(m.PublishTime())
+	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
+	event.SetSource(a.source)
+	event.SetData(m.Message())
+
 	// TODO: this will break when the upstream sender updates cloudevents versions.
 	// The correct thing to do would be to convert the message to a cloudevent if it is one.
 	et := sourcesv1alpha1.GcpPubSubSourceEventType
@@ -105,16 +126,21 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 		et = override
 		logger.Infof("overriding the cloud event type with %q", et)
 	}
+	event.SetType(et)
 
-	event := cloudevents.Event{
-		Context: cloudevents.EventContextV02{
-			Type:        et,
-			ID:          m.ID(),
-			Time:        &types.Timestamp{Time: m.PublishTime()},
-			Source:      *types.ParseURLRef(a.source),
-			ContentType: cloudevents.StringOfApplicationJSON(),
-		}.AsV02(),
-		Data: m.Message(),
+	// If a transformer has been configured, then transform the message.
+	if a.transformer {
+		resp, err := a.transformerClient.Send(ctx, event)
+		if err != nil {
+			logger.Errorf("error transforming cloud event %q", event.ID())
+			return err
+		}
+		if resp != nil {
+			// Update the event with the transformed one.
+			event = *resp
+		} else {
+			logger.Warnf("cloud event %q was not transformed", event.ID())
+		}
 	}
 
 	_, err := a.ceClient.Send(ctx, event)
