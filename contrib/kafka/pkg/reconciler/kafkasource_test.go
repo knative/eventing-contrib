@@ -189,6 +189,36 @@ func TestReconcile(t *testing.T) {
 				getEventType("name2", "topic2"),
 			},
 		}, {
+			Name: "successful create missing event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+				getEventType("name2", "topic2"),
+				getEventType("name3", "whatever_topic"),
+			},
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+						if eventType, ok := obj.(*eventingv1alpha1.EventType); ok {
+							// Hack because the fakeClient does not support GenerateName.
+							if strings.Contains(eventType.Spec.Source, "topic1") {
+								eventType.Name = "name1"
+							}
+							return controllertesting.Unhandled, nil
+						}
+						return controllertesting.Unhandled, nil
+					},
+				},
+			},
+			WantPresent: []runtime.Object{
+				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
+				getEventType("name1", "topic1"),
+				getEventType("name2", "topic2"),
+			},
+			WantAbsent: []runtime.Object{
+				getEventType("name3", "whatever_topic"),
+			},
+		}, {
 			Name: "successful delete event type",
 			InitialState: []runtime.Object{
 				getSource(),
