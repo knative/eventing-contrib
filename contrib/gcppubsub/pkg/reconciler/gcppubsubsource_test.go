@@ -29,7 +29,7 @@ import (
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -305,13 +305,14 @@ func TestReconcile(t *testing.T) {
 			InitialState: []runtime.Object{
 				getSource(),
 				getAddressable(),
-				getEventTypeForSource(getSource()),
+				getAddressableWithName(transformerAddressableName),
+				getEventTypeForSource("name-1", getSource()),
 			},
 			WantPresent: []runtime.Object{
 				getReadyAndMarkEventTypeSource(),
 			},
 			WantAbsent: []runtime.Object{
-				getEventTypeForSource(getSource()),
+				getEventTypeForSource("name-1", getSource()),
 			},
 		}, {
 			Name: "cannot create event types",
@@ -424,10 +425,10 @@ func getSourceWithKind(kind string) *sourcesv1alpha1.GcpPubSubSource {
 }
 
 func getEventType() *eventingv1alpha1.EventType {
-	return getEventTypeForSource(getSourceWithKind(brokerKind))
+	return getEventTypeForSource("", getSourceWithKind(brokerKind))
 }
 
-func getEventTypeForSource(src *sourcesv1alpha1.GcpPubSubSource) *eventingv1alpha1.EventType {
+func getEventTypeForSource(name string, src *sourcesv1alpha1.GcpPubSubSource) *eventingv1alpha1.EventType {
 	return &eventingv1alpha1.EventType{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
@@ -444,6 +445,7 @@ func getEventTypeForSource(src *sourcesv1alpha1.GcpPubSubSource) *eventingv1alph
 					UID:                sourceUID,
 				},
 			},
+			Name:         name,
 			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.GcpPubSubSourceEventType),
 			Namespace:    testNS,
 			Labels:       getLabels(src),
