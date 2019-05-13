@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"fmt"
+
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/apis"
 	"github.com/knative/pkg/apis/duck"
