@@ -37,6 +37,11 @@ var (
 	addressableKind       = "Sink"
 	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 
+	serviceName       = "test-service"
+	serviceKind       = "Service"
+	serviceAPIVersion = "v1"
+	serviceDNSName    = "http://test-service.testnamespace.svc/"
+
 	unaddressableName       = "testunaddressable"
 	unaddressableKind       = "KResource"
 	unaddressableAPIVersion = "duck.knative.dev/v1alpha1"
@@ -82,6 +87,14 @@ func TestGetSinkURI(t *testing.T) {
 			ref:       nil,
 			wantErr:   fmt.Errorf(`sink ref is nil`),
 		},
+		"v1Service": {
+			objects: []runtime.Object{
+				v1Service(),
+			},
+			namespace: testNS,
+			ref:       getServiceRef(),
+			want:      serviceDNSName,
+		},
 		"nil address": {
 			objects: []runtime.Object{
 				getAddressableNilAddress(),
@@ -125,6 +138,19 @@ func TestGetSinkURI(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func v1Service() *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": serviceAPIVersion,
+			"kind":       serviceKind,
+			"metadata": map[string]interface{}{
+				"namespace": testNS,
+				"name":      serviceName,
+			},
+		},
 	}
 }
 
@@ -190,6 +216,14 @@ func getAddressableNilHostname() *unstructured.Unstructured {
 				},
 			},
 		},
+	}
+}
+
+func getServiceRef() *corev1.ObjectReference {
+	return &corev1.ObjectReference{
+		Kind:       serviceKind,
+		Name:       serviceName,
+		APIVersion: serviceAPIVersion,
 	}
 }
 

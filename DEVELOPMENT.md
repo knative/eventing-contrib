@@ -58,8 +58,7 @@ follows.
 ## Installing Sources
 
 Once you've [setup your development environment](#getting-started), install
-sources _Container Source_, _Github Source_, _Kubernetes Event Source_ and _AWS
-SQS Source_ with:
+sources _Github Source_ and _AWS SQS Source_ with:
 
 ```shell
 ko apply -f config/

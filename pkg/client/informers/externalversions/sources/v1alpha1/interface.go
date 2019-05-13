@@ -26,8 +26,6 @@ import (
 type Interface interface {
 	// GitHubSources returns a GitHubSourceInformer.
 	GitHubSources() GitHubSourceInformer
-	// KubernetesEventSources returns a KubernetesEventSourceInformer.
-	KubernetesEventSources() KubernetesEventSourceInformer
 }
 
 type version struct {
@@ -44,9 +42,4 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // GitHubSources returns a GitHubSourceInformer.
 func (v *version) GitHubSources() GitHubSourceInformer {
 	return &gitHubSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// KubernetesEventSources returns a KubernetesEventSourceInformer.
-func (v *version) KubernetesEventSources() KubernetesEventSourceInformer {
-	return &kubernetesEventSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
