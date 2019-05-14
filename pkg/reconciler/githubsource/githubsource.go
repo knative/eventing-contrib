@@ -195,14 +195,11 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		return nil
 	}
 
-	// Only create EventTypes for Broker sinks.
-	if source.Spec.Sink.Kind == "Broker" {
-		err = r.reconcileEventTypes(ctx, source)
-		if err != nil {
-			return err
-		}
-		source.Status.MarkEventTypes()
+	err = r.reconcileEventTypes(ctx, source)
+	if err != nil {
+		return err
 	}
+	source.Status.MarkEventTypes()
 
 	return nil
 }
@@ -366,6 +363,7 @@ func (r *reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSo
 		Specs:     specs,
 		Namespace: source.Namespace,
 		Labels:    resources.Labels(source.Name),
+		Kind:      source.Spec.Sink.Kind,
 	}
 }
 

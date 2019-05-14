@@ -45,14 +45,22 @@ spec:
           properties:
             gcpCredsSecret:
               type: object
+              description: "Credential to use to poll the GCP PubSub Subscription. It is not used to create or delete the Subscription, only to poll it. The value of the secret entry must be a service account key in the JSON format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys)."
             googleCloudProject:
               type: string
+              description: "ID of the Google Cloud Project that the PubSub Topic exists in."
             serviceAccountName:
               type: string
+              description: "Name of the ServiceAccount that will be used to run the Receive Adapter Deployment."
             sink:
               type: object
+              description: "Reference to an object that will resolve to a domain name to use as the sink."
+            transformer:
+              type: object
+              description: "Reference to an object that will resolve to a domain name to use as the transformer."
             topic:
               type: string
+              description: "ID of the GCP PubSub Topic to Subscribe to. It must be in the form of the unique identifier within the project, not the entire name. E.g. it must be 'laconia', not 'projects/my-gcp-project/topics/laconia'."
           type: object
         status:
           properties:
@@ -79,6 +87,8 @@ spec:
                 type: object
               type: array
             sinkUri:
+              type: string
+            transformerUri:
               type: string
           type: object
   version: v1alpha1

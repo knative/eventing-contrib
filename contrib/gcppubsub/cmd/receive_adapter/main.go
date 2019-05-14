@@ -18,10 +18,9 @@ package main
 
 import (
 	"flag"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
 	"log"
-	"os"
-
-	gcppubsub "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -29,28 +28,23 @@ import (
 	"golang.org/x/net/context"
 )
 
-const (
-	// Environment variable containing project id
-	envProject = "GCPPUBSUB_PROJECT"
+type envConfig struct {
+	// Environment variable containing project id.
+	Project string `envconfig:"GCPPUBSUB_PROJECT" required:"true"`
 
-	// Sink for messages.
-	envSinkURI = "SINK_URI"
+	// Environment variable containing the sink URI.
+	Sink string `envconfig:"SINK_URI" required:"true"`
 
-	// envTopic is the name of the environment variable that contains the GCP PubSub Topic being
+	// Environment variable containing the transformer URI.
+	Transformer string `envconfig:"TRANSFORMER_URI" default:""`
+
+	// Environment variable containing the GCP PubSub Topic being
 	// subscribed to's name. In the form that is unique within the project. E.g. 'laconia', not
 	// 'projects/my-gcp-project/topics/laconia'.
-	envTopic = "GCPPUBSUB_TOPIC"
+	Topic string `envconfig:"GCPPUBSUB_TOPIC" default:""`
 
-	// Name of the subscription to use
-	envSubscription = "GCPPUBSUB_SUBSCRIPTION_ID"
-)
-
-func getRequiredEnv(envKey string) string {
-	val, defined := os.LookupEnv(envKey)
-	if !defined {
-		log.Fatalf("required environment variable not defined '%s'", envKey)
-	}
-	return val
+	// Environment variable containing the name of the subscription to use.
+	Subscription string `envconfig:"GCPPUBSUB_SUBSCRIPTION_ID" required:"true"`
 }
 
 func main() {
@@ -64,11 +58,17 @@ func main() {
 		log.Fatalf("Unable to create logger: %v", err)
 	}
 
+	var env envConfig
+	if err := envconfig.Process("", &env); err != nil {
+		log.Fatal("Failed to process env var", zap.Error(err))
+	}
+
 	adapter := &gcppubsub.Adapter{
-		ProjectID:      getRequiredEnv(envProject),
-		TopicID:        getRequiredEnv(envTopic),
-		SinkURI:        getRequiredEnv(envSinkURI),
-		SubscriptionID: getRequiredEnv(envSubscription),
+		ProjectID:      env.Project,
+		TopicID:        env.Topic,
+		SinkURI:        env.Sink,
+		SubscriptionID: env.Subscription,
+		TransformerURI: env.Transformer,
 	}
 
 	logger.Info("Starting GCP Pub/Sub Receive Adapter. %v", zap.Reflect("adapter", adapter))

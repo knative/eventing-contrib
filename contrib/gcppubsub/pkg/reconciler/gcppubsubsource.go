@@ -155,6 +155,16 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 	src.Status.MarkSink(sinkURI)
 
+	var transformerURI string
+	if src.Spec.Transformer != nil {
+		transformerURI, err = sinks.GetSinkURI(ctx, r.client, src.Spec.Transformer, src.Namespace)
+		if err != nil {
+			src.Status.MarkNoTransformer("NotFound", "")
+			return err
+		}
+		src.Status.MarkTransformer(transformerURI)
+	}
+
 	sub, err := r.createSubscription(ctx, src)
 	if err != nil {
 		logger.Error("Unable to create the subscription", zap.Error(err))
@@ -162,22 +172,19 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 	src.Status.MarkSubscribed()
 
-	_, err = r.createReceiveAdapter(ctx, src, sub.ID(), sinkURI)
+	_, err = r.createReceiveAdapter(ctx, src, sub.ID(), sinkURI, transformerURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
 	src.Status.MarkDeployed()
 
-	// Only create EventTypes for Broker sinks.
-	if src.Spec.Sink.Kind == "Broker" {
-		err = r.reconcileEventTypes(ctx, src)
-		if err != nil {
-			logger.Error("Unable to reconcile the event types", zap.Error(err))
-			return err
-		}
-		src.Status.MarkEventTypes()
+	err = r.reconcileEventTypes(ctx, src)
+	if err != nil {
+		logger.Error("Unable to reconcile the event types", zap.Error(err))
+		return err
 	}
+	src.Status.MarkEventTypes()
 
 	return nil
 }
@@ -194,7 +201,7 @@ func (r *reconciler) removeFinalizer(s *v1alpha1.GcpPubSubSource) {
 	s.Finalizers = finalizers.List()
 }
 
-func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, subscriptionID, sinkURI string) (*v1.Deployment, error) {
+func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.GcpPubSubSource, subscriptionID, sinkURI, transformerURI string) (*v1.Deployment, error) {
 	ra, err := r.getReceiveAdapter(ctx, src)
 	if err != nil && !apierrors.IsNotFound(err) {
 		logging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
@@ -210,6 +217,7 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Gcp
 		Labels:         getLabels(src),
 		SubscriptionID: subscriptionID,
 		SinkURI:        sinkURI,
+		TransformerURI: transformerURI,
 	})
 	if err := controllerutil.SetControllerReference(src, svc, r.scheme); err != nil {
 		return nil, err
@@ -303,7 +311,7 @@ func (r *reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.GcpP
 func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.GcpPubSubSource) *eventtype.ReconcilerArgs {
 	spec := eventingv1alpha1.EventTypeSpec{
 		Type:   v1alpha1.GcpPubSubSourceEventType,
-		Source: v1alpha1.GetGcpPubSubSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
+		Source: v1alpha1.GcpPubSubEventSource(src.Spec.GoogleCloudProject, src.Spec.Topic),
 		Broker: src.Spec.Sink.Name,
 	}
 	specs := make([]eventingv1alpha1.EventTypeSpec, 0, 1)
@@ -312,6 +320,7 @@ func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.GcpPubSubSource) *
 		Specs:     specs,
 		Namespace: src.Namespace,
 		Labels:    getLabels(src),
+		Kind:      src.Spec.Sink.Kind,
 	}
 }
 
