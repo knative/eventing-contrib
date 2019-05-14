@@ -226,6 +226,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -284,6 +285,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -340,6 +342,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "orghookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -571,6 +574,7 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
 				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
 				return s
 			}(),
 		},
@@ -687,6 +691,66 @@ var testCases = []controllertesting.TestCase{
 				s.Status.MarkEventTypes()
 				return s
 			}(),
+			getEventType(),
+		},
+		IgnoreTimes: true,
+	}, {
+		Name:       "valid githubsource delete event type",
+		Reconciles: &sourcesv1alpha1.GitHubSource{},
+		InitialState: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				return s
+			}(),
+			// service resource
+			func() runtime.Object {
+				svc := &servingv1alpha1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: testNS,
+						Name:      serviceName,
+					},
+					Status: servingv1alpha1.ServiceStatus{
+						Status: duckv1alpha1.Status{
+							Conditions: duckv1alpha1.Conditions{{
+								Type:   servingv1alpha1.ServiceConditionRoutesReady,
+								Status: corev1.ConditionTrue,
+							}},
+						},
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
+							Domain: serviceDNS,
+						},
+					},
+				}
+				svc.SetOwnerReferences(getOwnerReferences())
+				return svc
+			}(),
+			getGitHubSecrets(),
+			getAddressable(),
+			getEventType(),
+		},
+		OtherTestData: map[string]interface{}{
+			webhookData: webhookCreatorData{
+				expectedOwner: "myuser",
+				expectedRepo:  "myproject",
+				hookID:        "repohookid",
+			},
+		},
+		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
+		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSource()
+				s.UID = gitHubSourceUID
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(addressableURI)
+				s.Status.MarkSecrets()
+				s.Status.WebhookIDKey = "repohookid"
+				s.Status.MarkEventTypes()
+				return s
+			}(),
+		},
+		WantAbsent: []runtime.Object{
 			getEventType(),
 		},
 		IgnoreTimes: true,

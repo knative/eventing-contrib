@@ -179,15 +179,12 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 	src.Status.MarkDeployed()
 
-	// Only create EventTypes for Broker sinks.
-	if src.Spec.Sink.Kind == "Broker" {
-		err = r.reconcileEventTypes(ctx, src)
-		if err != nil {
-			logger.Error("Unable to reconcile the event types", zap.Error(err))
-			return err
-		}
-		src.Status.MarkEventTypes()
+	err = r.reconcileEventTypes(ctx, src)
+	if err != nil {
+		logger.Error("Unable to reconcile the event types", zap.Error(err))
+		return err
 	}
+	src.Status.MarkEventTypes()
 
 	return nil
 }
@@ -323,6 +320,7 @@ func (r *reconciler) newEventTypeReconcilerArgs(src *v1alpha1.GcpPubSubSource) *
 		Specs:     specs,
 		Namespace: src.Namespace,
 		Labels:    getLabels(src),
+		Kind:      src.Spec.Sink.Kind,
 	}
 }
 

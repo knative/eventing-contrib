@@ -30,7 +30,7 @@ import (
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -142,7 +142,7 @@ func TestReconcile(t *testing.T) {
 				getAddressable(),
 			},
 			WantPresent: []runtime.Object{
-				getReadySource(),
+				getReadySourceAndMarkEventTypes(),
 			},
 		}, {
 			Name: "successful create - reuse existing receive adapter",
@@ -159,7 +159,7 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadySource(),
+				getReadySourceAndMarkEventTypes(),
 			},
 		}, {
 			Name: "successful create event types",
@@ -185,8 +185,59 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
-				getEventType("name1", "group", "topic1"),
-				getEventType("name2", "group", "topic2"),
+				getEventType("name1", "topic1"),
+				getEventType("name2", "topic2"),
+			},
+		}, {
+			Name: "successful create missing event types",
+			InitialState: []runtime.Object{
+				getSourceWithKind(brokerKind),
+				getAddressableWithKind(brokerKind),
+				getEventType("name2", "topic2"),
+				getEventType("name3", "whatever_topic"),
+			},
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+						if eventType, ok := obj.(*eventingv1alpha1.EventType); ok {
+							// Hack because the fakeClient does not support GenerateName.
+							if strings.Contains(eventType.Spec.Source, "topic1") {
+								eventType.Name = "name1"
+							}
+							return controllertesting.Unhandled, nil
+						}
+						return controllertesting.Unhandled, nil
+					},
+				},
+			},
+			WantPresent: []runtime.Object{
+				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
+				getEventType("name1", "topic1"),
+				getEventType("name2", "topic2"),
+			},
+			WantAbsent: []runtime.Object{
+				getEventType("name3", "whatever_topic"),
+			},
+		}, {
+			Name: "successful delete event type",
+			InitialState: []runtime.Object{
+				getSource(),
+				getAddressable(),
+				getReceiveAdapter(),
+				getEventType("name1", "topic1"),
+			},
+			Mocks: controllertesting.Mocks{
+				MockCreates: []controllertesting.MockCreate{
+					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+						return controllertesting.Handled, errors.New("an error that won't be seen because create is not called")
+					},
+				},
+			},
+			WantPresent: []runtime.Object{
+				getReadySourceAndMarkEventTypes(),
+			},
+			WantAbsent: []runtime.Object{
+				getEventType("name1", "topic1"),
 			},
 		}, {
 			Name: "cannot create event types",
@@ -205,8 +256,8 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantAbsent: []runtime.Object{
-				getEventType("name1", "group", "topic1"),
-				getEventType("name2", "group", "topic2"),
+				getEventType("name1", "topic1"),
+				getEventType("name2", "topic2"),
 			},
 			WantPresent: []runtime.Object{
 				getSourceWithSinkAndDeployedAndKind(brokerKind),
@@ -288,7 +339,7 @@ func getSourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
 	return obj
 }
 
-func getEventType(name, group, topic string) *eventingv1alpha1.EventType {
+func getEventTypeForSource(name, topic string, source *sourcesv1alpha1.KafkaSource) *eventingv1alpha1.EventType {
 	return &eventingv1alpha1.EventType{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
@@ -308,7 +359,7 @@ func getEventType(name, group, topic string) *eventingv1alpha1.EventType {
 			Name:         name,
 			GenerateName: fmt.Sprintf("%s-", sourcesv1alpha1.KafkaEventType),
 			Namespace:    testNS,
-			Labels:       getLabels(getSourceWithKind(brokerKind)),
+			Labels:       getLabels(source),
 		},
 		Spec: eventingv1alpha1.EventTypeSpec{
 			Type:   sourcesv1alpha1.KafkaEventType,
@@ -316,6 +367,10 @@ func getEventType(name, group, topic string) *eventingv1alpha1.EventType {
 			Broker: addressableName,
 		},
 	}
+}
+
+func getEventType(name, topic string) *eventingv1alpha1.EventType {
+	return getEventTypeForSource(name, topic, getSourceWithKind(brokerKind))
 }
 
 func getSourceWithNoSink() *sourcesv1alpha1.KafkaSource {
@@ -349,6 +404,12 @@ func getReadySource() *sourcesv1alpha1.KafkaSource {
 func getReadySourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
 	src := getReadySource()
 	src.Spec.Sink.Kind = kind
+	return src
+}
+
+func getReadySourceAndMarkEventTypes() *sourcesv1alpha1.KafkaSource {
+	src := getReadySource()
+	src.Status.MarkEventTypes()
 	return src
 }
 
