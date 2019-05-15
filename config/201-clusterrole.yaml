@@ -76,6 +76,7 @@ rules:
   - ""
   resources:
   - secrets
+  - services
   verbs:
   - get
   - list
