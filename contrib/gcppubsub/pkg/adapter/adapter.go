@@ -18,7 +18,8 @@ package gcppubsub
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"

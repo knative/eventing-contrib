@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
 	"log"
+
+	"github.com/kelseyhightower/envconfig"
+	gcppubsub "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
