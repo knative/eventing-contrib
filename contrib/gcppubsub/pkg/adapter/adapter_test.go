@@ -45,12 +45,6 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			sink:    accepted,
 			reqBody: `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":null,"PublishTime":"0001-01-01T00:00:00Z"}`,
 		},
-		"happyWithCustomEvent": {
-			sink:              accepted,
-			attributes:        map[string]string{"ce-type": "foobar"},
-			reqBody:           `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":{"ce-type":"foobar"},"PublishTime":"0001-01-01T00:00:00Z"}`,
-			expectedEventType: "foobar",
-		},
 		"rejected": {
 			sink:    rejected,
 			reqBody: `{"ID":"ABC","Data":"eyJrZXkiOiJ2YWx1ZSJ9","Attributes":null,"PublishTime":"0001-01-01T00:00:00Z"}`,
