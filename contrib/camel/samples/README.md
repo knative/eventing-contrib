@@ -16,7 +16,7 @@ These steps assume that you have checked out the repo and have a shell in this
    any namespace where you want to run Camel sources.
 
    The preferred version that is compatible with Camel sources is
-   [Camel K v0.3.2](https://github.com/apache/camel-k/releases/tag/0.3.2).
+   [Camel K v0.3.3](https://github.com/apache/camel-k/releases/tag/0.3.3).
 
    Installation instruction are provided on the
    [Apache Camel K Github repository](https://github.com/apache/camel-k#installation).
