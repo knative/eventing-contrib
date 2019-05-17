@@ -33,7 +33,7 @@
   version = "v1.21.0"
 
 [[projects]]
-  digest = "1:38fe2fae4e200713fc8db3c8b70ce1f60ada8fcca96cf022c6e58f9e8ba2e198"
+  digest = "1:12102db6608e5b7ad461798984ca5126080140487acbc1959704a881e3831e76"
   name = "github.com/apache/camel-k"
   packages = [
     "pkg/apis/camel/v1alpha1",
@@ -41,8 +41,8 @@
     "pkg/util",
   ]
   pruneopts = "NUT"
-  revision = "93fbc4fda708a94ccbc25494f33b48e4448ae5ed"
-  version = "0.2.0"
+  revision = "87c0d6fe53978ffd753b2d0c95c02f44b374860e"
+  version = "0.3.3"
 
 [[projects]]
   digest = "1:164a1e6e8407f99696f29dca7b21025c347b5ec47beafc1b8254e4a4ae71cc08"
@@ -515,6 +515,14 @@
   ]
   pruneopts = "UT"
   revision = "e83cf0ab6b1d7ea37ff65d279f745284ae0c77b2"
+
+[[projects]]
+  digest = "1:d244f8666a838fe6ad70ec8fe77f50ebc29fdc3331a2729ba5886bef8435d10d"
+  name = "github.com/magiconair/properties"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c2353362d570a7bfa228149c62842019201cfb71"
+  version = "v1.8.0"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"

@@ -16,17 +16,17 @@ limitations under the License.
 
 package resources
 
-type CamelArguments struct {
-	Name               string
-	Namespace          string
-	Source             CamelArgumentsSource
-	ServiceAccountName string
-	Context            string
-	Sink               string
-}
+import (
+	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
+)
 
-type CamelArgumentsSource struct {
-	Name       string
-	Content    string
-	Properties map[string]string
+type CamelArguments struct {
+	Name      string
+	Namespace string
+	Source    v1alpha1.CamelSourceOriginSpec
+	Sink      string
+	// DEPRECATED
+	DeprecatedIntegrationContext string
+	// DEPRECATED
+	DeprecatedServiceAccountName string
 }

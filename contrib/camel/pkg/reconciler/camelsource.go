@@ -68,7 +68,11 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		},
 	}
 
-	return p.Add(mgr, logger)
+	err := p.Add(mgr, logger)
+	if err != nil {
+		log.Println("Camel K cluster resources not installed correctly. Follow installation instructions at: https://github.com/apache/camel-k")
+	}
+	return err
 }
 
 type reconciler struct {
@@ -115,8 +119,8 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	source.Status.MarkSink(sinkURI)
 
 	integrationContextName := ""
-	if source.Spec.Image != "" {
-		ictx, err := r.reconcileIntegrationContext(ctx, source.Namespace, source.Spec.Image)
+	if source.Spec.DeprecatedImage != "" {
+		ictx, err := r.reconcileIntegrationContext(ctx, source.Namespace, source.Spec.DeprecatedImage)
 		if err != nil {
 			return err
 		}
@@ -128,12 +132,6 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 		return err
 	}
 
-	// Create the platform if not present
-	if err := r.reconcilePlatform(ctx, source.Namespace); err != nil {
-		logger.Error("Error occurred when trying to reconcile the camel platform")
-		return err
-	}
-
 	// Update source status
 	if integration != nil && integration.Status.Phase == camelv1alpha1.IntegrationPhaseRunning {
 		source.Status.MarkDeployed()
@@ -142,21 +140,15 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	return nil
 }
 
-func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, integrationContextName string, sinkURI string) (*camelv1alpha1.Integration, error) {
+func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, deprecatedIntegrationContext string, sinkURI string) (*camelv1alpha1.Integration, error) {
 	logger := logging.FromContext(ctx)
-	camelSource, err := resources.BuildSourceCode(source)
-	if err != nil {
-		r.recorder.Eventf(source, corev1.EventTypeWarning, "SourceCodeFailed", "Failed to build camel source: %v", err)
-		return nil, err
-	}
-
 	args := &resources.CamelArguments{
-		Name:               source.Name,
-		Namespace:          source.Namespace,
-		Source:             camelSource,
-		ServiceAccountName: source.Spec.ServiceAccountName,
-		Context:            integrationContextName,
-		Sink:               sinkURI,
+		Name:      source.Name,
+		Namespace: source.Namespace,
+		Source:    source.Spec.Source,
+		Sink:      sinkURI,
+		DeprecatedIntegrationContext: deprecatedIntegrationContext,
+		DeprecatedServiceAccountName: source.Spec.DeprecatedServiceAccountName,
 	}
 
 	integration, err := r.getIntegration(ctx, source)
@@ -248,28 +240,6 @@ func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.Cam
 		return nil, err
 	}
 	return integration, nil
-}
-
-func (r *reconciler) reconcilePlatform(ctx context.Context, namespace string) error {
-	_, err := r.getPlatform(ctx, namespace)
-	if err != nil && k8serrors.IsNotFound(err) {
-		// Create a platform with default configuration if not present
-		platform := resources.MakePlatform(namespace)
-		return r.client.Create(ctx, platform)
-	}
-	return err
-}
-
-func (r *reconciler) getPlatform(ctx context.Context, namespace string) (*camelv1alpha1.IntegrationPlatform, error) {
-	platform := camelv1alpha1.IntegrationPlatform{}
-	key := client.ObjectKey{
-		Namespace: namespace,
-		Name:      resources.IntegrationPlatformName,
-	}
-	if err := r.client.Get(ctx, key, &platform); err != nil {
-		return nil, err
-	}
-	return &platform, nil
 }
 
 func (r *reconciler) reconcileIntegrationContext(ctx context.Context, namespace string, image string) (*camelv1alpha1.IntegrationContext, error) {

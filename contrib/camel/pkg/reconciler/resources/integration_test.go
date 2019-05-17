@@ -17,6 +17,7 @@ limitations under the License.
 package resources
 
 import (
+	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
 	"testing"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
@@ -28,17 +29,18 @@ func TestMakeDeployment_sink(t *testing.T) {
 	got, err := MakeIntegration(&CamelArguments{
 		Name:      "test-name",
 		Namespace: "test-namespace",
-		Source: CamelArgumentsSource{
-			Content: "test-source-content",
-			Name:    "test-source-name",
-			Properties: map[string]string{
-				"k":  "v",
-				"k2": "v2",
+		Source: v1alpha1.CamelSourceOriginSpec{
+			Component: &v1alpha1.CamelSourceOriginComponentSpec{
+				URI: "timer:tick",
+				Properties: map[string]string{
+					"k":  "v",
+					"k2": "v2",
+				},
+				ServiceAccountName: "test-service-account",
+				Context:            "test-context",
 			},
 		},
-		ServiceAccountName: "test-service-account",
-		Context:            "test-context",
-		Sink:               "http://test-sink",
+		Sink: "http://test-sink",
 	})
 	if err != nil {
 		t.Error(err)
@@ -59,8 +61,8 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Sources: []camelv1alpha1.SourceSpec{
 				{
 					DataSpec: camelv1alpha1.DataSpec{
-						Name:    "test-source-name",
-						Content: "test-source-content",
+						Name:    "source.flow",
+						Content: "- steps:\n  - kind: endpoint\n    uri: timer:tick\n  - kind: endpoint\n    uri: knative:endpoint/sink\n",
 					},
 				},
 			},
@@ -74,15 +76,10 @@ func TestMakeDeployment_sink(t *testing.T) {
 					Value: "k2=v2",
 				},
 			},
-			Traits: map[string]camelv1alpha1.IntegrationTraitSpec{
+			Traits: map[string]camelv1alpha1.TraitSpec{
 				"knative": {
 					Configuration: map[string]string{
 						"configuration": `{"services":[{"type":"endpoint","protocol":"http","name":"sink","host":"test-sink","port":80,"metadata":{"service.path":"/"}}]}`,
-					},
-				},
-				"images": {
-					Configuration: map[string]string{
-						"enabled": "true",
 					},
 				},
 			},

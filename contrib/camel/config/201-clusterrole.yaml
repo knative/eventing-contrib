@@ -30,6 +30,12 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  verbs:
+  - list
+- apiGroups:
   - ""
   resources:
   - events
