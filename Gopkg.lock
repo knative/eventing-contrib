@@ -507,14 +507,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4587a5308bf116649bf0891017d6ac2053ff5953714efa59096a26ef7bc6db03"
+  digest = "1:1bfc083da5bbeb7abaac53c56890eb14eb11bac9ec985bfe338c4bbb0540c9ba"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "e83cf0ab6b1d7ea37ff65d279f745284ae0c77b2"
+  revision = "1576da30069624094cf01719452da944b3046826"
 
 [[projects]]
   digest = "1:d244f8666a838fe6ad70ec8fe77f50ebc29fdc3331a2729ba5886bef8435d10d"
@@ -1482,6 +1482,7 @@
     "gopkg.in/go-playground/webhooks.v5/github",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/rbac/v1",
     "k8s.io/api/rbac/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",
