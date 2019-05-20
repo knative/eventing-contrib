@@ -24,6 +24,8 @@ import (
 	"regexp"
 	"syscall"
 
+	"github.com/magiconair/properties"
+
 	"github.com/scylladb/go-set/strset"
 
 	corev1 "k8s.io/api/core/v1"
@@ -152,4 +154,42 @@ func FindAllDistinctStringSubmatch(data string, regexps ...*regexp.Regexp) []str
 		}
 	}
 	return submatchs.List()
+}
+
+// ExtractApplicationPropertiesString --
+func ExtractApplicationPropertiesString(data map[string]string, consumer func(string, string)) error {
+	pstr, ok := data["application.properties"]
+	if !ok {
+		return nil
+	}
+
+	p, err := properties.LoadString(pstr)
+	if err != nil {
+		return err
+	}
+
+	for _, k := range p.Keys() {
+		consumer(k, p.MustGet(k))
+	}
+
+	return nil
+}
+
+// ExtractApplicationPropertiesBytes --
+func ExtractApplicationPropertiesBytes(data map[string][]byte, consumer func(string, string)) error {
+	pstr, ok := data["application.properties"]
+	if !ok {
+		return nil
+	}
+
+	p, err := properties.Load(pstr, properties.UTF8)
+	if err != nil {
+		return err
+	}
+
+	for _, k := range p.Keys() {
+		consumer(k, p.MustGet(k))
+	}
+
+	return nil
 }

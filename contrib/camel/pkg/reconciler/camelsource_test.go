@@ -27,7 +27,7 @@ import (
 	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"go.uber.org/zap"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -90,14 +90,12 @@ func TestReconcile(t *testing.T) {
 				getDeletedSource(),
 			},
 			WantAbsent: []runtime.Object{
-				getPlatform(),
 				getContext(),
 			},
 		},
 		{
 			Name: "Cannot get sink URI",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 			},
 			WantPresent: []runtime.Object{
@@ -111,7 +109,6 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Creating integration",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 				getAddressable(),
 			},
@@ -125,14 +122,29 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source Deployed",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 				getAddressable(),
 				getRunningIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				getDeployedSource(),
+				asDeployedSource(getSource()),
 				getRunningIntegration(t),
+			},
+			WantAbsent: []runtime.Object{
+				getContext(),
+			},
+		},
+		{
+			Name:       "Camel K Source Deployed",
+			Reconciles: getCamelKSource(),
+			InitialState: []runtime.Object{
+				getCamelKSource(),
+				getAddressable(),
+				getRunningCamelKIntegration(t),
+			},
+			WantPresent: []runtime.Object{
+				asDeployedSource(getCamelKSource()),
+				getRunningCamelKIntegration(t),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -141,14 +153,29 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source changed",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				getSource(),
 				getAddressable(),
 				getWrongIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithUpdatingIntegration(),
+				withUpdatingIntegration(getSource()),
 				getRunningIntegration(t),
+			},
+			WantAbsent: []runtime.Object{
+				getContext(),
+			},
+		},
+		{
+			Name:       "Camel K Source changed",
+			Reconciles: getCamelKSource(),
+			InitialState: []runtime.Object{
+				getCamelKSource(),
+				getAddressable(),
+				getWrongIntegration(t),
+			},
+			WantPresent: []runtime.Object{
+				withUpdatingIntegration(getCamelKSource()),
+				getRunningCamelKIntegration(t),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -157,28 +184,55 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source with image",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				withAlternativeImage(getSource()),
 				getAddressable(),
 				getRunningIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				withAlternativeImage(getDeployedSource()),
+				withAlternativeImage(asDeployedSource(getSource())),
 				getRunningIntegration(t),
 				getContext(),
 			},
 		},
 		{
+			Name: "Source with context",
+			InitialState: []runtime.Object{
+				withAlternativeContext(getSource()),
+				getAddressable(),
+				integrationWithAlternativeContext(getRunningIntegration(t)),
+				getAlternativeContext(),
+			},
+			WantPresent: []runtime.Object{
+				withAlternativeContext(asDeployedSource(getSource())),
+				integrationWithAlternativeContext(getRunningIntegration(t)),
+				getAlternativeContext(),
+			},
+		},
+		{
+			Name:       "Camel K Source with context",
+			Reconciles: withAlternativeContext(getCamelKSource()),
+			InitialState: []runtime.Object{
+				withAlternativeContext(getCamelKSource()),
+				getAddressable(),
+				integrationWithAlternativeContext(getRunningCamelKIntegration(t)),
+				getAlternativeContext(),
+			},
+			WantPresent: []runtime.Object{
+				withAlternativeContext(asDeployedSource(getCamelKSource())),
+				integrationWithAlternativeContext(getRunningCamelKIntegration(t)),
+				getAlternativeContext(),
+			},
+		},
+		{
 			Name: "Source with image and existing context",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				withAlternativeImage(getSource()),
 				getAddressable(),
 				getRunningIntegrationWithAlternativeContext(t),
 				getAlternativeContext(),
 			},
 			WantPresent: []runtime.Object{
-				withAlternativeImage(getDeployedSource()),
+				withAlternativeImage(asDeployedSource(getSource())),
 				getRunningIntegrationWithAlternativeContext(t),
 				getAlternativeContext(),
 			},
@@ -186,32 +240,15 @@ func TestReconcile(t *testing.T) {
 		{
 			Name: "Source with image and unbound existing context",
 			InitialState: []runtime.Object{
-				getPlatform(),
 				withAlternativeImage(getSource()),
 				getAddressable(),
 				getRunningIntegration(t),
 				getAlternativeContext(),
 			},
 			WantPresent: []runtime.Object{
-				withAlternativeImage(getSourceWithUpdatingIntegration()),
+				withAlternativeImage(withUpdatingIntegration(getSource())),
 				getRunningIntegrationWithAlternativeContext(t),
 				getAlternativeContext(),
-			},
-		},
-		{
-			Name: "Source without platform",
-			InitialState: []runtime.Object{
-				getSource(),
-				getAddressable(),
-				getRunningIntegration(t),
-			},
-			WantPresent: []runtime.Object{
-				getDeployedSource(),
-				getRunningIntegration(t),
-				getPlatform(),
-			},
-			WantAbsent: []runtime.Object{
-				getContext(),
 			},
 		},
 	}
@@ -219,8 +256,10 @@ func TestReconcile(t *testing.T) {
 		recorder := record.NewBroadcaster().NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
 		tc.IgnoreTimes = true
 		tc.ReconcileKey = fmt.Sprintf("%s/%s", testNS, sourceName)
-		tc.Reconciles = getSource()
 		tc.Scheme = scheme.Scheme
+		if tc.Reconciles == nil {
+			tc.Reconciles = getSource()
+		}
 
 		c := tc.GetClient()
 		r := &reconciler{
@@ -234,10 +273,6 @@ func TestReconcile(t *testing.T) {
 
 		t.Run(tc.Name, tc.Runner(t, r, c))
 	}
-}
-
-func getPlatform() runtime.Object {
-	return resources.MakePlatform(testNS)
 }
 
 func getSource() *sourcesv1alpha1.CamelSource {
@@ -265,8 +300,49 @@ func getSource() *sourcesv1alpha1.CamelSource {
 	return obj
 }
 
+func getCamelKSource() *sourcesv1alpha1.CamelSource {
+	obj := &sourcesv1alpha1.CamelSource{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+			Kind:       "CamelSource",
+		},
+		ObjectMeta: om(testNS, sourceName),
+		Spec: sourcesv1alpha1.CamelSourceSpec{
+			Source: sourcesv1alpha1.CamelSourceOriginSpec{
+				Integration: &camelv1alpha1.IntegrationSpec{
+					Sources: []camelv1alpha1.SourceSpec{
+						{
+							DataSpec: camelv1alpha1.DataSpec{
+								Name:    "integration.groovy",
+								Content: "from('timer:tick?period=3s').to('knative://endpoint/sink')",
+							},
+						},
+					},
+				},
+			},
+			Sink: &corev1.ObjectReference{
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
+			},
+		},
+	}
+	// selflink is not filled in when we create the object, so clear it
+	obj.ObjectMeta.SelfLink = ""
+	return obj
+}
+
 func withAlternativeImage(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
-	src.Spec.Image = alternativeImage
+	src.Spec.DeprecatedImage = alternativeImage
+	return src
+}
+
+func withAlternativeContext(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
+	if src.Spec.Source.Component != nil {
+		src.Spec.Source.Component.Context = alternativeContextName
+	} else {
+		src.Spec.Source.Integration.Context = alternativeContextName
+	}
 	return src
 }
 
@@ -281,33 +357,45 @@ func getAlternativeContext() *camelv1alpha1.IntegrationContext {
 }
 
 func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
-	flows := camelv1alpha1.Flows{
-		{
-			Steps: []camelv1alpha1.Step{
-				{
-					Kind: "endpoint",
-					URI:  "timer:tick?period=3s",
-				},
-				{
-					Kind: "endpoint",
-					URI:  "knative:endpoint/sink",
-				},
-			},
-		},
-	}
-	source, err := flows.Serialize()
-	if err != nil {
-		t.Error("failed to serialize source", err)
-		return nil
-	}
-
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
 		Sink:      addressableURI,
-		Source: resources.CamelArgumentsSource{
-			Name:    "source.flow",
-			Content: source,
+		Source: sourcesv1alpha1.CamelSourceOriginSpec{
+			Component: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
+				URI: "timer:tick?period=3s",
+			},
+		},
+	})
+	if err != nil {
+		t.Error("failed to create integration", err)
+	}
+	it.ObjectMeta.OwnerReferences = getOwnerReferences()
+	it.Status.Phase = camelv1alpha1.IntegrationPhaseRunning
+	return it
+}
+
+func integrationWithAlternativeContext(integration *camelv1alpha1.Integration) *camelv1alpha1.Integration {
+	integration.Spec.Context = alternativeContextName
+	return integration
+}
+
+func getRunningCamelKIntegration(t *testing.T) *camelv1alpha1.Integration {
+	it, err := resources.MakeIntegration(&resources.CamelArguments{
+		Name:      sourceName,
+		Namespace: testNS,
+		Sink:      addressableURI,
+		Source: sourcesv1alpha1.CamelSourceOriginSpec{
+			Integration: &camelv1alpha1.IntegrationSpec{
+				Sources: []camelv1alpha1.SourceSpec{
+					{
+						DataSpec: camelv1alpha1.DataSpec{
+							Name:    "integration.groovy",
+							Content: "from('timer:tick?period=3s').to('knative://endpoint/sink')",
+						},
+					},
+				},
+			},
 		},
 	})
 	if err != nil {
@@ -337,8 +425,7 @@ func getSourceWithNoSink() *sourcesv1alpha1.CamelSource {
 	return src
 }
 
-func getSourceWithUpdatingIntegration() *sourcesv1alpha1.CamelSource {
-	src := getSource()
+func withUpdatingIntegration(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
 	src.Status.InitializeConditions()
 	src.Status.MarkSink(addressableURI)
 	src.Status.MarkDeploying("IntegrationUpdated", "Updated integration ")
@@ -353,8 +440,7 @@ func getDeployingSource() *sourcesv1alpha1.CamelSource {
 	return src
 }
 
-func getDeployedSource() *sourcesv1alpha1.CamelSource {
-	src := getSource()
+func asDeployedSource(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
 	src.Status.InitializeConditions()
 	src.Status.MarkSink(addressableURI)
 	src.Status.MarkDeployed()

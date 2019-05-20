@@ -17,7 +17,9 @@ limitations under the License.
 
 package v1alpha1
 
-import "time"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // ConfigurationSpec --
 type ConfigurationSpec struct {
@@ -49,13 +51,23 @@ type Step struct {
 // Failure --
 type Failure struct {
 	Reason   string          `json:"reason"`
-	Time     time.Time       `json:"time"`
+	Time     metav1.Time     `json:"time"`
 	Recovery FailureRecovery `json:"recovery"`
 }
 
 // FailureRecovery --
 type FailureRecovery struct {
-	Attempt     int       `json:"attempt"`
-	AttemptMax  int       `json:"attemptMax"`
-	AttemptTime time.Time `json:"attemptTime"`
+	Attempt     int         `json:"attempt"`
+	AttemptMax  int         `json:"attemptMax"`
+	AttemptTime metav1.Time `json:"attemptTime"`
+}
+
+// A TraitSpec contains the configuration of a trait
+type TraitSpec struct {
+	Configuration map[string]string `json:"configuration,omitempty"`
+}
+
+// Configurable --
+type Configurable interface {
+	Configurations() []ConfigurationSpec
 }

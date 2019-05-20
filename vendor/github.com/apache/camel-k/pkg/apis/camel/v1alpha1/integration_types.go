@@ -8,16 +8,16 @@ import (
 
 // IntegrationSpec defines the desired state of Integration
 type IntegrationSpec struct {
-	Replicas           *int32                          `json:"replicas,omitempty"`
-	Sources            []SourceSpec                    `json:"sources,omitempty"`
-	Resources          []ResourceSpec                  `json:"resources,omitempty"`
-	Context            string                          `json:"context,omitempty"`
-	Dependencies       []string                        `json:"dependencies,omitempty"`
-	Profile            TraitProfile                    `json:"profile,omitempty"`
-	Traits             map[string]IntegrationTraitSpec `json:"traits,omitempty"`
-	Configuration      []ConfigurationSpec             `json:"configuration,omitempty"`
-	Repositories       []string                        `json:"repositories,omitempty"`
-	ServiceAccountName string                          `json:"serviceAccountName,omitempty"`
+	Replicas           *int32               `json:"replicas,omitempty"`
+	Sources            []SourceSpec         `json:"sources,omitempty"`
+	Resources          []ResourceSpec       `json:"resources,omitempty"`
+	Context            string               `json:"context,omitempty"`
+	Dependencies       []string             `json:"dependencies,omitempty"`
+	Profile            TraitProfile         `json:"profile,omitempty"`
+	Traits             map[string]TraitSpec `json:"traits,omitempty"`
+	Configuration      []ConfigurationSpec  `json:"configuration,omitempty"`
+	Repositories       []string             `json:"repositories,omitempty"`
+	ServiceAccountName string               `json:"serviceAccountName,omitempty"`
 }
 
 // IntegrationStatus defines the observed state of Integration
@@ -29,6 +29,8 @@ type IntegrationStatus struct {
 	Context          string           `json:"context,omitempty"`
 	GeneratedSources []SourceSpec     `json:"generatedSources,omitempty"`
 	Failure          *Failure         `json:"failure,omitempty"`
+	CamelVersion     string           `json:"camelVersion,omitempty"`
+	RuntimeVersion   string           `json:"runtimeVersion,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -57,6 +59,7 @@ type DataSpec struct {
 	Name        string `json:"name,omitempty"`
 	Content     string `json:"content,omitempty"`
 	ContentRef  string `json:"contentRef,omitempty"`
+	ContentKey  string `json:"contentKey,omitempty"`
 	Compression bool   `json:"compression,omitempty"`
 }
 
@@ -66,7 +69,8 @@ type ResourceType string
 // ResourceSpec --
 type ResourceSpec struct {
 	DataSpec
-	Type ResourceType `json:"type,omitempty"`
+	Type      ResourceType `json:"type,omitempty"`
+	MountPath string       `json:"mountPath,omitempty"`
 }
 
 const (
@@ -106,16 +110,11 @@ const (
 var Languages = []Language{
 	LanguageJavaSource,
 	LanguageJavaClass,
-	LanguageJavaScript,
 	LanguageGroovy,
 	LanguageJavaScript,
+	LanguageXML,
 	LanguageKotlin,
 	LanguageYamlFlow,
-}
-
-// A IntegrationTraitSpec contains the configuration of a trait
-type IntegrationTraitSpec struct {
-	Configuration map[string]string `json:"configuration,omitempty"`
 }
 
 // IntegrationPhase --
@@ -131,16 +130,20 @@ const (
 	IntegrationPhaseWaitingForPlatform IntegrationPhase = "Waiting For Platform"
 	// IntegrationPhaseBuildingContext --
 	IntegrationPhaseBuildingContext IntegrationPhase = "Building Context"
-	// IntegrationPhaseBuildingImage --
-	IntegrationPhaseBuildingImage IntegrationPhase = "Building Image"
+	// IntegrationPhaseResolvingContext --
+	IntegrationPhaseResolvingContext IntegrationPhase = "Resolving Context"
+	// IntegrationPhaseBuildImageSubmitted --
+	IntegrationPhaseBuildImageSubmitted IntegrationPhase = "Build Image Submitted"
+	// IntegrationPhaseBuildImageRunning --
+	IntegrationPhaseBuildImageRunning IntegrationPhase = "Build Image Running"
 	// IntegrationPhaseDeploying --
 	IntegrationPhaseDeploying IntegrationPhase = "Deploying"
 	// IntegrationPhaseRunning --
 	IntegrationPhaseRunning IntegrationPhase = "Running"
 	// IntegrationPhaseError --
 	IntegrationPhaseError IntegrationPhase = "Error"
-	// IntegrationPhaseBuildFailureRecovery --
-	IntegrationPhaseBuildFailureRecovery IntegrationPhase = "Building Failure Recovery"
+	// IntegrationPhaseDeleting --
+	IntegrationPhaseDeleting IntegrationPhase = "Deleting"
 )
 
 func init() {

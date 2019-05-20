@@ -59,6 +59,60 @@ spec:
                     uri:
                       minLength: 1
                       type: string
+                    serviceAccountName:
+                      type: string
+                    context:
+                      type: string
+                  type: object
+                integration:
+                  properties:
+                    configuration:
+                      items:
+                        properties:
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - type
+                        - value
+                        type: object
+                      type: array
+                    context:
+                      type: string
+                    dependencies:
+                      items:
+                        type: string
+                      type: array
+                    profile:
+                      type: string
+                    replicas:
+                      format: int32
+                      type: integer
+                    repositories:
+                      items:
+                        type: string
+                      type: array
+                    resources:
+                      items:
+                        properties:
+                          mountPath:
+                            type: string
+                          type:
+                            type: string
+                        type: object
+                      type: array
+                    serviceAccountName:
+                      type: string
+                    sources:
+                      items:
+                        properties:
+                          language:
+                            type: string
+                        type: object
+                      type: array
+                    traits:
+                      type: object
                   type: object
               type: object
           required:

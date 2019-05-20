@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -68,14 +69,16 @@ type CamelSourceSpec struct {
 	// Source is the reference to the integration flow to run.
 	Source CamelSourceOriginSpec `json:"source"`
 
+	// DEPRECATED: moved inside the specific CamelSourceOriginSpec
 	// ServiceAccountName is the name of the ServiceAccount to use to run this
 	// source.
 	// +optional
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+	DeprecatedServiceAccountName string `json:"serviceAccountName,omitempty"`
 
+	// DEPRECATED: use the context field in CamelSourceOriginSpec
 	// Image is an optional base image used to run the source.
 	// +optional
-	Image string `json:"image,omitempty"`
+	DeprecatedImage string `json:"image,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
@@ -86,14 +89,24 @@ type CamelSourceSpec struct {
 type CamelSourceOriginSpec struct {
 	// Component is a kind of source that directly references a Camel component
 	Component *CamelSourceOriginComponentSpec `json:"component,omitempty"`
-	// Other kind of sources, such as Camel K integrations will be added here
+	// Integration is a kind of source that contains a Camel K integration
+	Integration *v1alpha1.IntegrationSpec `json:"integration,omitempty"`
 }
 
 type CamelSourceOriginComponentSpec struct {
 	// URI is a Camel component URI to use as starting point (e.g. "timer:tick?period=2s")
 	// +kubebuilder:validation:MinLength=1
-	URI        string            `json:"uri,omitempty"`
+	URI string `json:"uri,omitempty"`
+
 	Properties map[string]string `json:"properties,omitempty"`
+
+	// ServiceAccountName is the name of the ServiceAccount to use to run this source.
+	// +optional
+	ServiceAccountName string `json:"serviceAccountName,omitempty"`
+
+	// The Camel K context to use when running the source
+	// +optional
+	Context string `json:"context,omitempty"`
 }
 
 // CamelSourceStatus defines the observed state of CamelSource

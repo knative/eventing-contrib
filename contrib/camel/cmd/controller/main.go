@@ -20,6 +20,7 @@ import (
 	"log"
 
 	"github.com/knative/eventing-sources/contrib/camel/pkg/apis"
+	"github.com/knative/eventing-sources/contrib/camel/pkg/install"
 	"github.com/knative/eventing-sources/contrib/camel/pkg/reconciler"
 	"github.com/knative/pkg/logging/logkey"
 	"go.uber.org/zap"
@@ -43,6 +44,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Check Camel K is installed before proceeding
+	install.EnsureCamelKInstalled(cfg)
+	log.Printf("Camel K is correctly installed in the cluster.")
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{})

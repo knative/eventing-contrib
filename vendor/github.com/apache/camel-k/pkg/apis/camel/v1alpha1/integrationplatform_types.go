@@ -8,10 +8,12 @@ import (
 
 // IntegrationPlatformSpec defines the desired state of IntegrationPlatform
 type IntegrationPlatformSpec struct {
-	Cluster   IntegrationPlatformCluster       `json:"cluster,omitempty"`
-	Profile   TraitProfile                     `json:"profile,omitempty"`
-	Build     IntegrationPlatformBuildSpec     `json:"build,omitempty"`
-	Resources IntegrationPlatformResourcesSpec `json:"resources,omitempty"`
+	Cluster       IntegrationPlatformCluster       `json:"cluster,omitempty"`
+	Profile       TraitProfile                     `json:"profile,omitempty"`
+	Build         IntegrationPlatformBuildSpec     `json:"build,omitempty"`
+	Resources     IntegrationPlatformResourcesSpec `json:"resources,omitempty"`
+	Traits        map[string]TraitSpec             `json:"traits,omitempty"`
+	Configuration []ConfigurationSpec              `json:"configuration,omitempty"`
 }
 
 // IntegrationPlatformResourcesSpec contains platform related resources
@@ -71,17 +73,39 @@ var allTraitProfiles = []TraitProfile{TraitProfileOpenShift, TraitProfileKuberne
 
 // IntegrationPlatformBuildSpec contains platform related build information
 type IntegrationPlatformBuildSpec struct {
-	PublishStrategy IntegrationPlatformBuildPublishStrategy `json:"publishStrategy,omitempty"`
-	Registry        string                                  `json:"registry,omitempty"`
-	Organization    string                                  `json:"organization,omitempty"`
-	PushSecret      string                                  `json:"pushSecret,omitempty"`
-	CamelVersion    string                                  `json:"camelVersion,omitempty"`
-	BaseImage       string                                  `json:"baseImage,omitempty"`
-	Properties      map[string]string                       `json:"properties,omitempty"`
-	Repositories    []string                                `json:"repositories,omitempty"`
+	BuildStrategy         IntegrationPlatformBuildStrategy        `json:"buildStrategy,omitempty"`
+	PublishStrategy       IntegrationPlatformBuildPublishStrategy `json:"publishStrategy,omitempty"`
+	CamelVersion          string                                  `json:"camelVersion,omitempty"`
+	RuntimeVersion        string                                  `json:"runtimeVersion,omitempty"`
+	BaseImage             string                                  `json:"baseImage,omitempty"`
+	Properties            map[string]string                       `json:"properties,omitempty"`
+	LocalRepository       string                                  `json:"localRepository,omitempty"`
+	Repositories          []string                                `json:"repositories,omitempty"`
+	Registry              IntegrationPlatformRegistrySpec         `json:"registry,omitempty"`
+	Timeout               metav1.Duration                         `json:"timeout,omitempty"`
+	PersistentVolumeClaim string                                  `json:"persistentVolumeClaim,omitempty"`
 }
 
-// IntegrationPlatformBuildPublishStrategy enumerates all implemented build strategies
+// IntegrationPlatformRegistrySpec --
+type IntegrationPlatformRegistrySpec struct {
+	Insecure     bool   `json:"insecure,omitempty"`
+	Address      string `json:"address,omitempty"`
+	Secret       string `json:"secret,omitempty"`
+	Organization string `json:"organization,omitempty"`
+}
+
+// IntegrationPlatformBuildStrategy enumerates all implemented build strategies
+type IntegrationPlatformBuildStrategy string
+
+const (
+	// IntegrationPlatformBuildStrategyRoutine performs the build in a routine
+	IntegrationPlatformBuildStrategyRoutine = "routine"
+
+	// IntegrationPlatformBuildStrategyPod performs the build in a pod
+	IntegrationPlatformBuildStrategyPod = "pod"
+)
+
+// IntegrationPlatformBuildPublishStrategy enumerates all implemented publish strategies
 type IntegrationPlatformBuildPublishStrategy string
 
 const (
@@ -101,6 +125,8 @@ const (
 
 	// IntegrationPlatformPhaseCreating --
 	IntegrationPlatformPhaseCreating IntegrationPlatformPhase = "Creating"
+	// IntegrationPlatformPhaseWarming --
+	IntegrationPlatformPhaseWarming IntegrationPlatformPhase = "Warming"
 	// IntegrationPlatformPhaseStarting --
 	IntegrationPlatformPhaseStarting IntegrationPlatformPhase = "Starting"
 	// IntegrationPlatformPhaseReady --
