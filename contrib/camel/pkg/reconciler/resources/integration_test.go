@@ -17,8 +17,9 @@ limitations under the License.
 package resources
 
 import (
-	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
 	"testing"
+
+	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"github.com/google/go-cmp/cmp"
