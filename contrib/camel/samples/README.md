@@ -37,8 +37,10 @@ These steps assume that you have checked out the repo and have a shell in this
 In order to check a `CamelSource` is fully working, we will create:
 
 - a simple Knative event display service that prints incoming events to its log
-- a in-memory channel named `camel-test` that will buffer events created by the event source
-- a subscription to direct events from the test channel to the event display service
+- a in-memory channel named `camel-test` that will buffer events created by the
+  event source
+- a subscription to direct events from the test channel to the event display
+  service
 
 Deploy `display_resources.yaml`, building it from source:
 
@@ -114,15 +116,18 @@ Start again kail and keep it open on the event display:
 kail -d camel-event-display --since=10m
 ```
 
-Now, you can contact your bot with any Telegram client. Each message you send
-to the bot will be printed by the event display as cloudevent.
+Now, you can contact your bot with any Telegram client. Each message you send to
+the bot will be printed by the event display as cloudevent.
 
 ### Run a Camel K Source
 
-For complex use cases that require multiple steps to be executed before event data is ready to be published, you can use Camel K sources.
-Camel K lets you use Camel DSL to design one or more routes that can define arbitrarily complex workflows before sending events to the target sink.
+For complex use cases that require multiple steps to be executed before event
+data is ready to be published, you can use Camel K sources. Camel K lets you use
+Camel DSL to design one or more routes that can define arbitrarily complex
+workflows before sending events to the target sink.
 
-If you have previously deployed other CamelSources, in order to reduce noise in the event display, you can remove them all from the namespace:
+If you have previously deployed other CamelSources, in order to reduce noise in
+the event display, you can remove them all from the namespace:
 
 ```shell
 kubectl delete camelsource --all
@@ -140,5 +145,6 @@ Start again kail and keep it open on the event display:
 kail -d camel-event-display --since=10m
 ```
 
-The event display will show some JSON data periodically pulled from an external REST API.
-The API in the example is static, but you can use your own dynamic API by just replacing the endpoint.
+The event display will show some JSON data periodically pulled from an external
+REST API. The API in the example is static, but you can use your own dynamic API
+by just replacing the endpoint.
