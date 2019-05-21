@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"k8s.io/api/rbac/v1"
+	v1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	clientscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
