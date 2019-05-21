@@ -143,10 +143,10 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, deprecatedIntegrationContext string, sinkURI string) (*camelv1alpha1.Integration, error) {
 	logger := logging.FromContext(ctx)
 	args := &resources.CamelArguments{
-		Name:      source.Name,
-		Namespace: source.Namespace,
-		Source:    source.Spec.Source,
-		Sink:      sinkURI,
+		Name:                         source.Name,
+		Namespace:                    source.Namespace,
+		Source:                       source.Spec.Source,
+		Sink:                         sinkURI,
 		DeprecatedIntegrationContext: deprecatedIntegrationContext,
 		DeprecatedServiceAccountName: source.Spec.DeprecatedServiceAccountName,
 	}
