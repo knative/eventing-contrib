@@ -74,15 +74,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_USER", args.Source.Spec.Net.SASL.User.SecretKeyRef)
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_PASSWORD", args.Source.Spec.Net.SASL.Password.SecretKeyRef)
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CERT", args.Source.Spec.Net.TLS.Cert.SecretKeyRef)
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_KEY", args.Source.Spec.Net.TLS.Key.SecretKeyRef)
+	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CA_CERT", args.Source.Spec.Net.TLS.CACert.SecretKeyRef)
 
-	if args.Source.Spec.Net.SASL.Password.SecretKeyRef != nil {
-		env = append(env, corev1.EnvVar{
-			Name: "KAFKA_NET_SASL_PASSWORD",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: args.Source.Spec.Net.SASL.Password.SecretKeyRef,
-			},
-		})
-	}
 	RequestResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceCPU)
 	if err != nil {
 		RequestResourceCPU = resource.MustParse("250m")

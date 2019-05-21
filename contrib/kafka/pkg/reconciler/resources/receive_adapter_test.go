@@ -19,7 +19,6 @@ package resources
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/kmp"
@@ -224,6 +223,16 @@ func TestMakeReceiveAdapter(t *testing.T) {
 									},
 								},
 							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("250m"),
+									corev1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("250m"),
+									corev1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+							},
 						},
 					},
 				},
@@ -231,7 +240,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff, err := kmp.SafeDiff(want, got); err != nil {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
 }
@@ -377,11 +386,11 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 				},
 				{
 					Name:  "KAFKA_NET_SASL_ENABLE",
-					Value: "true",
+					Value: "false",
 				},
 				{
 					Name:  "KAFKA_NET_TLS_ENABLE",
-					Value: "true",
+					Value: "false",
 				},
 				{
 					Name:  "SINK_URI",
@@ -406,6 +415,39 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 								Name: "the-password-secret",
 							},
 							Key: "password",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_TLS_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-cert-secret",
+							},
+							Key: "tls.crt",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_TLS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-key-secret",
+							},
+							Key: "tls.key",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_TLS_CA_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-ca-cert-secret",
+							},
+							Key: "tls.crt",
 						},
 					},
 				},
