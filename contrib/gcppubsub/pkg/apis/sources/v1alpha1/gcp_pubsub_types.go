@@ -86,7 +86,7 @@ const (
 	GcpPubSubSourceEventType = "google.pubsub.topic.publish"
 )
 
-// GetGcpPubSubSource returns the GcpPubSub CloudEvent source value.
+// GcpPubSubEventSource returns the GcpPubSub CloudEvent source value.
 func GcpPubSubEventSource(googleCloudProject, topic string) string {
 	return fmt.Sprintf("//pubsub.googleapis.com/%s/topics/%s", googleCloudProject, topic)
 }
@@ -153,7 +153,7 @@ func (s *GcpPubSubSourceStatus) MarkSink(uri string) {
 	if len(uri) > 0 {
 		gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubConditionSinkProvided)
 	} else {
-		gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.")
 	}
 }
 
@@ -163,7 +163,7 @@ func (s *GcpPubSubSourceStatus) MarkTransformer(uri string) {
 	if len(uri) > 0 {
 		gcpPubSubSourceCondSet.Manage(s).MarkTrue(GcpPubSubConditionTransformerProvided)
 	} else {
-		gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubConditionTransformerProvided, "TransformerEmpty", "Transformer has resolved to empty.%s", "")
+		gcpPubSubSourceCondSet.Manage(s).MarkUnknown(GcpPubSubConditionTransformerProvided, "TransformerEmpty", "Transformer has resolved to empty.")
 	}
 }
 
