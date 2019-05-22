@@ -34,6 +34,7 @@ readonly E2E_TEST_FUNCTION_NAMESPACE=e2etestfn3
 # Helper functions.
 
 function knative_setup() {
+  install_istio || return 1
   start_latest_knative_serving || return 1
   start_latest_knative_eventing || return 1
 
@@ -61,6 +62,18 @@ function knative_teardown() {
   wait_until_object_does_not_exist customresourcedefinitions containersources.sources.knative.dev
   wait_until_object_does_not_exist customresourcedefinitions githubsources.sources.knative.dev
   wait_until_object_does_not_exist customresourcedefinitions kuberneteseventsources.sources.knative.dev
+}
+
+function install_istio() {
+  kubectl apply -f "${ISTIO_CRD_YAML}" || return 1
+  kubectl apply -f "${ISTIO_YAML}" || return 1
+  wait_until_pods_running istio-system || return 1
+}
+
+function uninstall_istio() {
+  kubectl delete -f "${ISTIO_CRD_YAML}" || return 1
+  kubectl delete -f "${ISTIO_YAML}" || return 1
+  wait_until_object_does_not_exist namespaces istio-system
 }
 
 function test_setup() {
@@ -102,7 +115,8 @@ function dump_extra_cluster_state() {
 
 # Script entry point.
 
-initialize $@
+# Skip installing istio as an add-on
+initialize $@ --skip-istio-addon
 
 go_test_e2e ./test/e2e || fail_test
 
