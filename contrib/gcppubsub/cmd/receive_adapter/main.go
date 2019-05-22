@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
+	"log"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/adapter"
-	"log"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -60,7 +61,7 @@ func main() {
 
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
-		log.Fatal("Failed to process env var", zap.Error(err))
+		logger.Fatal("Failed to process env var", zap.Error(err))
 	}
 
 	adapter := &gcppubsub.Adapter{

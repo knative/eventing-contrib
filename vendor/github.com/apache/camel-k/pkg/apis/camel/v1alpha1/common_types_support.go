@@ -20,7 +20,8 @@ package v1alpha1
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
+	"github.com/mitchellh/mapstructure"
+	yaml2 "gopkg.in/yaml.v2"
 )
 
 func (in *Artifact) String() string {
@@ -33,9 +34,29 @@ func (spec ConfigurationSpec) String() string {
 
 // Serialize serializes a Flow
 func (flows Flows) Serialize() (string, error) {
-	res, err := yaml.Marshal(flows)
+	res, err := yaml2.Marshal(flows)
 	if err != nil {
 		return "", err
 	}
 	return string(res), nil
+}
+
+// Decode the trait configuration to a type safe struct
+func (in *TraitSpec) Decode(target interface{}) error {
+	md := mapstructure.Metadata{}
+
+	decoder, err := mapstructure.NewDecoder(
+		&mapstructure.DecoderConfig{
+			Metadata:         &md,
+			WeaklyTypedInput: true,
+			TagName:          "property",
+			Result:           &target,
+		},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return decoder.Decode(in.Configuration)
 }

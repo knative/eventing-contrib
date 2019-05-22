@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/apache/camel-k/pkg/util"
-	"github.com/mitchellh/mapstructure"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -50,10 +49,10 @@ func NewIntegrationList() IntegrationList {
 }
 
 // Sources return a new slice containing all the sources associated to the integration
-func (i *Integration) Sources() []SourceSpec {
-	allSources := make([]SourceSpec, 0, len(i.Spec.Sources)+len(i.Status.GeneratedSources))
-	allSources = append(allSources, i.Spec.Sources...)
-	allSources = append(allSources, i.Status.GeneratedSources...)
+func (in *Integration) Sources() []SourceSpec {
+	allSources := make([]SourceSpec, 0, len(in.Spec.Sources)+len(in.Status.GeneratedSources))
+	allSources = append(allSources, in.Spec.Sources...)
+	allSources = append(allSources, in.Status.GeneratedSources...)
 
 	return allSources
 }
@@ -84,33 +83,29 @@ func (is *IntegrationSpec) AddConfiguration(confType string, confValue string) {
 // AddDependency --
 func (is *IntegrationSpec) AddDependency(dependency string) {
 	switch {
-	case strings.HasPrefix(dependency, "mvn:"):
-		util.StringSliceUniqueAdd(&is.Dependencies, dependency)
-	case strings.HasPrefix(dependency, "file:"):
-		util.StringSliceUniqueAdd(&is.Dependencies, dependency)
 	case strings.HasPrefix(dependency, "camel-"):
 		util.StringSliceUniqueAdd(&is.Dependencies, "camel:"+strings.TrimPrefix(dependency, "camel-"))
+	default:
+		util.StringSliceUniqueAdd(&is.Dependencies, dependency)
 	}
 }
 
-// Decode the trait configuration to a type safe struct
-func (in *IntegrationTraitSpec) Decode(target interface{}) error {
-	md := mapstructure.Metadata{}
-
-	decoder, err := mapstructure.NewDecoder(
-		&mapstructure.DecoderConfig{
-			Metadata:         &md,
-			WeaklyTypedInput: true,
-			TagName:          "property",
-			Result:           &target,
-		},
-	)
-
-	if err != nil {
-		return err
+// Configurations --
+func (is *IntegrationSpec) Configurations() []ConfigurationSpec {
+	if is == nil {
+		return []ConfigurationSpec{}
 	}
 
-	return decoder.Decode(in.Configuration)
+	return is.Configuration
+}
+
+// Configurations --
+func (in *Integration) Configurations() []ConfigurationSpec {
+	if in == nil {
+		return []ConfigurationSpec{}
+	}
+
+	return in.Spec.Configurations()
 }
 
 // NewSourceSpec --

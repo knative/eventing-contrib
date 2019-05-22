@@ -18,7 +18,8 @@ package gcppubsub
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/knative/eventing-sources/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
@@ -27,13 +28,6 @@ import (
 	"cloud.google.com/go/pubsub"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
 	"golang.org/x/net/context"
-)
-
-const (
-	// If in the PubSub message attributes this header is set, use
-	// it as the Cloud Event type so as to preserve types that flow
-	// through the Receive Adapter.
-	eventTypeOverrideKey = "ce-type"
 )
 
 // Adapter implements the GCP Pub/Sub adapter to deliver Pub/Sub messages from
@@ -118,15 +112,7 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
 	event.SetSource(a.source)
 	event.SetData(m.Message())
-
-	// TODO: this will break when the upstream sender updates cloudevents versions.
-	// The correct thing to do would be to convert the message to a cloudevent if it is one.
-	et := sourcesv1alpha1.GcpPubSubSourceEventType
-	if override, ok := m.Message().Attributes[eventTypeOverrideKey]; ok {
-		et = override
-		logger.Infof("overriding the cloud event type with %q", et)
-	}
-	event.SetType(et)
+	event.SetType(sourcesv1alpha1.GcpPubSubSourceEventType)
 
 	// If a transformer has been configured, then transform the message.
 	if a.transformer {
@@ -135,12 +121,12 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 			logger.Errorf("error transforming cloud event %q", event.ID())
 			return err
 		}
-		if resp != nil {
-			// Update the event with the transformed one.
-			event = *resp
-		} else {
+		if resp == nil {
 			logger.Warnf("cloud event %q was not transformed", event.ID())
+			return nil
 		}
+		// Update the event with the transformed one.
+		event = *resp
 	}
 
 	_, err := a.ceClient.Send(ctx, event)

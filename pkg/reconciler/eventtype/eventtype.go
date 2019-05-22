@@ -19,6 +19,7 @@ package eventtype
 import (
 	"context"
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	"github.com/knative/eventing-sources/pkg/reconciler/eventtype/resources"
