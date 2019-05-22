@@ -30,6 +30,8 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.s
 # Names of the Resources used in the tests.
 readonly E2E_TEST_NAMESPACE=e2etest
 readonly E2E_TEST_FUNCTION_NAMESPACE=e2etestfn3
+readonly ISTIO_CRD_YAML="${KNATIVE_BASE_YAML_SOURCE/@/serving}/istio-crds.yaml"
+readonly ISTIO_YAML="${KNATIVE_BASE_YAML_SOURCE/@/serving}/istio.yaml"
 
 # Helper functions.
 
