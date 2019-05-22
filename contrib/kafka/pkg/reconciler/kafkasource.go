@@ -32,6 +32,7 @@ import (
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -130,6 +131,21 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 	}
 	if ra != nil {
 		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
+		expected := resources.MakeReceiveAdapter(&resources.ReceiveAdapterArgs{
+			Image:   r.receiveAdapterImage,
+			Source:  src,
+			Labels:  getLabels(src),
+			SinkURI: sinkURI,
+		})
+		if !equality.Semantic.DeepDerivative(expected.Spec, ra.Spec) {
+			ra.Spec = expected.Spec
+			err = r.client.Update(ctx, ra)
+			if err == nil {
+				return ra, nil
+			} else {
+				return nil, err
+			}
+		}
 		return ra, nil
 	}
 	svc := resources.MakeReceiveAdapter(&resources.ReceiveAdapterArgs{
