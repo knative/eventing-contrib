@@ -357,14 +357,14 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 	if diff, err := kmp.SafeDiff(want, got); err != nil {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
-	src.Spec.Resources = v1alpha1.KafkaResourceSpec{
-		Requests: v1alpha1.KafkaRequestsSpec{
-			ResourceCPU:    "101m",
-			ResourceMemory: "200Mi",
+	src.Spec.Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("101m"),
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
 		},
-		Limits: v1alpha1.KafkaLimitsSpec{
-			ResourceCPU:    "102m",
-			ResourceMemory: "500Mi",
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("102m"),
+			corev1.ResourceMemory: resource.MustParse("500Mi"),
 		},
 	}
 	want.Spec.Template.Spec.Containers = []corev1.Container{
