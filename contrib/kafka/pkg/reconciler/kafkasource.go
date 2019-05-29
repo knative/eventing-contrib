@@ -142,7 +142,7 @@ func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
 		key:   "Limit.Memory",
 		field: src.Spec.Resources.Limits.ResourceMemory,
 	}} {
-		// In the event the field isn't specified, we assign a default in the recieve_adapter
+		// In the event the field isn't specified, we assign a default in the receive_adapter
 		if rsrc.field != "" {
 			if _, err := resource.ParseQuantity(rsrc.field); err != nil {
 				src.Status.MarkResourcesIncorrect("Incorrect Resource", "%s: %s, Error: %s", rsrc.key, rsrc.field, err)
