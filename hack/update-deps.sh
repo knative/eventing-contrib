@@ -25,7 +25,9 @@ cd ${REPO_ROOT_DIR}
 # Ensure we have everything we need under vendor/
 dep ensure
 
+rm -rf $(find vendor/ -name 'OWNERS')
 rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
+rm -fr vendor/github.com/knative/test-infra/devstats
 
 update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./contrib/gcppubsub/cmd/*" "./contrib/kafka/cmd/*" "./contrib/awssqs/cmd/*"
