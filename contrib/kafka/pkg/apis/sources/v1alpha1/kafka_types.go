@@ -82,6 +82,21 @@ type KafkaSourceNetSpec struct {
 	TLS  KafkaSourceTLSSpec  `json:"tls,omitempty"`
 }
 
+type KafkaRequestsSpec struct {
+	ResourceCPU    string `json:"cpu,omitempty"`
+	ResourceMemory string `json:"memory,omitempty"`
+}
+
+type KafkaLimitsSpec struct {
+	ResourceCPU    string `json:"cpu,omitempty"`
+	ResourceMemory string `json:"memory,omitempty"`
+}
+
+type KafkaResourceSpec struct {
+	Requests KafkaRequestsSpec `json:"requests,omitempty"`
+	Limits   KafkaLimitsSpec   `json:"limits,omitempty"`
+}
+
 // KafkaSourceSpec defines the desired state of the KafkaSource.
 type KafkaSourceSpec struct {
 	// Bootstrap servers are the Kafka servers the consumer will connect to.
@@ -107,7 +122,7 @@ type KafkaSourceSpec struct {
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Resource limits and Request specifications of the Receive Adapter Deployment
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	Resources KafkaResourceSpec `json:"resources,omitempty"`
 }
 
 const (

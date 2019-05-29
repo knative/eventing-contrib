@@ -78,20 +78,20 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_KEY", args.Source.Spec.Net.TLS.Key.SecretKeyRef)
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CA_CERT", args.Source.Spec.Net.TLS.CACert.SecretKeyRef)
 
-	RequestResourceCPU, ok := args.Source.Spec.Resources.Requests[corev1.ResourceCPU]
-	if !ok {
+	RequestResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceCPU)
+	if err != nil {
 		RequestResourceCPU = resource.MustParse("250m")
 	}
-	RequestResourceMemory, ok := args.Source.Spec.Resources.Requests[corev1.ResourceMemory]
-	if !ok {
+	RequestResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceMemory)
+	if err != nil {
 		RequestResourceMemory = resource.MustParse("512Mi")
 	}
-	LimitResourceCPU, ok := args.Source.Spec.Resources.Limits[corev1.ResourceCPU]
-	if !ok {
+	LimitResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceCPU)
+	if err != nil {
 		LimitResourceCPU = resource.MustParse("250m")
 	}
-	LimitResourceMemory, ok := args.Source.Spec.Resources.Limits[corev1.ResourceMemory]
-	if !ok {
+	LimitResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceMemory)
+	if err != nil {
 		LimitResourceMemory = resource.MustParse("512Mi")
 	}
 
