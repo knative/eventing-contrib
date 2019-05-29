@@ -336,6 +336,7 @@ func getSourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
 	}
 	// selflink is not filled in when we create the object, so clear it
 	obj.ObjectMeta.SelfLink = ""
+	obj.Status.MarkResourcesCorrect()
 	return obj
 }
 

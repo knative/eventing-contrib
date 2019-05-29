@@ -147,6 +147,10 @@ const (
 
 	// KafkaConditionEventTypesProvided has status True when the KafkaSource has been configured with event types.
 	KafkaConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypesProvided"
+
+	// KafkaConditionResources is True when the resources listed for the KafkaSource have been properly
+	// parsed and match specified syntax for resource quantities
+	KafkaConditionResources duckv1alpha1.ConditionType = "ResourcesCorrect"
 )
 
 var kafkaSourceCondSet = duckv1alpha1.NewLivingConditionSet(
@@ -218,6 +222,14 @@ func (s *KafkaSourceStatus) MarkEventTypes() {
 // MarkNoEventTypes sets the condition that the source does not its event types configured.
 func (s *KafkaSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
 	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionEventTypesProvided, reason, messageFormat, messageA...)
+}
+
+func (s *KafkaSourceStatus) MarkResourcesCorrect() {
+	kafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionResources)
+}
+
+func (s *KafkaSourceStatus) MarkResourcesIncorrect(reason, messageFormat string, messageA ...interface{}) {
+	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionResources, reason, messageFormat, messageA...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
