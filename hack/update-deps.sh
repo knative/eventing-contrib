@@ -27,5 +27,6 @@ dep ensure
 
 rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
+rm -rf vendor/github.com/knative/test-infra/devstats
 
 update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./contrib/gcppubsub/cmd/*" "./contrib/kafka/cmd/*"
