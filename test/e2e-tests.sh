@@ -30,8 +30,9 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.s
 # Names of the Resources used in the tests.
 readonly E2E_TEST_NAMESPACE=e2etest
 readonly E2E_TEST_FUNCTION_NAMESPACE=e2etestfn3
-readonly ISTIO_CRD_YAML="${KNATIVE_BASE_YAML_SOURCE/@/serving}/istio-crds.yaml"
-readonly ISTIO_YAML="${KNATIVE_BASE_YAML_SOURCE/@/serving}/istio.yaml"
+# Get istio build file by using KNATIVE_SERVING_RELEASE - https://storage.googleapis.com/knative-releases/serving/previous/v0.5.0/serving.yaml
+readonly ISTIO_CRD_YAML="$(echo ${KNATIVE_SERVING_RELEASE} | sed 's/serving/istio-crds/2')"
+readonly ISTIO_YAML="$(echo ${KNATIVE_SERVING_RELEASE} | sed 's/serving/istio/2')"
 
 # Helper functions.
 
