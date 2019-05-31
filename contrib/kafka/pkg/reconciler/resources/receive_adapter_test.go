@@ -19,11 +19,12 @@ package resources
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
 	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/pkg/kmp"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -222,6 +223,16 @@ func TestMakeReceiveAdapter(t *testing.T) {
 									},
 								},
 							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("250m"),
+									corev1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("250m"),
+									corev1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+							},
 						},
 					},
 				},
@@ -229,7 +240,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff, err := kmp.SafeDiff(want, got); err != nil {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
 }
@@ -326,6 +337,16 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 									Value: "source-namespace",
 								},
 							},
+							Resources: corev1.ResourceRequirements{
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("250m"),
+									corev1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("250m"),
+									corev1.ResourceMemory: resource.MustParse("512Mi"),
+								},
+							},
 						},
 					},
 				},
@@ -333,7 +354,118 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want, got); diff != "" {
+	if diff, err := kmp.SafeDiff(want, got); err != nil {
+		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
+	}
+	src.Spec.Resources = v1alpha1.KafkaResourceSpec{
+		Requests: v1alpha1.KafkaRequestsSpec{
+			ResourceCPU:    "101m",
+			ResourceMemory: "200Mi",
+		},
+		Limits: v1alpha1.KafkaLimitsSpec{
+			ResourceCPU:    "102m",
+			ResourceMemory: "500Mi",
+		},
+	}
+	want.Spec.Template.Spec.Containers = []corev1.Container{
+		{
+			Name:  "receive-adapter",
+			Image: "test-image",
+			Env: []corev1.EnvVar{
+				{
+					Name:  "KAFKA_BOOTSTRAP_SERVERS",
+					Value: "server1,server2",
+				},
+				{
+					Name:  "KAFKA_TOPICS",
+					Value: "topic1,topic2",
+				},
+				{
+					Name:  "KAFKA_CONSUMER_GROUP",
+					Value: "group",
+				},
+				{
+					Name:  "KAFKA_NET_SASL_ENABLE",
+					Value: "false",
+				},
+				{
+					Name:  "KAFKA_NET_TLS_ENABLE",
+					Value: "false",
+				},
+				{
+					Name:  "SINK_URI",
+					Value: "sink-uri",
+				},
+				{
+					Name: "KAFKA_NET_SASL_USER",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-user-secret",
+							},
+							Key: "user",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_SASL_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-password-secret",
+							},
+							Key: "password",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_TLS_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-cert-secret",
+							},
+							Key: "tls.crt",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_TLS_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-key-secret",
+							},
+							Key: "tls.key",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_TLS_CA_CERT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-ca-cert-secret",
+							},
+							Key: "tls.crt",
+						},
+					},
+				},
+			},
+			Resources: corev1.ResourceRequirements{
+				Limits: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("102m"),
+					corev1.ResourceMemory: resource.MustParse("500Mi"),
+				},
+				Requests: corev1.ResourceList{
+					corev1.ResourceCPU:    resource.MustParse("101m"),
+					corev1.ResourceMemory: resource.MustParse("200Mi"),
+				},
+			},
+		},
+	}
+
+	if diff, err := kmp.SafeDiff(want, got); err != nil {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
 }
