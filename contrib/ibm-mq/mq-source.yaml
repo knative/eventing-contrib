@@ -1,0 +1,24 @@
+---
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: ContainerSource
+metadata:
+  name: mq
+spec:
+  image: gcr.io/triggermesh/mq:0.0.9
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: default
+  env:
+    - name: QUEUE_MANAGER
+      value: QM1
+    - name: CHANNEL_NAME
+      value: DEV.ADMIN.SVRCONN
+    - name: CONNECTION_NAME
+      value: mq-service.default.svc.cluster.local(1414)
+    - name: USER_ID
+      value: admin
+    - name: PASSWORD
+      value: passw0rd
+    - name: QUEUE_NAME 
+      value: DEV.QUEUE.1
