@@ -1,0 +1,87 @@
+required = [
+    "github.com/emicklei/go-restful",
+    "github.com/onsi/ginkgo", # for test framework
+    "github.com/onsi/gomega", # for test matchers
+    "k8s.io/client-go/plugin/pkg/client/auth/gcp", # for development against gcp
+    "k8s.io/code-generator/cmd/deepcopy-gen", # for go generate
+    "sigs.k8s.io/controller-tools/cmd/controller-gen", # for crd/rbac generation
+    "sigs.k8s.io/controller-runtime/pkg/client/config",
+    "sigs.k8s.io/controller-runtime/pkg/controller",
+    "sigs.k8s.io/controller-runtime/pkg/handler",
+    "sigs.k8s.io/controller-runtime/pkg/manager",
+    "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
+    "sigs.k8s.io/controller-runtime/pkg/source",
+    "sigs.k8s.io/testing_frameworks/integration", # for integration testing
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
+    ]
+
+[prune]
+  go-tests = true
+  unused-packages = true
+  non-go = true
+
+[[prune.project]]
+  name = "github.com/knative/test-infra"
+  non-go = false
+
+[[prune.project]]
+  name = "k8s.io/code-generator"
+  unused-packages = false
+  non-go = false
+
+[[prune.project]]
+  name = "k8s.io/gengo"
+  unused-packages = false
+  non-go = false
+
+[[override]]
+  name = "github.com/knative/pkg"
+  # HEAD as of 2018-11-05
+  revision = "862aa6dbe7b6a79430354f732da044d02dcadac0"
+
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "k8s.io/code-generator"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.11.3"
+
+[[override]]
+  name = "cloud.google.com/go"
+  revision = "90f2606161ee6a14efe2ca79fc05ac2b8efe250b"
+
+[[constraint]]
+  name = "github.com/knative/serving"
+  version = "v0.2.1"
+
+# STANZAS BELOW ARE GENERATED AND MAY BE WRITTEN - DO NOT MODIFY BELOW THIS LINE.
+
+[[constraint]]
+  name="sigs.k8s.io/controller-runtime"
+  revision = "0f0740db56812f732d90ff7df3520a291a9f04c9"
+
+# For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
+[[override]]
+  name = "gopkg.in/fsnotify.v1"
+  source = "https://github.com/fsnotify/fsnotify.git"
+  version="v1.4.7"
+
+[[override]]
+  name = "github.com/json-iterator/go"
+  # This is the commit at which k8s depends on this in 1.11
+  # It seems to be broken at HEAD.
+  revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
+

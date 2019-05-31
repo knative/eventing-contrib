@@ -1,0 +1,20 @@
+apiVersion: sources.eventing.triggermesh.dev/v1alpha1
+kind: GitLabSource
+metadata:
+  name: gitlabsample
+spec:
+  eventTypes:
+    - push_events
+  projectUrl: https://gitlab.com/sebgoa/kdemo
+  accessToken:
+    secretKeyRef:
+      name: gitlabsecret
+      key: accessToken
+  secretToken:
+    secretKeyRef:
+      name: gitlabsecret
+      key: secretToken
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: default
