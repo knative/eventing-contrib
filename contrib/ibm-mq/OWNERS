@@ -1,0 +1,9 @@
+approvers:
+  - ibm-mq-approvers
+
+reviewers:
+  - ibm-mq-reviewers
+
+labels:
+  - area/IBM-MQ
+

@@ -20,7 +20,6 @@ RUN go build
 
 FROM debian:stretch-slim
 WORKDIR /opt/mqm/
-RUN mkdir lib64
 COPY --from=0 /opt/mqm .
 COPY --from=0 /go/src/github.com/triggermesh/mq/mq .
 

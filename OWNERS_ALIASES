@@ -20,6 +20,11 @@ aliases:
     - bbrowning
     - matzew
 
+  ibm-mq-approvers:
+    - sebgoa
+  ibm-mq-reviewers:
+    - sebgoa
+
   productivity-approvers:
   - adrcunha
   - chaodaiG
