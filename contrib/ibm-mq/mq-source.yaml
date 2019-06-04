@@ -20,5 +20,5 @@ spec:
       value: admin
     - name: PASSWORD
       value: passw0rd
-    - name: QUEUE_NAME 
+    - name: QUEUE_NAME
       value: DEV.QUEUE.1
