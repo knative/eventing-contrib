@@ -30,10 +30,14 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/e2e-tests.s
 # Names of the Resources used in the tests.
 readonly E2E_TEST_NAMESPACE=e2etest
 readonly E2E_TEST_FUNCTION_NAMESPACE=e2etestfn3
+# Derive Istio manifest location from Knative Serving manifest location
+readonly ISTIO_CRD_YAML="${KNATIVE_SERVING_RELEASE/serving.yaml/istio-crds.yaml}"
+readonly ISTIO_YAML="${KNATIVE_SERVING_RELEASE/serving.yaml/istio.yaml}"
 
 # Helper functions.
 
 function knative_setup() {
+  install_istio || return 1
   start_latest_knative_serving || return 1
   start_latest_knative_eventing || return 1
 
@@ -61,6 +65,20 @@ function knative_teardown() {
   wait_until_object_does_not_exist customresourcedefinitions containersources.sources.knative.dev
   wait_until_object_does_not_exist customresourcedefinitions githubsources.sources.knative.dev
   wait_until_object_does_not_exist customresourcedefinitions kuberneteseventsources.sources.knative.dev
+
+  uninstall_istio
+}
+
+function install_istio() {
+  kubectl apply -f "${ISTIO_CRD_YAML}" || return 1
+  kubectl apply -f "${ISTIO_YAML}" || return 1
+  wait_until_pods_running istio-system || return 1
+}
+
+function uninstall_istio() {
+  kubectl delete -f "${ISTIO_CRD_YAML}" || return 1
+  kubectl delete -f "${ISTIO_YAML}" || return 1
+  wait_until_object_does_not_exist namespaces istio-system
 }
 
 function test_setup() {
@@ -102,7 +120,7 @@ function dump_extra_cluster_state() {
 
 # Script entry point.
 
-initialize $@
+initialize $@ --skip-istio-addon
 
 go_test_e2e ./test/e2e || fail_test
 
