@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	"cloud.google.com/go/pubsub"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
+	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"

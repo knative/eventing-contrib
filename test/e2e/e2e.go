@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/knative/eventing-sources/test"
+	"github.com/knative/eventing-contrib/test"
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	pkgTest "github.com/knative/pkg/test"
 	"github.com/knative/pkg/test/logging"

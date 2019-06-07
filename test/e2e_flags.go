@@ -25,7 +25,7 @@ import (
 	"github.com/knative/pkg/test/logging"
 )
 
-// EventingSourcesFlags holds the command line flags specific to knative/eventing-sources
+// EventingSourcesFlags holds the command line flags specific to knative/eventing-contrib
 var EventingSourcesFlags = initializeEventingSourcesFlags()
 
 // EventingSourcesEnvironmentFlags holds the e2e flags needed only by the eventing-sources repo

@@ -30,7 +30,7 @@ spec:
         control-plane: camel-controller-manager
     spec:
       containers:
-      - image: github.com/knative/eventing-sources/contrib/camel/cmd/controller
+      - image: github.com/knative/eventing-contrib/contrib/camel/cmd/controller
         name: manager
         resources:
           limits:

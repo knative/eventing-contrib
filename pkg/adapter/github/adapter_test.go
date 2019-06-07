@@ -27,7 +27,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/pkg/apis/sources/v1alpha1"
 
 	"github.com/google/go-cmp/cmp"
 

@@ -23,7 +23,7 @@ function upload_test_images() {
 
   for image_dir in ${image_dirs}; do
       local image_name="$(basename ${image_dir})"
-      local image="github.com/knative/eventing-sources/test/test_images/${image_name}"
+      local image="github.com/knative/eventing-contrib/test/test_images/${image_name}"
       ko publish -B ${image}
       if [ -n "$docker_tag" ]; then
           image=$KO_DOCKER_REPO/${image_name}

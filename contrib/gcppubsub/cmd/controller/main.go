@@ -19,8 +19,8 @@ package main
 import (
 	"log"
 
-	"github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis"
-	controller "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/reconciler"
+	"github.com/knative/eventing-contrib/contrib/gcppubsub/pkg/apis"
+	controller "github.com/knative/eventing-contrib/contrib/gcppubsub/pkg/reconciler"
 	"github.com/knative/pkg/logging/logkey"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

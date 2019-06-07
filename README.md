@@ -1,7 +1,7 @@
 # Knative Eventing Sources
 
-[![GoDoc](https://godoc.org/github.com/knative/eventing-sources?status.svg)](https://godoc.org/github.com/knative/eventing-sources)
-[![Go Report Card](https://goreportcard.com/badge/knative/eventing-sources)](https://goreportcard.com/report/knative/eventing-sources)
+[![GoDoc](https://godoc.org/github.com/knative/eventing-contrib?status.svg)](https://godoc.org/github.com/knative/eventing-contrib)
+[![Go Report Card](https://goreportcard.com/badge/knative/eventing-contrib)](https://goreportcard.com/report/knative/eventing-contrib)
 
 The Knative Eventing Sources project provides source implementations that:
 

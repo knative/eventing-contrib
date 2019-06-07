@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/knative/eventing-sources/contrib/awssqs/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/knative/eventing-sources/contrib/awssqs/pkg/client/informers/externalversions/internalinterfaces"
-	sources "github.com/knative/eventing-sources/contrib/awssqs/pkg/client/informers/externalversions/sources"
+	versioned "github.com/knative/eventing-contrib/contrib/awssqs/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/knative/eventing-contrib/contrib/awssqs/pkg/client/informers/externalversions/internalinterfaces"
+	sources "github.com/knative/eventing-contrib/contrib/awssqs/pkg/client/informers/externalversions/sources"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

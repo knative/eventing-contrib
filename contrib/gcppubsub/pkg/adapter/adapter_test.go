@@ -26,8 +26,8 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/pkg/kncloudevents"
 	"go.uber.org/zap"
 )
 

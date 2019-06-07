@@ -19,9 +19,9 @@ package main
 import (
 	"log"
 
-	"github.com/knative/eventing-sources/contrib/camel/pkg/apis"
-	"github.com/knative/eventing-sources/contrib/camel/pkg/install"
-	"github.com/knative/eventing-sources/contrib/camel/pkg/reconciler"
+	"github.com/knative/eventing-contrib/contrib/camel/pkg/apis"
+	"github.com/knative/eventing-contrib/contrib/camel/pkg/install"
+	"github.com/knative/eventing-contrib/contrib/camel/pkg/reconciler"
 	"github.com/knative/pkg/logging/logkey"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

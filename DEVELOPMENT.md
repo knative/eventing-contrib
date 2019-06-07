@@ -31,7 +31,7 @@ installed.
 ### Checkout your fork
 
 The Go tools require that you clone the repository to the
-`src/github.com/knative/eventing-sources` directory in your
+`src/github.com/knative/eventing-contrib` directory in your
 [`GOPATH`](https://github.com/golang/go/wiki/SettingGOPATH).
 
 To check out this repository:
@@ -45,7 +45,7 @@ mkdir -p ${GOPATH}/src/github.com/knative
 cd ${GOPATH}/src/github.com/knative
 git clone git@github.com:${YOUR_GITHUB_USERNAME}/eventing-sources.git
 cd eventing-sources
-git remote add upstream git@github.com:knative/eventing-sources.git
+git remote add upstream git@github.com:knative/eventing-contrib.git
 git remote set-url --push upstream no_push
 ```
 

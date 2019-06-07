@@ -21,7 +21,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
+	"github.com/knative/eventing-contrib/pkg/kncloudevents"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"

@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/knative/eventing-sources/pkg/reconciler/githubsource"
+	"github.com/knative/eventing-contrib/pkg/reconciler/githubsource"
 )
 
 func init() {

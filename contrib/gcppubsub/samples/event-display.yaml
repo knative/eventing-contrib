@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: user-container
-        image: github.com/knative/eventing-sources/cmd/event_display
+        image: github.com/knative/eventing-contrib/cmd/event_display
         ports:
         - containerPort: 8080
 ---

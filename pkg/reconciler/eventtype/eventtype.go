@@ -22,7 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/equality"
 
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype/resources"
+	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype/resources"
 
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
