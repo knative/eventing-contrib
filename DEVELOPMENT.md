@@ -57,15 +57,9 @@ follows.
 
 ## Installing Sources
 
-Once you've [setup your development environment](#getting-started), install
-sources _Github Source_ and _AWS SQS Source_ with:
-
-```shell
-ko apply -f config/
-```
-
-or install a single source _Camel Source_, _Gcppubsub Source_, _Kafka Source_
-with
+Once you've [setup your development environment](#getting-started), install any of the sources 
+_Github Source_, _AWS SQS Source_, _Camel Source_, _Gcppubsub Source_, _Kafka Source_
+with:
 
 ```
 ko apply -f contrib/<source_name>/
@@ -74,18 +68,18 @@ ko apply -f contrib/<source_name>/
 These commands are idempotent, so you can run them at any time to update your
 deployment.
 
-You can see things running with:
+If you applied the _GitHub Source_, you can see things running with:
 
 ```shell
 $ kubectl -n knative-sources get pods
-NAME                   READY     STATUS    RESTARTS   AGE
-controller-manager-0   1/1       Running   0          2h
+NAME                          READY     STATUS    RESTARTS   AGE
+github-controller-manager-0   1/1       Running   0          2h
 ```
 
-You can access the Eventing Manager's logs with:
+You can access the Github eventing manager's logs with:
 
 ```shell
-kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=controller-manager -o name)
+kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=github-controller-manager -o name)
 ```
 
 _See
@@ -131,7 +125,7 @@ Running tests as you make changes to the code-base is pretty simple. See
 You can delete `Knative Sources` with:
 
 ```shell
-ko delete -f config/
+ko delete -f contrib/<source_name>/config/
 ```
 
 <!--
