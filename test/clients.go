@@ -18,7 +18,7 @@ limitations under the License.
 package test
 
 import (
-	sources "github.com/knative/eventing-sources/pkg/client/clientset/versioned"
+	sources "github.com/knative/eventing-contrib/pkg/client/clientset/versioned"
 	eventing "github.com/knative/eventing/pkg/client/clientset/versioned"
 	"github.com/knative/pkg/test"
 	serving "github.com/knative/serving/pkg/client/clientset/versioned"

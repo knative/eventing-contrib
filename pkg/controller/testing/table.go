@@ -24,7 +24,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/knative/eventing-sources/pkg/controller/sdk"
+	"github.com/knative/eventing-contrib/pkg/controller/sdk"
 	"github.com/knative/pkg/apis"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"

@@ -30,11 +30,11 @@ spec:
     spec:
       serviceAccountName: controller-manager
       containers:
-      - image: github.com/knative/eventing-sources/cmd/manager
+      - image: github.com/knative/eventing-contrib/cmd/manager
         name: manager
         env:
         - name: GH_RA_IMAGE
-          value: github.com/knative/eventing-sources/cmd/github_receive_adapter
+          value: github.com/knative/eventing-contrib/cmd/github_receive_adapter
         resources:
           requests:
             cpu: 100m

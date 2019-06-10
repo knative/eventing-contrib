@@ -19,10 +19,10 @@ package main
 import (
 	"log"
 
-	"github.com/knative/eventing-sources/pkg/apis"
-	_ "github.com/knative/eventing-sources/pkg/apis/eventing/v1alpha1"
-	_ "github.com/knative/eventing-sources/pkg/apis/serving/v1alpha1"
-	"github.com/knative/eventing-sources/pkg/controller"
+	"github.com/knative/eventing-contrib/pkg/apis"
+	_ "github.com/knative/eventing-contrib/pkg/apis/eventing/v1alpha1"
+	_ "github.com/knative/eventing-contrib/pkg/apis/serving/v1alpha1"
+	"github.com/knative/eventing-contrib/pkg/controller"
 	"github.com/knative/pkg/logging/logkey"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

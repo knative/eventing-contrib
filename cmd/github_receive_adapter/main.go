@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/knative/eventing-sources/pkg/adapter/github"
+	"github.com/knative/eventing-contrib/pkg/adapter/github"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
 )
 

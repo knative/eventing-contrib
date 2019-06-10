@@ -19,8 +19,8 @@ package main
 import (
 	"log"
 
-	"github.com/knative/eventing-sources/contrib/awssqs/pkg/apis"
-	"github.com/knative/eventing-sources/contrib/awssqs/pkg/reconciler"
+	"github.com/knative/eventing-contrib/contrib/awssqs/pkg/apis"
+	"github.com/knative/eventing-contrib/contrib/awssqs/pkg/reconciler"
 	"github.com/knative/pkg/logging/logkey"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

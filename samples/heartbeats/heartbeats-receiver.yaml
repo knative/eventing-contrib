@@ -22,4 +22,4 @@ spec:
       revisionTemplate:
         spec:
           container:
-            image: github.com/knative/eventing-sources/cmd/heartbeats_receiver
+            image: github.com/knative/eventing-contrib/cmd/heartbeats_receiver

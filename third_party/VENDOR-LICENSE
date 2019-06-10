@@ -1,6 +1,6 @@
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/cloud.google.com/go
+Import: github.com/knative/eventing-contrib/vendor/cloud.google.com/go
 
 
                                  Apache License
@@ -208,7 +208,7 @@ Import: github.com/knative/eventing-sources/vendor/cloud.google.com/go
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/DataDog/zstd
+Import: github.com/knative/eventing-contrib/vendor/github.com/DataDog/zstd
 
 Simplified BSD License
 
@@ -241,7 +241,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/Shopify/sarama
+Import: github.com/knative/eventing-contrib/vendor/github.com/Shopify/sarama
 
 Copyright (c) 2013 Shopify
 
@@ -267,7 +267,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/aws/aws-sdk-go
+Import: github.com/knative/eventing-contrib/vendor/github.com/aws/aws-sdk-go
 
 
                                  Apache License
@@ -475,7 +475,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/aws/aws-sdk-go
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/beorn7/perks
+Import: github.com/knative/eventing-contrib/vendor/github.com/beorn7/perks
 
 Copyright (C) 2013 Blake Mizerany
 
@@ -501,7 +501,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/cloudevents/sdk-go
+Import: github.com/knative/eventing-contrib/vendor/github.com/cloudevents/sdk-go
 
                                  Apache License
                            Version 2.0, January 2004
@@ -708,7 +708,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/cloudevents/sdk-go
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/davecgh/go-spew
+Import: github.com/knative/eventing-contrib/vendor/github.com/davecgh/go-spew
 
 ISC License
 
@@ -729,7 +729,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/eapache/go-resiliency
+Import: github.com/knative/eventing-contrib/vendor/github.com/eapache/go-resiliency
 
 The MIT License (MIT)
 
@@ -757,7 +757,7 @@ SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/eapache/go-xerial-snappy
+Import: github.com/knative/eventing-contrib/vendor/github.com/eapache/go-xerial-snappy
 
 The MIT License (MIT)
 
@@ -784,7 +784,7 @@ SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/eapache/queue
+Import: github.com/knative/eventing-contrib/vendor/github.com/eapache/queue
 
 The MIT License (MIT)
 
@@ -810,7 +810,7 @@ SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/evanphx/json-patch
+Import: github.com/knative/eventing-contrib/vendor/github.com/evanphx/json-patch
 
 Copyright (c) 2014, Evan Phoenix
 All rights reserved.
@@ -841,7 +841,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/ghodss/yaml
+Import: github.com/knative/eventing-contrib/vendor/github.com/ghodss/yaml
 
 The MIT License (MIT)
 
@@ -897,7 +897,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/go-logr/logr
+Import: github.com/knative/eventing-contrib/vendor/github.com/go-logr/logr
 
                                  Apache License
                            Version 2.0, January 2004
@@ -1104,7 +1104,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/go-logr/logr
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/go-logr/zapr
+Import: github.com/knative/eventing-contrib/vendor/github.com/go-logr/zapr
 
                                  Apache License
                            Version 2.0, January 2004
@@ -1311,7 +1311,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/go-logr/zapr
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/gobuffalo/envy
+Import: github.com/knative/eventing-contrib/vendor/github.com/gobuffalo/envy
 
 The MIT License (MIT)
 Copyright (c) 2018 Mark Bates
@@ -1325,7 +1325,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/gogo/protobuf
+Import: github.com/knative/eventing-contrib/vendor/github.com/gogo/protobuf
 
 Protocol Buffers for Go with Gadgets
 
@@ -1367,7 +1367,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/golang/glog
+Import: github.com/knative/eventing-contrib/vendor/github.com/golang/glog
 
 Apache License
 Version 2.0, January 2004
@@ -1564,7 +1564,7 @@ third-party archives.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/golang/groupcache
+Import: github.com/knative/eventing-contrib/vendor/github.com/golang/groupcache
 
 Apache License
 Version 2.0, January 2004
@@ -1761,7 +1761,7 @@ third-party archives.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/golang/protobuf
+Import: github.com/knative/eventing-contrib/vendor/github.com/golang/protobuf
 
 Copyright 2010 The Go Authors.  All rights reserved.
 
@@ -1795,7 +1795,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/golang/snappy
+Import: github.com/knative/eventing-contrib/vendor/github.com/golang/snappy
 
 Copyright (c) 2011 The Snappy-Go Authors. All rights reserved.
 
@@ -1828,7 +1828,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/google/btree
+Import: github.com/knative/eventing-contrib/vendor/github.com/google/btree
 
 
                                  Apache License
@@ -2036,7 +2036,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/google/btree
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/google/go-cmp
+Import: github.com/knative/eventing-contrib/vendor/github.com/google/go-cmp
 
 Copyright (c) 2017 The Go Authors. All rights reserved.
 
@@ -2069,7 +2069,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/google/go-containerregistry
+Import: github.com/knative/eventing-contrib/vendor/github.com/google/go-containerregistry
 
 
                                  Apache License
@@ -2276,7 +2276,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/google/go-containe
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/google/go-github
+Import: github.com/knative/eventing-contrib/vendor/github.com/google/go-github
 
 Copyright (c) 2013 The go-github AUTHORS. All rights reserved.
 
@@ -2309,7 +2309,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/google/go-querystring
+Import: github.com/knative/eventing-contrib/vendor/github.com/google/go-querystring
 
 Copyright (c) 2013 Google. All rights reserved.
 
@@ -2342,7 +2342,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/google/gofuzz
+Import: github.com/knative/eventing-contrib/vendor/github.com/google/gofuzz
 
 
                                  Apache License
@@ -2550,7 +2550,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/google/gofuzz
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/google/uuid
+Import: github.com/knative/eventing-contrib/vendor/github.com/google/uuid
 
 Copyright (c) 2009,2014 Google Inc. All rights reserved.
 
@@ -2583,7 +2583,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/googleapis/gax-go
+Import: github.com/knative/eventing-contrib/vendor/github.com/googleapis/gax-go
 
 Copyright 2016, Google Inc.
 All rights reserved.
@@ -2616,7 +2616,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/googleapis/gnostic
+Import: github.com/knative/eventing-contrib/vendor/github.com/googleapis/gnostic
 
 
                                  Apache License
@@ -2825,7 +2825,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/googleapis/gnostic
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/gorilla/websocket
+Import: github.com/knative/eventing-contrib/vendor/github.com/gorilla/websocket
 
 Copyright (c) 2013 The Gorilla WebSocket Authors. All rights reserved.
 
@@ -2853,7 +2853,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/gregjones/httpcache
+Import: github.com/knative/eventing-contrib/vendor/github.com/gregjones/httpcache
 
 Copyright © 2012 Greg Jones (greg.jones@gmail.com)
 
@@ -2865,7 +2865,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/hashicorp/golang-lru
+Import: github.com/knative/eventing-contrib/vendor/github.com/hashicorp/golang-lru
 
 Mozilla Public License, version 2.0
 
@@ -3233,7 +3233,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/imdario/mergo
+Import: github.com/knative/eventing-contrib/vendor/github.com/imdario/mergo
 
 Copyright (c) 2013 Dario Castañé. All rights reserved.
 Copyright (c) 2012 The Go Authors. All rights reserved.
@@ -3267,7 +3267,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/jmespath/go-jmespath
+Import: github.com/knative/eventing-contrib/vendor/github.com/jmespath/go-jmespath
 
 Copyright 2015 James Saryerwinnie
 
@@ -3286,7 +3286,7 @@ limitations under the License.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/joho/godotenv
+Import: github.com/knative/eventing-contrib/vendor/github.com/joho/godotenv
 
 Copyright (c) 2013 John Barton
 
@@ -3315,7 +3315,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/json-iterator/go
+Import: github.com/knative/eventing-contrib/vendor/github.com/json-iterator/go
 
 MIT License
 
@@ -3342,7 +3342,7 @@ SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/kelseyhightower/envconfig
+Import: github.com/knative/eventing-contrib/vendor/github.com/kelseyhightower/envconfig
 
 Copyright (c) 2013 Kelsey Hightower
 
@@ -3367,7 +3367,7 @@ SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/knative/build
+Import: github.com/knative/eventing-contrib/vendor/github.com/knative/build
 
 
                                  Apache License
@@ -3575,7 +3575,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/knative/build
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/knative/eventing
+Import: github.com/knative/eventing-contrib/vendor/github.com/knative/eventing
 
                                  Apache License
                            Version 2.0, January 2004
@@ -3782,7 +3782,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/knative/eventing
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/knative/pkg
+Import: github.com/knative/eventing-contrib/vendor/github.com/knative/pkg
 
                                  Apache License
                            Version 2.0, January 2004
@@ -3989,7 +3989,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/knative/pkg
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/knative/serving
+Import: github.com/knative/eventing-contrib/vendor/github.com/knative/serving
 
 
                                  Apache License
@@ -4197,7 +4197,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/knative/serving
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/markbates/inflect
+Import: github.com/knative/eventing-contrib/vendor/github.com/markbates/inflect
 
 Copyright (c) 2011 Chris Farmiloe
 
@@ -4210,7 +4210,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/mattbaird/jsonpatch
+Import: github.com/knative/eventing-contrib/vendor/github.com/mattbaird/jsonpatch
 
                                  Apache License
                            Version 2.0, January 2004
@@ -4418,7 +4418,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/mattbaird/jsonpatc
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/matttproud/golang_protobuf_extensions
+Import: github.com/knative/eventing-contrib/vendor/github.com/matttproud/golang_protobuf_extensions
 
                                  Apache License
                            Version 2.0, January 2004
@@ -4625,7 +4625,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/matttproud/golang_
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/modern-go/concurrent
+Import: github.com/knative/eventing-contrib/vendor/github.com/modern-go/concurrent
 
                                  Apache License
                            Version 2.0, January 2004
@@ -4832,7 +4832,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/modern-go/concurre
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/modern-go/reflect2
+Import: github.com/knative/eventing-contrib/vendor/github.com/modern-go/reflect2
 
                                  Apache License
                            Version 2.0, January 2004
@@ -5039,7 +5039,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/modern-go/reflect2
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/pborman/uuid
+Import: github.com/knative/eventing-contrib/vendor/github.com/pborman/uuid
 
 Copyright (c) 2009,2014 Google Inc. All rights reserved.
 
@@ -5072,7 +5072,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/peterbourgon/diskv
+Import: github.com/knative/eventing-contrib/vendor/github.com/peterbourgon/diskv
 
 Copyright (c) 2011-2012 Peter Bourgon
 
@@ -5097,7 +5097,7 @@ THE SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/pierrec/lz4
+Import: github.com/knative/eventing-contrib/vendor/github.com/pierrec/lz4
 
 Copyright (c) 2015, Pierre Curto
 All rights reserved.
@@ -5131,7 +5131,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/client_golang
+Import: github.com/knative/eventing-contrib/vendor/github.com/prometheus/client_golang
 
                                  Apache License
                            Version 2.0, January 2004
@@ -5338,7 +5338,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/client_
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/client_model
+Import: github.com/knative/eventing-contrib/vendor/github.com/prometheus/client_model
 
                                  Apache License
                            Version 2.0, January 2004
@@ -5545,7 +5545,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/client_
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/common
+Import: github.com/knative/eventing-contrib/vendor/github.com/prometheus/common
 
                                  Apache License
                            Version 2.0, January 2004
@@ -5752,7 +5752,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/common
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/procfs
+Import: github.com/knative/eventing-contrib/vendor/github.com/prometheus/procfs
 
                                  Apache License
                            Version 2.0, January 2004
@@ -5959,7 +5959,7 @@ Import: github.com/knative/eventing-sources/vendor/github.com/prometheus/procfs
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/rcrowley/go-metrics
+Import: github.com/knative/eventing-contrib/vendor/github.com/rcrowley/go-metrics
 
 Copyright 2012 Richard Crowley. All rights reserved.
 
@@ -5994,7 +5994,7 @@ official policies, either expressed or implied, of Richard Crowley.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/github.com/spf13/pflag
+Import: github.com/knative/eventing-contrib/vendor/github.com/spf13/pflag
 
 Copyright (c) 2012 Alex Ogier. All rights reserved.
 Copyright (c) 2012 The Go Authors. All rights reserved.
@@ -6028,7 +6028,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/go.opencensus.io
+Import: github.com/knative/eventing-contrib/vendor/go.opencensus.io
 
 
                                  Apache License
@@ -6235,7 +6235,7 @@ Import: github.com/knative/eventing-sources/vendor/go.opencensus.io
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/go.uber.org/atomic
+Import: github.com/knative/eventing-contrib/vendor/go.uber.org/atomic
 
 Copyright (c) 2016 Uber Technologies, Inc.
 
@@ -6260,7 +6260,7 @@ THE SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/go.uber.org/multierr
+Import: github.com/knative/eventing-contrib/vendor/go.uber.org/multierr
 
 Copyright (c) 2017 Uber Technologies, Inc.
 
@@ -6285,7 +6285,7 @@ THE SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/go.uber.org/zap
+Import: github.com/knative/eventing-contrib/vendor/go.uber.org/zap
 
 Copyright (c) 2016-2017 Uber Technologies, Inc.
 
@@ -6310,7 +6310,7 @@ THE SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/golang.org/x/crypto
+Import: github.com/knative/eventing-contrib/vendor/golang.org/x/crypto
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -6343,7 +6343,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/golang.org/x/net
+Import: github.com/knative/eventing-contrib/vendor/golang.org/x/net
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -6376,7 +6376,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/golang.org/x/oauth2
+Import: github.com/knative/eventing-contrib/vendor/golang.org/x/oauth2
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -6409,7 +6409,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/golang.org/x/sync
+Import: github.com/knative/eventing-contrib/vendor/golang.org/x/sync
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -6442,7 +6442,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/golang.org/x/sys
+Import: github.com/knative/eventing-contrib/vendor/golang.org/x/sys
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -6475,7 +6475,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/golang.org/x/text
+Import: github.com/knative/eventing-contrib/vendor/golang.org/x/text
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -6508,7 +6508,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/golang.org/x/time
+Import: github.com/knative/eventing-contrib/vendor/golang.org/x/time
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
 
@@ -6541,7 +6541,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/google.golang.org/api
+Import: github.com/knative/eventing-contrib/vendor/google.golang.org/api
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -6574,7 +6574,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/google.golang.org/genproto
+Import: github.com/knative/eventing-contrib/vendor/google.golang.org/genproto
 
 
                                  Apache License
@@ -6782,7 +6782,7 @@ Import: github.com/knative/eventing-sources/vendor/google.golang.org/genproto
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/google.golang.org/grpc
+Import: github.com/knative/eventing-contrib/vendor/google.golang.org/grpc
 
 
                                  Apache License
@@ -6990,7 +6990,7 @@ Import: github.com/knative/eventing-sources/vendor/google.golang.org/grpc
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/gopkg.in/go-playground/webhooks.v5
+Import: github.com/knative/eventing-contrib/vendor/gopkg.in/go-playground/webhooks.v5
 
 The MIT License (MIT)
 
@@ -7018,7 +7018,7 @@ SOFTWARE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/gopkg.in/inf.v0
+Import: github.com/knative/eventing-contrib/vendor/gopkg.in/inf.v0
 
 Copyright (c) 2012 Péter Surányi. Portions Copyright (c) 2009 The Go
 Authors. All rights reserved.
@@ -7052,7 +7052,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/gopkg.in/yaml.v2
+Import: github.com/knative/eventing-contrib/vendor/gopkg.in/yaml.v2
 
                                  Apache License
                            Version 2.0, January 2004
@@ -7259,7 +7259,7 @@ Import: github.com/knative/eventing-sources/vendor/gopkg.in/yaml.v2
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/k8s.io/api
+Import: github.com/knative/eventing-contrib/vendor/k8s.io/api
 
 
                                  Apache License
@@ -7467,7 +7467,7 @@ Import: github.com/knative/eventing-sources/vendor/k8s.io/api
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/k8s.io/apimachinery
+Import: github.com/knative/eventing-contrib/vendor/k8s.io/apimachinery
 
 
                                  Apache License
@@ -7675,7 +7675,7 @@ Import: github.com/knative/eventing-sources/vendor/k8s.io/apimachinery
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/k8s.io/client-go
+Import: github.com/knative/eventing-contrib/vendor/k8s.io/client-go
 
 
                                  Apache License
@@ -7883,7 +7883,7 @@ Import: github.com/knative/eventing-sources/vendor/k8s.io/client-go
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/k8s.io/kube-openapi
+Import: github.com/knative/eventing-contrib/vendor/k8s.io/kube-openapi
 
 
                                  Apache License
@@ -8091,7 +8091,7 @@ Import: github.com/knative/eventing-sources/vendor/k8s.io/kube-openapi
 
 
 ===========================================================
-Import: github.com/knative/eventing-sources/vendor/sigs.k8s.io/controller-runtime
+Import: github.com/knative/eventing-contrib/vendor/sigs.k8s.io/controller-runtime
 
                                  Apache License
                            Version 2.0, January 2004

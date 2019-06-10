@@ -30,10 +30,10 @@ spec:
         control-plane: awssqs-controller-manager
     spec:
       containers:
-      - image: github.com/knative/eventing-sources/contrib/awssqs/cmd/controller
+      - image: github.com/knative/eventing-contrib/contrib/awssqs/cmd/controller
         env:
         - name: AWSSQS_RA_IMAGE
-          value: github.com/knative/eventing-sources/contrib/awssqs/cmd/receive_adapter
+          value: github.com/knative/eventing-contrib/contrib/awssqs/cmd/receive_adapter
         name: manager
         resources:
           limits:
