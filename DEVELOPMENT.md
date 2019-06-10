@@ -94,7 +94,7 @@ As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
-- **If you change a type definition ([pkg/apis/](./pkg/apis/.)),** then you must
+- **If you change a type definition (contrib/<source_name>/pkg/apis/),** then you must
   run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This also runs
   [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 
