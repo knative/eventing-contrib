@@ -20,13 +20,13 @@ import (
 	"fmt"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
+	"github.com/knative/eventing-contrib/pkg/kncloudevents"
 	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 
 	// Imports the Google Cloud Pub/Sub client package.
 	"cloud.google.com/go/pubsub"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/gcppubsub/pkg/apis/sources/v1alpha1"
 	"golang.org/x/net/context"
 )
 

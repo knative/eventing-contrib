@@ -23,10 +23,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/knative/eventing-sources/pkg/reconciler/eventtype"
+	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype"
 
-	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
-	controllertesting "github.com/knative/eventing-sources/pkg/controller/testing"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/kafka/pkg/apis/sources/v1alpha1"
+	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"

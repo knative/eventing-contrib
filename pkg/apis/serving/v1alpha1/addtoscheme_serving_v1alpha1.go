@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/knative/eventing-sources/pkg/apis"
+	"github.com/knative/eventing-contrib/pkg/apis"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 )
 

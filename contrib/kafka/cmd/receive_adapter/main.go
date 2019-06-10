@@ -22,7 +22,7 @@ import (
 	"os"
 	"strconv"
 
-	kafka "github.com/knative/eventing-sources/contrib/kafka/pkg/adapter"
+	kafka "github.com/knative/eventing-contrib/contrib/kafka/pkg/adapter"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

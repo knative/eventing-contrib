@@ -26,7 +26,7 @@ These steps assume that you have checked out the repo and have a shell in this
 1. Install the [GCP PubSub Source from this directory](../config/) from source:
 
    ```shell
-   ko apply --filename https://github.com/knative/eventing-sources/tree/master/contrib/gcppubsub/config/
+   ko apply --filename https://github.com/knative/eventing-contrib/tree/master/contrib/gcppubsub/config/
    ```
 
    Or install a release version (TODO: link to released component).

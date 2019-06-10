@@ -17,7 +17,7 @@ limitations under the License.
 package resources
 
 import (
-	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/contrib/camel/pkg/apis/sources/v1alpha1"
 )
 
 type CamelArguments struct {

@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/pkg/apis/sources/v1alpha1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 )
 

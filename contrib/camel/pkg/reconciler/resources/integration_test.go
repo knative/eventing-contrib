@@ -19,7 +19,7 @@ package resources
 import (
 	"testing"
 
-	"github.com/knative/eventing-sources/contrib/camel/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/contrib/camel/pkg/apis/sources/v1alpha1"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"github.com/google/go-cmp/cmp"

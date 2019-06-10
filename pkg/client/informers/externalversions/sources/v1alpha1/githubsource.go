@@ -21,10 +21,10 @@ package v1alpha1
 import (
 	time "time"
 
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
-	versioned "github.com/knative/eventing-sources/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/knative/eventing-sources/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/knative/eventing-sources/pkg/client/listers/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/pkg/apis/sources/v1alpha1"
+	versioned "github.com/knative/eventing-contrib/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/knative/eventing-contrib/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/knative/eventing-contrib/pkg/client/listers/sources/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

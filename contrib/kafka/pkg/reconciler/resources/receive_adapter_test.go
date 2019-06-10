@@ -19,8 +19,8 @@ package resources
 import (
 	"testing"
 
-	"github.com/knative/eventing-sources/contrib/kafka/pkg/apis/sources/v1alpha1"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/contrib/kafka/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/kmp"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

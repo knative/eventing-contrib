@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned"
-	sourcesv1alpha1 "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1"
-	fakesourcesv1alpha1 "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake"
+	clientset "github.com/knative/eventing-contrib/contrib/camel/pkg/client/clientset/versioned"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1"
+	fakesourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

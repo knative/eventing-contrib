@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/knative/eventing-sources/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1"
+	v1alpha1 "github.com/knative/eventing-contrib/contrib/camel/pkg/client/clientset/versioned/typed/sources/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
