@@ -1,35 +1,104 @@
 ## IBM MQ source
 
-This event source is meant to be used as a Container Source with a Knative cluster to consume messages from IBM Message Queue and send them to a Knative service/function.
+This event source is meant to be used as a Container Source within a Knative cluster in order to consume messages from IBM Message Queue.
 
-### Local Usage with Docker
+### Local Build and Usage
 
-1. Setup local IBM MQ following [this tutorial](https://developer.ibm.com/messaging/learn-mq/mq-tutorials/mq-connect-to-queue-manager/#docker)
+1. Setup a local IBM MQ with the following commands:
 
-2. Define environment variables:
-```
-export PASSWORD=yourPass
-```
-The rest comes as default, if you change these defaults, set env variables accordingly
-
-3. Run `docker build -t mqsource .` to build the source image from the source code
-
-4. Run `docker run --rm -e PASSWORD=yourPass -e CONNECTION_NAME='6bc57e4c9378(1414)' --link=6bc57e4c9378 mqsource`
-
-5. Go to `https://localhost:9443/ibmmq/console/` and add messages to the queue that you have connected to and see how they are being processed by the MQ source
-
-```
-{QueueManager:QM1 ChannelName:DEV.APP.SVRCONN ConnectionName:6bc57e4c9378(1414) UserID:app Password:admin QueueName:DEV.QUEUE.1}
-Connection to QM1 succeeded.
-Opened queue DEV.QUEUE.1
-2019/05/07 14:31:23 New message:  &{1 0 8 -1 0 273 1208 MQSTR 0 0 [65 77 81 32 81 77 49 32 32 32 32 32 32 32 32 32 131 60 209 92 2 16 45 35] [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 0  QM1 mqm [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] admin 7 IBM MQ Web Admin/REST API 20190507 14312329  [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 1 0 0 -1}
+```shell
+docker volume create qmdata
+docker network create mqnetwork
+docker run --env LICENSE=accept \
+           --env MQ_QMGR_NAME=QM1 \
+           --volume qmdata:/mnt/mqm \
+           --publish 1414:1414 \
+           --publish 9443:9443 \
+           --network mqnetwork \
+           --network-alias qmgr \
+           --detach \
+           --env MQ_APP_PASSWORD=password \
+           --name mq \
+           ibmcom/mq:latest
 ```
 
-If you want to add and remove message in bulk, build the Docker image for IBM MQ Local client from `local-client` folder and follow the instructions from the tutorial (step 5) to get messages to the MQ (enter `put 20` in the shell prompt)
+If you face any issues please follow the official [tutorial](https://developer.ibm.com/messaging/learn-mq/mq-tutorials/mq-connect-to-queue-manager/#docker)
+
+1. Connect the Knative event display:
+
+```shell
+docker run --name display --net=container:mq -d gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display@sha256:37ace92b63fc516ad4c8331b6b3b2d84e4ab2d8ba898e387c0b6f68f0e3081c4
+```
+
+1. To build the container image from the local source code
+
+```shell
+docker build -t mqsource .
+```
+
+1. Run this _source_ locally with:
+
+```shell
+docker run --rm -e PASSWORD=password \
+                --net=container:mq \
+                mqsource --sink http://localhost:8080
+```
+
+1. Open the MQ console:
+
+Using _Admin_ and _passw0rd_ as default development credentials do:
+
+`open https://localhost:9443/ibmmq/console/` 
+
+Add messages to `DEV.QUEUE.1` queue and check the logs of the Knative event display to see the CloudEvents being received. They will look something like
+
+```
+$ docker logs display
+☁️  cloudevents.Event
+Validation: valid
+Context Attributes,
+  cloudEventsVersion: 0.1
+  eventType: message queue item
+  source: ibm:mq
+  eventID: 08e05aa7-c9cc-4139-a041-9623cb101613
+  eventTime: 2019-06-07T13:42:10.6321831Z
+  contentType: application/json
+Data,
+  {
+    "Version": 1,
+    "Report": 0,
+    "MsgType": 8,
+    "Expiry": -1,
+    "Feedback": 0,
+    "Encoding": 273,
+    "CodedCharSetId": 1208,
+    "Format": "MQSTR",
+    "Priority": 0,
+    "Persistence": 0,
+    "MsgId": "QU1RIFFNMSAgICAgICAgIDJo+lwCCJQg",
+    "CorrelId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "BackoutCount": 0,
+    "ReplyToQ": "",
+    "ReplyToQMgr": "QM1",
+    "UserIdentifier": "mqm",
+    "AccountingToken": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "ApplIdentityData": "admin",
+    "PutApplType": 7,
+    "PutApplName": "IBM MQ Web Admin/REST API",
+    "PutDate": "20190607",
+    "PutTime": "13421062",
+    "ApplOriginData": "",
+    "GroupId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "MsgSeqNumber": 1,
+    "Offset": 0,
+    "MsgFlags": 0,
+    "OriginalLength": -1
+  }
+```
 
 ### Knative usage
 
-Edit the Container source manifest and apply it:
+Edit the Container source manifest to specify your queue and connection parameters then and apply it like so:
 
 ```
 kubectl apply -f mq-source.yaml
