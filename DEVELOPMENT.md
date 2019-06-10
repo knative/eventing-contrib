@@ -57,7 +57,7 @@ follows.
 
 ## Installing Sources
 
-Once you've [setup your development environment](#getting-started), install any of the sources 
+Once you've [setup your development environment](#getting-started), install any of the sources
 _Github Source_, _AWS SQS Source_, _Camel Source_, _Gcppubsub Source_, _Kafka Source_
 with:
 
