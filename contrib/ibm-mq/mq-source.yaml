@@ -13,7 +13,7 @@ spec:
     - name: QUEUE_MANAGER
       value: QM1
     - name: CHANNEL_NAME
-      value: DEV.ADMIN.SVRCONN
+      value: DEV.APP.SVRCONN
     - name: CONNECTION_NAME
       value: mq-service.default.svc.cluster.local(1414)
     - name: USER_ID
