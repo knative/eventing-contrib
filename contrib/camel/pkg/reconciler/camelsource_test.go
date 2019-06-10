@@ -23,7 +23,6 @@ import (
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/camel/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-contrib/contrib/camel/pkg/reconciler/resources"
-	genericv1alpha1 "github.com/knative/eventing-contrib/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"go.uber.org/zap"
@@ -65,7 +64,6 @@ func init() {
 		v1.AddToScheme,
 		corev1.AddToScheme,
 		sourcesv1alpha1.SchemeBuilder.AddToScheme,
-		genericv1alpha1.SchemeBuilder.AddToScheme,
 		duckv1alpha1.AddToScheme,
 		camelv1alpha1.SchemeBuilder.AddToScheme,
 	)
