@@ -4,7 +4,7 @@ kind: ContainerSource
 metadata:
   name: mq
 spec:
-  image: gcr.io/triggermesh/mq:0.0.9
+  image: gcr.io/triggermesh/mq:0.1.0
   sink:
     apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel

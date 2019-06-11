@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -39,8 +40,14 @@ type config struct {
 	QueueName      string `env:"QUEUE_NAME" envDefault:"DEV.QUEUE.1"`
 }
 
+//MQMessage wraps message descriptor and message body into one struct
+type MQMessage struct {
+	Message     *ibmmq.MQMD `json:"message_descriptor"`
+	MessageData string      `json:"message_data"`
+}
+
 func init() {
-	flag.StringVar(&sink, "sink", "", "where to sink events to")
+	flag.StringVar(&sink, "sink", "http://localhost:8080", "where to sink events to")
 }
 
 func main() {
@@ -153,14 +160,18 @@ func main() {
 		}
 
 		wg.Add(1)
-		go func(gomd *ibmmq.MQMD) {
-			log.Println("New message: ", gomd)
-			err := sendMessage(cloudEventsClient, gomd)
+		go func(gomd *ibmmq.MQMD, messageData []byte) {
+			log.Printf("New message: %v", bytes.Trim(messageData, "\u0000"))
+			msg := MQMessage{
+				Message:     gomd,
+				MessageData: string(bytes.Trim(messageData, "\u0000")),
+			}
+			err := sendMessage(cloudEventsClient, &msg)
 			if err != nil {
 				log.Printf("Failed to send message: %v\n", err)
 			}
 			wg.Done()
-		}(getmqmd)
+		}(getmqmd, buffer)
 	}
 }
 
@@ -186,7 +197,7 @@ func close(object ibmmq.MQObject) error {
 	return err
 }
 
-func sendMessage(client *cloudevents.Client, message *ibmmq.MQMD) error {
+func sendMessage(client *cloudevents.Client, message *MQMessage) error {
 	err := client.Send(message)
 	if err != nil {
 		return err
