@@ -20,9 +20,8 @@ import (
 	"testing"
 
 	"github.com/knative/eventing-contrib/contrib/kafka/pkg/apis/sources/v1alpha1"
-	sourcesv1alpha1 "github.com/knative/eventing-contrib/pkg/apis/sources/v1alpha1"
 	"github.com/knative/pkg/kmp"
-	v1 "k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,7 +41,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 			Net: v1alpha1.KafkaSourceNetSpec{
 				SASL: v1alpha1.KafkaSourceSASLSpec{
 					Enable: true,
-					User: sourcesv1alpha1.SecretValueFromSource{
+					User: v1alpha1.SecretValueFromSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "the-user-secret",
@@ -50,7 +49,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 							Key: "user",
 						},
 					},
-					Password: sourcesv1alpha1.SecretValueFromSource{
+					Password: v1alpha1.SecretValueFromSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "the-password-secret",
@@ -61,7 +60,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 				},
 				TLS: v1alpha1.KafkaSourceTLSSpec{
 					Enable: true,
-					Cert: sourcesv1alpha1.SecretValueFromSource{
+					Cert: v1alpha1.SecretValueFromSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "the-cert-secret",
@@ -69,7 +68,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 							Key: "tls.crt",
 						},
 					},
-					Key: sourcesv1alpha1.SecretValueFromSource{
+					Key: v1alpha1.SecretValueFromSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "the-key-secret",
@@ -77,7 +76,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 							Key: "tls.key",
 						},
 					},
-					CACert: sourcesv1alpha1.SecretValueFromSource{
+					CACert: v1alpha1.SecretValueFromSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "the-ca-cert-secret",

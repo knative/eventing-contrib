@@ -7,6 +7,9 @@ The Knative Eventing Contrib project provides source implementations that:
 
 - Integrate with GitHub
 - Integrate with Pub/Sub
+- Integrate with Kafka
+- Integrate with AWS SQS
+- Integrate with Camel K
 - Integrate with Websockets
 - Expose an ingress
 
