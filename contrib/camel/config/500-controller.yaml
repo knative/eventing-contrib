@@ -32,12 +32,5 @@ spec:
       containers:
       - image: github.com/knative/eventing-contrib/contrib/camel/cmd/controller
         name: manager
-        resources:
-          limits:
-            cpu: 100m
-            memory: 30Mi
-          requests:
-            cpu: 20m
-            memory: 20Mi
       serviceAccount: camel-controller-manager
       terminationGracePeriodSeconds: 10
