@@ -33,16 +33,15 @@
   version = "v1.21.0"
 
 [[projects]]
-  digest = "1:12102db6608e5b7ad461798984ca5126080140487acbc1959704a881e3831e76"
+  digest = "1:c7de6e7b9ca306b64b257c7e93b0a231936875b88fd6ea6dd43b3c2d87082585"
   name = "github.com/apache/camel-k"
   packages = [
     "pkg/apis/camel/v1alpha1",
     "pkg/apis/camel/v1alpha1/knative",
-    "pkg/util",
   ]
   pruneopts = "NUT"
-  revision = "87c0d6fe53978ffd753b2d0c95c02f44b374860e"
-  version = "0.3.3"
+  revision = "c47fb2c85e89852f0fd111d1662f57917030ced5"
+  version = "0.3.4"
 
 [[projects]]
   digest = "1:164a1e6e8407f99696f29dca7b21025c347b5ec47beafc1b8254e4a4ae71cc08"
@@ -517,14 +516,6 @@
   revision = "a3c073a2fea1d6a5a97c4150b05792a3faba2bc0"
 
 [[projects]]
-  digest = "1:d244f8666a838fe6ad70ec8fe77f50ebc29fdc3331a2729ba5886bef8435d10d"
-  name = "github.com/magiconair/properties"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "c2353362d570a7bfa228149c62842019201cfb71"
-  version = "v1.8.0"
-
-[[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
   name = "github.com/markbates/inflect"
   packages = ["."]
@@ -547,14 +538,6 @@
   pruneopts = "NUT"
   revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
   version = "v1.0.1"
-
-[[projects]]
-  digest = "1:a45ae66dea4c899d79fceb116accfa1892105c251f0dcd9a217ddc276b42ec68"
-  name = "github.com/mitchellh/mapstructure"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
-  version = "v1.1.2"
 
 [[projects]]
   digest = "1:2f42fa12d6911c7b7659738758631bec870b7e9b4c6be5444f963cdcfccc191f"
@@ -717,14 +700,6 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "3113b8401b8a98917cde58f8bbd42a1b1c03b1fd"
-
-[[projects]]
-  digest = "1:6f3ce746342be7b14a2d1ca33a4a11fd6cb0300e5d34c766f01e19e936fb10af"
-  name = "github.com/scylladb/go-set"
-  packages = ["strset"]
-  pruneopts = "NUT"
-  revision = "e560bb8f49bb7f34d4f59b7e771f6e1307c329da"
-  version = "v1.0.2"
 
 [[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
