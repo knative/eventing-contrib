@@ -28,7 +28,7 @@ import (
 // EventingSourcesFlags holds the command line flags specific to knative/eventing-contrib
 var EventingSourcesFlags = initializeEventingSourcesFlags()
 
-// EventingSourcesEnvironmentFlags holds the e2e flags needed only by the eventing-sources repo
+// EventingSourcesEnvironmentFlags holds the e2e flags needed only by the eventing-contrib repo
 type EventingSourcesEnvironmentFlags struct {
 }
 
