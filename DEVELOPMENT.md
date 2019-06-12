@@ -57,9 +57,9 @@ follows.
 
 ## Installing Sources
 
-Once you've [setup your development environment](#getting-started), install any of the sources
-_Github Source_, _AWS SQS Source_, _Camel Source_, _Gcppubsub Source_, _Kafka Source_
-with:
+Once you've [setup your development environment](#getting-started), install any
+of the sources _Github Source_, _AWS SQS Source_, _Camel Source_, _Gcppubsub
+Source_, _Kafka Source_ with:
 
 ```
 ko apply -f contrib/<source_name>/
@@ -94,9 +94,9 @@ As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
-- **If you change a type definition (contrib/<source_name>/pkg/apis/),** then you must
-  run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This also runs
-  [`./hack/update-deps.sh`](./hack/update-deps.sh)._
+- **If you change a type definition (contrib/<source_name>/pkg/apis/),** then
+  you must run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This
+  also runs [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 
 These are both idempotent, and we expect that running these in the `master`
 branch to produce no diffs.
