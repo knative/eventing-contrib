@@ -37,9 +37,6 @@ spec:
           value: github.com/knative/eventing-contrib/contrib/kafka/cmd/receive_adapter
         volumeMounts:
         resources:
-          limits:
-            cpu: 100m
-            memory: 30Mi
           requests:
             cpu: 20m
             memory: 20Mi
