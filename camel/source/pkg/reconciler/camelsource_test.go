@@ -20,10 +20,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/knative/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/camel/source/pkg/reconciler/resources"
-
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
+	sourcesv1alpha1 "github.com/knative/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/camel/source/pkg/reconciler/resources"
 	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	"go.uber.org/zap"
@@ -64,7 +63,7 @@ func init() {
 	addToScheme(
 		v1.AddToScheme,
 		corev1.AddToScheme,
-		v1alpha1.SchemeBuilder.AddToScheme,
+		sourcesv1alpha1.SchemeBuilder.AddToScheme,
 		duckv1alpha1.AddToScheme,
 		camelv1alpha1.SchemeBuilder.AddToScheme,
 	)
@@ -274,16 +273,16 @@ func TestReconcile(t *testing.T) {
 	}
 }
 
-func getSource() *v1alpha1.CamelSource {
-	obj := &v1alpha1.CamelSource{
+func getSource() *sourcesv1alpha1.CamelSource {
+	obj := &sourcesv1alpha1.CamelSource{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "CamelSource",
 		},
 		ObjectMeta: om(testNS, sourceName),
-		Spec: v1alpha1.CamelSourceSpec{
-			Source: v1alpha1.CamelSourceOriginSpec{
-				Component: &v1alpha1.CamelSourceOriginComponentSpec{
+		Spec: sourcesv1alpha1.CamelSourceSpec{
+			Source: sourcesv1alpha1.CamelSourceOriginSpec{
+				Component: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
 					URI: "timer:tick?period=3s",
 				},
 			},
@@ -299,15 +298,15 @@ func getSource() *v1alpha1.CamelSource {
 	return obj
 }
 
-func getCamelKSource() *v1alpha1.CamelSource {
-	obj := &v1alpha1.CamelSource{
+func getCamelKSource() *sourcesv1alpha1.CamelSource {
+	obj := &sourcesv1alpha1.CamelSource{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "CamelSource",
 		},
 		ObjectMeta: om(testNS, sourceName),
-		Spec: v1alpha1.CamelSourceSpec{
-			Source: v1alpha1.CamelSourceOriginSpec{
+		Spec: sourcesv1alpha1.CamelSourceSpec{
+			Source: sourcesv1alpha1.CamelSourceOriginSpec{
 				Integration: &camelv1alpha1.IntegrationSpec{
 					Sources: []camelv1alpha1.SourceSpec{
 						{
@@ -331,12 +330,12 @@ func getCamelKSource() *v1alpha1.CamelSource {
 	return obj
 }
 
-func withAlternativeImage(src *v1alpha1.CamelSource) *v1alpha1.CamelSource {
+func withAlternativeImage(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
 	src.Spec.DeprecatedImage = alternativeImage
 	return src
 }
 
-func withAlternativeContext(src *v1alpha1.CamelSource) *v1alpha1.CamelSource {
+func withAlternativeContext(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
 	if src.Spec.Source.Component != nil {
 		src.Spec.Source.Component.Context = alternativeContextName
 	} else {
@@ -360,8 +359,8 @@ func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
 		Name:      sourceName,
 		Namespace: testNS,
 		Sink:      addressableURI,
-		Source: v1alpha1.CamelSourceOriginSpec{
-			Component: &v1alpha1.CamelSourceOriginComponentSpec{
+		Source: sourcesv1alpha1.CamelSourceOriginSpec{
+			Component: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
 				URI: "timer:tick?period=3s",
 			},
 		},
@@ -384,7 +383,7 @@ func getRunningCamelKIntegration(t *testing.T) *camelv1alpha1.Integration {
 		Name:      sourceName,
 		Namespace: testNS,
 		Sink:      addressableURI,
-		Source: v1alpha1.CamelSourceOriginSpec{
+		Source: sourcesv1alpha1.CamelSourceOriginSpec{
 			Integration: &camelv1alpha1.IntegrationSpec{
 				Sources: []camelv1alpha1.SourceSpec{
 					{
@@ -417,21 +416,21 @@ func getWrongIntegration(t *testing.T) *camelv1alpha1.Integration {
 	return it
 }
 
-func getSourceWithNoSink() *v1alpha1.CamelSource {
+func getSourceWithNoSink() *sourcesv1alpha1.CamelSource {
 	src := getSource()
 	src.Status.InitializeConditions()
 	src.Status.MarkNoSink("NotFound", "")
 	return src
 }
 
-func withUpdatingIntegration(src *v1alpha1.CamelSource) *v1alpha1.CamelSource {
+func withUpdatingIntegration(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
 	src.Status.InitializeConditions()
 	src.Status.MarkSink(addressableURI)
 	src.Status.MarkDeploying("IntegrationUpdated", "Updated integration ")
 	return src
 }
 
-func getDeployingSource() *v1alpha1.CamelSource {
+func getDeployingSource() *sourcesv1alpha1.CamelSource {
 	src := getSource()
 	src.Status.InitializeConditions()
 	src.Status.MarkSink(addressableURI)
@@ -439,14 +438,14 @@ func getDeployingSource() *v1alpha1.CamelSource {
 	return src
 }
 
-func asDeployedSource(src *v1alpha1.CamelSource) *v1alpha1.CamelSource {
+func asDeployedSource(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
 	src.Status.InitializeConditions()
 	src.Status.MarkSink(addressableURI)
 	src.Status.MarkDeployed()
 	return src
 }
 
-func getDeletedSource() *v1alpha1.CamelSource {
+func getDeletedSource() *sourcesv1alpha1.CamelSource {
 	src := getSource()
 	src.ObjectMeta.DeletionTimestamp = &deletionTime
 	return src
@@ -481,7 +480,7 @@ func getAddressable() *unstructured.Unstructured {
 
 func getOwnerReferences() []metav1.OwnerReference {
 	return []metav1.OwnerReference{{
-		APIVersion:         v1alpha1.SchemeGroupVersion.String(),
+		APIVersion:         sourcesv1alpha1.SchemeGroupVersion.String(),
 		Kind:               "CamelSource",
 		Name:               sourceName,
 		Controller:         &trueVal,
