@@ -17,8 +17,9 @@ limitations under the License.
 package resources
 
 import (
-	v1alpha12 "github.com/knative/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	"testing"
+
+	"github.com/knative/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"github.com/google/go-cmp/cmp"
@@ -29,8 +30,8 @@ func TestMakeDeployment_sink(t *testing.T) {
 	got, err := MakeIntegration(&CamelArguments{
 		Name:      "test-name",
 		Namespace: "test-namespace",
-		Source: v1alpha12.CamelSourceOriginSpec{
-			Component: &v1alpha12.CamelSourceOriginComponentSpec{
+		Source: v1alpha1.CamelSourceOriginSpec{
+			Component: &v1alpha1.CamelSourceOriginComponentSpec{
 				URI: "timer:tick",
 				Properties: map[string]string{
 					"k":  "v",
