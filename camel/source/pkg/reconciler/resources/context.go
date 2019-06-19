@@ -31,7 +31,7 @@ func MakeContext(namespace string, image string) *camelv1alpha1.IntegrationConte
 			GenerateName: "ctx-",
 			Namespace:    namespace,
 			Labels: map[string]string{
-				"app": "camel-k",
+				"app":                           "camel-k",
 				"camel.apache.org/context.type": camelv1alpha1.IntegrationContextTypeExternal,
 			},
 		},
