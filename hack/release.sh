@@ -22,7 +22,7 @@ COMPONENTS=(
   ["github.yaml"]="contrib/github/config"
   ["gcppubsub.yaml"]="contrib/gcppubsub/config"
   ["event-display.yaml"]="config/tools/event-display"
-  ["camel.yaml"]="contrib/camel/config"
+  ["camel.yaml"]="camel/source/config"
   ["kafka.yaml"]="kafka/source/config"
   ["awssqs.yaml"]="contrib/awssqs/config"
 )
