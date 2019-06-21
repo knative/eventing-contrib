@@ -38,12 +38,16 @@ type Heartbeat struct {
 }
 
 var (
-	sink      string
-	label     string
-	periodStr string
+	eventSource string
+	eventType   string
+	sink        string
+	label       string
+	periodStr   string
 )
 
 func init() {
+	flag.StringVar(&eventSource, "eventSource", "", "the event-source (CloudEvents)")
+	flag.StringVar(&eventType, "eventType", "dev.knative.eventing.samples.heartbeat", "the event-type (CloudEvents)")
 	flag.StringVar(&sink, "sink", "", "the host url to heartbeat to")
 	flag.StringVar(&label, "label", "", "a special label")
 	flag.StringVar(&periodStr, "period", "5", "the number of seconds between heartbeats")
@@ -85,9 +89,10 @@ func main() {
 		period = time.Duration(p) * time.Second
 	}
 
-	source := types.ParseURLRef(
-		fmt.Sprintf("https://github.com/knative/eventing-contrib/cmd/heartbeats/#%s/%s", env.Namespace, env.Name))
-	log.Printf("Heartbeats Source: %s", source)
+	if eventSource == "" {
+		eventSource := fmt.Sprintf("https://github.com/knative/eventing-contrib/cmd/heartbeats/#%s/%s", env.Namespace, env.Name)
+		log.Printf("Heartbeats Source: %s", eventSource)
+	}
 
 	if len(label) > 0 && label[0] == '"' {
 		label, _ = strconv.Unquote(label)
@@ -102,8 +107,8 @@ func main() {
 
 		event := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
-				Type:   "dev.knative.eventing.samples.heartbeat",
-				Source: *source,
+				Type:   eventType,
+				Source: *types.ParseURLRef(eventSource),
 				Extensions: map[string]interface{}{
 					"the":   42,
 					"heart": "yes",
