@@ -459,12 +459,14 @@
   revision = "53ee52c1292bc6f6807512a9081b9e64055f2bd2"
 
 [[projects]]
-  digest = "1:60a1ee206bae79b58dc441e2dc4f63085f14fa162eed1068bb850c233442d662"
+  branch = "release-0.7"
+  digest = "1:ce855f6a786a15c09fbdc17455154c625928ec346caafb6a8f85eaf3386207f7"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
     "apis/duck",
     "apis/duck/v1alpha1",
+    "apis/duck/v1beta1",
     "changeset",
     "configmap",
     "kmeta",
@@ -481,7 +483,7 @@
     "webhook",
   ]
   pruneopts = "NUT"
-  revision = "52709ba13d9b77473fe37f2481312a62f63a7d6d"
+  revision = "d82505e6c5b4ce46562d6c242be0e706791f35bd"
 
 [[projects]]
   digest = "1:877272591f1cdf21c3d9d333c6393c836f22b137b4b24a303814fdf0b706ef7b"

@@ -35,12 +35,9 @@ required = [
   name = "k8s.io/gengo"
   unused-packages = false
 
-# Constrain the version of knative/pkg we would like to import.
-# This controls when we upgrade apis independently of Serving.
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2019-04-26
-  revision = "52709ba13d9b77473fe37f2481312a62f63a7d6d"
+  branch = "release-0.7"
 
 [[override]]
   name = "k8s.io/api"
