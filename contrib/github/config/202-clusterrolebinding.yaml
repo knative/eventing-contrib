@@ -16,6 +16,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-github-controller
+  labels:
+    contrib.eventing.knative.dev/release: devel
 subjects:
 - kind: ServiceAccount
   name: github-controller-manager
@@ -31,6 +33,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-github-addressable-resolver
+  labels:
+    contrib.eventing.knative.dev/release: devel
 subjects:
 - kind: ServiceAccount
   name: github-controller-manager

@@ -17,6 +17,8 @@ apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
 metadata:
   name: awssqs-bus-ext
+  labels:
+    contrib.eventing.knative.dev/release: devel
 spec:
   hosts:
   - "*.amazonaws.com"
