@@ -17,7 +17,7 @@ kind: ClusterRoleBinding
 metadata:
   name: awssqs-controller-rolebinding
   labels:
-    contrib.eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: "v0.7.0"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

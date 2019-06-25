@@ -18,7 +18,7 @@ kind: ServiceEntry
 metadata:
   name: gcppubsub-bus-ext
   labels:
-    contrib.eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: "v0.7.0"
 spec:
   hosts:
   - "*.googleapis.com"

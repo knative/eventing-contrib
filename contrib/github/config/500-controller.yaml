@@ -18,7 +18,7 @@ metadata:
   name: github-controller-manager
   namespace: knative-sources
   labels:
-    contrib.eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: "v0.7.0"
     control-plane: github-controller-manager
 spec:
   selector:

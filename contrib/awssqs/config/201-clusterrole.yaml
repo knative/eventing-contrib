@@ -17,7 +17,7 @@ kind: ClusterRole
 metadata:
   name: awssqs-controller
   labels:
-    contrib.eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: "v0.7.0"
 rules:
 - apiGroups:
   - apps

@@ -17,7 +17,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-github-controller
   labels:
-    contrib.eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: "v0.7.0"
 subjects:
 - kind: ServiceAccount
   name: github-controller-manager
@@ -34,7 +34,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-github-addressable-resolver
   labels:
-    contrib.eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: "v0.7.0"
 subjects:
 - kind: ServiceAccount
   name: github-controller-manager
