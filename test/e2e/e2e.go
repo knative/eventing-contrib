@@ -21,12 +21,12 @@ import (
 
 	"github.com/knative/eventing-contrib/test"
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	pkgTest "github.com/knative/pkg/test"
-	"github.com/knative/pkg/test/logging"
-	servingV1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	rbacV1beta1 "k8s.io/api/rbac/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	pkgTest "knative.dev/pkg/test"
+	"knative.dev/pkg/test/logging"
 
 	// Mysteriously required to support GCP auth (required by k8s libs).
 	// Apparently just importing it is enough. @_@ side effects @_@.
@@ -67,21 +67,21 @@ func TearDown(clients *test.Clients, cleaner *test.Cleaner, logger logging.Forma
 // CreateRouteAndConfig will create Route and Config objects using clients.
 // The Config object will serve requests to a container started from the image at imagePath.
 func CreateRouteAndConfig(clients *test.Clients, logger logging.FormatLogger, cleaner *test.Cleaner, name string, imagePath string) error {
-	configurations := clients.Serving.ServingV1alpha1().Configurations(pkgTest.Flags.Namespace)
+	configurations := clients.Serving.ServingV1beta1().Configurations(pkgTest.Flags.Namespace)
 	config, err := configurations.Create(
 		test.Configuration(name, pkgTest.Flags.Namespace, imagePath))
 	if err != nil {
 		return err
 	}
-	cleaner.Add(servingV1alpha1.SchemeGroupVersion.Group, servingV1alpha1.SchemeGroupVersion.Version, "configurations", pkgTest.Flags.Namespace, config.ObjectMeta.Name)
+	cleaner.Add(servingv1beta1.SchemeGroupVersion.Group, servingv1beta1.SchemeGroupVersion.Version, "configurations", pkgTest.Flags.Namespace, config.ObjectMeta.Name)
 
-	routes := clients.Serving.ServingV1alpha1().Routes(pkgTest.Flags.Namespace)
+	routes := clients.Serving.ServingV1beta1().Routes(pkgTest.Flags.Namespace)
 	route, err := routes.Create(
 		test.Route(name, pkgTest.Flags.Namespace, name))
 	if err != nil {
 		return err
 	}
-	cleaner.Add(servingV1alpha1.SchemeGroupVersion.Group, servingV1alpha1.SchemeGroupVersion.Version, "routes", pkgTest.Flags.Namespace, route.ObjectMeta.Name)
+	cleaner.Add(servingv1beta1.SchemeGroupVersion.Group, servingv1beta1.SchemeGroupVersion.Version, "routes", pkgTest.Flags.Namespace, route.ObjectMeta.Name)
 	return nil
 }
 
@@ -91,7 +91,7 @@ func WithRouteReady(clients *test.Clients, logger logging.FormatLogger, cleaner 
 	if err != nil {
 		return err
 	}
-	routes := clients.Serving.ServingV1alpha1().Routes(pkgTest.Flags.Namespace)
+	routes := clients.Serving.ServingV1beta1().Routes(pkgTest.Flags.Namespace)
 	if err := test.WaitForRouteState(routes, name, test.IsRouteReady, "RouteIsReady"); err != nil {
 		return err
 	}

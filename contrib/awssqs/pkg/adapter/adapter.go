@@ -30,9 +30,9 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/awssqs/pkg/apis/sources/v1alpha1"
 	"github.com/knative/eventing-contrib/pkg/kncloudevents"
-	"github.com/knative/pkg/logging"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
+	"knative.dev/pkg/logging"
 )
 
 // Adapter implements the AWS SQS adapter to deliver SQS messages from

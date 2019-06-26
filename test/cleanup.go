@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 
-	"github.com/knative/pkg/test/logging"
+	"knative.dev/pkg/test/logging"
 )
 
 // Cleaner holds resources that will be cleaned after test

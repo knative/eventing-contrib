@@ -19,9 +19,9 @@ package test
 
 import (
 	eventing "github.com/knative/eventing/pkg/client/clientset/versioned"
-	"github.com/knative/pkg/test"
 	serving "github.com/knative/serving/pkg/client/clientset/versioned"
 	"k8s.io/client-go/dynamic"
+	"knative.dev/pkg/test"
 )
 
 // Clients holds instances of interfaces for making requests to Knative.

@@ -36,8 +36,8 @@ required = [
   unused-packages = false
 
 [[override]]
-  name = "github.com/knative/pkg"
-  branch = "release-0.7"
+  name = "knative.dev/pkg"
+  branch = "master"
 
 [[override]]
   name = "k8s.io/api"
@@ -65,17 +65,13 @@ required = [
 
 [[constraint]]
   name = "github.com/knative/serving"
-  version = "v0.5.0"
-
-# Bring build along for serving.
-[[override]]
-  name = "github.com/knative/build"
-  version = "v0.5.0"
+  # HEAD as of 2019-06-26. Needed to test github.
+  revision = "50cdf8762deae58ed89763adef26a88e7efecac7"
 
 [[constraint]]
   name = "github.com/knative/eventing"
-  # HEAD as of 2019-05-12. Needed to import EventType API object.
-  revision = "53ee52c1292bc6f6807512a9081b9e64055f2bd2"
+  # HEAD as of 2019-06-26. Needed to import EventType API object.
+  revision = "677d3d17e84b7337f006220d6bb465af4f416f81"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"

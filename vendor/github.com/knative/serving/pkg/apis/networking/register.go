@@ -17,6 +17,7 @@ limitations under the License.
 package networking
 
 const (
+	// GroupName is the name for the networking API group.
 	GroupName = "networking.internal.knative.dev"
 
 	// IngressClassAnnotationKey is the annotation for the
@@ -34,7 +35,45 @@ const (
 	// Istio-based ClusterIngress will reconcile into a VirtualService).
 	IngressClassAnnotationKey = "networking.knative.dev/ingress.class"
 
-	// IngressLabelKey is the label key attached to underlying network programming
+	// ClusterIngressLabelKey is the label key attached to underlying network programming
 	// resources to indicate which ClusterIngress triggered their creation.
-	IngressLabelKey = GroupName + "/clusteringress"
+	ClusterIngressLabelKey = GroupName + "/clusteringress"
+
+	// SKSLabelKey is the label key that SKS Controller attaches to the
+	// underlying resources it controls.
+	SKSLabelKey = GroupName + "/serverlessservice"
+
+	// ServiceTypeKey is the label key attached to a service specifying the type of service.
+	// e.g. Public, Metrics
+	ServiceTypeKey = GroupName + "/serviceType"
+
+	// OriginSecretNameLabelKey is the label key attached to the TLS secret to indicate
+	// the name of the origin secret that the TLS secret is copied from.
+	OriginSecretNameLabelKey = GroupName + "/originSecretName"
+
+	// OriginSecretNamespaceLabelKey is the label key attached to the TLS secret
+	// to indicate the namespace of the origin secret that the TLS secret is copied from.
+	OriginSecretNamespaceLabelKey = GroupName + "/originSecretNamespace"
+)
+
+// ServiceType is the enumeration type for the Kubernetes services
+// that we have in our system, classified by usage purpose.
+type ServiceType string
+
+const (
+	// ServiceTypePrivate is the label value for internal only services
+	// for user applications.
+	ServiceTypePrivate ServiceType = "Private"
+	// ServiceTypePublic is the label value for externally reachable
+	// services for user applications.
+	ServiceTypePublic ServiceType = "Public"
+	// ServiceTypeMetrics is the label value for Metrics services. Such services
+	// are used for meric scraping.
+	ServiceTypeMetrics ServiceType = "Metrics"
+)
+
+// Pseudo-constants
+var (
+	// DefaultRetryCount will be set if Attempts not specified.
+	DefaultRetryCount = 3
 )
