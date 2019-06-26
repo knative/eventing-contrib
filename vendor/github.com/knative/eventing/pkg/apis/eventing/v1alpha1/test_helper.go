@@ -17,6 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
+	duckv1alpha1 "github.com/knative/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis"
+	pkgduckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	v1 "k8s.io/api/apps/v1"
 )
 
@@ -29,7 +33,7 @@ func (testHelper) ReadyChannelStatus() *ChannelStatus {
 	cs := &ChannelStatus{}
 	cs.MarkProvisionerInstalled()
 	cs.MarkProvisioned()
-	cs.SetAddress("foo")
+	cs.SetAddress(&apis.URL{Scheme: "http", Host: "foo"})
 	return cs
 }
 
@@ -39,10 +43,30 @@ func (t testHelper) NotReadyChannelStatus() *ChannelStatus {
 	return cs
 }
 
+func (testHelper) ReadyChannelStatusCRD() *duckv1alpha1.ChannelableStatus {
+	cs := &duckv1alpha1.ChannelableStatus{
+		Status: duckv1beta1.Status{},
+		AddressStatus: pkgduckv1alpha1.AddressStatus{
+			Address: &pkgduckv1alpha1.Addressable{
+				Addressable: duckv1beta1.Addressable{
+					URL: &apis.URL{Scheme: "http", Host: "foo"},
+				},
+				Hostname: "foo",
+			},
+		},
+		SubscribableTypeStatus: duckv1alpha1.SubscribableTypeStatus{}}
+	return cs
+}
+
+func (t testHelper) NotReadyChannelStatusCRD() *duckv1alpha1.ChannelableStatus {
+	return &duckv1alpha1.ChannelableStatus{}
+}
+
 func (testHelper) ReadySubscriptionStatus() *SubscriptionStatus {
 	ss := &SubscriptionStatus{}
 	ss.MarkChannelReady()
 	ss.MarkReferencesResolved()
+	ss.MarkAddedToChannel()
 	return ss
 }
 
@@ -59,7 +83,19 @@ func (t testHelper) ReadyBrokerStatus() *BrokerStatus {
 	bs.PropagateTriggerChannelReadiness(t.ReadyChannelStatus())
 	bs.PropagateIngressSubscriptionReadiness(t.ReadySubscriptionStatus())
 	bs.PropagateFilterDeploymentAvailability(t.AvailableDeployment())
-	bs.SetAddress("foo")
+	bs.SetAddress(&apis.URL{Scheme: "http", Host: "foo"})
+	return bs
+}
+
+func (t testHelper) ReadyBrokerStatusDeprecated() *BrokerStatus {
+	bs := &BrokerStatus{}
+	bs.MarkDeprecated("ClusterChannelProvisionerDeprecated", "Provisioners are deprecated and will be removed in 0.8. Recommended replacement is CRD based channels using spec.channelTemplateSpec.")
+	bs.PropagateIngressDeploymentAvailability(t.AvailableDeployment())
+	bs.PropagateIngressChannelReadiness(t.ReadyChannelStatus())
+	bs.PropagateTriggerChannelReadiness(t.ReadyChannelStatus())
+	bs.PropagateIngressSubscriptionReadiness(t.ReadySubscriptionStatus())
+	bs.PropagateFilterDeploymentAvailability(t.AvailableDeployment())
+	bs.SetAddress(&apis.URL{Scheme: "http", Host: "foo"})
 	return bs
 }
 

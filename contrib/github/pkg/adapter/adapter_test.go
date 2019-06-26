@@ -572,7 +572,7 @@ func TestHandleEvent(t *testing.T) {
 	header.Set("X-"+GHHeaderDelivery, eventID)
 	ra.HandleEvent(payload, http.Header(header))
 
-	// TODO(https://github.com/knative/pkg/issues/250): clean this up when there is a shared test client.
+	// TODO(https://knative.dev/pkg/issues/250): clean this up when there is a shared test client.
 
 	canonicalizeHeaders(expectedRequest)
 	if diff := cmp.Diff(expectedRequest.Headers, h.header); diff != "" {

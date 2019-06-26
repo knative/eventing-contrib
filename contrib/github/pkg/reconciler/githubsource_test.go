@@ -31,7 +31,6 @@ import (
 	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/github/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 )
 
 var (

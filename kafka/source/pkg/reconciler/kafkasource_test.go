@@ -29,13 +29,13 @@ import (
 	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -296,8 +296,15 @@ func getNonKafkaSource() *eventingsourcesv1alpha1.ContainerSource {
 		},
 		ObjectMeta: om(testNS, sourceName),
 		Spec: eventingsourcesv1alpha1.ContainerSourceSpec{
-			Image: image,
-			Args:  []string(nil),
+			Template: &corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Image: image,
+						Args:  []string(nil),
+					},
+					},
+				},
+			},
 			Sink: &corev1.ObjectReference{
 				Name:       addressableName,
 				Kind:       addressableKind,

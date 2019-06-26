@@ -23,8 +23,8 @@ import (
 	"strconv"
 
 	ghclient "github.com/google/go-github/github"
-	"github.com/knative/pkg/logging"
 	"golang.org/x/oauth2"
+	"knative.dev/pkg/logging"
 )
 
 type webhookOptions struct {

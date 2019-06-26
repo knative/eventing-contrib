@@ -21,8 +21,8 @@ package test
 import (
 	"flag"
 
-	pkgTest "github.com/knative/pkg/test"
-	"github.com/knative/pkg/test/logging"
+	pkgTest "knative.dev/pkg/test"
+	"knative.dev/pkg/test/logging"
 )
 
 // EventingSourcesFlags holds the command line flags specific to knative/eventing-contrib

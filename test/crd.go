@@ -19,10 +19,10 @@ package test
 
 import (
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	pkgTest "github.com/knative/pkg/test"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	pkgTest "knative.dev/pkg/test"
 )
 
 const (
