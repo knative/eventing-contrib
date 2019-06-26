@@ -20,16 +20,32 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	buildv1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
-	"github.com/knative/pkg/apis"
+	"knative.dev/pkg/apis"
+	"github.com/knative/serving/pkg/apis/serving"
 )
 
 // Validate makes sure that Configuration is properly configured.
-func (c *Configuration) Validate(ctx context.Context) *apis.FieldError {
-	return ValidateObjectMetadata(c.GetObjectMeta()).ViaField("metadata").
-		Also(c.Spec.Validate(ctx).ViaField("spec"))
+func (c *Configuration) Validate(ctx context.Context) (errs *apis.FieldError) {
+	// If we are in a status sub resource update, the metadata and spec cannot change.
+	// So, to avoid rejecting controller status updates due to validations that may
+	// have changed (i.e. due to config-defaults changes), we elide the metadata and
+	// spec validation.
+	if !apis.IsInStatusUpdate(ctx) {
+		errs = errs.Also(serving.ValidateObjectMetadata(c.GetObjectMeta()).ViaField("metadata"))
+		ctx = apis.WithinParent(ctx, c.ObjectMeta)
+		errs = errs.Also(c.Spec.Validate(apis.WithinSpec(ctx)).ViaField("spec"))
+	}
+
+	if apis.IsInUpdate(ctx) {
+		original := apis.GetBaseline(ctx).(*Configuration)
+
+		err := c.Spec.GetTemplate().VerifyNameChange(ctx,
+			original.Spec.GetTemplate())
+		errs = errs.Also(err.ViaField("spec.revisionTemplate"))
+	}
+
+	return errs
 }
 
 // Validate makes sure that ConfigurationSpec is properly configured.
@@ -37,18 +53,27 @@ func (cs *ConfigurationSpec) Validate(ctx context.Context) *apis.FieldError {
 	if equality.Semantic.DeepEqual(cs, &ConfigurationSpec{}) {
 		return apis.ErrMissingField(apis.CurrentField)
 	}
-	var errs *apis.FieldError
-	// TODO(mattmoor): Check ObjectMeta for Name/Namespace/GenerateName
 
-	if cs.Build == nil {
-		// No build was specified.
-	} else if err := cs.Build.As(&buildv1alpha1.BuildSpec{}); err == nil {
-		// It is a BuildSpec, this is the legacy path.
-	} else if err = cs.Build.As(&unstructured.Unstructured{}); err == nil {
-		// It is an unstructured.Unstructured.
-	} else {
-		errs = errs.Also(apis.ErrInvalidValue(err.Error(), "build"))
+	errs := apis.CheckDeprecated(ctx, cs)
+
+	// Build support is now disabled.
+	if cs.DeprecatedBuild != nil {
+		errs = errs.Also(apis.ErrDisallowedFields("build"))
 	}
 
-	return errs.Also(cs.RevisionTemplate.Validate(ctx).ViaField("revisionTemplate"))
+	var templateField string
+	switch {
+	case cs.DeprecatedRevisionTemplate != nil && cs.Template != nil:
+		return apis.ErrMultipleOneOf("revisionTemplate", "template")
+	case cs.DeprecatedRevisionTemplate != nil:
+		templateField = "revisionTemplate"
+	case cs.Template != nil:
+		templateField = "template"
+		// Disallow the use of deprecated fields under "template".
+		ctx = apis.DisallowDeprecated(ctx)
+	default:
+		return apis.ErrMissingOneOf("revisionTemplate", "template")
+	}
+
+	return errs.Also(cs.GetTemplate().Validate(ctx).ViaField(templateField))
 }

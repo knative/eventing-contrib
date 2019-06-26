@@ -16,7 +16,7 @@ limitations under the License.
 package test
 
 import (
-	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	"github.com/knative/serving/pkg/apis/serving/v1beta1"
 )
 
 // states contains functions for asserting against the state of Knative Serving
@@ -26,18 +26,18 @@ import (
 // IsRevisionReady will check the status conditions of the revision and return true if the revision is
 // ready to serve traffic. It will return false if the status indicates a state other than deploying
 // or being ready. It will also return false if the type of the condition is unexpected.
-func IsRevisionReady(r *v1alpha1.Revision) (bool, error) {
+func IsRevisionReady(r *v1beta1.Revision) (bool, error) {
 	return r.Status.IsReady(), nil
 }
 
 // IsServiceReady will check the status conditions of the service and return true if the service is
 // ready. This means that its configurations and routes have all reported ready.
-func IsServiceReady(s *v1alpha1.Service) (bool, error) {
+func IsServiceReady(s *v1beta1.Service) (bool, error) {
 	return s.Status.IsReady(), nil
 }
 
 // IsRouteReady will check the status conditions of the route and return true if the route is
 // ready.
-func IsRouteReady(r *v1alpha1.Route) (bool, error) {
+func IsRouteReady(r *v1beta1.Route) (bool, error) {
 	return r.Status.IsReady(), nil
 }

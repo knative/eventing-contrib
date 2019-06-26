@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"time"
 
-	servingV1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
-	servingtyped "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1"
+	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	servingtyped "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1"
 	"go.opencensus.io/trace"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -39,7 +39,7 @@ const (
 // interval until inState returns `true` indicating it is done, returns an
 // error or timeout. desc will be used to name the metric that is emitted to
 // track how long it took for name to get into the state checked by inState.
-func WaitForRouteState(client servingtyped.RouteInterface, name string, inState func(r *servingV1alpha1.Route) (bool, error), desc string) error {
+func WaitForRouteState(client servingtyped.RouteInterface, name string, inState func(r *servingv1beta1.Route) (bool, error), desc string) error {
 	metricName := fmt.Sprintf("WaitForRouteState/%s/%s", name, desc)
 	_, span := trace.StartSpan(context.Background(), metricName)
 	defer span.End()

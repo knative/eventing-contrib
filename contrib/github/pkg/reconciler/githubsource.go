@@ -29,8 +29,7 @@ import (
 	"github.com/knative/eventing-contrib/pkg/controller/sinks"
 	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"github.com/knative/pkg/logging"
-	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,6 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/record"
+	"knative.dev/pkg/logging"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -66,7 +66,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &sourcesv1alpha1.GitHubSource{},
-		Owns:      []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
+		Owns:      []runtime.Object{&servingv1beta1.Service{}, &eventingv1alpha1.EventType{}},
 		Reconciler: &reconciler{
 			recorder:            mgr.GetRecorder(controllerAgentName),
 			scheme:              mgr.GetScheme(),
@@ -170,9 +170,9 @@ func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		return err
 	}
 
-	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
-	receiveAdapterDomain := ksvc.Status.Domain
-	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
+	routeCondition := ksvc.Status.GetCondition(servingv1beta1.ServiceConditionReady)
+	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && ksvc.Status.URL != nil {
+		receiveAdapterDomain := ksvc.Status.URL.Host
 		// TODO: Mark Deployed for the ksvc
 		// TODO: Mark some condition for the webhook status?
 		r.addFinalizer(source)
@@ -317,8 +317,8 @@ func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 	return owner, repo, nil
 }
 
-func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {
-	list := &servingv1alpha1.ServiceList{}
+func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1beta1.Service, error) {
+	list := &servingv1beta1.ServiceList{}
 	err := r.client.List(ctx, &client.ListOptions{
 		Namespace:     source.Namespace,
 		LabelSelector: labels.Everything(),
@@ -326,7 +326,7 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 		// Remove this when it's no longer needed.
 		Raw: &metav1.ListOptions{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: servingv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: servingv1beta1.SchemeGroupVersion.String(),
 				Kind:       "Service",
 			},
 		},
@@ -341,7 +341,7 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 			return &ksvc, nil
 		}
 	}
-	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
+	return nil, apierrors.NewNotFound(servingv1beta1.Resource("services"), "")
 }
 
 func (r *reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {

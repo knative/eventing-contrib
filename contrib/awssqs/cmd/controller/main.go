@@ -21,9 +21,9 @@ import (
 
 	"github.com/knative/eventing-contrib/contrib/awssqs/pkg/apis"
 	"github.com/knative/eventing-contrib/contrib/awssqs/pkg/reconciler"
-	"github.com/knative/pkg/logging/logkey"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"knative.dev/pkg/logging/logkey"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"

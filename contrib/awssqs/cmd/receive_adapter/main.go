@@ -22,7 +22,7 @@ import (
 	"os"
 
 	awssqs "github.com/knative/eventing-contrib/contrib/awssqs/pkg/adapter"
-	"github.com/knative/pkg/signals"
+	"knative.dev/pkg/signals"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
