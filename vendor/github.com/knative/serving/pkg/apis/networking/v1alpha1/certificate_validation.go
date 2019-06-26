@@ -19,12 +19,12 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/knative/pkg/apis"
+	"knative.dev/pkg/apis"
 )
 
 // Validate inspects and validates Certificate object.
 func (c *Certificate) Validate(ctx context.Context) *apis.FieldError {
-	return c.Spec.Validate(ctx).ViaField("spec")
+	return c.Spec.Validate(apis.WithinSpec(ctx)).ViaField("spec")
 }
 
 // Validate inspects and validates CertificateSpec object.

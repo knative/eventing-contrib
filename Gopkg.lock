@@ -267,11 +267,11 @@
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
-  digest = "1:c280fbe00363f7c8db868a738b94df33586ce05c10d26578c3adf544d010eb64"
+  digest = "1:7915c656a10819b240db94ffd6afc6a621af4687db735341d9919668750485ec"
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "dbc4da98389f9d0c42eb314c2b346bf1d2a27310"
+  revision = "abf9ef06abd9f532944e28e8942644ea4b710a40"
 
 [[projects]]
   digest = "1:f4f203acd8b11b8747bdcd91696a01dbc95ccb9e2ca2db6abf81c3a4f5e950ce"
@@ -431,17 +431,6 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:0836bde83bdc49aae7710e22d04e2555d9bd25cd133fbb78508c492307081aea"
-  name = "github.com/knative/build"
-  packages = [
-    "pkg/apis/build",
-    "pkg/apis/build/v1alpha1",
-  ]
-  pruneopts = "NUT"
-  revision = "4fc8663ff9c48a66c52684b2e4cdf06ec83117c8"
-  version = "v0.5.0"
-
-[[projects]]
   digest = "1:f4d08f98ce04ca52197f2bb0cd40bfc8da83ace982df9f6c4f7f241f00009f80"
   name = "github.com/knative/eventing"
   packages = [
@@ -462,21 +451,7 @@
   revision = "677d3d17e84b7337f006220d6bb465af4f416f81"
 
 [[projects]]
-  branch = "master"
-  digest = "1:69db98ed5c2c106e99143d7023c653430495a40bfa2c0e3c0d865f13552bc44d"
-  name = "github.com/knative/pkg"
-  packages = [
-    "apis",
-    "apis/duck/v1alpha1",
-    "configmap",
-    "kmeta",
-    "kmp",
-  ]
-  pruneopts = "NUT"
-  revision = "3c6bc12e7897bf8c0d1eb1411fbd3d80537420f9"
-
-[[projects]]
-  digest = "1:877272591f1cdf21c3d9d333c6393c836f22b137b4b24a303814fdf0b706ef7b"
+  digest = "1:1fa8a00b12c1ad84d6ed050e328d750d16c3f3bd62dae55c449322dc7c355a28"
   name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -486,15 +461,16 @@
     "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
     "pkg/apis/serving/v1alpha1",
+    "pkg/apis/serving/v1beta1",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
     "pkg/client/clientset/versioned/typed/networking/v1alpha1",
     "pkg/client/clientset/versioned/typed/serving/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "ca4fffb4743924c58e98badcf5bd3f17a3634d43"
-  version = "v0.5.0"
+  revision = "50cdf8762deae58ed89763adef26a88e7efecac7"
 
 [[projects]]
   branch = "master"
@@ -1336,7 +1312,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:71f76c8836c1ac959f8a72691e0a8fdac78caf34236d59e0414887e065819359"
+  digest = "1:f0a2d6dc85eba89aa87a0b11a2866e6e954df99e5b5907015e13fe84ad3f36b7"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1344,10 +1320,12 @@
     "apis/duck/v1alpha1",
     "apis/duck/v1beta1",
     "changeset",
+    "configmap",
     "kmeta",
     "kmp",
     "logging",
     "logging/logkey",
+    "ptr",
     "signals",
     "test",
     "test/ingress",
