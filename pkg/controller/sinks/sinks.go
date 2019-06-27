@@ -57,9 +57,9 @@ func GetSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReferen
 		return "", fmt.Errorf("sink %s does not contain address", objIdentifier)
 	}
 
-	if t.Status.Address.Hostname == "" {
+	url := t.Status.Address.GetURL()
+	if url.Host == "" {
 		return "", fmt.Errorf("sink %s contains an empty hostname", objIdentifier)
 	}
-
-	return fmt.Sprintf("http://%s/", t.Status.Address.Hostname), nil
+	return url.String(), nil
 }

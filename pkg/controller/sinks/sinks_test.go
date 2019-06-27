@@ -32,6 +32,7 @@ import (
 
 var (
 	addressableDNS = "addressable.sink.svc.cluster.local"
+	addressableURL = fmt.Sprintf("http://%s/", addressableDNS)
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
@@ -52,7 +53,7 @@ var (
 
 func init() {
 	// Add types to scheme
-	duckv1alpha1.AddToScheme(scheme.Scheme)
+	_ = duckv1alpha1.AddToScheme(scheme.Scheme)
 }
 
 func TestGetSinkURI(t *testing.T) {
@@ -63,7 +64,15 @@ func TestGetSinkURI(t *testing.T) {
 		wantErr   error
 		ref       *corev1.ObjectReference
 	}{
-		"happy": {
+		"happy - hostname": {
+			objects: []runtime.Object{
+				getAddressableWithHostname(),
+			},
+			namespace: testNS,
+			ref:       getAddressableRef(),
+			want:      fmt.Sprintf("http://%s", addressableDNS),
+		},
+		"happy - uri": {
 			objects: []runtime.Object{
 				getAddressable(),
 			},
@@ -165,11 +174,21 @@ func getAddressable() *unstructured.Unstructured {
 			},
 			"status": map[string]interface{}{
 				"address": map[string]interface{}{
-					"hostname": addressableDNS,
+					"url": addressableURL,
 				},
 			},
 		},
 	}
+}
+
+func getAddressableWithHostname() *unstructured.Unstructured {
+	a := getAddressable()
+	a.Object["status"] = map[string]interface{}{
+		"address": map[string]interface{}{
+			"hostname": addressableDNS,
+		},
+	}
+	return a
 }
 
 func getAddressableNoStatus() *unstructured.Unstructured {
