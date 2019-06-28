@@ -55,7 +55,7 @@ const (
 	addressableKind       = "Sink"
 	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 	addressableDNS        = "addressable.sink.svc.cluster.local"
-	addressableURI        = "http://addressable.sink.svc.cluster.local/"
+	addressableURI        = "http://addressable.sink.svc.cluster.local"
 )
 
 func init() {

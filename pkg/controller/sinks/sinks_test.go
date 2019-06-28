@@ -69,7 +69,7 @@ func TestGetSinkURI(t *testing.T) {
 			},
 			namespace: testNS,
 			ref:       getAddressableRef(),
-			want:      fmt.Sprintf("http://%s/", addressableDNS),
+			want:      fmt.Sprintf("http://%s", addressableDNS),
 		},
 		"nil hostname": {
 			objects: []runtime.Object{
