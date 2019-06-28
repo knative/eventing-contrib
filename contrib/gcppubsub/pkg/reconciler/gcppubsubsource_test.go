@@ -61,7 +61,7 @@ const (
 	brokerKind                 = "Broker"
 	addressableAPIVersion      = "duck.knative.dev/v1alpha1"
 	addressableDNS             = "addressable.sink.svc.cluster.local"
-	addressableURI             = "http://addressable.sink.svc.cluster.local/"
+	addressableURI             = "http://addressable.sink.svc.cluster.local"
 	transformerAddressableName = "testtransformer"
 )
 

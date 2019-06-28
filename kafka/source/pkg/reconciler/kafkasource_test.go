@@ -23,10 +23,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype"
-
 	sourcesv1alpha1 "github.com/knative/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
+	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
@@ -62,7 +61,7 @@ const (
 	brokerKind            = "Broker"
 	addressableAPIVersion = "duck.knative.dev/v1alpha1"
 	addressableDNS        = "addressable.sink.svc.cluster.local"
-	addressableURI        = "http://addressable.sink.svc.cluster.local/"
+	addressableURI        = "http://addressable.sink.svc.cluster.local"
 )
 
 func init() {
