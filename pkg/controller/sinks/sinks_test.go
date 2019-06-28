@@ -32,7 +32,7 @@ import (
 
 var (
 	addressableDNS = "addressable.sink.svc.cluster.local"
-	addressableURL = fmt.Sprintf("http://%s/", addressableDNS)
+	addressableURL = fmt.Sprintf("http://%s", addressableDNS)
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
@@ -70,7 +70,7 @@ func TestGetSinkURI(t *testing.T) {
 			},
 			namespace: testNS,
 			ref:       getAddressableRef(),
-			want:      fmt.Sprintf("http://%s", addressableDNS),
+			want:      addressableURL,
 		},
 		"happy - uri": {
 			objects: []runtime.Object{
@@ -78,7 +78,7 @@ func TestGetSinkURI(t *testing.T) {
 			},
 			namespace: testNS,
 			ref:       getAddressableRef(),
-			want:      fmt.Sprintf("http://%s/", addressableDNS),
+			want:      addressableURL,
 		},
 		"nil hostname": {
 			objects: []runtime.Object{
