@@ -61,6 +61,5 @@ func GetSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReferen
 	if url.Host == "" {
 		return "", fmt.Errorf("sink %s contains an empty hostname", objIdentifier)
 	}
-
 	return url.String(), nil
 }
