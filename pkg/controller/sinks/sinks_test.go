@@ -22,16 +22,17 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var (
 	addressableDNS = "addressable.sink.svc.cluster.local"
+	addressableURL = fmt.Sprintf("http://%s", addressableDNS)
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
@@ -52,7 +53,7 @@ var (
 
 func init() {
 	// Add types to scheme
-	duckv1alpha1.AddToScheme(scheme.Scheme)
+	_ = duckv1alpha1.AddToScheme(scheme.Scheme)
 }
 
 func TestGetSinkURI(t *testing.T) {
@@ -63,13 +64,21 @@ func TestGetSinkURI(t *testing.T) {
 		wantErr   error
 		ref       *corev1.ObjectReference
 	}{
-		"happy": {
+		"happy - hostname": {
+			objects: []runtime.Object{
+				getAddressableWithHostname(),
+			},
+			namespace: testNS,
+			ref:       getAddressableRef(),
+			want:      addressableURL,
+		},
+		"happy - uri": {
 			objects: []runtime.Object{
 				getAddressable(),
 			},
 			namespace: testNS,
 			ref:       getAddressableRef(),
-			want:      fmt.Sprintf("http://%s/", addressableDNS),
+			want:      addressableURL,
 		},
 		"nil hostname": {
 			objects: []runtime.Object{
@@ -165,11 +174,21 @@ func getAddressable() *unstructured.Unstructured {
 			},
 			"status": map[string]interface{}{
 				"address": map[string]interface{}{
-					"hostname": addressableDNS,
+					"url": addressableURL,
 				},
 			},
 		},
 	}
+}
+
+func getAddressableWithHostname() *unstructured.Unstructured {
+	a := getAddressable()
+	a.Object["status"] = map[string]interface{}{
+		"address": map[string]interface{}{
+			"hostname": addressableDNS,
+		},
+	}
+	return a
 }
 
 func getAddressableNoStatus() *unstructured.Unstructured {

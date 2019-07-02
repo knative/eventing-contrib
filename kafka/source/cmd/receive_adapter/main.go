@@ -29,8 +29,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/knative/pkg/logging"
-	"github.com/knative/pkg/signals"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/signals"
 )
 
 const (

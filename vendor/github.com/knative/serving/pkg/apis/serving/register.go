@@ -45,10 +45,6 @@ const (
 	// its unique identifier
 	RevisionUID = GroupName + "/revisionUID"
 
-	// AutoscalerLabelKey is the label key attached to a autoscaler pod indicating by
-	// which Autoscaler deployment it is created.
-	AutoscalerLabelKey = GroupName + "/autoscaler"
-
 	// ServiceLabelKey is the label key attached to a Route and Configuration indicating by
 	// which Service they are created.
 	ServiceLabelKey = GroupName + "/service"
@@ -57,11 +53,14 @@ const (
 	// metadata generation of the Configuration that created this revision
 	ConfigurationGenerationLabelKey = GroupName + "/configurationGeneration"
 
-	// DeprecatedConfigurationMetadataGenerationLabelKey is the label key attached to a Revision indicating the
-	// metadata generation of the Configuration that created this revision
-	DeprecatedConfigurationMetadataGenerationLabelKey = GroupName + "/configurationMetadataGeneration"
+	// CreatorAnnotation is the annotation key to describe the user that
+	// created the resource.
+	CreatorAnnotation = GroupName + "/creator"
+	// UpdaterAnnotation is the annotation key to describe the user that
+	// last updated the resource.
+	UpdaterAnnotation = GroupName + "/lastModifier"
 
-	// BuildHashLabelKey is the label key attached to a Build indicating the
-	// hash of the spec from which they were created.
-	BuildHashLabelKey = GroupName + "/buildHash"
+	// QueueSideCarResourcePercentageAnnotation is the percentage of user container resources to be used for queue-proxy
+	// It has to be in [0.1,100]
+	QueueSideCarResourcePercentageAnnotation = "queue.sidecar." + GroupName + "/resourcePercentage"
 )

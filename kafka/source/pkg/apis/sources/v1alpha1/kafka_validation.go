@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/knative/pkg/apis"
+	"knative.dev/pkg/apis"
 )
 
 func (current *KafkaSource) CheckImmutableFields(ctx context.Context, og apis.Immutable) *apis.FieldError {

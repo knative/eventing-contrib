@@ -19,10 +19,10 @@ package test
 
 import (
 	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	pkgTest "github.com/knative/pkg/test"
-	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	pkgTest "knative.dev/pkg/test"
 )
 
 const (
@@ -30,14 +30,14 @@ const (
 )
 
 // Route returns a Route object in namespace
-func Route(name string, namespace string, configName string) *servingv1alpha1.Route {
-	return &servingv1alpha1.Route{
+func Route(name string, namespace string, configName string) *servingv1beta1.Route {
+	return &servingv1beta1.Route{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 			Name:      name,
 		},
-		Spec: servingv1alpha1.RouteSpec{
-			Traffic: []servingv1alpha1.TrafficTarget{
+		Spec: servingv1beta1.RouteSpec{
+			Traffic: []servingv1beta1.TrafficTarget{
 				{
 					ConfigurationName: configName,
 					Percent:           100,
@@ -49,20 +49,22 @@ func Route(name string, namespace string, configName string) *servingv1alpha1.Ro
 
 // Configuration returns a Configuration object in namespace with name
 // that uses the image specified by imagePath.
-func Configuration(name string, namespace string, imagePath string) *servingv1alpha1.Configuration {
-	return &servingv1alpha1.Configuration{
+func Configuration(name string, namespace string, imagePath string) *servingv1beta1.Configuration {
+	return &servingv1beta1.Configuration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: servingv1alpha1.ConfigurationSpec{
-			RevisionTemplate: servingv1alpha1.RevisionTemplateSpec{
+		Spec: servingv1beta1.ConfigurationSpec{
+			Template: servingv1beta1.RevisionTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{"knative.dev/type": "container"},
 				},
-				Spec: servingv1alpha1.RevisionSpec{
-					Container: corev1.Container{
-						Image: imagePath,
+				Spec: servingv1beta1.RevisionSpec{
+					PodSpec: corev1.PodSpec{
+						Containers: []corev1.Container{{
+							Image: imagePath,
+						}},
 					},
 				},
 			},
