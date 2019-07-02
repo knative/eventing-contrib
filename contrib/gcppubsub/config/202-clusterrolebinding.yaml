@@ -17,7 +17,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-gcppubsub-controller
   labels:
-    contrib.eventing.knative.dev/release: "v0.7.0"
+    contrib.eventing.knative.dev/release: "v0.7.1"
 subjects:
 - kind: ServiceAccount
   name: gcppubsub-controller-manager
@@ -34,7 +34,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-gcppubsub-resolver
   labels:
-    contrib.eventing.knative.dev/release: "v0.7.0"
+    contrib.eventing.knative.dev/release: "v0.7.1"
 subjects:
 - kind: ServiceAccount
   name: gcppubsub-controller-manager

@@ -18,7 +18,7 @@ kind: ServiceEntry
 metadata:
   name: awssqs-bus-ext
   labels:
-    contrib.eventing.knative.dev/release: "v0.7.0"
+    contrib.eventing.knative.dev/release: "v0.7.1"
 spec:
   hosts:
   - "*.amazonaws.com"

@@ -16,7 +16,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    contrib.eventing.knative.dev/release: "v0.7.0"
+    contrib.eventing.knative.dev/release: "v0.7.1"
     control-plane: awssqs-controller-manager
   name: awssqs-controller-manager
   namespace: knative-sources
