@@ -20,7 +20,6 @@ package v1alpha1
 import (
 	"strings"
 
-	"github.com/apache/camel-k/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -82,16 +81,32 @@ func (is *IntegrationSpec) AddConfiguration(confType string, confValue string) {
 
 // AddDependency --
 func (is *IntegrationSpec) AddDependency(dependency string) {
-	switch {
-	case strings.HasPrefix(dependency, "camel-"):
-		util.StringSliceUniqueAdd(&is.Dependencies, "camel:"+strings.TrimPrefix(dependency, "camel-"))
-	default:
-		util.StringSliceUniqueAdd(&is.Dependencies, dependency)
+	if is.Dependencies == nil {
+		is.Dependencies = make([]string, 0)
 	}
+	newDep := dependency
+	if strings.HasPrefix(newDep, "camel-") {
+		newDep = "camel:" + strings.TrimPrefix(dependency, "camel-")
+	}
+	for _, d := range is.Dependencies {
+		if d == newDep {
+			return
+		}
+	}
+	is.Dependencies = append(is.Dependencies, newDep)
 }
 
 // Configurations --
 func (is *IntegrationSpec) Configurations() []ConfigurationSpec {
+	if is == nil {
+		return []ConfigurationSpec{}
+	}
+
+	return is.Configuration
+}
+
+// Configurations --
+func (is *IntegrationStatus) Configurations() []ConfigurationSpec {
 	if is == nil {
 		return []ConfigurationSpec{}
 	}
@@ -105,7 +120,11 @@ func (in *Integration) Configurations() []ConfigurationSpec {
 		return []ConfigurationSpec{}
 	}
 
-	return in.Spec.Configurations()
+	answer := make([]ConfigurationSpec, 0)
+	answer = append(answer, in.Status.Configuration...)
+	answer = append(answer, in.Spec.Configuration...)
+
+	return answer
 }
 
 // NewSourceSpec --

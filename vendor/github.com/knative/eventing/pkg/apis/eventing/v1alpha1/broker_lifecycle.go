@@ -17,12 +17,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/apps/v1"
+	"time"
 
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	duckv1alpha1 "github.com/knative/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var brokerCondSet = duckv1alpha1.NewLivingConditionSet(
+var brokerCondSet = apis.NewLivingConditionSet(
 	BrokerConditionIngress,
 	BrokerConditionTriggerChannel,
 	BrokerConditionIngressChannel,
@@ -32,22 +36,22 @@ var brokerCondSet = duckv1alpha1.NewLivingConditionSet(
 )
 
 const (
-	BrokerConditionReady                              = duckv1alpha1.ConditionReady
-	BrokerConditionIngress duckv1alpha1.ConditionType = "IngressReady"
+	BrokerConditionReady                      = apis.ConditionReady
+	BrokerConditionIngress apis.ConditionType = "IngressReady"
 
-	BrokerConditionTriggerChannel duckv1alpha1.ConditionType = "TriggerChannelReady"
+	BrokerConditionTriggerChannel apis.ConditionType = "TriggerChannelReady"
 
-	BrokerConditionIngressChannel duckv1alpha1.ConditionType = "IngressChannelReady"
+	BrokerConditionIngressChannel apis.ConditionType = "IngressChannelReady"
 
-	BrokerConditionIngressSubscription duckv1alpha1.ConditionType = "IngressSubscriptionReady"
+	BrokerConditionIngressSubscription apis.ConditionType = "IngressSubscriptionReady"
 
-	BrokerConditionFilter duckv1alpha1.ConditionType = "FilterReady"
+	BrokerConditionFilter apis.ConditionType = "FilterReady"
 
-	BrokerConditionAddressable duckv1alpha1.ConditionType = "Addressable"
+	BrokerConditionAddressable apis.ConditionType = "Addressable"
 )
 
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (bs *BrokerStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+func (bs *BrokerStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return brokerCondSet.Manage(bs).GetCondition(t)
 }
 
@@ -65,7 +69,7 @@ func (bs *BrokerStatus) MarkIngressFailed(reason, format string, args ...interfa
 	brokerCondSet.Manage(bs).MarkFalse(BrokerConditionIngress, reason, format, args...)
 }
 
-func (bs *BrokerStatus) PropagateIngressDeploymentAvailability(d *v1.Deployment) {
+func (bs *BrokerStatus) PropagateIngressDeploymentAvailability(d *appsv1.Deployment) {
 	if deploymentIsAvailable(&d.Status) {
 		brokerCondSet.Manage(bs).MarkTrue(BrokerConditionIngress)
 	} else {
@@ -91,6 +95,16 @@ func (bs *BrokerStatus) PropagateTriggerChannelReadiness(cs *ChannelStatus) {
 	}
 }
 
+func (bs *BrokerStatus) PropagateTriggerChannelReadinessCRD(cs *duckv1alpha1.ChannelableStatus) {
+	// TODO: Once you can get a Ready status from Channelable in a generic way, use it here...
+	address := cs.AddressStatus.Address
+	if address != nil {
+		brokerCondSet.Manage(bs).MarkTrue(BrokerConditionTriggerChannel)
+	} else {
+		bs.MarkTriggerChannelFailed("ChannelNotReady", "trigger Channel is not ready: not addressalbe")
+	}
+}
+
 func (bs *BrokerStatus) MarkIngressChannelFailed(reason, format string, args ...interface{}) {
 	brokerCondSet.Manage(bs).MarkFalse(BrokerConditionIngressChannel, reason, format, args...)
 }
@@ -104,6 +118,16 @@ func (bs *BrokerStatus) PropagateIngressChannelReadiness(cs *ChannelStatus) {
 			msg = cc.Message
 		}
 		bs.MarkIngressChannelFailed("ChannelNotReady", "ingress Channel is not ready: %s", msg)
+	}
+}
+
+func (bs *BrokerStatus) PropagateIngressChannelReadinessCRD(cs *duckv1alpha1.ChannelableStatus) {
+	// TODO: Once you can get a Ready status from Channelable in a generic way, use it here...
+	address := cs.AddressStatus.Address
+	if address != nil {
+		brokerCondSet.Manage(bs).MarkTrue(BrokerConditionIngressChannel)
+	} else {
+		bs.MarkIngressChannelFailed("ChannelNotReady", "ingress Channel is not ready: not addressable")
 	}
 }
 
@@ -127,7 +151,7 @@ func (bs *BrokerStatus) MarkFilterFailed(reason, format string, args ...interfac
 	brokerCondSet.Manage(bs).MarkFalse(BrokerConditionFilter, reason, format, args...)
 }
 
-func (bs *BrokerStatus) PropagateFilterDeploymentAvailability(d *v1.Deployment) {
+func (bs *BrokerStatus) PropagateFilterDeploymentAvailability(d *appsv1.Deployment) {
 	if deploymentIsAvailable(&d.Status) {
 		brokerCondSet.Manage(bs).MarkTrue(BrokerConditionFilter)
 	} else {
@@ -137,10 +161,10 @@ func (bs *BrokerStatus) PropagateFilterDeploymentAvailability(d *v1.Deployment) 
 	}
 }
 
-func deploymentIsAvailable(d *v1.DeploymentStatus) bool {
+func deploymentIsAvailable(d *appsv1.DeploymentStatus) bool {
 	// Check if the Deployment is available.
 	for _, cond := range d.Conditions {
-		if cond.Type == v1.DeploymentAvailable {
+		if cond.Type == appsv1.DeploymentAvailable {
 			return cond.Status == "True"
 		}
 	}
@@ -150,11 +174,34 @@ func deploymentIsAvailable(d *v1.DeploymentStatus) bool {
 
 // SetAddress makes this Broker addressable by setting the hostname. It also
 // sets the BrokerConditionAddressable to true.
-func (bs *BrokerStatus) SetAddress(hostname string) {
-	bs.Address.Hostname = hostname
-	if hostname != "" {
+func (bs *BrokerStatus) SetAddress(url *apis.URL) {
+	if url != nil {
+		bs.Address.Hostname = url.Host
+		bs.Address.URL = url
 		brokerCondSet.Manage(bs).MarkTrue(BrokerConditionAddressable)
 	} else {
+		bs.Address.Hostname = ""
+		bs.Address.URL = nil
 		brokerCondSet.Manage(bs).MarkFalse(BrokerConditionAddressable, "emptyHostname", "hostname is the empty string")
 	}
+}
+
+// MarkDeprecated adds a warning condition that using Channel Provisioners is deprecated
+// and will stop working in the future. Note that this does not affect the Ready condition.
+func (cs *BrokerStatus) MarkDeprecated(reason, msg string) {
+	dc := apis.Condition{
+		Type:               "Deprecated",
+		Reason:             reason,
+		Status:             v1.ConditionTrue,
+		Severity:           apis.ConditionSeverityWarning,
+		Message:            msg,
+		LastTransitionTime: apis.VolatileTime{Inner: metav1.NewTime(time.Now())},
+	}
+	for i, c := range cs.Conditions {
+		if c.Type == dc.Type {
+			cs.Conditions[i] = dc
+			return
+		}
+	}
+	cs.Conditions = append(cs.Conditions, dc)
 }

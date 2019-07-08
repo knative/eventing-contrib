@@ -19,11 +19,11 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(
-  ["eventing-sources.yaml"]="config"
+  ["github.yaml"]="contrib/github/config"
   ["gcppubsub.yaml"]="contrib/gcppubsub/config"
   ["event-display.yaml"]="config/tools/event-display"
-  ["camel.yaml"]="contrib/camel/config"
-  ["kafka.yaml"]="contrib/kafka/config"
+  ["camel.yaml"]="camel/source/config"
+  ["kafka.yaml"]="kafka/source/config"
   ["awssqs.yaml"]="contrib/awssqs/config"
 )
 readonly COMPONENTS

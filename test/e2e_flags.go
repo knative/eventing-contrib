@@ -21,14 +21,14 @@ package test
 import (
 	"flag"
 
-	pkgTest "github.com/knative/pkg/test"
-	"github.com/knative/pkg/test/logging"
+	pkgTest "knative.dev/pkg/test"
+	"knative.dev/pkg/test/logging"
 )
 
 // EventingSourcesFlags holds the command line flags specific to knative/eventing-contrib
 var EventingSourcesFlags = initializeEventingSourcesFlags()
 
-// EventingSourcesEnvironmentFlags holds the e2e flags needed only by the eventing-sources repo
+// EventingSourcesEnvironmentFlags holds the e2e flags needed only by the eventing-contrib repo
 type EventingSourcesEnvironmentFlags struct {
 }
 

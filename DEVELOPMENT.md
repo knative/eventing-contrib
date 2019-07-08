@@ -57,15 +57,9 @@ follows.
 
 ## Installing Sources
 
-Once you've [setup your development environment](#getting-started), install
-sources _Github Source_ and _AWS SQS Source_ with:
-
-```shell
-ko apply -f config/
-```
-
-or install a single source _Camel Source_, _Gcppubsub Source_, _Kafka Source_
-with
+Once you've [setup your development environment](#getting-started), install any
+of the sources _Github Source_, _AWS SQS Source_, _Camel Source_, _Gcppubsub
+Source_, _Kafka Source_ with:
 
 ```
 ko apply -f contrib/<source_name>/
@@ -74,24 +68,24 @@ ko apply -f contrib/<source_name>/
 These commands are idempotent, so you can run them at any time to update your
 deployment.
 
-You can see things running with:
+If you applied the _GitHub Source_, you can see things running with:
 
 ```shell
 $ kubectl -n knative-sources get pods
-NAME                   READY     STATUS    RESTARTS   AGE
-controller-manager-0   1/1       Running   0          2h
+NAME                          READY     STATUS    RESTARTS   AGE
+github-controller-manager-0   1/1       Running   0          2h
 ```
 
-You can access the Eventing Manager's logs with:
+You can access the Github eventing manager's logs with:
 
 ```shell
-kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=controller-manager -o name)
+kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=github-controller-manager -o name)
 ```
 
 _See
 [contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md),
-[contrib/camel/samples/README.md](./contrib/camel/samples/README.md),
-[contrib/kafka/samples/README.md](./contrib/kafka/samples/README.md) for
+[camel/source/samples/README.md](./camel/source/samples/README.md),
+[kafka/source/samples/README.md](./kafka/source/samples/README.md) for
 instructions on installing the Gcppubsub Source, Camel Source and Kafka Source._
 
 ## Iterating
@@ -100,9 +94,9 @@ As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
-- **If you change a type definition ([pkg/apis/](./pkg/apis/.)),** then you must
-  run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This also runs
-  [`./hack/update-deps.sh`](./hack/update-deps.sh)._
+- **If you change a type definition (contrib/<source_name>/pkg/apis/),** then
+  you must run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This
+  also runs [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 
 These are both idempotent, and we expect that running these in the `master`
 branch to produce no diffs.
@@ -131,7 +125,7 @@ Running tests as you make changes to the code-base is pretty simple. See
 You can delete `Knative Sources` with:
 
 ```shell
-ko delete -f config/
+ko delete -f contrib/<source_name>/config/
 ```
 
 <!--

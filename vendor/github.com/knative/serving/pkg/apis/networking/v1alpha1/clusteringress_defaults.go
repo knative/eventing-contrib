@@ -18,72 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-const (
-	// DefaultTimeout will be set if timeout not specified.
-	DefaultTimeout = 10 * time.Minute
-	// DefaultRetryCount will be set if Attempts not specified.
-	DefaultRetryCount = 3
+	"knative.dev/pkg/apis"
 )
 
 func (c *ClusterIngress) SetDefaults(ctx context.Context) {
-	c.Spec.SetDefaults(ctx)
-}
-
-func (c *IngressSpec) SetDefaults(ctx context.Context) {
-	for i := range c.TLS {
-		c.TLS[i].SetDefaults(ctx)
-	}
-	for i := range c.Rules {
-		c.Rules[i].SetDefaults(ctx)
-	}
-	if c.Visibility == "" {
-		c.Visibility = IngressVisibilityExternalIP
-	}
-}
-
-func (t *ClusterIngressTLS) SetDefaults(ctx context.Context) {
-	// Default Secret key for ServerCertificate is `tls.crt`.
-	if t.ServerCertificate == "" {
-		t.ServerCertificate = "tls.crt"
-	}
-	// Default Secret key for PrivateKey is `tls.key`.
-	if t.PrivateKey == "" {
-		t.PrivateKey = "tls.key"
-	}
-}
-
-func (r *ClusterIngressRule) SetDefaults(ctx context.Context) {
-	r.HTTP.SetDefaults(ctx)
-}
-
-func (r *HTTPClusterIngressRuleValue) SetDefaults(ctx context.Context) {
-	for i := range r.Paths {
-		r.Paths[i].SetDefaults(ctx)
-	}
-}
-
-func (p *HTTPClusterIngressPath) SetDefaults(ctx context.Context) {
-	// If only one split is specified, we default to 100.
-	if len(p.Splits) == 1 && p.Splits[0].Percent == 0 {
-		p.Splits[0].Percent = 100
-	}
-
-	if p.Timeout == nil {
-		p.Timeout = &metav1.Duration{Duration: DefaultTimeout}
-	}
-
-	if p.Retries == nil {
-		p.Retries = &HTTPRetry{
-			PerTryTimeout: &metav1.Duration{Duration: DefaultTimeout},
-			Attempts:      DefaultRetryCount,
-		}
-	}
-	if p.Retries.PerTryTimeout == nil {
-		p.Retries.PerTryTimeout = &metav1.Duration{Duration: DefaultTimeout}
-	}
+	c.Spec.SetDefaults(apis.WithinSpec(ctx))
 }
