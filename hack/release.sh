@@ -31,12 +31,12 @@ readonly COMPONENTS
 function build_release() {
   local all_yamls=()
   for yaml in "${!COMPONENTS[@]}"; do
-  local config="${COMPONENTS[${yaml}]}"
+    local config="${COMPONENTS[${yaml}]}"
     echo "Building Knative Eventing Sources - ${config}"
     ko resolve ${KO_FLAGS} -f ${config}/ > ${yaml}
     all_yamls+=(${yaml})
   done
-  YAMLS_TO_PUBLISH="${all_yamls[@]}"
+  ARTIFACTS_TO_PUBLISH="${all_yamls[@]}"
 }
 
 main $@
