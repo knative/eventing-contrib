@@ -83,7 +83,7 @@ kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control
 ```
 
 _See
-[contrib/gcppubsub/samples/README.md](./contrib/gcppubsub/samples/README.md),
+[contrib/gcppubsub/samples/README.md](gcppubsub/samples/README.md),
 [camel/source/samples/README.md](./camel/source/samples/README.md),
 [kafka/source/samples/README.md](./kafka/source/samples/README.md) for
 instructions on installing the Gcppubsub Source, Camel Source and Kafka Source._
