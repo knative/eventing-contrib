@@ -23,7 +23,7 @@ source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
 declare -A COMPONENTS
 COMPONENTS=(
   ["github.yaml"]="contrib/github/config"
-  ["gcppubsub.yaml"]="contrib/gcppubsub/config"
+  ["gcppubsub.yaml"]="gcppubsub/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["camel.yaml"]="camel/source/config"
   ["kafka.yaml"]="kafka/source/config"
