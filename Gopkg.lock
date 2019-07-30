@@ -1012,10 +1012,10 @@
   version = "v1.3.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:214430b211a5232ac29e15d6fb8297301f9048f13c47418d663d5e92d1570a08"
+  digest = "1:20e41ea0a46968c5efef50d40ccb1c0afae9fa0384d32c3e5c86c48a779e4a37"
   name = "google.golang.org/genproto"
   packages = [
+    "googleapis/api",
     "googleapis/api/annotations",
     "googleapis/api/distribution",
     "googleapis/api/label",
@@ -1030,7 +1030,7 @@
     "protobuf/field_mask",
   ]
   pruneopts = "NUT"
-  revision = "b69ba1387ce2108ac9bc8e8e5e5a46e7d5c72313"
+  revision = "357c62f0e4bbba7e6cc403ae09edcf3e2b9028fe"
 
 [[projects]]
   digest = "1:f16e8193cfe5fdd5b3d62c2d22f4a6bf0a08c61f99d78b54e16f780a9db4f923"
