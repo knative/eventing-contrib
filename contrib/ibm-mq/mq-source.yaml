@@ -1,0 +1,30 @@
+---
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: ContainerSource
+metadata:
+  name: mq
+spec:
+  template:
+    spec:
+      containers:
+        - image: github.com/triggermesh/eventing-contrib/contrib/ibm-mq
+          name: receiver
+          env:
+            - name: LD_LIBRARY_PATH
+              value: /var/run/ko/lib64
+            - name: QUEUE_MANAGER
+              value: QM1
+            - name: CHANNEL_NAME
+              value: DEV.APP.SVRCONN
+            - name: CONNECTION_NAME
+              value: mq-service.default.svc.cluster.local(1414)
+            - name: USER_ID
+              value: admin
+            - name: PASSWORD
+              value: passw0rd
+            - name: QUEUE_NAME
+              value: DEV.QUEUE.1
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: default

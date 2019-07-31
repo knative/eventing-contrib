@@ -1,0 +1,2 @@
+baseImageOverrides:
+  github.com/triggermesh/eventing-contrib/contrib/ibm-mq: debian:stretch-slim

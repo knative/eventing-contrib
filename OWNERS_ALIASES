@@ -19,6 +19,11 @@ aliases:
     - Abd4llA
   natss-reviewers:
     - Abd4llA
+    
+  ibm-mq-approvers:
+    - sebgoa
+  ibm-mq-reviewers:
+    - sebgoa
 
   productivity-approvers:
   - adrcunha
