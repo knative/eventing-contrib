@@ -82,8 +82,7 @@ You can access the Github eventing manager's logs with:
 kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=github-controller-manager -o name)
 ```
 
-_See
-[contrib/gcppubsub/samples/README.md](gcppubsub/samples/README.md),
+_See [contrib/gcppubsub/samples/README.md](gcppubsub/samples/README.md),
 [camel/source/samples/README.md](./camel/source/samples/README.md),
 [kafka/source/samples/README.md](./kafka/source/samples/README.md) for
 instructions on installing the Gcppubsub Source, Camel Source and Kafka Source._
