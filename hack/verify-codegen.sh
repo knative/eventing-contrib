@@ -37,6 +37,7 @@ cp -aR "${REPO_ROOT_DIR}/Gopkg.lock" "${REPO_ROOT_DIR}/pkg" "${REPO_ROOT_DIR}/ve
 "${REPO_ROOT_DIR}/hack/update-codegen.sh"
 echo "Diffing ${REPO_ROOT_DIR} against freshly generated codegen"
 ret=0
+diff -Naupr --no-dereference "${REPO_ROOT_DIR}/Gopkg.lock" "${TMP_DIFFROOT}/Gopkg.lock" || ret=1
 diff -Naupr "${REPO_ROOT_DIR}/pkg" "${TMP_DIFFROOT}/pkg" || ret=1
 diff -Naupr --no-dereference "${REPO_ROOT_DIR}/vendor" "${TMP_DIFFROOT}/vendor" || ret=1
 
