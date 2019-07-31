@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/library.sh
+source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
 cd ${REPO_ROOT_DIR}
 
@@ -28,6 +28,6 @@ dep ensure
 rm -rf $(find vendor/ -name 'OWNERS')
 rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
-rm -fr vendor/github.com/knative/test-infra/devstats
+rm -fr vendor/knative.dev/test-infra/devstats
 
 update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./contrib/github/cmd/*" "./gcppubsub/cmd/*" "./camel/source/cmd/*" "./kafka/source/cmd/*" "./contrib/awssqs/cmd/*"
