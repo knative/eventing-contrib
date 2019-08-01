@@ -473,17 +473,6 @@
   revision = "50cdf8762deae58ed89763adef26a88e7efecac7"
 
 [[projects]]
-  branch = "master"
-  digest = "1:480c2cdecde930157f2d3849eb3f1769d2c9215c44823e77ac52a653b24d9536"
-  name = "github.com/knative/test-infra"
-  packages = [
-    "scripts",
-    "tools/dep-collector",
-  ]
-  pruneopts = "UT"
-  revision = "a3c073a2fea1d6a5a97c4150b05792a3faba2bc0"
-
-[[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
   name = "github.com/markbates/inflect"
   packages = ["."]
@@ -1339,6 +1328,17 @@
   revision = "1104d6c75533160d27c02d3eb373fc567bd6d60c"
 
 [[projects]]
+  branch = "master"
+  digest = "1:68050b4ce26531655bac0f6e109d04eb0a4550ead73e320119ed3c628ced4a0a"
+  name = "knative.dev/test-infra"
+  packages = [
+    "scripts",
+    "tools/dep-collector",
+  ]
+  pruneopts = "UT"
+  revision = "17f2331e80ad0d3e170ea2bae45c3922744f83af"
+
+[[projects]]
   digest = "1:399953e7c3ac9253dcf1fe909b0a74f6d1c4e974decefd6f5d361cab06249ccc"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
@@ -1430,11 +1430,9 @@
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/apis/sources/v1alpha1",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
-    "github.com/knative/serving/pkg/apis/serving/v1alpha1",
+    "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/knative/serving/pkg/client/clientset/versioned",
-    "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1",
-    "github.com/knative/test-infra/scripts",
-    "github.com/knative/test-infra/tools/dep-collector",
+    "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "go.opencensus.io/trace",
@@ -1479,12 +1477,15 @@
     "knative.dev/pkg/apis",
     "knative.dev/pkg/apis/duck",
     "knative.dev/pkg/apis/duck/v1alpha1",
+    "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/kmp",
     "knative.dev/pkg/logging",
     "knative.dev/pkg/logging/logkey",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/test",
     "knative.dev/pkg/test/logging",
+    "knative.dev/test-infra/scripts",
+    "knative.dev/test-infra/tools/dep-collector",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/client/fake",

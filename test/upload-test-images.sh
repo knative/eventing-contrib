@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# If gcloud is not available make it a no-op, not an error.
+which gcloud &> /dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
+
 set -o errexit
 
 function upload_test_images() {

@@ -17,13 +17,13 @@
 # Documentation about this script and how to use it can be found
 # at https://github.com/knative/test-infra/tree/master/ci
 
-source $(dirname $0)/../vendor/github.com/knative/test-infra/scripts/release.sh
+source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
 
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(
   ["github.yaml"]="contrib/github/config"
-  ["gcppubsub.yaml"]="contrib/gcppubsub/config"
+  ["gcppubsub.yaml"]="gcppubsub/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["camel.yaml"]="camel/source/config"
   ["kafka.yaml"]="kafka/source/config"
