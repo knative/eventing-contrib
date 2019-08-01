@@ -18,10 +18,10 @@ package v1alpha1
 
 import (
 	duckv1alpha1 "github.com/knative/eventing/pkg/apis/duck/v1alpha1"
+	v1 "k8s.io/api/apps/v1"
 	"knative.dev/pkg/apis"
 	pkgduckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
-	v1 "k8s.io/api/apps/v1"
 )
 
 type testHelper struct{}
@@ -73,6 +73,7 @@ func (testHelper) ReadySubscriptionStatus() *SubscriptionStatus {
 func (testHelper) NotReadySubscriptionStatus() *SubscriptionStatus {
 	ss := &SubscriptionStatus{}
 	ss.MarkReferencesResolved()
+	ss.MarkChannelNotReady("testInducedError", "test induced %s", "error")
 	return ss
 }
 
@@ -87,9 +88,15 @@ func (t testHelper) ReadyBrokerStatus() *BrokerStatus {
 	return bs
 }
 
+func (t testHelper) NotReadyBrokerStatus() *BrokerStatus {
+	bs := &BrokerStatus{}
+	bs.PropagateIngressChannelReadinessCRD(&duckv1alpha1.ChannelableStatus{})
+	return bs
+}
+
 func (t testHelper) ReadyBrokerStatusDeprecated() *BrokerStatus {
 	bs := &BrokerStatus{}
-	bs.MarkDeprecated("ClusterChannelProvisionerDeprecated", "Provisioners are deprecated and will be removed in 0.8. Recommended replacement is CRD based channels using spec.channelTemplateSpec.")
+	bs.MarkDeprecated("ClusterChannelProvisionerDeprecated", "Provisioners are deprecated and will be removed in 0.9. Recommended replacement is CRD based channels using spec.channelTemplateSpec.")
 	bs.PropagateIngressDeploymentAvailability(t.AvailableDeployment())
 	bs.PropagateIngressChannelReadiness(t.ReadyChannelStatus())
 	bs.PropagateTriggerChannelReadiness(t.ReadyChannelStatus())
