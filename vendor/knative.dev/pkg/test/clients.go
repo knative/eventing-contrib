@@ -22,14 +22,14 @@ import (
 	"fmt"
 	"strings"
 
-	"knative.dev/pkg/test/logging"
-	"knative.dev/pkg/test/spoof"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	k8styped "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"knative.dev/pkg/test/logging"
+	"knative.dev/pkg/test/spoof"
 )
 
 // KubeClient holds instances of interfaces for making requests to kubernetes client.
@@ -110,5 +110,5 @@ func (client *KubeClient) PodLogs(podName, containerName, namespace string) ([]b
 			return result.Raw()
 		}
 	}
-	return nil, fmt.Errorf("Could not find logs for %s/%s", podName, containerName)
+	return nil, fmt.Errorf("could not find logs for %s/%s", podName, containerName)
 }

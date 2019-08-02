@@ -37,7 +37,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  branch = "release-0.8"
 
 [[override]]
   name = "k8s.io/api"
@@ -104,3 +104,22 @@ required = [
 [[constraint]]
   name = "github.com/apache/camel-k"
   version = "0.3.4"
+  
+
+# The dependencies below are required for opencensus.
+[[override]]
+  name = "google.golang.org/genproto"
+  revision = "357c62f0e4bbba7e6cc403ae09edcf3e2b9028fe"
+
+[[constraint]]
+  name = "go.opencensus.io"
+  version = "0.22.0"
+
+[[override]]
+  name = "github.com/census-instrumentation/opencensus-proto"
+  version = "0.2.0"
+
+[[override]]
+  name="github.com/golang/protobuf"
+  version = "1.3.2"
+
