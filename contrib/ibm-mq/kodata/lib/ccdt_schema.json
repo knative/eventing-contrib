@@ -1,0 +1,444 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ccdt_schema.json",
+  "type": "object",
+  "title": "Client Channel Definition Table Schema",
+  "required": [
+    "channel"
+  ],
+  "properties": {
+    "channel": {
+      "$id": "#/properties/channel",
+      "type": "array",
+      "title": "Channel Schema",
+      "items": {
+        "$id": "#/properties/channel/items",
+        "type": "object",
+        "title": "Items Schema",
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "compression": {
+            "$id": "#/properties/channel/items/properties/compression",
+            "type": "object",
+            "title": "Compression Schema",
+            "properties": {
+              "header": {
+                "$id": "#/properties/channel/items/properties/compression/properties/header",
+                "type": "array",
+                "title": "Header Compression Schema",
+                "items": {
+                  "$id": "#/properties/channel/items/properties/compression/properties/header/items",
+                  "type": "string",
+                  "title": "Items Schema",
+                  "default": "",
+                  "examples": [
+                    "system",
+                    "none"
+                  ],
+                  "pattern": "^(.*)$"
+                }
+              },
+              "message": {
+                "$id": "#/properties/channel/items/properties/compression/properties/message",
+                "type": "array",
+                "title": "Message Compression Schema",
+                "items": {
+                  "$id": "#/properties/channel/items/properties/compression/properties/message/items",
+                  "type": "string",
+                  "title": "Items Schema",
+                  "default": "",
+                  "examples": [
+                    "rle",
+                    "zlibhigh",
+                    "zlibfast",
+                    "none"
+                  ],
+                  "pattern": "^(.*)$"
+                }
+              }
+            }
+          },
+          "connectionManagement": {
+            "$id": "#/properties/channel/items/properties/connectionManagement",
+            "type": "object",
+            "title": "Connection Management Schema",
+            "properties": {
+              "sharingConversations": {
+                "$id": "#/properties/channel/items/properties/connectionManagement/properties/sharingConversations",
+                "type": "integer",
+                "title": "Sharing Conversations Schema",
+                "default": 0,
+                "examples": [
+                  10
+                ]
+              },
+              "clientWeight": {
+                "$id": "#/properties/channel/items/properties/connectionManagement/properties/clientWeight",
+                "type": "integer",
+                "title": "Client Weight Schema",
+                "default": 0,
+                "examples": [
+                  5
+                ]
+              },
+              "affinity": {
+                "$id": "#/properties/channel/items/properties/connectionManagement/properties/affinity",
+                "type": "string",
+                "title": "Client Affinity Schema",
+                "default": "preferred",
+                "examples": [
+                  "preferred",
+                  "none"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "defaultReconnect": {
+                "$id": "#/properties/channel/items/properties/connectionManagement/properties/defaultReconnect",
+                "type": "string",
+                "title": "Default Reconnect Schema",
+                "default": "no",
+                "examples": [
+                  "no",
+                  "yes",
+                  "queueManager",
+                  "disabled"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "heartbeatInterval": {
+                "$id": "#/properties/channel/items/properties/connectionManagement/properties/heartbeatInterval",
+                "type": "integer",
+                "title": "Heartbeat Interval Schema",
+                "default": 300,
+                "examples": [
+                  300
+                ]
+              },
+              "keepAliveInterval": {
+                "$id": "#/properties/channel/items/properties/connectionManagement/properties/keepAliveInterval",
+                "type": "integer",
+                "title": "Keepalive Interval Schema",
+                "default": -1,
+                "examples": [
+                  -1
+                ]
+              },
+              "localAddress": {
+                "$id": "#/properties/channel/items/properties/connectionManagement/properties/localAddress",
+                "type": "array",
+                "title": "Local Address Schema",
+                "items": {
+                  "$id": "#/properties/channel/items/properties/connectionManagement/properties/localAddress/items",
+                  "type": "object",
+                  "title": "Items Schema",
+                  "properties": {
+                    "host": {
+                      "$id": "#/properties/channel/items/properties/clientConnection/properties/connection/items/properties/host",
+                      "type": "string",
+                      "title": "Host Schema",
+                      "default": "",
+                      "examples": [
+                        "host.example.com",
+                        "9.20.123.45"
+                      ],
+                      "pattern": "^(.*)$"
+                    },
+                    "port": {
+                      "$id": "#/properties/channel/items/properties/clientConnection/properties/connection/items/properties/port",
+                      "type": "integer",
+                      "title": "Port Schema",
+                      "default": 1414,
+                      "examples": [
+                        1414
+                      ]
+                    },
+                    "portRange": {
+                      "$id": "#/properties/channel/items/properties/connectionManagement/properties/localAddress/items/properties/portRange",
+                      "type": "object",
+                      "title": "Port Range Schema",
+                      "required": [
+                        "low",
+                        "high"
+                      ],
+                      "properties": {
+                        "low": {
+                          "$id": "#/properties/channel/items/properties/connectionManagement/properties/localAddress/items/properties/portRange/properties/low",
+                          "type": "integer",
+                          "title": "Low Port Schema",
+                          "default": 0,
+                          "examples": [
+                            2020
+                          ]
+                        },
+                        "high": {
+                          "$id": "#/properties/channel/items/properties/connectionManagement/properties/localAddress/items/properties/portRange/properties/high",
+                          "type": "integer",
+                          "title": "High Port Schema",
+                          "default": 0,
+                          "examples": [
+                            3030
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "general": {
+            "$id": "#/properties/channel/items/properties/general",
+            "type": "object",
+            "title": "General Schema",
+            "properties": {
+              "description": {
+                "$id": "#/properties/channel/items/properties/general/properties/description",
+                "type": "string",
+                "title": "Description Schema",
+                "default": "",
+                "examples": [
+                  "My channel"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "maximumMessageLength": {
+                "$id": "#/properties/channel/items/properties/general/properties/maximumMessageLength",
+                "type": "integer",
+                "title": "Maximum Message Length Schema",
+                "default": 4194304,
+                "examples": [
+                  4194304
+                ]
+              }
+            }
+          },
+          "exits": {
+            "$id": "#/properties/channel/items/properties/exits",
+            "type": "object",
+            "title": "Exits Schema",
+            "properties": {
+              "security": {
+                "$id": "#/properties/channel/items/properties/exits/properties/security",
+                "type": "object",
+                "title": "Security Exit Schema",
+                "properties": {
+                  "name": {
+                    "$id": "#/properties/channel/items/properties/exits/properties/security/properties/name",
+                    "type": "string",
+                    "title": "Exit Name Schema",
+                    "default": "",
+                    "examples": [
+                      "BlibBlob(chlexit)"
+                    ],
+                    "pattern": "^(.*)$"
+                  },
+                  "userData": {
+                    "$id": "#/properties/channel/items/properties/exits/properties/security/properties/userData",
+                    "type": "string",
+                    "title": "Exit Userdata Schema",
+                    "default": "",
+                    "examples": [
+                      "GlibGlurp"
+                    ],
+                    "pattern": "^(.*)$"
+                  }
+                }
+              },
+              "send": {
+                "$id": "#/properties/channel/items/properties/exits/properties/send",
+                "type": "array",
+                "title": "Send Exit Schema",
+                "items": {
+                  "$id": "#/properties/channel/items/properties/exits/properties/send/items",
+                  "type": "object",
+                  "title": "Items Schema",
+                  "properties": {
+                    "name": {
+                      "$id": "#/properties/channel/items/properties/exits/properties/send/items/properties/name",
+                      "type": "string",
+                      "title": "Exit Name Schema",
+                      "default": "",
+                      "examples": [
+                        "mysendexit"
+                      ],
+                      "pattern": "^(.*)$"
+                    },
+                    "userData": {
+                      "$id": "#/properties/channel/items/properties/exits/properties/send/items/properties/userData",
+                      "type": "string",
+                      "title": "Exit Userdata Schema",
+                      "default": "",
+                      "examples": [
+                        "mysendexitdata"
+                      ],
+                      "pattern": "^(.*)$"
+                    }
+                  }
+                }
+              },
+              "receive": {
+                "$id": "#/properties/channel/items/properties/exits/properties/receive",
+                "type": "array",
+                "title": "Receive Exit Schema",
+                "items": {
+                  "$id": "#/properties/channel/items/properties/exits/properties/receive/items",
+                  "type": "object",
+                  "title": "Items Schema",
+                  "properties": {
+                    "name": {
+                      "$id": "#/properties/channel/items/properties/exits/properties/receive/items/properties/name",
+                      "type": "string",
+                      "title": "Exit Name Schema",
+                      "default": "",
+                      "examples": [
+                        "myrecvexit"
+                      ],
+                      "pattern": "^(.*)$"
+                    },
+                    "userData": {
+                      "$id": "#/properties/channel/items/properties/exits/properties/receive/items/properties/userData",
+                      "type": "string",
+                      "title": "Exit Userdata Schema",
+                      "default": "",
+                      "examples": [
+                        "myrecvexitdata"
+                      ],
+                      "pattern": "^(.*)$"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "name": {
+            "$id": "#/properties/channel/items/properties/name",
+            "type": "string",
+            "title": "Channel Name Schema",
+            "default": "",
+            "examples": [
+              "MY.CLIENTCHL"
+            ],
+            "pattern": "^(.*)$"
+          },
+          "clientConnection": {
+            "$id": "#/properties/channel/items/properties/clientConnection",
+            "type": "object",
+            "title": "Client Connection Schema",
+            "properties": {
+              "connection": {
+                "$id": "#/properties/channel/items/properties/clientConnection/properties/connection",
+                "type": "array",
+                "title": "Connection Schema",
+                "items": {
+                  "$id": "#/properties/channel/items/properties/clientConnection/properties/connection/items",
+                  "type": "object",
+                  "title": "Items Schema",
+                  "properties": {
+                    "host": {
+                      "$id": "#/properties/channel/items/properties/clientConnection/properties/connection/items/properties/host",
+                      "type": "string",
+                      "title": "Host Schema",
+                      "default": "",
+                      "examples": [
+                        "host.example.com",
+                        "9.20.123.45"
+                      ],
+                      "pattern": "^(.*)$"
+                    },
+                    "port": {
+                      "$id": "#/properties/channel/items/properties/clientConnection/properties/connection/items/properties/port",
+                      "type": "integer",
+                      "title": "Port Schema",
+                      "default": 1414,
+                      "examples": [
+                        1414
+                      ]
+                    }
+                  }
+                }
+              },
+              "queueManager": {
+                "$id": "#/properties/channel/items/properties/clientConnection/properties/queueManager",
+                "type": "string",
+                "title": "Queue Manager Schema",
+                "default": "",
+                "examples": [
+                  "MYQMGR"
+                ],
+                "pattern": "^(.*)$"
+              }
+            }
+          },
+          "timestamps": {
+            "$id": "#/properties/channel/items/properties/timestamps",
+            "type": "object",
+            "title": "Timestamps Schema",
+            "properties": {
+              "altered": {
+                "$id": "#/properties/channel/items/properties/timestamps/properties/altered",
+                "type": "string",
+                "title": "Altered Schema",
+                "default": "",
+                "examples": [
+                  "2017-12-04T15:37:22.000Z"
+                ],
+                "pattern": "^(.*)$"
+              }
+            }
+          },
+          "transmissionSecurity": {
+            "$id": "#/properties/channel/items/properties/transmissionSecurity",
+            "type": "object",
+            "title": "Transmission Security Schema",
+            "properties": {
+              "cipherSpecification": {
+                "$id": "#/properties/channel/items/properties/transmissionSecurity/properties/cipherSpecification",
+                "type": "string",
+                "title": "Cipher Specification Schema",
+                "default": "",
+                "examples": [
+                  "ANY_TLS12"
+                ],
+                "pattern": "^(.*)$"
+              },
+              "certificateLabel": {
+                "$id": "#/properties/channel/items/properties/transmissionSecurity/properties/certificateLabel",
+                "type": "string",
+                "title": "Certificate Label Schema",
+                "default": "",
+                "examples": [
+                  ""
+                ],
+                "pattern": "^(.*)$"
+              },
+              "certificatePeerName": {
+                "$id": "#/properties/channel/items/properties/transmissionSecurity/properties/certificatePeerName",
+                "type": "string",
+                "title": "Certificate Peername Schema",
+                "default": "",
+                "examples": [
+                  "CN=Alice, O=IBM, C=GB"
+                ],
+                "pattern": "^(.*)$"
+              }
+            }
+          },
+          "type": {
+            "$id": "#/properties/channel/items/properties/type",
+            "type": "string",
+            "title": "Channel Type Schema",
+            "default": "",
+            "examples": [
+              "clientConnection"
+            ],
+            "pattern": "^(.*)$"
+          }
+        }
+      }
+    }
+  }
+}
