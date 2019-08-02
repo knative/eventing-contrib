@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       containers:
-        - image: github.com/triggermesh/eventing-contrib/contrib/ibm-mq
+        - image: knative.dev/eventing-contrib/contrib/ibm-mq
           name: receiver
           env:
             - name: LD_LIBRARY_PATH

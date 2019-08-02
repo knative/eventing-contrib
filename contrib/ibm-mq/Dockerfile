@@ -11,8 +11,8 @@ ENV CGO_LDFLAGS_ALLOW="-Wl,-rpath.*"
 ENV CGO_LDFLAGS="-L$MQ_INSTALLATION_PATH/lib64 -Wl,-rpath,$MQ_INSTALLATION_PATH/lib64"
 ENV CGO_CFLAGS="-I$MQ_INSTALLATION_PATH/inc"
 
-RUN mkdir -p $GOPATH/src/github.com/triggermesh/mq
-WORKDIR $GOPATH/src/github.com/triggermesh/mq
+RUN mkdir -p $GOPATH/src/knative.dev/eventing-contrib/mq
+WORKDIR $GOPATH/src/knative.dev/eventing-contrib/mq
 COPY . .
 RUN go get
 RUN go build
@@ -21,6 +21,6 @@ RUN go build
 FROM debian:stretch-slim
 WORKDIR /opt/mqm/
 COPY --from=0 /opt/mqm .
-COPY --from=0 /go/src/github.com/triggermesh/mq/mq .
+COPY --from=0 /go/src/knative.dev/eventing-contrib/mq/mq .
 
 ENTRYPOINT ["./mq"]
