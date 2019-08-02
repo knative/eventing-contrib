@@ -19,7 +19,6 @@ package main
 import (
 	"bytes"
 	"flag"
-	"fmt"
 	"log"
 	"sync"
 
@@ -66,7 +65,7 @@ func main() {
 		},
 	)
 
-	fmt.Printf("%+v\n", cfg)
+	log.Printf("%+v\n", cfg)
 
 	// create IBM MQ channel definition
 	channelDefinition := ibmmq.NewMQCD()
@@ -92,7 +91,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Connection to %s succeeded.\n", cfg.QueueManager)
+	log.Printf("Connection to %s succeeded.\n", cfg.QueueManager)
 	defer disconnect(qMgrObject)
 
 	// Create the Object Descriptor that allows us to give the queue name
@@ -111,7 +110,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Opened queue", qObject.Name)
+	log.Println("Opened queue", qObject.Name)
 	defer close(qObject)
 	defer wg.Wait()
 
@@ -161,21 +160,17 @@ func main() {
 }
 
 // Disconnect from the queue manager
-func disconnect(qMgrObject ibmmq.MQQueueManager) error {
-	err := qMgrObject.Disc()
-	if err != nil {
-		fmt.Println(err)
+func disconnect(qMgrObject ibmmq.MQQueueManager) {
+	if err := qMgrObject.Disc(); err != nil {
+		log.Fatal(err)
 	}
-	return err
 }
 
 // Close the queue if it was opened
-func close(object ibmmq.MQObject) error {
-	err := object.Close(0)
-	if err != nil {
-		fmt.Println(err)
+func close(object ibmmq.MQObject) {
+	if err := object.Close(0); err != nil {
+		log.Fatal(err)
 	}
-	return err
 }
 
 func sendMessage(client *cloudevents.Client, message *MQMessage) error {
