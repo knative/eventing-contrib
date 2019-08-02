@@ -23,10 +23,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"knative.dev/pkg/test/logging"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"knative.dev/pkg/test/logging"
 )
 
 // CheckPortAvailability checks to see if the port is available on the machine.
@@ -46,7 +46,7 @@ func CheckPortAvailability(port int) error {
 func GetPods(kubeClientset *kubernetes.Clientset, app, namespace string) (*v1.PodList, error) {
 	pods, err := kubeClientset.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", app)})
 	if err == nil && len(pods.Items) == 0 {
-		err = fmt.Errorf("No %s Pod found on the cluster. Ensure monitoring is switched on for your Knative Setup", app)
+		err = fmt.Errorf("no %s Pod found on the cluster. Ensure monitoring is switched on for your Knative Setup", app)
 	}
 
 	return pods, err
@@ -65,7 +65,7 @@ func PortForward(logf logging.FormatLogger, podList *v1.PodList, localPort, remo
 	portFwdProcess, err := executeCmdBackground(logf, portFwdCmd)
 
 	if err != nil {
-		return 0, fmt.Errorf("Failed to port forward: %v", err)
+		return 0, fmt.Errorf("failed to port forward: %v", err)
 	}
 
 	logf("running %s port-forward in background, pid = %d", podName, portFwdProcess.Pid)
