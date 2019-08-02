@@ -36,7 +36,7 @@ func BuildComponentIntegrationSpec(args *CamelArguments) (camelv1alpha1.Integrat
 		Sources: []camelv1alpha1.SourceSpec{
 			{
 				DataSpec: camelv1alpha1.DataSpec{
-					Name:    "source.flow",
+					Name:    "source.yaml",
 					Content: code,
 				},
 			},
