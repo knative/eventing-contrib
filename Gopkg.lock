@@ -55,15 +55,15 @@
   version = "v1.21.0"
 
 [[projects]]
-  digest = "1:c7de6e7b9ca306b64b257c7e93b0a231936875b88fd6ea6dd43b3c2d87082585"
+  digest = "1:392b83d75c8af0cd969ca69f8356bf6ad034293fd7906508e9ba5a0b7e81ebd7"
   name = "github.com/apache/camel-k"
   packages = [
     "pkg/apis/camel/v1alpha1",
     "pkg/apis/camel/v1alpha1/knative",
   ]
   pruneopts = "NUT"
-  revision = "c47fb2c85e89852f0fd111d1662f57917030ced5"
-  version = "0.3.4"
+  revision = "0e477f416309446cdbdeca8db9a4c26041b0d100"
+  version = "1.0.0-M1"
 
 [[projects]]
   digest = "1:164a1e6e8407f99696f29dca7b21025c347b5ec47beafc1b8254e4a4ae71cc08"
@@ -1490,6 +1490,7 @@
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "gopkg.in/go-playground/webhooks.v5/github",
+    "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1",

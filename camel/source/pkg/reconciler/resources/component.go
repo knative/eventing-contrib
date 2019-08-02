@@ -31,8 +31,8 @@ func BuildComponentIntegrationSpec(args *CamelArguments) (camelv1alpha1.Integrat
 	}
 
 	spec := camelv1alpha1.IntegrationSpec{
-		Context:            args.Source.Component.Context,
-		ServiceAccountName: args.Source.Component.ServiceAccountName,
+		Kit:                args.Source.DeprecatedComponent.Context,
+		ServiceAccountName: args.Source.DeprecatedComponent.ServiceAccountName,
 		Sources: []camelv1alpha1.SourceSpec{
 			{
 				DataSpec: camelv1alpha1.DataSpec{
@@ -43,26 +43,18 @@ func BuildComponentIntegrationSpec(args *CamelArguments) (camelv1alpha1.Integrat
 		},
 	}
 
-	// TODO remove when deprecated fields are removed
-	if args.DeprecatedServiceAccountName != "" {
-		spec.ServiceAccountName = args.DeprecatedServiceAccountName
-	}
-	if args.DeprecatedIntegrationContext != "" {
-		spec.Context = args.DeprecatedIntegrationContext
-	}
-
-	if args.Source.Component.Properties != nil {
-		spec.Configuration = make([]camelv1alpha1.ConfigurationSpec, 0, len(args.Source.Component.Properties))
+	if args.Source.DeprecatedComponent.Properties != nil {
+		spec.Configuration = make([]camelv1alpha1.ConfigurationSpec, 0, len(args.Source.DeprecatedComponent.Properties))
 		// Get keys to have consistent ordering
-		keys := make([]string, 0, len(args.Source.Component.Properties))
-		for k := range args.Source.Component.Properties {
+		keys := make([]string, 0, len(args.Source.DeprecatedComponent.Properties))
+		for k := range args.Source.DeprecatedComponent.Properties {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
 			conf := camelv1alpha1.ConfigurationSpec{
 				Type:  "property",
-				Value: k + "=" + args.Source.Component.Properties[k],
+				Value: k + "=" + args.Source.DeprecatedComponent.Properties[k],
 			}
 			spec.Configuration = append(spec.Configuration, conf)
 		}
@@ -73,21 +65,13 @@ func BuildComponentIntegrationSpec(args *CamelArguments) (camelv1alpha1.Integrat
 
 // buildFlowCode creates the Camel flow code corresponding to the requested source
 func buildFlowCode(source v1alpha1.CamelSourceOriginSpec) (string, error) {
-	component := *source.Component
-	flows := camelv1alpha1.Flows{
-		{
-			Steps: []camelv1alpha1.Step{
-				{
-					Kind: "endpoint",
-					URI:  component.URI,
-				},
-				{
-					Kind: "endpoint",
-					URI:  "knative:endpoint/sink",
-				},
-			},
+	component := *source.DeprecatedComponent
+	flow := map[interface{}]interface{}{
+		"from": map[interface{}]interface{}{
+			"uri": component.URI,
 		},
 	}
-
-	return flows.Serialize()
+	enhancedFlow := AddSinkToCamelFlow(flow, "sink")
+	flows := []map[interface{}]interface{}{enhancedFlow}
+	return MarshalCamelFlows(flows)
 }

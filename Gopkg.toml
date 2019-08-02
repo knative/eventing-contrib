@@ -103,7 +103,7 @@ required = [
 
 [[constraint]]
   name = "github.com/apache/camel-k"
-  version = "0.3.4"
+  version = "1.0.0-M1"
 
 # Required for opencensus.
 [[override]]

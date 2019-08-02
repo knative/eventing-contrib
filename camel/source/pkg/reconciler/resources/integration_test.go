@@ -31,7 +31,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 		Name:      "test-name",
 		Namespace: "test-namespace",
 		Source: v1alpha1.CamelSourceOriginSpec{
-			Component: &v1alpha1.CamelSourceOriginComponentSpec{
+			DeprecatedComponent: &v1alpha1.CamelSourceOriginComponentSpec{
 				URI: "timer:tick",
 				Properties: map[string]string{
 					"k":  "v",
@@ -58,12 +58,12 @@ func TestMakeDeployment_sink(t *testing.T) {
 		},
 		Spec: camelv1alpha1.IntegrationSpec{
 			ServiceAccountName: "test-service-account",
-			Context:            "test-context",
+			Kit:                "test-context",
 			Sources: []camelv1alpha1.SourceSpec{
 				{
 					DataSpec: camelv1alpha1.DataSpec{
 						Name:    "source.flow",
-						Content: "- steps:\n  - kind: endpoint\n    uri: timer:tick\n  - kind: endpoint\n    uri: knative:endpoint/sink\n",
+						Content: "- from:\n    steps:\n    - to:\n        uri: knative:endpoint/sink\n    uri: timer:tick\n",
 					},
 				},
 			},

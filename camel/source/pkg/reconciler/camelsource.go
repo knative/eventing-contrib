@@ -54,7 +54,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 
 	// Register Camel specific types
 	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.Integration{}, &camelv1alpha1.IntegrationList{})
-	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationContext{}, &camelv1alpha1.IntegrationContextList{})
+	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationKit{}, &camelv1alpha1.IntegrationKitList{})
 	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationPlatform{}, &camelv1alpha1.IntegrationPlatformList{})
 	metav1.AddToGroupVersion(mgr.GetScheme(), camelv1alpha1.SchemeGroupVersion)
 
@@ -118,16 +118,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 	source.Status.MarkSink(sinkURI)
 
-	integrationContextName := ""
-	if source.Spec.DeprecatedImage != "" {
-		ictx, err := r.reconcileIntegrationContext(ctx, source.Namespace, source.Spec.DeprecatedImage)
-		if err != nil {
-			return err
-		}
-		integrationContextName = ictx.Name
-	}
-
-	integration, err := r.reconcileIntegration(ctx, source, integrationContextName, sinkURI)
+	integration, err := r.reconcileIntegration(ctx, source, sinkURI)
 	if err != nil {
 		return err
 	}
@@ -140,15 +131,13 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	return nil
 }
 
-func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, deprecatedIntegrationContext string, sinkURI string) (*camelv1alpha1.Integration, error) {
+func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, sinkURI string) (*camelv1alpha1.Integration, error) {
 	logger := logging.FromContext(ctx)
 	args := &resources.CamelArguments{
-		Name:                         source.Name,
-		Namespace:                    source.Namespace,
-		Source:                       source.Spec.Source,
-		Sink:                         sinkURI,
-		DeprecatedIntegrationContext: deprecatedIntegrationContext,
-		DeprecatedServiceAccountName: source.Spec.DeprecatedServiceAccountName,
+		Name:      source.Name,
+		Namespace: source.Namespace,
+		Source:    source.Spec.Source,
+		Sink:      sinkURI,
 	}
 
 	integration, err := r.getIntegration(ctx, source)
@@ -242,26 +231,10 @@ func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.Cam
 	return integration, nil
 }
 
-func (r *reconciler) reconcileIntegrationContext(ctx context.Context, namespace string, image string) (*camelv1alpha1.IntegrationContext, error) {
-	ct, err := r.getIntegrationContext(ctx, namespace, image)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			// Create a context with default configuration if not present
-			ct = resources.MakeContext(namespace, image)
-			if err := r.client.Create(ctx, ct); err != nil {
-				return nil, err
-			}
-			return r.getIntegrationContext(ctx, namespace, image)
-		}
-		return nil, err
-	}
-	return ct, err
-}
-
-func (r *reconciler) getIntegrationContext(ctx context.Context, namespace string, image string) (*camelv1alpha1.IntegrationContext, error) {
+func (r *reconciler) getIntegrationContext(ctx context.Context, namespace string, image string) (*camelv1alpha1.IntegrationKit, error) {
 	logger := logging.FromContext(ctx)
 
-	list := &camelv1alpha1.IntegrationContextList{}
+	list := &camelv1alpha1.IntegrationKitList{}
 	err := r.client.List(
 		ctx,
 		&client.ListOptions{
@@ -272,7 +245,7 @@ func (r *reconciler) getIntegrationContext(ctx context.Context, namespace string
 			Raw: &metav1.ListOptions{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
-					Kind:       "IntegrationContext",
+					Kind:       "IntegrationKit",
 				},
 			},
 		},

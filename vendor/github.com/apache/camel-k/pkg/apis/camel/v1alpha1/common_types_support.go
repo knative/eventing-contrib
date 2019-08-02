@@ -20,22 +20,21 @@ package v1alpha1
 import (
 	"fmt"
 
-	yaml2 "gopkg.in/yaml.v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (in *Artifact) String() string {
 	return in.ID
 }
 
-func (spec ConfigurationSpec) String() string {
-	return fmt.Sprintf("%s=%s", spec.Type, spec.Value)
+func (in *ConfigurationSpec) String() string {
+	return fmt.Sprintf("%s=%s", in.Type, in.Value)
 }
 
-// Serialize serializes a Flow
-func (flows Flows) Serialize() (string, error) {
-	res, err := yaml2.Marshal(flows)
-	if err != nil {
-		return "", err
+// NewErrorFailure --
+func NewErrorFailure(err error) *Failure {
+	return &Failure{
+		Reason: err.Error(),
+		Time:   metav1.Now(),
 	}
-	return string(res), nil
 }

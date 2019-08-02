@@ -18,6 +18,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,7 +29,7 @@ type IntegrationSpec struct {
 	Replicas           *int32               `json:"replicas,omitempty"`
 	Sources            []SourceSpec         `json:"sources,omitempty"`
 	Resources          []ResourceSpec       `json:"resources,omitempty"`
-	Context            string               `json:"context,omitempty"`
+	Kit                string               `json:"kit,omitempty"`
 	Dependencies       []string             `json:"dependencies,omitempty"`
 	Profile            TraitProfile         `json:"profile,omitempty"`
 	Traits             map[string]TraitSpec `json:"traits,omitempty"`
@@ -39,16 +40,19 @@ type IntegrationSpec struct {
 
 // IntegrationStatus defines the observed state of Integration
 type IntegrationStatus struct {
-	Phase            IntegrationPhase    `json:"phase,omitempty"`
-	Digest           string              `json:"digest,omitempty"`
-	Image            string              `json:"image,omitempty"`
-	Dependencies     []string            `json:"dependencies,omitempty"`
-	Context          string              `json:"context,omitempty"`
-	GeneratedSources []SourceSpec        `json:"generatedSources,omitempty"`
-	Failure          *Failure            `json:"failure,omitempty"`
-	CamelVersion     string              `json:"camelVersion,omitempty"`
-	RuntimeVersion   string              `json:"runtimeVersion,omitempty"`
-	Configuration    []ConfigurationSpec `json:"configuration,omitempty"`
+	Phase            IntegrationPhase       `json:"phase,omitempty"`
+	Digest           string                 `json:"digest,omitempty"`
+	Image            string                 `json:"image,omitempty"`
+	Dependencies     []string               `json:"dependencies,omitempty"`
+	Kit              string                 `json:"kit,omitempty"`
+	Platform         string                 `json:"platform,omitempty"`
+	GeneratedSources []SourceSpec           `json:"generatedSources,omitempty"`
+	Failure          *Failure               `json:"failure,omitempty"`
+	CamelVersion     string                 `json:"camelVersion,omitempty"`
+	RuntimeVersion   string                 `json:"runtimeVersion,omitempty"`
+	Configuration    []ConfigurationSpec    `json:"configuration,omitempty"`
+	Conditions       []IntegrationCondition `json:"conditions,omitempty"`
+	Version          string                 `json:"version,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -120,8 +124,8 @@ const (
 	LanguageXML Language = "xml"
 	// LanguageKotlin --
 	LanguageKotlin Language = "kts"
-	// LanguageYamlFlow --
-	LanguageYamlFlow Language = "flow"
+	// LanguageYaml --
+	LanguageYaml Language = "yaml"
 )
 
 // Languages is the list of all supported languages
@@ -132,24 +136,29 @@ var Languages = []Language{
 	LanguageJavaScript,
 	LanguageXML,
 	LanguageKotlin,
-	LanguageYamlFlow,
+	LanguageYaml,
 }
 
 // IntegrationPhase --
 type IntegrationPhase string
 
+// IntegrationConditionType --
+type IntegrationConditionType string
+
 const (
 	// IntegrationKind --
 	IntegrationKind string = "Integration"
 
-	// IntegrationPhaseInitial --
-	IntegrationPhaseInitial IntegrationPhase = ""
+	// IntegrationPhaseNone --
+	IntegrationPhaseNone IntegrationPhase = ""
+	// IntegrationPhaseInitialization --
+	IntegrationPhaseInitialization IntegrationPhase = "Initialization"
 	// IntegrationPhaseWaitingForPlatform --
 	IntegrationPhaseWaitingForPlatform IntegrationPhase = "Waiting For Platform"
-	// IntegrationPhaseBuildingContext --
-	IntegrationPhaseBuildingContext IntegrationPhase = "Building Context"
-	// IntegrationPhaseResolvingContext --
-	IntegrationPhaseResolvingContext IntegrationPhase = "Resolving Context"
+	// IntegrationPhaseBuildingKit --
+	IntegrationPhaseBuildingKit IntegrationPhase = "Building Kit"
+	// IntegrationPhaseResolvingKit --
+	IntegrationPhaseResolvingKit IntegrationPhase = "Resolving Kit"
 	// IntegrationPhaseDeploying --
 	IntegrationPhaseDeploying IntegrationPhase = "Deploying"
 	// IntegrationPhaseRunning --
@@ -158,7 +167,71 @@ const (
 	IntegrationPhaseError IntegrationPhase = "Error"
 	// IntegrationPhaseDeleting --
 	IntegrationPhaseDeleting IntegrationPhase = "Deleting"
+
+	// IntegrationConditionKitAvailable --
+	IntegrationConditionKitAvailable IntegrationConditionType = "IntegrationKitAvailable"
+	// IntegrationConditionPlatformAvailable --
+	IntegrationConditionPlatformAvailable IntegrationConditionType = "IntegrationPlatformAvailable"
+	// IntegrationConditionDeploymentAvailable --
+	IntegrationConditionDeploymentAvailable IntegrationConditionType = "DeploymentAvailable"
+	// IntegrationConditionServiceAvailable --
+	IntegrationConditionServiceAvailable IntegrationConditionType = "ServiceAvailable"
+	// IntegrationConditionKnativeServiceAvailable --
+	IntegrationConditionKnativeServiceAvailable IntegrationConditionType = "KnativeServiceAvailable"
+	// IntegrationConditionExposureAvailable --
+	IntegrationConditionExposureAvailable IntegrationConditionType = "ExposureAvailable"
+	// IntegrationConditionPrometheusAvailable --
+	IntegrationConditionPrometheusAvailable IntegrationConditionType = "PrometheusAvailable"
+	// IntegrationConditionJolokiaAvailable --
+	IntegrationConditionJolokiaAvailable IntegrationConditionType = "JolokiaAvailable"
+
+	// IntegrationConditionKitAvailableReason --
+	IntegrationConditionKitAvailableReason string = "IntegrationKitAvailable"
+	// IntegrationConditionPlatformAvailableReason --
+	IntegrationConditionPlatformAvailableReason string = "IntegrationPlatformAvailable"
+	// IntegrationConditionDeploymentAvailableReason --
+	IntegrationConditionDeploymentAvailableReason string = "DeploymentAvailable"
+	// IntegrationConditionDeploymentNotAvailableReason --
+	IntegrationConditionDeploymentNotAvailableReason string = "DeploymentNotAvailable"
+	// IntegrationConditionServiceAvailableReason --
+	IntegrationConditionServiceAvailableReason string = "ServiceAvailable"
+	// IntegrationConditionServiceNotAvailableReason --
+	IntegrationConditionServiceNotAvailableReason string = "ServiceNotAvailable"
+	// IntegrationConditionContainerNotAvailableReason --
+	IntegrationConditionContainerNotAvailableReason string = "ContainerNotAvailable"
+	// IntegrationConditionRouteAvailableReason --
+	IntegrationConditionRouteAvailableReason string = "RouteAvailable"
+	// IntegrationConditionRouteNotAvailableReason --
+	IntegrationConditionRouteNotAvailableReason string = "RouteNotAvailable"
+	// IntegrationConditionIngressAvailableReason --
+	IntegrationConditionIngressAvailableReason string = "IngressAvailable"
+	// IntegrationConditionIngressNotAvailableReason --
+	IntegrationConditionIngressNotAvailableReason string = "IngressNotAvailable"
+	// IntegrationConditionKnativeServiceAvailableReason --
+	IntegrationConditionKnativeServiceAvailableReason string = "KnativeServiceAvailable"
+	// IntegrationConditionKnativeServiceNotAvailableReason --
+	IntegrationConditionKnativeServiceNotAvailableReason string = "KnativeServiceNotAvailable"
+	// IntegrationConditionPrometheusAvailableReason --
+	IntegrationConditionPrometheusAvailableReason string = "PrometheusAvailable"
+	// IntegrationConditionJolokiaAvailableReason --
+	IntegrationConditionJolokiaAvailableReason string = "JolokiaAvailable"
 )
+
+// IntegrationCondition describes the state of a resource at a certain point.
+type IntegrationCondition struct {
+	// Type of integration condition.
+	Type IntegrationConditionType `json:"type"`
+	// Status of the condition, one of True, False, Unknown.
+	Status corev1.ConditionStatus `json:"status"`
+	// The last time this condition was updated.
+	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
+	// Last time the condition transitioned from one status to another.
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+	// The reason for the condition's last transition.
+	Reason string `json:"reason,omitempty"`
+	// A human readable message indicating details about the transition.
+	Message string `json:"message,omitempty"`
+}
 
 func init() {
 	SchemeBuilder.Register(&Integration{}, &IntegrationList{})

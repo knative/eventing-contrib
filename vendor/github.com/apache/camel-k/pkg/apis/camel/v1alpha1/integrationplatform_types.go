@@ -14,9 +14,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,12 +36,14 @@ type IntegrationPlatformSpec struct {
 
 // IntegrationPlatformResourcesSpec contains platform related resources
 type IntegrationPlatformResourcesSpec struct {
-	Contexts []string `json:"contexts,omitempty"`
+	Kits []string `json:"kits,omitempty"`
 }
 
 // IntegrationPlatformStatus defines the observed state of IntegrationPlatform
 type IntegrationPlatformStatus struct {
-	Phase IntegrationPlatformPhase `json:"phase,omitempty"`
+	Phase      IntegrationPlatformPhase       `json:"phase,omitempty"`
+	Conditions []IntegrationPlatformCondition `json:"conditions,omitempty"`
+	Version    string                         `json:"version,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -135,6 +139,9 @@ const (
 // IntegrationPlatformPhase --
 type IntegrationPlatformPhase string
 
+// IntegrationPlatformConditionType --
+type IntegrationPlatformConditionType string
+
 const (
 	// IntegrationPlatformKind --
 	IntegrationPlatformKind string = "IntegrationPlatform"
@@ -143,8 +150,6 @@ const (
 	IntegrationPlatformPhaseCreating IntegrationPlatformPhase = "Creating"
 	// IntegrationPlatformPhaseWarming --
 	IntegrationPlatformPhaseWarming IntegrationPlatformPhase = "Warming"
-	// IntegrationPlatformPhaseStarting --
-	IntegrationPlatformPhaseStarting IntegrationPlatformPhase = "Starting"
 	// IntegrationPlatformPhaseReady --
 	IntegrationPlatformPhaseReady IntegrationPlatformPhase = "Ready"
 	// IntegrationPlatformPhaseError --
@@ -152,6 +157,22 @@ const (
 	// IntegrationPlatformPhaseDuplicate --
 	IntegrationPlatformPhaseDuplicate IntegrationPlatformPhase = "Duplicate"
 )
+
+// Condition describes the state of a resource at a certain point.
+type IntegrationPlatformCondition struct {
+	// Type of integration condition.
+	Type IntegrationPlatformConditionType `json:"type"`
+	// Status of the condition, one of True, False, Unknown.
+	Status corev1.ConditionStatus `json:"status"`
+	// The last time this condition was updated.
+	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
+	// Last time the condition transitioned from one status to another.
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+	// The reason for the condition's last transition.
+	Reason string `json:"reason,omitempty"`
+	// A human readable message indicating details about the transition.
+	Message string `json:"message,omitempty"`
+}
 
 func init() {
 	SchemeBuilder.Register(&IntegrationPlatform{}, &IntegrationPlatformList{})

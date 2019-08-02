@@ -35,20 +35,6 @@ type Artifact struct {
 	Target   string `json:"target,omitempty" yaml:"target,omitempty"`
 }
 
-// Flow --
-type Flow struct {
-	Steps []Step `json:"steps"`
-}
-
-// Flows are collections of Flow
-type Flows []Flow
-
-// Step --
-type Step struct {
-	Kind string `json:"kind"`
-	URI  string `json:"uri"`
-}
-
 // Failure --
 type Failure struct {
 	Reason   string          `json:"reason"`
@@ -73,9 +59,15 @@ type Configurable interface {
 	Configurations() []ConfigurationSpec
 }
 
+// PlatformInjectable --
+type PlatformInjectable interface {
+	SetIntegrationPlatform(platform *IntegrationPlatform)
+}
+
 // MavenSpec --
 type MavenSpec struct {
-	Settings ValueSource `json:"settings,omitempty"`
+	Settings ValueSource     `json:"settings,omitempty"`
+	Timeout  metav1.Duration `json:"timeout,omitempty"`
 }
 
 // ValueSource --
@@ -85,3 +77,8 @@ type ValueSource struct {
 	// Selects a key of a secret.
 	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty" `
 }
+
+const (
+	// ServiceTypeUser --
+	ServiceTypeUser = "user"
+)

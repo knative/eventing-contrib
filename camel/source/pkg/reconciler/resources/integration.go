@@ -18,6 +18,7 @@ package resources
 
 import (
 	"errors"
+	"net/url"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	camelknativev1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1/knative"
@@ -25,9 +26,9 @@ import (
 )
 
 func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
-	if args.Source.Component != nil && args.Source.Integration != nil {
+	if args.Source.DeprecatedComponent != nil && (args.Source.Integration != nil || args.Source.Flow != nil) {
 		return nil, errors.New("too many kind of sources defined")
-	} else if args.Source.Component == nil && args.Source.Integration == nil {
+	} else if args.Source.DeprecatedComponent == nil && args.Source.Integration == nil && args.Source.Flow == nil {
 		return nil, errors.New("empty sources")
 	}
 
@@ -37,14 +38,38 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 	}
 
 	var spec *camelv1alpha1.IntegrationSpec
-	if args.Source.Integration != nil {
-		spec = args.Source.Integration.DeepCopy()
-	} else {
+	if args.Source.DeprecatedComponent != nil {
 		builtSpec, err := BuildComponentIntegrationSpec(args)
 		if err != nil {
 			return nil, err
 		}
 		spec = &builtSpec
+	} else {
+		if args.Source.Integration != nil {
+			spec = args.Source.Integration.DeepCopy()
+		} else {
+			spec = &camelv1alpha1.IntegrationSpec{}
+		}
+
+		if args.Source.Flow != nil {
+			flow, err := CopyCamelFlow(args.Source.Flow.Object)
+			if err != nil {
+				return nil, err
+			}
+			enhancedFlow := AddSinkToCamelFlow(flow, "sink")
+			flows := []map[interface{}]interface{}{enhancedFlow}
+			flowData, err := MarshalCamelFlows(flows)
+			if err != nil {
+				return nil, err
+			}
+			spec.Sources = append(spec.Sources, camelv1alpha1.SourceSpec{
+				Language: camelv1alpha1.LanguageYaml,
+				DataSpec: camelv1alpha1.DataSpec{
+					Name:    "flow.yaml",
+					Content: flowData,
+				},
+			})
+		}
 	}
 
 	if spec.Traits == nil {
@@ -72,11 +97,15 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 }
 
 func makeCamelEnvironment(sinkURI string) (string, error) {
-	env := camelknativev1alpha1.NewCamelEnvironment()
-	svc, err := camelknativev1alpha1.BuildCamelServiceDefinition("sink", camelknativev1alpha1.CamelServiceTypeEndpoint, sinkURI)
+	sink, err := url.Parse(sinkURI)
 	if err != nil {
 		return "", err
 	}
-	env.Services = append(env.Services, *svc)
+	env := camelknativev1alpha1.NewCamelEnvironment()
+	svc, err := camelknativev1alpha1.BuildCamelServiceDefinition("sink", camelknativev1alpha1.CamelServiceTypeEndpoint, *sink)
+	if err != nil {
+		return "", err
+	}
+	env.Services = append(env.Services, svc)
 	return env.Serialize()
 }
