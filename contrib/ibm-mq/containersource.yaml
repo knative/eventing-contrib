@@ -2,7 +2,7 @@
 apiVersion: sources.eventing.knative.dev/v1alpha1
 kind: ContainerSource
 metadata:
-  name: mq
+  name: ibm-mq
 spec:
   template:
     spec:
@@ -18,12 +18,12 @@ spec:
               value: DEV.APP.SVRCONN
             - name: CONNECTION_NAME
               value: mq-service.default.svc.cluster.local(1414)
-            - name: USER_ID
-              value: admin
-            - name: PASSWORD
-              value: passw0rd
             - name: QUEUE_NAME
               value: DEV.QUEUE.1
+            - name: USER_ID
+              value: <USER_ID>
+            - name: PASSWORD
+              value: <PASSWORD>
   sink:
     apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel

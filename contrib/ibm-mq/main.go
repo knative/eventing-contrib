@@ -100,7 +100,7 @@ func main() {
 
 	// We have to say how we are going to use this queue. In this case, to GET
 	// messages. That is done in the openOptions parameter.
-	openOptions := ibmmq.MQOO_INPUT_EXCLUSIVE
+	openOptions := ibmmq.MQOO_INPUT_SHARED
 
 	// Opening a QUEUE (rather than a Topic or other object type) and give the name
 	mqod.ObjectType = ibmmq.MQOT_Q
@@ -138,7 +138,7 @@ func main() {
 		_, err := qObject.Get(msgDescriptor, msgOptions, buffer)
 		if err != nil {
 			mqret := err.(*ibmmq.MQReturn)
-			if mqret.MQRC == ibmmq.MQRC_NO_MSG_AVAILABLE {
+			if mqret != nil && mqret.MQRC == ibmmq.MQRC_NO_MSG_AVAILABLE {
 				continue
 			}
 			break
@@ -147,11 +147,12 @@ func main() {
 		wg.Add(1)
 		go func(md *ibmmq.MQMD, messageData []byte) {
 			defer wg.Done()
-			log.Printf("New message: %v", bytes.Trim(messageData, "\u0000"))
+			data := string(bytes.Trim(messageData, "\u0000"))
 			msg := MQMessage{
 				Message:     md,
-				MessageData: string(bytes.Trim(messageData, "\u0000")),
+				MessageData: data,
 			}
+			log.Printf("New message: %s", data)
 			if err := sendMessage(cloudEventsClient, &msg); err != nil {
 				log.Printf("Failed to send message: %v\n", err)
 			}

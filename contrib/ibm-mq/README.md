@@ -101,8 +101,16 @@ Data,
 
 ### Knative usage
 
-Edit the Container source manifest to specify your queue and connection parameters then and apply it like so:
+Edit the Container source manifest to specify your queue and connection parameters then apply it like so:
 
 ```
-kubectl apply -f mq-source.yaml
+kubectl apply -f containersource.yaml
 ```
+
+Or deploy it with `ko` (from repository root):
+
+```
+CGO_ENABLED=1 ko apply -f ./contrib/ibm-mq/
+```
+
+Please note that client requires CGO module to use IBM MQ library bindings 
