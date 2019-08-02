@@ -37,7 +37,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  branch = "release-0.8"
 
 [[override]]
   name = "k8s.io/api"
