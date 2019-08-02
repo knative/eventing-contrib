@@ -20,7 +20,6 @@ import (
 	"github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/pkg/apis/duck"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
@@ -83,17 +82,7 @@ type CamelSourceOriginSpec struct {
 	// Integration is a kind of source that contains a Camel K integration
 	Integration *v1alpha1.IntegrationSpec `json:"integration,omitempty"`
 	// Flow is a kind of source that contains a single Camel YAML flow route
-	Flow *CamelFlowSpec `json:"flow,omitempty"`
-}
-
-type CamelFlowSpec unstructured.Unstructured
-
-func (in *CamelFlowSpec) DeepCopy() *CamelFlowSpec {
-	if in == nil {
-		return nil
-	}
-	u := (*unstructured.Unstructured)(in).DeepCopy()
-	return (*CamelFlowSpec)(u)
+	Flow *string `json:"flow,omitempty"`
 }
 
 type CamelSourceOriginComponentSpec struct {

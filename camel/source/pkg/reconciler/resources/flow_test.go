@@ -43,7 +43,7 @@ from:
   steps:
   - step: step
   - to:
-      uri: knative:endpoint/sink
+      uri: knative://endpoint/sink
 `,
 		},
 		{
@@ -57,7 +57,7 @@ from:
   uri: theuri
   steps:
   - to:
-      uri: knative:endpoint/sink
+      uri: knative://endpoint/sink
 `,
 		},
 		{
@@ -67,7 +67,7 @@ from:
 from:
   steps:
   - to:
-      uri: knative:endpoint/sink
+      uri: knative://endpoint/sink
 `,
 		},
 		{
@@ -80,7 +80,7 @@ from:
 from:
   steps:
   - to:
-      uri: knative:endpoint/sink
+      uri: knative://endpoint/sink
 `,
 		},
 		{
@@ -105,7 +105,7 @@ from:
     - f2:
         to: 2
     - to:
-        uri: knative:endpoint/another-sink
+        uri: knative://endpoint/another-sink
 `,
 			Sink: "another-sink",
 		},

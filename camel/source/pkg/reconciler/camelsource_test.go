@@ -303,6 +303,22 @@ func getCamelKSource() *sourcesv1alpha1.CamelSource {
 }
 
 func getCamelKFlowSource() *sourcesv1alpha1.CamelSource {
+	flow := map[interface{}]interface{}{
+		"from": map[string]interface{}{
+			"uri": "timer:tick?period=3s",
+			"steps": []interface{}{
+				map[string]interface{}{
+					"set-body": map[string]interface{}{
+						"constant": "Hello world",
+					},
+				},
+			},
+		},
+	}
+	source, err := resources.MarshalCamelFlow(flow)
+	if err != nil {
+		panic(err)
+	}
 	obj := &sourcesv1alpha1.CamelSource{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
@@ -311,20 +327,7 @@ func getCamelKFlowSource() *sourcesv1alpha1.CamelSource {
 		ObjectMeta: om(testNS, sourceName),
 		Spec: sourcesv1alpha1.CamelSourceSpec{
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
-				Flow: &sourcesv1alpha1.CamelFlowSpec{
-					Object: map[string]interface{}{
-						"from": map[string]interface{}{
-							"uri": "timer:tick?period=3s",
-							"steps": []interface{}{
-								map[string]interface{}{
-									"set-body": map[string]interface{}{
-										"constant": "Hello world",
-									},
-								},
-							},
-						},
-					},
-				},
+				Flow: &source,
 			},
 			Sink: &corev1.ObjectReference{
 				Name:       addressableName,

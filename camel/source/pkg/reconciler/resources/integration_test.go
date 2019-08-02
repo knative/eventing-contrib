@@ -62,8 +62,8 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Sources: []camelv1alpha1.SourceSpec{
 				{
 					DataSpec: camelv1alpha1.DataSpec{
-						Name:    "source.flow",
-						Content: "- from:\n    steps:\n    - to:\n        uri: knative:endpoint/sink\n    uri: timer:tick\n",
+						Name:    "source.yaml",
+						Content: "- from:\n    steps:\n    - to:\n        uri: knative://endpoint/sink\n    uri: timer:tick\n",
 					},
 				},
 			},

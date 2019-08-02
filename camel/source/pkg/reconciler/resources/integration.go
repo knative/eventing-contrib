@@ -52,7 +52,7 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 		}
 
 		if args.Source.Flow != nil {
-			flow, err := CopyCamelFlow(args.Source.Flow.Object)
+			flow, err := UnmarshalCamelFlow(*args.Source.Flow)
 			if err != nil {
 				return nil, err
 			}

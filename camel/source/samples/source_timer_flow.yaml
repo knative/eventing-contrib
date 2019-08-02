@@ -10,7 +10,7 @@ metadata:
   name: camel-timer-flow-source
 spec:
   source:
-    flow:
+    flow: |
       from:
         uri: timer:tick?period=3s
         steps:
