@@ -23,9 +23,9 @@ import (
 
 	"fmt"
 
-	"knative.dev/pkg/apis"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/apis"
 )
 
 // Conditions is the interface for a Resource that implements the getter and
@@ -218,11 +218,7 @@ func (r conditionsImpl) isTerminal(t ConditionType) bool {
 		}
 	}
 
-	if t == r.happy {
-		return true
-	}
-
-	return false
+	return t == r.happy
 }
 
 func (r conditionsImpl) severity(t ConditionType) ConditionSeverity {
