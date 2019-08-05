@@ -7,12 +7,15 @@
 apiVersion: sources.eventing.knative.dev/v1alpha1
 kind: CamelSource
 metadata:
-  name: camel-timer-source
+  name: camel-timer-flow-source
 spec:
   source:
-    component:
-      # Using 'period' URI option (see component documentation)
-      uri: timer:tick?period=3s
+    flow: |
+      from:
+        uri: timer:tick?period=3s
+        steps:
+          - set-body:
+              constant: Hello world!
   sink:
     apiVersion: eventing.knative.dev/v1alpha1
     kind: Channel

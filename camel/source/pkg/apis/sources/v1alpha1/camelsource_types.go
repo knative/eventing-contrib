@@ -69,17 +69,6 @@ type CamelSourceSpec struct {
 	// Source is the reference to the integration flow to run.
 	Source CamelSourceOriginSpec `json:"source"`
 
-	// DEPRECATED: moved inside the specific CamelSourceOriginSpec
-	// ServiceAccountName is the name of the ServiceAccount to use to run this
-	// source.
-	// +optional
-	DeprecatedServiceAccountName string `json:"serviceAccountName,omitempty"`
-
-	// DEPRECATED: use the context field in CamelSourceOriginSpec
-	// Image is an optional base image used to run the source.
-	// +optional
-	DeprecatedImage string `json:"image,omitempty"`
-
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
@@ -88,9 +77,12 @@ type CamelSourceSpec struct {
 // CamelSourceOriginSpec is the integration flow to run
 type CamelSourceOriginSpec struct {
 	// Component is a kind of source that directly references a Camel component
-	Component *CamelSourceOriginComponentSpec `json:"component,omitempty"`
+	// DEPRECATED
+	DeprecatedComponent *CamelSourceOriginComponentSpec `json:"component,omitempty"`
 	// Integration is a kind of source that contains a Camel K integration
 	Integration *v1alpha1.IntegrationSpec `json:"integration,omitempty"`
+	// Flow is a kind of source that contains a single Camel YAML flow route
+	Flow *string `json:"flow,omitempty"`
 }
 
 type CamelSourceOriginComponentSpec struct {

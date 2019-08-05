@@ -180,19 +180,6 @@ func TestReconcile(t *testing.T) {
 			},
 		},
 		{
-			Name: "Source with image",
-			InitialState: []runtime.Object{
-				withAlternativeImage(getSource()),
-				getAddressable(),
-				getRunningIntegration(t),
-			},
-			WantPresent: []runtime.Object{
-				withAlternativeImage(asDeployedSource(getSource())),
-				getRunningIntegration(t),
-				getContext(),
-			},
-		},
-		{
 			Name: "Source with context",
 			InitialState: []runtime.Object{
 				withAlternativeContext(getSource()),
@@ -222,31 +209,16 @@ func TestReconcile(t *testing.T) {
 			},
 		},
 		{
-			Name: "Source with image and existing context",
+			Name:       "Camel K Flow source",
+			Reconciles: getCamelKFlowSource(),
 			InitialState: []runtime.Object{
-				withAlternativeImage(getSource()),
+				getCamelKFlowSource(),
 				getAddressable(),
-				getRunningIntegrationWithAlternativeContext(t),
-				getAlternativeContext(),
+				getRunningCamelKFlowIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				withAlternativeImage(asDeployedSource(getSource())),
-				getRunningIntegrationWithAlternativeContext(t),
-				getAlternativeContext(),
-			},
-		},
-		{
-			Name: "Source with image and unbound existing context",
-			InitialState: []runtime.Object{
-				withAlternativeImage(getSource()),
-				getAddressable(),
-				getRunningIntegration(t),
-				getAlternativeContext(),
-			},
-			WantPresent: []runtime.Object{
-				withAlternativeImage(withUpdatingIntegration(getSource())),
-				getRunningIntegrationWithAlternativeContext(t),
-				getAlternativeContext(),
+				asDeployedSource(getCamelKFlowSource()),
+				getRunningCamelKFlowIntegration(t),
 			},
 		},
 	}
@@ -282,7 +254,7 @@ func getSource() *sourcesv1alpha1.CamelSource {
 		ObjectMeta: om(testNS, sourceName),
 		Spec: sourcesv1alpha1.CamelSourceSpec{
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
-				Component: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
+				DeprecatedComponent: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
 					URI: "timer:tick?period=3s",
 				},
 			},
@@ -330,28 +302,84 @@ func getCamelKSource() *sourcesv1alpha1.CamelSource {
 	return obj
 }
 
-func withAlternativeImage(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
-	src.Spec.DeprecatedImage = alternativeImage
-	return src
+func getCamelKFlowSource() *sourcesv1alpha1.CamelSource {
+	flow := map[interface{}]interface{}{
+		"from": map[string]interface{}{
+			"uri": "timer:tick?period=3s",
+			"steps": []interface{}{
+				map[string]interface{}{
+					"set-body": map[string]interface{}{
+						"constant": "Hello world",
+					},
+				},
+			},
+		},
+	}
+	source, err := resources.MarshalCamelFlow(flow)
+	if err != nil {
+		panic(err)
+	}
+	obj := &sourcesv1alpha1.CamelSource{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
+			Kind:       "CamelSource",
+		},
+		ObjectMeta: om(testNS, sourceName),
+		Spec: sourcesv1alpha1.CamelSourceSpec{
+			Source: sourcesv1alpha1.CamelSourceOriginSpec{
+				Flow: &source,
+			},
+			Sink: &corev1.ObjectReference{
+				Name:       addressableName,
+				Kind:       addressableKind,
+				APIVersion: addressableAPIVersion,
+			},
+		},
+	}
+	// selflink is not filled in when we create the object, so clear it
+	obj.ObjectMeta.SelfLink = ""
+	return obj
 }
 
 func withAlternativeContext(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
-	if src.Spec.Source.Component != nil {
-		src.Spec.Source.Component.Context = alternativeContextName
+	if src.Spec.Source.DeprecatedComponent != nil {
+		src.Spec.Source.DeprecatedComponent.Context = alternativeContextName
 	} else {
-		src.Spec.Source.Integration.Context = alternativeContextName
+		src.Spec.Source.Integration.Kit = alternativeContextName
 	}
 	return src
 }
 
-func getContext() *camelv1alpha1.IntegrationContext {
-	return resources.MakeContext(testNS, alternativeImage)
+func getContext() *camelv1alpha1.IntegrationKit {
+	return makeContext(testNS, alternativeImage)
 }
 
-func getAlternativeContext() *camelv1alpha1.IntegrationContext {
-	ctx := resources.MakeContext(testNS, alternativeImage)
+func getAlternativeContext() *camelv1alpha1.IntegrationKit {
+	ctx := makeContext(testNS, alternativeImage)
 	ctx.Name = alternativeContextName
 	return ctx
+}
+
+func makeContext(namespace string, image string) *camelv1alpha1.IntegrationKit {
+	ct := camelv1alpha1.IntegrationKit{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "IntegrationKit",
+			APIVersion: "camel.apache.org/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "ctx-",
+			Namespace:    namespace,
+			Labels: map[string]string{
+				"app": "camel-k",
+				"camel.apache.org/kit.type": camelv1alpha1.IntegrationKitTypeExternal,
+			},
+		},
+		Spec: camelv1alpha1.IntegrationKitSpec{
+			Image:   image,
+			Profile: camelv1alpha1.TraitProfileKnative,
+		},
+	}
+	return &ct
 }
 
 func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
@@ -360,7 +388,7 @@ func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
 		Namespace: testNS,
 		Sink:      addressableURI,
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
-			Component: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
+			DeprecatedComponent: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
 				URI: "timer:tick?period=3s",
 			},
 		},
@@ -374,7 +402,7 @@ func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
 }
 
 func integrationWithAlternativeContext(integration *camelv1alpha1.Integration) *camelv1alpha1.Integration {
-	integration.Spec.Context = alternativeContextName
+	integration.Spec.Kit = alternativeContextName
 	return integration
 }
 
@@ -404,9 +432,30 @@ func getRunningCamelKIntegration(t *testing.T) *camelv1alpha1.Integration {
 	return it
 }
 
-func getRunningIntegrationWithAlternativeContext(t *testing.T) *camelv1alpha1.Integration {
-	it := getRunningIntegration(t)
-	it.Spec.Context = alternativeContextName
+func getRunningCamelKFlowIntegration(t *testing.T) *camelv1alpha1.Integration {
+	it, err := resources.MakeIntegration(&resources.CamelArguments{
+		Name:      sourceName,
+		Namespace: testNS,
+		Sink:      addressableURI,
+		Source: sourcesv1alpha1.CamelSourceOriginSpec{
+			Integration: &camelv1alpha1.IntegrationSpec{
+				Sources: []camelv1alpha1.SourceSpec{
+					{
+						Language: camelv1alpha1.LanguageYaml,
+						DataSpec: camelv1alpha1.DataSpec{
+							Name:    "flow.yaml",
+							Content: "- from:\n    steps:\n    - set-body:\n        constant: Hello world\n    - to:\n        uri: knative://endpoint/sink\n    uri: timer:tick?period=3s\n",
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Error("failed to create integration", err)
+	}
+	it.ObjectMeta.OwnerReferences = getOwnerReferences()
+	it.Status.Phase = camelv1alpha1.IntegrationPhaseRunning
 	return it
 }
 

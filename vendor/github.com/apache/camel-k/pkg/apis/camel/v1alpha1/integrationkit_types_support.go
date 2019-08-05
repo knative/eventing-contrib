@@ -18,28 +18,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// NewIntegrationPlatformList --
-func NewIntegrationPlatformList() IntegrationPlatformList {
-	return IntegrationPlatformList{
+// NewIntegrationKit --
+func NewIntegrationKit(namespace string, name string) IntegrationKit {
+	return IntegrationKit{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationPlatformKind,
-		},
-	}
-}
-
-// NewIntegrationPlatform --
-func NewIntegrationPlatform(namespace string, name string) IntegrationPlatform {
-	return IntegrationPlatform{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationPlatformKind,
+			Kind:       IntegrationKindKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -48,18 +36,26 @@ func NewIntegrationPlatform(namespace string, name string) IntegrationPlatform {
 	}
 }
 
-// TraitProfileByName returns the trait profile corresponding to the given name (case insensitive)
-func TraitProfileByName(name string) TraitProfile {
-	for _, p := range allTraitProfiles {
-		if strings.EqualFold(name, string(p)) {
-			return p
-		}
+// NewIntegrationKitList --
+func NewIntegrationKitList() IntegrationKitList {
+	return IntegrationKitList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: SchemeGroupVersion.String(),
+			Kind:       IntegrationKindKind,
+		},
 	}
-	return ""
+}
+
+// ImageForIntegration returns the image to use when using it for running an integration
+func (in *IntegrationKit) ImageForIntegration() string {
+	if in.Status.PublicImage != "" {
+		return in.Status.PublicImage
+	}
+	return in.Status.Image
 }
 
 // Configurations --
-func (in *IntegrationPlatformSpec) Configurations() []ConfigurationSpec {
+func (in *IntegrationKitSpec) Configurations() []ConfigurationSpec {
 	if in == nil {
 		return []ConfigurationSpec{}
 	}
@@ -68,7 +64,7 @@ func (in *IntegrationPlatformSpec) Configurations() []ConfigurationSpec {
 }
 
 // Configurations --
-func (in *IntegrationPlatform) Configurations() []ConfigurationSpec {
+func (in *IntegrationKit) Configurations() []ConfigurationSpec {
 	if in == nil {
 		return []ConfigurationSpec{}
 	}
@@ -76,29 +72,37 @@ func (in *IntegrationPlatform) Configurations() []ConfigurationSpec {
 	return in.Spec.Configuration
 }
 
-// AddConfiguration --
-func (in *IntegrationPlatform) AddConfiguration(confType string, confValue string) {
-	in.Spec.Configuration = append(in.Spec.Configuration, ConfigurationSpec{
-		Type:  confType,
-		Value: confValue,
-	})
+// SetIntegrationPlatform --
+func (in *IntegrationKit) SetIntegrationPlatform(platform *IntegrationPlatform) {
+	cs := corev1.ConditionTrue
+
+	if platform.Status.Phase != IntegrationPlatformPhaseReady {
+		cs = corev1.ConditionFalse
+	}
+
+	var message string
+	if platform.Name != "" {
+		message = "IntegrationPlatform (" + platform.Name + ")"
+	}
+
+	in.Status.SetCondition(IntegrationKitConditionPlatformAvailable, cs, IntegrationKitConditionPlatformAvailableReason, message)
+	in.Status.Platform = platform.Name
 }
 
 // GetCondition returns the condition with the provided type.
-func (in *IntegrationPlatformStatus) GetCondition(condType IntegrationPlatformConditionType) *IntegrationPlatformCondition {
+func (in *IntegrationKitStatus) GetCondition(condType IntegrationKitConditionType) *IntegrationKitCondition {
 	for i := range in.Conditions {
 		c := in.Conditions[i]
 		if c.Type == condType {
 			return &c
 		}
-
 	}
 	return nil
 }
 
 // SetCondition --
-func (in *IntegrationPlatformStatus) SetCondition(condType IntegrationPlatformConditionType, status corev1.ConditionStatus, reason string, message string) {
-	in.SetConditions(IntegrationPlatformCondition{
+func (in *IntegrationKitStatus) SetCondition(condType IntegrationKitConditionType, status corev1.ConditionStatus, reason string, message string) {
+	in.SetConditions(IntegrationKitCondition{
 		Type:               condType,
 		Status:             status,
 		LastUpdateTime:     metav1.Now(),
@@ -109,8 +113,8 @@ func (in *IntegrationPlatformStatus) SetCondition(condType IntegrationPlatformCo
 }
 
 // SetErrorCondition --
-func (in *IntegrationPlatformStatus) SetErrorCondition(condType IntegrationPlatformConditionType, reason string, err error) {
-	in.SetConditions(IntegrationPlatformCondition{
+func (in *IntegrationKitStatus) SetErrorCondition(condType IntegrationKitConditionType, reason string, err error) {
+	in.SetConditions(IntegrationKitCondition{
 		Type:               condType,
 		Status:             corev1.ConditionFalse,
 		LastUpdateTime:     metav1.Now(),
@@ -124,7 +128,7 @@ func (in *IntegrationPlatformStatus) SetErrorCondition(condType IntegrationPlatf
 //
 // If a condition that we are about to add already exists and has the same status and
 // reason then we are not going to update.
-func (in *IntegrationPlatformStatus) SetConditions(conditions ...IntegrationPlatformCondition) {
+func (in *IntegrationKitStatus) SetConditions(conditions ...IntegrationKitCondition) {
 	for _, condition := range conditions {
 		if condition.LastUpdateTime.IsZero() {
 			condition.LastUpdateTime = metav1.Now()
@@ -149,7 +153,7 @@ func (in *IntegrationPlatformStatus) SetConditions(conditions ...IntegrationPlat
 }
 
 // RemoveCondition removes the resource condition with the provided type.
-func (in *IntegrationPlatformStatus) RemoveCondition(condType IntegrationPlatformConditionType) {
+func (in *IntegrationKitStatus) RemoveCondition(condType IntegrationKitConditionType) {
 	newConditions := in.Conditions[:0]
 	for _, c := range in.Conditions {
 		if c.Type != condType {

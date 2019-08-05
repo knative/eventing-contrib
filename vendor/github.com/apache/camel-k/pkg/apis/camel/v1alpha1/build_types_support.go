@@ -18,28 +18,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// NewIntegrationPlatformList --
-func NewIntegrationPlatformList() IntegrationPlatformList {
-	return IntegrationPlatformList{
+// NewBuild --
+func NewBuild(namespace string, name string) Build {
+	return Build{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationPlatformKind,
-		},
-	}
-}
-
-// NewIntegrationPlatform --
-func NewIntegrationPlatform(namespace string, name string) IntegrationPlatform {
-	return IntegrationPlatform{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationPlatformKind,
+			Kind:       BuildKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -48,57 +36,42 @@ func NewIntegrationPlatform(namespace string, name string) IntegrationPlatform {
 	}
 }
 
-// TraitProfileByName returns the trait profile corresponding to the given name (case insensitive)
-func TraitProfileByName(name string) TraitProfile {
-	for _, p := range allTraitProfiles {
-		if strings.EqualFold(name, string(p)) {
-			return p
-		}
+// NewBuildList --
+func NewBuildList() BuildList {
+	return BuildList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: SchemeGroupVersion.String(),
+			Kind:       BuildKind,
+		},
 	}
-	return ""
 }
 
-// Configurations --
-func (in *IntegrationPlatformSpec) Configurations() []ConfigurationSpec {
-	if in == nil {
-		return []ConfigurationSpec{}
+// SetIntegrationPlatform --
+func (in *Build) SetIntegrationPlatform(platform *IntegrationPlatform) {
+	cs := corev1.ConditionTrue
+
+	if platform.Status.Phase != IntegrationPlatformPhaseReady {
+		cs = corev1.ConditionFalse
 	}
 
-	return in.Configuration
-}
-
-// Configurations --
-func (in *IntegrationPlatform) Configurations() []ConfigurationSpec {
-	if in == nil {
-		return []ConfigurationSpec{}
-	}
-
-	return in.Spec.Configuration
-}
-
-// AddConfiguration --
-func (in *IntegrationPlatform) AddConfiguration(confType string, confValue string) {
-	in.Spec.Configuration = append(in.Spec.Configuration, ConfigurationSpec{
-		Type:  confType,
-		Value: confValue,
-	})
+	in.Status.SetCondition(BuildConditionPlatformAvailable, cs, BuildConditionPlatformAvailableReason, platform.Name)
+	in.Status.Platform = platform.Name
 }
 
 // GetCondition returns the condition with the provided type.
-func (in *IntegrationPlatformStatus) GetCondition(condType IntegrationPlatformConditionType) *IntegrationPlatformCondition {
+func (in *BuildStatus) GetCondition(condType BuildConditionType) *BuildCondition {
 	for i := range in.Conditions {
 		c := in.Conditions[i]
 		if c.Type == condType {
 			return &c
 		}
-
 	}
 	return nil
 }
 
 // SetCondition --
-func (in *IntegrationPlatformStatus) SetCondition(condType IntegrationPlatformConditionType, status corev1.ConditionStatus, reason string, message string) {
-	in.SetConditions(IntegrationPlatformCondition{
+func (in *BuildStatus) SetCondition(condType BuildConditionType, status corev1.ConditionStatus, reason string, message string) {
+	in.SetConditions(BuildCondition{
 		Type:               condType,
 		Status:             status,
 		LastUpdateTime:     metav1.Now(),
@@ -109,8 +82,8 @@ func (in *IntegrationPlatformStatus) SetCondition(condType IntegrationPlatformCo
 }
 
 // SetErrorCondition --
-func (in *IntegrationPlatformStatus) SetErrorCondition(condType IntegrationPlatformConditionType, reason string, err error) {
-	in.SetConditions(IntegrationPlatformCondition{
+func (in *BuildStatus) SetErrorCondition(condType BuildConditionType, reason string, err error) {
+	in.SetConditions(BuildCondition{
 		Type:               condType,
 		Status:             corev1.ConditionFalse,
 		LastUpdateTime:     metav1.Now(),
@@ -124,7 +97,7 @@ func (in *IntegrationPlatformStatus) SetErrorCondition(condType IntegrationPlatf
 //
 // If a condition that we are about to add already exists and has the same status and
 // reason then we are not going to update.
-func (in *IntegrationPlatformStatus) SetConditions(conditions ...IntegrationPlatformCondition) {
+func (in *BuildStatus) SetConditions(conditions ...BuildCondition) {
 	for _, condition := range conditions {
 		if condition.LastUpdateTime.IsZero() {
 			condition.LastUpdateTime = metav1.Now()
@@ -149,7 +122,7 @@ func (in *IntegrationPlatformStatus) SetConditions(conditions ...IntegrationPlat
 }
 
 // RemoveCondition removes the resource condition with the provided type.
-func (in *IntegrationPlatformStatus) RemoveCondition(condType IntegrationPlatformConditionType) {
+func (in *BuildStatus) RemoveCondition(condType BuildConditionType) {
 	newConditions := in.Conditions[:0]
 	for _, c := range in.Conditions {
 		if c.Type != condType {
