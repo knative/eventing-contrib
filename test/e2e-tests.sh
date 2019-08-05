@@ -5,7 +5,7 @@ function knative_setup() {
   echo "GOPATH: ${GOPATH}"
 
   pushd .
-  cd ${GOPATH} && mkdir -p src/github.com && cd src/github.com
+  cd ${GOPATH} && mkdir -p src/github.com/knative && cd src/github.com/knative
   git clone https://github.com/knative/eventing
   cd ${GOPATH}/src/github.com/knative/eventing
   ko apply -f config/
