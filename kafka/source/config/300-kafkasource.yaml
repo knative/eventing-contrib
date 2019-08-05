@@ -49,6 +49,7 @@ spec:
                     type:
                       type: string
                       pattern: "dev.knative.kafka.event"
+                    # TODO: set the schema pattern.
                     schema:
                       type: string
         spec:

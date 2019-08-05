@@ -50,6 +50,7 @@ spec:
                     type:
                       type: string
                       pattern: "aws.sqs.message"
+                    # TODO: set the schema pattern.
                     schema:
                       type: string
         spec:

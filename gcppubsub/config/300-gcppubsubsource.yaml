@@ -50,6 +50,7 @@ spec:
                     type:
                       type: string
                       pattern: "google.pubsub.topic.publish"
+                    # TODO: set the schema pattern.
                     schema:
                       type: string
         spec:
