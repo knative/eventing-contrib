@@ -1,5 +1,7 @@
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/e2e-tests.sh
 
+initialize $@ --skip-istio-addon
+
 echo "current path: $(pwd)"
 
 echo "GOPATH: ${GOPATH}"
