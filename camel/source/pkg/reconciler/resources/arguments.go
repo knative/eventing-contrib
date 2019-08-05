@@ -25,8 +25,4 @@ type CamelArguments struct {
 	Namespace string
 	Source    v1alpha1.CamelSourceOriginSpec
 	Sink      string
-	// DEPRECATED
-	DeprecatedIntegrationContext string
-	// DEPRECATED
-	DeprecatedServiceAccountName string
 }

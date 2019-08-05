@@ -18,6 +18,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/knative/eventing-contrib/camel/source/pkg/apis"
 	"github.com/knative/eventing-contrib/camel/source/pkg/install"
@@ -28,6 +29,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+)
+
+const (
+	// envCamelKInstalled determines whether the controller should consider Camel K already installed without checking
+	envCamelKInstalled = "CAMEL_K_INSTALLED"
 )
 
 func main() {
@@ -45,9 +51,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Check Camel K is installed before proceeding
-	install.EnsureCamelKInstalled(cfg)
-	log.Printf("Camel K is correctly installed in the cluster.")
+	if "true" == os.Getenv(envCamelKInstalled) {
+		log.Printf("Camel K is already installed. Skipping the check...")
+	} else {
+		// Check Camel K is installed before proceeding
+		install.EnsureCamelKInstalled(cfg)
+		log.Printf("Camel K is correctly installed in the cluster.")
+	}
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{})
