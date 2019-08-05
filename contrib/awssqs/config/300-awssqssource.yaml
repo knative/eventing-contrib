@@ -52,7 +52,6 @@ spec:
                       pattern: "aws.sqs.message"
                     schema:
                       type: string
-                      pattern: ""
         spec:
           properties:
             awsCredsSecret:

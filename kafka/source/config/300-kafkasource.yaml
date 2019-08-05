@@ -51,7 +51,6 @@ spec:
                       pattern: "dev.knative.kafka.event"
                     schema:
                       type: string
-                      pattern: ""
         spec:
           properties:
             bootstrapServers:

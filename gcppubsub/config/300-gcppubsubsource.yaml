@@ -52,7 +52,6 @@ spec:
                       pattern: "google.pubsub.topic.publish"
                     schema:
                       type: string
-                      pattern: ""
         spec:
           properties:
             gcpCredsSecret:

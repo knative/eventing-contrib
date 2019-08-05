@@ -41,7 +41,7 @@ spec:
           description: "Internal information, users should not set this property"
           properties:
             eventTypes:
-              # TODO: set the schemas.
+              # TODO: set the schemas' patterns.
               type: object
               description: "Event types that GitHubSource can produce"
               properties:
@@ -53,7 +53,6 @@ spec:
                       pattern: "dev.knative.source.github.check_suite"
                     schema:
                       type: string
-                      pattern: ""
                 commit_comment:
                   type: object
                   properties:
@@ -62,7 +61,6 @@ spec:
                       pattern: "dev.knative.source.github.commit_comment"
                     schema:
                       type: string
-                      pattern: ""
                 create:
                   type: object
                   properties:
@@ -71,7 +69,6 @@ spec:
                       pattern: "dev.knative.source.github.create"
                     schema:
                       type: string
-                      pattern: ""
                 delete:
                   type: object
                   properties:
@@ -80,7 +77,6 @@ spec:
                       pattern: "dev.knative.source.github.delete"
                     schema:
                       type: string
-                      pattern: ""
                 deployment:
                   type: object
                   properties:
@@ -89,7 +85,6 @@ spec:
                       pattern: "dev.knative.source.github.deployment"
                     schema:
                       type: string
-                      pattern: ""
                 deployment_status:
                   type: object
                   properties:
@@ -98,7 +93,6 @@ spec:
                       pattern: "dev.knative.source.github.deployment_status"
                     schema:
                       type: string
-                      pattern: ""
                 fork:
                   type: object
                   properties:
@@ -107,7 +101,6 @@ spec:
                       pattern: "dev.knative.source.github.fork"
                     schema:
                       type: string
-                      pattern: ""
                 gollum:
                   type: object
                   properties:
@@ -116,7 +109,6 @@ spec:
                       pattern: "dev.knative.source.github.gollum"
                     schema:
                       type: string
-                      pattern: ""
                 installation:
                   type: object
                   properties:
@@ -125,7 +117,6 @@ spec:
                       pattern: "dev.knative.source.github.installation"
                     schema:
                       type: string
-                      pattern: ""
                 integration_installation:
                   type: object
                   properties:
@@ -134,7 +125,6 @@ spec:
                       pattern: "dev.knative.source.github.integration_installation"
                     schema:
                       type: string
-                      pattern: ""
                 issue_comment:
                   type: object
                   properties:
@@ -143,7 +133,6 @@ spec:
                       pattern: "dev.knative.source.github.issue_comment"
                     schema:
                       type: string
-                      pattern: ""
                 issues:
                   type: object
                   properties:
@@ -152,7 +141,6 @@ spec:
                       pattern: "dev.knative.source.github.issues"
                     schema:
                       type: string
-                      pattern: ""
                 label:
                   type: object
                   properties:
@@ -161,7 +149,6 @@ spec:
                       pattern: "dev.knative.source.github.label"
                     schema:
                       type: string
-                      pattern: ""
                 member:
                   type: object
                   properties:
@@ -170,7 +157,6 @@ spec:
                       pattern: "dev.knative.source.github.member"
                     schema:
                       type: string
-                      pattern: ""
                 membership:
                   type: object
                   properties:
@@ -179,7 +165,6 @@ spec:
                       pattern: "dev.knative.source.github.membership"
                     schema:
                       type: string
-                      pattern: ""
                 milestone:
                   type: object
                   properties:
@@ -188,7 +173,6 @@ spec:
                       pattern: "dev.knative.source.github.milestone"
                     schema:
                       type: string
-                      pattern: ""
                 organization:
                   type: object
                   properties:
@@ -197,7 +181,6 @@ spec:
                       pattern: "dev.knative.source.github.organization"
                     schema:
                       type: string
-                      pattern: ""
                 org_block:
                   type: object
                   properties:
@@ -206,7 +189,6 @@ spec:
                       pattern: "dev.knative.source.github.org_block"
                     schema:
                       type: string
-                      pattern: ""
                 page_build:
                   type: object
                   properties:
@@ -215,7 +197,6 @@ spec:
                       pattern: "dev.knative.source.github.page_build"
                     schema:
                       type: string
-                      pattern: ""
                 ping:
                   type: object
                   properties:
@@ -224,7 +205,6 @@ spec:
                       pattern: "dev.knative.source.github.ping"
                     schema:
                       type: string
-                      pattern: ""
                 project_card:
                   type: object
                   properties:
@@ -233,7 +213,6 @@ spec:
                       pattern: "dev.knative.source.github.project_card"
                     schema:
                       type: string
-                      pattern: ""
                 project_column:
                   type: object
                   properties:
@@ -242,7 +221,6 @@ spec:
                       pattern: "dev.knative.source.github.project_column"
                     schema:
                       type: string
-                      pattern: ""
                 project:
                   type: object
                   properties:
@@ -251,7 +229,6 @@ spec:
                       pattern: "dev.knative.source.github.project"
                     schema:
                       type: string
-                      pattern: ""
                 public:
                   type: object
                   properties:
@@ -260,7 +237,6 @@ spec:
                       pattern: "dev.knative.source.github.public"
                     schema:
                       type: string
-                      pattern: ""
                 pull_request:
                   type: object
                   properties:
@@ -269,7 +245,6 @@ spec:
                       pattern: "dev.knative.source.github.pull_request"
                     schema:
                       type: string
-                      pattern: ""
                 pull_request_review:
                   type: object
                   properties:
@@ -278,7 +253,6 @@ spec:
                       pattern: "dev.knative.source.github.pull_request_review"
                     schema:
                       type: string
-                      pattern: ""
                 pull_request_review_comment:
                   type: object
                   properties:
@@ -287,7 +261,6 @@ spec:
                       pattern: "dev.knative.source.github.pull_request_review_comment"
                     schema:
                       type: string
-                      pattern: ""
                 push:
                   type: object
                   properties:
@@ -296,7 +269,6 @@ spec:
                       pattern: "dev.knative.source.github.push"
                     schema:
                       type: string
-                      pattern: ""
                 release:
                   type: object
                   properties:
@@ -305,7 +277,6 @@ spec:
                       pattern: "dev.knative.source.github.release"
                     schema:
                       type: string
-                      pattern: ""
                 repository:
                   type: object
                   properties:
@@ -314,7 +285,6 @@ spec:
                       pattern: "dev.knative.source.github.repository"
                     schema:
                       type: string
-                      pattern: ""
                 status:
                   type: object
                   properties:
@@ -323,7 +293,6 @@ spec:
                       pattern: "dev.knative.source.github.status"
                     schema:
                       type: string
-                      pattern: ""
                 team:
                   type: object
                   properties:
@@ -332,7 +301,6 @@ spec:
                       pattern: "dev.knative.source.github.team"
                     schema:
                       type: string
-                      pattern: ""
                 team_add:
                   type: object
                   properties:
@@ -341,7 +309,6 @@ spec:
                       pattern: "dev.knative.source.github.team_add"
                     schema:
                       type: string
-                      pattern: ""
                 watch:
                   type: object
                   properties:
@@ -350,7 +317,6 @@ spec:
                       pattern: "dev.knative.source.github.watch"
                     schema:
                       type: string
-                      pattern: ""
         spec:
           properties:
             accessToken:
