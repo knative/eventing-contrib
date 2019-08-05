@@ -16,6 +16,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
+    contrib.eventing.knative.dev/release: devel
     control-plane: camel-controller-manager
   name: camel-controller-manager
   namespace: knative-sources
