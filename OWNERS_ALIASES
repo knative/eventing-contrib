@@ -20,6 +20,11 @@ aliases:
     - bbrowning
     - matzew
 
+  natss-approvers:
+    - Abd4llA
+  natss-reviewers:
+    - Abd4llA
+
   productivity-approvers:
   - adrcunha
   - chaodaiG
