@@ -18,6 +18,7 @@ metadata:
   name: kafka-controller-manager
   namespace: knative-sources
   labels:
+    contrib.eventing.knative.dev/release: devel
     control-plane: kafka-controller-manager
 spec:
   selector:

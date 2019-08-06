@@ -17,6 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
+    contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
   name: camelsources.sources.eventing.knative.dev
