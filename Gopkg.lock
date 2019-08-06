@@ -74,6 +74,14 @@
   version = "1.0.0-M1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:5fc59659227ab4a033745305327e884b5e2efe275bf1e3a3b70cfa824398b5bb"
+  name = "github.com/armon/go-metrics"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ec5e00d3c878b2a97bbe0884ef45ffd1b4f669f5"
+
+[[projects]]
   digest = "1:164a1e6e8407f99696f29dca7b21025c347b5ec47beafc1b8254e4a4ae71cc08"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -244,10 +252,12 @@
   version = "v1.6.5"
 
 [[projects]]
-  digest = "1:8679b8a64f3613e9749c5640c3535c83399b8e69f67ce54d91dc73f6d77373af"
+  digest = "1:cd4f86461732066e277335465962660cbf02999e18d5bbb5e9285eac4608b970"
   name = "github.com/gogo/protobuf"
   packages = [
+    "gogoproto",
     "proto",
+    "protoc-gen-gogo/descriptor",
     "sortkeys",
   ]
   pruneopts = "NUT"
@@ -412,6 +422,30 @@
   revision = "9cad4c3443a7200dd6400aef47183728de563a38"
 
 [[projects]]
+  digest = "1:2d5c50fd90deb2a3f75e344a2363b675999726f8c6ca9d23821ef3caa1e7948e"
+  name = "github.com/hashicorp/go-hclog"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "5ccdce08c75b6c7b37af61159f13f6a4f5e2e928"
+  version = "v0.9.2"
+
+[[projects]]
+  digest = "1:74fcd337a6f349cdf637809abd746bd0e88f132747f0bbe06daa4315cccba5b9"
+  name = "github.com/hashicorp/go-immutable-radix"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "7dd1121b595e4e1bd6dd5caa78e0f5c454740379"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:96303573c0bb8fb3f7192575cf6b03260de1eb694c63ef2719e3cce73594632e"
+  name = "github.com/hashicorp/go-msgpack"
+  packages = ["codec"]
+  pruneopts = "NUT"
+  revision = "ad60660ecf9c5a1eae0ca32182ed72bab5807961"
+  version = "v0.5.5"
+
+[[projects]]
   digest = "1:b42cde0e1f3c816dd57f57f7bbcf05ca40263ad96f168714c130c611fc0856a6"
   name = "github.com/hashicorp/golang-lru"
   packages = [
@@ -421,6 +455,14 @@
   pruneopts = "NUT"
   revision = "20f1fb78b0740ba8c3cb143a61e86ba5c8669768"
   version = "v0.5.0"
+
+[[projects]]
+  digest = "1:658336a380db1d7af967e0e1ec2dcd64087bd061d68cc054c0708663dce00fee"
+  name = "github.com/hashicorp/raft"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ff523e1c1515a5b33cc3153a34c984093fed06bb"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:41933d387bfa3eaa6a82647914ed7044f7b8355764c24fb920892bc8c03ef0c3"
@@ -483,9 +525,29 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:c10b2c6ae17571c461908af3ea628dd9430c023f419d2303f98a5feb3898d9bc"
+  digest = "1:f189fbfc2644d06b0c72576e9a581bb16bbee55df30be3ed77d5f1978c4a1bb7"
   name = "github.com/knative/eventing"
   packages = [
+    "contrib/natss/pkg/apis/messaging",
+    "contrib/natss/pkg/apis/messaging/v1alpha1",
+    "contrib/natss/pkg/client/clientset/versioned",
+    "contrib/natss/pkg/client/clientset/versioned/fake",
+    "contrib/natss/pkg/client/clientset/versioned/scheme",
+    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
+    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
+    "contrib/natss/pkg/client/informers/externalversions",
+    "contrib/natss/pkg/client/informers/externalversions/internalinterfaces",
+    "contrib/natss/pkg/client/informers/externalversions/messaging",
+    "contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1",
+    "contrib/natss/pkg/client/listers/messaging/v1alpha1",
+    "contrib/natss/pkg/dispatcher",
+    "contrib/natss/pkg/reconciler",
+    "contrib/natss/pkg/reconciler/controller",
+    "contrib/natss/pkg/reconciler/controller/resources",
+    "contrib/natss/pkg/reconciler/dispatcher",
+    "contrib/natss/pkg/reconciler/testing",
+    "contrib/natss/pkg/stanutil",
+    "contrib/natss/pkg/util",
     "pkg/apis/duck",
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing",
@@ -587,6 +649,84 @@
   pruneopts = "NUT"
   revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
   version = "1.0.1"
+
+[[projects]]
+  digest = "1:3a007c2952878394de42747f04bf7fead5c9df9ecb4d16735c734b269f275612"
+  name = "github.com/nats-io/gnatsd"
+  packages = [
+    "conf",
+    "logger",
+    "server",
+    "server/pse",
+  ]
+  pruneopts = "NUT"
+  revision = "3e64f0bfd1fe4c2cf6599f064ff72fa7af439663"
+  version = "v1.4.1"
+
+[[projects]]
+  digest = "1:c525e25319b805711985485b95285fcfda9a97563919c7b9f709f6ef1e553efe"
+  name = "github.com/nats-io/go-nats"
+  packages = [
+    ".",
+    "encoders/builtin",
+    "util",
+  ]
+  pruneopts = "NUT"
+  revision = "70fe06cee50d4b6f98248d9675fb55f2a3aa7228"
+  version = "v1.7.2"
+
+[[projects]]
+  digest = "1:fc0bc63c2430301e10b5bf257707a601e46858b526ab6b07d8447d419a35909b"
+  name = "github.com/nats-io/go-nats-streaming"
+  packages = [
+    ".",
+    "pb",
+  ]
+  pruneopts = "NUT"
+  revision = "7cd94c239033c0405a43454be55a0810d3a3ca89"
+  version = "v0.4.4"
+
+[[projects]]
+  digest = "1:14e32c27cba8116b9b4df54cf50e16da79bf045505f4c9cb91e2fc9333ccaace"
+  name = "github.com/nats-io/nats-streaming-server"
+  packages = [
+    "logger",
+    "server",
+    "spb",
+    "stores",
+    "util",
+  ]
+  pruneopts = "NUT"
+  revision = "1ce767705f3a16654fe0b7d34f4b11eb71499426"
+  version = "v0.14.3"
+
+[[projects]]
+  digest = "1:198f52f16bac13d9338ae08d4ab3d16812e840550146ad6097d22ed5cb395629"
+  name = "github.com/nats-io/nats.go"
+  packages = [
+    ".",
+    "encoders/builtin",
+    "util",
+  ]
+  pruneopts = "NUT"
+  revision = "e2837a2879e82886f6e21715e3a0217fdc46d370"
+  version = "v1.8.1"
+
+[[projects]]
+  digest = "1:d649fe8fa50df39a525a9acd9fa73a29f8097272467ca3830a2ebc1abcfb33e3"
+  name = "github.com/nats-io/nkeys"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "0073b400419be3ffb022ef46b675805e92534a34"
+  version = "v0.1.0"
+
+[[projects]]
+  digest = "1:98d41d5085f44b0baa46a83ca0ca6d8a079f1ffb449ba5a36050ca9019de391c"
+  name = "github.com/nats-io/nuid"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "4b96681fa6d28dd0ab5fe79bac63b3a493d9ee94"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:cdc5cfc04dd0b98f86433207fe6d9879757c46734441a08886acc11251c7ed4a"
@@ -785,6 +925,14 @@
   version = "v1.0.3"
 
 [[projects]]
+  digest = "1:3a4c90791db3bf894a26cf6ffc0f792a31d0f225664c38b0577f02a36bc0cda7"
+  name = "go.etcd.io/bbolt"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "a0458a2b35708eef59eb5f620ceb3cd1c01a824d"
+  version = "v1.3.3"
+
+[[projects]]
   digest = "1:0e3fd52087079d1289983e4fef32268ca965973f5370b69204e2934185527baa"
   name = "go.opencensus.io"
   packages = [
@@ -846,9 +994,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
+  digest = "1:1ba2be3e8d1836918b69f885227fa1db9ea76bb50ec6effb82161abb72b8f7a7"
   name = "golang.org/x/crypto"
-  packages = ["ssh/terminal"]
+  packages = [
+    "bcrypt",
+    "blowfish",
+    "chacha20poly1305",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "internal/chacha20",
+    "internal/subtle",
+    "poly1305",
+    "ssh/terminal",
+  ]
   pruneopts = "NUT"
   revision = "0c41d7ab0a0ee717d4590a44bcb987dfd9e183eb"
 
@@ -899,11 +1057,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:08ba96980b288a3774b7202c125f1d32b84909c5e5903d654556bec15ac747d1"
+  digest = "1:849654fa1e2be39428bf168cf37ab2c57b8db423309fcedcddac65601157dc31"
   name = "golang.org/x/sys"
   packages = [
+    "cpu",
     "unix",
     "windows",
+    "windows/registry",
+    "windows/svc",
+    "windows/svc/debug",
+    "windows/svc/eventlog",
+    "windows/svc/mgr",
   ]
   pruneopts = "NUT"
   revision = "8f1d3d21f81be6e86ebcd6febee89c89bc50719f"
@@ -1596,6 +1760,26 @@
     "github.com/google/go-github/github",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
+    "github.com/knative/eventing/contrib/natss/pkg/apis/messaging",
+    "github.com/knative/eventing/contrib/natss/pkg/apis/messaging/v1alpha1",
+    "github.com/knative/eventing/contrib/natss/pkg/client/clientset/versioned",
+    "github.com/knative/eventing/contrib/natss/pkg/client/clientset/versioned/fake",
+    "github.com/knative/eventing/contrib/natss/pkg/client/clientset/versioned/scheme",
+    "github.com/knative/eventing/contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
+    "github.com/knative/eventing/contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
+    "github.com/knative/eventing/contrib/natss/pkg/client/informers/externalversions",
+    "github.com/knative/eventing/contrib/natss/pkg/client/informers/externalversions/internalinterfaces",
+    "github.com/knative/eventing/contrib/natss/pkg/client/informers/externalversions/messaging",
+    "github.com/knative/eventing/contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1",
+    "github.com/knative/eventing/contrib/natss/pkg/client/listers/messaging/v1alpha1",
+    "github.com/knative/eventing/contrib/natss/pkg/dispatcher",
+    "github.com/knative/eventing/contrib/natss/pkg/reconciler",
+    "github.com/knative/eventing/contrib/natss/pkg/reconciler/controller",
+    "github.com/knative/eventing/contrib/natss/pkg/reconciler/controller/resources",
+    "github.com/knative/eventing/contrib/natss/pkg/reconciler/dispatcher",
+    "github.com/knative/eventing/contrib/natss/pkg/reconciler/testing",
+    "github.com/knative/eventing/contrib/natss/pkg/stanutil",
+    "github.com/knative/eventing/contrib/natss/pkg/util",
     "github.com/knative/eventing/pkg/apis/duck/v1alpha1",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/apis/sources/v1alpha1",
@@ -1615,6 +1799,8 @@
     "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/knative/serving/pkg/client/clientset/versioned",
     "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1",
+    "github.com/nats-io/go-nats-streaming",
+    "github.com/nats-io/nats-streaming-server/server",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "go.opencensus.io/stats",
