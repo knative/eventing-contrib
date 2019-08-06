@@ -27,6 +27,11 @@ required = [
   non-go = false
 
 [[prune.project]]
+  name = "knative.dev/pkg"
+  unused-packages = false
+  non-go = false
+
+[[prune.project]]
   name = "k8s.io/code-generator"
   unused-packages = false
   non-go = false
@@ -38,6 +43,11 @@ required = [
 [[override]]
   name = "knative.dev/pkg"
   branch = "release-0.8"
+
+# TODO why is this overridden?
+[[override]]
+  name = "github.com/Shopify/sarama"
+  version = "1.21.0"
 
 [[override]]
   name = "k8s.io/api"
@@ -70,8 +80,8 @@ required = [
 
 [[constraint]]
   name = "github.com/knative/eventing"
-  # HEAD as of 2019-06-26. Needed to import EventType API object.
-  revision = "677d3d17e84b7337f006220d6bb465af4f416f81"
+  # HEAD as of 2019-08-06. Needed to match latest.
+  revision = "9770b9cb4f38d5c74ef7c0291b598490b20d3799"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
@@ -105,6 +115,11 @@ required = [
   name = "github.com/apache/camel-k"
   version = "1.0.0-M1"
 
+# needed because pkg upgraded
+[[override]]
+  name = "go.uber.org/zap"
+  revision = "67bc79d13d155c02fd008f721863ff8cc5f30659"
+
 # Required for opencensus.
 [[override]]
   name = "google.golang.org/genproto"
@@ -124,4 +139,3 @@ required = [
 [[override]]
   name="github.com/golang/protobuf"
   version = "1.3.2"
-

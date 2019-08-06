@@ -30,4 +30,4 @@ rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
 rm -fr vendor/knative.dev/test-infra/devstats
 
-update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./contrib/github/cmd/*" "./gcppubsub/cmd/*" "./camel/source/cmd/*" "./kafka/source/cmd/*" "./contrib/awssqs/cmd/*"
+update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./contrib/github/cmd/*" "./gcppubsub/cmd/*" "./camel/source/cmd/*" "./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./contrib/awssqs/cmd/*"

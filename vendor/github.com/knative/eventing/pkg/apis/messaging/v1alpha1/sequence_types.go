@@ -17,15 +17,16 @@
 package v1alpha1
 
 import (
+	eventingduckv1alpha1 "github.com/knative/eventing/pkg/apis/duck/v1alpha1"
 	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"knative.dev/pkg/apis"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
-	"knative.dev/pkg/webhook"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/webhook"
 )
 
 // +genclient
@@ -55,39 +56,15 @@ var _ apis.Defaultable = (*Sequence)(nil)
 var _ runtime.Object = (*Sequence)(nil)
 var _ webhook.GenericCRD = (*Sequence)(nil)
 
-// This should be duck so that Broker can also use this
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ChannelTemplateSpec struct {
-	metav1.TypeMeta `json:",inline"`
-
-	// Spec defines the Spec to use for each channel created. Passed
-	// in verbatim to the Channel CRD as Spec section.
-	// +optional
-	Spec *runtime.RawExtension `json:"spec,omitempty"`
-}
-
-// Internal version of ChannelTemplateSpec that includes ObjectMeta so that
-// we can easily create new Channels off of it.
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ChannelTemplateSpecInternal struct {
-	metav1.TypeMeta `json:",inline"`
-
-	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// Spec defines the Spec to use for each channel created. Passed
-	// in verbatim to the Channel CRD as Spec section.
-	// +optional
-	Spec *runtime.RawExtension `json:"spec,omitempty"`
-}
-
 type SequenceSpec struct {
 	// Steps is the list of Subscribers (processors / functions) that will be called in the order
 	// provided.
 	Steps []eventingv1alpha1.SubscriberSpec `json:"steps"`
 
-	// ChannelTemplate specifies which Channel CRD to use
-	ChannelTemplate ChannelTemplateSpec `json:"channelTemplate"`
+	// ChannelTemplate specifies which Channel CRD to use. If left unspecified, it is set to the default Channel CRD
+	// for the namespace (or cluster, in case there are no defaults for the namespace).
+	// +optional
+	ChannelTemplate *eventingduckv1alpha1.ChannelTemplateSpec `json:"channelTemplate,omitempty"`
 
 	// Reply is a Reference to where the result of the last Subscriber gets sent to.
 	//
@@ -128,11 +105,11 @@ type SequenceStatus struct {
 
 	// SubscriptionStatuses is an array of corresponding Subscription statuses.
 	// Matches the Spec.Steps array in the order.
-	SubscriptionStatuses []SequenceSubscriptionStatus
+	SubscriptionStatuses []SequenceSubscriptionStatus `json:"subscriptionStatuses"`
 
 	// ChannelStatuses is an array of corresponding Channel statuses.
 	// Matches the Spec.Steps array in the order.
-	ChannelStatuses []SequenceChannelStatus
+	ChannelStatuses []SequenceChannelStatus `json:"channelStatuses"`
 
 	// AddressStatus is the starting point to this Sequence. Sending to this
 	// will target the first subscriber.
