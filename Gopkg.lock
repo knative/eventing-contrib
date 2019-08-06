@@ -701,18 +701,6 @@
   version = "v0.14.3"
 
 [[projects]]
-  digest = "1:198f52f16bac13d9338ae08d4ab3d16812e840550146ad6097d22ed5cb395629"
-  name = "github.com/nats-io/nats.go"
-  packages = [
-    ".",
-    "encoders/builtin",
-    "util",
-  ]
-  pruneopts = "NUT"
-  revision = "e2837a2879e82886f6e21715e3a0217fdc46d370"
-  version = "v1.8.1"
-
-[[projects]]
   digest = "1:d649fe8fa50df39a525a9acd9fa73a29f8097272467ca3830a2ebc1abcfb33e3"
   name = "github.com/nats-io/nkeys"
   packages = ["."]
@@ -1605,8 +1593,8 @@
   revision = "e494cc58111187acad93e64529228a2fc0153e39"
 
 [[projects]]
-  branch = "release-0.8"
-  digest = "1:bb229ac008f2b7ddcd122f857584627de4cf78f31f3001ca79560f48659db88f"
+  branch = "master"
+  digest = "1:5e2eff8a4b0de901e3183489bcfa0a303ff249e74939b2259578ea23a093b5b8"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1657,7 +1645,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "2b848f71969c997809a2dbea8351eaadb23e9bc9"
+  revision = "a6e24ef7e5b297969d6a87a45ac3ec6d7b3c5f0f"
 
 [[projects]]
   branch = "master"
