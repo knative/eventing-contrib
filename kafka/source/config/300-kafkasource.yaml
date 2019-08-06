@@ -16,6 +16,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
   name: kafkasources.sources.eventing.knative.dev
@@ -35,12 +36,23 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
-        apiVersion:
-          type: string
-        kind:
-          type: string
-        metadata:
+        registry:
           type: object
+          description: "Internal information, users should not set this property"
+          properties:
+            eventTypes:
+              type: object
+              description: "Event types that KafkaSource can produce"
+              properties:
+                event:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      pattern: "dev.knative.kafka.event"
+                    # TODO: set the schema pattern.
+                    schema:
+                      type: string
         spec:
           properties:
             bootstrapServers:

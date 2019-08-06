@@ -16,6 +16,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: camel-controller-rolebinding
+  labels:
+    contrib.eventing.knative.dev/release: devel
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -31,6 +33,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-camel-controller-addressable-resolver
+  labels:
+    contrib.eventing.knative.dev/release: devel
 subjects:
 - kind: ServiceAccount
   name: camel-controller-manager

@@ -16,6 +16,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: eventing-sources-kafka-controller
+  labels:
+    contrib.eventing.knative.dev/release: devel
 subjects:
 - kind: ServiceAccount
   name: kafka-controller-manager
@@ -30,7 +32,9 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: eventing-sources-kafka-controller-addressable-resolver 
+  name: eventing-sources-kafka-controller-addressable-resolver
+  labels:
+    contrib.eventing.knative.dev/release: devel
 subjects:
 - kind: ServiceAccount
   name: kafka-controller-manager
