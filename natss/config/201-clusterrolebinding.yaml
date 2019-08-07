@@ -17,7 +17,7 @@ kind: ClusterRoleBinding
 metadata:
   name: natss-ch-controller
   labels:
-    eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
 subjects:
   - kind: ServiceAccount
     name: natss-ch-controller
