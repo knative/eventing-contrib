@@ -29,6 +29,7 @@ COMPONENTS=(
   ["kafka-importer.yaml"]="kafka/source/config"
   ["kafka-channel-crd.yaml"]="kafka/channel/config"
   ["kafka-channel-ccp.yaml"]="kafka/channel/config/provisioner"
+  ["natss.yaml"]="natss/config"
   ["awssqs.yaml"]="contrib/awssqs/config"
 )
 readonly COMPONENTS
