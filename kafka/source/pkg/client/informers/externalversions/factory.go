@@ -23,13 +23,13 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/knative/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/knative/eventing-contrib/kafka/source/pkg/client/informers/externalversions/internalinterfaces"
-	sources "github.com/knative/eventing-contrib/kafka/source/pkg/client/informers/externalversions/sources"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
+	versioned "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
+	internalinterfaces "knative.dev/eventing-contrib/kafka/source/pkg/client/informers/externalversions/internalinterfaces"
+	sources "knative.dev/eventing-contrib/kafka/source/pkg/client/informers/externalversions/sources"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.

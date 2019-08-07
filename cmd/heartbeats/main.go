@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/knative/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -90,7 +90,7 @@ func main() {
 	}
 
 	if eventSource == "" {
-		eventSource = fmt.Sprintf("https://github.com/knative/eventing-contrib/cmd/heartbeats/#%s/%s", env.Namespace, env.Name)
+		eventSource = fmt.Sprintf("https://knative.dev/eventing-contrib/cmd/heartbeats/#%s/%s", env.Namespace, env.Name)
 		log.Printf("Heartbeats Source: %s", eventSource)
 	}
 

@@ -32,10 +32,10 @@ spec:
       serviceAccountName: kafka-controller-manager
       containers:
       - name: manager
-        image: github.com/knative/eventing-contrib/kafka/source/cmd/controller
+        image: knative.dev/eventing-contrib/kafka/source/cmd/controller
         env:
         - name: KAFKA_RA_IMAGE
-          value: github.com/knative/eventing-contrib/kafka/source/cmd/receive_adapter
+          value: knative.dev/eventing-contrib/kafka/source/cmd/receive_adapter
         volumeMounts:
         resources:
           requests:

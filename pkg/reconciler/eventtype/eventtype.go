@@ -22,12 +22,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/equality"
 
-	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype/resources"
+	"knative.dev/eventing-contrib/pkg/reconciler/eventtype/resources"
 
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )

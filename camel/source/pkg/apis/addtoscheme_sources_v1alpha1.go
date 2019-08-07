@@ -17,7 +17,7 @@ limitations under the License.
 package apis
 
 import (
-	"github.com/knative/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 )
 
 func init() {

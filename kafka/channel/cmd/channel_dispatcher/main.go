@@ -20,20 +20,20 @@ import (
 	"flag"
 	"log"
 
-	"github.com/knative/eventing/pkg/tracing"
+	"knative.dev/eventing/pkg/tracing"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
-	informers "github.com/knative/eventing-contrib/kafka/channel/pkg/client/informers/externalversions"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/dispatcher"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/reconciler"
-	kafkachannel "github.com/knative/eventing-contrib/kafka/channel/pkg/reconciler/dispatcher"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/utils"
-	"github.com/knative/eventing/pkg/logconfig"
 	"go.uber.org/zap"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	informers "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/dispatcher"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler"
+	kafkachannel "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/dispatcher"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing/pkg/logconfig"
 	"knative.dev/pkg/configmap"
 	kncontroller "knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"

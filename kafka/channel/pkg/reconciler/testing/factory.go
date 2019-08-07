@@ -27,8 +27,8 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 
-	fakeclientset "github.com/knative/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/fake"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/reconciler"
+	fakeclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/fake"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler"
 	"knative.dev/pkg/controller"
 	logtesting "knative.dev/pkg/logging/testing"
 

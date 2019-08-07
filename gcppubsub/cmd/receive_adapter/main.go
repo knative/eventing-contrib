@@ -26,7 +26,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	gcppubsub "github.com/knative/eventing-contrib/gcppubsub/pkg/adapter"
+	gcppubsub "knative.dev/eventing-contrib/gcppubsub/pkg/adapter"
 )
 
 type envConfig struct {

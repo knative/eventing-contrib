@@ -23,8 +23,8 @@ import (
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
 
-	"github.com/knative/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 
 	// Imports the Google Cloud Pub/Sub client package.
 	"cloud.google.com/go/pubsub"

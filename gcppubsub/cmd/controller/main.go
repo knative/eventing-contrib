@@ -19,11 +19,11 @@ package main
 import (
 	"log"
 
-	"github.com/knative/eventing-contrib/gcppubsub/pkg/apis"
-	controller "github.com/knative/eventing-contrib/gcppubsub/pkg/reconciler"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"knative.dev/eventing-contrib/gcppubsub/pkg/apis"
+	controller "knative.dev/eventing-contrib/gcppubsub/pkg/reconciler"
 	"knative.dev/pkg/logging/logkey"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

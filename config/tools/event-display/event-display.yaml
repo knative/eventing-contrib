@@ -25,4 +25,4 @@ spec:
       revisionTemplate:
         spec:
           container:
-            image: github.com/knative/eventing-contrib/cmd/event_display
+            image: knative.dev/eventing-contrib/cmd/event_display

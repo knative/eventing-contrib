@@ -18,10 +18,10 @@ limitations under the License.
 package test
 
 import (
-	eventing "github.com/knative/eventing/pkg/client/clientset/versioned"
-	serving "github.com/knative/serving/pkg/client/clientset/versioned"
 	"k8s.io/client-go/dynamic"
+	eventing "knative.dev/eventing/pkg/client/clientset/versioned"
 	"knative.dev/pkg/test"
+	serving "knative.dev/serving/pkg/client/clientset/versioned"
 )
 
 // Clients holds instances of interfaces for making requests to Knative.

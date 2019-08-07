@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"time"
 
-	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
-	servingtyped "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1"
 	"go.opencensus.io/trace"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
+	servingtyped "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1beta1"
 )
 
 const (

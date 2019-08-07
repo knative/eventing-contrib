@@ -20,7 +20,7 @@ import (
 	"sort"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
-	"github.com/knative/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 )
 
 // BuildComponentIntegrationSpec creates a integration spec corresponding to a component flow

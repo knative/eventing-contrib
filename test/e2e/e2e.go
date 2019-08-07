@@ -19,14 +19,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/knative/eventing-contrib/test"
-	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	rbacV1beta1 "k8s.io/api/rbac/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing-contrib/test"
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/logging"
+	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 
 	// Mysteriously required to support GCP auth (required by k8s libs).
 	// Apparently just importing it is enough. @_@ side effects @_@.
