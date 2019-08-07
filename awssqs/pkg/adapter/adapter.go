@@ -31,7 +31,7 @@ import (
 
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	sourcesv1alpha1 "knative.dev/eventing-contrib//awssqs/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
 )

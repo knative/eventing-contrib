@@ -21,7 +21,7 @@ package fake
 import (
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
-	v1alpha1 "knative.dev/eventing-contrib//github/pkg/client/clientset/versioned/typed/sources/v1alpha1"
+	v1alpha1 "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/typed/sources/v1alpha1"
 )
 
 type FakeSourcesV1alpha1 struct {

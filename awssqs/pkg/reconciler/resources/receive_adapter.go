@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-contrib//awssqs/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
 )
 
 // ReceiveAdapterArgs are the arguments needed to create an AWS SQS

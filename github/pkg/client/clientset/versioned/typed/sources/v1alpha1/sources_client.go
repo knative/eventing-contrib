@@ -21,8 +21,8 @@ package v1alpha1
 import (
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
-	v1alpha1 "knative.dev/eventing-contrib//github/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib//github/pkg/client/clientset/versioned/scheme"
+	v1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/scheme"
 )
 
 type SourcesV1alpha1Interface interface {

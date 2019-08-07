@@ -30,8 +30,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	sourcesv1alpha1 "knative.dev/eventing-contrib//github/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib//github/pkg/reconciler/resources"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/github/pkg/reconciler/resources"
 	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
 	"knative.dev/eventing-contrib/pkg/reconciler/eventtype"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
@@ -48,7 +48,7 @@ var (
 )
 
 const (
-	image            = "github.com/knative/test/image"
+	image            = "knative.dev/test/image"
 	gitHubSourceName = "testgithubsource"
 	testNS           = "testnamespace"
 	gitHubSourceUID  = "2b2219e2-ce67-11e8-b3a3-42010a8a00af"
