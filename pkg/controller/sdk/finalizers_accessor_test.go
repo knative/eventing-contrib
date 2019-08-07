@@ -19,7 +19,7 @@ package sdk
 import (
 	"testing"
 
-	"github.com/knative/eventing-contrib/contrib/awssqs/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
