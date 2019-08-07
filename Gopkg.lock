@@ -525,29 +525,10 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:7252099f8cc269bc0776151877a7a26229c138e9e3fb5130fd26a16b84f64c83"
+  digest = "1:fa2b64571e7c8a701cdaa2e7bf0c4a1e5aefa36a2e53bf7331bf149dd0523a61"
   name = "github.com/knative/eventing"
   packages = [
-    "contrib/natss/pkg/apis/messaging",
-    "contrib/natss/pkg/apis/messaging/v1alpha1",
-    "contrib/natss/pkg/client/clientset/versioned",
-    "contrib/natss/pkg/client/clientset/versioned/fake",
-    "contrib/natss/pkg/client/clientset/versioned/scheme",
-    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
-    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "contrib/natss/pkg/client/informers/externalversions",
-    "contrib/natss/pkg/client/informers/externalversions/internalinterfaces",
-    "contrib/natss/pkg/client/informers/externalversions/messaging",
-    "contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1",
-    "contrib/natss/pkg/client/listers/messaging/v1alpha1",
-    "contrib/natss/pkg/dispatcher",
-    "contrib/natss/pkg/reconciler",
-    "contrib/natss/pkg/reconciler/controller",
-    "contrib/natss/pkg/reconciler/controller/resources",
-    "contrib/natss/pkg/reconciler/dispatcher",
-    "contrib/natss/pkg/reconciler/testing",
     "contrib/natss/pkg/stanutil",
-    "contrib/natss/pkg/util",
     "pkg/apis/duck",
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing",
@@ -1746,6 +1727,7 @@
     "github.com/google/go-github/github",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
+    "github.com/knative/eventing/contrib/natss/pkg/stanutil",
     "github.com/knative/eventing/pkg/apis/duck/v1alpha1",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/apis/sources/v1alpha1",
