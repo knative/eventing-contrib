@@ -21,7 +21,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"knative.dev/eventing-contrib/contrib/awssqs/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib//awssqs/pkg/apis/sources/v1alpha1"
 )
 
 func TestNewReflectedFinalizersAccessor(t *testing.T) {
