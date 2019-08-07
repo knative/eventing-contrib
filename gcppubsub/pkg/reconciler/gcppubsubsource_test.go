@@ -52,7 +52,7 @@ const (
 
 	pscData = "pubSubClientCreatorData"
 
-	image      = "github.com/knative/test/image"
+	image      = "knative.dev/test/image"
 	sourceName = "test-gcp-pub-sub-source"
 	sourceUID  = "1234-5678-90"
 	testNS     = "testnamespace"

@@ -75,13 +75,11 @@ required = [
 
 [[constraint]]
   name = "knative.dev/serving"
-  # HEAD as of 2019-08-07. Needed to test github.
-  revision = "50cdf8762deae58ed89763adef26a88e7efecac7"
+  revision = "master"
 
 [[constraint]]
   name = "knative.dev/eventing"
-  # HEAD as of 2019-08-07. Needed to match latest.
-  revision = "9770b9cb4f38d5c74ef7c0291b598490b20d3799"
+  revision = "master"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"

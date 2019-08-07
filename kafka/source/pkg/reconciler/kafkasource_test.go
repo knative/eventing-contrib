@@ -51,7 +51,7 @@ const (
 
 	pscData = "kafkaClientCreatorData"
 
-	image      = "github.com/knative/test/image"
+	image      = "knative.dev/test/image"
 	sourceName = "test-kafka-source"
 	sourceUID  = "1234-5678-90"
 	testNS     = "testnamespace"

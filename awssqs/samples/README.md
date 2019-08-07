@@ -6,7 +6,7 @@ from an AWS SQS queue.
 ## Deployment Steps
 
 The steps below assume that you have cloned the
-[eventing-sources](https://github.com/knative/eventing-contrib) repo and run the
+[eventing-contrib](https://github.com/knative/eventing-contrib) repo and run the
 commands from the root.
 
 ### Prerequisites

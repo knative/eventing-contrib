@@ -525,8 +525,8 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:321205b5abf37923a521002169a10e4a9bc6c3e1bec7ea76b099a93b3cc9da57"
-  name = "knative.dev/eventing"
+  digest = "1:9b83c3605710c6ff243978acca3a784ae8a7e0cb831cb02a2e6fd81e4eaa5f58"
+  name = "github.com/knative/eventing"
   packages = [
     "contrib/natss/pkg/apis/messaging",
     "contrib/natss/pkg/apis/messaging/v1alpha1",
@@ -571,8 +571,6 @@
     "pkg/provisioners",
     "pkg/provisioners/fanout",
     "pkg/provisioners/multichannelfanout",
-    "pkg/provisioners/swappable",
-    "pkg/provisioners/utils",
     "pkg/reconciler/names",
     "pkg/utils",
   ]
@@ -582,7 +580,7 @@
 
 [[projects]]
   digest = "1:3f0601fb57b21441f4ec47f7b787805c363779b6d711a043bbfbba429def1901"
-  name = "knative.dev/serving"
+  name = "github.com/knative/serving"
   packages = [
     "pkg/apis/autoscaling",
     "pkg/apis/autoscaling/v1alpha1",
@@ -1588,7 +1586,7 @@
   revision = "e494cc58111187acad93e64529228a2fc0153e39"
 
 [[projects]]
-  digest = "1:876fd1dabe0d7698ef2e855c1238e65c37fbdbd21039604ad86c1057ef02fb05"
+  digest = "1:5b195e2b331df2bd2ccdd4f264209d0b87e572d29ec6feadcad3823f574deb18"
   name = "knative.dev/eventing"
   packages = [
     "contrib/natss/pkg/apis/messaging",
@@ -1614,7 +1612,6 @@
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing/v1alpha1",
     "pkg/apis/sources/v1alpha1",
-    "pkg/channelwatcher",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/logconfig",
@@ -1886,7 +1883,6 @@
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",
-    "knative.dev/eventing/pkg/channelwatcher",
     "knative.dev/eventing/pkg/client/clientset/versioned",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/logconfig",
