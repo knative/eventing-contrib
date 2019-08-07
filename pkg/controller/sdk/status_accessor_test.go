@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/knative/eventing-contrib/contrib/awssqs/pkg/apis/sources/v1alpha1"
+	"github.com/knative/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 )
 
