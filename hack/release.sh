@@ -27,8 +27,7 @@ COMPONENTS=(
   ["event-display.yaml"]="config/tools/event-display"
   ["camel.yaml"]="camel/source/config"
   ["kafka-importer.yaml"]="kafka/source/config"
-  ["kafka-channel-crd.yaml"]="kafka/channel/config"
-  ["kafka-channel-ccp.yaml"]="kafka/channel/config/provisioner"
+  ["kafka-channel.yaml"]="kafka/channel/config"
   ["awssqs.yaml"]="contrib/awssqs/config"
 )
 readonly COMPONENTS
