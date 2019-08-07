@@ -17,7 +17,7 @@ kind: ClusterRole
 metadata:
   name: natss-addressable-resolver
   labels:
-    eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:

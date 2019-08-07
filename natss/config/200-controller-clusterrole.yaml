@@ -17,7 +17,7 @@ kind: ClusterRole
 metadata:
   name: natss-ch-controller
   labels:
-    eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
 rules:
   - apiGroups:
       - messaging.knative.dev
