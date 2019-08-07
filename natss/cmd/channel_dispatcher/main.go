@@ -24,11 +24,6 @@ import (
 
 	"github.com/knative/eventing-contrib/natss/pkg/util"
 
-	clientset "github.com/knative/eventing-contrib/natss/pkg/client/clientset/versioned"
-	informers "github.com/knative/eventing-contrib/natss/pkg/client/informers/externalversions"
-	"github.com/knative/eventing-contrib/natss/pkg/dispatcher"
-	"github.com/knative/eventing-contrib/natss/pkg/reconciler"
-	natsschannel "github.com/knative/eventing-contrib/natss/pkg/reconciler/dispatcher"
 	"github.com/knative/eventing/pkg/logconfig"
 	"go.uber.org/zap"
 	"k8s.io/client-go/rest"
@@ -37,6 +32,12 @@ import (
 	kncontroller "knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
+
+	clientset "github.com/knative/eventing-contrib/natss/pkg/client/clientset/versioned"
+	informers "github.com/knative/eventing-contrib/natss/pkg/client/informers/externalversions"
+	"github.com/knative/eventing-contrib/natss/pkg/dispatcher"
+	"github.com/knative/eventing-contrib/natss/pkg/reconciler"
+	natsschannel "github.com/knative/eventing-contrib/natss/pkg/reconciler/dispatcher"
 )
 
 var (
