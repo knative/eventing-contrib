@@ -26,7 +26,8 @@ COMPONENTS=(
   ["gcppubsub.yaml"]="gcppubsub/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["camel.yaml"]="camel/source/config"
-  ["kafka.yaml"]="kafka/source/config"
+  ["kafka-importer.yaml"]="kafka/source/config"
+  ["kafka-channel.yaml"]="kafka/channel/config"
   ["awssqs.yaml"]="contrib/awssqs/config"
 )
 readonly COMPONENTS

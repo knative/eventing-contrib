@@ -572,6 +572,7 @@
     "pkg/provisioners/fanout",
     "pkg/provisioners/multichannelfanout",
     "pkg/provisioners/swappable",
+    "pkg/provisioners/utils",
     "pkg/reconciler/names",
     "pkg/utils",
   ]
@@ -1932,7 +1933,6 @@
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
     "sigs.k8s.io/controller-runtime/pkg/runtime/inject",
-    "sigs.k8s.io/controller-runtime/pkg/runtime/log",
     "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
     "sigs.k8s.io/controller-runtime/pkg/source",
