@@ -19,15 +19,18 @@ package v1beta1
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"knative.dev/pkg/apis"
-	"github.com/knative/serving/pkg/apis/serving"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"knative.dev/pkg/apis"
+	"knative.dev/serving/pkg/apis/serving"
+	"knative.dev/serving/pkg/reconciler/route/config"
 )
 
 // Validate makes sure that Route is properly configured.
 func (r *Route) Validate(ctx context.Context) *apis.FieldError {
-	errs := serving.ValidateObjectMetadata(r.GetObjectMeta()).ViaField("metadata")
+	errs := serving.ValidateObjectMetadata(r.GetObjectMeta()).Also(
+		r.validateLabels().ViaField("labels")).ViaField("metadata")
 	errs = errs.Also(r.Spec.Validate(apis.WithinSpec(ctx)).ViaField("spec"))
 	errs = errs.Also(r.Status.Validate(apis.WithinStatus(ctx)).ViaField("status"))
 	return errs
@@ -75,20 +78,15 @@ func (rs *RouteSpec) Validate(ctx context.Context) *apis.FieldError {
 
 // Validate verifies that TrafficTarget is properly configured.
 func (tt *TrafficTarget) Validate(ctx context.Context) *apis.FieldError {
-	var errs *apis.FieldError
+	errs := tt.validateLatestRevision(ctx)
+	errs = tt.validateRevisionAndConfiguration(ctx, errs)
+	errs = tt.validateTrafficPercentage(errs)
+	return tt.validateUrl(ctx, errs)
+}
 
+func (tt *TrafficTarget) validateRevisionAndConfiguration(ctx context.Context, errs *apis.FieldError) *apis.FieldError {
 	// We only validate the sense of latestRevision in the context of a Spec,
 	// and only when it is specified.
-	if apis.IsInSpec(ctx) && tt.LatestRevision != nil {
-		lr := *tt.LatestRevision
-		pinned := tt.RevisionName != ""
-		if pinned == lr {
-			// The senses for whether to pin to a particular revision or
-			// float forward to the latest revision must match.
-			errs = errs.Also(apis.ErrInvalidValue(lr, "latestRevision"))
-		}
-	}
-
 	switch {
 	// When we have a default configurationName, we don't
 	// allow one to be specified.
@@ -127,13 +125,32 @@ func (tt *TrafficTarget) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(apis.ErrMissingOneOf(
 			"revisionName", "configurationName"))
 	}
+	return errs
+}
 
+func (tt *TrafficTarget) validateTrafficPercentage(errs *apis.FieldError) *apis.FieldError {
 	// Check that the traffic Percentage is within bounds.
 	if tt.Percent < 0 || tt.Percent > 100 {
 		errs = errs.Also(apis.ErrOutOfBoundsValue(
 			tt.Percent, 0, 100, "percent"))
 	}
+	return errs
+}
 
+func (tt *TrafficTarget) validateLatestRevision(ctx context.Context) *apis.FieldError {
+	if apis.IsInSpec(ctx) && tt.LatestRevision != nil {
+		lr := *tt.LatestRevision
+		pinned := tt.RevisionName != ""
+		if pinned == lr {
+			// The senses for whether to pin to a particular revision or
+			// float forward to the latest revision must match.
+			return apis.ErrInvalidValue(lr, "latestRevision")
+		}
+	}
+	return nil
+}
+
+func (tt *TrafficTarget) validateUrl(ctx context.Context, errs *apis.FieldError) *apis.FieldError {
 	// Check that we set the URL appropriately.
 	if tt.URL.String() != "" {
 		// URL is not allowed in traffic under spec.
@@ -151,16 +168,15 @@ func (tt *TrafficTarget) Validate(ctx context.Context) *apis.FieldError {
 			errs = errs.Also(apis.ErrMissingField("url"))
 		}
 	}
-
 	return errs
 }
 
-// Validate implements apis.Validatable
+// Validate implements apis.Validatable.
 func (rs *RouteStatus) Validate(ctx context.Context) *apis.FieldError {
 	return rs.RouteStatusFields.Validate(ctx)
 }
 
-// Validate implements apis.Validatable
+// Validate implements apis.Validatable.
 func (rsf *RouteStatusFields) Validate(ctx context.Context) *apis.FieldError {
 	// TODO(mattmoor): Validate other status fields.
 
@@ -168,4 +184,26 @@ func (rsf *RouteStatusFields) Validate(ctx context.Context) *apis.FieldError {
 		return validateTrafficList(ctx, rsf.Traffic).ViaField("traffic")
 	}
 	return nil
+}
+
+func validateClusterVisibilityLabel(label string) (errs *apis.FieldError) {
+	if label != config.VisibilityClusterLocal {
+		errs = apis.ErrInvalidValue(label, config.VisibilityLabelKey)
+	}
+	return
+}
+
+// validateLabels function validates route labels.
+func (r *Route) validateLabels() (errs *apis.FieldError) {
+	for key, val := range r.GetLabels() {
+		switch {
+		case key == config.VisibilityLabelKey:
+			errs = errs.Also(validateClusterVisibilityLabel(val))
+		case key == serving.ServiceLabelKey:
+			errs = errs.Also(verifyLabelOwnerRef(val, serving.ServiceLabelKey, "Service", r.GetOwnerReferences()))
+		case strings.HasPrefix(key, serving.GroupNamePrefix):
+			errs = errs.Also(apis.ErrInvalidKeyName(key, apis.CurrentField))
+		}
+	}
+	return
 }

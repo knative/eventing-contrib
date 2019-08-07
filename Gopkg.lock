@@ -525,84 +525,6 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:9b83c3605710c6ff243978acca3a784ae8a7e0cb831cb02a2e6fd81e4eaa5f58"
-  name = "github.com/knative/eventing"
-  packages = [
-    "contrib/natss/pkg/apis/messaging",
-    "contrib/natss/pkg/apis/messaging/v1alpha1",
-    "contrib/natss/pkg/client/clientset/versioned",
-    "contrib/natss/pkg/client/clientset/versioned/fake",
-    "contrib/natss/pkg/client/clientset/versioned/scheme",
-    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
-    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "contrib/natss/pkg/client/informers/externalversions/internalinterfaces",
-    "contrib/natss/pkg/client/informers/externalversions/messaging",
-    "contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1",
-    "contrib/natss/pkg/client/listers/messaging/v1alpha1",
-    "contrib/natss/pkg/dispatcher",
-    "contrib/natss/pkg/reconciler",
-    "contrib/natss/pkg/reconciler/controller/resources",
-    "contrib/natss/pkg/stanutil",
-    "pkg/apis/duck",
-    "pkg/apis/duck/v1alpha1",
-    "pkg/apis/eventing",
-    "pkg/apis/eventing/v1alpha1",
-    "pkg/apis/messaging",
-    "pkg/apis/messaging/v1alpha1",
-    "pkg/apis/sources",
-    "pkg/apis/sources/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/fake",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
-    "pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
-    "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
-    "pkg/client/injection/client",
-    "pkg/client/injection/client/fake",
-    "pkg/client/listers/eventing/v1alpha1",
-    "pkg/client/listers/messaging/v1alpha1",
-    "pkg/client/listers/sources/v1alpha1",
-    "pkg/configmap",
-    "pkg/duck",
-    "pkg/logging",
-    "pkg/provisioners",
-    "pkg/provisioners/fanout",
-    "pkg/provisioners/multichannelfanout",
-    "pkg/reconciler/names",
-    "pkg/utils",
-  ]
-  pruneopts = "NUT"
-  revision = "a59dae6f326057211f43f7c2d1414a9fd821b8aa"
-  version = "v0.8.0"
-
-[[projects]]
-  digest = "1:3f0601fb57b21441f4ec47f7b787805c363779b6d711a043bbfbba429def1901"
-  name = "github.com/knative/serving"
-  packages = [
-    "pkg/apis/autoscaling",
-    "pkg/apis/autoscaling/v1alpha1",
-    "pkg/apis/config",
-    "pkg/apis/networking",
-    "pkg/apis/networking/v1alpha1",
-    "pkg/apis/serving",
-    "pkg/apis/serving/v1alpha1",
-    "pkg/apis/serving/v1beta1",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
-    "pkg/client/clientset/versioned/typed/networking/v1alpha1",
-    "pkg/client/clientset/versioned/typed/serving/v1alpha1",
-    "pkg/client/clientset/versioned/typed/serving/v1beta1",
-    "pkg/gc",
-    "pkg/network",
-  ]
-  pruneopts = "NUT"
-  revision = "3f73b117b61ee5d8fe5dcedd6cca2c96014329a9"
-  version = "v0.8.0"
-
-[[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
   name = "github.com/markbates/inflect"
   packages = ["."]
@@ -1586,34 +1508,34 @@
   revision = "e494cc58111187acad93e64529228a2fc0153e39"
 
 [[projects]]
-  digest = "1:5b195e2b331df2bd2ccdd4f264209d0b87e572d29ec6feadcad3823f574deb18"
+  branch = "master"
+  digest = "1:bdbba8b7fa814fe85b2fd9a2bfb99d782ec3e3ff6f135cf9816b3f744a1d9df8"
   name = "knative.dev/eventing"
   packages = [
-    "contrib/natss/pkg/apis/messaging",
-    "contrib/natss/pkg/apis/messaging/v1alpha1",
-    "contrib/natss/pkg/client/clientset/versioned",
-    "contrib/natss/pkg/client/clientset/versioned/fake",
-    "contrib/natss/pkg/client/clientset/versioned/scheme",
-    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
-    "contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "contrib/natss/pkg/client/informers/externalversions",
-    "contrib/natss/pkg/client/informers/externalversions/internalinterfaces",
-    "contrib/natss/pkg/client/informers/externalversions/messaging",
-    "contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1",
-    "contrib/natss/pkg/client/listers/messaging/v1alpha1",
-    "contrib/natss/pkg/dispatcher",
-    "contrib/natss/pkg/reconciler",
-    "contrib/natss/pkg/reconciler/controller",
-    "contrib/natss/pkg/reconciler/controller/resources",
-    "contrib/natss/pkg/reconciler/dispatcher",
-    "contrib/natss/pkg/reconciler/testing",
-    "contrib/natss/pkg/stanutil",
-    "contrib/natss/pkg/util",
+    "pkg/apis/duck",
     "pkg/apis/duck/v1alpha1",
+    "pkg/apis/eventing",
     "pkg/apis/eventing/v1alpha1",
+    "pkg/apis/messaging",
+    "pkg/apis/messaging/v1alpha1",
+    "pkg/apis/sources",
     "pkg/apis/sources/v1alpha1",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
+    "pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
+    "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "pkg/client/injection/client",
+    "pkg/client/injection/client/fake",
+    "pkg/client/listers/eventing/v1alpha1",
+    "pkg/client/listers/messaging/v1alpha1",
+    "pkg/client/listers/sources/v1alpha1",
+    "pkg/configmap",
+    "pkg/duck",
     "pkg/logconfig",
     "pkg/logging",
     "pkg/provisioners",
@@ -1626,7 +1548,7 @@
     "pkg/utils",
   ]
   pruneopts = "NUT"
-  revision = "9770b9cb4f38d5c74ef7c0291b598490b20d3799"
+  revision = "ebe59f22c47c09881f723fb73fe21c7441528281"
 
 [[projects]]
   branch = "master"
@@ -1684,7 +1606,8 @@
   revision = "a6e24ef7e5b297969d6a87a45ac3ec6d7b3c5f0f"
 
 [[projects]]
-  digest = "1:84d79647a4ca8b638930221bcf7f2054901902c2b7f52e4da6686813ddc8798d"
+  branch = "master"
+  digest = "1:a3473ba79ccddc4d623ffad42daa893be9a3da3305b8247c16f41c187633bc41"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1697,11 +1620,16 @@
     "pkg/apis/serving/v1beta1",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
+    "pkg/client/clientset/versioned/typed/networking/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1alpha1",
     "pkg/client/clientset/versioned/typed/serving/v1beta1",
+    "pkg/gc",
+    "pkg/network",
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "50cdf8762deae58ed89763adef26a88e7efecac7"
+  revision = "a6a69f05dddad562f81539d6ef78b52cebc44226"
 
 [[projects]]
   branch = "master"
@@ -1860,26 +1788,6 @@
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",
-    "knative.dev/eventing/contrib/natss/pkg/apis/messaging",
-    "knative.dev/eventing/contrib/natss/pkg/apis/messaging/v1alpha1",
-    "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned",
-    "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned/fake",
-    "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned/scheme",
-    "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
-    "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions",
-    "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions/internalinterfaces",
-    "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions/messaging",
-    "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1",
-    "knative.dev/eventing/contrib/natss/pkg/client/listers/messaging/v1alpha1",
-    "knative.dev/eventing/contrib/natss/pkg/dispatcher",
-    "knative.dev/eventing/contrib/natss/pkg/reconciler",
-    "knative.dev/eventing/contrib/natss/pkg/reconciler/controller",
-    "knative.dev/eventing/contrib/natss/pkg/reconciler/controller/resources",
-    "knative.dev/eventing/contrib/natss/pkg/reconciler/dispatcher",
-    "knative.dev/eventing/contrib/natss/pkg/reconciler/testing",
-    "knative.dev/eventing/contrib/natss/pkg/stanutil",
-    "knative.dev/eventing/contrib/natss/pkg/util",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",

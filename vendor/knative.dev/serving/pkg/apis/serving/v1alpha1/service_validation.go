@@ -20,12 +20,12 @@ import (
 	"context"
 	"fmt"
 
-	"knative.dev/pkg/apis"
-	"github.com/knative/serving/pkg/apis/serving"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"knative.dev/pkg/apis"
+	"knative.dev/serving/pkg/apis/serving"
 
-	"github.com/knative/serving/pkg/apis/serving/v1beta1"
+	"knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
 // Validate validates the fields belonging to Service
@@ -42,7 +42,8 @@ func (s *Service) Validate(ctx context.Context) (errs *apis.FieldError) {
 
 	if apis.IsInUpdate(ctx) {
 		original := apis.GetBaseline(ctx).(*Service)
-
+		errs = errs.Also(apis.ValidateCreatorAndModifier(original.Spec, s.Spec, original.GetAnnotations(),
+			s.GetAnnotations(), serving.GroupName).ViaField("metadata.annotations"))
 		field, currentConfig := s.Spec.getConfigurationSpec()
 		_, originalConfig := original.Spec.getConfigurationSpec()
 

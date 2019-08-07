@@ -17,13 +17,13 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/knative/serving/pkg/apis/serving/v1beta1"
+	"knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
 // +genclient
@@ -34,7 +34,7 @@ import (
 // materializing that container image from source. Revisions are created by
 // updates to a Configuration.
 //
-// See also: https://github.com/knative/serving/blob/master/docs/spec/overview.md#revision
+// See also: https://knative.dev/serving/blob/master/docs/spec/overview.md#revision
 type Revision struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
@@ -72,7 +72,7 @@ type RevisionTemplateSpec struct {
 }
 
 // DeprecatedRevisionServingStateType is an enumeration of the levels of serving readiness of the Revision.
-// See also: https://github.com/knative/serving/blob/master/docs/spec/errors.md#error-conditions-and-reporting
+// See also: https://knative.dev/serving/blob/master/docs/spec/errors.md#error-conditions-and-reporting
 type DeprecatedRevisionServingStateType string
 
 const (
@@ -87,24 +87,25 @@ const (
 	// anymore. It should not have any Istio routes or Kubernetes resources.
 	// A Revision may be brought out of retirement, but it may take longer than
 	// it would from a "Reserve" state.
-	// Note: currently not set anywhere. See https://github.com/knative/serving/issues/1203
+	// Note: currently not set anywhere. See https://knative.dev/serving/issues/1203
 	DeprecatedRevisionServingStateRetired DeprecatedRevisionServingStateType = "Retired"
 )
 
-// RevisionRequestConcurrencyModelType is an enumeration of the
+// DeprecatedRevisionRequestConcurrencyModelType is an enumeration of the
 // concurrency models supported by a Revision.
 // DEPRECATED in favor of RevisionContainerConcurrencyType.
-type RevisionRequestConcurrencyModelType string
+// TODO(vagababov): retire completely in 0.9.
+type DeprecatedRevisionRequestConcurrencyModelType string
 
 const (
-	// RevisionRequestConcurrencyModelSingle guarantees that only one
+	// DeprecatedRevisionRequestConcurrencyModelSingle guarantees that only one
 	// request will be handled at a time (concurrently) per instance
 	// of Revision Container.
-	RevisionRequestConcurrencyModelSingle RevisionRequestConcurrencyModelType = "Single"
-	// RevisionRequestConcurencyModelMulti allows more than one request to
+	DeprecatedRevisionRequestConcurrencyModelSingle DeprecatedRevisionRequestConcurrencyModelType = "Single"
+	// DeprecatedRevisionRequestConcurencyModelMulti allows more than one request to
 	// be handled at a time (concurrently) per instance of Revision
 	// Container.
-	RevisionRequestConcurrencyModelMulti RevisionRequestConcurrencyModelType = "Multi"
+	DeprecatedRevisionRequestConcurrencyModelMulti DeprecatedRevisionRequestConcurrencyModelType = "Multi"
 )
 
 // RevisionSpec holds the desired state of the Revision (from the client).
@@ -117,7 +118,7 @@ type RevisionSpec struct {
 	// This property will be dropped in future Knative releases and should
 	// not be used - use metadata.generation
 	//
-	// Tracking issue: https://github.com/knative/serving/issues/643
+	// Tracking issue: https://knative.dev/serving/issues/643
 	//
 	// +optional
 	DeprecatedGeneration int64 `json:"generation,omitempty"`
@@ -134,7 +135,7 @@ type RevisionSpec struct {
 	// Revision. Defaults to Multi.
 	// Deprecated in favor of ContainerConcurrency.
 	// +optional
-	DeprecatedConcurrencyModel RevisionRequestConcurrencyModelType `json:"concurrencyModel,omitempty"`
+	DeprecatedConcurrencyModel DeprecatedRevisionRequestConcurrencyModelType `json:"concurrencyModel,omitempty"`
 
 	// DeprecatedBuildName optionally holds the name of the Build responsible for
 	// producing the container image for its Revision.
@@ -152,7 +153,7 @@ type RevisionSpec struct {
 	// this Container, including: name and lifecycle.
 	// See also the runtime contract for more information about the execution
 	// environment:
-	// https://github.com/knative/serving/blob/master/docs/runtime-contract.md
+	// https://knative.dev/serving/blob/master/docs/runtime-contract.md
 	// +optional
 	DeprecatedContainer *corev1.Container `json:"container,omitempty"`
 }

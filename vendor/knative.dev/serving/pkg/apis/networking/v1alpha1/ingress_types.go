@@ -17,11 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"knative.dev/pkg/apis"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // +genclient
@@ -90,7 +90,7 @@ type IngressSpec struct {
 	// This property will be dropped in future Knative releases and should
 	// not be used - use metadata.generation
 	//
-	// Tracking issue: https://github.com/knative/serving/issues/643
+	// Tracking issue: https://knative.dev/serving/issues/643
 	//
 	// +optional
 	DeprecatedGeneration int64 `json:"generation,omitempty"`
@@ -169,6 +169,11 @@ type IngressRule struct {
 	// If multiple matching Hosts were provided, the first rule will take precedent.
 	// +optional
 	Hosts []string `json:"hosts,omitempty"`
+
+	// Visibility signifies whether this rule should `ClusterLocal`. If it's not
+	// specified then it defaults to `ExternalIP`.
+	// +optional
+	Visibility IngressVisibility `json:"visibility,omitempty"`
 
 	// HTTP represents a rule to apply against incoming requests. If the
 	// rule is satisfied, the request is routed to the specified backend.
@@ -274,8 +279,17 @@ type IngressStatus struct {
 	duckv1beta1.Status `json:",inline"`
 
 	// LoadBalancer contains the current status of the load-balancer.
+	// This is to be superseded by the combination of `PublicLoadBalancer` and `PrivateLoadBalancer`
 	// +optional
 	LoadBalancer *LoadBalancerStatus `json:"loadBalancer,omitempty"`
+
+	// PublicLoadBalancer contains the current status of the load-balancer.
+	// +optional
+	PublicLoadBalancer *LoadBalancerStatus `json:"publicLoadBalancer,omitempty"`
+
+	// PrivateLoadBalancer contains the current status of the load-balancer.
+	// +optional
+	PrivateLoadBalancer *LoadBalancerStatus `json:"privateLoadBalancer,omitempty"`
 }
 
 // LoadBalancerStatus represents the status of a load-balancer.

@@ -75,11 +75,11 @@ required = [
 
 [[constraint]]
   name = "knative.dev/serving"
-  revision = "master"
+  branch = "master"
 
 [[constraint]]
   name = "knative.dev/eventing"
-  revision = "master"
+  branch = "master"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"

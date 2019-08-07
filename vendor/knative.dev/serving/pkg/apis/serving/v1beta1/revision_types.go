@@ -17,11 +17,11 @@ limitations under the License.
 package v1beta1
 
 import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +genclient
@@ -31,7 +31,7 @@ import (
 // references a container image. Revisions are created by updates to a
 // Configuration.
 //
-// See also: https://github.com/knative/serving/blob/master/docs/spec/overview.md#revision
+// See also: https://knative.dev/serving/blob/master/docs/spec/overview.md#revision
 type Revision struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
@@ -83,7 +83,8 @@ type RevisionSpec struct {
 
 	// ContainerConcurrency specifies the maximum allowed in-flight (concurrent)
 	// requests per container of the Revision.  Defaults to `0` which means
-	// unlimited concurrency.
+	// concurrency to the application is not limited, and the system decides the
+	// target concurrency for the autoscaler.
 	// +optional
 	ContainerConcurrency RevisionContainerConcurrencyType `json:"containerConcurrency,omitempty"`
 

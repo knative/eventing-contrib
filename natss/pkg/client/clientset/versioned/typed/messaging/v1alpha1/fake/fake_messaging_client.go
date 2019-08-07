@@ -21,7 +21,7 @@ package fake
 import (
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
-	v1alpha1 "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1"
+	v1alpha1 "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1"
 )
 
 type FakeMessagingV1alpha1 struct {

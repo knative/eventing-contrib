@@ -27,9 +27,9 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
-	versioned "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned"
-	internalinterfaces "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions/internalinterfaces"
-	messaging "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions/messaging"
+	versioned "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
+	internalinterfaces "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/internalinterfaces"
+	messaging "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.

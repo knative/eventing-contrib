@@ -25,10 +25,10 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	messagingv1alpha1 "knative.dev/eventing/contrib/natss/pkg/apis/messaging/v1alpha1"
-	versioned "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned"
-	internalinterfaces "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/eventing/contrib/natss/pkg/client/listers/messaging/v1alpha1"
+	messagingv1alpha1 "knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
+	versioned "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
+	internalinterfaces "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 )
 
 // NatssChannelInformer provides access to a shared informer and lister for

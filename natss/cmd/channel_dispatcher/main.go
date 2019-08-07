@@ -22,16 +22,16 @@ import (
 
 	"knative.dev/eventing/pkg/tracing"
 
-	"knative.dev/eventing/contrib/natss/pkg/util"
+	"knative.dev/eventing-contrib/natss/pkg/util"
 
 	"go.uber.org/zap"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	clientset "knative.dev/eventing/contrib/natss/pkg/client/clientset/versioned"
-	informers "knative.dev/eventing/contrib/natss/pkg/client/informers/externalversions"
-	"knative.dev/eventing/contrib/natss/pkg/dispatcher"
-	"knative.dev/eventing/contrib/natss/pkg/reconciler"
-	natsschannel "knative.dev/eventing/contrib/natss/pkg/reconciler/dispatcher"
+	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
+	informers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions"
+	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
+	"knative.dev/eventing-contrib/natss/pkg/reconciler"
+	natsschannel "knative.dev/eventing-contrib/natss/pkg/reconciler/dispatcher"
 	"knative.dev/eventing/pkg/logconfig"
 	"knative.dev/pkg/configmap"
 	kncontroller "knative.dev/pkg/controller"

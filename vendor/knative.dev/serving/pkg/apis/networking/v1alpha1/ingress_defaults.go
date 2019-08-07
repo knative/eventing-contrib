@@ -20,11 +20,11 @@ import (
 	"context"
 	"time"
 
-	"knative.dev/pkg/apis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/apis"
 
-	"github.com/knative/serving/pkg/apis/config"
-	"github.com/knative/serving/pkg/apis/networking"
+	"knative.dev/serving/pkg/apis/config"
+	"knative.dev/serving/pkg/apis/networking"
 )
 
 var (
