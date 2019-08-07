@@ -525,7 +525,7 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:f189fbfc2644d06b0c72576e9a581bb16bbee55df30be3ed77d5f1978c4a1bb7"
+  digest = "1:7252099f8cc269bc0776151877a7a26229c138e9e3fb5130fd26a16b84f64c83"
   name = "github.com/knative/eventing"
   packages = [
     "contrib/natss/pkg/apis/messaging",
@@ -556,7 +556,6 @@
     "pkg/apis/messaging/v1alpha1",
     "pkg/apis/sources",
     "pkg/apis/sources/v1alpha1",
-    "pkg/channelwatcher",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -578,7 +577,6 @@
     "pkg/provisioners",
     "pkg/provisioners/fanout",
     "pkg/provisioners/multichannelfanout",
-    "pkg/provisioners/swappable",
     "pkg/provisioners/utils",
     "pkg/reconciler/names",
     "pkg/reconciler/testing",
@@ -1771,7 +1769,6 @@
     "github.com/knative/eventing/pkg/apis/duck/v1alpha1",
     "github.com/knative/eventing/pkg/apis/eventing/v1alpha1",
     "github.com/knative/eventing/pkg/apis/sources/v1alpha1",
-    "github.com/knative/eventing/pkg/channelwatcher",
     "github.com/knative/eventing/pkg/client/clientset/versioned",
     "github.com/knative/eventing/pkg/client/clientset/versioned/fake",
     "github.com/knative/eventing/pkg/logconfig",
@@ -1874,7 +1871,6 @@
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
     "sigs.k8s.io/controller-runtime/pkg/runtime/inject",
-    "sigs.k8s.io/controller-runtime/pkg/runtime/log",
     "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
     "sigs.k8s.io/controller-runtime/pkg/source",
