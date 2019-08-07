@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/knative/eventing/contrib/natss/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/knative/eventing/contrib/natss/pkg/client/informers/externalversions/internalinterfaces"
-	messaging "github.com/knative/eventing/contrib/natss/pkg/client/informers/externalversions/messaging"
+	versioned "github.com/knative/eventing-contrib/natss/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/knative/eventing-contrib/natss/pkg/client/informers/externalversions/internalinterfaces"
+	messaging "github.com/knative/eventing-contrib/natss/pkg/client/informers/externalversions/messaging"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

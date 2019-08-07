@@ -17,9 +17,9 @@ limitations under the License.
 package testing
 
 import (
-	messagingv1alpha1 "github.com/knative/eventing/contrib/natss/pkg/apis/messaging/v1alpha1"
-	fakemessagingclientset "github.com/knative/eventing/contrib/natss/pkg/client/clientset/versioned/fake"
-	messaginglisters "github.com/knative/eventing/contrib/natss/pkg/client/listers/messaging/v1alpha1"
+	messagingv1alpha1 "github.com/knative/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
+	fakemessagingclientset "github.com/knative/eventing-contrib/natss/pkg/client/clientset/versioned/fake"
+	messaginglisters "github.com/knative/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 	fakeeventsclientset "github.com/knative/eventing/pkg/client/clientset/versioned/fake"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

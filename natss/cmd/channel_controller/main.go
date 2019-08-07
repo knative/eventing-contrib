@@ -20,12 +20,12 @@ import (
 	"flag"
 	"log"
 
-	"github.com/knative/eventing/contrib/natss/pkg/stanutil"
-	"github.com/knative/eventing/contrib/natss/pkg/util"
+	"github.com/knative/eventing-contrib/natss/pkg/stanutil"
+	"github.com/knative/eventing-contrib/natss/pkg/util"
 
-	informers "github.com/knative/eventing/contrib/natss/pkg/client/informers/externalversions"
-	"github.com/knative/eventing/contrib/natss/pkg/reconciler"
-	natsschannel "github.com/knative/eventing/contrib/natss/pkg/reconciler/controller"
+	informers "github.com/knative/eventing-contrib/natss/pkg/client/informers/externalversions"
+	"github.com/knative/eventing-contrib/natss/pkg/reconciler"
+	natsschannel "github.com/knative/eventing-contrib/natss/pkg/reconciler/controller"
 	"github.com/knative/eventing/pkg/logconfig"
 	"go.uber.org/zap"
 	kubeinformers "k8s.io/client-go/informers"
