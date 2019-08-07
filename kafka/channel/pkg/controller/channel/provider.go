@@ -29,9 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	common "github.com/knative/eventing-contrib/kafka/channel/pkg/controller"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/utils"
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
+	common "knative.dev/eventing-contrib/kafka/channel/pkg/controller"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/pkg/system"
 )
 

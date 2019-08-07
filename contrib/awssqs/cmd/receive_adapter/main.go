@@ -21,7 +21,7 @@ import (
 	"log"
 	"os"
 
-	awssqs "github.com/knative/eventing-contrib/contrib/awssqs/pkg/adapter"
+	awssqs "knative.dev/eventing-contrib/contrib/awssqs/pkg/adapter"
 	"knative.dev/pkg/signals"
 
 	"go.uber.org/zap"

@@ -21,17 +21,17 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	"github.com/Shopify/sarama"
 	cluster "github.com/bsm/sarama-cluster"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/controller"
-	eventingduck "github.com/knative/eventing/pkg/apis/duck/v1alpha1"
-	"github.com/knative/eventing/pkg/provisioners"
-	"github.com/knative/eventing/pkg/provisioners/multichannelfanout"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/controller"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/provisioners"
+	"knative.dev/eventing/pkg/provisioners/multichannelfanout"
 )
 
 type KafkaDispatcher struct {

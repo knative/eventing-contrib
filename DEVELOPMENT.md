@@ -31,7 +31,7 @@ installed.
 ### Checkout your fork
 
 The Go tools require that you clone the repository to the
-`src/github.com/knative/eventing-contrib` directory in your
+`src/knative.dev/eventing-contrib` directory in your
 [`GOPATH`](https://github.com/golang/go/wiki/SettingGOPATH).
 
 To check out this repository:

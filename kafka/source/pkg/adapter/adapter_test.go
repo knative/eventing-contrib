@@ -34,8 +34,8 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	sourcesv1alpha1 "github.com/knative/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/pkg/kncloudevents"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {

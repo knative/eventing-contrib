@@ -19,8 +19,8 @@ limitations under the License.
 package sources
 
 import (
-	internalinterfaces "github.com/knative/eventing-contrib/contrib/github/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/knative/eventing-contrib/contrib/github/pkg/client/informers/externalversions/sources/v1alpha1"
+	internalinterfaces "knative.dev/eventing-contrib/contrib/github/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "knative.dev/eventing-contrib/contrib/github/pkg/client/informers/externalversions/sources/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

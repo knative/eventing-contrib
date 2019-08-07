@@ -19,7 +19,7 @@ package resources
 import (
 	"fmt"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 )
 
 const (

@@ -20,17 +20,17 @@ import (
 	"flag"
 	"os"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
-	provisionerController "github.com/knative/eventing-contrib/kafka/channel/pkg/controller"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/controller/channel"
-	eventingv1alpha "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	"github.com/knative/eventing/pkg/provisioners"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime"
+	provisionerController "knative.dev/eventing-contrib/kafka/channel/pkg/controller"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/controller/channel"
+	eventingv1alpha "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/provisioners"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

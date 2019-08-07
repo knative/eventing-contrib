@@ -18,11 +18,11 @@ package test
 // crd contains functions that construct boilerplate CRD definitions.
 
 import (
-	"github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	pkgTest "knative.dev/pkg/test"
+	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
 const (

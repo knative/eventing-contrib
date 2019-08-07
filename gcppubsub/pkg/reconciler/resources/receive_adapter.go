@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/knative/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
 )
 
 // ReceiveAdapterArgs are the arguments needed to create a GCP PubSub Source Receive Adapter. Every

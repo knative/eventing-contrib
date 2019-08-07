@@ -23,8 +23,8 @@ import (
 	"net/http"
 	"os"
 
-	github "github.com/knative/eventing-contrib/contrib/github/pkg/adapter"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
+	github "knative.dev/eventing-contrib/contrib/github/pkg/adapter"
 )
 
 const (

@@ -32,12 +32,12 @@ spec:
       serviceAccountName: gcppubsub-controller-manager
       containers:
       - name: manager
-        image: github.com/knative/eventing-contrib/gcppubsub/cmd/controller
+        image: knative.dev/eventing-contrib/gcppubsub/cmd/controller
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /var/secrets/google/key.json
         - name: GCPPUBSUB_RA_IMAGE
-          value: github.com/knative/eventing-contrib/gcppubsub/cmd/receive_adapter
+          value: knative.dev/eventing-contrib/gcppubsub/cmd/receive_adapter
         volumeMounts:
         - name: google-cloud-key
           mountPath: /var/secrets/google

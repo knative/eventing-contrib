@@ -74,13 +74,13 @@ required = [
   revision = "90f2606161ee6a14efe2ca79fc05ac2b8efe250b"
 
 [[constraint]]
-  name = "github.com/knative/serving"
-  # HEAD as of 2019-06-26. Needed to test github.
+  name = "knative.dev/serving"
+  # HEAD as of 2019-08-07. Needed to test github.
   revision = "50cdf8762deae58ed89763adef26a88e7efecac7"
 
 [[constraint]]
-  name = "github.com/knative/eventing"
-  # HEAD as of 2019-08-06. Needed to match latest.
+  name = "knative.dev/eventing"
+  # HEAD as of 2019-08-07. Needed to match latest.
   revision = "9770b9cb4f38d5c74ef7c0291b598490b20d3799"
 
 [[constraint]]

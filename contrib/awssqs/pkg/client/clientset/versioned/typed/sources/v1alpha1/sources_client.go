@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/knative/eventing-contrib/contrib/awssqs/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/contrib/awssqs/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
+	v1alpha1 "knative.dev/eventing-contrib/contrib/awssqs/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/contrib/awssqs/pkg/client/clientset/versioned/scheme"
 )
 
 type SourcesV1alpha1Interface interface {

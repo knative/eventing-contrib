@@ -22,10 +22,10 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	"knative.dev/pkg/apis"
 )
 

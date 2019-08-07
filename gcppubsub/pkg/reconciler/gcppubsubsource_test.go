@@ -23,20 +23,20 @@ import (
 	"testing"
 
 	"cloud.google.com/go/pubsub"
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
-	eventingsourcesv1alpha1 "github.com/knative/eventing/pkg/apis/sources/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	eventingsourcesv1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/knative/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
-	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype"
+	"knative.dev/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
+	"knative.dev/eventing-contrib/pkg/reconciler/eventtype"
 )
 
 var (

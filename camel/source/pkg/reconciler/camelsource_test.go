@@ -21,9 +21,6 @@ import (
 	"testing"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
-	sourcesv1alpha1 "github.com/knative/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/camel/source/pkg/reconciler/resources"
-	controllertesting "github.com/knative/eventing-contrib/pkg/controller/testing"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -32,6 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
+	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 )
 

@@ -33,7 +33,7 @@ for DIR in "${API_DIRS[@]}"; do
   #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
   #                  instead of the $GOPATH directly. For normal projects this can be dropped.
   ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
-    "github.com/knative/eventing-contrib/${DIR}/client" "github.com/knative/eventing-contrib/${DIR}/apis" \
+    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
     "sources:v1alpha1" \
     --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 done

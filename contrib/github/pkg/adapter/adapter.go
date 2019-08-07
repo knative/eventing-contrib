@@ -25,9 +25,9 @@ import (
 	"strings"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	sourcesv1alpha1 "github.com/knative/eventing-contrib/contrib/github/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/pkg/kncloudevents"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/contrib/github/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
 
 const (
