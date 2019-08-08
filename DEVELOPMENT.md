@@ -18,8 +18,8 @@ Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Requirements
 
-You must have the core of [Knative Serving](http://github.com/knative/serving) running
-on your cluster.
+You must have the core of [Knative Serving](http://github.com/knative/serving)
+running on your cluster.
 
 You must have [Knative Eventing](http://github.com/knative/eventing) running on
 your cluster.
