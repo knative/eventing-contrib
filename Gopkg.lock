@@ -519,16 +519,12 @@
   version = "v1.3.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:927762c6729b4e72957ba3310e485ed09cf8451c5a637a52fd016a9fe09e7936"
-  name = "github.com/mailru/easyjson"
-  packages = [
-    "buffer",
-    "jlexer",
-    "jwriter",
-  ]
+  digest = "1:f0b13ded1636cd71c51dc9f2a16cac980698d861c8e91f242c0c368428aaae5b"
+  name = "github.com/knative/serving"
+  packages = ["pkg/apis/serving/v1beta1"]
   pruneopts = "NUT"
-  revision = "b2ccc519800e761ac8000b95e5d57c80a897ff9e"
+  revision = "3f73b117b61ee5d8fe5dcedd6cca2c96014329a9"
+  version = "v0.8.0"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -1551,16 +1547,33 @@
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "pkg/client/informers/externalversions",
+    "pkg/client/informers/externalversions/eventing",
+    "pkg/client/informers/externalversions/eventing/v1alpha1",
+    "pkg/client/informers/externalversions/internalinterfaces",
+    "pkg/client/informers/externalversions/messaging",
+    "pkg/client/informers/externalversions/messaging/v1alpha1",
+    "pkg/client/informers/externalversions/sources",
+    "pkg/client/informers/externalversions/sources/v1alpha1",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
+    "pkg/client/injection/informers/eventing/factory",
+    "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
+    "pkg/client/injection/informers/sources/factory",
+    "pkg/client/injection/informers/sources/v1alpha1/apiserversource",
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
-    "pkg/defaultchannel",
     "pkg/duck",
+    "pkg/kncloudevents",
     "pkg/logconfig",
     "pkg/logging",
+    "pkg/provisioners",
+    "pkg/provisioners/fanout",
+    "pkg/provisioners/multichannelfanout",
+    "pkg/provisioners/utils",
+    "pkg/reconciler",
     "pkg/reconciler/names",
     "pkg/reconciler/testing",
     "pkg/tracing",
@@ -1605,6 +1618,11 @@
     "injection",
     "injection/clients/dynamicclient",
     "injection/clients/dynamicclient/fake",
+    "injection/clients/kubeclient",
+    "injection/clients/kubeclient/fake",
+    "injection/informers/kubeinformers/appsv1/deployment",
+    "injection/informers/kubeinformers/factory",
+    "injection/sharedmain",
     "kmeta",
     "kmp",
     "logging",
@@ -1752,6 +1770,7 @@
     "github.com/google/go-github/github",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
+    "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
     "github.com/onsi/ginkgo",
@@ -1805,6 +1824,7 @@
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",
+    "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
@@ -1813,8 +1833,18 @@
     "knative.dev/eventing/pkg/channel/fanout",
     "knative.dev/eventing/pkg/channel/multichannelfanout",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
+    "knative.dev/eventing/pkg/client/injection/informers/sources/v1alpha1/apiserversource",
+    "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
+    "knative.dev/eventing/pkg/duck",
+    "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
+    "knative.dev/eventing/pkg/provisioners",
+    "knative.dev/eventing/pkg/provisioners/fanout",
+    "knative.dev/eventing/pkg/provisioners/multichannelfanout",
+    "knative.dev/eventing/pkg/provisioners/utils",
+    "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
@@ -1830,6 +1860,8 @@
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
+    "knative.dev/pkg/injection/informers/kubeinformers/appsv1/deployment",
+    "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/kmp",
     "knative.dev/pkg/logging",
