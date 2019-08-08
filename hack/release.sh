@@ -28,6 +28,7 @@ COMPONENTS=(
   ["camel.yaml"]="camel/source/config"
   ["kafka-importer.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
+  ["natss-channel.yaml"]="natss/config"
   ["awssqs.yaml"]="awssqs/config"
 )
 readonly COMPONENTS
