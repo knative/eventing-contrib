@@ -28,8 +28,8 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
 
-	"github.com/knative/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {

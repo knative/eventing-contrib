@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/knative/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 
 	corev1 "k8s.io/api/core/v1"
 )

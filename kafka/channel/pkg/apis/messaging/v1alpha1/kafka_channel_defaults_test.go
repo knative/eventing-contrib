@@ -17,7 +17,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	"github.com/google/go-cmp/cmp"
 )

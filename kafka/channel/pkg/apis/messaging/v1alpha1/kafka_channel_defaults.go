@@ -19,7 +19,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
 
 func (c *KafkaChannel) SetDefaults(ctx context.Context) {

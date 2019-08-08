@@ -28,10 +28,10 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	sourcesv1alpha1 "github.com/knative/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/pkg/kncloudevents"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
 )
 

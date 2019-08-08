@@ -18,10 +18,10 @@ Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Requirements
 
-You must have the core of [Knative](http://github.com/knative/serving) running
+You must have the core of [Knative Serving](http://github.com/knative/serving) running
 on your cluster.
 
-You must have [Knative Eventing](http://github.com/knative/serving) running on
+You must have [Knative Eventing](http://github.com/knative/eventing) running on
 your cluster.
 
 You must have
@@ -31,7 +31,7 @@ installed.
 ### Checkout your fork
 
 The Go tools require that you clone the repository to the
-`src/github.com/knative/eventing-contrib` directory in your
+`src/knative.dev/eventing-contrib` directory in your
 [`GOPATH`](https://github.com/golang/go/wiki/SettingGOPATH).
 
 To check out this repository:
@@ -42,7 +42,7 @@ To check out this repository:
 
 ```shell
 mkdir -p ${GOPATH}/src/github.com/knative
-cd ${GOPATH}/src/github.com/knative
+cd ${GOPATH}/src/knative.dev
 git clone git@github.com:${YOUR_GITHUB_USERNAME}/eventing-contrib.git
 cd eventing-contrib
 git remote add upstream git@github.com:knative/eventing-contrib.git

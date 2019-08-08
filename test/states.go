@@ -16,7 +16,7 @@ limitations under the License.
 package test
 
 import (
-	"github.com/knative/serving/pkg/apis/serving/v1beta1"
+	"knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
 // states contains functions for asserting against the state of Knative Serving

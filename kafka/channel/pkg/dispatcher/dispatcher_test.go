@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/knative/eventing/pkg/provisioners/utils"
+	"knative.dev/eventing/pkg/provisioners/utils"
 
 	cluster "github.com/bsm/sarama-cluster"
 
@@ -20,10 +20,10 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	eventingduck "github.com/knative/eventing/pkg/apis/duck/v1alpha1"
-	"github.com/knative/eventing/pkg/provisioners"
-	"github.com/knative/eventing/pkg/provisioners/fanout"
-	"github.com/knative/eventing/pkg/provisioners/multichannelfanout"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/provisioners"
+	"knative.dev/eventing/pkg/provisioners/fanout"
+	"knative.dev/eventing/pkg/provisioners/multichannelfanout"
 	_ "knative.dev/pkg/system/testing"
 )
 

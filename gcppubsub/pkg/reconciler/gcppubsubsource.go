@@ -23,7 +23,6 @@ import (
 	"os"
 
 	"cloud.google.com/go/pubsub"
-	eventingv1alpha1 "github.com/knative/eventing/pkg/apis/eventing/v1alpha1"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -32,16 +31,17 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/pkg/logging"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/knative/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
-	"github.com/knative/eventing-contrib/gcppubsub/pkg/reconciler/resources"
-	"github.com/knative/eventing-contrib/pkg/controller/sdk"
-	"github.com/knative/eventing-contrib/pkg/controller/sinks"
-	"github.com/knative/eventing-contrib/pkg/reconciler/eventtype"
+	"knative.dev/eventing-contrib/gcppubsub/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/gcppubsub/pkg/reconciler/resources"
+	"knative.dev/eventing-contrib/pkg/controller/sdk"
+	"knative.dev/eventing-contrib/pkg/controller/sinks"
+	"knative.dev/eventing-contrib/pkg/reconciler/eventtype"
 )
 
 const (

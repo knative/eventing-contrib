@@ -25,16 +25,10 @@ import (
 
 	"knative.dev/pkg/apis"
 
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/utils"
-	"github.com/knative/eventing/pkg/reconciler/names"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing/pkg/reconciler/names"
 
 	"github.com/Shopify/sarama"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
-	messaginginformers "github.com/knative/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/messaging/v1alpha1"
-	listers "github.com/knative/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/reconciler"
-	"github.com/knative/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
-	"github.com/knative/eventing/pkg/logging"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -47,6 +41,12 @@ import (
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	messaginginformers "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/messaging/v1alpha1"
+	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
+	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/controller"
 )
 
