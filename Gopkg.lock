@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:7eae9819951226dbae87c1315b9bb4f6090662e0b405074256e3a9861f6e93fb"
+  digest = "1:a3a700fde960868375691c0ffb5fac44111249e9e12d47d9bfc9a3faf10f8694"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
@@ -11,9 +11,6 @@
     "internal/optional",
     "internal/version",
     "monitoring/apiv3",
-    "pubsub",
-    "pubsub/apiv1",
-    "pubsub/internal/distribution",
     "trace/apiv2",
   ]
   pruneopts = "NUT"
@@ -1084,7 +1081,6 @@
     "googleapis/devtools/cloudtrace/v2",
     "googleapis/iam/v1",
     "googleapis/monitoring/v3",
-    "googleapis/pubsub/v1",
     "googleapis/rpc/status",
     "protobuf/field_mask",
   ]
@@ -1713,7 +1709,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "cloud.google.com/go/pubsub",
     "github.com/Shopify/sarama",
     "github.com/apache/camel-k/pkg/apis/camel/v1alpha1",
     "github.com/apache/camel-k/pkg/apis/camel/v1alpha1/knative",

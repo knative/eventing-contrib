@@ -25,9 +25,9 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/k8s.io/code-
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
 # Generate based on annotations
-go generate ./pkg/... ./cmd/... ./github/pkg/... ./gcppubsub/pkg/... ./camel/source/pkg/... ./kafka/source/pkg/... ./kafka/channel/pkg/... ./awssqs/pkg/...
+go generate ./pkg/... ./cmd/... ./github/pkg/... ./camel/source/pkg/... ./kafka/source/pkg/... ./kafka/channel/pkg/... ./awssqs/pkg/...
 
-API_DIRS=(github/pkg gcppubsub/pkg camel/source/pkg kafka/source/pkg awssqs/pkg)
+API_DIRS=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg)
 
 for DIR in "${API_DIRS[@]}"; do
   # generate the code with:

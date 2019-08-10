@@ -2,11 +2,6 @@ aliases:
   # These aliases are for OWNERS of the various Source implementations. These
   # Are in addition to the repo level OWNERS.
 
-  gcp-pubsub-approvers:
-    - Harwayne
-  gcp-pubsub-reviewers:
-    - Harwayne
-  
   github-approvers:
     - bbrowning
   github-reviewers:
