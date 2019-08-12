@@ -37,6 +37,22 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
+        registry:
+          type: object
+          description: "Internal information, users should not set this property"
+          properties:
+            eventTypes:
+              type: object
+              description: "Event types that CouchDB importer can produce"
+              properties:
+                changes:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      pattern: "dev.knative.couchdb.changes"
+                    schema:
+                      type: object
         apiVersion:
           type: string
         kind:
