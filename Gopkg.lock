@@ -1524,7 +1524,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c536367542111dc62e96136e0528b03b3dd0e575f3baac64655238d80565381f"
+  digest = "1:cd6ee5900bf38344d03391d51159f25e3347aa947ff148253011ff76c69b8c5f"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1559,8 +1559,6 @@
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/factory",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
-    "pkg/client/injection/informers/sources/factory",
-    "pkg/client/injection/informers/sources/v1alpha1/apiserversource",
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/sources/v1alpha1",
@@ -1834,7 +1832,6 @@
     "knative.dev/eventing/pkg/channel/multichannelfanout",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
-    "knative.dev/eventing/pkg/client/injection/informers/sources/v1alpha1/apiserversource",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/duck",
     "knative.dev/eventing/pkg/kncloudevents",
