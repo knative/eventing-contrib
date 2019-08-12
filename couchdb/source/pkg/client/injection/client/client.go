@@ -22,7 +22,7 @@ import (
 	"context"
 
 	rest "k8s.io/client-go/rest"
-	versioned "knative.dev/eventing/pkg/client/clientset/versioned"
+	versioned "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
 )

@@ -26,9 +26,9 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./ven
 
 # Generate based on annotations
 go generate ./pkg/... ./cmd/... ./github/pkg/... ./camel/source/pkg/... ./kafka/source/pkg/... ./kafka/channel/pkg/... ./awssqs/pkg/... \
-  ./couchdb/importer/pkg/...
+  ./couchdb/source/pkg/...
 
-API_DIRS=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/importer/pkg)
+API_DIRS=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg)
 
 for DIR in "${API_DIRS[@]}"; do
   # generate the code with:

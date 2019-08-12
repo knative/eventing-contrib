@@ -1215,17 +1215,14 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:e464a08adca7204feeb7c356010d02e0c2c9d20ac30d476235351be105e5132f"
+  digest = "1:51f330b7a61ac0e8b6e082490586ff2b18008eb514a67eccbe5ec78ffd32ee25"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
     "pkg/apis/apiextensions/v1beta1",
     "pkg/client/clientset/clientset",
-    "pkg/client/clientset/clientset/fake",
     "pkg/client/clientset/clientset/scheme",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
-    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake",
-    "pkg/client/listers/apiextensions/v1beta1",
   ]
   pruneopts = "NUT"
   revision = "bd0469a053ff88529a61145790499fe78a09a49d"
@@ -1524,7 +1521,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cd6ee5900bf38344d03391d51159f25e3347aa947ff148253011ff76c69b8c5f"
+  digest = "1:0b60bbea8266e01237a545858d70427b90287b72b4946f74e13d6ccc627bf2a7"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1556,7 +1553,6 @@
     "pkg/client/informers/externalversions/sources",
     "pkg/client/informers/externalversions/sources/v1alpha1",
     "pkg/client/injection/client",
-    "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/factory",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/listers/eventing/v1alpha1",
@@ -1570,7 +1566,6 @@
     "pkg/provisioners",
     "pkg/provisioners/fanout",
     "pkg/provisioners/multichannelfanout",
-    "pkg/provisioners/utils",
     "pkg/reconciler",
     "pkg/reconciler/names",
     "pkg/reconciler/testing",
@@ -1615,9 +1610,7 @@
     "controller",
     "injection",
     "injection/clients/dynamicclient",
-    "injection/clients/dynamicclient/fake",
     "injection/clients/kubeclient",
-    "injection/clients/kubeclient/fake",
     "injection/informers/kubeinformers/appsv1/deployment",
     "injection/informers/kubeinformers/factory",
     "injection/sharedmain",
@@ -1840,7 +1833,6 @@
     "knative.dev/eventing/pkg/provisioners",
     "knative.dev/eventing/pkg/provisioners/fanout",
     "knative.dev/eventing/pkg/provisioners/multichannelfanout",
-    "knative.dev/eventing/pkg/provisioners/utils",
     "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/tracing",
