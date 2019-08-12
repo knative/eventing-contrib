@@ -18,8 +18,8 @@ Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### Requirements
 
-You must have the core of [Knative Serving](http://github.com/knative/serving) running
-on your cluster.
+You must have the core of [Knative Serving](http://github.com/knative/serving)
+running on your cluster.
 
 You must have [Knative Eventing](http://github.com/knative/eventing) running on
 your cluster.
@@ -58,8 +58,8 @@ follows.
 ## Installing Sources
 
 Once you've [setup your development environment](#getting-started), install any
-of the sources _Github Source_, _AWS SQS Source_, _Camel Source_, _Gcppubsub
-Source_, _Kafka Source_ with:
+of the sources _Github Source_, _AWS SQS Source_, _Camel Source_, _Kafka Source_
+with:
 
 ```
 ko apply -f contrib/<source_name>/
@@ -82,10 +82,9 @@ You can access the Github eventing manager's logs with:
 kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=github-controller-manager -o name)
 ```
 
-_See [contrib/gcppubsub/samples/README.md](gcppubsub/samples/README.md),
-[camel/source/samples/README.md](./camel/source/samples/README.md),
+_See [camel/source/samples/README.md](./camel/source/samples/README.md),
 [kafka/source/samples/README.md](./kafka/source/samples/README.md) for
-instructions on installing the Gcppubsub Source, Camel Source and Kafka Source._
+instructions on installing the Camel Source and Kafka Source._
 
 ## Iterating
 

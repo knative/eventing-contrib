@@ -118,6 +118,9 @@ func main() {
 				log.Print("Event not found")
 				return
 			}
+			w.WriteHeader(http.StatusBadRequest)
+			log.Printf("Error processing request: %s", err)
+			return
 		}
 
 		ra.HandleEvent(event, r.Header)
