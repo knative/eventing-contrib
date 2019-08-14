@@ -65,8 +65,6 @@ func main() {
 		},
 	)
 
-	log.Printf("%+v\n", cfg)
-
 	// create IBM MQ channel definition
 	channelDefinition := ibmmq.NewMQCD()
 	channelDefinition.ChannelName = cfg.ChannelName
@@ -91,7 +89,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("Connection to %s succeeded.\n", cfg.QueueManager)
+	log.Printf("Connection to %q succeeded.\n", cfg.QueueManager)
 	defer disconnect(qMgrObject)
 
 	// Create the Object Descriptor that allows us to give the queue name
@@ -151,7 +149,6 @@ func main() {
 				Message:     md,
 				MessageData: data,
 			}
-			log.Printf("New message: %s", data)
 			if err := sendMessage(cloudEventsClient, &msg); err != nil {
 				log.Printf("Failed to send message: %v\n", err)
 			}

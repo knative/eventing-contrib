@@ -1,6 +1,6 @@
 ## IBM MQ source
 
-This event source is meant to be used as a Container Source within a Knative cluster in order to consume messages from IBM Message Queue.
+This event source is meant to be used within a Knative cluster in order to consume messages from IBM Message Queue.
 
 ### Local Build and Usage
 
@@ -101,10 +101,10 @@ Data,
 
 ### Knative usage
 
-Edit the Container source manifest to specify your queue and connection parameters then apply it like so:
+Edit the event source manifest to specify your queue and connection parameters then apply it like so:
 
 ```
-kubectl apply -f containersource.yaml
+kubectl apply -f mqsource.yaml
 ```
 
 Or deploy it with `ko` (from repository root):
