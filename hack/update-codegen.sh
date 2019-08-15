@@ -22,10 +22,12 @@ source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
 CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator)}
 
-# Generate based on annotations
-go generate ./pkg/... ./cmd/... ./github/pkg/... ./gcppubsub/pkg/... ./camel/source/pkg/... ./kafka/source/pkg/... ./kafka/channel/pkg/... ./awssqs/pkg/...
+KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
-API_DIRS=(github/pkg gcppubsub/pkg camel/source/pkg kafka/source/pkg awssqs/pkg)
+# Generate based on annotations
+go generate ./pkg/... ./cmd/... ./github/pkg/... ./camel/source/pkg/... ./kafka/source/pkg/... ./kafka/channel/pkg/... ./awssqs/pkg/...
+
+API_DIRS=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg)
 
 for DIR in "${API_DIRS[@]}"; do
   # generate the code with:
@@ -33,6 +35,12 @@ for DIR in "${API_DIRS[@]}"; do
   #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
   #                  instead of the $GOPATH directly. For normal projects this can be dropped.
   ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
+    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
+    "sources:v1alpha1" \
+    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
+
+  # Knative Injection
+  ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
     "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
     "sources:v1alpha1" \
     --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
