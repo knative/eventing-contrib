@@ -131,7 +131,7 @@ spec:
       serviceAccountName: kafka-channel-controller
       containers:
       - name: kafka-channel-controller-controller
-        image: github.com/knative/eventing-contrib/kafka/channel/cmd/cmd/controller
+        image: github.com/knative/eventing-contrib/kafka/channel/cmd/controller
         volumeMounts:
           - name: kafka-channel-controller-config
             mountPath: /etc/config-provisioner
@@ -210,7 +210,7 @@ spec:
       serviceAccountName: kafka-channel-dispatcher
       containers:
         - name: dispatcher
-          image: github.com/knative/eventing-contrib/kafka/channel/cmd/cmd/dispatcher
+          image: github.com/knative/eventing-contrib/kafka/channel/cmd/dispatcher
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
