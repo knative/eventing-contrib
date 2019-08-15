@@ -16,6 +16,8 @@ apiVersion: eventing.knative.dev/v1alpha1
 kind: ClusterChannelProvisioner
 metadata:
   name: kafka
+  labels:
+    contrib.eventing.knative.dev/release: devel
 spec: {}
 ---
 
@@ -24,12 +26,16 @@ kind: ServiceAccount
 metadata:
   name: kafka-channel-controller
   namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: devel
 ---
 
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: kafka-channel-controller
+  labels:
+    contrib.eventing.knative.dev/release: devel
 rules:
   - apiGroups:
       - eventing.knative.dev
@@ -88,6 +94,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: kafka-channel-controller-manage
+  labels:
+    contrib.eventing.knative.dev/release: devel
 subjects:
   - kind: ServiceAccount
     name: kafka-channel-controller
@@ -103,6 +111,8 @@ kind: ConfigMap
 metadata:
   name: kafka-channel-controller-config
   namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: devel
 data:
   # Broker URL's for the provisioner. Replace this with the URL's for your kafka cluster,
   # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
@@ -119,6 +129,8 @@ kind: Deployment
 metadata:
   name: kafka-channel-controller
   namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
@@ -151,6 +163,8 @@ kind: ServiceAccount
 metadata:
   name: kafka-channel-dispatcher
   namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: devel
 
 ---
 
@@ -158,6 +172,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: kafka-channel-dispatcher
+  labels:
+    contrib.eventing.knative.dev/release: devel
 rules:
   - apiGroups:
       - "" # Core API group.
@@ -181,6 +197,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: kafka-channel-dispatcher
+  labels:
+    contrib.eventing.knative.dev/release: devel
 subjects:
   - kind: ServiceAccount
     name: kafka-channel-dispatcher
@@ -197,6 +215,8 @@ kind: Deployment
 metadata:
   name: kafka-channel-dispatcher
   namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
