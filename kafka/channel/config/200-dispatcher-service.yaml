@@ -18,6 +18,7 @@ metadata:
   name: kafka-ch-dispatcher
   namespace: knative-eventing
   labels:
+      contrib.eventing.knative.dev/release: devel
       messaging.knative.dev/channel: kafka-channel
       messaging.knative.dev/role: dispatcher
 spec:
