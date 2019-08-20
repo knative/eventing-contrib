@@ -1,16 +1,6 @@
-# Apache Kafka - Source
+# Apache Kafka - Source Example
 
-The Apache Kafka Event source enables Knative Eventing integration with Apache
-Kafka. When a message is produced to Apache Kafka, the Apache Kafka Event Source
-will consume the produced message and post that message to the corresponding
-event sink.
-
-This sample demonstrates how to configure, deploy, and use the Apache Kafka
-Event Source with a Knative Service.
-
-For Kubernetes, a simple Apache Kafka installation can be done with Strimzi,
-check out their [Quickstart](https://strimzi.io/quickstarts/) for both Minikube
-and Openshift guides. You can also install Kafka on the host.
+Tutorial on how to use the `KafkaSource`
 
 ## Build and Deploy Steps
 
