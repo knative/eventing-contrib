@@ -25,6 +25,12 @@
 # in a net-negative contributor experience.
 export DISABLE_MD_LINTING=1
 
+export CGO_ENABLED=1
+export CGO_LDFLAGS_ALLOW="-Wl,-rpath.*"
+export MQ_INSTALLATION_PATH=$(dirname $0)/../contrib/ibm-mq/kodata
+export CGO_CFLAGS="-I$MQ_INSTALLATION_PATH/inc"
+export CGO_LDFLAGS="-L$MQ_INSTALLATION_PATH/lib64 -Wl,-rpath,$MQ_INSTALLATION_PATH/lib64"
+
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/presubmit-tests.sh
 
 # We use the default build, unit and integration test runners.
