@@ -48,4 +48,4 @@ event sink.
 
 ## Example
 
-A more detailed example of the `KafkaSource` can be found in the [samples](samples) folder.
+A more detailed example of the `KafkaSource` can be found in the [Knative documentation](https://knative.dev/docs/eventing/samples/).
