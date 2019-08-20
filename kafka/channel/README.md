@@ -6,7 +6,7 @@ topics.
 ## Deployment steps
 
 1. Setup [Knative Eventing](../../DEVELOPMENT.md)
-1. If not done already, install an Apache Kafka cluster!
+Install an Apache Kafka cluster, if you have not done so already.
 
    - For Kubernetes a simple installation is done using the
      [Strimzi Kafka Operator](http://strimzi.io). Its installation
