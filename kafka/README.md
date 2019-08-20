@@ -1,6 +1,6 @@
 # Apache Kafka Componentes for Knative
 
-Apache Kafka Componentes for Knative support the `KafkaChannel` and the `KafkaSource` implementation, which offers different ways to integrate Knative with the [Apache Kafka](http://kafka.apache.org/) broker.
+Apache Kafka Components for Knative support the `KafkaChannel` and the `KafkaSource` implementation, which offer ways to integrate Knative with the [Apache Kafka](http://kafka.apache.org/) broker.
 topics.
 
 ## Overview
