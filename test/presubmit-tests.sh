@@ -27,7 +27,7 @@ export DISABLE_MD_LINTING=1
 
 export CGO_ENABLED=1
 export CGO_LDFLAGS_ALLOW="-Wl,-rpath.*"
-export MQ_INSTALLATION_PATH=$(dirname $0)/../contrib/ibm-mq/kodata
+export MQ_INSTALLATION_PATH=$(realpath $(dirname $0)/../contrib/ibm-mq/kodata)
 export CGO_CFLAGS="-I$MQ_INSTALLATION_PATH/inc"
 export CGO_LDFLAGS="-L$MQ_INSTALLATION_PATH/lib64 -Wl,-rpath,$MQ_INSTALLATION_PATH/lib64"
 
