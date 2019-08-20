@@ -18,10 +18,8 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
-	cluster "github.com/bsm/sarama-cluster"
 	"knative.dev/pkg/configmap"
 )
 
@@ -43,7 +41,6 @@ const (
 
 type KafkaConfig struct {
 	Brokers      []string
-	ConsumerMode cluster.ConsumerMode
 }
 
 // GetKafkaConfig returns the details of the Kafka cluster.
@@ -71,18 +68,6 @@ func GetKafkaConfig(path string) (*KafkaConfig, error) {
 		return nil, fmt.Errorf("missing key %s in configuration", BrokerConfigMapKey)
 	}
 
-	config.ConsumerMode = cluster.ConsumerModeMultiplex
-	if mode, ok := configMap[ConsumerModeConfigMapKey]; ok {
-		switch strings.ToLower(mode) {
-		case ConsumerModeMultiplexConsumerValue:
-			config.ConsumerMode = cluster.ConsumerModeMultiplex
-		case ConsumerModePartitionConsumerValue:
-			config.ConsumerMode = cluster.ConsumerModePartitions
-		default:
-			log.Printf("consumerMode: %q is invalid. Using default mode %q", mode, ConsumerModeMultiplexConsumerValue)
-			config.ConsumerMode = cluster.ConsumerModeMultiplex
-		}
-	}
 	return config, nil
 }
 

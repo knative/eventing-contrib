@@ -16,6 +16,7 @@ limitations under the License.
 package dispatcher
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -24,7 +25,6 @@ import (
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	"github.com/Shopify/sarama"
-	cluster "github.com/bsm/sarama-cluster"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
@@ -44,11 +44,11 @@ type KafkaDispatcher struct {
 	receiver   *provisioners.MessageReceiver
 	dispatcher *provisioners.MessageDispatcher
 
-	kafkaAsyncProducer sarama.AsyncProducer
-	kafkaConsumers     map[provisioners.ChannelReference]map[subscription]KafkaConsumer
+	kafkaAsyncProducer  sarama.AsyncProducer
+	kafkaConsumerGroups map[provisioners.ChannelReference]map[subscription]sarama.ConsumerGroup
 	// consumerUpdateLock must be used to update kafkaConsumers
 	consumerUpdateLock sync.Mutex
-	kafkaCluster       KafkaCluster
+	kafkaConsumerFactory KafkaConsumerFactory
 
 	topicFunc TopicFunc
 	logger    *zap.Logger
@@ -59,40 +59,53 @@ type TopicFunc func(separator, namespace, name string) string
 type KafkaDispatcherArgs struct {
 	ClientID     string
 	Brokers      []string
-	ConsumerMode cluster.ConsumerMode
 	TopicFunc    TopicFunc
 	Logger       *zap.Logger
 }
 
-type KafkaConsumer interface {
-	Messages() <-chan *sarama.ConsumerMessage
-	Partitions() <-chan cluster.PartitionConsumer
-	MarkOffset(msg *sarama.ConsumerMessage, metadata string)
-	Close() (err error)
+// Kafka consumer factory creates the ConsumerGroup and start consuming the specified topic
+type KafkaConsumerFactory interface {
+	StartConsumerGroup(
+		groupID string,
+		topicName string,
+		channelRef provisioners.ChannelReference,
+		sub subscription,
+		logger *zap.Logger,
+		dispatcher *provisioners.MessageDispatcher,
+	) (sarama.ConsumerGroup, error)
 }
 
-type KafkaCluster interface {
-	NewConsumer(groupID string, topics []string) (KafkaConsumer, error)
-
-	GetConsumerMode() cluster.ConsumerMode
+type kafkaConsumerFactoryImpl struct {
+	client sarama.Client
 }
 
-type saramaCluster struct {
-	kafkaBrokers []string
+func (c kafkaConsumerFactoryImpl) StartConsumerGroup(
+		groupID string,
+		topicName string,
+		channelRef provisioners.ChannelReference,
+		sub subscription,
+		logger *zap.Logger,
+		dispatcher *provisioners.MessageDispatcher,
+	) (sarama.ConsumerGroup, error) {
+	consumerGroup, err := sarama.NewConsumerGroupFromClient(groupID, c.client)
 
-	consumerMode cluster.ConsumerMode
+	if err != nil {
+		return nil, err
+	}
+
+	consumerHandler := KafkaConsumerHandler{
+		channelRef,
+		sub,
+		logger,
+		dispatcher,
+	}
+
+	err = consumerGroup.Consume(context.TODO(), []string{topicName}, &consumerHandler)
+
+	return consumerGroup, err
 }
 
-func (c *saramaCluster) NewConsumer(groupID string, topics []string) (KafkaConsumer, error) {
-	consumerConfig := cluster.NewConfig()
-	consumerConfig.Version = sarama.V1_1_0_0
-	consumerConfig.Group.Mode = c.consumerMode
-	return cluster.NewConsumer(c.kafkaBrokers, groupID, topics, consumerConfig)
-}
-
-func (c *saramaCluster) GetConsumerMode() cluster.ConsumerMode {
-	return c.consumerMode
-}
+var _ KafkaConsumerFactory = (*kafkaConsumerFactoryImpl)(nil)
 
 type subscription struct {
 	UID           string
@@ -125,7 +138,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 		}
 		for _, subSpec := range cc.FanoutConfig.Subscriptions {
 			sub := newSubscription(subSpec)
-			if _, ok := d.kafkaConsumers[channelRef][sub]; !ok {
+			if _, ok := d.kafkaConsumerGroups[channelRef][sub]; !ok {
 				// only subscribe when not exists in channel-subscriptions map
 				// do not need to resubscribe every time channel fanout config is updated
 				if err := d.subscribe(channelRef, sub); err != nil {
@@ -137,7 +150,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 	}
 
 	// Unsubscribe and close consumer for any deleted subscriptions
-	for channelRef, subMap := range d.kafkaConsumers {
+	for channelRef, subMap := range d.kafkaConsumerGroups {
 		for sub := range subMap {
 			if ok := newSubs[sub]; !ok {
 				d.unsubscribe(channelRef, sub)
@@ -231,8 +244,8 @@ func (d *KafkaDispatcher) subscribe(channelRef provisioners.ChannelReference, su
 	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
 
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
-	group := fmt.Sprintf("%s.%s", controller.Name, sub.UID)
-	consumer, err := d.kafkaCluster.NewConsumer(group, []string{topicName})
+	groupID := fmt.Sprintf("%s.%s", controller.Name, sub.UID)
+	consumerGroup, err := d.kafkaConsumerFactory.StartConsumerGroup(groupID, topicName, channelRef, sub, d.logger, d.dispatcher)
 
 	if err != nil {
 		// we can not create a consumer - logging that, with reason
@@ -240,81 +253,34 @@ func (d *KafkaDispatcher) subscribe(channelRef provisioners.ChannelReference, su
 		return err
 	}
 
-	channelMap, ok := d.kafkaConsumers[channelRef]
+	// sarama reports error in consumerGroup.Error() channel
+	// this goroutine logs errors incoming
+	go func() {
+		for err = range consumerGroup.Errors() {
+			d.logger.Info("Error in consumer group", zap.Error(err))
+		}
+	}()
+
+	consumerGroupMap, ok := d.kafkaConsumerGroups[channelRef]
 	if !ok {
-		channelMap = make(map[subscription]KafkaConsumer)
-		d.kafkaConsumers[channelRef] = channelMap
+		consumerGroupMap = make(map[subscription]sarama.ConsumerGroup)
+		d.kafkaConsumerGroups[channelRef] = consumerGroupMap
 	}
-	channelMap[sub] = consumer
+	consumerGroupMap[sub] = consumerGroup
 
-	if cluster.ConsumerModePartitions == d.kafkaCluster.GetConsumerMode() {
-		go d.partitionConsumerLoop(consumer, channelRef, sub)
-	} else {
-		go d.multiplexConsumerLoop(consumer, channelRef, sub)
-	}
 	return nil
-}
-
-func (d *KafkaDispatcher) partitionConsumerLoop(consumer KafkaConsumer, channelRef provisioners.ChannelReference, sub subscription) {
-	d.logger.Info("Partition Consumer for subscription started", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
-	for {
-		pc, more := <-consumer.Partitions()
-		if !more {
-			break
-		}
-		go func(pc cluster.PartitionConsumer) {
-			for msg := range pc.Messages() {
-				d.dispatch(channelRef, sub, consumer, msg)
-			}
-		}(pc)
-	}
-	d.logger.Info("Partition Consumer for subscription stopped", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
-}
-
-func (d *KafkaDispatcher) multiplexConsumerLoop(consumer KafkaConsumer, channelRef provisioners.ChannelReference, sub subscription) {
-	d.logger.Info("Consumer for subscription started", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
-	for {
-		msg, more := <-consumer.Messages()
-		if more {
-			d.dispatch(channelRef, sub, consumer, msg)
-		} else {
-			break
-		}
-	}
-	d.logger.Info("Consumer for subscription stopped", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
-}
-
-func (d *KafkaDispatcher) dispatch(channelRef provisioners.ChannelReference, sub subscription, consumer KafkaConsumer,
-	msg *sarama.ConsumerMessage) error {
-	d.logger.Info("Dispatching a message for subscription", zap.Any("channelRef", channelRef),
-		zap.Any("subscription", sub), zap.Any("partition", msg.Partition), zap.Any("offset", msg.Offset))
-	message := fromKafkaMessage(msg)
-	err := d.dispatchMessage(message, sub)
-	if err != nil {
-		d.logger.Warn("Got error trying to dispatch message", zap.Error(err))
-	}
-	// TODO: handle errors with pluggable strategy
-	consumer.MarkOffset(msg, "") // Mark message as processed
-	return err
 }
 
 // unsubscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
 // unsubscribe must be called under updateLock.
 func (d *KafkaDispatcher) unsubscribe(channel provisioners.ChannelReference, sub subscription) error {
 	d.logger.Info("Unsubscribing from channel", zap.Any("channel", channel), zap.Any("subscription", sub))
-	if consumer, ok := d.kafkaConsumers[channel][sub]; ok {
-		delete(d.kafkaConsumers[channel], sub)
+	if consumer, ok := d.kafkaConsumerGroups[channel][sub]; ok {
+		delete(d.kafkaConsumerGroups[channel], sub)
 		return consumer.Close()
 	}
 	return nil
 }
-
-// dispatchMessage sends the request to exactly one subscription. It handles both the `call` and
-// the `sink` portions of the subscription.
-func (d *KafkaDispatcher) dispatchMessage(m *provisioners.Message, sub subscription) error {
-	return d.dispatcher.DispatchMessage(m, sub.SubscriberURI, sub.ReplyURI, provisioners.DispatchDefaults{})
-}
-
 func (d *KafkaDispatcher) getConfig() *multichannelfanout.Config {
 	return d.config.Load().(*multichannelfanout.Config)
 }
@@ -333,9 +299,11 @@ func (d *KafkaDispatcher) setHostToChannelMap(hcMap map[string]provisioners.Chan
 
 func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 	conf := sarama.NewConfig()
-	conf.Version = sarama.V1_1_0_0
+	conf.Version = sarama.V2_0_0_0
 	conf.ClientID = args.ClientID
+	conf.Consumer.Return.Errors = true // Returns the errors in ConsumerGroup#Errors() https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
 	client, err := sarama.NewClient(args.Brokers, conf)
+
 	if err != nil {
 		return nil, fmt.Errorf("unable to create kafka client: %v", err)
 	}
@@ -347,11 +315,9 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 
 	dispatcher := &KafkaDispatcher{
 		dispatcher: provisioners.NewMessageDispatcher(args.Logger.Sugar()),
-
-		kafkaCluster:       &saramaCluster{kafkaBrokers: args.Brokers, consumerMode: args.ConsumerMode},
-		kafkaConsumers:     make(map[provisioners.ChannelReference]map[subscription]KafkaConsumer),
+		kafkaConsumerFactory: kafkaConsumerFactoryImpl{client},
+		kafkaConsumerGroups:     make(map[provisioners.ChannelReference]map[subscription]sarama.ConsumerGroup),
 		kafkaAsyncProducer: producer,
-
 		logger: args.Logger,
 	}
 	receiverFunc, err := provisioners.NewMessageReceiver(
