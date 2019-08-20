@@ -288,10 +288,14 @@ function create_test_cluster_with_retries() {
       [[ "$(get_test_return_code)" == "0" ]] && return 0
       # Retry if cluster creation failed because of:
       # - stockout (https://github.com/knative/test-infra/issues/592)
-      # - latest GKE not available in this region/zone yet (https://github.com/knative/test-infra/issues/694)
+      # - latest GKE not available in this region/zone yet
+      #   (https://github.com/knative/test-infra/issues/694)
+      # - cluster created but some nodes are unhealthy
+      #   (https://github.com/knative/test-infra/issues/1291)
       [[ -z "$(grep -Fo 'does not have enough resources available to fulfill' ${cluster_creation_log})" \
           && -z "$(grep -Fo 'ResponseError: code=400, message=No valid versions with the prefix' ${cluster_creation_log})" \
           && -z "$(grep -Po 'ResponseError: code=400, message=Master version "[0-9a-z\-\.]+" is unsupported' ${cluster_creation_log})" ]] \
+          && -z "$(grep -Po '[0-9]+ nodes out of [0-9]+ are unhealthy' ${cluster_creation_log})" ]] \
           && return 1
     done
   done
@@ -310,7 +314,8 @@ function setup_test_cluster() {
   # Set the actual project the test cluster resides in
   # It will be a project assigned by Boskos if test is running on Prow,
   # otherwise will be ${GCP_PROJECT} set up by user.
-  readonly export E2E_PROJECT_ID="$(gcloud config get-value project)"
+  export E2E_PROJECT_ID="$(gcloud config get-value project)"
+  readonly E2E_PROJECT_ID
 
   # Save some metadata about cluster creation for using in prow and testgrid
   save_metadata
