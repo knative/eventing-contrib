@@ -48,7 +48,7 @@ const (
 	channelName                   = "test-channel"
 	clusterChannelProvisionerName = "kafka"
 	testNS                        = "test-namespace"
-	topicPrefix                   = "knative-eventing-channel"
+	topicPrefix                   = "knative-messaging-kafka"
 	testUID                       = "test-uid"
 	argumentNumPartitions         = "NumPartitions"
 	argumentReplicationFactor     = "ReplicationFactor"
