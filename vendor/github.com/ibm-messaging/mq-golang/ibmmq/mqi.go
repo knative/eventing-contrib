@@ -1,5 +1,5 @@
 /*
-Package ibmmq provides a wrapper to a the IBM MQ procedural interface (the MQI).
+Package ibmmq provides a wrapper to the IBM MQ procedural interface (the MQI).
 
 The verbs are given mixed case names without MQ - Open instead
 of MQOPEN etc.
@@ -9,8 +9,8 @@ constants and structures, see the MQ Knowledge Center
 at https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_9.1.0/com.ibm.mq.dev.doc/q023720_.htm#q023720_
 
 If an MQI call returns MQCC_FAILED or MQCC_WARNING, a custom error
-type is returned containing the MQCC/MQRC values as
-a formatted string. Use mqreturn:= err(*ibmmq.MQReturn) to access
+type is returned containing the MQCC/MQRC values as well as
+a formatted string. Use 'mqreturn:= err(*ibmmq.MQReturn)' to access
 the particular MQRC or MQCC values.
 
 The build directives assume the default MQ installation path
@@ -607,6 +607,36 @@ The length of the retrieved message is returned.
 */
 func (object MQObject) Get(gomd *MQMD,
 	gogmo *MQGMO, buffer []byte) (int, error) {
+	return object.getInternal(gomd, gogmo, buffer, false)
+}
+
+/*
+GetSlice is the same as Get except that the buffer gets returned
+ready-sliced based on the message length instead of just returning the
+length. The real length is also still returned in case of truncation.
+*/
+func (object MQObject) GetSlice(gomd *MQMD,
+	gogmo *MQGMO, buffer []byte) ([]byte, int, error) {
+	realDatalen, err := object.getInternal(gomd, gogmo, buffer, true)
+
+	// The datalen will be set even if the buffer is too small - there
+	// will be one of MQRC_TRUNCATED_MSG_ACCEPTED or _FAILED depending on the
+	// GMO options. In any case, we return the available data along with the
+	// error code but need to make sure that the real untruncated
+	// message length is also returned. Also ensure we don't try to read past the
+	// end of the buffer.
+	datalen := realDatalen
+	if datalen > cap(buffer) {
+		datalen = cap(buffer)
+	}
+	return buffer[0:datalen], realDatalen, err
+}
+
+/*
+This is the real function that calls MQGET.
+*/
+func (object MQObject) getInternal(gomd *MQMD,
+	gogmo *MQGMO, buffer []byte, useCap bool) (int, error) {
 
 	var mqrc C.MQLONG
 	var mqcc C.MQLONG
@@ -624,12 +654,23 @@ func (object MQObject) Get(gomd *MQMD,
 		return 0, err
 	}
 
-	bufflen := len(buffer)
+	bufflen := 0
+	if useCap {
+		bufflen = cap(buffer)
+	} else {
+		bufflen = len(buffer)
+	}
 
 	copyMDtoC(&mqmd, gomd)
 	copyGMOtoC(&mqgmo, gogmo)
 
 	if bufflen > 0 {
+		// There has to be something in the buffer for CGO to be able to
+		// find its address. We know there's space backing the buffer so just
+		// set the first byte to something.
+		if useCap && len(buffer) == 0 {
+			buffer = append(buffer, 0)
+		}
 		ptr = (C.PMQVOID)(unsafe.Pointer(&buffer[0]))
 	} else {
 		ptr = nil
@@ -652,7 +693,7 @@ func (object MQObject) Get(gomd *MQMD,
 	}
 
 	if mqcc != C.MQCC_OK {
-		return 0, &mqreturn
+		return godatalen, &mqreturn
 	}
 
 	return godatalen, nil
@@ -724,14 +765,14 @@ func (object MQObject) Inq(goSelectors []int32, intAttrCount int, charAttrLen in
 */
 
 /*
- * Inq is the function to inquire on an attribute of an object
- *
- * This has a much simpler API than the original implementation.
- * Simply pass in the list of selectors for the object
- * and the return value consists of a map whose elements are
- * a) accessed via the selector
- * b) varying datatype (integer, string, string array) based on the selector
- */
+Inq is the function to inquire on an attribute of an object
+
+This has a much simpler API than the original implementation.
+Simply pass in the list of selectors for the object
+and the return value consists of a map whose elements are
+a) accessed via the selector
+b) varying datatype (integer, string, string array) based on the selector
+*/
 func (object MQObject) Inq(goSelectors []int32) (map[int32]interface{}, error) {
 	var mqrc C.MQLONG
 	var mqcc C.MQLONG
@@ -841,18 +882,18 @@ func (object MQObject) Inq(goSelectors []int32) (map[int32]interface{}, error) {
 }
 
 /*
-* The InqMap function was the migration path when the original Inq was
-* deprecated. It is kept here as a tempoary wrapper to the new Inq() version.
- */
+The InqMap function was the migration path when the original Inq was
+deprecated. It is kept here as a temporary wrapper to the new Inq() version.
+*/
 func (object MQObject) InqMap(goSelectors []int32) (map[int32]interface{}, error) {
 	return object.Inq(goSelectors)
 }
 
 /*
- * Set is the function that wraps MQSET. The single parameter is a map whose
- * elements contain an MQIA/MQCA selector with either a string or an int32 for
- * the value.
- */
+Set is the function that wraps MQSET. The single parameter is a map whose
+elements contain an MQIA/MQCA selector with either a string or an int32 for
+the value.
+*/
 func (object MQObject) Set(goSelectors map[int32]interface{}) error {
 	var mqrc C.MQLONG
 	var mqcc C.MQLONG

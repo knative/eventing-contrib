@@ -2,13 +2,11 @@
 
 
 [[projects]]
-  digest = "1:a3a700fde960868375691c0ffb5fac44111249e9e12d47d9bfc9a3faf10f8694"
+  digest = "1:3c95041b75e8fb053961ea963ebe52551d6897b2e62a0be37e4c3fb21ac1dd59"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
     "container/apiv1",
-    "iam",
-    "internal/optional",
     "internal/version",
     "monitoring/apiv3",
     "trace/apiv2",
@@ -131,6 +129,14 @@
   pruneopts = "NUT"
   revision = "c618e605e15c0d7535f6c96ff8efbb0dba4fd66c"
   version = "v2.1.15"
+
+[[projects]]
+  digest = "1:719d9c856a213851c92fbbc1622068ef373b24f2cfa36111d5d20ae032c7e40e"
+  name = "github.com/caarlos0/env"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "4bd75bf16b9ef8c1383109b5e4d931bd72c3b6d0"
+  version = "v6.0.0"
 
 [[projects]]
   digest = "1:e7d26760c4e7d67a443b082153c4b473ad0b8f7388302a2f788b1360f751abb8"
@@ -474,6 +480,14 @@
   pruneopts = "NUT"
   revision = "a30252cb686a21eb2d0b98132633053ec2f7f1e5"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:b20691defa29d8ac467fa3afc9d0049143e4f1f3d4eb1533cac17ce8d29e4853"
+  name = "github.com/ibm-messaging/mq-golang"
+  packages = ["ibmmq"]
+  pruneopts = "NUT"
+  revision = "19b946c185a89401b389a4bba551ab002e70535f"
+  version = "v4.1.0"
 
 [[projects]]
   digest = "1:9a52adf44086cead3b384e5d0dbf7a1c1cce65e67552ee3383a8561c42a18cd3"
@@ -946,12 +960,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c313aef534e493304f3666fbd24dca5932ebf776a82b7a40f961c9355794a1b1"
+  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
   name = "golang.org/x/sync"
-  packages = [
-    "errgroup",
-    "semaphore",
-  ]
+  packages = ["semaphore"]
   pruneopts = "NUT"
   revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
@@ -1068,7 +1079,7 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:20e41ea0a46968c5efef50d40ccb1c0afae9fa0384d32c3e5c86c48a779e4a37"
+  digest = "1:3689f4cc57cc55b4631efc4b778c47d2a888a7060b4108f42cf289a2033be5ba"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api",
@@ -1079,7 +1090,6 @@
     "googleapis/api/monitoredres",
     "googleapis/container/v1",
     "googleapis/devtools/cloudtrace/v2",
-    "googleapis/iam/v1",
     "googleapis/monitoring/v3",
     "googleapis/rpc/status",
     "protobuf/field_mask",
@@ -1568,6 +1578,7 @@
     "client/clientset/versioned/typed/authentication/v1alpha1/fake",
     "client/clientset/versioned/typed/istio/v1alpha3",
     "client/clientset/versioned/typed/istio/v1alpha3/fake",
+    "cloudevents",
     "configmap",
     "controller",
     "injection",
@@ -1716,6 +1727,7 @@
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/bsm/sarama-cluster",
+    "github.com/caarlos0/env",
     "github.com/cloudevents/sdk-go",
     "github.com/cloudevents/sdk-go/pkg/cloudevents",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/client",
@@ -1726,6 +1738,7 @@
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
     "github.com/gorilla/websocket",
+    "github.com/ibm-messaging/mq-golang/ibmmq",
     "github.com/kelseyhightower/envconfig",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
@@ -1803,6 +1816,7 @@
     "knative.dev/pkg/apis/duck/v1alpha1",
     "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/client/clientset/versioned/fake",
+    "knative.dev/pkg/cloudevents",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",

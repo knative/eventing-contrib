@@ -1,3 +1,5 @@
+package ibmmq
+
 /*
   Copyright (c) IBM Corporation 2018
 
@@ -16,7 +18,6 @@
    Contributors:
      Mark Taylor - Initial Contribution
 */
-package ibmmq
 
 /*
 #include <stdlib.h>

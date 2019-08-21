@@ -1,3 +1,5 @@
+package ibmmq
+
 /*
   Copyright (c) IBM Corporation 2018
 
@@ -20,7 +22,6 @@
 /*
 This file deals with asynchronous delivery of MQ messages via the MQCTL/MQCB verbs.
 */
-package ibmmq
 
 /*
 #include <stdlib.h>

@@ -36,7 +36,7 @@ package ibmmq
 *   <END_BUILDINFO>
  */
 
-var (
+const (
 	MQACH_CURRENT_LENGTH           int32  = 72
 	MQACH_CURRENT_VERSION          int32  = 1
 	MQACH_LENGTH_1                 int32  = 72
