@@ -25,9 +25,6 @@ import (
 
 const (
 	BrokerConfigMapKey                 = "bootstrapServers"
-	ConsumerModeConfigMapKey           = "consumerMode"
-	ConsumerModePartitionConsumerValue = "partitions"
-	ConsumerModeMultiplexConsumerValue = "multiplex"
 	KafkaChannelSeparator              = "."
 
 	// DefaultNumPartitions defines the default number of partitions
