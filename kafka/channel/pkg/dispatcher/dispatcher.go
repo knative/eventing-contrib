@@ -65,28 +65,14 @@ type KafkaDispatcherArgs struct {
 
 // Kafka consumer factory creates the ConsumerGroup and start consuming the specified topic
 type KafkaConsumerFactory interface {
-	StartConsumerGroup(
-		groupID string,
-		topicName string,
-		channelRef provisioners.ChannelReference,
-		sub subscription,
-		logger *zap.Logger,
-		dispatcher *provisioners.MessageDispatcher,
-	) (sarama.ConsumerGroup, error)
+	StartConsumerGroup(groupID string, topicName string, channelRef provisioners.ChannelReference, sub subscription, logger *zap.Logger, dispatcher func(m *provisioners.Message, sub *subscription) error, ) (sarama.ConsumerGroup, error)
 }
 
 type kafkaConsumerFactoryImpl struct {
 	client sarama.Client
 }
 
-func (c kafkaConsumerFactoryImpl) StartConsumerGroup(
-		groupID string,
-		topicName string,
-		channelRef provisioners.ChannelReference,
-		sub subscription,
-		logger *zap.Logger,
-		dispatcher *provisioners.MessageDispatcher,
-	) (sarama.ConsumerGroup, error) {
+func (c kafkaConsumerFactoryImpl) StartConsumerGroup(groupID string, topicName string, channelRef provisioners.ChannelReference, sub subscription, logger *zap.Logger, dispatcher func(m *provisioners.Message, sub *subscription) error, ) (sarama.ConsumerGroup, error) {
 	consumerGroup, err := sarama.NewConsumerGroupFromClient(groupID, c.client)
 
 	if err != nil {
@@ -245,7 +231,7 @@ func (d *KafkaDispatcher) subscribe(channelRef provisioners.ChannelReference, su
 
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
 	groupID := fmt.Sprintf("%s.%s", controller.Name, sub.UID)
-	consumerGroup, err := d.kafkaConsumerFactory.StartConsumerGroup(groupID, topicName, channelRef, sub, d.logger, d.dispatcher)
+	consumerGroup, err := d.kafkaConsumerFactory.StartConsumerGroup(groupID, topicName, channelRef, sub, d.logger, d.dispatchMessage)
 
 	if err != nil {
 		// we can not create a consumer - logging that, with reason
@@ -344,6 +330,12 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (provisioners
 		return cr, fmt.Errorf("invalid Hostname:%s. Hostname not found in ConfigMap for any Channel", host)
 	}
 	return cr, nil
+}
+
+// dispatchMessage sends the request to exactly one subscription. It handles both the `call` and
+// the `sink` portions of the subscription.
+func (d *KafkaDispatcher) dispatchMessage(m *provisioners.Message, sub *subscription) error {
+	return d.dispatcher.DispatchMessage(m, sub.SubscriberURI, sub.ReplyURI, provisioners.DispatchDefaults{})
 }
 
 func fromKafkaMessage(kafkaMessage *sarama.ConsumerMessage) *provisioners.Message {

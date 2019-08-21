@@ -11,7 +11,7 @@ type KafkaConsumerHandler struct {
 	channelRef provisioners.ChannelReference
 	sub subscription
 	logger *zap.Logger
-	dispatcher *provisioners.MessageDispatcher
+	dispatcherFunc func(*provisioners.Message, *subscription) error
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
@@ -46,7 +46,7 @@ func (consumer *KafkaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupS
 		)
 
 		knativeMessage := fromKafkaMessage(message)
-		err := consumer.dispatchMessage(knativeMessage)
+		err := consumer.dispatcherFunc(knativeMessage, &consumer.sub)
 		if err != nil {
 			consumer.logger.Warn("Got error trying to dispatch knativeMessage", zap.Error(err))
 		}
@@ -55,12 +55,6 @@ func (consumer *KafkaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupS
 	}
 
 	return nil
-}
-
-// dispatchMessage sends the request to exactly one subscription. It handles both the `call` and
-// the `sink` portions of the subscription.
-func (consumer *KafkaConsumerHandler) dispatchMessage(m *provisioners.Message) error {
-	return consumer.dispatcher.DispatchMessage(m, consumer.sub.SubscriberURI, consumer.sub.ReplyURI, provisioners.DispatchDefaults{})
 }
 
 var _ sarama.ConsumerGroupHandler = (*KafkaConsumerHandler)(nil)
