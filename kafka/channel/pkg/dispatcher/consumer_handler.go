@@ -49,9 +49,10 @@ func (consumer *KafkaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupS
 		err := consumer.dispatcherFunc(knativeMessage, &consumer.sub)
 		if err != nil {
 			consumer.logger.Warn("Got error trying to dispatch knativeMessage", zap.Error(err))
+		} else {
+			session.MarkMessage(message, "") // Mark kafka message as processed
+			consumer.logger.Debug(fmt.Sprintf("Message marked: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic))
 		}
-
-		session.MarkMessage(message, "") // Mark knativeMessage as processed
 	}
 
 	return nil
