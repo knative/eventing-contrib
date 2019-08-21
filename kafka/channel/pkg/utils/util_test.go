@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	cluster "github.com/bsm/sarama-cluster"
 	"github.com/google/go-cmp/cmp"
 	_ "knative.dev/pkg/system/testing"
 )
@@ -75,7 +74,6 @@ func TestGetKafkaConfig(t *testing.T) {
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "partitions"},
 			expected: &KafkaConfig{
 				Brokers:      []string{"kafkabroker.kafka:9092"},
-				ConsumerMode: cluster.ConsumerModePartitions,
 			},
 		},
 		{
@@ -83,7 +81,6 @@ func TestGetKafkaConfig(t *testing.T) {
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "multiplex"},
 			expected: &KafkaConfig{
 				Brokers:      []string{"kafkabroker.kafka:9092"},
-				ConsumerMode: cluster.ConsumerModeMultiplex,
 			},
 		},
 		{
@@ -91,7 +88,6 @@ func TestGetKafkaConfig(t *testing.T) {
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "foo"},
 			expected: &KafkaConfig{
 				Brokers:      []string{"kafkabroker.kafka:9092"},
-				ConsumerMode: cluster.ConsumerModeMultiplex,
 			},
 		},
 	}
