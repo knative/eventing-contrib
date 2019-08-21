@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"knative.dev/eventing/pkg/provisioners/utils"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	cluster "github.com/bsm/sarama-cluster"
 
