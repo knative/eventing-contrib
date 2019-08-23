@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"knative.dev/eventing/pkg/provisioners/utils"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	cluster "github.com/bsm/sarama-cluster"
 
@@ -488,7 +488,7 @@ func TestToKafkaMessage(t *testing.T) {
 		Payload: data,
 	}
 	want := &sarama.ProducerMessage{
-		Topic: "knative-eventing-channel.test-ns.test-channel",
+		Topic: "knative-messaging-kafka.test-ns.test-channel",
 		Headers: []sarama.RecordHeader{
 			{
 				Key:   []byte("k1"),

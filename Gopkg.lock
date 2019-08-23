@@ -2,13 +2,11 @@
 
 
 [[projects]]
-  digest = "1:a3a700fde960868375691c0ffb5fac44111249e9e12d47d9bfc9a3faf10f8694"
+  digest = "1:3c95041b75e8fb053961ea963ebe52551d6897b2e62a0be37e4c3fb21ac1dd59"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
     "container/apiv1",
-    "iam",
-    "internal/optional",
     "internal/version",
     "monitoring/apiv3",
     "trace/apiv2",
@@ -946,12 +944,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c313aef534e493304f3666fbd24dca5932ebf776a82b7a40f961c9355794a1b1"
+  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
   name = "golang.org/x/sync"
-  packages = [
-    "errgroup",
-    "semaphore",
-  ]
+  packages = ["semaphore"]
   pruneopts = "NUT"
   revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
@@ -1068,7 +1063,7 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:20e41ea0a46968c5efef50d40ccb1c0afae9fa0384d32c3e5c86c48a779e4a37"
+  digest = "1:3689f4cc57cc55b4631efc4b778c47d2a888a7060b4108f42cf289a2033be5ba"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api",
@@ -1079,7 +1074,6 @@
     "googleapis/api/monitoredres",
     "googleapis/container/v1",
     "googleapis/devtools/cloudtrace/v2",
-    "googleapis/iam/v1",
     "googleapis/monitoring/v3",
     "googleapis/rpc/status",
     "protobuf/field_mask",
@@ -1505,7 +1499,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bdbba8b7fa814fe85b2fd9a2bfb99d782ec3e3ff6f135cf9816b3f744a1d9df8"
+  digest = "1:3ec436792eeacb49e37d22c0750004f0cd3603287fa4dc8faee824beb3cd5573"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1537,7 +1531,6 @@
     "pkg/provisioners",
     "pkg/provisioners/fanout",
     "pkg/provisioners/multichannelfanout",
-    "pkg/provisioners/utils",
     "pkg/reconciler/names",
     "pkg/reconciler/testing",
     "pkg/tracing",
@@ -1793,7 +1786,6 @@
     "knative.dev/eventing/pkg/provisioners",
     "knative.dev/eventing/pkg/provisioners/fanout",
     "knative.dev/eventing/pkg/provisioners/multichannelfanout",
-    "knative.dev/eventing/pkg/provisioners/utils",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/reconciler/testing",
     "knative.dev/eventing/pkg/tracing",
