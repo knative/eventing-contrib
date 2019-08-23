@@ -178,9 +178,8 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 			err = r.client.Update(ctx, ra)
 			if err == nil {
 				return ra, nil
-			} else {
-				return nil, err
 			}
+			return nil, err
 		}
 		return ra, nil
 	}
