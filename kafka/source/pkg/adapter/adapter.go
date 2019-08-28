@@ -191,9 +191,8 @@ func (a *Adapter) jsonEncode(ctx context.Context, value []byte) interface{} {
 	if err := json.Unmarshal(value, &payload); err != nil {
 		logger.Info("Error unmarshalling JSON: ", zap.Error(err))
 		return value
-	} else {
-		return payload
 	}
+	return payload
 }
 
 // newTLSConfig returns a *tls.Config using the given client cert, client key,

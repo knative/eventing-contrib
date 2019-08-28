@@ -171,11 +171,10 @@ func getLoggingConfigOrDie() map[string]string {
 					"callerEncoder": ""
 				}`,
 		}
-	} else {
-		cm, err := configmap.Load("/etc/config-logging")
-		if err != nil {
-			log.Fatalf("Error loading logging configuration: %v", err)
-		}
-		return cm
 	}
+	cm, err := configmap.Load("/etc/config-logging")
+	if err != nil {
+		log.Fatalf("Error loading logging configuration: %v", err)
+	}
+	return cm
 }
