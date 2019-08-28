@@ -43,7 +43,6 @@ func TestGenerateTopicNameWithHyphen(t *testing.T) {
 	}
 }
 
-
 func TestGetKafkaConfig(t *testing.T) {
 
 	testCases := []struct {
