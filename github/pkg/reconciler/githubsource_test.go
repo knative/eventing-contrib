@@ -30,16 +30,17 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/github/pkg/reconciler/resources"
-	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
-	"knative.dev/eventing-contrib/pkg/reconciler/eventtype"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/pkg/apis"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
-	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
+	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/github/pkg/reconciler/resources"
+	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
+	"knative.dev/eventing-contrib/pkg/reconciler/eventtype"
 )
 
 var (
@@ -48,7 +49,6 @@ var (
 )
 
 const (
-	image            = "knative.dev/test/image"
 	gitHubSourceName = "testgithubsource"
 	testNS           = "testnamespace"
 	gitHubSourceUID  = "2b2219e2-ce67-11e8-b3a3-42010a8a00af"
@@ -86,7 +86,7 @@ func init() {
 	// Add types to scheme
 	sourcesv1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme)
 	duckv1alpha1.AddToScheme(scheme.Scheme)
-	servingv1beta1.AddToScheme(scheme.Scheme)
+	servingv1alpha1.AddToScheme(scheme.Scheme)
 	eventingv1alpha1.AddToScheme(scheme.Scheme)
 }
 
@@ -194,19 +194,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -251,19 +251,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -310,19 +310,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -417,19 +417,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -542,19 +542,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -600,19 +600,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -655,19 +655,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -713,19 +713,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},
@@ -774,19 +774,19 @@ var testCases = []controllertesting.TestCase{
 			}(),
 			// service resource
 			func() runtime.Object {
-				svc := &servingv1beta1.Service{
+				svc := &servingv1alpha1.Service{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: testNS,
 						Name:      serviceName,
 					},
-					Status: servingv1beta1.ServiceStatus{
+					Status: servingv1alpha1.ServiceStatus{
 						Status: duckv1beta1.Status{
 							Conditions: duckv1beta1.Conditions{{
-								Type:   servingv1beta1.ServiceConditionReady,
+								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
 						},
-						RouteStatusFields: servingv1beta1.RouteStatusFields{
+						RouteStatusFields: servingv1alpha1.RouteStatusFields{
 							URL: &serviceURL,
 						},
 					},

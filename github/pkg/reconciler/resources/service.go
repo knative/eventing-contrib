@@ -22,13 +22,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
 	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
+
+	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 )
 
 // MakeService generates, but does not create, a Service for the given
 // GitHubSource.
-func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage string) *servingv1beta1.Service {
+func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage string) *servingv1alpha1.Service {
 	labels := map[string]string{
 		"receive-adapter": "github",
 	}
@@ -50,22 +52,24 @@ func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage strin
 		},
 	}
 	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI)}
-	return &servingv1beta1.Service{
+	return &servingv1alpha1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),
 			Namespace:    source.Namespace,
 			Labels:       labels,
 		},
-		Spec: servingv1beta1.ServiceSpec{
-			ConfigurationSpec: servingv1beta1.ConfigurationSpec{
-				Template: servingv1beta1.RevisionTemplateSpec{
-					Spec: servingv1beta1.RevisionSpec{
-						PodSpec: corev1.PodSpec{
-							Containers: []corev1.Container{{
-								Image: receiveAdapterImage,
-								Env:   env,
-								Args:  containerArgs,
-							}},
+		Spec: servingv1alpha1.ServiceSpec{
+			ConfigurationSpec: servingv1alpha1.ConfigurationSpec{
+				Template: &servingv1alpha1.RevisionTemplateSpec{
+					Spec: servingv1alpha1.RevisionSpec{
+						RevisionSpec: servingv1beta1.RevisionSpec{
+							PodSpec: corev1.PodSpec{
+								Containers: []corev1.Container{{
+									Image: receiveAdapterImage,
+									Env:   env,
+									Args:  containerArgs,
+								}},
+							},
 						},
 					},
 				},
