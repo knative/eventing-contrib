@@ -182,6 +182,23 @@ func (c *mockSaramaCluster) GetConsumerMode() cluster.ConsumerMode {
 	return c.consumerMode
 }
 
+// test util for various config checks
+func (d *KafkaDispatcher) checkConfigAndUpdate(config *multichannelfanout.Config) error {
+	if config == nil {
+		return errors.New("nil config")
+	}
+
+	if _, err := d.UpdateKafkaConsumers(config); err != nil {
+		// failed to update dispatchers consumers
+		return err
+	}
+	if err := d.UpdateHostToChannelMap(config); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func TestDispatcher_UpdateConfig(t *testing.T) {
 	testCases := []struct {
 		name             string
@@ -403,7 +420,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			d.setHostToChannelMap(map[string]provisioners.ChannelReference{})
 
 			// Initialize using oldConfig
-			err := d.UpdateConfig(tc.oldConfig)
+			err := d.checkConfigAndUpdate(tc.oldConfig)
 			if err != nil {
 
 				t.Errorf("unexpected error: %v", err)
@@ -422,7 +439,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			}
 
 			// Update with new config
-			err = d.UpdateConfig(tc.newConfig)
+			err = d.checkConfigAndUpdate(tc.newConfig)
 			if tc.createErr != "" {
 				if err == nil {
 					t.Errorf("Expected UpdateConfig error: '%v'. Actual nil", tc.createErr)
