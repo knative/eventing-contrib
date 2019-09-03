@@ -24,11 +24,10 @@ import (
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	"github.com/Shopify/sarama"
-	cluster "github.com/bsm/sarama-cluster"
+	"github.com/bsm/sarama-cluster"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/controller"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/provisioners"
 	"knative.dev/eventing/pkg/provisioners/multichannelfanout"
@@ -107,7 +106,7 @@ func (d *KafkaDispatcher) configDiff(updated *multichannelfanout.Config) string 
 	return cmp.Diff(d.getConfig(), updated)
 }
 
-// UpdateKafkaConsumers will be called by new CRD based kafka channel dispatcher controller, instead of UpdateConfig.
+// UpdateKafkaConsumers will be called by new CRD based kafka channel dispatcher controller.
 func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config) (map[eventingduck.SubscriberSpec]error, error) {
 	if config == nil {
 		return nil, fmt.Errorf("nil config")
@@ -147,7 +146,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 	return failedToSubscribe, nil
 }
 
-// UpdateHostToChannelMap will be called by new CRD based kafka channel dispatcher controller, instead of UpdateConfig.
+// UpdateHostToChannelMap will be called by new CRD based kafka channel dispatcher controller.
 func (d *KafkaDispatcher) UpdateHostToChannelMap(config *multichannelfanout.Config) error {
 	if config == nil {
 		return errors.New("nil config")
@@ -162,23 +161,6 @@ func (d *KafkaDispatcher) UpdateHostToChannelMap(config *multichannelfanout.Conf
 	}
 
 	d.setHostToChannelMap(hcMap)
-	return nil
-}
-
-// UpdateConfig is used by older kafka channel dispatcher controller that is based on ClusterChannelProvisioners model
-// Remove this function when the older channel code is deleted
-func (d *KafkaDispatcher) UpdateConfig(config *multichannelfanout.Config) error {
-	if config == nil {
-		return errors.New("nil config")
-	}
-
-	if _, err := d.UpdateKafkaConsumers(config); err != nil {
-		return err
-	}
-	if err := d.UpdateHostToChannelMap(config); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -231,7 +213,7 @@ func (d *KafkaDispatcher) subscribe(channelRef provisioners.ChannelReference, su
 	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
 
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
-	group := fmt.Sprintf("%s.%s", controller.Name, sub.UID)
+	group := fmt.Sprintf("%s.%s", "kafka", sub.UID)
 	consumer, err := d.kafkaCluster.NewConsumer(group, []string{topicName})
 
 	if err != nil {
