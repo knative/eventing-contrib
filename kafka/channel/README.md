@@ -5,21 +5,21 @@ topics.
 
 ## Deployment steps
 
-1. Setup [Knative Eventing](../../../DEVELOPMENT.md)
-1. If not done already, install an Apache Kafka cluster!
+1. Setup [Knative Eventing](../../DEVELOPMENT.md)
+Install an Apache Kafka cluster, if you have not done so already.
 
    - For Kubernetes a simple installation is done using the
      [Strimzi Kafka Operator](http://strimzi.io). Its installation
      [guides](http://strimzi.io/quickstarts/) provide content for Kubernetes and
      Openshift.
 
-   > Note: This _Channel_ is not limited to Apache Kafka installations on
+   > Note: This `KafkaChannel` is not limited to Apache Kafka installations on
    > Kubernetes. It is also possible to use an off-cluster Apache Kafka
    > installation.
 
 1. Now that Apache Kafka is installed, you need to configure the
    `bootstrapServers` value in the `config-kafka` ConfigMap, located inside the
-   `contrib/kafka/config/400-kafka-config.yaml` file:
+   `config/400-kafka-config.yaml` file:
 
    ```yaml
    apiVersion: v1
@@ -36,10 +36,10 @@ topics.
 1. Apply the Kafka config:
 
    ```
-   ko apply -f contrib/kafka/config
+   ko apply -f config
    ```
 
-1. Create the kafka channel custom objects:
+1. Create the `KafkaChannel` custom objects:
 
    ```yaml
    apiVersion: messaging.knative.dev/v1alpha1
