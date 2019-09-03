@@ -28,7 +28,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/controller"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/provisioners"
@@ -195,7 +194,7 @@ func (d *KafkaDispatcher) subscribe(channelRef provisioners.ChannelReference, su
 	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
 
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
-	groupID := fmt.Sprintf("%s.%s", controller.Name, sub.UID)
+	groupID := fmt.Sprintf("kafka.%s", sub.UID)
 
 	handler := consumerMessageHandler{sub, d.dispatcher }
 

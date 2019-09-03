@@ -17,6 +17,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	"sync"
@@ -76,7 +77,10 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 	consumerHandler := NewConsumerHandler(logger, handler)
 
 	go func() {
-		_ = consumerGroup.Consume(context.TODO(), topics, &consumerHandler)
+		err = consumerGroup.Consume(context.TODO(), topics, &consumerHandler)
+		if err != nil {
+			logger.Warn(fmt.Sprintf("Cannot start consuming topics %v: %v", topics, err))
+		}
 	}()
 
 	return customConsumerGroup{consumerHandler.errors, consumerGroup}, err

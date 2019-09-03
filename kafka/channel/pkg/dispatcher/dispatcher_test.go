@@ -1,6 +1,3 @@
-package dispatcher
-
-import (
 /*
 Copyright 2019 The Knative Authors
 
@@ -17,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+package dispatcher
+
+import (
 	"context"
 	"errors"
 	"io/ioutil"

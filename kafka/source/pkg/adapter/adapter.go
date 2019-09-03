@@ -158,7 +158,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	// Track errors
 	go func() {
 		for err := range group.Errors() {
-			logger.Error("An error has occoured while consuming messages occurred: ", zap.Error(err))
+			logger.Error("An error has occurred while consuming messages occurred: ", zap.Error(err))
 		}
 	}()
 
