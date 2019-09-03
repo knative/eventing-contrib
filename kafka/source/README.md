@@ -26,8 +26,8 @@ event sink.
    ```
 
 1. Create the `KafkaSource` custom objects, by configuring the required
-   `consumerGroup`, `bootstrapServers` and `topics` values on the CR file of your source.
-   Below is an example:
+   `consumerGroup`, `bootstrapServers` and `topics` values on the CR file of
+   your source. Below is an example:
 
    ```yaml
    apiVersion: sources.eventing.knative.dev/v1alpha1
@@ -48,4 +48,5 @@ event sink.
 
 ## Example
 
-A more detailed example of the `KafkaSource` can be found in the [Knative documentation](https://knative.dev/docs/eventing/samples/).
+A more detailed example of the `KafkaSource` can be found in the
+[Knative documentation](https://knative.dev/docs/eventing/samples/).
