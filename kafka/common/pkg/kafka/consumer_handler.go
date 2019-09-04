@@ -19,6 +19,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 )
@@ -42,9 +43,9 @@ type saramaConsumerHandler struct {
 
 func NewConsumerHandler(logger *zap.Logger, handler KafkaConsumerHandler) saramaConsumerHandler {
 	return saramaConsumerHandler{
-		logger:         logger,
-		handler: 		handler,
-		errors:         make(chan error, 10), // Some buffering to avoid blocking the message processing
+		logger:  logger,
+		handler: handler,
+		errors:  make(chan error, 10), // Some buffering to avoid blocking the message processing
 	}
 }
 

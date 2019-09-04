@@ -19,17 +19,18 @@ package kafka
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
-	"testing"
 )
 
 //------ Mocks
 
 type mockConsumerGroup struct {
-	mockInputMessageCh    chan *sarama.ConsumerMessage
+	mockInputMessageCh             chan *sarama.ConsumerMessage
 	mustGenerateConsumerGroupError bool
-	mustGenerateHandlerError bool
+	mustGenerateHandlerError       bool
 }
 
 func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
@@ -58,7 +59,7 @@ func (m mockConsumerGroup) Close() error {
 	return nil
 }
 
-func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMessage, mustGenerateConsumerGroupError bool, mustGenerateHandlerError bool, mustFail bool)  func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
+func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMessage, mustGenerateConsumerGroupError bool, mustGenerateHandlerError bool, mustFail bool) func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
 	if !mustFail {
 		return func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
 			return mockConsumerGroup{
@@ -121,5 +122,3 @@ func TestErrorWhileCreatingNewConsumerGroup(t *testing.T) {
 		t.Errorf("Should contain an error with message failed. Got %v", err)
 	}
 }
-
-
