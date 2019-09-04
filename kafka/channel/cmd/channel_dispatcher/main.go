@@ -67,7 +67,6 @@ func main() {
 	args := &dispatcher.KafkaDispatcherArgs{
 		ClientID:     "kafka-ch-dispatcher",
 		Brokers:      kafkaConfig.Brokers,
-		ConsumerMode: kafkaConfig.ConsumerMode,
 		TopicFunc:    utils.TopicName,
 		Logger:       logger.Desugar(),
 	}

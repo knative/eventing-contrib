@@ -25,6 +25,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -70,10 +71,11 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				BootstrapServers: "server1,server2",
 				ConsumerGroup:    "group",
 				SinkURI:          sinkServer.URL,
-				client: func() client.Client {
+				ceClient: func() client.Client {
 					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 					return c
 				}(),
+				logger: zap.NewNop(),
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})
@@ -90,7 +92,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: time.Now(),
 			}
 
-			err = a.postMessage(context.TODO(), m)
+			_, err = a.Handle(context.TODO(), m)
 
 			if tc.error && err == nil {
 				t.Errorf("expected error, but got %v", err)
@@ -323,4 +325,28 @@ func generateCert(t *testing.T) (string, string) {
 	}
 
 	return certOut.String(), keyOut.String()
+}
+
+func TestAdapterStartFailure(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+
+	adapter := &Adapter{
+		Net: AdapterNet {
+			AdapterSASL{},
+			AdapterTLS{},
+		},
+		logger: zap.NewNop(),
+		BootstrapServers: "example.com",
+		Topics: "bla",
+		ConsumerGroup: "my-group",
+		SinkURI: "example.com",
+		Name: "my-name",
+		Namespace: "my-namespace",
+	}
+
+	_ = adapter.Start(context.TODO(), make(chan struct{}))
 }
