@@ -331,7 +331,7 @@ func (s *SubscriptionsSupervisor) setHostToChannelMap(hcMap map[string]channels.
 }
 
 // NewHostNameToChannelRefMap parses each channel from cList and creates a map[string(Status.Address.HostName)]ChannelReference
-func NewHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]channels.ChannelReference, error) {
+func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]channels.ChannelReference, error) {
 	hostToChanMap := make(map[string]channels.ChannelReference, len(cList))
 	for _, c := range cList {
 		url := c.Status.Address.GetURL()
@@ -354,7 +354,7 @@ func NewHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]c
 // It will update internal hostToChannelMap which is used to resolve the hostHeader of the
 // incoming request to the correct ChannelReference in the receiver function.
 func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
-	hostToChanMap, err := NewHostNameToChannelRefMap(chanList)
+	hostToChanMap, err := newHostNameToChannelRefMap(chanList)
 	if err != nil {
 		logging.FromContext(ctx).Info("UpdateHostToChannelMap: Error occurred when creating the new hostToChannel map.", zap.Error(err))
 		return err
