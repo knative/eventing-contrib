@@ -25,13 +25,14 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -335,17 +336,17 @@ func TestAdapterStartFailure(t *testing.T) {
 	}()
 
 	adapter := &Adapter{
-		Net: AdapterNet {
+		Net: AdapterNet{
 			AdapterSASL{},
 			AdapterTLS{},
 		},
-		logger: zap.NewNop(),
+		logger:           zap.NewNop(),
 		BootstrapServers: "example.com",
-		Topics: "bla",
-		ConsumerGroup: "my-group",
-		SinkURI: "example.com",
-		Name: "my-name",
-		Namespace: "my-namespace",
+		Topics:           "bla",
+		ConsumerGroup:    "my-group",
+		SinkURI:          "example.com",
+		Name:             "my-name",
+		Namespace:        "my-namespace",
 	}
 
 	_ = adapter.Start(context.TODO(), make(chan struct{}))

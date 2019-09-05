@@ -65,10 +65,10 @@ func main() {
 	}
 
 	args := &dispatcher.KafkaDispatcherArgs{
-		ClientID:     "kafka-ch-dispatcher",
-		Brokers:      kafkaConfig.Brokers,
-		TopicFunc:    utils.TopicName,
-		Logger:       logger.Desugar(),
+		ClientID:  "kafka-ch-dispatcher",
+		Brokers:   kafkaConfig.Brokers,
+		TopicFunc: utils.TopicName,
+		Logger:    logger.Desugar(),
 	}
 	kafkaDispatcher, err := dispatcher.NewDispatcher(args)
 	if err != nil {
