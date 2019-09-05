@@ -1485,7 +1485,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e93cdc5e13233d2b70e4be14d5797abf32c8f5b5c44a2da965c6f2492764b6b1"
+  digest = "1:b2f4dc556930284be858120690c96124065612208b81cc197852456d6e7bd660"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1496,6 +1496,9 @@
     "pkg/apis/messaging/v1alpha1",
     "pkg/apis/sources",
     "pkg/apis/sources/v1alpha1",
+    "pkg/channel",
+    "pkg/channel/fanout",
+    "pkg/channel/multichannelfanout",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -1508,23 +1511,21 @@
     "pkg/configmap",
     "pkg/logconfig",
     "pkg/logging",
-    "pkg/provisioners",
-    "pkg/provisioners/fanout",
-    "pkg/provisioners/multichannelfanout",
     "pkg/reconciler/names",
     "pkg/tracing",
     "pkg/utils",
   ]
   pruneopts = "NUT"
-  revision = "ebe59f22c47c09881f723fb73fe21c7441528281"
+  revision = "14a2af1edc7464187c53025ab016454280d46430"
 
 [[projects]]
   branch = "master"
-  digest = "1:5e2eff8a4b0de901e3183489bcfa0a303ff249e74939b2259578ea23a093b5b8"
+  digest = "1:ff82ed45d16c5600150453ce4b44074e7b606fdc30be94a6e46bbf8acd48e0ca"
   name = "knative.dev/pkg"
   packages = [
     "apis",
     "apis/duck",
+    "apis/duck/v1",
     "apis/duck/v1alpha1",
     "apis/duck/v1beta1",
     "apis/istio",
@@ -1532,6 +1533,7 @@
     "apis/istio/authentication/v1alpha1",
     "apis/istio/common/v1alpha1",
     "apis/istio/v1alpha3",
+    "apis/v1alpha1",
     "changeset",
     "client/clientset/versioned",
     "client/clientset/versioned/fake",
@@ -1550,6 +1552,7 @@
     "logging/testing",
     "metrics",
     "metrics/metricskey",
+    "network",
     "ptr",
     "reconciler/testing",
     "signals",
@@ -1567,11 +1570,11 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "a6e24ef7e5b297969d6a87a45ac3ec6d7b3c5f0f"
+  revision = "a91557650ede935407f2bdaef5cce80465ef62e2"
 
 [[projects]]
   branch = "master"
-  digest = "1:a3473ba79ccddc4d623ffad42daa893be9a3da3305b8247c16f41c187633bc41"
+  digest = "1:b4349627d2f85d0023d95db7241fb09912a22be2e0ce11cc2d9c5d269d13492f"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1580,12 +1583,14 @@
     "pkg/apis/networking",
     "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
+    "pkg/apis/serving/v1",
     "pkg/apis/serving/v1alpha1",
     "pkg/apis/serving/v1beta1",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
     "pkg/client/clientset/versioned/typed/networking/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1",
     "pkg/client/clientset/versioned/typed/serving/v1alpha1",
     "pkg/client/clientset/versioned/typed/serving/v1beta1",
     "pkg/gc",
@@ -1593,18 +1598,18 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "a6a69f05dddad562f81539d6ef78b52cebc44226"
+  revision = "24ae126893d0b26ba621b5d874ed76d8d67cfcd3"
 
 [[projects]]
   branch = "master"
-  digest = "1:68050b4ce26531655bac0f6e109d04eb0a4550ead73e320119ed3c628ced4a0a"
+  digest = "1:230d4d8a9aa64db75413202a9d1cde3b80bcc417b858093f0fd27c2017bb4955"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "17f2331e80ad0d3e170ea2bae45c3922744f83af"
+  revision = "85ba5ed6514ca54a592e08cabb038cdd0c3d8946"
 
 [[projects]]
   digest = "1:399953e7c3ac9253dcf1fe909b0a74f6d1c4e974decefd6f5d361cab06249ccc"
@@ -1752,14 +1757,15 @@
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
+    "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing/pkg/channel",
+    "knative.dev/eventing/pkg/channel/fanout",
+    "knative.dev/eventing/pkg/channel/multichannelfanout",
     "knative.dev/eventing/pkg/client/clientset/versioned",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
-    "knative.dev/eventing/pkg/provisioners",
-    "knative.dev/eventing/pkg/provisioners/fanout",
-    "knative.dev/eventing/pkg/provisioners/multichannelfanout",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
@@ -1777,6 +1783,7 @@
     "knative.dev/pkg/logging/logkey",
     "knative.dev/pkg/logging/testing",
     "knative.dev/pkg/metrics",
+    "knative.dev/pkg/ptr",
     "knative.dev/pkg/reconciler/testing",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",

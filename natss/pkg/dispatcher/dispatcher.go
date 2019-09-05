@@ -30,9 +30,9 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
 	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/provisioners"
+	channels "knative.dev/eventing/pkg/channel"
 )
 
 const (
@@ -49,11 +49,11 @@ var (
 type SubscriptionsSupervisor struct {
 	logger *zap.Logger
 
-	receiver   *provisioners.MessageReceiver
-	dispatcher *provisioners.MessageDispatcher
+	receiver   *channels.MessageReceiver
+	dispatcher *channels.MessageDispatcher
 
 	subscriptionsMux sync.Mutex
-	subscriptions    map[provisioners.ChannelReference]map[subscriptionReference]*stan.Subscription
+	subscriptions    map[channels.ChannelReference]map[subscriptionReference]*stan.Subscription
 
 	connect   chan struct{}
 	natssURL  string
@@ -72,18 +72,18 @@ type SubscriptionsSupervisor struct {
 func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (*SubscriptionsSupervisor, error) {
 	d := &SubscriptionsSupervisor{
 		logger:        logger,
-		dispatcher:    provisioners.NewMessageDispatcher(logger.Sugar()),
+		dispatcher:    channels.NewMessageDispatcher(logger.Sugar()),
 		connect:       make(chan struct{}, maxElements),
 		natssURL:      natssURL,
 		clusterID:     clusterID,
 		clientID:      clientID,
-		subscriptions: make(map[provisioners.ChannelReference]map[subscriptionReference]*stan.Subscription),
+		subscriptions: make(map[channels.ChannelReference]map[subscriptionReference]*stan.Subscription),
 	}
-	d.setHostToChannelMap(map[string]provisioners.ChannelReference{})
-	receiver, err := provisioners.NewMessageReceiver(
+	d.setHostToChannelMap(map[string]channels.ChannelReference{})
+	receiver, err := channels.NewMessageReceiver(
 		createReceiverFunction(d, logger.Sugar()),
 		logger.Sugar(),
-		provisioners.ResolveChannelFromHostHeader(provisioners.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
+		channels.ResolveChannelFromHostHeader(channels.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +100,8 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 	}
 }
 
-func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) func(provisioners.ChannelReference, *provisioners.Message) error {
-	return func(channel provisioners.ChannelReference, m *provisioners.Message) error {
+func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) func(channels.ChannelReference, *channels.Message) error {
+	return func(channel channels.ChannelReference, m *channels.Message) error {
 		logger.Infof("Received message from %q channel", channel.String())
 		// publish to Natss
 		ch := getSubject(channel)
@@ -187,12 +187,12 @@ func (s *SubscriptionsSupervisor) Connect(stopCh <-chan struct{}) {
 // UpdateSubscriptions creates/deletes the natss subscriptions based on channel.Spec.Subscribable.Subscribers
 // Return type:map[eventingduck.SubscriberSpec]error --> Returns a map of subscriberSpec that failed with the value=error encountered.
 // Ignore the value in case error != nil
-func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *eventingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error) {
+func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error) {
 	s.subscriptionsMux.Lock()
 	defer s.subscriptionsMux.Unlock()
 
 	failedToSubscribe := make(map[eventingduck.SubscriberSpec]error)
-	cRef := provisioners.ChannelReference{Namespace: channel.Namespace, Name: channel.Name}
+	cRef := channels.ChannelReference{Namespace: channel.Namespace, Name: channel.Name}
 	if channel.Spec.Subscribable == nil || isFinalizer {
 		s.logger.Sugar().Infof("Empty subscriptions for channel Ref: %v; unsubscribe all active subscriptions, if any", cRef)
 		chMap, ok := s.subscriptions[cRef]
@@ -261,17 +261,17 @@ func toSubscriberStatus(subSpec *v1alpha1.SubscriberSpec, condition corev1.Condi
 	}
 }
 
-func (s *SubscriptionsSupervisor) subscribe(channel provisioners.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
+func (s *SubscriptionsSupervisor) subscribe(channel channels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	mcb := func(msg *stan.Msg) {
-		message := provisioners.Message{}
+		message := channels.Message{}
 		if err := json.Unmarshal(msg.Data, &message); err != nil {
 			s.logger.Error("Failed to unmarshal message: ", zap.Error(err))
 			return
 		}
 		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, headers: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, message.Headers)
-		if err := s.dispatcher.DispatchMessage(&message, subscription.SubscriberURI, subscription.ReplyURI, provisioners.DispatchDefaults{Namespace: channel.Namespace}); err != nil {
+		if err := s.dispatcher.DispatchMessage(&message, subscription.SubscriberURI, subscription.ReplyURI, channels.DispatchDefaults{Namespace: channel.Namespace}); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
@@ -304,7 +304,7 @@ func (s *SubscriptionsSupervisor) subscribe(channel provisioners.ChannelReferenc
 }
 
 // should be called only while holding subscriptionsMux
-func (s *SubscriptionsSupervisor) unsubscribe(channel provisioners.ChannelReference, subscription subscriptionReference) error {
+func (s *SubscriptionsSupervisor) unsubscribe(channel channels.ChannelReference, subscription subscriptionReference) error {
 	s.logger.Info("Unsubscribe from channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	if stanSub, ok := s.subscriptions[channel][subscription]; ok {
@@ -318,23 +318,43 @@ func (s *SubscriptionsSupervisor) unsubscribe(channel provisioners.ChannelRefere
 	return nil
 }
 
-func getSubject(channel provisioners.ChannelReference) string {
+func getSubject(channel channels.ChannelReference) string {
 	return channel.Name + "." + channel.Namespace
 }
 
-func (s *SubscriptionsSupervisor) getHostToChannelMap() map[string]provisioners.ChannelReference {
-	return s.hostToChannelMap.Load().(map[string]provisioners.ChannelReference)
+func (s *SubscriptionsSupervisor) getHostToChannelMap() map[string]channels.ChannelReference {
+	return s.hostToChannelMap.Load().(map[string]channels.ChannelReference)
 }
 
-func (s *SubscriptionsSupervisor) setHostToChannelMap(hcMap map[string]provisioners.ChannelReference) {
+func (s *SubscriptionsSupervisor) setHostToChannelMap(hcMap map[string]channels.ChannelReference) {
 	s.hostToChannelMap.Store(hcMap)
 }
+
+// NewHostNameToChannelRefMap parses each channel from cList and creates a map[string(Status.Address.HostName)]ChannelReference
+func NewHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]channels.ChannelReference, error) {
+	hostToChanMap := make(map[string]channels.ChannelReference, len(cList))
+	for _, c := range cList {
+		url := c.Status.Address.GetURL()
+		if cr, ok := hostToChanMap[url.Host]; ok {
+			return nil, fmt.Errorf(
+				"duplicate hostName found. Each channel must have a unique host header. HostName:%s, channel:%s.%s, channel:%s.%s",
+				url.Host,
+				c.Namespace,
+				c.Name,
+				cr.Namespace,
+				cr.Name)
+		}
+		hostToChanMap[url.Host] = channels.ChannelReference{Name: c.Name, Namespace: c.Namespace}
+	}
+	return hostToChanMap, nil
+}
+
 
 // UpdateHostToChannelMap will be called from the controller that watches natss channels.
 // It will update internal hostToChannelMap which is used to resolve the hostHeader of the
 // incoming request to the correct ChannelReference in the receiver function.
-func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, chanList []eventingv1alpha1.Channel) error {
-	hostToChanMap, err := provisioners.NewHostNameToChannelRefMap(chanList)
+func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
+	hostToChanMap, err := NewHostNameToChannelRefMap(chanList)
 	if err != nil {
 		logging.FromContext(ctx).Info("UpdateHostToChannelMap: Error occurred when creating the new hostToChannel map.", zap.Error(err))
 		return err
@@ -344,7 +364,7 @@ func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, ch
 	return nil
 }
 
-func (s *SubscriptionsSupervisor) getChannelReferenceFromHost(host string) (provisioners.ChannelReference, error) {
+func (s *SubscriptionsSupervisor) getChannelReferenceFromHost(host string) (channels.ChannelReference, error) {
 	chMap := s.getHostToChannelMap()
 	cr, ok := chMap[host]
 	if !ok {
