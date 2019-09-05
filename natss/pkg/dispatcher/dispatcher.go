@@ -335,7 +335,7 @@ func NewHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]c
 	hostToChanMap := make(map[string]channels.ChannelReference, len(cList))
 	for _, c := range cList {
 		url := c.Status.Address.GetURL()
-		if cr, ok := hostToChanMap[url.Host]; ok {
+		if cr, present := hostToChanMap[url.Host]; present {
 			return nil, fmt.Errorf(
 				"duplicate hostName found. Each channel must have a unique host header. HostName:%s, channel:%s.%s, channel:%s.%s",
 				url.Host,
