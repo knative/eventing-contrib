@@ -19,8 +19,6 @@ limitations under the License.
 package test
 
 import (
-	"flag"
-
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/logging"
 )
@@ -32,10 +30,11 @@ var EventingSourcesFlags = initializeEventingSourcesFlags()
 type EventingSourcesEnvironmentFlags struct {
 }
 
+// initializeEventingSourcesFlags registers flags used by e2e tests, calling flag.Parse() here would fail in
+// go1.13+, see https://github.com/knative/test-infra/issues/1329 for details
 func initializeEventingSourcesFlags() *EventingSourcesEnvironmentFlags {
 	var f EventingSourcesEnvironmentFlags
 
-	flag.Parse()
 	logging.InitializeLogger(pkgTest.Flags.LogVerbose)
 
 	if pkgTest.Flags.EmitMetrics {
