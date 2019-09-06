@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	BrokerConfigMapKey                 = "bootstrapServers"
-	KafkaChannelSeparator              = "."
+	BrokerConfigMapKey    = "bootstrapServers"
+	KafkaChannelSeparator = "."
 
 	// DefaultNumPartitions defines the default number of partitions
 	DefaultNumPartitions = 1
@@ -37,7 +37,7 @@ const (
 )
 
 type KafkaConfig struct {
-	Brokers      []string
+	Brokers []string
 }
 
 // GetKafkaConfig returns the details of the Kafka cluster.

@@ -17,9 +17,10 @@ package kafka
 
 import (
 	"context"
+	"sync"
+
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
-	"sync"
 )
 
 var newConsumerGroupFromClient = sarama.NewConsumerGroupFromClient
