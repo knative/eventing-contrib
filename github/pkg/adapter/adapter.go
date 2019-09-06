@@ -88,7 +88,7 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	event.SetSubject(subject)
 	event.SetData(payload)
 
-	_, err := a.client.Send(context.Background(), event)
+	_, _, err := a.client.Send(context.Background(), event)
 	return err
 }
 

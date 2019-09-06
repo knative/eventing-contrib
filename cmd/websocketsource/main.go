@@ -83,7 +83,7 @@ func main() {
 			}.AsV02(),
 			Data: message,
 		}
-		if _, err := ce.Send(context.TODO(), event); err != nil {
+		if _, _, err := ce.Send(context.TODO(), event); err != nil {
 			log.Printf("sending event to channel failed: %v", err)
 		}
 	}
