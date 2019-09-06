@@ -203,6 +203,11 @@ func (in *RevisionList) DeepCopyObject() runtime.Object {
 func (in *RevisionSpec) DeepCopyInto(out *RevisionSpec) {
 	*out = *in
 	in.PodSpec.DeepCopyInto(&out.PodSpec)
+	if in.ContainerConcurrency != nil {
+		in, out := &in.ContainerConcurrency, &out.ContainerConcurrency
+		*out = new(int64)
+		**out = **in
+	}
 	if in.TimeoutSeconds != nil {
 		in, out := &in.TimeoutSeconds, &out.TimeoutSeconds
 		*out = new(int64)
@@ -495,6 +500,11 @@ func (in *TrafficTarget) DeepCopyInto(out *TrafficTarget) {
 	if in.LatestRevision != nil {
 		in, out := &in.LatestRevision, &out.LatestRevision
 		*out = new(bool)
+		**out = **in
+	}
+	if in.Percent != nil {
+		in, out := &in.Percent, &out.Percent
+		*out = new(int64)
 		**out = **in
 	}
 	if in.URL != nil {

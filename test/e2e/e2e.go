@@ -23,7 +23,7 @@ import (
 	rbacV1beta1 "k8s.io/api/rbac/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/test"
-	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/logging"
 	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
@@ -100,7 +100,7 @@ func WithRouteReady(clients *test.Clients, logger logging.FormatLogger, cleaner 
 
 // CreateChannel will create a Channel
 func CreateChannel(clients *test.Clients, channel *v1alpha1.Channel, logger logging.FormatLogger, cleaner *test.Cleaner) error {
-	channels := clients.Eventing.EventingV1alpha1().Channels(pkgTest.Flags.Namespace)
+	channels := clients.Eventing.MessagingV1alpha1().Channels(pkgTest.Flags.Namespace)
 	res, err := channels.Create(channel)
 	if err != nil {
 		return err
@@ -111,7 +111,7 @@ func CreateChannel(clients *test.Clients, channel *v1alpha1.Channel, logger logg
 
 // CreateSubscription will create a Subscription
 func CreateSubscription(clients *test.Clients, subs *v1alpha1.Subscription, logger logging.FormatLogger, cleaner *test.Cleaner) error {
-	subscriptions := clients.Eventing.EventingV1alpha1().Subscriptions(pkgTest.Flags.Namespace)
+	subscriptions := clients.Eventing.MessagingV1alpha1().Subscriptions(pkgTest.Flags.Namespace)
 	res, err := subscriptions.Create(subs)
 	if err != nil {
 		return err

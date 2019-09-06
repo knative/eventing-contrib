@@ -33,8 +33,8 @@ import (
 	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/provisioners/fanout"
-	"knative.dev/eventing/pkg/provisioners/multichannelfanout"
+	"knative.dev/eventing/pkg/channel/fanout"
+	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/pkg/controller"
 )
 

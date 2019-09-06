@@ -25,6 +25,16 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/serving/pkg/apis/autoscaling"
 	"knative.dev/serving/pkg/apis/config"
+	routeconfig "knative.dev/serving/pkg/reconciler/route/config"
+)
+
+var (
+	allowedAnnotations = map[string]struct{}{
+		UpdaterAnnotation:                {},
+		CreatorAnnotation:                {},
+		RevisionLastPinnedAnnotationKey:  {},
+		GroupNamePrefix + "forceUpgrade": {},
+	}
 )
 
 // ValidateObjectMetadata validates that `metadata` stanza of the
@@ -38,7 +48,7 @@ func ValidateObjectMetadata(meta metav1.Object) *apis.FieldError {
 
 func validateKnativeAnnotations(annotations map[string]string) (errs *apis.FieldError) {
 	for key := range annotations {
-		if strings.HasPrefix(key, GroupNamePrefix) && key != UpdaterAnnotation && key != CreatorAnnotation && key != RevisionLastPinnedAnnotationKey {
+		if _, ok := allowedAnnotations[key]; !ok && strings.HasPrefix(key, GroupNamePrefix) {
 			errs = errs.Also(apis.ErrInvalidKeyName(key, apis.CurrentField))
 		}
 	}
@@ -75,4 +85,24 @@ func ValidateTimeoutSeconds(ctx context.Context, timeoutSeconds int64) *apis.Fie
 		}
 	}
 	return nil
+}
+
+// ValidateContainerConcurrency function validates the ContainerConcurrency field
+// TODO(#5007): Move this to autoscaling.
+func ValidateContainerConcurrency(containerConcurrency *int64) *apis.FieldError {
+	if containerConcurrency != nil {
+		if *containerConcurrency < 0 || *containerConcurrency > config.DefaultMaxRevisionContainerConcurrency {
+			return apis.ErrOutOfBoundsValue(
+				*containerConcurrency, 0, config.DefaultMaxRevisionContainerConcurrency, apis.CurrentField)
+		}
+	}
+	return nil
+}
+
+// ValidateClusterVisibilityLabel function validates the visibility label on a Route
+func ValidateClusterVisibilityLabel(label string) (errs *apis.FieldError) {
+	if label != routeconfig.VisibilityClusterLocal {
+		errs = apis.ErrInvalidValue(label, routeconfig.VisibilityLabelKey)
+	}
+	return
 }
