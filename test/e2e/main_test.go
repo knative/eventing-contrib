@@ -21,6 +21,7 @@ import (
 	"os"
 	"testing"
 
+	"knative.dev/eventing-contrib/test"
 	eventingTest "knative.dev/eventing/test"
 	"knative.dev/eventing/test/common"
 )
@@ -35,7 +36,7 @@ func TestMain(m *testing.M) {
 	eventingTest.InitializeEventingFlags()
 	channels = eventingTest.EventingFlags.Channels
 	channelTestRunner = common.ChannelTestRunner{
-		ChannelFeatureMap: common.ChannelFeatureMap,
+		ChannelFeatureMap: test.ChannelFeatureMap,
 		ChannelsToTest:    eventingTest.EventingFlags.Channels,
 	}
 	os.Exit(m.Run())
