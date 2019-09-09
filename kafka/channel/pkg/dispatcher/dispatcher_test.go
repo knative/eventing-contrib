@@ -20,9 +20,10 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 	"net/http"
 	"testing"
+
+	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
@@ -56,7 +57,7 @@ func (c mockKafkaConsumerFactory) StartConsumerGroup(groupID string, topics []st
 
 var _ kafka.KafkaConsumerGroupFactory = (*mockKafkaConsumerFactory)(nil)
 
-type mockConsumerGroup struct {}
+type mockConsumerGroup struct{}
 
 func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
 	return nil
@@ -303,10 +304,10 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Logf("Running %s", t.Name())
 			d := &KafkaDispatcher{
-				kafkaConsumerFactory:   &mockKafkaConsumerFactory{},
-				kafkaConsumerGroups: make(map[channels.ChannelReference]map[subscription]sarama.ConsumerGroup),
-				topicFunc:      utils.TopicName,
-				logger:         zap.NewNop(),
+				kafkaConsumerFactory: &mockKafkaConsumerFactory{},
+				kafkaConsumerGroups:  make(map[channels.ChannelReference]map[subscription]sarama.ConsumerGroup),
+				topicFunc:            utils.TopicName,
+				logger:               zap.NewNop(),
 			}
 			d.setConfig(&multichannelfanout.Config{})
 			d.setHostToChannelMap(map[string]channels.ChannelReference{})
@@ -432,11 +433,11 @@ func (h *dispatchTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 }
 
 func TestSubscribeError(t *testing.T) {
-	cf := &mockKafkaConsumerFactory{createErr:true}
+	cf := &mockKafkaConsumerFactory{createErr: true}
 	d := &KafkaDispatcher{
 		kafkaConsumerFactory: cf,
-		logger:       zap.NewNop(),
-		topicFunc:    utils.TopicName,
+		logger:               zap.NewNop(),
+		topicFunc:            utils.TopicName,
 	}
 
 	channelRef := channels.ChannelReference{
@@ -454,10 +455,10 @@ func TestSubscribeError(t *testing.T) {
 }
 
 func TestUnsubscribeUnknownSub(t *testing.T) {
-	cf := &mockKafkaConsumerFactory{createErr:true}
+	cf := &mockKafkaConsumerFactory{createErr: true}
 	d := &KafkaDispatcher{
 		kafkaConsumerFactory: cf,
-		logger:       zap.NewNop(),
+		logger:               zap.NewNop(),
 	}
 
 	channelRef := channels.ChannelReference{
@@ -496,10 +497,10 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 func TestNewDispatcher(t *testing.T) {
 
 	args := &KafkaDispatcherArgs{
-		ClientID:     "kafka-ch-dispatcher",
-		Brokers:      []string{"127.0.0.1:9092"},
-		TopicFunc:    utils.TopicName,
-		Logger:       nil,
+		ClientID:  "kafka-ch-dispatcher",
+		Brokers:   []string{"127.0.0.1:9092"},
+		TopicFunc: utils.TopicName,
+		Logger:    nil,
 	}
 	_, err := NewDispatcher(args)
 	if err == nil {
