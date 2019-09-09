@@ -75,13 +75,14 @@ func main() {
 	}
 
 	options := webhook.ControllerOptions{
-		ServiceName:    logconfig.WebhookName(),
-		DeploymentName: logconfig.WebhookName(),
-		Namespace:      system.Namespace(),
-		Port:           8443,
-		SecretName:     "messaging-webhook-certs",
-		WebhookName:    "webhook.messaging.knative.dev",
-		StatsReporter:  stats,
+		ServiceName:                     logconfig.WebhookName(),
+		DeploymentName:                  logconfig.WebhookName(),
+		Namespace:                       system.Namespace(),
+		Port:                            8443,
+		SecretName:                      "messaging-webhook-certs",
+		WebhookName:                     "webhook.messaging.knative.dev",
+		StatsReporter:                   stats,
+		ResourceAdmissionControllerPath: "/",
 	}
 
 	resourceHandlers := map[schema.GroupVersionKind]webhook.GenericCRD{
