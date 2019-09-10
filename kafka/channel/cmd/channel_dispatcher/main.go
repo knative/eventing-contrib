@@ -64,13 +64,13 @@ func main() {
 		logger.Fatalw("Error loading kafka config", zap.Error(err))
 	}
 	logger.Info("Starting the Kafka dispatcher")
-	logger.Info("Kafka broker configuration - ", utils.BrokerConfigMapKey + ": ", kafkaConfig.Brokers)
+	logger.Info("Kafka broker configuration - ", utils.BrokerConfigMapKey+": ", kafkaConfig.Brokers)
 
 	args := &dispatcher.KafkaDispatcherArgs{
-		ClientID:     "kafka-ch-dispatcher",
-		Brokers:      kafkaConfig.Brokers,
-		TopicFunc:    utils.TopicName,
-		Logger:       logger.Desugar(),
+		ClientID:  "kafka-ch-dispatcher",
+		Brokers:   kafkaConfig.Brokers,
+		TopicFunc: utils.TopicName,
+		Logger:    logger.Desugar(),
 	}
 	kafkaDispatcher, err := dispatcher.NewDispatcher(args)
 	if err != nil {

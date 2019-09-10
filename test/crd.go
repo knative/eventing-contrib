@@ -26,7 +26,6 @@ import (
 	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
-
 // Route returns a Route object in namespace
 func Route(name string, namespace string, configName string) *servingv1beta1.Route {
 	return &servingv1beta1.Route{
