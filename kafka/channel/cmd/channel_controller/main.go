@@ -68,7 +68,7 @@ func main() {
 		logger.Fatalw("Error loading kafka config", zap.Error(err))
 	}
 	logger.Info("Starting the Kafka controller")
-	logger.Info("Kafka broker configuration - ", utils.BrokerConfigMapKey + ": ", kafkaConfig.Brokers)
+	logger.Info("Kafka broker configuration - ", utils.BrokerConfigMapKey+": ", kafkaConfig.Brokers)
 
 	logger = logger.With(zap.String("controller/impl", "pkg"))
 

@@ -31,8 +31,8 @@ import (
 	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
-	"knative.dev/eventing/pkg/logging"
 	channels "knative.dev/eventing/pkg/channel"
+	"knative.dev/eventing/pkg/logging"
 )
 
 const (
@@ -348,7 +348,6 @@ func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]c
 	}
 	return hostToChanMap, nil
 }
-
 
 // UpdateHostToChannelMap will be called from the controller that watches natss channels.
 // It will update internal hostToChannelMap which is used to resolve the hostHeader of the

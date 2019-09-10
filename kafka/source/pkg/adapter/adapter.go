@@ -21,12 +21,14 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 	"strconv"
 	"strings"
 	"time"
 
+	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
+
 	"context"
+
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -63,7 +65,7 @@ type Adapter struct {
 	Name             string
 	Namespace        string
 	ceClient         client.Client
-	logger 			 *zap.Logger
+	logger           *zap.Logger
 }
 
 // --------------------------------------------------------------------

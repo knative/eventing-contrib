@@ -21,14 +21,14 @@ import (
 	"strings"
 	"syscall"
 
-	corev1 "k8s.io/api/core/v1"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/configmap"
 )
 
 const (
-	BrokerConfigMapKey                 = "bootstrapServers"
-	KafkaChannelSeparator              = "."
+	BrokerConfigMapKey    = "bootstrapServers"
+	KafkaChannelSeparator = "."
 
 	// DefaultNumPartitions defines the default number of partitions
 	DefaultNumPartitions = 1
@@ -44,7 +44,7 @@ var (
 )
 
 type KafkaConfig struct {
-	Brokers      []string
+	Brokers []string
 }
 
 // GetKafkaConfig returns the details of the Kafka cluster.
@@ -84,8 +84,8 @@ func TopicName(separator, namespace, name string) string {
 // of change of the watched ConfigMap but the map's initial state. See the comment for
 // knative.dev/pkg/configmap/watcher.Start()
 func KafkaConfigMapObserver(logger *zap.SugaredLogger) func(configMap *corev1.ConfigMap) {
-	return func (kafkaConfigMap *corev1.ConfigMap) {
-		if (firstKafkaConfigMapCall) {
+	return func(kafkaConfigMap *corev1.ConfigMap) {
+		if firstKafkaConfigMapCall {
 			firstKafkaConfigMapCall = false
 		} else {
 			logger.Info("Kafka broker configuration updated, restarting")

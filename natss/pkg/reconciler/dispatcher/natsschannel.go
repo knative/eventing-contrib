@@ -38,9 +38,9 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
-	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
+	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/controller"
 )
 

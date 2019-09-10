@@ -89,21 +89,21 @@ func TestGetKafkaConfig(t *testing.T) {
 			name: "partition consumer",
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "partitions"},
 			expected: &KafkaConfig{
-				Brokers:      []string{"kafkabroker.kafka:9092"},
+				Brokers: []string{"kafkabroker.kafka:9092"},
 			},
 		},
 		{
 			name: "default multiplex",
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "multiplex"},
 			expected: &KafkaConfig{
-				Brokers:      []string{"kafkabroker.kafka:9092"},
+				Brokers: []string{"kafkabroker.kafka:9092"},
 			},
 		},
 		{
 			name: "default multiplex from invalid consumerMode",
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "foo"},
 			expected: &KafkaConfig{
-				Brokers:      []string{"kafkabroker.kafka:9092"},
+				Brokers: []string{"kafkabroker.kafka:9092"},
 			},
 		},
 	}
