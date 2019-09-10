@@ -19,13 +19,16 @@ package utils
 import (
 	"fmt"
 	"strings"
+	"syscall"
 
+	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/configmap"
 )
 
 const (
-	BrokerConfigMapKey                 = "bootstrapServers"
-	KafkaChannelSeparator              = "."
+	BrokerConfigMapKey    = "bootstrapServers"
+	KafkaChannelSeparator = "."
 
 	// DefaultNumPartitions defines the default number of partitions
 	DefaultNumPartitions = 1
@@ -36,8 +39,12 @@ const (
 	knativeKafkaTopicPrefix = "knative-messaging-kafka"
 )
 
+var (
+	firstKafkaConfigMapCall = true
+)
+
 type KafkaConfig struct {
-	Brokers      []string
+	Brokers []string
 }
 
 // GetKafkaConfig returns the details of the Kafka cluster.
@@ -71,4 +78,18 @@ func GetKafkaConfig(path string) (*KafkaConfig, error) {
 func TopicName(separator, namespace, name string) string {
 	topic := []string{knativeKafkaTopicPrefix, namespace, name}
 	return strings.Join(topic, separator)
+}
+
+// We skip the first call into KafkaConfigMapObserver because it is not an indication
+// of change of the watched ConfigMap but the map's initial state. See the comment for
+// knative.dev/pkg/configmap/watcher.Start()
+func KafkaConfigMapObserver(logger *zap.SugaredLogger) func(configMap *corev1.ConfigMap) {
+	return func(kafkaConfigMap *corev1.ConfigMap) {
+		if firstKafkaConfigMapCall {
+			firstKafkaConfigMapCall = false
+		} else {
+			logger.Info("Kafka broker configuration updated, restarting")
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		}
+	}
 }

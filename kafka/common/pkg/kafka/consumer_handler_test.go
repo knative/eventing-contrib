@@ -20,9 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
-	"testing"
 )
 
 //------ Mocks
@@ -53,9 +54,11 @@ func (m *mockConsumerGroupSession) GenerationID() int32 {
 	return 0
 }
 
-func (m *mockConsumerGroupSession) MarkOffset(topic string, partition int32, offset int64, metadata string) {}
+func (m *mockConsumerGroupSession) MarkOffset(topic string, partition int32, offset int64, metadata string) {
+}
 
-func (m *mockConsumerGroupSession) ResetOffset(topic string, partition int32, offset int64, metadata string) {}
+func (m *mockConsumerGroupSession) ResetOffset(topic string, partition int32, offset int64, metadata string) {
+}
 
 func (m *mockConsumerGroupSession) MarkMessage(msg *sarama.ConsumerMessage, metadata string) {
 	m.marked = true
@@ -95,7 +98,7 @@ func (m mockConsumerGroupClaim) Messages() <-chan *sarama.ConsumerMessage {
 }
 
 type mockMessageHandler struct {
-	shouldErr bool
+	shouldErr  bool
 	shouldMark bool
 }
 
@@ -112,15 +115,15 @@ func (m mockMessageHandler) Handle(ctx context.Context, message *sarama.Consumer
 func Test(t *testing.T) {
 	tests := []mockMessageHandler{
 		{
-			shouldErr: false,
+			shouldErr:  false,
 			shouldMark: true,
 		},
 		{
-			shouldErr: true,
+			shouldErr:  true,
 			shouldMark: true,
 		},
 		{
-			shouldErr: true,
+			shouldErr:  true,
 			shouldMark: false,
 		},
 	}
@@ -135,7 +138,7 @@ func Test(t *testing.T) {
 			_ = cgh.ConsumeClaim(&session, claim)
 
 			if test.shouldErr {
-				e := <- cgh.errors
+				e := <-cgh.errors
 				if e.Error() != "bla" {
 					t.Errorf("Wrong error received %v", e)
 				}
@@ -152,5 +155,3 @@ func Test(t *testing.T) {
 		})
 	}
 }
-
-

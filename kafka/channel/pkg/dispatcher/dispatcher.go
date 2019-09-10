@@ -47,7 +47,7 @@ type KafkaDispatcher struct {
 	kafkaAsyncProducer  sarama.AsyncProducer
 	kafkaConsumerGroups map[channels.ChannelReference]map[subscription]sarama.ConsumerGroup
 	// consumerUpdateLock must be used to update kafkaConsumers
-	consumerUpdateLock sync.Mutex
+	consumerUpdateLock   sync.Mutex
 	kafkaConsumerFactory kafka.KafkaConsumerGroupFactory
 
 	topicFunc TopicFunc
@@ -57,14 +57,14 @@ type KafkaDispatcher struct {
 type TopicFunc func(separator, namespace, name string) string
 
 type KafkaDispatcherArgs struct {
-	ClientID     string
-	Brokers      []string
-	TopicFunc    TopicFunc
-	Logger       *zap.Logger
+	ClientID  string
+	Brokers   []string
+	TopicFunc TopicFunc
+	Logger    *zap.Logger
 }
 
 type consumerMessageHandler struct {
-	sub subscription
+	sub        subscription
 	dispatcher *channels.MessageDispatcher
 }
 
@@ -196,7 +196,7 @@ func (d *KafkaDispatcher) subscribe(channelRef channels.ChannelReference, sub su
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
 	groupID := fmt.Sprintf("kafka.%s", sub.UID)
 
-	handler := consumerMessageHandler{sub, d.dispatcher }
+	handler := consumerMessageHandler{sub, d.dispatcher}
 
 	consumerGroup, err := d.kafkaConsumerFactory.StartConsumerGroup(groupID, []string{topicName}, d.logger, handler)
 
@@ -267,11 +267,11 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 	}
 
 	dispatcher := &KafkaDispatcher{
-		dispatcher: channels.NewMessageDispatcher(args.Logger.Sugar()),
+		dispatcher:           channels.NewMessageDispatcher(args.Logger.Sugar()),
 		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(client),
-		kafkaConsumerGroups:     make(map[channels.ChannelReference]map[subscription]sarama.ConsumerGroup),
-		kafkaAsyncProducer: producer,
-		logger: args.Logger,
+		kafkaConsumerGroups:  make(map[channels.ChannelReference]map[subscription]sarama.ConsumerGroup),
+		kafkaAsyncProducer:   producer,
+		logger:               args.Logger,
 	}
 	receiverFunc, err := channels.NewMessageReceiver(
 		func(channel channels.ChannelReference, message *channels.Message) error {
