@@ -80,7 +80,7 @@ func main() {
 		Namespace:                       system.Namespace(),
 		Port:                            8443,
 		SecretName:                      "messaging-webhook-certs",
-		WebhookName:                     "webhook.messaging.knative.dev",
+		ResourceMutatingWebhookName:     "webhook.messaging.knative.dev",
 		StatsReporter:                   stats,
 		ResourceAdmissionControllerPath: "/",
 	}
