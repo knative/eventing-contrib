@@ -158,6 +158,6 @@ function kafka_teardown() {
 
 initialize $@ --skip-istio-addon
 
-go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=KafkaChannel || fail_test
+go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=NatssChannel || fail_test
 
 success
