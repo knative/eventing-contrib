@@ -16,3 +16,7 @@ limitations under the License.
 
 // Package sources contains sources API versions
 package sources
+
+const (
+	GroupName = "sources.eventing.knative.dev"
+)
