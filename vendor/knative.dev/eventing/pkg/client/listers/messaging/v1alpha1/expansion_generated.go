@@ -50,6 +50,9 @@ type SequenceListerExpansion interface{}
 // SequenceNamespaceLister.
 type SequenceNamespaceListerExpansion interface{}
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Add README and remove OWNERS
 
 // SubscriptionListerExpansion allows custom methods to be added to
 // SubscriptionLister.
@@ -58,5 +61,8 @@ type SubscriptionListerExpansion interface{}
 // SubscriptionNamespaceListerExpansion allows custom methods to be added to
 // SubscriptionNamespaceLister.
 type SubscriptionNamespaceListerExpansion interface{}
+<<<<<<< HEAD
 =======
 >>>>>>> rename importers to source to be consistent
+=======
+>>>>>>> Add README and remove OWNERS

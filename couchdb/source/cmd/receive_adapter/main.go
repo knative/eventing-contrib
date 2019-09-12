@@ -28,7 +28,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/adapter"
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/signals"
 )
 
@@ -64,12 +63,6 @@ func main() {
 
 	logger = logger.With(zap.String("controller/couchdb", "adapter"))
 	logger.Info("Starting the adapter")
-
-	if err = tracing.SetupStaticZipkinPublishing("couchdbsource", tracing.OnePercentSampling); err != nil {
-		// If tracing doesn't work, we will log an error, but allow the source to continue to
-		// start.
-		logger.Error("Error setting up Zipkin publishing", zap.Error(err))
-	}
 
 	eventsClient, err := kncloudevents.NewDefaultClient(env.SinkURI)
 	if err != nil {

@@ -6,3 +6,4 @@ bazel-*
 cover.out
 bin/
 *.swp
+.history

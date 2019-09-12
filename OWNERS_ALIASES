@@ -20,11 +20,6 @@ aliases:
   natss-reviewers:
     - Abd4llA
 
-  couchdb-approvers
-    - lionelvillard
-  couchdb-reviewers:
-    - lionelvillard
-
   productivity-approvers:
   - adrcunha
   - chaodaiG

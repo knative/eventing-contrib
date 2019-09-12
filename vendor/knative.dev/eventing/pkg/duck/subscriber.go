@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 <<<<<<< HEAD
+<<<<<<< HEAD
 	duckapis "knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
@@ -45,6 +46,15 @@ import (
 	"knative.dev/pkg/apis/duck"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 >>>>>>> rename importers to source to be consistent
+=======
+	duckapis "knative.dev/pkg/apis"
+	"knative.dev/pkg/apis/duck"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+
+	"knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing/pkg/logging"
+	"knative.dev/eventing/pkg/reconciler/names"
+>>>>>>> Add README and remove OWNERS
 )
 
 // DomainToURL converts a domain into an HTTP URL.

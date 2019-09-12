@@ -959,9 +959,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
+  digest = "1:c313aef534e493304f3666fbd24dca5932ebf776a82b7a40f961c9355794a1b1"
   name = "golang.org/x/sync"
-  packages = ["semaphore"]
+  packages = [
+    "errgroup",
+    "semaphore",
+  ]
   pruneopts = "NUT"
   revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
@@ -1521,7 +1524,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0b60bbea8266e01237a545858d70427b90287b72b4946f74e13d6ccc627bf2a7"
+  digest = "1:51da9d83a34017cb32dded808bd699c85c0b453238e0468866034a9e9e0d187c"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1563,9 +1566,6 @@
     "pkg/kncloudevents",
     "pkg/logconfig",
     "pkg/logging",
-    "pkg/provisioners",
-    "pkg/provisioners/fanout",
-    "pkg/provisioners/multichannelfanout",
     "pkg/reconciler",
     "pkg/reconciler/names",
     "pkg/reconciler/testing",
@@ -1622,6 +1622,7 @@
     "metrics",
     "metrics/metricskey",
     "network",
+    "profiling",
     "ptr",
     "reconciler/testing",
     "signals",
@@ -1830,9 +1831,6 @@
     "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
-    "knative.dev/eventing/pkg/provisioners",
-    "knative.dev/eventing/pkg/provisioners/fanout",
-    "knative.dev/eventing/pkg/provisioners/multichannelfanout",
     "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/tracing",
