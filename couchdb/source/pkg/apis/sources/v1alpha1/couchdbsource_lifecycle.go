@@ -39,6 +39,7 @@ const (
 var CouchDbCondSet = apis.NewLivingConditionSet(
 	CouchDbConditionSinkProvided,
 	CouchDbConditionDeployed,
+	CouchDbConditionEventTypeProvided,
 )
 
 // GetCondition returns the condition currently associated with the given type, or nil.
