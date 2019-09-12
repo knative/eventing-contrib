@@ -112,7 +112,7 @@ func main() {
 	var _ [numControllers - len(controllers)][len(controllers) - numControllers]int
 
 	// Watch the logging config map and dynamically update logging levels.
-	opt.ConfigMapWatcher.Watch(logconfig.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
+	opt.ConfigMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
 	// TODO: Watch the observability config map and dynamically update metrics exporter.
 	//opt.ConfigMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
 	if err := opt.ConfigMapWatcher.Start(stopCh); err != nil {
@@ -173,11 +173,10 @@ func getLoggingConfigOrDie() map[string]string {
 					"callerEncoder": ""
 				}`,
 		}
-	} else {
-		cm, err := configmap.Load("/etc/config-logging")
-		if err != nil {
-			log.Fatalf("Error loading logging configuration: %v", err)
-		}
-		return cm
 	}
+	cm, err := configmap.Load("/etc/config-logging")
+	if err != nil {
+		log.Fatalf("Error loading logging configuration: %v", err)
+	}
+	return cm
 }

@@ -25,11 +25,14 @@ import (
 	"strings"
 	"time"
 
+	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
+
+	"context"
+
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
@@ -61,46 +64,48 @@ type Adapter struct {
 	SinkURI          string
 	Name             string
 	Namespace        string
-	client           client.Client
+	ceClient         client.Client
+	logger           *zap.Logger
 }
 
 // --------------------------------------------------------------------
 
-// ConsumerGroupHandler functions to define message consume and related logic.
-func (a *Adapter) Setup(_ sarama.ConsumerGroupSession) error {
-	if a.client == nil {
-		var err error
-		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
-			return err
-		}
+func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool, error) {
+	jsonPayload, err := a.jsonEncode(msg.Value)
+
+	if err != nil {
+		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
 	}
-	return nil
-}
-func (a *Adapter) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
-func (a *Adapter) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 
-	logger := logging.FromContext(context.TODO())
+	event := cloudevents.New(cloudevents.CloudEventsVersionV02)
+	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
+	event.SetTime(msg.Timestamp)
+	event.SetType(sourcesv1alpha1.KafkaEventType)
+	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.Namespace, a.Name, msg.Topic))
+	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
+	event.SetExtension("key", string(msg.Key))
+	err = event.SetData(jsonPayload)
 
-	for msg := range claim.Messages() {
-		logger.Debug("Received: ", zap.String("topic:", msg.Topic),
-			zap.Int32("partition:", msg.Partition),
-			zap.Int64("offset:", msg.Offset))
-
-		// send and mark message if post was successful
-		if err := a.postMessage(context.TODO(), msg); err == nil {
-			sess.MarkMessage(msg, "")
-			logger.Debug("Successfully sent event to sink")
-		} else {
-			logger.Error("Sending event to sink failed: ", zap.Error(err))
-		}
+	if err != nil {
+		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
 	}
-	return nil
+
+	a.logger.Debug("Sending cloud event", zap.String("event", event.String()))
+
+	_, err = a.ceClient.Send(ctx, event)
+
+	if err != nil {
+		return false, err // Error while sending, don't commit offset
+	}
+
+	return true, nil
 }
 
 // --------------------------------------------------------------------
 
 func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	logger := logging.FromContext(ctx)
+	a.logger = logger.Desugar()
 
 	logger.Infow("Starting with config: ",
 		zap.String("BootstrapServers", a.BootstrapServers),
@@ -129,7 +134,15 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		kafkaConfig.Net.TLS.Config = tlsConfig
 	}
 
-	// Start with a client
+	// Start the cloud events client
+	if a.ceClient == nil {
+		var err error
+		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+			return err
+		}
+	}
+
+	// Start with a ceClient
 	client, err := sarama.NewClient(strings.Split(a.BootstrapServers, ","), kafkaConfig)
 	if err != nil {
 		panic(err)
@@ -137,7 +150,8 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	defer func() { _ = client.Close() }()
 
 	// init consumer group
-	group, err := sarama.NewConsumerGroupFromClient(a.ConsumerGroup, client)
+	consumerGroupFactory := kafka.NewConsumerGroupFactory(client)
+	group, err := consumerGroupFactory.StartConsumerGroup(a.ConsumerGroup, strings.Split(a.Topics, ","), logger.Desugar(), a)
 	if err != nil {
 		panic(err)
 	}
@@ -146,16 +160,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	// Track errors
 	go func() {
 		for err := range group.Errors() {
-			logger.Error("A consumer group error occurred: ", zap.Error(err))
-		}
-	}()
-
-	// Handle session
-	go func() {
-		for {
-			if err := group.Consume(ctx, strings.Split(a.Topics, ","), a); err != nil {
-				panic(err)
-			}
+			logger.Error("An error has occurred while consuming messages occurred: ", zap.Error(err))
 		}
 	}()
 
@@ -168,35 +173,17 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	}
 }
 
-func (a *Adapter) postMessage(ctx context.Context, msg *sarama.ConsumerMessage) error {
-
-	event := cloudevents.New(cloudevents.CloudEventsVersionV02)
-	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
-	event.SetTime(msg.Timestamp)
-	event.SetType(sourcesv1alpha1.KafkaEventType)
-	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.Namespace, a.Name, msg.Topic))
-	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
-	event.SetExtension("key", string(msg.Key))
-	event.SetData(a.jsonEncode(ctx, msg.Value))
-
-	_, err := a.client.Send(ctx, event)
-	return err
-}
-
-func (a *Adapter) jsonEncode(ctx context.Context, value []byte) interface{} {
+func (a *Adapter) jsonEncode(value []byte) (map[string]interface{}, error) {
 	var payload map[string]interface{}
 
-	logger := logging.FromContext(ctx)
-
 	if err := json.Unmarshal(value, &payload); err != nil {
-		logger.Info("Error unmarshalling JSON: ", zap.Error(err))
-		return value
+		return nil, err
 	} else {
-		return payload
+		return payload, nil
 	}
 }
 
-// newTLSConfig returns a *tls.Config using the given client cert, client key,
+// newTLSConfig returns a *tls.Config using the given ceClient cert, ceClient key,
 // and CA certificate. If none are appropriate, a nil *tls.Config is returned.
 func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
 	valid := false

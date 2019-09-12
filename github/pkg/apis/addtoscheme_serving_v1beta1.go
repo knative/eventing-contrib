@@ -16,11 +16,8 @@ limitations under the License.
 
 package apis
 
-import (
-	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
-)
-
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
-	AddToSchemes = append(AddToSchemes, servingv1beta1.SchemeBuilder.AddToScheme)
+	// TODO: add this back when we move to v1beta1 serving.
+	// AddToSchemes = append(AddToSchemes, servingv1beta1.SchemeBuilder.AddToScheme)
 }

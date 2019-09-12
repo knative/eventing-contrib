@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	"knative.dev/pkg/apis"
@@ -33,14 +32,11 @@ func (pa *PodAutoscaler) Validate(ctx context.Context) *apis.FieldError {
 }
 
 // Validate validates PodAutoscaler Spec.
-func (rs *PodAutoscalerSpec) Validate(ctx context.Context) *apis.FieldError {
-	if equality.Semantic.DeepEqual(rs, &PodAutoscalerSpec{}) {
+func (pa *PodAutoscalerSpec) Validate(ctx context.Context) *apis.FieldError {
+	if equality.Semantic.DeepEqual(pa, &PodAutoscalerSpec{}) {
 		return apis.ErrMissingField(apis.CurrentField)
 	}
-	errs := serving.ValidateNamespacedObjectReference(&rs.ScaleTargetRef).ViaField("scaleTargetRef")
-	errs = errs.Also(rs.ContainerConcurrency.Validate(ctx).
-		ViaField("containerConcurrency"))
-	return errs.Also(validateSKSFields(ctx, rs))
+	return serving.ValidateNamespacedObjectReference(&pa.ScaleTargetRef).ViaField("scaleTargetRef").Also(serving.ValidateContainerConcurrency(&pa.ContainerConcurrency).ViaField("containerConcurrency")).Also(validateSKSFields(ctx, pa))
 }
 
 func validateSKSFields(ctx context.Context, rs *PodAutoscalerSpec) (errs *apis.FieldError) {
@@ -52,24 +48,19 @@ func (pa *PodAutoscaler) validateMetric() *apis.FieldError {
 		switch pa.Class() {
 		case autoscaling.KPA:
 			switch metric {
-			case autoscaling.Concurrency:
+			case autoscaling.Concurrency, autoscaling.RPS:
 				return nil
 			}
 		case autoscaling.HPA:
 			switch metric {
-			case autoscaling.CPU, autoscaling.Concurrency:
+			case autoscaling.CPU, autoscaling.Concurrency, autoscaling.RPS:
 				return nil
 			}
-			// TODO: implement OPS autoscaling.
 		default:
 			// Leave other classes of PodAutoscaler alone.
 			return nil
 		}
-		return &apis.FieldError{
-			Message: fmt.Sprintf("Unsupported metric %q for PodAutoscaler class %q",
-				metric, pa.Class()),
-			Paths: []string{"annotations[autoscaling.knative.dev/metric]"},
-		}
+		return apis.ErrInvalidValue(metric, "autoscaling.knative.dev/metric").ViaField("annotations")
 	}
 	return nil
 }

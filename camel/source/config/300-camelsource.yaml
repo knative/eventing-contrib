@@ -65,6 +65,8 @@ spec:
                     context:
                       type: string
                   type: object
+                flow:
+                  type: string
                 integration:
                   type: object
               type: object

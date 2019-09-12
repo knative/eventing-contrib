@@ -63,13 +63,14 @@ func main() {
 	if err != nil {
 		logger.Fatalw("Error loading kafka config", zap.Error(err))
 	}
+	logger.Info("Starting the Kafka dispatcher")
+	logger.Info("Kafka broker configuration - ", utils.BrokerConfigMapKey+": ", kafkaConfig.Brokers)
 
 	args := &dispatcher.KafkaDispatcherArgs{
-		ClientID:     "kafka-ch-dispatcher",
-		Brokers:      kafkaConfig.Brokers,
-		ConsumerMode: kafkaConfig.ConsumerMode,
-		TopicFunc:    utils.TopicName,
-		Logger:       logger.Desugar(),
+		ClientID:  "kafka-ch-dispatcher",
+		Brokers:   kafkaConfig.Brokers,
+		TopicFunc: utils.TopicName,
+		Logger:    logger.Desugar(),
 	}
 	kafkaDispatcher, err := dispatcher.NewDispatcher(args)
 	if err != nil {
@@ -77,7 +78,6 @@ func main() {
 	}
 
 	logger = logger.With(zap.String("controller/impl", "pkg"))
-	logger.Info("Starting the Kafka dispatcher")
 
 	const numControllers = 1
 	cfg.QPS = numControllers * rest.DefaultQPS
@@ -106,12 +106,13 @@ func main() {
 	var _ [numControllers - len(controllers)][len(controllers) - numControllers]int
 
 	// Watch the logging config map and dynamically update logging levels.
-	opt.ConfigMapWatcher.Watch(logconfig.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
+	opt.ConfigMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
 	// TODO: Watch the observability config map and dynamically update metrics exporter.
 	//opt.ConfigMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
-
+	// Watch the config-kafka config map and restart if it changes
+	opt.ConfigMapWatcher.Watch("config-kafka", utils.KafkaConfigMapObserver(logger))
 	// Setup zipkin tracing.
-	if err = tracing.SetupDynamicZipkinPublishing(logger, opt.ConfigMapWatcher, "kafka-ch-dispatcher"); err != nil {
+	if err = tracing.SetupDynamicPublishing(logger, opt.ConfigMapWatcher, "kafka-ch-dispatcher"); err != nil {
 		logger.Fatalw("Error setting up Zipkin publishing", zap.Error(err))
 	}
 
@@ -171,11 +172,10 @@ func getLoggingConfigOrDie() map[string]string {
 					"callerEncoder": ""
 				}`,
 		}
-	} else {
-		cm, err := configmap.Load("/etc/config-logging")
-		if err != nil {
-			log.Fatalf("Error loading logging configuration: %v", err)
-		}
-		return cm
 	}
+	cm, err := configmap.Load("/etc/config-logging")
+	if err != nil {
+		log.Fatalf("Error loading logging configuration: %v", err)
+	}
+	return cm
 }

@@ -20,13 +20,10 @@ package test
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-	pkgTest "knative.dev/pkg/test"
-	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
-)
+	"knative.dev/pkg/ptr"
 
-const (
-	apiVersion = "eventing.knative.dev/v1alpha1"
+	"knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 )
 
 // Route returns a Route object in namespace
@@ -40,7 +37,7 @@ func Route(name string, namespace string, configName string) *servingv1beta1.Rou
 			Traffic: []servingv1beta1.TrafficTarget{
 				{
 					ConfigurationName: configName,
-					Percent:           100,
+					Percent:           ptr.Int64(100),
 				},
 			},
 		},
@@ -68,40 +65,6 @@ func Configuration(name string, namespace string, imagePath string) *servingv1be
 					},
 				},
 			},
-		},
-	}
-}
-
-// ClusterChannelProvisioner returns a ClusterChannelProvisioner for a given name
-func ClusterChannelProvisioner(name string) *corev1.ObjectReference {
-	return pkgTest.CoreV1ObjectReference("ClusterChannelProvisioner", apiVersion, name)
-}
-
-// ChannelRef returns an ObjectReference for a given Channel Name
-func ChannelRef(name string) *corev1.ObjectReference {
-	return pkgTest.CoreV1ObjectReference("Channel", apiVersion, name)
-}
-
-// Channel returns a Channel with the specified provisioner
-func Channel(name string, namespace string, provisioner *corev1.ObjectReference) *v1alpha1.Channel {
-	return &v1alpha1.Channel{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: v1alpha1.ChannelSpec{
-			Provisioner: provisioner,
-		},
-	}
-}
-
-// SubscriberSpecForRoute returns a SubscriberSpec for a given Knative Service.
-func SubscriberSpecForRoute(name string) *v1alpha1.SubscriberSpec {
-	return &v1alpha1.SubscriberSpec{
-		Ref: &corev1.ObjectReference{
-			Kind:       "Route",
-			APIVersion: "serving.knative.dev/v1alpha1",
-			Name:       name,
 		},
 	}
 }

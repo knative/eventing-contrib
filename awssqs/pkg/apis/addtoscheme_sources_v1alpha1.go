@@ -16,7 +16,7 @@ limitations under the License.
 
 package apis
 
-import "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+import "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
 
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back

@@ -2,13 +2,11 @@
 
 
 [[projects]]
-  digest = "1:a3a700fde960868375691c0ffb5fac44111249e9e12d47d9bfc9a3faf10f8694"
+  digest = "1:3c95041b75e8fb053961ea963ebe52551d6897b2e62a0be37e4c3fb21ac1dd59"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
     "container/apiv1",
-    "iam",
-    "internal/optional",
     "internal/version",
     "monitoring/apiv3",
     "trace/apiv2",
@@ -123,14 +121,6 @@
   packages = ["quantile"]
   pruneopts = "NUT"
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
-
-[[projects]]
-  digest = "1:be1e32779b5150a3e4341f584f14282db95feff53f60d49b17134a5710ac8ff9"
-  name = "github.com/bsm/sarama-cluster"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "c618e605e15c0d7535f6c96ff8efbb0dba4fd66c"
-  version = "v2.1.15"
 
 [[projects]]
   digest = "1:e7d26760c4e7d67a443b082153c4b473ad0b8f7388302a2f788b1360f751abb8"
@@ -946,12 +936,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c313aef534e493304f3666fbd24dca5932ebf776a82b7a40f961c9355794a1b1"
+  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
   name = "golang.org/x/sync"
-  packages = [
-    "errgroup",
-    "semaphore",
-  ]
+  packages = ["semaphore"]
   pruneopts = "NUT"
   revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
@@ -1068,7 +1055,7 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:20e41ea0a46968c5efef50d40ccb1c0afae9fa0384d32c3e5c86c48a779e4a37"
+  digest = "1:3689f4cc57cc55b4631efc4b778c47d2a888a7060b4108f42cf289a2033be5ba"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api",
@@ -1079,7 +1066,6 @@
     "googleapis/api/monitoredres",
     "googleapis/container/v1",
     "googleapis/devtools/cloudtrace/v2",
-    "googleapis/iam/v1",
     "googleapis/monitoring/v3",
     "googleapis/rpc/status",
     "protobuf/field_mask",
@@ -1206,17 +1192,11 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:e464a08adca7204feeb7c356010d02e0c2c9d20ac30d476235351be105e5132f"
+  digest = "1:b8a1dcc5f4e559b7af185ba12dd341cb8c175ea3d36227a02699b251ae5fde05"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
     "pkg/apis/apiextensions/v1beta1",
-    "pkg/client/clientset/clientset",
-    "pkg/client/clientset/clientset/fake",
-    "pkg/client/clientset/clientset/scheme",
-    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
-    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake",
-    "pkg/client/listers/apiextensions/v1beta1",
   ]
   pruneopts = "NUT"
   revision = "bd0469a053ff88529a61145790499fe78a09a49d"
@@ -1505,7 +1485,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bdbba8b7fa814fe85b2fd9a2bfb99d782ec3e3ff6f135cf9816b3f744a1d9df8"
+  digest = "1:b2f4dc556930284be858120690c96124065612208b81cc197852456d6e7bd660"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1516,6 +1496,9 @@
     "pkg/apis/messaging/v1alpha1",
     "pkg/apis/sources",
     "pkg/apis/sources/v1alpha1",
+    "pkg/channel",
+    "pkg/channel/fanout",
+    "pkg/channel/multichannelfanout",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -1525,34 +1508,24 @@
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
-    "pkg/client/injection/client",
-    "pkg/client/injection/client/fake",
-    "pkg/client/listers/eventing/v1alpha1",
-    "pkg/client/listers/messaging/v1alpha1",
-    "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
-    "pkg/duck",
     "pkg/logconfig",
     "pkg/logging",
-    "pkg/provisioners",
-    "pkg/provisioners/fanout",
-    "pkg/provisioners/multichannelfanout",
-    "pkg/provisioners/utils",
     "pkg/reconciler/names",
-    "pkg/reconciler/testing",
     "pkg/tracing",
     "pkg/utils",
   ]
   pruneopts = "NUT"
-  revision = "ebe59f22c47c09881f723fb73fe21c7441528281"
+  revision = "14a2af1edc7464187c53025ab016454280d46430"
 
 [[projects]]
   branch = "master"
-  digest = "1:5e2eff8a4b0de901e3183489bcfa0a303ff249e74939b2259578ea23a093b5b8"
+  digest = "1:ff82ed45d16c5600150453ce4b44074e7b606fdc30be94a6e46bbf8acd48e0ca"
   name = "knative.dev/pkg"
   packages = [
     "apis",
     "apis/duck",
+    "apis/duck/v1",
     "apis/duck/v1alpha1",
     "apis/duck/v1beta1",
     "apis/istio",
@@ -1560,6 +1533,7 @@
     "apis/istio/authentication/v1alpha1",
     "apis/istio/common/v1alpha1",
     "apis/istio/v1alpha3",
+    "apis/v1alpha1",
     "changeset",
     "client/clientset/versioned",
     "client/clientset/versioned/fake",
@@ -1571,10 +1545,6 @@
     "configmap",
     "controller",
     "injection",
-    "injection/clients/dynamicclient",
-    "injection/clients/dynamicclient/fake",
-    "injection/clients/kubeclient",
-    "injection/clients/kubeclient/fake",
     "kmeta",
     "kmp",
     "logging",
@@ -1582,6 +1552,7 @@
     "logging/testing",
     "metrics",
     "metrics/metricskey",
+    "network",
     "ptr",
     "reconciler/testing",
     "signals",
@@ -1599,11 +1570,11 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "a6e24ef7e5b297969d6a87a45ac3ec6d7b3c5f0f"
+  revision = "a91557650ede935407f2bdaef5cce80465ef62e2"
 
 [[projects]]
   branch = "master"
-  digest = "1:a3473ba79ccddc4d623ffad42daa893be9a3da3305b8247c16f41c187633bc41"
+  digest = "1:b4349627d2f85d0023d95db7241fb09912a22be2e0ce11cc2d9c5d269d13492f"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1612,12 +1583,14 @@
     "pkg/apis/networking",
     "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
+    "pkg/apis/serving/v1",
     "pkg/apis/serving/v1alpha1",
     "pkg/apis/serving/v1beta1",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
     "pkg/client/clientset/versioned/typed/networking/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1",
     "pkg/client/clientset/versioned/typed/serving/v1alpha1",
     "pkg/client/clientset/versioned/typed/serving/v1beta1",
     "pkg/gc",
@@ -1625,18 +1598,18 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "a6a69f05dddad562f81539d6ef78b52cebc44226"
+  revision = "24ae126893d0b26ba621b5d874ed76d8d67cfcd3"
 
 [[projects]]
   branch = "master"
-  digest = "1:68050b4ce26531655bac0f6e109d04eb0a4550ead73e320119ed3c628ced4a0a"
+  digest = "1:230d4d8a9aa64db75413202a9d1cde3b80bcc417b858093f0fd27c2017bb4955"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "17f2331e80ad0d3e170ea2bae45c3922744f83af"
+  revision = "85ba5ed6514ca54a592e08cabb038cdd0c3d8946"
 
 [[projects]]
   digest = "1:399953e7c3ac9253dcf1fe909b0a74f6d1c4e974decefd6f5d361cab06249ccc"
@@ -1715,7 +1688,6 @@
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",
-    "github.com/bsm/sarama-cluster",
     "github.com/cloudevents/sdk-go",
     "github.com/cloudevents/sdk-go/pkg/cloudevents",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/client",
@@ -1785,17 +1757,16 @@
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
+    "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing/pkg/channel",
+    "knative.dev/eventing/pkg/channel/fanout",
+    "knative.dev/eventing/pkg/channel/multichannelfanout",
     "knative.dev/eventing/pkg/client/clientset/versioned",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
-    "knative.dev/eventing/pkg/provisioners",
-    "knative.dev/eventing/pkg/provisioners/fanout",
-    "knative.dev/eventing/pkg/provisioners/multichannelfanout",
-    "knative.dev/eventing/pkg/provisioners/utils",
     "knative.dev/eventing/pkg/reconciler/names",
-    "knative.dev/eventing/pkg/reconciler/testing",
     "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/pkg/apis",
@@ -1812,6 +1783,7 @@
     "knative.dev/pkg/logging/logkey",
     "knative.dev/pkg/logging/testing",
     "knative.dev/pkg/metrics",
+    "knative.dev/pkg/ptr",
     "knative.dev/pkg/reconciler/testing",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
@@ -1819,6 +1791,7 @@
     "knative.dev/pkg/test",
     "knative.dev/pkg/test/logging",
     "knative.dev/pkg/webhook",
+    "knative.dev/serving/pkg/apis/serving/v1alpha1",
     "knative.dev/serving/pkg/apis/serving/v1beta1",
     "knative.dev/serving/pkg/client/clientset/versioned",
     "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1beta1",

@@ -61,7 +61,8 @@ func EnsureCamelKInstalled(cfg *rest.Config) {
 
 // IsCamelKInstalled checks if Camel K cluster resources are installed in the current cluster
 func IsCamelKInstalled(c controller.Client) (bool, error) {
-	ctx, _ := context.WithDeadline(context.Background(), time.Now().Add(requestTimeout))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(requestTimeout))
+	defer cancel()
 	opts := controller.ListOptions{
 		LabelSelector: labels.SelectorFromSet(labels.Set{"app": "camel-k"}),
 	}

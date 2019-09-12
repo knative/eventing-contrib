@@ -345,9 +345,8 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alp
 				return nil, err
 			}
 			return svc, nil
-		} else {
-			logger.Error("Unable to get the channel service", zap.Error(err))
 		}
+		logger.Error("Unable to get the channel service", zap.Error(err))
 		return nil, err
 	}
 	// Check to make sure that the KafkaChannel owns this service and if not, complain.
