@@ -20,7 +20,6 @@ which gcloud &> /dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
 set -o errexit
 
 function upload_test_images() {
-  echo ">> Publishing test images"
   local image_dirs="$(find $(dirname $0)/test_images -mindepth 1 -maxdepth 1 -type d)"
   local docker_tag=$1
 
