@@ -1485,7 +1485,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b2f4dc556930284be858120690c96124065612208b81cc197852456d6e7bd660"
+  digest = "1:976d041f6c80cc5d52180622c3ece1879ebd360c17bbc00d02a5b71d48bc13c5"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1516,7 +1516,7 @@
     "pkg/utils",
   ]
   pruneopts = "NUT"
-  revision = "14a2af1edc7464187c53025ab016454280d46430"
+  revision = "2024418959749f09451967d0dd061905dc7d3da5"
 
 [[projects]]
   branch = "release-0.9"
