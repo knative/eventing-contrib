@@ -92,7 +92,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 
 	a.logger.Debug("Sending cloud event", zap.String("event", event.String()))
 
-	_, err = a.ceClient.Send(ctx, event)
+	_, _, err = a.ceClient.Send(ctx, event)
 
 	if err != nil {
 		return false, err // Error while sending, don't commit offset

@@ -118,7 +118,7 @@ func main() {
 			Data: hb,
 		}
 
-		if _, err := c.Send(context.Background(), event); err != nil {
+		if _, _, err := c.Send(context.Background(), event); err != nil {
 			log.Printf("failed to send cloudevent: %s", err.Error())
 		}
 		// Wait for next tick

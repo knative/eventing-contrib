@@ -105,9 +105,9 @@ required = [
   name = "github.com/gorilla/websocket"
   version = "1.4.0"
 
-[[override]]
+[[constraint]]
   name = "github.com/cloudevents/sdk-go"
-  version = "=0.7.0"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/apache/camel-k"
