@@ -81,6 +81,7 @@ func main() {
 		Port:                            8443,
 		SecretName:                      "messaging-webhook-certs",
 		StatsReporter:                   stats,
+		ResourceMutatingWebhookName:     "webhook.messaging.knative.dev",
 		ResourceAdmissionControllerPath: "/",
 	}
 
