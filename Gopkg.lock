@@ -1519,7 +1519,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0d226d7915d77a1072338aa6a23b6e087cfcb784fea921f2143813b76c3be760"
+  digest = "1:5ab69d2a5c254c09c218b95dc7c6feaf14c6a2035d7356aba7c7fa0fb096970d"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1563,15 +1563,16 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "8a9e86f71b97c70a441ec2e1f053343dd477db93"
+  revision = "2024418959749f09451967d0dd061905dc7d3da5"
 
 [[projects]]
-  branch = "master"
-  digest = "1:ff82ed45d16c5600150453ce4b44074e7b606fdc30be94a6e46bbf8acd48e0ca"
+  branch = "release-0.9"
+  digest = "1:19beb74b5d34a69dc256f965c3ef2519fdb2ae74590174b1231a1f0da7e26fd4"
   name = "knative.dev/pkg"
   packages = [
     "apis",
     "apis/duck",
+    "apis/duck/v1",
     "apis/duck/v1alpha1",
     "apis/duck/v1beta1",
     "apis/istio",
@@ -1588,13 +1589,13 @@
     "client/clientset/versioned/typed/authentication/v1alpha1/fake",
     "client/clientset/versioned/typed/istio/v1alpha3",
     "client/clientset/versioned/typed/istio/v1alpha3/fake",
+    "client/injection/kube/client",
+    "client/injection/kube/client/fake",
     "configmap",
     "controller",
     "injection",
     "injection/clients/dynamicclient",
     "injection/clients/dynamicclient/fake",
-    "injection/clients/kubeclient",
-    "injection/clients/kubeclient/fake",
     "kmeta",
     "kmp",
     "logging",
@@ -1621,7 +1622,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "a91557650ede935407f2bdaef5cce80465ef62e2"
+  revision = "74659889c421b26b9a416fd203f5a8d3e602bfb2"
 
 [[projects]]
   branch = "master"
