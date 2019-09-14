@@ -527,6 +527,18 @@
   version = "v0.8.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:927762c6729b4e72957ba3310e485ed09cf8451c5a637a52fd016a9fe09e7936"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    "buffer",
+    "jlexer",
+    "jwriter",
+  ]
+  pruneopts = "NUT"
+  revision = "1b2b06f5f209fea48ff5922d8bfb2b9ed5d8f00b"
+
+[[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
   name = "github.com/markbates/inflect"
   packages = ["."]
@@ -1218,14 +1230,17 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:51f330b7a61ac0e8b6e082490586ff2b18008eb514a67eccbe5ec78ffd32ee25"
+  digest = "1:e464a08adca7204feeb7c356010d02e0c2c9d20ac30d476235351be105e5132f"
   name = "k8s.io/apiextensions-apiserver"
   packages = [
     "pkg/apis/apiextensions",
     "pkg/apis/apiextensions/v1beta1",
     "pkg/client/clientset/clientset",
+    "pkg/client/clientset/clientset/fake",
     "pkg/client/clientset/clientset/scheme",
     "pkg/client/clientset/clientset/typed/apiextensions/v1beta1",
+    "pkg/client/clientset/clientset/typed/apiextensions/v1beta1/fake",
+    "pkg/client/listers/apiextensions/v1beta1",
   ]
   pruneopts = "NUT"
   revision = "bd0469a053ff88529a61145790499fe78a09a49d"
@@ -1524,7 +1539,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:51da9d83a34017cb32dded808bd699c85c0b453238e0468866034a9e9e0d187c"
+  digest = "1:87245facc9ae4d8ec1da3834cd1931b7f575355a34378fe97b0349c0aa30fd53"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1556,12 +1571,14 @@
     "pkg/client/informers/externalversions/sources",
     "pkg/client/informers/externalversions/sources/v1alpha1",
     "pkg/client/injection/client",
-    "pkg/client/injection/informers/eventing/factory",
+    "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
+    "pkg/client/injection/informers/factory",
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
+    "pkg/defaultchannel",
     "pkg/duck",
     "pkg/kncloudevents",
     "pkg/logconfig",
@@ -1606,13 +1623,13 @@
     "client/clientset/versioned/typed/istio/v1alpha3/fake",
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
+    "client/injection/kube/informers/apps/v1/deployment",
+    "client/injection/kube/informers/factory",
     "configmap",
     "controller",
     "injection",
     "injection/clients/dynamicclient",
-    "injection/clients/kubeclient",
-    "injection/informers/kubeinformers/appsv1/deployment",
-    "injection/informers/kubeinformers/factory",
+    "injection/clients/dynamicclient/fake",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -1794,6 +1811,7 @@
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/util/validation",
+    "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
@@ -1844,10 +1862,10 @@
     "knative.dev/pkg/apis/duck/v1alpha1",
     "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/client/clientset/versioned/fake",
+    "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
-    "knative.dev/pkg/injection/informers/kubeinformers/appsv1/deployment",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/kmp",

@@ -24,9 +24,9 @@ import (
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
+	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	deploymentinformer "knative.dev/pkg/injection/informers/kubeinformers/appsv1/deployment"
 
 	"knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client"
 	couchdbinformer "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/sources/v1alpha1/couchdbsource"
@@ -53,10 +53,10 @@ func NewController(
 	resourceInformer := duck.NewResourceInformer(ctx)
 
 	r := &Reconciler{
-		Base:                  reconciler.NewBase(ctx, controllerAgentName, cmw),
+		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
 		couchdbsourceLister: couchdbSourceInformer.Lister(),
-		deploymentLister:      deploymentInformer.Lister(),
-		couchdbClientSet:      client.Get(ctx),
+		deploymentLister:    deploymentInformer.Lister(),
+		couchdbClientSet:    client.Get(ctx),
 	}
 	impl := controller.NewImpl(r, r.Logger, ReconcilerName)
 

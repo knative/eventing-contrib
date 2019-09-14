@@ -93,7 +93,7 @@ func (a *adapter) send() (done bool, err error) {
 				return false, err
 			}
 
-			if _, err := a.ce.Send(context.Background(), *event); err != nil {
+			if _, _, err := a.ce.Send(context.Background(), *event); err != nil {
 				a.logger.Info("event delivery failed", zap.Error(err))
 				return false, err
 			}
