@@ -25,7 +25,7 @@ commands from the root.
 ### Create a channel and subscriber
 
 ```shell
-ko apply -f contrib/awssqs/samples/display-resources.yaml
+ko apply -f awssqs/samples/display-resources.yaml
 ```
 
 The sample provided will configure an in-memory channel (named `awssqs-test` and
@@ -57,7 +57,7 @@ kubectl -n knative-sources create secret generic awssqs-source-credentials --fro
 Deploy the `AwsSqsSource` controller as part of eventing-source's controller.
 
 ```shell
-ko -n default apply -f contrib/awssqs/config/
+ko -n default apply -f awssqs/config/
 ```
 
 Note that if the `Source` Service Account secret is in a non-default location,
@@ -75,7 +75,7 @@ Replace the place holders in `samples/awssqs-source.yaml`.
 Now deploy `awssqs-source.yaml`.
 
 ```shell
-ko apply -f contrib/awssqs/samples/awssqs-source.yaml
+ko apply -f awssqs/samples/awssqs-source.yaml
 ```
 
 You can use [kail](https://github.com/boz/kail/) to tail the logs of the

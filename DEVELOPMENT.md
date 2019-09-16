@@ -62,7 +62,7 @@ of the sources _Github Source_, _AWS SQS Source_, _Camel Source_, _Kafka Source_
 with:
 
 ```
-ko apply -f contrib/<source_name>/
+ko apply -f <source_name>/config  # e.g. github/config
 ```
 
 These commands are idempotent, so you can run them at any time to update your
@@ -92,7 +92,7 @@ As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
-- **If you change a type definition (contrib/<source_name>/pkg/apis/),** then
+- **If you change a type definition (<source_name>/pkg/apis/),** then
   you must run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This
   also runs [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 
@@ -123,7 +123,7 @@ Running tests as you make changes to the code-base is pretty simple. See
 You can delete `Knative Sources` with:
 
 ```shell
-ko delete -f contrib/<source_name>/config/
+ko delete -f <source_name>/config/
 ```
 
 <!--
