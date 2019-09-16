@@ -22,10 +22,25 @@ import (
 	"path/filepath"
 	"testing"
 
-	cluster "github.com/bsm/sarama-cluster"
 	"github.com/google/go-cmp/cmp"
 	_ "knative.dev/pkg/system/testing"
 )
+
+func TestGenerateTopicNameWithDot(t *testing.T) {
+	expected := "knative-messaging-kafka.channel-namespace.channel-name"
+	actual := TopicName(".", "channel-namespace", "channel-name")
+	if expected != actual {
+		t.Errorf("Expected '%s'. Actual '%s'", expected, actual)
+	}
+}
+
+func TestGenerateTopicNameWithHyphen(t *testing.T) {
+	expected := "knative-messaging-kafka-channel-namespace-channel-name"
+	actual := TopicName("-", "channel-namespace", "channel-name")
+	if expected != actual {
+		t.Errorf("Expected '%s'. Actual '%s'", expected, actual)
+	}
+}
 
 func TestGetKafkaConfig(t *testing.T) {
 
@@ -74,24 +89,21 @@ func TestGetKafkaConfig(t *testing.T) {
 			name: "partition consumer",
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "partitions"},
 			expected: &KafkaConfig{
-				Brokers:      []string{"kafkabroker.kafka:9092"},
-				ConsumerMode: cluster.ConsumerModePartitions,
+				Brokers: []string{"kafkabroker.kafka:9092"},
 			},
 		},
 		{
 			name: "default multiplex",
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "multiplex"},
 			expected: &KafkaConfig{
-				Brokers:      []string{"kafkabroker.kafka:9092"},
-				ConsumerMode: cluster.ConsumerModeMultiplex,
+				Brokers: []string{"kafkabroker.kafka:9092"},
 			},
 		},
 		{
 			name: "default multiplex from invalid consumerMode",
 			data: map[string]string{"bootstrapServers": "kafkabroker.kafka:9092", "consumerMode": "foo"},
 			expected: &KafkaConfig{
-				Brokers:      []string{"kafkabroker.kafka:9092"},
-				ConsumerMode: cluster.ConsumerModeMultiplex,
+				Brokers: []string{"kafkabroker.kafka:9092"},
 			},
 		},
 	}

@@ -1,18 +1,31 @@
+/*
+Copyright 2019 The Knative Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package dispatcher
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
-	"sync"
-	"sync/atomic"
 	"testing"
 
-	"knative.dev/eventing/pkg/provisioners/utils"
+	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 
-	cluster "github.com/bsm/sarama-cluster"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
 	"github.com/Shopify/sarama"
 	"github.com/google/go-cmp/cmp"
@@ -21,165 +34,62 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	"knative.dev/eventing/pkg/provisioners"
-	"knative.dev/eventing/pkg/provisioners/fanout"
-	"knative.dev/eventing/pkg/provisioners/multichannelfanout"
+	channels "knative.dev/eventing/pkg/channel"
+	"knative.dev/eventing/pkg/channel/fanout"
+	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	_ "knative.dev/pkg/system/testing"
 )
 
-type mockConsumer struct {
-	message    chan *sarama.ConsumerMessage
-	partitions chan cluster.PartitionConsumer
-}
+//----- Mocks
 
-func (c *mockConsumer) Messages() <-chan *sarama.ConsumerMessage {
-	return c.message
-}
-
-func (c *mockConsumer) Partitions() <-chan cluster.PartitionConsumer {
-	return c.partitions
-}
-
-func (c *mockConsumer) Close() error {
-	return nil
-}
-
-func (c *mockConsumer) MarkOffset(msg *sarama.ConsumerMessage, metadata string) {
-	return
-}
-
-type mockPartitionConsumer struct {
-	highWaterMarkOffset int64
-	l                   sync.Mutex
-	topic               string
-	partition           int32
-	offset              int64
-	messages            chan *sarama.ConsumerMessage
-	errors              chan *sarama.ConsumerError
-	singleClose         sync.Once
-	consumed            bool
-}
-
-// AsyncClose implements the AsyncClose method from the sarama.PartitionConsumer interface.
-func (pc *mockPartitionConsumer) AsyncClose() {
-	pc.singleClose.Do(func() {
-		close(pc.messages)
-		close(pc.errors)
-	})
-}
-
-// Close implements the Close method from the sarama.PartitionConsumer interface. It will
-// verify whether the partition consumer was actually started.
-func (pc *mockPartitionConsumer) Close() error {
-	if !pc.consumed {
-		return fmt.Errorf("Expectations set on %s/%d, but no partition consumer was started.", pc.topic, pc.partition)
-	}
-	pc.AsyncClose()
-	var (
-		closeErr error
-		wg       sync.WaitGroup
-	)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		var errs = make(sarama.ConsumerErrors, 0)
-		for err := range pc.errors {
-			errs = append(errs, err)
-		}
-		if len(errs) > 0 {
-			closeErr = errs
-		}
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for range pc.messages {
-			// drain
-		}
-	}()
-	wg.Wait()
-	return closeErr
-}
-
-// Errors implements the Errors method from the sarama.PartitionConsumer interface.
-func (pc *mockPartitionConsumer) Errors() <-chan *sarama.ConsumerError {
-	return pc.errors
-}
-
-// Messages implements the Messages method from the sarama.PartitionConsumer interface.
-func (pc *mockPartitionConsumer) Messages() <-chan *sarama.ConsumerMessage {
-	return pc.messages
-}
-
-func (pc *mockPartitionConsumer) HighWaterMarkOffset() int64 {
-	return atomic.LoadInt64(&pc.highWaterMarkOffset) + 1
-}
-
-func (pc *mockPartitionConsumer) Topic() string {
-	return pc.topic
-}
-
-// Partition returns the consumed partition
-func (pc *mockPartitionConsumer) Partition() int32 {
-	return pc.partition
-}
-
-// InitialOffset returns the offset used for creating the PartitionConsumer instance.
-// The returned offset can be a literal offset, or OffsetNewest, or OffsetOldest
-func (pc *mockPartitionConsumer) InitialOffset() int64 {
-	return 0
-}
-
-// MarkOffset marks the offset of a message as preocessed.
-func (pc *mockPartitionConsumer) MarkOffset(offset int64, metadata string) {
-}
-
-// ResetOffset resets the offset to a previously processed message.
-func (pc *mockPartitionConsumer) ResetOffset(offset int64, metadata string) {
-	pc.offset = 0
-}
-
-type mockSaramaCluster struct {
-	// closed closes the message channel so that it doesn't block during the test
-	closed bool
-	// Handle to the latest created consumer, useful to access underlying message chan
-	consumerChannel chan *sarama.ConsumerMessage
-	// Handle to the latest created partition consumer, useful to access underlying message chan
-	partitionConsumerChannel chan cluster.PartitionConsumer
+type mockKafkaConsumerFactory struct {
 	// createErr will return an error when creating a consumer
 	createErr bool
-	// consumer mode
-	consumerMode cluster.ConsumerMode
 }
 
-func (c *mockSaramaCluster) NewConsumer(groupID string, topics []string) (KafkaConsumer, error) {
+func (c mockKafkaConsumerFactory) StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler kafka.KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
 	if c.createErr {
 		return nil, errors.New("error creating consumer")
 	}
 
-	var consumer *mockConsumer
-	if c.consumerMode != cluster.ConsumerModePartitions {
-		consumer = &mockConsumer{
-			message: make(chan *sarama.ConsumerMessage),
-		}
-		if c.closed {
-			close(consumer.message)
-		}
-		c.consumerChannel = consumer.message
-	} else {
-		consumer = &mockConsumer{
-			partitions: make(chan cluster.PartitionConsumer),
-		}
-		if c.closed {
-			close(consumer.partitions)
-		}
-		c.partitionConsumerChannel = consumer.partitions
-	}
-	return consumer, nil
+	return mockConsumerGroup{}, nil
 }
 
-func (c *mockSaramaCluster) GetConsumerMode() cluster.ConsumerMode {
-	return c.consumerMode
+var _ kafka.KafkaConsumerGroupFactory = (*mockKafkaConsumerFactory)(nil)
+
+type mockConsumerGroup struct{}
+
+func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
+	return nil
+}
+
+func (m mockConsumerGroup) Errors() <-chan error {
+	return nil
+}
+
+func (m mockConsumerGroup) Close() error {
+	return nil
+}
+
+var _ sarama.ConsumerGroup = (*mockConsumerGroup)(nil)
+
+//----- Tests
+
+// test util for various config checks
+func (d *KafkaDispatcher) checkConfigAndUpdate(config *multichannelfanout.Config) error {
+	if config == nil {
+		return errors.New("nil config")
+	}
+
+	if _, err := d.UpdateKafkaConsumers(config); err != nil {
+		// failed to update dispatchers consumers
+		return err
+	}
+	if err := d.UpdateHostToChannelMap(config); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func TestDispatcher_UpdateConfig(t *testing.T) {
@@ -190,23 +100,23 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		subscribes       []string
 		unsubscribes     []string
 		createErr        string
-		oldHostToChanMap map[string]provisioners.ChannelReference
-		newHostToChanMap map[string]provisioners.ChannelReference
+		oldHostToChanMap map[string]channels.ChannelReference
+		newHostToChanMap map[string]channels.ChannelReference
 	}{
 		{
 			name:             "nil config",
 			oldConfig:        &multichannelfanout.Config{},
 			newConfig:        nil,
 			createErr:        "nil config",
-			oldHostToChanMap: map[string]provisioners.ChannelReference{},
-			newHostToChanMap: map[string]provisioners.ChannelReference{},
+			oldHostToChanMap: map[string]channels.ChannelReference{},
+			newHostToChanMap: map[string]channels.ChannelReference{},
 		},
 		{
 			name:             "same config",
 			oldConfig:        &multichannelfanout.Config{},
 			newConfig:        &multichannelfanout.Config{},
-			oldHostToChanMap: map[string]provisioners.ChannelReference{},
-			newHostToChanMap: map[string]provisioners.ChannelReference{},
+			oldHostToChanMap: map[string]channels.ChannelReference{},
+			newHostToChanMap: map[string]channels.ChannelReference{},
 		},
 		{
 			name:      "config with no subscription",
@@ -220,8 +130,8 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 					},
 				},
 			},
-			oldHostToChanMap: map[string]provisioners.ChannelReference{},
-			newHostToChanMap: map[string]provisioners.ChannelReference{
+			oldHostToChanMap: map[string]channels.ChannelReference{},
+			newHostToChanMap: map[string]channels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
 		},
@@ -250,8 +160,8 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				},
 			},
 			subscribes:       []string{"subscription-1", "subscription-2"},
-			oldHostToChanMap: map[string]provisioners.ChannelReference{},
-			newHostToChanMap: map[string]provisioners.ChannelReference{
+			oldHostToChanMap: map[string]channels.ChannelReference{},
+			newHostToChanMap: map[string]channels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
 		},
@@ -297,10 +207,10 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			},
 			subscribes:   []string{"subscription-2", "subscription-3"},
 			unsubscribes: []string{"subscription-1"},
-			oldHostToChanMap: map[string]provisioners.ChannelReference{
+			oldHostToChanMap: map[string]channels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
-			newHostToChanMap: map[string]provisioners.ChannelReference{
+			newHostToChanMap: map[string]channels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
 		},
@@ -360,10 +270,10 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			},
 			subscribes:   []string{"subscription-1", "subscription-3", "subscription-4"},
 			unsubscribes: []string{"subscription-2"},
-			oldHostToChanMap: map[string]provisioners.ChannelReference{
+			oldHostToChanMap: map[string]channels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel-1", Namespace: "default"},
 			},
-			newHostToChanMap: map[string]provisioners.ChannelReference{
+			newHostToChanMap: map[string]channels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel-1", Namespace: "default"},
 				"e.f.g.h": {Name: "test-channel-2", Namespace: "default"},
 			},
@@ -386,7 +296,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				},
 			},
 			createErr:        "duplicate hostName found. Each channel must have a unique host header. HostName:a.b.c.d, channel:default.test-channel-2, channel:default.test-channel-1",
-			oldHostToChanMap: map[string]provisioners.ChannelReference{},
+			oldHostToChanMap: map[string]channels.ChannelReference{},
 		},
 	}
 
@@ -394,22 +304,22 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Logf("Running %s", t.Name())
 			d := &KafkaDispatcher{
-				kafkaCluster:   &mockSaramaCluster{closed: true},
-				kafkaConsumers: make(map[provisioners.ChannelReference]map[subscription]KafkaConsumer),
-				topicFunc:      utils.TopicName,
-				logger:         zap.NewNop(),
+				kafkaConsumerFactory: &mockKafkaConsumerFactory{},
+				kafkaConsumerGroups:  make(map[channels.ChannelReference]map[subscription]sarama.ConsumerGroup),
+				topicFunc:            utils.TopicName,
+				logger:               zap.NewNop(),
 			}
 			d.setConfig(&multichannelfanout.Config{})
-			d.setHostToChannelMap(map[string]provisioners.ChannelReference{})
+			d.setHostToChannelMap(map[string]channels.ChannelReference{})
 
 			// Initialize using oldConfig
-			err := d.UpdateConfig(tc.oldConfig)
+			err := d.checkConfigAndUpdate(tc.oldConfig)
 			if err != nil {
 
 				t.Errorf("unexpected error: %v", err)
 			}
 			oldSubscribers := sets.NewString()
-			for _, subMap := range d.kafkaConsumers {
+			for _, subMap := range d.kafkaConsumerGroups {
 				for sub := range subMap {
 					oldSubscribers.Insert(sub.UID)
 				}
@@ -422,7 +332,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			}
 
 			// Update with new config
-			err = d.UpdateConfig(tc.newConfig)
+			err = d.checkConfigAndUpdate(tc.newConfig)
 			if tc.createErr != "" {
 				if err == nil {
 					t.Errorf("Expected UpdateConfig error: '%v'. Actual nil", tc.createErr)
@@ -435,7 +345,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			}
 
 			var newSubscribers []string
-			for _, subMap := range d.kafkaConsumers {
+			for _, subMap := range d.kafkaConsumerGroups {
 				for sub := range subMap {
 					newSubscribers = append(newSubscribers, sub.UID)
 				}
@@ -463,7 +373,7 @@ func TestFromKafkaMessage(t *testing.T) {
 		},
 		Value: data,
 	}
-	want := &provisioners.Message{
+	want := &channels.Message{
 		Headers: map[string]string{
 			"k1": "v1",
 		},
@@ -477,18 +387,18 @@ func TestFromKafkaMessage(t *testing.T) {
 
 func TestToKafkaMessage(t *testing.T) {
 	data := []byte("data")
-	channelRef := provisioners.ChannelReference{
+	channelRef := channels.ChannelReference{
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
-	msg := &provisioners.Message{
+	msg := &channels.Message{
 		Headers: map[string]string{
 			"k1": "v1",
 		},
 		Payload: data,
 	}
 	want := &sarama.ProducerMessage{
-		Topic: "knative-eventing-channel.test-ns.test-channel",
+		Topic: "knative-messaging-kafka.test-ns.test-channel",
 		Headers: []sarama.RecordHeader{
 			{
 				Key:   []byte("k1"),
@@ -522,113 +432,15 @@ func (h *dispatchTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.done <- true
 }
 
-func TestSubscribe(t *testing.T) {
-	sc := &mockSaramaCluster{}
-	data := []byte("data")
-	d := &KafkaDispatcher{
-		kafkaCluster:   sc,
-		kafkaConsumers: make(map[provisioners.ChannelReference]map[subscription]KafkaConsumer),
-		dispatcher:     provisioners.NewMessageDispatcher(zap.NewNop().Sugar()),
-		logger:         zap.NewNop(),
-		topicFunc:      utils.TopicName,
-	}
-
-	testHandler := &dispatchTestHandler{
-		t:       t,
-		payload: data,
-		done:    make(chan bool)}
-
-	server := httptest.NewServer(testHandler)
-	defer server.Close()
-
-	channelRef := provisioners.ChannelReference{
-		Name:      "test-channel",
-		Namespace: "test-ns",
-	}
-
-	subRef := subscription{
-		UID:           "test-sub",
-		SubscriberURI: server.URL[7:],
-	}
-	err := d.subscribe(channelRef, subRef)
-	if err != nil {
-		t.Errorf("unexpected error %s", err)
-	}
-	defer close(sc.consumerChannel)
-	sc.consumerChannel <- &sarama.ConsumerMessage{
-		Headers: []*sarama.RecordHeader{
-			{
-				Key:   []byte("k1"),
-				Value: []byte("v1"),
-			},
-		},
-		Value: data,
-	}
-
-	<-testHandler.done
-
-}
-
-func TestPartitionConsumer(t *testing.T) {
-	sc := &mockSaramaCluster{consumerMode: cluster.ConsumerModePartitions}
-	data := []byte("data")
-	d := &KafkaDispatcher{
-		kafkaCluster:   sc,
-		kafkaConsumers: make(map[provisioners.ChannelReference]map[subscription]KafkaConsumer),
-		dispatcher:     provisioners.NewMessageDispatcher(zap.NewNop().Sugar()),
-		logger:         zap.NewNop(),
-		topicFunc:      utils.TopicName,
-	}
-	testHandler := &dispatchTestHandler{
-		t:       t,
-		payload: data,
-		done:    make(chan bool)}
-	server := httptest.NewServer(testHandler)
-	defer server.Close()
-	channelRef := provisioners.ChannelReference{
-		Name:      "test-channel",
-		Namespace: "test-ns",
-	}
-	subRef := subscription{
-		UID:           "test-sub",
-		SubscriberURI: server.URL[7:],
-	}
-	err := d.subscribe(channelRef, subRef)
-	if err != nil {
-		t.Errorf("unexpected error %s", err)
-	}
-	defer close(sc.partitionConsumerChannel)
-	pc := &mockPartitionConsumer{
-		topic:     channelRef.Name,
-		partition: 1,
-		messages:  make(chan *sarama.ConsumerMessage, 1),
-	}
-	pc.messages <- &sarama.ConsumerMessage{
-		Topic:     channelRef.Name,
-		Partition: 1,
-		Headers: []*sarama.RecordHeader{
-			{
-				Key:   []byte("k1"),
-				Value: []byte("v1"),
-			},
-		},
-		Value: data,
-	}
-	sc.partitionConsumerChannel <- pc
-	<-testHandler.done
-}
-
 func TestSubscribeError(t *testing.T) {
-	sc := &mockSaramaCluster{
-		createErr: true,
-	}
+	cf := &mockKafkaConsumerFactory{createErr: true}
 	d := &KafkaDispatcher{
-		kafkaCluster: sc,
-		logger:       zap.NewNop(),
-		topicFunc:    utils.TopicName,
+		kafkaConsumerFactory: cf,
+		logger:               zap.NewNop(),
+		topicFunc:            utils.TopicName,
 	}
 
-	channelRef := provisioners.ChannelReference{
+	channelRef := channels.ChannelReference{
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
@@ -643,15 +455,13 @@ func TestSubscribeError(t *testing.T) {
 }
 
 func TestUnsubscribeUnknownSub(t *testing.T) {
-	sc := &mockSaramaCluster{
-		createErr: true,
-	}
+	cf := &mockKafkaConsumerFactory{createErr: true}
 	d := &KafkaDispatcher{
-		kafkaCluster: sc,
-		logger:       zap.NewNop(),
+		kafkaConsumerFactory: cf,
+		logger:               zap.NewNop(),
 	}
 
-	channelRef := provisioners.ChannelReference{
+	channelRef := channels.ChannelReference{
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
@@ -671,7 +481,7 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}
 
-	receiver, err := provisioners.NewMessageReceiver(func(channel provisioners.ChannelReference, message *provisioners.Message) error {
+	receiver, err := channels.NewMessageReceiver(func(channel channels.ChannelReference, message *channels.Message) error {
 		return nil
 	}, zap.NewNop().Sugar())
 	if err != nil {
@@ -681,6 +491,20 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 	err = d.Start(make(chan struct{}))
 	if err == nil {
 		t.Errorf("Expected error want %s, got %s", "kafkaAsyncProducer is not set", err)
+	}
+}
+
+func TestNewDispatcher(t *testing.T) {
+
+	args := &KafkaDispatcherArgs{
+		ClientID:  "kafka-ch-dispatcher",
+		Brokers:   []string{"127.0.0.1:9092"},
+		TopicFunc: utils.TopicName,
+		Logger:    nil,
+	}
+	_, err := NewDispatcher(args)
+	if err == nil {
+		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}
 }
 

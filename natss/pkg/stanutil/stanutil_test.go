@@ -23,7 +23,7 @@ import (
 
 	"github.com/nats-io/nats-streaming-server/server"
 	"go.uber.org/zap"
-	"knative.dev/eventing/pkg/provisioners"
+	channels "knative.dev/eventing/pkg/channel"
 	_ "knative.dev/pkg/system/testing"
 )
 
@@ -38,7 +38,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logger = provisioners.NewProvisionerLoggerFromConfig(provisioners.NewLoggingConfig())
+	logger = channels.NewProvisionerLoggerFromConfig(channels.NewLoggingConfig())
 	defer logger.Sync()
 
 	stanServer, err := startNatss()

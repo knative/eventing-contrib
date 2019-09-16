@@ -67,9 +67,10 @@ func main() {
 	if err != nil {
 		logger.Fatalw("Error loading kafka config", zap.Error(err))
 	}
+	logger.Info("Starting the Kafka controller")
+	logger.Info("Kafka broker configuration - ", utils.BrokerConfigMapKey+": ", kafkaConfig.Brokers)
 
 	logger = logger.With(zap.String("controller/impl", "pkg"))
-	logger.Info("Starting the Kafka controller")
 
 	systemNS := system.Namespace()
 
@@ -113,9 +114,11 @@ func main() {
 	var _ [numControllers - len(controllers)][len(controllers) - numControllers]int
 
 	// Watch the logging config map and dynamically update logging levels.
-	opt.ConfigMapWatcher.Watch(logconfig.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
+	opt.ConfigMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
 	// TODO: Watch the observability config map and dynamically update metrics exporter.
 	//opt.ConfigMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
+	// Watch the config-kafka config map and restart if it changes
+	opt.ConfigMapWatcher.Watch("config-kafka", utils.KafkaConfigMapObserver(logger))
 	if err := opt.ConfigMapWatcher.Start(stopCh); err != nil {
 		logger.Fatalw("failed to start configuration manager", zap.Error(err))
 	}
@@ -174,11 +177,10 @@ func getLoggingConfigOrDie() map[string]string {
 					"callerEncoder": ""
 				}`,
 		}
-	} else {
-		cm, err := configmap.Load("/etc/config-logging")
-		if err != nil {
-			log.Fatalf("Error loading logging configuration: %v", err)
-		}
-		return cm
 	}
+	cm, err := configmap.Load("/etc/config-logging")
+	if err != nil {
+		log.Fatalf("Error loading logging configuration: %v", err)
+	}
+	return cm
 }

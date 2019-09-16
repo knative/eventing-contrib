@@ -37,10 +37,10 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing/pkg/channel/fanout"
+	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/provisioners/fanout"
-	"knative.dev/eventing/pkg/provisioners/multichannelfanout"
 	"knative.dev/pkg/controller"
 )
 
@@ -178,7 +178,7 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 		return err
 	}
 
-	channels := make([]eventingv1alpha1.Channel, 0)
+	channels := make([]messagingv1alpha1.Channel, 0)
 	for _, nc := range natssChannels {
 		if nc.Status.IsReady() {
 			channels = append(channels, *toChannel(nc))
@@ -281,19 +281,19 @@ func removeFinalizer(channel *v1alpha1.NatssChannel) {
 	channel.Finalizers = finalizers.List()
 }
 
-func toChannel(natssChannel *v1alpha1.NatssChannel) *eventingv1alpha1.Channel {
-	channel := &eventingv1alpha1.Channel{
+func toChannel(natssChannel *v1alpha1.NatssChannel) *messagingv1alpha1.Channel {
+	channel := &messagingv1alpha1.Channel{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      natssChannel.Name,
 			Namespace: natssChannel.Namespace,
 		},
-		Spec: eventingv1alpha1.ChannelSpec{
+		Spec: messagingv1alpha1.ChannelSpec{
 			Subscribable: natssChannel.Spec.Subscribable,
 		},
 	}
 	if natssChannel.Status.Address != nil {
-		channel.Status = eventingv1alpha1.ChannelStatus{
-			Address: *natssChannel.Status.Address,
+		channel.Status = messagingv1alpha1.ChannelStatus{
+			AddressStatus: natssChannel.Status.AddressStatus,
 		}
 	}
 	return channel

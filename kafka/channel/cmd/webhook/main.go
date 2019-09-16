@@ -16,6 +16,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 
@@ -66,7 +67,7 @@ func main() {
 	// Watch the logging config map and dynamically update logging levels.
 	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.Namespace())
 
-	configMapWatcher.Watch(logconfig.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.WebhookName()))
+	configMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.WebhookName()))
 
 	stats, err := webhook.NewStatsReporter()
 	if err != nil {
@@ -74,24 +75,34 @@ func main() {
 	}
 
 	options := webhook.ControllerOptions{
-		ServiceName:    logconfig.WebhookName(),
-		DeploymentName: logconfig.WebhookName(),
-		Namespace:      system.Namespace(),
-		Port:           8443,
-		SecretName:     "messaging-webhook-certs",
-		WebhookName:    "webhook.messaging.knative.dev",
-		StatsReporter:  stats,
+		ServiceName:                     logconfig.WebhookName(),
+		DeploymentName:                  logconfig.WebhookName(),
+		Namespace:                       system.Namespace(),
+		Port:                            8443,
+		SecretName:                      "messaging-webhook-certs",
+		StatsReporter:                   stats,
+		ResourceMutatingWebhookName:     "webhook.messaging.knative.dev",
+		ResourceAdmissionControllerPath: "/",
 	}
-	controller := webhook.AdmissionController{
-		Client:  kubeClient,
-		Options: options,
 
-		Handlers: map[schema.GroupVersionKind]webhook.GenericCRD{
-			// For group messaging.knative.dev
-			messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
-		},
-		Logger: logger,
+	resourceHandlers := map[schema.GroupVersionKind]webhook.GenericCRD{
+		// For group messaging.knative.dev
+		messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
 	}
+
+	// Decorate contexts with the current state of the config.
+	ctxFunc := func(ctx context.Context) context.Context {
+		// TODO: implement upgrades when eventing needs it:
+		//  return v1beta1.WithUpgradeViaDefaulting(store.ToContext(ctx))
+		return ctx
+	}
+
+	resourceAdmissionController := webhook.NewResourceAdmissionController(resourceHandlers, options, true)
+	admissionControllers := map[string]webhook.AdmissionController{
+		options.ResourceAdmissionControllerPath: resourceAdmissionController,
+	}
+
+	controller, err := webhook.New(kubeClient, options, admissionControllers, logger, ctxFunc)
 	if err != nil {
 		logger.Fatalw("Failed to create the Kafka admission controller", zap.Error(err))
 	}

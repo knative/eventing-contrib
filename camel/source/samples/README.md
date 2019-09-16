@@ -1,6 +1,6 @@
 # Camel Source
 
-These samples show how to configure a Camel source. It is a event source that
+These samples show how to configure a Camel source. It is an event source that
 can leverage one of the
 [250+ Apache Camel components](https://github.com/apache/camel/tree/master/components)
 for generating events.
@@ -12,15 +12,15 @@ These steps assume that you have checked out the repo and have a shell in this
 
 ### Prerequisites
 
-1. Install the [Apache Camel K](https://github.com/apache/camel-k) Operator in
+1. Install the [Apache Camel K](https://github.com/apache/camel-k) operator in
    any namespace where you want to run Camel sources.
 
    The preferred version that is compatible with Camel sources is
-   [Camel K v0.3.3](https://github.com/apache/camel-k/releases/tag/0.3.3).
+   [Camel K v1.0.0-M1](https://github.com/apache/camel-k/releases/tag/1.0.0-M1).
 
-   Installation instruction are provided on the
+   Installation instructions are provided on the
    [Apache Camel K Github repository](https://github.com/apache/camel-k#installation).
-   Documentation includes specific instructions for common Kubernetes
+   The documentation includes specific instructions for common Kubernetes
    environments, including development clusters.
 
 1. Install the Camel Source from the [yaml files in the config dir](../config/)
@@ -53,7 +53,7 @@ ko apply -f display_resources.yaml
 The samples directory contains some sample sources that can be used to generate
 events.
 
-The simplest one, that does not require additional configuration is the "timer"
+The simplest one, that does not require additional configuration, is the "timer"
 source.
 
 If you want, you can customize the source behavior using options available in
@@ -62,10 +62,10 @@ the Apache Camel documentation for the
 All Camel components are documented in the
 [Apache Camel github repository](https://github.com/apache/camel/tree/master/components).
 
-Install the [timer CamelSource](source_timer.yaml) from source:
+Install the [timer CamelSource](source_timer_flow.yaml) from source:
 
 ```shell
-ko apply -f source_timer.yaml
+ko apply -f source_timer_flow.yaml
 ```
 
 We will verify that the published message was sent into the Knative eventing

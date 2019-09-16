@@ -18,6 +18,7 @@ package adapter
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -468,7 +469,7 @@ func (tc *testCase) handleRequest(req *http.Request) (*http.Response, error) {
 		Body:   body,
 	}
 
-	event, err := codec.Decode(msg)
+	event, err := codec.Decode(context.Background(), msg)
 	if err != nil {
 		return nil, fmt.Errorf("unexpected error decoding cloudevent: %s", err)
 	}
