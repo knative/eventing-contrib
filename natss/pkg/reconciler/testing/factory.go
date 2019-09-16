@@ -61,9 +61,6 @@ func MakeFactory(ctor Ctor) Factory {
 		eventRecorder := record.NewFakeRecorder(maxEventBufferSize)
 		statsReporter := &FakeStatsReporter{}
 
-		PrependGenerateNameReactor(&client.Fake)
-		PrependGenerateNameReactor(&dynamicClient.Fake)
-
 		// Set up our Controller from the fakes.
 		c := ctor(&ls, reconciler.Options{
 			KubeClientSet:    kubeClient,
