@@ -52,6 +52,7 @@ const (
 	gitHubSourceName = "testgithubsource"
 	testNS           = "testnamespace"
 	gitHubSourceUID  = "2b2219e2-ce67-11e8-b3a3-42010a8a00af"
+	generation = 1
 
 	addressableDNS = "addressable.sink.svc.cluster.local"
 	addressableURI = "http://addressable.sink.svc.cluster.local"
@@ -115,7 +116,17 @@ var testCases = []controllertesting.TestCase{
 		},
 		ReconcileKey: fmt.Sprintf("%s/%s", testNS, gitHubSourceName),
 		Scheme:       scheme.Scheme,
+		WantPresent: []runtime.Object{
+			func() runtime.Object {
+				s := getGitHubSourceUnaddressable()
+				s.Status.ObservedGeneration = generation
+				s.Status.MarkSecrets()
+				s.Status.MarkNoSink("NotFound", `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1, Kind=KResource) does not contain address`)
+				return s
+			}(),
+		},
 		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1, Kind=KResource) does not contain address`,
+		IgnoreTimes: true,
 	}, {
 		Name:       "valid githubsource, sink is addressable",
 		Reconciles: &sourcesv1alpha1.GitHubSource{},
@@ -129,6 +140,7 @@ var testCases = []controllertesting.TestCase{
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
@@ -149,6 +161,7 @@ var testCases = []controllertesting.TestCase{
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSink("NotFound", "sink \"testnamespace/testsink\" (duck.knative.dev/v1alpha1, Kind=Sink) does not contain address")
 				s.Status.MarkSecrets()
@@ -175,6 +188,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.Spec.Sink = nil
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSink("NotFound", "sink ref is nil")
 				s.Status.MarkSecrets()
@@ -230,6 +244,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.UID = gitHubSourceUID
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
@@ -289,6 +304,7 @@ var testCases = []controllertesting.TestCase{
 				s := getGitHubSource()
 				s.UID = gitHubSourceUID
 				s.Spec.Secure = true
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
@@ -345,6 +361,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.UID = gitHubSourceUID
+				s.Status.ObservedGeneration = generation
 				s.Spec.OwnerAndRepository = "myorganization"
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
@@ -367,6 +384,7 @@ var testCases = []controllertesting.TestCase{
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSecrets("AccessTokenNotFound",
 					fmt.Sprintf(`secrets "%s" not found`, secretName))
@@ -396,6 +414,7 @@ var testCases = []controllertesting.TestCase{
 		WantPresent: []runtime.Object{
 			func() runtime.Object {
 				s := getGitHubSource()
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkNoSecrets("SecretTokenNotFound",
 					fmt.Sprintf(`key "%s" not found in secret "%s"`, secretTokenKey, secretName))
@@ -578,6 +597,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubEnterpriseSource()
 				s.UID = gitHubSourceUID
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
@@ -691,6 +711,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubEnterpriseSource()
 				s.UID = gitHubSourceUID
+				s.Status.ObservedGeneration = generation
 				s.Spec.Sink.Kind = brokerKind
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
@@ -750,6 +771,7 @@ var testCases = []controllertesting.TestCase{
 			func() runtime.Object {
 				s := getGitHubSource()
 				s.UID = gitHubSourceUID
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
@@ -821,6 +843,7 @@ var testCases = []controllertesting.TestCase{
 				s := getGitHubEnterpriseSource()
 				s.UID = gitHubSourceUID
 				s.Spec.Sink.Kind = brokerKind
+				s.Status.ObservedGeneration = generation
 				s.Status.InitializeConditions()
 				s.Status.MarkSink(addressableURI)
 				s.Status.MarkSecrets()
@@ -866,7 +889,7 @@ func TestAllCases(t *testing.T) {
 func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 	obj := &sourcesv1alpha1.GitHubSource{
 		TypeMeta:   gitHubSourceType(),
-		ObjectMeta: om(testNS, gitHubSourceName),
+		ObjectMeta: om(testNS, gitHubSourceName, generation),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
 			OwnerAndRepository: "myuser/myproject",
 			EventTypes:         []string{"pull_request"},
@@ -902,7 +925,7 @@ func getGitHubSource() *sourcesv1alpha1.GitHubSource {
 func getGitHubEnterpriseSource() *sourcesv1alpha1.GitHubSource {
 	obj := &sourcesv1alpha1.GitHubSource{
 		TypeMeta:   gitHubSourceType(),
-		ObjectMeta: om(testNS, gitHubSourceName),
+		ObjectMeta: om(testNS, gitHubSourceName, generation),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
 			OwnerAndRepository: "myuser/myproject",
 			EventTypes:         []string{"pull_request"},
@@ -939,7 +962,7 @@ func getGitHubEnterpriseSource() *sourcesv1alpha1.GitHubSource {
 func getGitHubSourceUnaddressable() *sourcesv1alpha1.GitHubSource {
 	obj := &sourcesv1alpha1.GitHubSource{
 		TypeMeta:   gitHubSourceType(),
-		ObjectMeta: om(testNS, gitHubSourceName),
+		ObjectMeta: om(testNS, gitHubSourceName, generation),
 		Spec: sourcesv1alpha1.GitHubSourceSpec{
 			OwnerAndRepository: "myuser/myproject",
 			EventTypes:         []string{"pull_request"},
@@ -1008,10 +1031,11 @@ func gitHubSourceType() metav1.TypeMeta {
 	}
 }
 
-func om(namespace, name string) metav1.ObjectMeta {
+func om(namespace, name string, generation int64) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Namespace: namespace,
 		Name:      name,
+		Generation:generation,
 		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
 	}
 }

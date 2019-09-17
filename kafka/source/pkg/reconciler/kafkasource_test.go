@@ -55,6 +55,7 @@ const (
 	sourceName = "test-kafka-source"
 	sourceUID  = "1234-5678-90"
 	testNS     = "testnamespace"
+	generation = 1
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
@@ -97,7 +98,11 @@ func TestReconcile(t *testing.T) {
 				getSource(),
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithNoSink(),
+				func() runtime.Object {
+					s := getSourceWithNoSink()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 			WantErrMsg: "sinks.duck.knative.dev \"testsink\" not found",
 		}, {
@@ -114,7 +119,11 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithSink(),
+				func() runtime.Object {
+					s := getSourceWithSink()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 			WantErrMsg: "test-induced-error",
 		}, {
@@ -131,7 +140,11 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithSink(),
+				func() runtime.Object {
+					s := getSourceWithSink()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 			WantErrMsg: "test-induced-error",
 		}, {
@@ -141,7 +154,11 @@ func TestReconcile(t *testing.T) {
 				getAddressable(),
 			},
 			WantPresent: []runtime.Object{
-				getReadySourceAndMarkEventTypes(),
+				func() runtime.Object {
+					s := getReadySourceAndMarkEventTypes()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 		}, {
 			Name: "successful create - reuse existing receive adapter",
@@ -158,7 +175,11 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadySourceAndMarkEventTypes(),
+				func() runtime.Object {
+					s := getReadySourceAndMarkEventTypes()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 		}, {
 			Name: "successful create event types",
@@ -183,9 +204,14 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
+				func() runtime.Object {
+					s := getReadyAndMarkEventTypesSourceWithKind(brokerKind)
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				getEventType("name1", "topic1"),
 				getEventType("name2", "topic2"),
+
 			},
 		}, {
 			Name: "successful create missing event types",
@@ -210,7 +236,12 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadyAndMarkEventTypesSourceWithKind(brokerKind),
+				func() runtime.Object {
+					s := getReadyAndMarkEventTypesSourceWithKind(brokerKind)
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
+
 				getEventType("name1", "topic1"),
 				getEventType("name2", "topic2"),
 			},
@@ -233,7 +264,11 @@ func TestReconcile(t *testing.T) {
 				},
 			},
 			WantPresent: []runtime.Object{
-				getReadySourceAndMarkEventTypes(),
+				func() runtime.Object {
+					s := getReadySourceAndMarkEventTypes()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 			WantAbsent: []runtime.Object{
 				getEventType("name1", "topic1"),
@@ -259,7 +294,12 @@ func TestReconcile(t *testing.T) {
 				getEventType("name2", "topic2"),
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithSinkAndDeployedAndKind(brokerKind),
+				func() runtime.Object {
+					s := getSourceWithSinkAndDeployedAndKind(brokerKind)
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
+
 			},
 			WantErrMsg: "test-induced-error",
 		},
@@ -293,7 +333,7 @@ func getNonKafkaSource() *eventingsourcesv1alpha1.ContainerSource {
 			APIVersion: eventingsourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "ContainerSource",
 		},
-		ObjectMeta: om(testNS, sourceName),
+		ObjectMeta: om(testNS, sourceName, generation),
 		Spec: eventingsourcesv1alpha1.ContainerSourceSpec{
 			Template: &corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
@@ -328,7 +368,7 @@ func getSourceWithKind(kind string) *sourcesv1alpha1.KafkaSource {
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "KafkaSource",
 		},
-		ObjectMeta: om(testNS, sourceName),
+		ObjectMeta: om(testNS, sourceName, generation),
 		Spec: sourcesv1alpha1.KafkaSourceSpec{
 			BootstrapServers: "server1,server2",
 			Topics:           "topic1,topic2",
@@ -426,10 +466,11 @@ func getReadyAndMarkEventTypesSourceWithKind(kind string) *sourcesv1alpha1.Kafka
 	return src
 }
 
-func om(namespace, name string) metav1.ObjectMeta {
+func om(namespace, name string, generation int64) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Namespace: namespace,
 		Name:      name,
+		Generation:generation,
 		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
 		UID:       sourceUID,
 	}

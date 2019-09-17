@@ -131,6 +131,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 }
 
 func (r *reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
+	source.Status.ObservedGeneration = source.Generation
 	source.Status.InitializeConditions()
 
 	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)

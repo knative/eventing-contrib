@@ -97,6 +97,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 	logger.Info("Reconciling new source: ", zap.Any("source", src))
 
+	src.Status.ObservedGeneration = src.Generation
 	src.Status.InitializeConditions()
 
 	sinkURI, err := sinks.GetSinkURI(ctx, r.client, src.Spec.Sink, src.Namespace)

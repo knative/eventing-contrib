@@ -50,6 +50,7 @@ const (
 	sourceName = "test-camel-source"
 	sourceUID  = "1234-5678-90"
 	testNS     = "testnamespace"
+	generation = 1
 
 	addressableName       = "testsink"
 	addressableKind       = "Sink"
@@ -97,7 +98,11 @@ func TestReconcile(t *testing.T) {
 				getSource(),
 			},
 			WantPresent: []runtime.Object{
-				getSourceWithNoSink(),
+				func() runtime.Object {
+					s := getSourceWithNoSink()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -111,7 +116,11 @@ func TestReconcile(t *testing.T) {
 				getAddressable(),
 			},
 			WantPresent: []runtime.Object{
-				getDeployingSource(),
+				func() runtime.Object {
+					s := getDeployingSource()
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -125,7 +134,11 @@ func TestReconcile(t *testing.T) {
 				getRunningIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				asDeployedSource(getSource()),
+				func() runtime.Object {
+					s := asDeployedSource(getSource())
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				getRunningIntegration(t),
 			},
 			WantAbsent: []runtime.Object{
@@ -141,7 +154,11 @@ func TestReconcile(t *testing.T) {
 				getRunningCamelKIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				asDeployedSource(getCamelKSource()),
+				func() runtime.Object {
+					s := asDeployedSource(getCamelKSource())
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				getRunningCamelKIntegration(t),
 			},
 			WantAbsent: []runtime.Object{
@@ -156,7 +173,11 @@ func TestReconcile(t *testing.T) {
 				getWrongIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				withUpdatingIntegration(getSource()),
+				func() runtime.Object {
+					s := withUpdatingIntegration(getSource())
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				getRunningIntegration(t),
 			},
 			WantAbsent: []runtime.Object{
@@ -172,7 +193,11 @@ func TestReconcile(t *testing.T) {
 				getWrongIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				withUpdatingIntegration(getCamelKSource()),
+				func() runtime.Object {
+					s := withUpdatingIntegration(getCamelKSource())
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				getRunningCamelKIntegration(t),
 			},
 			WantAbsent: []runtime.Object{
@@ -188,7 +213,11 @@ func TestReconcile(t *testing.T) {
 				getAlternativeContext(),
 			},
 			WantPresent: []runtime.Object{
-				withAlternativeContext(asDeployedSource(getSource())),
+				func() runtime.Object {
+					s := withAlternativeContext(asDeployedSource(getSource()))
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				integrationWithAlternativeContext(getRunningIntegration(t)),
 				getAlternativeContext(),
 			},
@@ -203,7 +232,11 @@ func TestReconcile(t *testing.T) {
 				getAlternativeContext(),
 			},
 			WantPresent: []runtime.Object{
-				withAlternativeContext(asDeployedSource(getCamelKSource())),
+				func() runtime.Object {
+					s := withAlternativeContext(asDeployedSource(getCamelKSource()))
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				integrationWithAlternativeContext(getRunningCamelKIntegration(t)),
 				getAlternativeContext(),
 			},
@@ -217,7 +250,11 @@ func TestReconcile(t *testing.T) {
 				getRunningCamelKFlowIntegration(t),
 			},
 			WantPresent: []runtime.Object{
-				asDeployedSource(getCamelKFlowSource()),
+				func() runtime.Object {
+					s := asDeployedSource(getCamelKFlowSource())
+					s.Status.ObservedGeneration = generation
+					return s
+				}(),
 				getRunningCamelKFlowIntegration(t),
 			},
 		},
@@ -251,7 +288,7 @@ func getSource() *sourcesv1alpha1.CamelSource {
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "CamelSource",
 		},
-		ObjectMeta: om(testNS, sourceName),
+		ObjectMeta: om(testNS, sourceName, generation),
 		Spec: sourcesv1alpha1.CamelSourceSpec{
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
 				DeprecatedComponent: &sourcesv1alpha1.CamelSourceOriginComponentSpec{
@@ -276,7 +313,7 @@ func getCamelKSource() *sourcesv1alpha1.CamelSource {
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "CamelSource",
 		},
-		ObjectMeta: om(testNS, sourceName),
+		ObjectMeta: om(testNS, sourceName, generation),
 		Spec: sourcesv1alpha1.CamelSourceSpec{
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
 				Integration: &camelv1alpha1.IntegrationSpec{
@@ -324,7 +361,7 @@ func getCamelKFlowSource() *sourcesv1alpha1.CamelSource {
 			APIVersion: sourcesv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "CamelSource",
 		},
-		ObjectMeta: om(testNS, sourceName),
+		ObjectMeta: om(testNS, sourceName, generation),
 		Spec: sourcesv1alpha1.CamelSourceSpec{
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
 				Flow: &source,
@@ -500,10 +537,11 @@ func getDeletedSource() *sourcesv1alpha1.CamelSource {
 	return src
 }
 
-func om(namespace, name string) metav1.ObjectMeta {
+func om(namespace, name string, generation int64) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Namespace: namespace,
 		Name:      name,
+		Generation:generation,
 		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
 		UID:       sourceUID,
 	}
