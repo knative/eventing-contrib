@@ -25,7 +25,7 @@ You must have [Knative Eventing](http://github.com/knative/eventing) running on
 your cluster.
 
 You must have
-[ko](https://github.com/google/go-containerregistry/blob/master/cmd/ko/README.md)
+[ko](https://github.com/google/ko)
 installed.
 
 ### Checkout your fork
