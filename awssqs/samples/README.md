@@ -17,10 +17,10 @@ commands from the root.
    [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
 
 1. The
-   [in-memory `ClusterChannelProvisioner`](https://knative.dev/eventing/tree/master/config/provisioners/in-memory-channel)
-   should be installed in your cluster. At the time of writing (release v0.5.0)
+   [in-memory channel CRD](https://github.com/knative/eventing/blob/master/config/channels/in-memory-channel/README.md)
+   should be installed in your cluster. At the time of writing (release v0.8.0)
    it is part of the default instructions so you will probably have it there
-   already.
+   already. For a development cluster see [this](https://github.com/knative/eventing/blob/master/DEVELOPMENT.md#install-channels).
 
 ### Create a channel and subscriber
 
@@ -59,7 +59,7 @@ kubectl -n knative-sources create secret generic awssqs-source-credentials --fro
 Deploy the `AwsSqsSource` controller as part of eventing-source's controller.
 
 ```shell
-ko -n default apply -f awssqs/config/
+ko apply -f awssqs/config/
 ```
 
 Note that if the `Source` Service Account secret is in a non-default location,
