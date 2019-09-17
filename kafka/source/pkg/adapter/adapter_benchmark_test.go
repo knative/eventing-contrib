@@ -19,21 +19,22 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"github.com/Shopify/sarama"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"go.uber.org/zap"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/Shopify/sarama"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"go.uber.org/zap"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
 
 // Run with go test -v ./kafka/source/pkg/adapter/ -gcflags="-N -l" -test.benchtime 2s -benchmem -run=Handle -bench=.
 
-type benchHandler struct {}
+type benchHandler struct{}
 
 func (b benchHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	writer.WriteHeader(http.StatusOK)
@@ -58,7 +59,7 @@ func BenchmarkHandle(b *testing.B) {
 			c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 			return c
 		}(),
-		logger: zap.NewNop(),
+		logger:     zap.NewNop(),
 		eventsPool: sync.Pool{},
 	}
 	b.SetParallelism(1)
@@ -78,7 +79,7 @@ var AError error
 
 // Baseline is required to understand how much time/memory is needed to allocate the sarama.ConsumerMessage
 func baseline(b *testing.B, adapter *Adapter, payload []byte) {
-	for i := 0; i < b.N ; i++ {
+	for i := 0; i < b.N; i++ {
 		Message = &sarama.ConsumerMessage{
 			Key:       []byte(strconv.Itoa(i)),
 			Topic:     "topic1",
@@ -91,7 +92,7 @@ func baseline(b *testing.B, adapter *Adapter, payload []byte) {
 }
 
 func benchmarkHandle(b *testing.B, adapter *Adapter, payload []byte) {
-	for i := 0; i < b.N ; i++ {
+	for i := 0; i < b.N; i++ {
 		Message := &sarama.ConsumerMessage{
 			Key:       []byte(strconv.Itoa(i)),
 			Topic:     "topic1",

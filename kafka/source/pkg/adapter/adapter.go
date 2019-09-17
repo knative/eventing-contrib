@@ -67,7 +67,7 @@ type Adapter struct {
 	Namespace        string
 	ceClient         client.Client
 	logger           *zap.Logger
-	eventsPool		 sync.Pool
+	eventsPool       sync.Pool
 }
 
 // --------------------------------------------------------------------
