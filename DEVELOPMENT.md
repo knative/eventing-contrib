@@ -89,7 +89,7 @@ kubectl -n knative-sources logs \
 ```
 
 _See [camel/source/samples/README.md](./camel/source/samples/README.md),
-[kafka/source/samples/README.md](./kafka/source/samples/README.md) for
+[kafka/source/README.md](./kafka/source/README.md) for
 instructions on installing the Camel Source and Kafka Source._
 
 ## Iterating
