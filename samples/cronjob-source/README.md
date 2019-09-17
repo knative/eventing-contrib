@@ -25,7 +25,6 @@
 
 ### Deployment
 
-<!-- TODO: is part of knative 0.8 ? only required for dev -->
 1. Deploy the `CronJobSource` controller as part of eventing-source's
    controller.
 
