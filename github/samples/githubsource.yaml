@@ -28,7 +28,7 @@ spec:
       name: githubsecret
       key: secretToken
   sink:
-    apiVersion: eventing.knative.dev/v1alpha1
+    apiVersion: messaging.knative.dev/v1alpha1
     kind: Channel
     name: githubchannel
 
@@ -45,12 +45,11 @@ stringData:
 
 ---
 
-apiVersion: eventing.knative.dev/v1alpha1
+apiVersion: messaging.knative.dev/v1alpha1
 kind: Channel
 metadata:
   name: githubchannel
 spec:
-  provisioner:
-    apiVersion: eventing.knative.dev/v1alpha1
-    kind: ClusterChannelProvisioner
-    name: in-memory-channel
+  channelTemplate:
+    apiVersion: messaging.knative.dev/v1alpha1
+    kind: InMemoryChannel
