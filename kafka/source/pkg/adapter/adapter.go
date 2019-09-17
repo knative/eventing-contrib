@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
@@ -66,33 +67,44 @@ type Adapter struct {
 	Namespace        string
 	ceClient         client.Client
 	logger           *zap.Logger
+	eventsPool		 sync.Pool
 }
 
 // --------------------------------------------------------------------
 
 func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool, error) {
-	jsonPayload, err := a.jsonEncode(msg.Value)
-
-	if err != nil {
+	if !json.Valid(msg.Value) {
 		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
 	}
 
-	event := cloudevents.New(cloudevents.CloudEventsVersionV02)
+	var event *cloudevents.Event
+	if poolRes := a.eventsPool.Get(); poolRes != nil {
+		event = poolRes.(*cloudevents.Event)
+	} else {
+		event = &cloudevents.Event{}
+		event.SetSpecVersion(cloudevents.CloudEventsVersionV02)
+	}
+
 	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
 	event.SetTime(msg.Timestamp)
 	event.SetType(sourcesv1alpha1.KafkaEventType)
 	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.Namespace, a.Name, msg.Topic))
 	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
 	event.SetExtension("key", string(msg.Key))
-	err = event.SetData(jsonPayload)
+	err := event.SetData(msg.Value)
 
 	if err != nil {
 		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
 	}
 
-	a.logger.Debug("Sending cloud event", zap.String("event", event.String()))
+	// Check before writing log since event.String() allocates and uses a lot of time
+	if ce := a.logger.Check(zap.DebugLevel, "debugging"); ce != nil {
+		a.logger.Debug("Sending cloud event", zap.String("event", event.String()))
+	}
 
-	_, _, err = a.ceClient.Send(ctx, event)
+	_, _, err = a.ceClient.Send(ctx, *event)
+
+	a.eventsPool.Put(event)
 
 	if err != nil {
 		return false, err // Error while sending, don't commit offset
@@ -134,6 +146,9 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		kafkaConfig.Net.TLS.Config = tlsConfig
 	}
 
+	// Create the events pool
+	a.eventsPool = sync.Pool{}
+
 	// Start the cloud events client
 	if a.ceClient == nil {
 		var err error
@@ -170,16 +185,6 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 			logger.Infow("Shutting down...")
 			return nil
 		}
-	}
-}
-
-func (a *Adapter) jsonEncode(value []byte) (map[string]interface{}, error) {
-	var payload map[string]interface{}
-
-	if err := json.Unmarshal(value, &payload); err != nil {
-		return nil, err
-	} else {
-		return payload, nil
 	}
 }
 
