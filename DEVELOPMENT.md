@@ -79,7 +79,13 @@ github-controller-manager-0   1/1       Running   0          2h
 You can access the Github eventing manager's logs with:
 
 ```shell
-kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=github-controller-manager -o name)
+kubectl -n knative-sources logs \
+    $(kubectl \
+        -n knative-sources \
+        get pods \
+        -l control-plane=github-controller-manager \
+        -o name \
+    )
 ```
 
 _See [camel/source/samples/README.md](./camel/source/samples/README.md),
@@ -92,7 +98,7 @@ As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
-- **If you change a type definition (<source_name>/pkg/apis/),** then
+- **If you change a type definition (\<source_name\>/pkg/apis/),** then
   you must run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This
   also runs [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 

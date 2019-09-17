@@ -11,16 +11,16 @@ commands from the root.
 
 ### Prerequisites
 
-1.  Create an [AWS SQS queue](https://aws.amazon.com/sqs/).
+1. Create an [AWS SQS queue](https://aws.amazon.com/sqs/).
 
-1.  Setup
-    [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
+1. Setup
+   [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
 
-1.  The
-    [in-memory `ClusterChannelProvisioner`](https://knative.dev/eventing/tree/master/config/provisioners/in-memory-channel)
-    should be installed in your cluster. At the time of writing (release v0.5.0)
-    it is part of the default instructions so you will probably have it there
-    already.
+1. The
+   [in-memory `ClusterChannelProvisioner`](https://knative.dev/eventing/tree/master/config/provisioners/in-memory-channel)
+   should be installed in your cluster. At the time of writing (release v0.5.0)
+   it is part of the default instructions so you will probably have it there
+   already.
 
 ### Create a channel and subscriber
 
@@ -42,9 +42,11 @@ Acquire
 [AWS Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html)
 for the same account. Your credentials file should look like this:
 
-     [default]
-     aws_access_key_id = ...
-     aws_secret_access_key = ...
+```
+[default]
+aws_access_key_id = ...
+aws_secret_access_key = ...
+```
 
 Then create a secret for the downloaded key:
 
