@@ -8,8 +8,7 @@ sources to see a working example.
 ### Prerequisites
 
 - [ ] Install [Knative](https://www.knative.dev/docs/install/)
-- [ ] Install
-      [ko](https://github.com/google/go-containerregistry/tree/master/cmd/ko)
+- [ ] Install [ko](https://github.com/google/ko)
 
 ### Deploy Heartbeats Sender and Receiver
 
@@ -24,7 +23,7 @@ ko apply -f ./samples/heartbeats/
 View sender logs:
 
 ```shell
-kubectl logs --tail=50 -l source=heartbeats-sender -c source
+kubectl logs --tail=50 containersource-heartbeats-<TAB> -c source
 ```
 
 View receiver logs:
