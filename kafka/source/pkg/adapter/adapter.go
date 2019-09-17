@@ -77,7 +77,14 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
 	}
 
-	event := a.eventsPool.Get().(*cloudevents.Event)
+	var event *cloudevents.Event
+	if poolRes := a.eventsPool.Get(); poolRes != nil {
+		event = poolRes.(*cloudevents.Event)
+	} else {
+		event = &cloudevents.Event{}
+		event.SetSpecVersion(cloudevents.CloudEventsVersionV02)
+	}
+
 	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
 	event.SetTime(msg.Timestamp)
 	event.SetType(sourcesv1alpha1.KafkaEventType)
@@ -140,15 +147,7 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 	}
 
 	// Create the events pool
-	a.eventsPool = sync.Pool{
-		New: func() interface{} {
-			// The Pool's New function should generally only return pointer
-			// types, since a pointer can be put into the return interface
-			// value without an allocation:
-			val := cloudevents.New(cloudevents.CloudEventsVersionV02)
-			return &val
-		},
-	}
+	a.eventsPool = sync.Pool{}
 
 	// Start the cloud events client
 	if a.ceClient == nil {
