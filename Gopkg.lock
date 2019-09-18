@@ -1236,7 +1236,7 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:ecd8d459a40c5135e6d50fe7ac191d39da56fbad2b4b222c2d74a045557f64e8"
+  digest = "1:d8052718b0234741451be12dfcd67133e7242e8330c2d21d587dbf8feee17814"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -1273,6 +1273,7 @@
     "pkg/util/mergepatch",
     "pkg/util/naming",
     "pkg/util/net",
+    "pkg/util/rand",
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
@@ -1289,6 +1290,14 @@
   pruneopts = "NUT"
   revision = "01f179d85dbce0f2e0e4351a92394b38694b7cae"
   version = "kubernetes-1.12.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f4399da66c191adee58287b4069dbd3f040c4b42c7050e426b9b906c263c65b6"
+  name = "k8s.io/apiserver"
+  packages = ["pkg/storage/names"]
+  pruneopts = "NUT"
+  revision = "d6b22d09ee11be9e99a9391e94513ea18952f6d7"
 
 [[projects]]
   digest = "1:e41f040a7dada94e29b62420a80fd02caddfc4f9dfa63ab38a9151545aa422ae"
@@ -1519,7 +1528,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5ab69d2a5c254c09c218b95dc7c6feaf14c6a2035d7356aba7c7fa0fb096970d"
+  digest = "1:c536367542111dc62e96136e0528b03b3dd0e575f3baac64655238d80565381f"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1563,7 +1572,7 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "2024418959749f09451967d0dd061905dc7d3da5"
+  revision = "a1a098150e5b624573c391563cd13f1703dcc10d"
 
 [[projects]]
   branch = "release-0.9"
@@ -1646,14 +1655,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ab8dac73d2e2118e42f22b3f1208eb7a44ee9493a9e9d97976fea509f8e0337f"
+  digest = "1:964a4f9e12d5021b9d550e04c36cf23feb880e286ceede1b246d5c0e43b523b9"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "2c83a176f473acb4b6b851e98e53882f594ffb5c"
+  revision = "e09d3c7669d2268d5ce11ea53cd7e9429722c1a7"
 
 [[projects]]
   digest = "1:399953e7c3ac9253dcf1fe909b0a74f6d1c4e974decefd6f5d361cab06249ccc"

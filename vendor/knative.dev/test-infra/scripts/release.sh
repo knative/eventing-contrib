@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Copyright 2018 The Knative Authors
 #
@@ -485,7 +485,9 @@ function main() {
   parse_flags $@
   # Log what will be done and where.
   banner "Release configuration"
-  echo "- gcloud user: $(gcloud config get-value core/account)"
+  if which gcloud &>/dev/null ; then
+    echo "- gcloud user: $(gcloud config get-value core/account)"
+  fi
   echo "- Go path: ${GOPATH}"
   echo "- Repository root: ${REPO_ROOT_DIR}"
   echo "- Destination GCR: ${KO_DOCKER_REPO}"
