@@ -132,6 +132,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 
 	r.addFinalizer(src)
 
+	src.Status.ObservedGeneration = src.Generation
 	src.Status.InitializeConditions()
 
 	sinkURI, err := sinks.GetSinkURI(ctx, r.client, src.Spec.Sink, src.Namespace)
