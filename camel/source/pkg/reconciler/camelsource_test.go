@@ -539,11 +539,11 @@ func getDeletedSource() *sourcesv1alpha1.CamelSource {
 
 func om(namespace, name string, generation int64) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Namespace: namespace,
-		Name:      name,
-		Generation:generation,
-		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
-		UID:       sourceUID,
+		Namespace:  namespace,
+		Name:       name,
+		Generation: generation,
+		SelfLink:   fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
+		UID:        sourceUID,
 	}
 }
 
