@@ -88,3 +88,22 @@ rules:
   resources:
   - eventtypes
   verbs: *everything
+
+# The role is needed for the aggregated role source-resolver in knative-eventing to provide readonly access to "Sources"
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: eventing-contrib-github-source-resolver
+  labels:
+    eventing.knative.dev/release: devel
+    duck.knative.dev/sourceObserver: "true"
+rules:
+  - apiGroups:
+      - "sources.eventing.knative.dev"
+    resources:
+      - "githubsources"
+    verbs:
+      - get
+      - list
+      - watch
