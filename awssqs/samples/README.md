@@ -11,21 +11,21 @@ commands from the root.
 
 ### Prerequisites
 
-1.  Create an [AWS SQS queue](https://aws.amazon.com/sqs/).
+1. Create an [AWS SQS queue](https://aws.amazon.com/sqs/).
 
-1.  Setup
-    [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
+1. Setup
+   [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
 
-1.  The
-    [in-memory `ClusterChannelProvisioner`](https://knative.dev/eventing/tree/master/config/provisioners/in-memory-channel)
-    should be installed in your cluster. At the time of writing (release v0.5.0)
-    it is part of the default instructions so you will probably have it there
-    already.
+1. The
+   [in-memory channel CRD](https://github.com/knative/eventing/blob/master/config/channels/in-memory-channel/README.md)
+   should be installed in your cluster. At the time of writing (release v0.8.0)
+   it is part of the default instructions so you will probably have it there
+   already. For a development cluster see [this](https://github.com/knative/eventing/blob/master/DEVELOPMENT.md#install-channels).
 
 ### Create a channel and subscriber
 
 ```shell
-ko apply -f contrib/awssqs/samples/display-resources.yaml
+ko apply -f awssqs/samples/display-resources.yaml
 ```
 
 The sample provided will configure an in-memory channel (named `awssqs-test` and
@@ -42,9 +42,11 @@ Acquire
 [AWS Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html)
 for the same account. Your credentials file should look like this:
 
-     [default]
-     aws_access_key_id = ...
-     aws_secret_access_key = ...
+```
+[default]
+aws_access_key_id = ...
+aws_secret_access_key = ...
+```
 
 Then create a secret for the downloaded key:
 
@@ -57,7 +59,7 @@ kubectl -n knative-sources create secret generic awssqs-source-credentials --fro
 Deploy the `AwsSqsSource` controller as part of eventing-source's controller.
 
 ```shell
-ko -n default apply -f contrib/awssqs/config/
+ko apply -f awssqs/config/
 ```
 
 Note that if the `Source` Service Account secret is in a non-default location,
@@ -75,7 +77,7 @@ Replace the place holders in `samples/awssqs-source.yaml`.
 Now deploy `awssqs-source.yaml`.
 
 ```shell
-ko apply -f contrib/awssqs/samples/awssqs-source.yaml
+ko apply -f awssqs/samples/awssqs-source.yaml
 ```
 
 You can use [kail](https://github.com/boz/kail/) to tail the logs of the
