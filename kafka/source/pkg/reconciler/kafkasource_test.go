@@ -211,7 +211,6 @@ func TestReconcile(t *testing.T) {
 				}(),
 				getEventType("name1", "topic1"),
 				getEventType("name2", "topic2"),
-
 			},
 		}, {
 			Name: "successful create missing event types",
@@ -299,7 +298,6 @@ func TestReconcile(t *testing.T) {
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
-
 			},
 			WantErrMsg: "test-induced-error",
 		},
@@ -468,11 +466,11 @@ func getReadyAndMarkEventTypesSourceWithKind(kind string) *sourcesv1alpha1.Kafka
 
 func om(namespace, name string, generation int64) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Namespace: namespace,
-		Name:      name,
-		Generation:generation,
-		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
-		UID:       sourceUID,
+		Namespace:  namespace,
+		Name:       name,
+		Generation: generation,
+		SelfLink:   fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
+		UID:        sourceUID,
 	}
 }
 

@@ -52,7 +52,7 @@ const (
 	gitHubSourceName = "testgithubsource"
 	testNS           = "testnamespace"
 	gitHubSourceUID  = "2b2219e2-ce67-11e8-b3a3-42010a8a00af"
-	generation = 1
+	generation       = 1
 
 	addressableDNS = "addressable.sink.svc.cluster.local"
 	addressableURI = "http://addressable.sink.svc.cluster.local"
@@ -125,7 +125,7 @@ var testCases = []controllertesting.TestCase{
 				return s
 			}(),
 		},
-		WantErrMsg:   `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1, Kind=KResource) does not contain address`,
+		WantErrMsg:  `sink "testnamespace/testunaddressable" (duck.knative.dev/v1alpha1, Kind=KResource) does not contain address`,
 		IgnoreTimes: true,
 	}, {
 		Name:       "valid githubsource, sink is addressable",
@@ -1033,10 +1033,10 @@ func gitHubSourceType() metav1.TypeMeta {
 
 func om(namespace, name string, generation int64) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Namespace: namespace,
-		Name:      name,
-		Generation:generation,
-		SelfLink:  fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
+		Namespace:  namespace,
+		Name:       name,
+		Generation: generation,
+		SelfLink:   fmt.Sprintf("/apis/eventing/sources/v1alpha1/namespaces/%s/object/%s", namespace, name),
 	}
 }
 
