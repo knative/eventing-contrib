@@ -20,7 +20,8 @@ commands from the root.
    [in-memory channel CRD](https://github.com/knative/eventing/blob/master/config/channels/in-memory-channel/README.md)
    should be installed in your cluster. At the time of writing (release v0.8.0)
    it is part of the default instructions so you will probably have it there
-   already. For a development cluster see [this](https://github.com/knative/eventing/blob/master/DEVELOPMENT.md#install-channels).
+   already. For a development cluster see
+   [this](https://github.com/knative/eventing/blob/master/DEVELOPMENT.md#install-channels).
 
 ### Create a channel and subscriber
 
