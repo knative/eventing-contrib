@@ -1539,7 +1539,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:87245facc9ae4d8ec1da3834cd1931b7f575355a34378fe97b0349c0aa30fd53"
+  digest = "1:6043107c0c9085ea7397f55dc806560c59d9b01e9b155581d28fc2c070e9b416"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
