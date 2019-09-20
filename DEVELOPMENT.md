@@ -24,9 +24,7 @@ running on your cluster.
 You must have [Knative Eventing](http://github.com/knative/eventing) running on
 your cluster.
 
-You must have
-[ko](https://github.com/google/ko)
-installed.
+You must have [ko](https://github.com/google/ko) installed.
 
 ### Checkout your fork
 
@@ -89,8 +87,8 @@ kubectl -n knative-sources logs \
 ```
 
 _See [camel/source/samples/README.md](./camel/source/samples/README.md),
-[kafka/source/README.md](./kafka/source/README.md) for
-instructions on installing the Camel Source and Kafka Source._
+[kafka/source/README.md](./kafka/source/README.md) for instructions on
+installing the Camel Source and Kafka Source._
 
 ## Iterating
 
@@ -98,9 +96,9 @@ As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
-- **If you change a type definition (\<source_name\>/pkg/apis/),** then
-  you must run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This
-  also runs [`./hack/update-deps.sh`](./hack/update-deps.sh)._
+- **If you change a type definition (\<source_name\>/pkg/apis/),** then you must
+  run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This also runs
+  [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 
 These are both idempotent, and we expect that running these in the `master`
 branch to produce no diffs.

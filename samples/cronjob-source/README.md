@@ -8,8 +8,8 @@
 1. If your installed version of Eventing did not include the in-memory channel
    CRD, install the
    [in-memory channel CRD](https://github.com/knative/eventing/blob/master/config/channels/in-memory-channel/README.md)
-   now. If you installed Eventing using the `release.yaml` file, the channel
-   CRD was included. (See the
+   now. If you installed Eventing using the `release.yaml` file, the channel CRD
+   was included. (See the
    [Custom install guide](https://www.knative.dev/docs/install/knative-custom-install/)
    for information about what is include in each install file.)
    - Note that you can skip this if you choose to use a different type of
