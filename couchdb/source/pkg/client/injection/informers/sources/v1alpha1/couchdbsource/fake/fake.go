@@ -21,7 +21,7 @@ package fake
 import (
 	"context"
 
-	fake "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/sources/factory/fake"
+	fake "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/factory/fake"
 	couchdbsource "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/sources/v1alpha1/couchdbsource"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
