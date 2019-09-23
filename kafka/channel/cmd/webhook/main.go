@@ -18,7 +18,6 @@ package main
 import (
 	"context"
 	"flag"
-	"knative.dev/pkg/metrics"
 	"log"
 
 	"go.uber.org/zap"
@@ -30,6 +29,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/logging/logkey"
+	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/webhook"
@@ -76,8 +76,6 @@ func main() {
 
 	// Watch the observability config map
 	configMapWatcher.Watch(metrics.ConfigMapName(), metrics.UpdateExporterFromConfigMap(component, logger))
-
-
 
 	stats, err := webhook.NewStatsReporter()
 	if err != nil {

@@ -89,7 +89,7 @@ kubectl port-forward -n knative-monitoring \
    9090
 ```
 
-Access Prometheus targets endpoint [http://localhost:9090/targets](http://localhost:9090/targets). Now, the **kafkachannel_controller**, **kafkachannel_dispatcher** and **kafkachannel_dispatcher** jobs should be up.
+Access Prometheus targets endpoint [http://localhost:9090/targets](http://localhost:9090/targets). Now, the **kafkachannel_controller**, **kafkachannel_dispatcher** and **kafkachannel_webhook** jobs should be up.
 
 ## Check KafkaChannel controller metrics
 
