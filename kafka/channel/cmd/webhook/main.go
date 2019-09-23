@@ -18,6 +18,7 @@ package main
 import (
 	"context"
 	"flag"
+	"knative.dev/pkg/metrics"
 	"log"
 
 	"go.uber.org/zap"
@@ -34,6 +35,10 @@ import (
 	"knative.dev/pkg/webhook"
 )
 
+const(
+	component = "kafkachannel_webhook"
+)
+
 func main() {
 	flag.Parse()
 	// Read the logging config and setup a logger.
@@ -46,7 +51,7 @@ func main() {
 		log.Fatalf("Error parsing logging configuration: %v", err)
 	}
 	logger, atomicLevel := logging.NewLoggerFromConfig(config, logconfig.WebhookName())
-	defer logger.Sync()
+	defer flush(logger)
 	logger = logger.With(zap.String(logkey.ControllerType, logconfig.WebhookName()))
 
 	logger.Infow("Starting the Kafka Messaging Webhook")
@@ -68,6 +73,11 @@ func main() {
 	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.Namespace())
 
 	configMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.WebhookName()))
+
+	// Watch the observability config map
+	configMapWatcher.Watch(metrics.ConfigMapName(), metrics.UpdateExporterFromConfigMap(component, logger))
+
+
 
 	stats, err := webhook.NewStatsReporter()
 	if err != nil {
@@ -110,4 +120,10 @@ func main() {
 		logger.Errorw("controller.Run() failed", zap.Error(err))
 	}
 	logger.Infow("Kafka webhook stopping")
+}
+
+
+func flush(logger *zap.SugaredLogger) {
+	_ = logger.Sync()
+	metrics.FlushExporter()
 }

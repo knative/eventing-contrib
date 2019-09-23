@@ -37,7 +37,12 @@ import (
 	"knative.dev/pkg/configmap"
 	kncontroller "knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/signals"
+)
+
+const (
+	component = "kafkachannel_dispatcher"
 )
 
 var (
@@ -49,7 +54,7 @@ var (
 func main() {
 	flag.Parse()
 	logger, atomicLevel := setupLogger()
-	defer logger.Sync()
+	defer flush(logger)
 
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := signals.SetupSignalHandler()
@@ -107,8 +112,10 @@ func main() {
 
 	// Watch the logging config map and dynamically update logging levels.
 	opt.ConfigMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
-	// TODO: Watch the observability config map and dynamically update metrics exporter.
-	//opt.ConfigMapWatcher.Watch(metrics.ObservabilityConfigName, metrics.UpdateExporterFromConfigMap(component, logger))
+
+	// Watch the observability config map
+	opt.ConfigMapWatcher.Watch(metrics.ConfigMapName(), metrics.UpdateExporterFromConfigMap(component, logger))
+
 	// Watch the config-kafka config map and restart if it changes
 	opt.ConfigMapWatcher.Watch("config-kafka", utils.KafkaConfigMapObserver(logger))
 	// Setup zipkin tracing.
@@ -178,4 +185,9 @@ func getLoggingConfigOrDie() map[string]string {
 		log.Fatalf("Error loading logging configuration: %v", err)
 	}
 	return cm
+}
+
+func flush(logger *zap.SugaredLogger) {
+	_ = logger.Sync()
+	metrics.FlushExporter()
 }
