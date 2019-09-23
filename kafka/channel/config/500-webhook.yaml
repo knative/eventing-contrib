@@ -49,7 +49,7 @@ spec:
             value: kafka-webhook
         ports:
           - containerPort: 9090
-              name: metrics
+            name: metrics
         volumeMounts:
         - name: config-logging
           mountPath: /etc/config-logging
