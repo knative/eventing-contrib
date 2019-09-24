@@ -35,7 +35,7 @@ import (
 	"knative.dev/pkg/webhook"
 )
 
-const(
+const (
 	component = "kafkachannel_webhook"
 )
 
@@ -119,7 +119,6 @@ func main() {
 	}
 	logger.Infow("Kafka webhook stopping")
 }
-
 
 func flush(logger *zap.SugaredLogger) {
 	_ = logger.Sync()
