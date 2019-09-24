@@ -1,6 +1,8 @@
 # Metrics
 
-Follow the instructions on Knative eventing to [access Prometheus metrics](https://github.com/knative/eventing/blob/master/docs/metrics.md#access-metrics). Then do the following to access Apache Kafka metrics.
+Follow the instructions on Knative eventing to
+[access Prometheus metrics](https://github.com/knative/eventing/blob/master/docs/metrics.md#access-metrics).
+Then do the following to access Apache Kafka metrics.
 
 ## Add KafkaChannel scrape jobs in the Prometheus config map
 
@@ -10,66 +12,84 @@ Edit the config map **prometheus-scrape-config**:
 kubectl edit cm -n knative-monitoring prometheus-scrape-config
 ```
 
-Add the following job entries under **data**.**prometheus.yml**.**scrape_configs**:
+Add the following job entries under
+**data**.**prometheus.yml**.**scrape_configs**:
 
 ```yaml
-    # kafkachannel_controller
-    - job_name: kafkachannel_controller
-      scrape_interval: 3s
-      scrape_timeout: 3s
-      kubernetes_sd_configs:
-        - role: pod
-      relabel_configs:
-        # Scrape only the the targets matching the following metadata
-        - source_labels: [__meta_kubernetes_namespace,__meta_kubernetes_pod_label_messaging_knative_dev_role, __meta_kubernetes_pod_label_messaging_knative_dev_channel, __meta_kubernetes_pod_container_port_name]
-          action: keep
-          regex: knative-eventing;controller;kafka-channel;metrics
-        # Rename metadata labels to be reader friendly
-        - source_labels: [__meta_kubernetes_namespace]
-          target_label: namespace
-        - source_labels: [__meta_kubernetes_pod_name]
-          target_label: pod
-        - source_labels: [__meta_kubernetes_service_name]
-          target_label: service
+# kafkachannel_controller
+- job_name: kafkachannel_controller
+  scrape_interval: 3s
+  scrape_timeout: 3s
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    # Scrape only the the targets matching the following metadata
+    - source_labels:
+        [
+          __meta_kubernetes_namespace,
+          __meta_kubernetes_pod_label_messaging_knative_dev_role,
+          __meta_kubernetes_pod_label_messaging_knative_dev_channel,
+          __meta_kubernetes_pod_container_port_name,
+        ]
+      action: keep
+      regex: knative-eventing;controller;kafka-channel;metrics
+    # Rename metadata labels to be reader friendly
+    - source_labels: [__meta_kubernetes_namespace]
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      target_label: pod
+    - source_labels: [__meta_kubernetes_service_name]
+      target_label: service
 
-    # kafkachannel_dispatcher
-    - job_name: kafkachannel_dispatcher
-      scrape_interval: 3s
-      scrape_timeout: 3s
-      kubernetes_sd_configs:
-        - role: pod
-      relabel_configs:
-        # Scrape only the the targets matching the following metadata
-        - source_labels: [__meta_kubernetes_namespace,__meta_kubernetes_pod_label_messaging_knative_dev_role, __meta_kubernetes_pod_label_messaging_knative_dev_channel, __meta_kubernetes_pod_container_port_name]
-          action: keep
-          regex: knative-eventing;dispatcher;kafka-channel;metrics
-        # Rename metadata labels to be reader friendly
-        - source_labels: [__meta_kubernetes_namespace]
-          target_label: namespace
-        - source_labels: [__meta_kubernetes_pod_name]
-          target_label: pod
-        - source_labels: [__meta_kubernetes_service_name]
-          target_label: service
+# kafkachannel_dispatcher
+- job_name: kafkachannel_dispatcher
+  scrape_interval: 3s
+  scrape_timeout: 3s
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    # Scrape only the the targets matching the following metadata
+    - source_labels:
+        [
+          __meta_kubernetes_namespace,
+          __meta_kubernetes_pod_label_messaging_knative_dev_role,
+          __meta_kubernetes_pod_label_messaging_knative_dev_channel,
+          __meta_kubernetes_pod_container_port_name,
+        ]
+      action: keep
+      regex: knative-eventing;dispatcher;kafka-channel;metrics
+    # Rename metadata labels to be reader friendly
+    - source_labels: [__meta_kubernetes_namespace]
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      target_label: pod
+    - source_labels: [__meta_kubernetes_service_name]
+      target_label: service
 
-    # kafkachannel_webhook
-    - job_name: kafkachannel_webhook
-      scrape_interval: 3s
-      scrape_timeout: 3s
-      kubernetes_sd_configs:
-        - role: pod
-      relabel_configs:
-        # Scrape only the the targets matching the following metadata
-        - source_labels: [__meta_kubernetes_namespace,__meta_kubernetes_pod_label_messaging_knative_dev_role, __meta_kubernetes_pod_label_messaging_knative_dev_channel, __meta_kubernetes_pod_container_port_name]
-          action: keep
-          regex: knative-eventing;controller;kafka-channel;metrics
-        # Rename metadata labels to be reader friendly
-        - source_labels: [__meta_kubernetes_namespace]
-          target_label: namespace
-        - source_labels: [__meta_kubernetes_pod_name]
-          target_label: pod
-        - source_labels: [__meta_kubernetes_service_name]
-          target_label: service
-
+# kafkachannel_webhook
+- job_name: kafkachannel_webhook
+  scrape_interval: 3s
+  scrape_timeout: 3s
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    # Scrape only the the targets matching the following metadata
+    - source_labels:
+        [
+          __meta_kubernetes_namespace,
+          __meta_kubernetes_pod_label_messaging_knative_dev_role,
+          __meta_kubernetes_pod_label_messaging_knative_dev_channel,
+          __meta_kubernetes_pod_container_port_name,
+        ]
+      action: keep
+      regex: knative-eventing;controller;kafka-channel;metrics
+    # Rename metadata labels to be reader friendly
+    - source_labels: [__meta_kubernetes_namespace]
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      target_label: pod
+    - source_labels: [__meta_kubernetes_service_name]
+      target_label: service
 ```
 
 ## Restart Prometheus pods to pick up this new config map changes
@@ -89,7 +109,10 @@ kubectl port-forward -n knative-monitoring \
    9090
 ```
 
-Access Prometheus targets endpoint [http://localhost:9090/targets](http://localhost:9090/targets). Now, the **kafkachannel_controller**, **kafkachannel_dispatcher** and **kafkachannel_webhook** jobs should be up.
+Access Prometheus targets endpoint
+[http://localhost:9090/targets](http://localhost:9090/targets). Now, the
+**kafkachannel_controller**, **kafkachannel_dispatcher** and
+**kafkachannel_webhook** jobs should be up.
 
 ## Check KafkaChannel controller metrics
 
@@ -114,4 +137,5 @@ metadata:
 EOF
 ```
 
-Access KafkaChannel controller metrics [http://localhost:9091/metrics](http://localhost:9091/metrics).
+Access KafkaChannel controller metrics
+[http://localhost:9091/metrics](http://localhost:9091/metrics).
