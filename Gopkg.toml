@@ -42,7 +42,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  branch = "release-0.9"
 
 # TODO why is this overridden?
 [[override]]

@@ -51,10 +51,8 @@ import (
 	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
 
-	//	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/controller"
 	pkgLogging "knative.dev/pkg/logging"
-	//	"knative.dev/pkg/tracker"
 )
 
 const (
@@ -77,12 +75,10 @@ type Reconciler struct {
 	receiveAdapterImage string
 	eventTypeLister     eventinglisters.EventTypeLister
 	kafkaLister         listers.KafkaSourceLister
-	//Tracker             tracker.Interface
-	sinkReconciler   *duck.SinkReconciler
-	deploymentLister appsv1listers.DeploymentLister
-	//	resourceTracker     duck.ResourceTracker
-	loggingContext context.Context
-	loggingConfig  *pkgLogging.Config
+	sinkReconciler      *duck.SinkReconciler
+	deploymentLister    appsv1listers.DeploymentLister
+	loggingContext      context.Context
+	loggingConfig       *pkgLogging.Config
 }
 
 // Check that our Reconciler implements controller.Reconciler
@@ -129,7 +125,6 @@ func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) e
 	src.Status.ObservedGeneration = src.Generation
 	src.Status.InitializeConditions()
 
-	//	track := r.resourceTracker.TrackInNamespace(src)
 	if src.Spec.Sink == nil {
 		src.Status.MarkNoSink("Missing", "Sink missing from spec")
 		return errors.New("spec.sink missing")
@@ -154,9 +149,6 @@ func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) e
 		return err
 	}
 	src.Status.MarkDeployed(ra)
-	//	if err = track(utils.ObjectRef(ra, deploymentGVK)); err != nil {
-	//		return fmt.Errorf("unable to track receive adapter: %v", err)
-	//	}
 
 	err = r.reconcileEventTypes(ctx, src)
 	if err != nil {
@@ -212,7 +204,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 	raArgs := resources.ReceiveAdapterArgs{
 		Image:         r.receiveAdapterImage,
 		Source:        src,
-		Labels:        getLabels(src),
+		Labels:        resources.GetLabels(src.Name),
 		LoggingConfig: loggingConfig,
 		SinkURI:       sinkURI,
 	}
@@ -227,14 +219,12 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 		}
 		r.Recorder.Eventf(src, corev1.EventTypeNormal, kafkaSourceDeploymentCreated, "%s", msg)
 		return ra, err
-	}
-	if err != nil {
+	} else if err != nil {
 		logging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
 		return nil, err
 	} else if !metav1.IsControlledBy(ra, src) {
 		return nil, fmt.Errorf("deployment %q is not owned by KafkaSource %q", ra.Name, src.Name)
 	} else if podSpecChanged(ra.Spec.Template.Spec, expected.Spec.Template.Spec) {
-		logging.FromContext(ctx).Desugar().Info("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 		ra.Spec.Template.Spec = expected.Spec.Template.Spec
 		if ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
 			return ra, err
@@ -327,14 +317,7 @@ func (r *Reconciler) getEventTypes(ctx context.Context, src *v1alpha1.KafkaSourc
 }
 
 func (r *Reconciler) getLabelSelector(src *v1alpha1.KafkaSource) labels.Selector {
-	return labels.SelectorFromSet(getLabels(src))
-}
-
-func getLabels(src *v1alpha1.KafkaSource) map[string]string {
-	return map[string]string{
-		"knative-eventing-source":      controllerAgentName,
-		"knative-eventing-source-name": src.Name,
-	}
+	return labels.SelectorFromSet(resources.GetLabels(src.Name))
 }
 
 func (r *Reconciler) updateStatus(ctx context.Context, src *v1alpha1.KafkaSource) (*v1alpha1.KafkaSource, error) {

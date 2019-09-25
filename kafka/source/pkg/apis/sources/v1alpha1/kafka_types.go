@@ -23,9 +23,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	//	"knative.dev/pkg/apis"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -34,8 +34,6 @@ import (
 
 // KafkaSource is the Schema for the kafkasources API.
 // +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:categories=all,knative,eventing,sources
 type KafkaSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,13 +46,10 @@ type KafkaSource struct {
 var _ runtime.Object = (*KafkaSource)(nil)
 
 // Check that KafkaSource will be checked for immutable fields.
-//var _ apis.Immutable = (*KafkaSource)(nil)
+var _ apis.Immutable = (*KafkaSource)(nil)
 
 //This is a total guess
 var _ kmeta.OwnerRefable = (*KafkaSource)(nil)
-
-// Check that KafkaSource implements the Conditions duck type.
-var _ = duck.VerifyType(&KafkaSource{}, &duckv1beta1.Conditions{})
 
 type KafkaSourceSASLSpec struct {
 	Enable bool `json:"enable,omitempty"`
@@ -151,7 +146,7 @@ type KafkaSourceStatus struct {
 	// inherits duck/v1alpha1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the KafkaSource.
 	// +optional

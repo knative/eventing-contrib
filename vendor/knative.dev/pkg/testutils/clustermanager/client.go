@@ -26,5 +26,4 @@ type ClusterOperations interface {
 	Provider() string
 	Initialize() error
 	Acquire() error
-	Delete() error
 }

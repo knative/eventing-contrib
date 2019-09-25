@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/fake"
@@ -37,6 +38,7 @@ import (
 	"knative.dev/eventing/pkg/reconciler"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/configmap"
+
 	//	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	clientgotesting "k8s.io/client-go/testing"
@@ -91,8 +93,6 @@ func init() {
 	_ = v1.AddToScheme(scheme.Scheme)
 	_ = corev1.AddToScheme(scheme.Scheme)
 	_ = duckv1alpha1.AddToScheme(scheme.Scheme)
-	_ = eventingv1alpha1.AddToScheme(scheme.Scheme)
-	_ = eventingsourcesv1alpha1.AddToScheme(scheme.Scheme)
 	_ = sourcesv1alpha1.AddToScheme(scheme.Scheme)
 }
 
@@ -347,6 +347,7 @@ func TestReconcile(t *testing.T) {
 	}
 
 	logger := logtesting.TestLogger(t)
+
 	for _, tc := range testCases {
 		cs := kafkaclient.NewSimpleClientset(tc.Objects...)
 		tc.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -359,7 +360,7 @@ func TestReconcile(t *testing.T) {
 				eventTypeLister:     listers.GetEventTypeLister(),
 				receiveAdapterImage: raImage,
 			}
-			r.sinkReconciler = duck.NewSinkReconciler(ctx, func(string) {})
+			r.sinkReconciler = duck.NewSinkReconciler(ctx, func(types.NamespacedName) {})
 			return r
 		},
 			true,

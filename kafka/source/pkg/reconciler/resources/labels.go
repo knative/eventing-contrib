@@ -22,9 +22,9 @@ const (
 	controllerAgentName = "kafka-source-controller"
 )
 
-func getLabels(name string) map[string]string {
+func GetLabels(name string) map[string]string {
 	return map[string]string{
-		"knative-eventing-source":      controllerAgentName,
-		"knative-eventing-source-name": name,
+		"eventing.knative.dev/source":     controllerAgentName,
+		"eventing.knative.dev/SourceName": name,
 	}
 }

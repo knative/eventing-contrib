@@ -20,14 +20,12 @@ import (
 	"context"
 	"os"
 
-	//	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
-	// NewController stuff
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	sourcescheme "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/scheme"
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client"
 	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource"
+	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
@@ -55,7 +53,6 @@ func NewController(
 	kafkaInformer := kafkainformer.Get(ctx)
 	eventTypeInformer := eventtypeinformer.Get(ctx)
 	deploymentInformer := deploymentinformer.Get(ctx)
-	//	resourceInformer := duck.NewResourceInformer(ctx)
 
 	c := &Reconciler{
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
@@ -69,7 +66,6 @@ func NewController(
 
 	impl := controller.NewImpl(c, c.Logger, "KafkaSource")
 
-	//	c.resourceTracker = resourceInformer.NewTracker(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	c.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
 
 	c.Logger.Info("Setting up kafka event handlers")

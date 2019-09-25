@@ -24,6 +24,8 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/apis/duck"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 var (
@@ -38,6 +40,9 @@ var (
 		},
 	}
 )
+
+// Check that KafkaSource implements the Conditions duck type.
+var _ = duck.VerifyType(&KafkaSource{}, &duckv1.Conditions{})
 
 func TestKafkaSourceStatusGetCondition(t *testing.T) {
 	tests := []struct {

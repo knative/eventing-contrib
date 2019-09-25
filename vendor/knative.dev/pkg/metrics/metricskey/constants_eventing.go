@@ -30,13 +30,10 @@ const (
 	// ResourceTypeKnativeSource is the Stackdriver resource type for Knative Sources.
 	ResourceTypeKnativeSource = "knative_source"
 
-	// LabelName is the label for the name of the resource.
-	LabelName = "name"
+	// LabelTriggerName is the label for the name of the Trigger.
+	LabelTriggerName = "trigger_name"
 
-	// LabelResourceGroup is the name of the resource CRD.
-	LabelResourceGroup = "resource_group"
-
-	// LabelBrokerName is the label for the name of the Trigger's broker.
+	// LabelBrokerName is the label for the name of the Broker.
 	LabelBrokerName = "broker_name"
 
 	// LabelEventType is the label for the name of the event type.
@@ -50,6 +47,12 @@ const (
 
 	// LabelFilterSource is the label for the Trigger filter attribute "source".
 	LabelFilterSource = "filter_source"
+
+	// LabelSourceName is the label for the name of the Source.
+	LabelSourceName = "source_name"
+
+	// LabelSourceResourceGroup is the name of the Source CRD.
+	LabelSourceResourceGroup = "source_resource_group"
 )
 
 var (
@@ -59,7 +62,7 @@ var (
 		LabelLocation,
 		LabelClusterName,
 		LabelNamespaceName,
-		LabelName,
+		LabelTriggerName,
 		LabelBrokerName,
 	)
 
@@ -77,7 +80,7 @@ var (
 		LabelLocation,
 		LabelClusterName,
 		LabelNamespaceName,
-		LabelName,
+		LabelBrokerName,
 	)
 
 	// KnativeBrokerMetrics stores a set of metric types which are supported
@@ -92,8 +95,8 @@ var (
 		LabelLocation,
 		LabelClusterName,
 		LabelNamespaceName,
-		LabelName,
-		LabelResourceGroup,
+		LabelSourceName,
+		LabelSourceResourceGroup,
 	)
 
 	// KnativeSourceMetrics stores a set of metric types which are supported
