@@ -20,6 +20,11 @@ aliases:
   natss-reviewers:
     - Abd4llA
 
+  couchdb-approvers:
+    - lionelvillard
+  couchdb-reviewers:
+    - lionelvillard
+
   productivity-approvers:
   - adrcunha
   - chaodaiG
@@ -28,7 +33,6 @@ aliases:
   - adrcunha
   - chaodaiG
   - coryrc
-  - dushyanthsc
   - Fredy-Z
   - srinivashegde86
   - steuhs

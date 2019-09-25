@@ -17,6 +17,6 @@ spec:
           - set-body:
               constant: Hello world!
   sink:
-    apiVersion: eventing.knative.dev/v1alpha1
+    apiVersion: messaging.knative.dev/v1alpha1
     kind: Channel
     name: camel-test

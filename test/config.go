@@ -19,12 +19,12 @@ import (
 // ChannelFeatureMap saves the channel-features mapping.
 // Each pair means the channel support the list of features.
 var ChannelFeatureMap = map[string][]common.Feature{
-	KafkaChannelKind: []common.Feature{
+	KafkaChannelKind: {
 		common.FeatureBasic,
 		common.FeatureRedelivery,
 		common.FeaturePersistence,
 	},
-	NatssChannelKind: []common.Feature{
+	NatssChannelKind: {
 		common.FeatureBasic,
 		common.FeatureRedelivery,
 		common.FeaturePersistence,

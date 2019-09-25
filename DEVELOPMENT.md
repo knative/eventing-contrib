@@ -24,9 +24,7 @@ running on your cluster.
 You must have [Knative Eventing](http://github.com/knative/eventing) running on
 your cluster.
 
-You must have
-[ko](https://github.com/google/go-containerregistry/blob/master/cmd/ko/README.md)
-installed.
+You must have [ko](https://github.com/google/ko) installed.
 
 ### Checkout your fork
 
@@ -62,7 +60,7 @@ of the sources _Github Source_, _AWS SQS Source_, _Camel Source_, _Kafka Source_
 with:
 
 ```
-ko apply -f contrib/<source_name>/
+ko apply -f <source_name>/config  # e.g. github/config
 ```
 
 These commands are idempotent, so you can run them at any time to update your
@@ -79,12 +77,18 @@ github-controller-manager-0   1/1       Running   0          2h
 You can access the Github eventing manager's logs with:
 
 ```shell
-kubectl -n knative-sources logs $(kubectl -n knative-sources get pods -l control-plane=github-controller-manager -o name)
+kubectl -n knative-sources logs \
+    $(kubectl \
+        -n knative-sources \
+        get pods \
+        -l control-plane=github-controller-manager \
+        -o name \
+    )
 ```
 
 _See [camel/source/samples/README.md](./camel/source/samples/README.md),
-[kafka/source/samples/README.md](./kafka/source/samples/README.md) for
-instructions on installing the Camel Source and Kafka Source._
+[kafka/source/README.md](./kafka/source/README.md) for instructions on
+installing the Camel Source and Kafka Source._
 
 ## Iterating
 
@@ -92,9 +96,9 @@ As you make changes to the code-base:
 
 - **If you change a package's deps** (including adding external dep), then you
   must run [`./hack/update-deps.sh`](./hack/update-deps.sh).
-- **If you change a type definition (contrib/<source_name>/pkg/apis/),** then
-  you must run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This
-  also runs [`./hack/update-deps.sh`](./hack/update-deps.sh)._
+- **If you change a type definition (\<source_name\>/pkg/apis/),** then you must
+  run [`./hack/update-codegen.sh`](./hack/update-codegen.sh). _This also runs
+  [`./hack/update-deps.sh`](./hack/update-deps.sh)._
 
 These are both idempotent, and we expect that running these in the `master`
 branch to produce no diffs.
@@ -123,7 +127,7 @@ Running tests as you make changes to the code-base is pretty simple. See
 You can delete `Knative Sources` with:
 
 ```shell
-ko delete -f contrib/<source_name>/config/
+ko delete -f <source_name>/config/
 ```
 
 <!--

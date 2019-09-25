@@ -11,6 +11,6 @@ spec:
     key: credentials
   queueUrl: QUEUE_URL
   sink:
-    apiVersion: eventing.knative.dev/v1alpha1
+    apiVersion: messaging.knative.dev/v1alpha1
     kind: Channel
     name: awssqs-test

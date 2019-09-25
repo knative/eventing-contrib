@@ -519,6 +519,14 @@
   version = "v1.3.0"
 
 [[projects]]
+  digest = "1:f0b13ded1636cd71c51dc9f2a16cac980698d861c8e91f242c0c368428aaae5b"
+  name = "github.com/knative/serving"
+  packages = ["pkg/apis/serving/v1beta1"]
+  pruneopts = "NUT"
+  revision = "3f73b117b61ee5d8fe5dcedd6cca2c96014329a9"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
   digest = "1:927762c6729b4e72957ba3310e485ed09cf8451c5a637a52fd016a9fe09e7936"
   name = "github.com/mailru/easyjson"
@@ -528,7 +536,7 @@
     "jwriter",
   ]
   pruneopts = "NUT"
-  revision = "b2ccc519800e761ac8000b95e5d57c80a897ff9e"
+  revision = "1b2b06f5f209fea48ff5922d8bfb2b9ed5d8f00b"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -963,9 +971,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
+  digest = "1:c313aef534e493304f3666fbd24dca5932ebf776a82b7a40f961c9355794a1b1"
   name = "golang.org/x/sync"
-  packages = ["semaphore"]
+  packages = [
+    "errgroup",
+    "semaphore",
+  ]
   pruneopts = "NUT"
   revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
@@ -1236,7 +1247,7 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:ecd8d459a40c5135e6d50fe7ac191d39da56fbad2b4b222c2d74a045557f64e8"
+  digest = "1:d8052718b0234741451be12dfcd67133e7242e8330c2d21d587dbf8feee17814"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -1273,6 +1284,7 @@
     "pkg/util/mergepatch",
     "pkg/util/naming",
     "pkg/util/net",
+    "pkg/util/rand",
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
@@ -1289,6 +1301,14 @@
   pruneopts = "NUT"
   revision = "01f179d85dbce0f2e0e4351a92394b38694b7cae"
   version = "kubernetes-1.12.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f4399da66c191adee58287b4069dbd3f040c4b42c7050e426b9b906c263c65b6"
+  name = "k8s.io/apiserver"
+  packages = ["pkg/storage/names"]
+  pruneopts = "NUT"
+  revision = "d6b22d09ee11be9e99a9391e94513ea18952f6d7"
 
 [[projects]]
   digest = "1:e41f040a7dada94e29b62420a80fd02caddfc4f9dfa63ab38a9151545aa422ae"
@@ -1519,7 +1539,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5ab69d2a5c254c09c218b95dc7c6feaf14c6a2035d7356aba7c7fa0fb096970d"
+  digest = "1:6043107c0c9085ea7397f55dc806560c59d9b01e9b155581d28fc2c070e9b416"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1542,16 +1562,28 @@
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "pkg/client/informers/externalversions",
+    "pkg/client/informers/externalversions/eventing",
+    "pkg/client/informers/externalversions/eventing/v1alpha1",
+    "pkg/client/informers/externalversions/internalinterfaces",
+    "pkg/client/informers/externalversions/messaging",
+    "pkg/client/informers/externalversions/messaging/v1alpha1",
+    "pkg/client/informers/externalversions/sources",
+    "pkg/client/informers/externalversions/sources/v1alpha1",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
+    "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
+    "pkg/client/injection/informers/factory",
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
     "pkg/defaultchannel",
     "pkg/duck",
+    "pkg/kncloudevents",
     "pkg/logconfig",
     "pkg/logging",
+    "pkg/reconciler",
     "pkg/reconciler/names",
     "pkg/reconciler/testing",
     "pkg/tracing",
@@ -1563,7 +1595,7 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "2024418959749f09451967d0dd061905dc7d3da5"
+  revision = "a1a098150e5b624573c391563cd13f1703dcc10d"
 
 [[projects]]
   branch = "release-0.9"
@@ -1591,11 +1623,14 @@
     "client/clientset/versioned/typed/istio/v1alpha3/fake",
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
+    "client/injection/kube/informers/apps/v1/deployment",
+    "client/injection/kube/informers/factory",
     "configmap",
     "controller",
     "injection",
     "injection/clients/dynamicclient",
     "injection/clients/dynamicclient/fake",
+    "injection/sharedmain",
     "kmeta",
     "kmp",
     "logging",
@@ -1604,6 +1639,7 @@
     "metrics",
     "metrics/metricskey",
     "network",
+    "profiling",
     "ptr",
     "reconciler/testing",
     "signals",
@@ -1646,14 +1682,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ab8dac73d2e2118e42f22b3f1208eb7a44ee9493a9e9d97976fea509f8e0337f"
+  digest = "1:964a4f9e12d5021b9d550e04c36cf23feb880e286ceede1b246d5c0e43b523b9"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "2c83a176f473acb4b6b851e98e53882f594ffb5c"
+  revision = "e09d3c7669d2268d5ce11ea53cd7e9429722c1a7"
 
 [[projects]]
   digest = "1:399953e7c3ac9253dcf1fe909b0a74f6d1c4e974decefd6f5d361cab06249ccc"
@@ -1743,6 +1779,7 @@
     "github.com/google/go-github/github",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
+    "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
     "github.com/onsi/ginkgo",
@@ -1774,6 +1811,7 @@
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/util/validation",
+    "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
@@ -1796,6 +1834,7 @@
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",
+    "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
@@ -1804,8 +1843,13 @@
     "knative.dev/eventing/pkg/channel/fanout",
     "knative.dev/eventing/pkg/channel/multichannelfanout",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
+    "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
+    "knative.dev/eventing/pkg/duck",
+    "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
+    "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
@@ -1818,9 +1862,11 @@
     "knative.dev/pkg/apis/duck/v1alpha1",
     "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/client/clientset/versioned/fake",
+    "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
+    "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/kmp",
     "knative.dev/pkg/logging",
