@@ -77,8 +77,8 @@ type Reconciler struct {
 
 	// listers index properties about resources
 	couchdbsourceLister listers.CouchDbSourceLister
-	deploymentLister      appsv1listers.DeploymentLister
-	eventTypeLister       eventinglisters.EventTypeLister
+	deploymentLister    appsv1listers.DeploymentLister
+	eventTypeLister     eventinglisters.EventTypeLister
 
 	couchdbClientSet versioned.Interface
 
