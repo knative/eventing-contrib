@@ -30,10 +30,11 @@ import (
 
 	"k8s.io/client-go/tools/record"
 
+	"go.uber.org/zap"
 	ktesting "k8s.io/client-go/testing"
 	"knative.dev/pkg/controller"
-	logtesting "knative.dev/pkg/logging/testing"
 
+	fakekafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client/fake"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
@@ -51,18 +52,18 @@ const (
 type Ctor func(context.Context, *Listers, configmap.Watcher) controller.Reconciler
 
 // MakeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
-func MakeFactory(ctor Ctor, unstructured bool) Factory {
+func MakeFactory(ctor Ctor, unstructured bool, logger *zap.SugaredLogger) Factory {
 	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList, *FakeStatsReporter) {
 		ls := NewListers(r.Objects)
 
 		ctx := context.Background()
-		logger := logtesting.TestLogger(t)
 		ctx = logging.WithLogger(ctx, logger)
 
 		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
 		ctx, client := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
 			NewScheme(), ToUnstructured(t, r.Objects)...)
+		ctx, kafkaClient := fakekafkaclient.With(ctx, ls.GetKafkaObjects()...)
 
 		dynamicScheme := runtime.NewScheme()
 		for _, addTo := range clientSetSchemes {
@@ -83,11 +84,12 @@ func MakeFactory(ctor Ctor, unstructured bool) Factory {
 		//ctx = reconciler.WithStatsReporter(ctx, statsReporter) // TODO: upstream stats interface from eventing to PKG
 
 		// Set up our Controller from the fakes.
-		c := ctor(ctx, &ls, configmap.NewFixedWatcher())
+		c := ctor(ctx, &ls, configmap.NewStaticWatcher())
 
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
 			client.PrependReactor("*", "*", reactor)
+			kafkaClient.PrependReactor("*", "*", reactor)
 			dynamicClient.PrependReactor("*", "*", reactor)
 		}
 
@@ -99,7 +101,7 @@ func MakeFactory(ctor Ctor, unstructured bool) Factory {
 			return ValidateUpdates(ctx, action)
 		})
 
-		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
+		actionRecorderList := ActionRecorderList{kafkaClient, dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
 
 		return c, actionRecorderList, eventList, statsReporter

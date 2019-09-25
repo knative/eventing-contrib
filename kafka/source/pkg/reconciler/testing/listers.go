@@ -104,10 +104,15 @@ func (l *Listers) GetSubscriberObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(subscriberAddToScheme)
 }
 
+func (l *Listers) GetKafkaObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakekafkaclientset.AddToScheme)
+}
+
 func (l *Listers) GetAllObjects() []runtime.Object {
 	all := l.GetSubscriberObjects()
 	all = append(all, l.GetEventingObjects()...)
 	all = append(all, l.GetKubeObjects()...)
+	all = append(all, l.GetKafkaObjects()...)
 	return all
 }
 

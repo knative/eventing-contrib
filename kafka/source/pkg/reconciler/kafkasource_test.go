@@ -30,8 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	//	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
-	//	"knative.dev/eventing-contrib/pkg/reconciler/eventtype"
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/fake"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	eventingsourcesv1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
@@ -145,7 +143,7 @@ func TestReconcile(t *testing.T) {
 					WithKafkaSourceObjectMetaGeneration(generation),
 					// Status Update follows:
 					WithInitKafkaSourceConditions,
-					WithKafkaSourceStatusObservedGeneration(0), //This should be 1?
+					WithKafkaSourceStatusObservedGeneration(generation),
 					WithKafkaSourceSinkNotFound,
 				),
 			}},
@@ -348,7 +346,7 @@ func TestReconcile(t *testing.T) {
 		},*/
 	}
 
-	defer logtesting.ClearAll()
+	logger := logtesting.TestLogger(t)
 	for _, tc := range testCases {
 		cs := kafkaclient.NewSimpleClientset(tc.Objects...)
 		tc.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
@@ -365,6 +363,7 @@ func TestReconcile(t *testing.T) {
 			return r
 		},
 			true,
+			logger,
 		))
 	}
 }
