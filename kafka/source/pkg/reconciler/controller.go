@@ -37,6 +37,10 @@ import (
 	"knative.dev/pkg/logging"
 )
 
+const (
+	controllerAgentName = "kafka-source-controller"
+)
+
 func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
@@ -51,12 +55,12 @@ func NewController(
 	kafkaInformer := kafkainformer.Get(ctx)
 	eventTypeInformer := eventtypeinformer.Get(ctx)
 	deploymentInformer := deploymentinformer.Get(ctx)
-	resourceInformer := duck.NewResourceInformer(ctx)
+	//	resourceInformer := duck.NewResourceInformer(ctx)
 
 	c := &Reconciler{
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
 		kafkaClientSet:      kafkaclient.Get(ctx),
-		KafkaLister:         kafkaInformer.Lister(),
+		kafkaLister:         kafkaInformer.Lister(),
 		deploymentLister:    deploymentInformer.Lister(),
 		receiveAdapterImage: raImage,
 		eventTypeLister:     eventTypeInformer.Lister(),
@@ -65,7 +69,7 @@ func NewController(
 
 	impl := controller.NewImpl(c, c.Logger, "KafkaSource")
 
-	c.resourceTracker = resourceInformer.NewTracker(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	//	c.resourceTracker = resourceInformer.NewTracker(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	c.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
 
 	c.Logger.Info("Setting up kafka event handlers")

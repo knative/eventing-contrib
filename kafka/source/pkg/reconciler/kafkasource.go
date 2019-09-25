@@ -50,14 +50,14 @@ import (
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
-	"knative.dev/eventing/pkg/utils"
+
+	//	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/controller"
 	pkgLogging "knative.dev/pkg/logging"
-	"knative.dev/pkg/tracker"
+	//	"knative.dev/pkg/tracker"
 )
 
 const (
-	controllerAgentName          = "kafka-source-controller"
 	raImageEnvVar                = "KAFKA_RA_IMAGE"
 	kafkaReadinessChanged        = "KafkaSourceReadinessChanged"
 	kafkaUpdateStatusFailed      = "KafkaSourceUpdateStatusFailed"
@@ -76,28 +76,28 @@ type Reconciler struct {
 	kafkaClientSet      clientset.Interface
 	receiveAdapterImage string
 	eventTypeLister     eventinglisters.EventTypeLister
-	KafkaLister         listers.KafkaSourceLister
-	Tracker             tracker.Interface
-	sinkReconciler      *duck.SinkReconciler
-	deploymentLister    appsv1listers.DeploymentLister
-	resourceTracker     duck.ResourceTracker
-	loggingContext      context.Context
-	loggingConfig       *pkgLogging.Config
+	kafkaLister         listers.KafkaSourceLister
+	//Tracker             tracker.Interface
+	sinkReconciler   *duck.SinkReconciler
+	deploymentLister appsv1listers.DeploymentLister
+	//	resourceTracker     duck.ResourceTracker
+	loggingContext context.Context
+	loggingConfig  *pkgLogging.Config
 }
 
 // Check that our Reconciler implements controller.Reconciler
 var _ controller.Reconciler = (*Reconciler)(nil)
 
 func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	logger := logging.FromContext(ctx)
+	logger := logging.FromContext(ctx).Desugar()
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		logger.Errorf("invalid resource key: %s", key)
+		logger.Error("invalid resource key: %s", zap.Any("key", key))
 		return nil
 	}
 
-	src, ok := r.KafkaLister.KafkaSources(namespace).Get(name)
+	src, ok := r.kafkaLister.KafkaSources(namespace).Get(name)
 	if apierrs.IsNotFound(ok) {
 		logger.Error("could not find Apache Kafka source", zap.Any("key", key))
 		return nil
@@ -113,9 +113,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		logger.Debug("KafkaSource reconciled")
 		r.Recorder.Eventf(kafka, corev1.EventTypeNormal, kafkaSourceReconciled, "`KafkaSource reconciled: %s/%s", kafka.Namespace, kafka.Name)
 	}
-	// updateStatusErr stuff here?
+
 	if _, updateStatusErr := r.updateStatus(ctx, kafka.DeepCopy()); updateStatusErr != nil {
-		logging.FromContext(ctx).Error("Failed to update the KafkaSource", zap.Error(err))
+		logging.FromContext(ctx).Warn("Failed to update the KafkaSource", zap.Error(err))
 		r.Recorder.Eventf(kafka, corev1.EventTypeWarning, kafkaUpdateStatusFailed, "Failed to update KafkaSource's status: %v", err)
 		return updateStatusErr
 	}
@@ -125,11 +125,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 
 func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) error {
 	logger := logging.FromContext(ctx)
-	logger.Info("Reconciling new source: ", zap.Any("source", src))
 
+	src.Status.ObservedGeneration = src.Generation
 	src.Status.InitializeConditions()
 
-	track := r.resourceTracker.TrackInNamespace(src)
+	//	track := r.resourceTracker.TrackInNamespace(src)
 	if src.Spec.Sink == nil {
 		src.Status.MarkNoSink("Missing", "Sink missing from spec")
 		return errors.New("spec.sink missing")
@@ -154,9 +154,9 @@ func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) e
 		return err
 	}
 	src.Status.MarkDeployed(ra)
-	if err = track(utils.ObjectRef(ra, deploymentGVK)); err != nil {
-		return fmt.Errorf("unable to track receive adapter: %v", err)
-	}
+	//	if err = track(utils.ObjectRef(ra, deploymentGVK)); err != nil {
+	//		return fmt.Errorf("unable to track receive adapter: %v", err)
+	//	}
 
 	err = r.reconcileEventTypes(ctx, src)
 	if err != nil {
@@ -338,7 +338,7 @@ func getLabels(src *v1alpha1.KafkaSource) map[string]string {
 }
 
 func (r *Reconciler) updateStatus(ctx context.Context, src *v1alpha1.KafkaSource) (*v1alpha1.KafkaSource, error) {
-	kafka, err := r.KafkaLister.KafkaSources(src.Namespace).Get(src.Name)
+	kafka, err := r.kafkaLister.KafkaSources(src.Namespace).Get(src.Name)
 	if err != nil {
 		return nil, err
 	}
