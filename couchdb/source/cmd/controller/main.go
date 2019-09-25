@@ -22,5 +22,5 @@ import (
 )
 
 func main() {
-	sharedmain.Main("couchdb-controller", reconciler.NewController)
+	sharedmain.Main("couchdb_controller", reconciler.NewController)
 }
