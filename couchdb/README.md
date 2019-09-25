@@ -1,15 +1,16 @@
 # Apache CouchDB source for Knative
 
-The Apache CouchDB Event source enables Knative Eventing integration with [Apache
-CouchDB](http://couchdb.apache.org/).
+The Apache CouchDB Event source enables Knative Eventing integration with
+[Apache CouchDB](http://couchdb.apache.org/).
 
-This source works by polling every 2 seconds for CouchDB database changes. More configuration
-parameters will be provided in the future.
+This source works by polling every 2 seconds for CouchDB database changes. More
+configuration parameters will be provided in the future.
 
 ## Deployment steps
 
 1. Setup [Knative Eventing](../DEVELOPMENT.md)
-1. Create a secret containing the data needed to access your CouchDB service. For example:
+1. Create a secret containing the data needed to access your CouchDB service.
+   For example:
 
    ```yaml
    apiVersion: v1
@@ -26,8 +27,8 @@ parameters will be provided in the future.
    ```
 
 1. Create the `CouchDbSource` custom objects, by configuring the required
-   `credentials` and `database` values on the CR file of
-   your source. Below is an example:
+   `credentials` and `database` values on the CR file of your source. Below is
+   an example:
 
    ```yaml
    apiVersion: sources.eventing.knative.dev/v1alpha1
