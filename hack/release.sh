@@ -29,6 +29,7 @@ COMPONENTS=(
   ["kafka-channel.yaml"]="kafka/channel/config"
   ["natss-channel.yaml"]="natss/config"
   ["awssqs.yaml"]="awssqs/config"
+  ["couchdb.yaml"]="couchdb/source/config"
 )
 readonly COMPONENTS
 
