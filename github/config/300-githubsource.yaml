@@ -20,6 +20,13 @@ metadata:
     contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "dev.knative.source.github.check_suite" },
+        { "type": "dev.knative.source.github.commit_comment" },
+        { "type": "dev.knative.source.github.create" },
+      ]
 spec:
   group: sources.eventing.knative.dev
   names:

@@ -20,6 +20,7 @@ metadata:
   labels:
     eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
+  annotations:
     registry.knative.dev/eventTypes: |
       [
         { "type": "dev.knative.couchdb.changes" }
