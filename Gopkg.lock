@@ -806,6 +806,14 @@
   revision = "3113b8401b8a98917cde58f8bbd42a1b1c03b1fd"
 
 [[projects]]
+  digest = "1:f1b3e1f7d4169dcd9e2003685383e99f6a4bdea14129bbcfdd80bfe455e0ad05"
+  name = "github.com/robfig/cron"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "45fbe1491cdd47d74d1bf1396286d67faee8b8b5"
+  version = "v3.0.0"
+
+[[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
@@ -1539,7 +1547,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6043107c0c9085ea7397f55dc806560c59d9b01e9b155581d28fc2c070e9b416"
+  digest = "1:dfef9df6503fdb6d789ffc2faa0cf25a14d0fa1a57eeb0c111cd24156b12c7e0"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1595,7 +1603,7 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "a1a098150e5b624573c391563cd13f1703dcc10d"
+  revision = "f01f9d6db8f1e6398baf42663cb60f2d9b3885cb"
 
 [[projects]]
   branch = "release-0.9"

@@ -24,6 +24,7 @@ import (
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"knative.dev/eventing/pkg/channel"
 	"knative.dev/pkg/tracing"
 )
 
@@ -35,7 +36,7 @@ const (
 // MessageReceiver starts a server to receive new messages for the channel dispatcher. The new
 // message is emitted via the receiver function.
 type MessageReceiver struct {
-	receiverFunc      func(ChannelReference, *Message) error
+	receiverFunc      func(channel.ChannelReference, *Message) error
 	forwardHeaders    sets.String
 	forwardPrefixes   []string
 	logger            *zap.SugaredLogger
@@ -47,7 +48,7 @@ type ReceiverOptions func(*MessageReceiver) error
 
 // ResolveChannelFromHostFunc function enables MessageReceiver to get the Channel Reference from incoming request HostHeader
 // before calling receiverFunc.
-type ResolveChannelFromHostFunc func(string) (ChannelReference, error)
+type ResolveChannelFromHostFunc func(string) (channel.ChannelReference, error)
 
 // ResolveChannelFromHostHeader is a ReceiverOption for NewMessageReceiver which enables the caller to overwrite the
 // default behaviour defined by ParseChannel function.
@@ -60,7 +61,7 @@ func ResolveChannelFromHostHeader(hostToChannelFunc ResolveChannelFromHostFunc) 
 
 // NewMessageReceiver creates a message receiver passing new messages to the
 // receiverFunc.
-func NewMessageReceiver(receiverFunc func(ChannelReference, *Message) error, logger *zap.SugaredLogger, opts ...ReceiverOptions) (*MessageReceiver, error) {
+func NewMessageReceiver(receiverFunc func(channel.ChannelReference, *Message) error, logger *zap.SugaredLogger, opts ...ReceiverOptions) (*MessageReceiver, error) {
 	receiver := &MessageReceiver{
 		receiverFunc:      receiverFunc,
 		forwardHeaders:    sets.NewString(forwardHeaders...),
@@ -207,12 +208,12 @@ func (r *MessageReceiver) fromHTTPHeaders(headers http.Header) map[string]string
 
 // ParseChannel converts the channel's hostname into a channel
 // reference.
-func ParseChannel(host string) (ChannelReference, error) {
+func ParseChannel(host string) (channel.ChannelReference, error) {
 	chunks := strings.Split(host, ".")
 	if len(chunks) < 2 {
-		return ChannelReference{}, fmt.Errorf("bad host format '%s'", host)
+		return channel.ChannelReference{}, fmt.Errorf("bad host format '%s'", host)
 	}
-	return ChannelReference{
+	return channel.ChannelReference{
 		Name:      chunks[0],
 		Namespace: chunks[1],
 	}, nil
