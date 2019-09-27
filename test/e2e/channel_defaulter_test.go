@@ -26,10 +26,14 @@ import (
 
 // TestChannelClusterDefaulter tests a cluster defaulted channel can be created with the template specified through configmap.
 func TestChannelClusterDefaulter(t *testing.T) {
+	// TODO(chizhg): reenable the test after solving https://github.com/knative/eventing-contrib/issues/627
+	t.Skip()
 	helpers.ChannelClusterDefaulterTestHelper(t, channelTestRunner)
 }
 
 // TestChannelNamespaceDefaulter tests a namespace defaulted channel can be created with the template specified through configmap.
 func TestChannelNamespaceDefaulter(t *testing.T) {
+	// TODO(chizhg): reenable the test after solving https://github.com/knative/eventing-contrib/issues/627
+	t.Skip()
 	helpers.ChannelNamespaceDefaulterTestHelper(t, channelTestRunner)
 }
