@@ -57,7 +57,7 @@ func (in *AwsSqsSource) DeepCopyObject() runtime.Object {
 func (in *AwsSqsSourceList) DeepCopyInto(out *AwsSqsSourceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AwsSqsSource, len(*in))

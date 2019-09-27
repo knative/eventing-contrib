@@ -57,7 +57,7 @@ func (in *GitHubSource) DeepCopyObject() runtime.Object {
 func (in *GitHubSourceList) DeepCopyInto(out *GitHubSourceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]GitHubSource, len(*in))

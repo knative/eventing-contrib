@@ -131,7 +131,7 @@ func (c *FakeGitHubSources) DeleteCollection(options *v1.DeleteOptions, listOpti
 // Patch applies the patch and returns the patched gitHubSource.
 func (c *FakeGitHubSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GitHubSource, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(githubsourcesResource, c.ns, name, data, subresources...), &v1alpha1.GitHubSource{})
+		Invokes(testing.NewPatchSubresourceAction(githubsourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.GitHubSource{})
 
 	if obj == nil {
 		return nil, err
