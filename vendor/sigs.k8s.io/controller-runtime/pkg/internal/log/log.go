@@ -14,20 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-Package patch provides method to calculate JSON patch between 2 k8s objects.
+// Package log contains utilities for fetching a new logger
+// when one is not already available.
+// Deprecated: use pkg/log
+package log
 
-Calculate JSON patch
+import (
+	"github.com/go-logr/logr"
 
-	oldDeployment := appsv1.Deployment{
-		// some fields
-	}
-	newDeployment := appsv1.Deployment{
-		// some different fields
-	}
-	patch, err := NewJSONPatch(oldDeployment, newDeployment)
-	if err != nil {
-		// handle error
-	}
-*/
-package patch
+	"sigs.k8s.io/controller-runtime/pkg/log"
+)
+
+var (
+	// RuntimeLog is a base parent logger for use inside controller-runtime.
+	RuntimeLog logr.Logger
+)
+
+func init() {
+	RuntimeLog = log.Log.WithName("controller-runtime")
+}

@@ -87,7 +87,7 @@ func (r *Reconciler) getEventTypes(ctx context.Context, namespace string, lbs ma
 	}
 
 	el := &eventingv1alpha1.EventTypeList{}
-	if err := r.Client.List(ctx, opts, el); err != nil {
+	if err := r.Client.List(ctx, el, opts); err != nil {
 		return nil, err
 	}
 
