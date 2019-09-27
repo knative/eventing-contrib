@@ -26,10 +26,12 @@ import (
 
 // TestChannelClusterDefaulter tests a cluster defaulted channel can be created with the template specified through configmap.
 func TestChannelClusterDefaulter(t *testing.T) {
+	t.Skip()
 	helpers.ChannelClusterDefaulterTestHelper(t, channelTestRunner)
 }
 
 // TestChannelNamespaceDefaulter tests a namespace defaulted channel can be created with the template specified through configmap.
 func TestChannelNamespaceDefaulter(t *testing.T) {
+	t.Skip()
 	helpers.ChannelNamespaceDefaulterTestHelper(t, channelTestRunner)
 }
