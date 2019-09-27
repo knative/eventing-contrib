@@ -20,6 +20,45 @@ metadata:
     contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
+  annotations:
+    # TODO add schemas and descriptions
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "dev.knative.source.github.check_suite" },
+        { "type": "dev.knative.source.github.commit_comment" },
+        { "type": "dev.knative.source.github.create" },
+        { "type": "dev.knative.source.github.delete" },
+        { "type": "dev.knative.source.github.deployment" },
+        { "type": "dev.knative.source.github.deployment_status" },
+        { "type": "dev.knative.source.github.fork" },
+        { "type": "dev.knative.source.github.gollum" },
+        { "type": "dev.knative.source.github.installation" },
+        { "type": "dev.knative.source.github.integration_installation" },
+        { "type": "dev.knative.source.github.issue_comment" },
+        { "type": "dev.knative.source.github.issues" },
+        { "type": "dev.knative.source.github.label" },
+        { "type": "dev.knative.source.github.member" },
+        { "type": "dev.knative.source.github.membership" },
+        { "type": "dev.knative.source.github.milestone" },
+        { "type": "dev.knative.source.github.organization" },
+        { "type": "dev.knative.source.github.org_block" },
+        { "type": "dev.knative.source.github.page_build" },
+        { "type": "dev.knative.source.github.ping" },
+        { "type": "dev.knative.source.github.project_card" },
+        { "type": "dev.knative.source.github.project_column" },
+        { "type": "dev.knative.source.github.project" },
+        { "type": "dev.knative.source.github.public" },
+        { "type": "dev.knative.source.github.pull_request" },
+        { "type": "dev.knative.source.github.pull_request_review" },
+        { "type": "dev.knative.source.github.pull_request_review_comment" },
+        { "type": "dev.knative.source.github.push" },
+        { "type": "dev.knative.source.github.release" },
+        { "type": "dev.knative.source.github.repository" },
+        { "type": "dev.knative.source.github.status" },
+        { "type": "dev.knative.source.github.team" },
+        { "type": "dev.knative.source.github.team_add" },
+        { "type": "dev.knative.source.github.watch" }
+      ]
 spec:
   group: sources.eventing.knative.dev
   names:
@@ -36,287 +75,6 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
-        registry:
-          type: object
-          description: "Internal information, users should not set this property"
-          properties:
-            eventTypes:
-              # TODO: set the schemas' patterns.
-              type: object
-              description: "Event types that GitHubSource can produce"
-              properties:
-                check_suite:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.check_suite"
-                    schema:
-                      type: string
-                commit_comment:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.commit_comment"
-                    schema:
-                      type: string
-                create:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.create"
-                    schema:
-                      type: string
-                delete:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.delete"
-                    schema:
-                      type: string
-                deployment:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.deployment"
-                    schema:
-                      type: string
-                deployment_status:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.deployment_status"
-                    schema:
-                      type: string
-                fork:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.fork"
-                    schema:
-                      type: string
-                gollum:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.gollum"
-                    schema:
-                      type: string
-                installation:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.installation"
-                    schema:
-                      type: string
-                integration_installation:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.integration_installation"
-                    schema:
-                      type: string
-                issue_comment:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.issue_comment"
-                    schema:
-                      type: string
-                issues:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.issues"
-                    schema:
-                      type: string
-                label:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.label"
-                    schema:
-                      type: string
-                member:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.member"
-                    schema:
-                      type: string
-                membership:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.membership"
-                    schema:
-                      type: string
-                milestone:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.milestone"
-                    schema:
-                      type: string
-                organization:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.organization"
-                    schema:
-                      type: string
-                org_block:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.org_block"
-                    schema:
-                      type: string
-                page_build:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.page_build"
-                    schema:
-                      type: string
-                ping:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.ping"
-                    schema:
-                      type: string
-                project_card:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.project_card"
-                    schema:
-                      type: string
-                project_column:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.project_column"
-                    schema:
-                      type: string
-                project:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.project"
-                    schema:
-                      type: string
-                public:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.public"
-                    schema:
-                      type: string
-                pull_request:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.pull_request"
-                    schema:
-                      type: string
-                pull_request_review:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.pull_request_review"
-                    schema:
-                      type: string
-                pull_request_review_comment:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.pull_request_review_comment"
-                    schema:
-                      type: string
-                push:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.push"
-                    schema:
-                      type: string
-                release:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.release"
-                    schema:
-                      type: string
-                repository:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.repository"
-                    schema:
-                      type: string
-                status:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.status"
-                    schema:
-                      type: string
-                team:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.team"
-                    schema:
-                      type: string
-                team_add:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.team_add"
-                    schema:
-                      type: string
-                watch:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.source.github.watch"
-                    schema:
-                      type: string
         spec:
           properties:
             accessToken:

@@ -19,6 +19,11 @@ metadata:
     contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "aws.sqs.message" }
+      ]
   name: awssqssources.sources.eventing.knative.dev
 spec:
   group: sources.eventing.knative.dev
@@ -36,23 +41,6 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
-        registry:
-          type: object
-          description: "Internal information, users should not set this property"
-          properties:
-            eventTypes:
-              type: object
-              description: "Event types that AwsSqsSource can produce"
-              properties:
-                message:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "aws.sqs.message"
-                    # TODO: set the schema pattern.
-                    schema:
-                      type: string
         spec:
           properties:
             awsCredsSecret:
