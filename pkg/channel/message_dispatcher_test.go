@@ -30,6 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
+// TODO remove once we migrate channels to use event_receiver and event_dispatcher.
+//  https://github.com/knative/eventing-contrib/issues/598
+//  https://github.com/knative/eventing-contrib/issues/597
+
 var (
 	// Headers that are added to the response, but we don't want to check in our assertions.
 	unimportantHeaders = sets.NewString(

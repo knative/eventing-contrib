@@ -33,6 +33,10 @@ import (
 	"go.uber.org/zap"
 )
 
+// TODO remove once we migrate channels to use event_receiver and event_dispatcher.
+//  https://github.com/knative/eventing-contrib/issues/598
+//  https://github.com/knative/eventing-contrib/issues/597
+
 func TestMessageReceiver_HandleRequest(t *testing.T) {
 	testCases := map[string]struct {
 		method       string

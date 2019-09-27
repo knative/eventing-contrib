@@ -22,6 +22,10 @@ import (
 	"strings"
 )
 
+// TODO remove once we migrate channels to use event_receiver and event_dispatcher.
+//  https://github.com/knative/eventing-contrib/issues/598
+//  https://github.com/knative/eventing-contrib/issues/597
+
 const (
 	// MessageHistoryHeader is the header containing all channel hosts traversed by the message
 	// This is an experimental header: https://github.com/knative/eventing/issues/638
