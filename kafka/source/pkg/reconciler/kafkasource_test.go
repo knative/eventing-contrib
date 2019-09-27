@@ -134,7 +134,7 @@ func TestReconcile(t *testing.T) {
 			},
 			Mocks: controllertesting.Mocks{
 				MockLists: []controllertesting.MockList{
-					func(_ client.Client, _ context.Context, _ *client.ListOptions, _ runtime.Object) (controllertesting.MockHandled, error) {
+					func(_ client.Client, _ context.Context, _ runtime.Object, _ ...client.ListOption) (controllertesting.MockHandled, error) {
 						return controllertesting.Handled, errors.New("test-induced-error")
 					},
 				},

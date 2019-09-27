@@ -69,7 +69,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		Parent:    &sourcesv1alpha1.GitHubSource{},
 		Owns:      []runtime.Object{&servingv1alpha1.Service{}, &eventingv1alpha1.EventType{}},
 		Reconciler: &reconciler{
-			recorder:            mgr.GetRecorder(controllerAgentName),
+			recorder:            mgr.GetEventRecorderFor(controllerAgentName),
 			scheme:              mgr.GetScheme(),
 			receiveAdapterImage: receiveAdapterImage,
 			webhookClient:       gitHubWebhookClient{},
@@ -321,7 +321,7 @@ func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 
 func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {
 	list := &servingv1alpha1.ServiceList{}
-	err := r.client.List(ctx, &client.ListOptions{
+	lo := &client.ListOptions{
 		Namespace:     source.Namespace,
 		LabelSelector: labels.Everything(),
 		// TODO this is here because the fake client needs it.
@@ -332,8 +332,8 @@ func (r *reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 				Kind:       "Service",
 			},
 		},
-	},
-		list)
+	}
+	err := r.client.List(ctx, list, lo)
 	if err != nil {
 		return nil, err
 	}

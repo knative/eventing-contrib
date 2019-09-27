@@ -202,7 +202,7 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 
 func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource) (*v1.Deployment, error) {
 	dl := &v1.DeploymentList{}
-	err := r.client.List(ctx, &client.ListOptions{
+	do := &client.ListOptions{
 		Namespace:     src.Namespace,
 		LabelSelector: r.getLabelSelector(src),
 		// TODO this is only needed by the fake client. Real K8s does not need it. Remove it once
@@ -213,8 +213,8 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaS
 				Kind:       "Deployment",
 			},
 		},
-	},
-		dl)
+	}
+	err := r.client.List(ctx, dl, do)
 
 	if err != nil {
 		logging.FromContext(ctx).Desugar().Error("Unable to list deployments: %v", zap.Error(err))
