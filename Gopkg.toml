@@ -42,32 +42,42 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "release-0.9"
+  branch = "master"
 
 # TODO why is this overridden?
 [[override]]
   name = "github.com/Shopify/sarama"
   version = "1.21.0"
 
+# Overridden to ensure compatibility with GKE
+# GKE version as of 2019-09-19 is 1.14
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.12.6"
+  version = "kubernetes-1.15.3"
 
+# Overridden to ensure compatibility with GKE
+# GKE version as of 2019-09-19 is 1.14
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.12.6"
+  version = "kubernetes-1.15.3"
 
-[[override]]
-  name = "k8s.io/code-generator"
-  version = "kubernetes-1.12.6"
-
-[[override]]
-  name = "k8s.io/client-go"
-  version = "kubernetes-1.12.6"
-
+# Overridden to ensure compatibility with GKE
+# GKE version as of 2019-09-19 is 1.14
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.12.6"
+  version = "kubernetes-1.15.3"
+
+# Overridden to ensure compatibility with GKE
+# GKE version as of 2019-09-19 is 1.14
+[[override]]
+  name = "k8s.io/code-generator"
+  version = "kubernetes-1.15.3"
+
+# Overridden to ensure compatibility with GKE
+# GKE version as of 2019-09-19 is 1.14
+[[override]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.15.3"
 
 [[override]]
   name = "cloud.google.com/go"
