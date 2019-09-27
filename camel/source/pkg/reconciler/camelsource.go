@@ -63,7 +63,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		Parent:    &v1alpha1.CamelSource{},
 		Owns:      []runtime.Object{&camelv1alpha1.Integration{}},
 		Reconciler: &reconciler{
-			recorder: mgr.GetRecorder(controllerAgentName),
+			recorder: mgr.GetEventRecorderFor(controllerAgentName),
 			scheme:   mgr.GetScheme(),
 		},
 	}
@@ -189,21 +189,19 @@ func (r *reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelS
 	logger := logging.FromContext(ctx)
 
 	list := &camelv1alpha1.IntegrationList{}
-	err := r.client.List(
-		ctx,
-		&client.ListOptions{
-			Namespace:     source.Namespace,
-			LabelSelector: labels.Everything(),
-			// TODO this is here because the fake client needs it.
-			// Remove this when it's no longer needed.
-			Raw: &metav1.ListOptions{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
-					Kind:       "Integration",
-				},
+	lo := &client.ListOptions{
+		Namespace:     source.Namespace,
+		LabelSelector: labels.Everything(),
+		// TODO this is here because the fake client needs it.
+		// Remove this when it's no longer needed.
+		Raw: &metav1.ListOptions{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
+				Kind:       "Integration",
 			},
 		},
-		list)
+	}
+	err := r.client.List(ctx, list, lo)
 	if err != nil {
 		logger.Errorw("Unable to list integrations", zap.Error(err))
 		return nil, err
@@ -236,21 +234,19 @@ func (r *reconciler) getIntegrationContext(ctx context.Context, namespace string
 	logger := logging.FromContext(ctx)
 
 	list := &camelv1alpha1.IntegrationKitList{}
-	err := r.client.List(
-		ctx,
-		&client.ListOptions{
-			Namespace:     namespace,
-			LabelSelector: labels.Everything(),
-			// TODO this is here because the fake client needs it.
-			// Remove this when it's no longer needed.
-			Raw: &metav1.ListOptions{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
-					Kind:       "IntegrationKit",
-				},
+	lo := &client.ListOptions{
+		Namespace:     namespace,
+		LabelSelector: labels.Everything(),
+		// TODO this is here because the fake client needs it.
+		// Remove this when it's no longer needed.
+		Raw: &metav1.ListOptions{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
+				Kind:       "IntegrationKit",
 			},
 		},
-		list)
+	}
+	err := r.client.List(ctx, list, lo)
 	if err != nil {
 		logger.Errorw("Unable to list integration contexts", zap.Error(err))
 		return nil, err

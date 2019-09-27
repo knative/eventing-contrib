@@ -106,7 +106,7 @@ func (m *MockClient) List(ctx context.Context, opts *client.ListOptions, list ru
 			return err
 		}
 	}
-	return m.innerClient.List(ctx, opts, list)
+	return m.innerClient.List(ctx, list, opts)
 }
 
 func (m *MockClient) Create(ctx context.Context, obj runtime.Object) error {

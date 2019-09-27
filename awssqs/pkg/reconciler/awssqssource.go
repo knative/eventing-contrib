@@ -189,7 +189,7 @@ func (r *reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Aws
 
 func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.AwsSqsSource) (*v1.Deployment, error) {
 	dl := &v1.DeploymentList{}
-	err := r.client.List(ctx, &client.ListOptions{
+	lo := &client.ListOptions{
 		Namespace:     src.Namespace,
 		LabelSelector: r.getLabelSelector(src),
 		// TODO this is only needed by the fake client. Real K8s does not need it. Remove it once
@@ -200,7 +200,8 @@ func (r *reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.AwsSqs
 				Kind:       "Deployment",
 			},
 		},
-	}, dl)
+	}
+	err := r.client.List(ctx, dl, lo)
 
 	if err != nil {
 		logging.FromContext(ctx).Desugar().Error("Unable to list deployments: %v", zap.Error(err))
