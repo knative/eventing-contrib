@@ -113,7 +113,7 @@ func TestReconcile(t *testing.T) {
 			},
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
-					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+					func(_ client.Client, _ context.Context, _ runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 						return controllertesting.Handled, errors.New("test-induced-error")
 					},
 				},
@@ -169,7 +169,7 @@ func TestReconcile(t *testing.T) {
 			},
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
-					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+					func(_ client.Client, _ context.Context, _ runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 						return controllertesting.Handled, errors.New("an error that won't be seen because create is not called")
 					},
 				},
@@ -189,7 +189,7 @@ func TestReconcile(t *testing.T) {
 			},
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
-					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+					func(_ client.Client, _ context.Context, obj runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 						if eventType, ok := obj.(*eventingv1alpha1.EventType); ok {
 							// Hack because the fakeClient does not support GenerateName.
 							if strings.Contains(eventType.Spec.Source, "topic1") {
@@ -222,7 +222,7 @@ func TestReconcile(t *testing.T) {
 			},
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
-					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+					func(_ client.Client, _ context.Context, obj runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 						if eventType, ok := obj.(*eventingv1alpha1.EventType); ok {
 							// Hack because the fakeClient does not support GenerateName.
 							if strings.Contains(eventType.Spec.Source, "topic1") {
@@ -257,7 +257,7 @@ func TestReconcile(t *testing.T) {
 			},
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
-					func(_ client.Client, _ context.Context, _ runtime.Object) (controllertesting.MockHandled, error) {
+					func(_ client.Client, _ context.Context, _ runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 						return controllertesting.Handled, errors.New("an error that won't be seen because create is not called")
 					},
 				},
@@ -280,7 +280,7 @@ func TestReconcile(t *testing.T) {
 			},
 			Mocks: controllertesting.Mocks{
 				MockCreates: []controllertesting.MockCreate{
-					func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+					func(_ client.Client, _ context.Context, obj runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 						if _, ok := obj.(*eventingv1alpha1.EventType); ok {
 							return controllertesting.Handled, errors.New("test-induced-error")
 						}
