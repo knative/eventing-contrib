@@ -174,7 +174,7 @@ func (m *MockClient) DeleteAllOf(ctx context.Context, obj runtime.Object, opts .
 			return err
 		}
 	}
-	return m.innerClient.DeleteAllOf(ctx, obj, opts...)
+	return m.innerClient.DeleteAllOf(ctx, obj)
 }
 
 func (m *MockClient) Status() client.StatusWriter {
