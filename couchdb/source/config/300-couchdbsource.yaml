@@ -20,6 +20,11 @@ metadata:
   labels:
     eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "dev.knative.couchdb.changes" }
+      ]
   name: couchdbsources.sources.eventing.knative.dev
 spec:
   group: sources.eventing.knative.dev
@@ -37,22 +42,6 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
-        registry:
-          type: object
-          description: "Internal information, users should not set this property"
-          properties:
-            eventTypes:
-              type: object
-              description: "Event types that CouchDB source can produce"
-              properties:
-                changes:
-                  type: object
-                  properties:
-                    type:
-                      type: string
-                      pattern: "dev.knative.couchdb.changes"
-                    schema:
-                      type: object
         apiVersion:
           type: string
         kind:
