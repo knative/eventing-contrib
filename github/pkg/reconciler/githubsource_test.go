@@ -830,7 +830,7 @@ var testCases = []controllertesting.TestCase{
 		Scheme:       scheme.Scheme,
 		Mocks: controllertesting.Mocks{
 			MockCreates: []controllertesting.MockCreate{
-				func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+				func(_ client.Client, _ context.Context, obj runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 					if _, ok := obj.(*eventingv1alpha1.EventType); ok {
 						return controllertesting.Handled, errors.New("test-induced-error")
 					}
