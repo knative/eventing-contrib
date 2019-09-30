@@ -73,6 +73,13 @@ function knative_setup() {
     popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
+
+  # TODO install head if !is_release_branch
+  echo "Installing Knative Monitoring"
+  kubectl create namespace istio-system
+  kubectl apply --filename "${KNATIVE_MONITORING_RELEASE}" || return 1
+  wait_until_pods_running istio-system || fail_test "Knative Monitoring did not come up"
+
 }
 
 function knative_teardown() {
