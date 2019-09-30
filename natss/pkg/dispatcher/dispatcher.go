@@ -101,7 +101,7 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 	}
 }
 
-func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) func(eventingchannels.ChannelReference, *channels.Message) error {
+func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) func(eventingchannels.ChannelReference, *contribchannels.Message) error {
 	return func(channel eventingchannels.ChannelReference, m *contribchannels.Message) error {
 		logger.Infof("Received message from %q channel", channel.String())
 		// publish to Natss
