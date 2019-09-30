@@ -31,7 +31,7 @@ import (
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
-	channels "knative.dev/eventing-contrib/pkg/channel"
+	contribchannels "knative.dev/eventing-contrib/pkg/channel"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/fanout"
@@ -372,7 +372,7 @@ func TestFromKafkaMessage(t *testing.T) {
 		},
 		Value: data,
 	}
-	want := &channels.Message{
+	want := &contribchannels.Message{
 		Headers: map[string]string{
 			"k1": "v1",
 		},
@@ -390,7 +390,7 @@ func TestToKafkaMessage(t *testing.T) {
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
-	msg := &channels.Message{
+	msg := &contribchannels.Message{
 		Headers: map[string]string{
 			"k1": "v1",
 		},
@@ -480,7 +480,7 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}
 
-	receiver, err := channels.NewMessageReceiver(func(channel eventingchannels.ChannelReference, message *channels.Message) error {
+	receiver, err := contribchannels.NewMessageReceiver(func(channel eventingchannels.ChannelReference, message *contribchannels.Message) error {
 		return nil
 	}, zap.NewNop().Sugar())
 	if err != nil {
