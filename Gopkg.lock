@@ -299,11 +299,11 @@
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
-  digest = "1:7915c656a10819b240db94ffd6afc6a621af4687db735341d9919668750485ec"
+  digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "abf9ef06abd9f532944e28e8942644ea4b710a40"
+  revision = "b02d448a3705facf11018efff34f1d2830be5724"
 
 [[projects]]
   digest = "1:f4f203acd8b11b8747bdcd91696a01dbc95ccb9e2ca2db6abf81c3a4f5e950ce"
@@ -1544,7 +1544,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dfef9df6503fdb6d789ffc2faa0cf25a14d0fa1a57eeb0c111cd24156b12c7e0"
+  digest = "1:ea0d4e1b231c23123d771043229e5dc6237a6d32b977fa336b5239c8d800945b"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1600,11 +1600,11 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "f01f9d6db8f1e6398baf42663cb60f2d9b3885cb"
+  revision = "f20c3b23dc7e85c7ef8289e36f41690a379f5334"
 
 [[projects]]
   branch = "master"
-  digest = "1:8b3869db4d049c0cf412b8fd042fabb4b33e86269905583fd8b5c60b38f3787e"
+  digest = "1:f824d17bcbf887fdc5cdf63f6a55e639c06d8634fc9810b7fd36522e219a6944"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1663,11 +1663,11 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "f6eb4a55ec685a342ffb631c8303436aa77e4ac5"
+  revision = "aafd48604668d007deb91e43ea34343c44c7c90e"
 
 [[projects]]
   branch = "master"
-  digest = "1:c24ab8c80a7870e36bc7b4f244813045199aab0805851df1443f4ea2ba0c8651"
+  digest = "1:7428fa3c29b9122911c62a8dace650c06f65934be4ebab1c0f6fa314ce000c66"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1676,6 +1676,7 @@
     "pkg/apis/networking",
     "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
+    "pkg/apis/serving/v1",
     "pkg/apis/serving/v1alpha1",
     "pkg/apis/serving/v1beta1",
     "pkg/gc",
@@ -1683,7 +1684,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "24ae126893d0b26ba621b5d874ed76d8d67cfcd3"
+  revision = "aad68e6dabc50d27d921f3cc50f0313b11195a72"
 
 [[projects]]
   branch = "master"

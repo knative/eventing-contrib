@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2019 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1
 
 import (
-	"context"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"knative.dev/pkg/apis"
 )
 
-// Validate inspects and validates ClusterIngress object.
-func (ci *ClusterIngress) Validate(ctx context.Context) *apis.FieldError {
-	return ci.Spec.Validate(apis.WithinSpec(ctx)).ViaField("spec")
+var routeCondSet = apis.NewLivingConditionSet()
+
+// GetGroupVersionKind returns the GroupVersionKind.
+func (r *Route) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("Route")
+}
+
+// IsReady returns if the route is ready to serve the requested configuration.
+func (rs *RouteStatus) IsReady() bool {
+	return routeCondSet.Manage(rs).IsHappy()
 }
