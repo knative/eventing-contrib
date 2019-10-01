@@ -32,3 +32,10 @@ rm -rf $(find vendor/ -name 'BUILD.bazel')
 update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./github/cmd/*" "./camel/source/cmd/*" \
 		"./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" \
 		"./natss/cmd/*" "./couchdb/source/cmd/*"
+
+# HACK HACK HACK
+# The only way we found to create a consistent Trace tree without any missing Spans is to
+# artificially set the SpanId. See pkg/tracing/traceparent.go for more details.
+# Produced with:
+# git diff origin/master HEAD -- vendor/go.opencensus.io/trace/trace.go > ./hack/set-span-id.patch
+git apply ${REPO_ROOT_DIR}/hack/set-span-id.patch
