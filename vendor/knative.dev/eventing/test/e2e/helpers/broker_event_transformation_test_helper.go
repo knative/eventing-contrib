@@ -106,9 +106,13 @@ func EventTransformationForTriggerTestHelper(t *testing.T, channelTestRunner com
 			st.Fatalf("Failed to send fake CloudEvent to the broker %q", brokerName)
 		}
 
+		log, err := client.DumpLog()
+		st.Logf("Error %v, Log %s", err, log)
+
 		// check if the logging service receives the correct event
 		if err := client.CheckLog(loggerPodName, common.CheckerContains(transformedEventBody)); err != nil {
 			st.Fatalf("String %q not found in logs of logger pod %q: %v", transformedEventBody, loggerPodName, err)
 		}
+
 	})
 }
