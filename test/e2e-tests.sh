@@ -69,7 +69,6 @@ function knative_setup() {
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
     git clone https://github.com/knative/eventing
     cd ${GOPATH}/src/knative.dev/eventing
-    git checkout f601cdbca1a76a83bf64311eeb307ba333134fc9
     ko apply -f ${EVENTING_CONFIG}
     popd
   fi

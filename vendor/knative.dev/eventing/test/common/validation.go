@@ -60,29 +60,6 @@ func (client *Client) CheckLog(podName string, checker func(string) bool) error 
 	})
 }
 
-// CheckLog waits until logs for the logger Pod satisfy the checker.
-// If the checker does not pass within timeout it returns error.
-func (client *Client) DumpLog(namespace string) (string, error) {
-	if namespace == "" {
-		namespace = client.Namespace
-	}
-	pods, err := client.Kube.Kube.CoreV1().Pods(namespace).List(metav1.ListOptions{})
-	if err != nil {
-		return "", fmt.Errorf("cannot get pods %v", err)
-	}
-	var logs string
-	for _, pod := range pods.Items {
-		log, err := client.GetLog(pod.Name)
-		if err != nil {
-			return "", fmt.Errorf("cannot get logs for pod %s, %v", pod.Name, err)
-		}
-		logs += " qqq Start of new log for qqq " + pod.Name + "\n"
-		logs += log
-		logs += " qqq End of new log for qqq " + pod.Name + "\n"
-	}
-	return logs, nil
-}
-
 // CheckLogEmpty waits the given amount of time and check the log is empty
 func (client *Client) CheckLogEmpty(podName string, timeout time.Duration) error {
 	time.Sleep(timeout)
