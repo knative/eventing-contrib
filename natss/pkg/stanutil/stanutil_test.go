@@ -23,7 +23,7 @@ import (
 
 	"github.com/nats-io/nats-streaming-server/server"
 	"go.uber.org/zap"
-	channels "knative.dev/eventing/pkg/channel"
+	channels "knative.dev/eventing-contrib/pkg/channel"
 	_ "knative.dev/pkg/system/testing"
 )
 

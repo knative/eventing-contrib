@@ -22,6 +22,12 @@ import (
 	"knative.dev/pkg/logging"
 )
 
+// TODO this should be removed and use instead the eventing one.
+//  There is a problem with the opencensus patching for tracing.
+//  span.SetSpanId function called from traceparent.go in eventing does not exist here,
+//  thus we cannot import anything that uses that.
+//  Also provisioner name is outdated, should be renamed.
+
 const (
 	provisionerLoggingComponent = "provisioner"
 )

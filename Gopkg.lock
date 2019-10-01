@@ -1543,8 +1543,8 @@
   revision = "69764acb6e8e900b7c05296c5d3c9c19545475f9"
 
 [[projects]]
-  branch = "master"
-  digest = "1:ea0d4e1b231c23123d771043229e5dc6237a6d32b977fa336b5239c8d800945b"
+  branch = "tracing"
+  digest = "1:85cd9cfe704ed643c7f7f06b9902fddda252fe9882f3847bb806a6ce0c387e60"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1555,7 +1555,6 @@
     "pkg/apis/messaging/v1alpha1",
     "pkg/apis/sources",
     "pkg/apis/sources/v1alpha1",
-    "pkg/channel",
     "pkg/channel/fanout",
     "pkg/channel/multichannelfanout",
     "pkg/client/clientset/versioned",
@@ -1600,7 +1599,8 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "f20c3b23dc7e85c7ef8289e36f41690a379f5334"
+  revision = "59bbc8afb10a08ee0f4f008f488648718eb205b1"
+  source = "github.com/nachocano/eventing"
 
 [[projects]]
   branch = "master"
@@ -1858,7 +1858,6 @@
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",
-    "knative.dev/eventing/pkg/channel",
     "knative.dev/eventing/pkg/channel/fanout",
     "knative.dev/eventing/pkg/channel/multichannelfanout",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",

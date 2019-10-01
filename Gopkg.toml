@@ -89,7 +89,8 @@ required = [
 
 [[constraint]]
   name = "knative.dev/eventing"
-  branch = "master"
+  source = "github.com/nachocano/eventing"
+  branch = "tracing"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
