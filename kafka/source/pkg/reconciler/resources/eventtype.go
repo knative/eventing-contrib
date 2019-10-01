@@ -37,7 +37,7 @@ func MakeEventType(args *EventTypeArgs) eventingv1alpha1.EventType {
 	return eventingv1alpha1.EventType{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", utils.ToDNS1123Subdomain(v1alpha1.KafkaEventType)),
-			Labels:       getLabels(args.Src.Name),
+			Labels:       GetLabels(args.Src.Name),
 			Namespace:    args.Src.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(args.Src, schema.GroupVersionKind{
