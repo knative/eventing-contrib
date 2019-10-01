@@ -39,10 +39,12 @@ const (
 // func(innerClient client.Client[, arguments to Foo()]) (MockHandled[, returns from Foo()])
 
 type MockGet func(innerClient client.Client, ctx context.Context, key client.ObjectKey, obj runtime.Object) (MockHandled, error)
-type MockList func(innerClient client.Client, ctx context.Context, opts *client.ListOptions, list runtime.Object) (MockHandled, error)
-type MockCreate func(innerClient client.Client, ctx context.Context, obj runtime.Object) (MockHandled, error)
-type MockDelete func(innerClient client.Client, ctx context.Context, obj runtime.Object) (MockHandled, error)
-type MockUpdate func(innerClient client.Client, ctx context.Context, obj runtime.Object) (MockHandled, error)
+type MockList func(innerClient client.Client, ctx context.Context, list runtime.Object, opts ...client.ListOption) (MockHandled, error)
+type MockCreate func(innerClient client.Client, ctx context.Context, obj runtime.Object, opts ...client.CreateOption) (MockHandled, error)
+type MockDelete func(innerClient client.Client, ctx context.Context, obj runtime.Object, opts ...client.DeleteOption) (MockHandled, error)
+type MockUpdate func(innerClient client.Client, ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) (MockHandled, error)
+type MockPatch func(innerClient client.Client, ctx context.Context, obj runtime.Object, patch client.Patch, opts ...client.PatchOption) (MockHandled, error)
+type MockDeleteAllOf func(innerClient client.Client, ctx context.Context, obj runtime.Object, opts ...client.DeleteAllOfOption) (MockHandled, error)
 
 var _ client.Client = (*MockClient)(nil)
 
@@ -63,6 +65,7 @@ type Mocks struct {
 	MockCreates []MockCreate
 	MockDeletes []MockDelete
 	MockUpdates []MockUpdate
+	MockPatches []MockPatch
 }
 
 func NewMockClient(innerClient client.Client, mocks Mocks) *MockClient {
@@ -96,9 +99,9 @@ func (m *MockClient) Get(ctx context.Context, key client.ObjectKey, obj runtime.
 	return m.innerClient.Get(ctx, key, obj)
 }
 
-func (m *MockClient) List(ctx context.Context, opts *client.ListOptions, list runtime.Object) error {
+func (m *MockClient) List(ctx context.Context, list runtime.Object, opts ...client.ListOption) error {
 	for i, mockList := range m.mocks.MockLists {
-		handled, err := mockList(m.innerClient, ctx, opts, list)
+		handled, err := mockList(m.innerClient, ctx, list)
 		if handled == Handled {
 			if len(m.mocks.MockLists) > 1 {
 				m.mocks.MockLists = append(m.mocks.MockLists[:i], m.mocks.MockLists[i+1:]...)
@@ -106,10 +109,10 @@ func (m *MockClient) List(ctx context.Context, opts *client.ListOptions, list ru
 			return err
 		}
 	}
-	return m.innerClient.List(ctx, opts, list)
+	return m.innerClient.List(ctx, list)
 }
 
-func (m *MockClient) Create(ctx context.Context, obj runtime.Object) error {
+func (m *MockClient) Create(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error {
 	for i, mockCreate := range m.mocks.MockCreates {
 		handled, err := mockCreate(m.innerClient, ctx, obj)
 		if handled == Handled {
@@ -122,7 +125,7 @@ func (m *MockClient) Create(ctx context.Context, obj runtime.Object) error {
 	return m.innerClient.Create(ctx, obj)
 }
 
-func (m *MockClient) Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOptionFunc) error {
+func (m *MockClient) Delete(ctx context.Context, obj runtime.Object, opts ...client.DeleteOption) error {
 	for i, mockDelete := range m.mocks.MockDeletes {
 		handled, err := mockDelete(m.innerClient, ctx, obj)
 		if handled == Handled {
@@ -135,7 +138,7 @@ func (m *MockClient) Delete(ctx context.Context, obj runtime.Object, opts ...cli
 	return m.innerClient.Delete(ctx, obj, opts...)
 }
 
-func (m *MockClient) Update(ctx context.Context, obj runtime.Object) error {
+func (m *MockClient) Update(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error {
 	for i, mockUpdate := range m.mocks.MockUpdates {
 		handled, err := mockUpdate(m.innerClient, ctx, obj)
 		if handled == Handled {
@@ -146,6 +149,32 @@ func (m *MockClient) Update(ctx context.Context, obj runtime.Object) error {
 		}
 	}
 	return m.innerClient.Update(ctx, obj)
+}
+
+func (m *MockClient) Patch(ctx context.Context, obj runtime.Object, patch client.Patch, opts ...client.PatchOption) error {
+	for i, mockPatch := range m.mocks.MockPatches {
+		handled, err := mockPatch(m.innerClient, ctx, obj, patch)
+		if handled == Handled {
+			if len(m.mocks.MockPatches) > 1 {
+				m.mocks.MockPatches = append(m.mocks.MockPatches[:i], m.mocks.MockPatches[i+1:]...)
+			}
+			return err
+		}
+	}
+	return m.innerClient.Patch(ctx, obj, patch)
+}
+
+func (m *MockClient) DeleteAllOf(ctx context.Context, obj runtime.Object, opts ...client.DeleteAllOfOption) error {
+	for i, mockDelete := range m.mocks.MockDeletes {
+		handled, err := mockDelete(m.innerClient, ctx, obj)
+		if handled == Handled {
+			if len(m.mocks.MockDeletes) > 1 {
+				m.mocks.MockDeletes = append(m.mocks.MockDeletes[:i], m.mocks.MockDeletes[i+1:]...)
+			}
+			return err
+		}
+	}
+	return m.innerClient.DeleteAllOf(ctx, obj)
 }
 
 func (m *MockClient) Status() client.StatusWriter {

@@ -131,7 +131,7 @@ func (c *FakeNatssChannels) DeleteCollection(options *v1.DeleteOptions, listOpti
 // Patch applies the patch and returns the patched natssChannel.
 func (c *FakeNatssChannels) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.NatssChannel, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(natsschannelsResource, c.ns, name, data, subresources...), &v1alpha1.NatssChannel{})
+		Invokes(testing.NewPatchSubresourceAction(natsschannelsResource, c.ns, name, pt, data, subresources...), &v1alpha1.NatssChannel{})
 
 	if obj == nil {
 		return nil, err

@@ -32,8 +32,8 @@ import (
 	"k8s.io/client-go/tools/record"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -214,8 +214,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -272,8 +272,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -332,8 +332,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -442,8 +442,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -567,8 +567,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -626,8 +626,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -681,8 +681,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -740,8 +740,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -802,8 +802,8 @@ var testCases = []controllertesting.TestCase{
 						Name:      serviceName,
 					},
 					Status: servingv1alpha1.ServiceStatus{
-						Status: duckv1beta1.Status{
-							Conditions: duckv1beta1.Conditions{{
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{{
 								Type:   servingv1alpha1.ServiceConditionReady,
 								Status: corev1.ConditionTrue,
 							}},
@@ -830,7 +830,7 @@ var testCases = []controllertesting.TestCase{
 		Scheme:       scheme.Scheme,
 		Mocks: controllertesting.Mocks{
 			MockCreates: []controllertesting.MockCreate{
-				func(_ client.Client, _ context.Context, obj runtime.Object) (controllertesting.MockHandled, error) {
+				func(_ client.Client, _ context.Context, obj runtime.Object, _ ...client.CreateOption) (controllertesting.MockHandled, error) {
 					if _, ok := obj.(*eventingv1alpha1.EventType); ok {
 						return controllertesting.Handled, errors.New("test-induced-error")
 					}

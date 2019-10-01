@@ -131,7 +131,7 @@ func (c *FakeCouchDbSources) DeleteCollection(options *v1.DeleteOptions, listOpt
 // Patch applies the patch and returns the patched couchDbSource.
 func (c *FakeCouchDbSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.CouchDbSource, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(couchdbsourcesResource, c.ns, name, data, subresources...), &v1alpha1.CouchDbSource{})
+		Invokes(testing.NewPatchSubresourceAction(couchdbsourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.CouchDbSource{})
 
 	if obj == nil {
 		return nil, err

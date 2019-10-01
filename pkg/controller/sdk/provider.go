@@ -51,7 +51,7 @@ func (p *Provider) Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	c, err := controller.New(p.AgentName, mgr, controller.Options{
 		Reconciler: &Reconciler{
 			provider: *p,
-			recorder: mgr.GetRecorder(p.AgentName),
+			recorder: mgr.GetEventRecorderFor(p.AgentName),
 			logger:   *logger,
 		},
 	})

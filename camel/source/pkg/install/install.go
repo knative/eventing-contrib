@@ -68,7 +68,7 @@ func IsCamelKInstalled(c controller.Client) (bool, error) {
 	}
 	list := v1.ClusterRoleList{}
 
-	err := c.List(ctx, &opts, &list)
+	err := c.List(ctx, &list, &opts)
 	if err != nil {
 		return false, err
 	}

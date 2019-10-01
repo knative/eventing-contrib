@@ -28,10 +28,11 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
+	contribchannels "knative.dev/eventing-contrib/pkg/channel"
 	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
-	channels "knative.dev/eventing/pkg/channel"
+	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/logging"
 )
 
@@ -49,11 +50,11 @@ var (
 type SubscriptionsSupervisor struct {
 	logger *zap.Logger
 
-	receiver   *channels.MessageReceiver
-	dispatcher *channels.MessageDispatcher
+	receiver   *contribchannels.MessageReceiver
+	dispatcher *contribchannels.MessageDispatcher
 
 	subscriptionsMux sync.Mutex
-	subscriptions    map[channels.ChannelReference]map[subscriptionReference]*stan.Subscription
+	subscriptions    map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription
 
 	connect   chan struct{}
 	natssURL  string
@@ -72,18 +73,18 @@ type SubscriptionsSupervisor struct {
 func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (*SubscriptionsSupervisor, error) {
 	d := &SubscriptionsSupervisor{
 		logger:        logger,
-		dispatcher:    channels.NewMessageDispatcher(logger.Sugar()),
+		dispatcher:    contribchannels.NewMessageDispatcher(logger.Sugar()),
 		connect:       make(chan struct{}, maxElements),
 		natssURL:      natssURL,
 		clusterID:     clusterID,
 		clientID:      clientID,
-		subscriptions: make(map[channels.ChannelReference]map[subscriptionReference]*stan.Subscription),
+		subscriptions: make(map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription),
 	}
-	d.setHostToChannelMap(map[string]channels.ChannelReference{})
-	receiver, err := channels.NewMessageReceiver(
+	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
+	receiver, err := contribchannels.NewMessageReceiver(
 		createReceiverFunction(d, logger.Sugar()),
 		logger.Sugar(),
-		channels.ResolveChannelFromHostHeader(channels.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
+		contribchannels.ResolveChannelFromHostHeader(contribchannels.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +101,8 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 	}
 }
 
-func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) func(channels.ChannelReference, *channels.Message) error {
-	return func(channel channels.ChannelReference, m *channels.Message) error {
+func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) func(eventingchannels.ChannelReference, *contribchannels.Message) error {
+	return func(channel eventingchannels.ChannelReference, m *contribchannels.Message) error {
 		logger.Infof("Received message from %q channel", channel.String())
 		// publish to Natss
 		ch := getSubject(channel)
@@ -192,7 +193,7 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 	defer s.subscriptionsMux.Unlock()
 
 	failedToSubscribe := make(map[eventingduck.SubscriberSpec]error)
-	cRef := channels.ChannelReference{Namespace: channel.Namespace, Name: channel.Name}
+	cRef := eventingchannels.ChannelReference{Namespace: channel.Namespace, Name: channel.Name}
 	if channel.Spec.Subscribable == nil || isFinalizer {
 		s.logger.Sugar().Infof("Empty subscriptions for channel Ref: %v; unsubscribe all active subscriptions, if any", cRef)
 		chMap, ok := s.subscriptions[cRef]
@@ -261,17 +262,17 @@ func toSubscriberStatus(subSpec *v1alpha1.SubscriberSpec, condition corev1.Condi
 	}
 }
 
-func (s *SubscriptionsSupervisor) subscribe(channel channels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
+func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	mcb := func(msg *stan.Msg) {
-		message := channels.Message{}
+		message := contribchannels.Message{}
 		if err := json.Unmarshal(msg.Data, &message); err != nil {
 			s.logger.Error("Failed to unmarshal message: ", zap.Error(err))
 			return
 		}
 		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, headers: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, message.Headers)
-		if err := s.dispatcher.DispatchMessage(&message, subscription.SubscriberURI, subscription.ReplyURI, channels.DispatchDefaults{Namespace: channel.Namespace}); err != nil {
+		if err := s.dispatcher.DispatchMessage(&message, subscription.SubscriberURI, subscription.ReplyURI, contribchannels.DispatchDefaults{Namespace: channel.Namespace}); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
@@ -304,7 +305,7 @@ func (s *SubscriptionsSupervisor) subscribe(channel channels.ChannelReference, s
 }
 
 // should be called only while holding subscriptionsMux
-func (s *SubscriptionsSupervisor) unsubscribe(channel channels.ChannelReference, subscription subscriptionReference) error {
+func (s *SubscriptionsSupervisor) unsubscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) error {
 	s.logger.Info("Unsubscribe from channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	if stanSub, ok := s.subscriptions[channel][subscription]; ok {
@@ -318,21 +319,21 @@ func (s *SubscriptionsSupervisor) unsubscribe(channel channels.ChannelReference,
 	return nil
 }
 
-func getSubject(channel channels.ChannelReference) string {
+func getSubject(channel eventingchannels.ChannelReference) string {
 	return channel.Name + "." + channel.Namespace
 }
 
-func (s *SubscriptionsSupervisor) getHostToChannelMap() map[string]channels.ChannelReference {
-	return s.hostToChannelMap.Load().(map[string]channels.ChannelReference)
+func (s *SubscriptionsSupervisor) getHostToChannelMap() map[string]eventingchannels.ChannelReference {
+	return s.hostToChannelMap.Load().(map[string]eventingchannels.ChannelReference)
 }
 
-func (s *SubscriptionsSupervisor) setHostToChannelMap(hcMap map[string]channels.ChannelReference) {
+func (s *SubscriptionsSupervisor) setHostToChannelMap(hcMap map[string]eventingchannels.ChannelReference) {
 	s.hostToChannelMap.Store(hcMap)
 }
 
 // NewHostNameToChannelRefMap parses each channel from cList and creates a map[string(Status.Address.HostName)]ChannelReference
-func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]channels.ChannelReference, error) {
-	hostToChanMap := make(map[string]channels.ChannelReference, len(cList))
+func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]eventingchannels.ChannelReference, error) {
+	hostToChanMap := make(map[string]eventingchannels.ChannelReference, len(cList))
 	for _, c := range cList {
 		url := c.Status.Address.GetURL()
 		if cr, present := hostToChanMap[url.Host]; present {
@@ -344,7 +345,7 @@ func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]c
 				cr.Namespace,
 				cr.Name)
 		}
-		hostToChanMap[url.Host] = channels.ChannelReference{Name: c.Name, Namespace: c.Namespace}
+		hostToChanMap[url.Host] = eventingchannels.ChannelReference{Name: c.Name, Namespace: c.Namespace}
 	}
 	return hostToChanMap, nil
 }
@@ -363,7 +364,7 @@ func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, ch
 	return nil
 }
 
-func (s *SubscriptionsSupervisor) getChannelReferenceFromHost(host string) (channels.ChannelReference, error) {
+func (s *SubscriptionsSupervisor) getChannelReferenceFromHost(host string) (eventingchannels.ChannelReference, error) {
 	chMap := s.getHostToChannelMap()
 	cr, ok := chMap[host]
 	if !ok {

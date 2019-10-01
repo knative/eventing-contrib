@@ -22,8 +22,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
-	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 )
@@ -62,7 +62,7 @@ func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage strin
 			ConfigurationSpec: servingv1alpha1.ConfigurationSpec{
 				Template: &servingv1alpha1.RevisionTemplateSpec{
 					Spec: servingv1alpha1.RevisionSpec{
-						RevisionSpec: servingv1beta1.RevisionSpec{
+						RevisionSpec: servingv1.RevisionSpec{
 							PodSpec: corev1.PodSpec{
 								Containers: []corev1.Container{{
 									Image: receiveAdapterImage,

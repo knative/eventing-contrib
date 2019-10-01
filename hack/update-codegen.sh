@@ -26,11 +26,12 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./ven
 
 # Generate based on annotations
 go generate ./pkg/... ./cmd/... ./github/pkg/... ./camel/source/pkg/... ./kafka/source/pkg/... ./kafka/channel/pkg/... ./awssqs/pkg/... \
-  ./couchdb/source/pkg/...
+  ./couchdb/source/pkg/... ./natss/pkg/...
 
-API_DIRS=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg)
+# Sources
+API_DIRS_SOURCES=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg)
 
-for DIR in "${API_DIRS[@]}"; do
+for DIR in "${API_DIRS_SOURCES[@]}"; do
   # generate the code with:
   # --output-base    because this script should also be able to run inside the vendor dir of
   #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
@@ -44,6 +45,26 @@ for DIR in "${API_DIRS[@]}"; do
   ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
     "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
     "sources:v1alpha1" \
+    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
+done
+
+# Channels
+API_DIRS_CHANNELS=(kafka/channel/pkg natss/pkg)
+
+for DIR in "${API_DIRS_CHANNELS[@]}"; do
+  # generate the code with:
+  # --output-base    because this script should also be able to run inside the vendor dir of
+  #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
+  #                  instead of the $GOPATH directly. For normal projects this can be dropped.
+  ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
+    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
+    "messaging:v1alpha1" \
+    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
+
+  # Knative Injection
+  ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
+    "messaging:v1alpha1" \
     --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 done
 
