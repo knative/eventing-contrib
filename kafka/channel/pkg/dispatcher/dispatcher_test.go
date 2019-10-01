@@ -31,8 +31,9 @@ import (
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
-	channels "knative.dev/eventing-contrib/pkg/channel"
+	contribchannels "knative.dev/eventing-contrib/pkg/channel"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	_ "knative.dev/pkg/system/testing"
@@ -98,23 +99,23 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		subscribes       []string
 		unsubscribes     []string
 		createErr        string
-		oldHostToChanMap map[string]channels.ChannelReference
-		newHostToChanMap map[string]channels.ChannelReference
+		oldHostToChanMap map[string]eventingchannels.ChannelReference
+		newHostToChanMap map[string]eventingchannels.ChannelReference
 	}{
 		{
 			name:             "nil config",
 			oldConfig:        &multichannelfanout.Config{},
 			newConfig:        nil,
 			createErr:        "nil config",
-			oldHostToChanMap: map[string]channels.ChannelReference{},
-			newHostToChanMap: map[string]channels.ChannelReference{},
+			oldHostToChanMap: map[string]eventingchannels.ChannelReference{},
+			newHostToChanMap: map[string]eventingchannels.ChannelReference{},
 		},
 		{
 			name:             "same config",
 			oldConfig:        &multichannelfanout.Config{},
 			newConfig:        &multichannelfanout.Config{},
-			oldHostToChanMap: map[string]channels.ChannelReference{},
-			newHostToChanMap: map[string]channels.ChannelReference{},
+			oldHostToChanMap: map[string]eventingchannels.ChannelReference{},
+			newHostToChanMap: map[string]eventingchannels.ChannelReference{},
 		},
 		{
 			name:      "config with no subscription",
@@ -128,8 +129,8 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 					},
 				},
 			},
-			oldHostToChanMap: map[string]channels.ChannelReference{},
-			newHostToChanMap: map[string]channels.ChannelReference{
+			oldHostToChanMap: map[string]eventingchannels.ChannelReference{},
+			newHostToChanMap: map[string]eventingchannels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
 		},
@@ -158,8 +159,8 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				},
 			},
 			subscribes:       []string{"subscription-1", "subscription-2"},
-			oldHostToChanMap: map[string]channels.ChannelReference{},
-			newHostToChanMap: map[string]channels.ChannelReference{
+			oldHostToChanMap: map[string]eventingchannels.ChannelReference{},
+			newHostToChanMap: map[string]eventingchannels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
 		},
@@ -205,10 +206,10 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			},
 			subscribes:   []string{"subscription-2", "subscription-3"},
 			unsubscribes: []string{"subscription-1"},
-			oldHostToChanMap: map[string]channels.ChannelReference{
+			oldHostToChanMap: map[string]eventingchannels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
-			newHostToChanMap: map[string]channels.ChannelReference{
+			newHostToChanMap: map[string]eventingchannels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel", Namespace: "default"},
 			},
 		},
@@ -268,10 +269,10 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			},
 			subscribes:   []string{"subscription-1", "subscription-3", "subscription-4"},
 			unsubscribes: []string{"subscription-2"},
-			oldHostToChanMap: map[string]channels.ChannelReference{
+			oldHostToChanMap: map[string]eventingchannels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel-1", Namespace: "default"},
 			},
-			newHostToChanMap: map[string]channels.ChannelReference{
+			newHostToChanMap: map[string]eventingchannels.ChannelReference{
 				"a.b.c.d": {Name: "test-channel-1", Namespace: "default"},
 				"e.f.g.h": {Name: "test-channel-2", Namespace: "default"},
 			},
@@ -294,7 +295,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				},
 			},
 			createErr:        "duplicate hostName found. Each channel must have a unique host header. HostName:a.b.c.d, channel:default.test-channel-2, channel:default.test-channel-1",
-			oldHostToChanMap: map[string]channels.ChannelReference{},
+			oldHostToChanMap: map[string]eventingchannels.ChannelReference{},
 		},
 	}
 
@@ -303,12 +304,12 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			t.Logf("Running %s", t.Name())
 			d := &KafkaDispatcher{
 				kafkaConsumerFactory: &mockKafkaConsumerFactory{},
-				kafkaConsumerGroups:  make(map[channels.ChannelReference]map[subscription]sarama.ConsumerGroup),
+				kafkaConsumerGroups:  make(map[eventingchannels.ChannelReference]map[subscription]sarama.ConsumerGroup),
 				topicFunc:            utils.TopicName,
 				logger:               zap.NewNop(),
 			}
 			d.setConfig(&multichannelfanout.Config{})
-			d.setHostToChannelMap(map[string]channels.ChannelReference{})
+			d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 
 			// Initialize using oldConfig
 			err := d.checkConfigAndUpdate(tc.oldConfig)
@@ -371,7 +372,7 @@ func TestFromKafkaMessage(t *testing.T) {
 		},
 		Value: data,
 	}
-	want := &channels.Message{
+	want := &contribchannels.Message{
 		Headers: map[string]string{
 			"k1": "v1",
 		},
@@ -385,11 +386,11 @@ func TestFromKafkaMessage(t *testing.T) {
 
 func TestToKafkaMessage(t *testing.T) {
 	data := []byte("data")
-	channelRef := channels.ChannelReference{
+	channelRef := eventingchannels.ChannelReference{
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
-	msg := &channels.Message{
+	msg := &contribchannels.Message{
 		Headers: map[string]string{
 			"k1": "v1",
 		},
@@ -438,7 +439,7 @@ func TestSubscribeError(t *testing.T) {
 		topicFunc:            utils.TopicName,
 	}
 
-	channelRef := channels.ChannelReference{
+	channelRef := eventingchannels.ChannelReference{
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
@@ -459,7 +460,7 @@ func TestUnsubscribeUnknownSub(t *testing.T) {
 		logger:               zap.NewNop(),
 	}
 
-	channelRef := channels.ChannelReference{
+	channelRef := eventingchannels.ChannelReference{
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
@@ -479,7 +480,7 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}
 
-	receiver, err := channels.NewMessageReceiver(func(channel channels.ChannelReference, message *channels.Message) error {
+	receiver, err := contribchannels.NewMessageReceiver(func(channel eventingchannels.ChannelReference, message *contribchannels.Message) error {
 		return nil
 	}, zap.NewNop().Sugar())
 	if err != nil {
