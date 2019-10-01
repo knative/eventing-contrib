@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/utils"
 	_ "knative.dev/pkg/system/testing"
 
@@ -45,7 +46,7 @@ func TestMessageReceiver_HandleRequest(t *testing.T) {
 		body         string
 		bodyReader   io.Reader
 		expected     int
-		receiverFunc func(ChannelReference, *Message) error
+		receiverFunc func(channel.ChannelReference, *Message) error
 	}{
 		"non '/' path": {
 			path:     "/something",
@@ -64,13 +65,13 @@ func TestMessageReceiver_HandleRequest(t *testing.T) {
 			expected:   http.StatusInternalServerError,
 		},
 		"unknown channel error": {
-			receiverFunc: func(_ ChannelReference, _ *Message) error {
+			receiverFunc: func(_ channel.ChannelReference, _ *Message) error {
 				return ErrUnknownChannel
 			},
 			expected: http.StatusNotFound,
 		},
 		"other receiver function error": {
-			receiverFunc: func(_ ChannelReference, _ *Message) error {
+			receiverFunc: func(_ channel.ChannelReference, _ *Message) error {
 				return errors.New("test induced receiver function error")
 			},
 			expected: http.StatusInternalServerError,
@@ -90,7 +91,7 @@ func TestMessageReceiver_HandleRequest(t *testing.T) {
 			},
 			body: "message-body",
 			host: "test-name.test-namespace.svc." + utils.GetClusterDomainName(),
-			receiverFunc: func(r ChannelReference, m *Message) error {
+			receiverFunc: func(r channel.ChannelReference, m *Message) error {
 				if r.Namespace != "test-namespace" || r.Name != "test-name" {
 					return fmt.Errorf("test receiver func -- bad reference: %v", r)
 				}
