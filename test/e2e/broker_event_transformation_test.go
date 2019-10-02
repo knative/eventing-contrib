@@ -24,6 +24,5 @@ import (
 )
 
 func TestEventTransformationForTrigger(t *testing.T) {
-	t.Skip("See issue: https://github.com/knative/eventing-contrib/issues/639")
 	helpers.EventTransformationForTriggerTestHelper(t, channelTestRunner)
 }
