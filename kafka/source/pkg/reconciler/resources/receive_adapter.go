@@ -25,13 +25,16 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing/pkg/utils"
+	"knative.dev/pkg/kmeta"
 )
 
 type ReceiveAdapterArgs struct {
-	Image   string
-	Source  *v1alpha1.KafkaSource
-	Labels  map[string]string
-	SinkURI string
+	Image         string
+	Source        *v1alpha1.KafkaSource
+	Labels        map[string]string
+	SinkURI       string
+	LoggingConfig string
 }
 
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
@@ -69,6 +72,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		{
 			Name:  "NAMESPACE",
 			Value: args.Source.Namespace,
+		},
+		{
+			Name:  "K_LOGGING_CONFIG",
+			Value: args.LoggingConfig,
 		},
 	}
 
@@ -108,9 +115,13 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
+			Name:         utils.GenerateFixedName(args.Source, fmt.Sprintf("kafkasource-%s", args.Source.Name)),
 			Namespace:    args.Source.Namespace,
 			GenerateName: fmt.Sprintf("%s-", args.Source.Name),
 			Labels:       args.Labels,
+			OwnerReferences: []metav1.OwnerReference{
+				*kmeta.NewControllerRef(args.Source),
+			},
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{

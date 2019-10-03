@@ -17,56 +17,14 @@ limitations under the License.
 package main
 
 import (
-	"log"
+	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler"
+	"knative.dev/pkg/injection/sharedmain"
+)
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis"
-	controller "knative.dev/eventing-contrib/kafka/source/pkg/reconciler"
-	"knative.dev/pkg/logging/logkey"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+const (
+	component = "kafka_controller"
 )
 
 func main() {
-	// Get a config to talk to the API server
-	logCfg := zap.NewProductionConfig()
-	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	logger, err := logCfg.Build()
-	logger = logger.With(zap.String(logkey.ControllerType, "kafka-controller"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cfg, err := config.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Registering Components.")
-
-	// Setup Scheme for all resources
-	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Setting up Controller.")
-
-	// Setup Kafka Controller
-	if err := controller.Add(mgr, logger.Sugar()); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Starting Apache Kafka controller.")
-
-	// Start the Cmd
-	log.Fatal(mgr.Start(signals.SetupSignalHandler()))
+	sharedmain.Main(component, kafka.NewController)
 }

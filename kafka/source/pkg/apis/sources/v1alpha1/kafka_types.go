@@ -22,9 +22,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/apis/duck"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/kmeta"
 )
 
 // +genclient
@@ -32,8 +33,6 @@ import (
 
 // KafkaSource is the Schema for the kafkasources API.
 // +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:categories=all,knative,eventing,sources
 type KafkaSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,8 +47,7 @@ var _ runtime.Object = (*KafkaSource)(nil)
 // Check that KafkaSource will be checked for immutable fields.
 var _ apis.Immutable = (*KafkaSource)(nil)
 
-// Check that KafkaSource implements the Conditions duck type.
-var _ = duck.VerifyType(&KafkaSource{}, &duckv1alpha1.Conditions{})
+var _ kmeta.OwnerRefable = (*KafkaSource)(nil)
 
 type KafkaSourceSASLSpec struct {
 	Enable bool `json:"enable,omitempty"`
@@ -57,6 +55,7 @@ type KafkaSourceSASLSpec struct {
 	// User is the Kubernetes secret containing the SASL username.
 	// +optional
 	User SecretValueFromSource `json:"user,omitempty"`
+
 	// Password is the Kubernetes secret containing the SASL password.
 	// +optional
 	Password SecretValueFromSource `json:"password,omitempty"`
@@ -140,101 +139,20 @@ func KafkaEventSource(namespace, kafkaSourceName, topic string) string {
 	return fmt.Sprintf("/apis/v1/namespaces/%s/kafkasources/%s#%s", namespace, kafkaSourceName, topic)
 }
 
-const (
-	// KafkaConditionReady has status True when the KafkaSource is ready to send events.
-	KafkaConditionReady = duckv1alpha1.ConditionReady
-
-	// KafkaConditionSinkProvided has status True when the KafkaSource has been configured with a sink target.
-	KafkaConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
-
-	// KafkaConditionDeployed has status True when the KafkaSource has had it's receive adapter deployment created.
-	KafkaConditionDeployed duckv1alpha1.ConditionType = "Deployed"
-
-	// KafkaConditionEventTypesProvided has status True when the KafkaSource has been configured with event types.
-	KafkaConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypesProvided"
-
-	// KafkaConditionResources is True when the resources listed for the KafkaSource have been properly
-	// parsed and match specified syntax for resource quantities
-	KafkaConditionResources duckv1alpha1.ConditionType = "ResourcesCorrect"
-)
-
-var kafkaSourceCondSet = duckv1alpha1.NewLivingConditionSet(
-	KafkaConditionSinkProvided,
-	KafkaConditionDeployed)
-
 // KafkaSourceStatus defines the observed state of KafkaSource.
 type KafkaSourceStatus struct {
 	// inherits duck/v1alpha1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1alpha1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the KafkaSource.
 	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
 }
 
-// GetCondition returns the condition currently associated with the given type, or nil.
-func (s *KafkaSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
-	return kafkaSourceCondSet.Manage(s).GetCondition(t)
-}
-
-// IsReady returns true if the resource is ready overall.
-func (s *KafkaSourceStatus) IsReady() bool {
-	return kafkaSourceCondSet.Manage(s).IsHappy()
-}
-
-// InitializeConditions sets relevant unset conditions to Unknown state.
-func (s *KafkaSourceStatus) InitializeConditions() {
-	kafkaSourceCondSet.Manage(s).InitializeConditions()
-}
-
-// MarkSink sets the condition that the source has a sink configured.
-func (s *KafkaSourceStatus) MarkSink(uri string) {
-	s.SinkURI = uri
-	if len(uri) > 0 {
-		kafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionSinkProvided)
-	} else {
-		kafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
-	}
-}
-
-// MarkNoSink sets the condition that the source does not have a sink configured.
-func (s *KafkaSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionSinkProvided, reason, messageFormat, messageA...)
-}
-
-// MarkDeployed sets the condition that the source has been deployed.
-func (s *KafkaSourceStatus) MarkDeployed() {
-	kafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionDeployed)
-}
-
-// MarkDeploying sets the condition that the source is deploying.
-func (s *KafkaSourceStatus) MarkDeploying(reason, messageFormat string, messageA ...interface{}) {
-	kafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionDeployed, reason, messageFormat, messageA...)
-}
-
-// MarkNotDeployed sets the condition that the source has not been deployed.
-func (s *KafkaSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
-	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionDeployed, reason, messageFormat, messageA...)
-}
-
-// MarkEventTypes sets the condition that the source has created its event types.
-func (s *KafkaSourceStatus) MarkEventTypes() {
-	kafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionEventTypesProvided)
-}
-
-// MarkNoEventTypes sets the condition that the source does not its event types configured.
-func (s *KafkaSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
-	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionEventTypesProvided, reason, messageFormat, messageA...)
-}
-
-func (s *KafkaSourceStatus) MarkResourcesCorrect() {
-	kafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionResources)
-}
-
-func (s *KafkaSourceStatus) MarkResourcesIncorrect(reason, messageFormat string, messageA ...interface{}) {
-	kafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionResources, reason, messageFormat, messageA...)
+func (s *KafkaSource) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("KafkaSource")
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -244,8 +162,4 @@ type KafkaSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []KafkaSource `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&KafkaSource{}, &KafkaSourceList{})
 }
