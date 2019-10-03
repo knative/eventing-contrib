@@ -47,7 +47,6 @@ var _ runtime.Object = (*KafkaSource)(nil)
 // Check that KafkaSource will be checked for immutable fields.
 var _ apis.Immutable = (*KafkaSource)(nil)
 
-//This is a total guess
 var _ kmeta.OwnerRefable = (*KafkaSource)(nil)
 
 type KafkaSourceSASLSpec struct {
