@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler"
+	kafka "knative.dev/eventing-contrib/kafka/source/pkg/reconciler"
 	"knative.dev/pkg/injection/sharedmain"
 )
 
