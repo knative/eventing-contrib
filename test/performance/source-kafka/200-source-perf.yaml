@@ -15,10 +15,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: channel-perf-send-receive
+  name: source-perf-send-receive
   namespace: perf-eventing
   labels:
-    role: channel-perf-consumer
+    role: source-perf-consumer
 spec:
   completions: 1
   parallelism: 1
@@ -26,18 +26,20 @@ spec:
   template:
     metadata:
       labels:
-        role: channel-perf-consumer
+        role: source-perf-consumer
     spec:
       serviceAccountName: perf-eventing
       restartPolicy: Never
       containers:
         - name: sender-receiver
-          image: knative.dev/eventing/test/test_images/performance
+          image: knative.dev/eventing-contrib/test/test_images/kafka_performance
           args:
-            - "--role=sender-receiver"
-            - "--sink=http://kafka-channel-test-channel-kn-channel.perf-eventing.svc.cluster.local"
-            - "--aggregator=channel-perf-aggregator:10000"
-            - "--pace=500:30,600:30,700:30,800:30,900:30,1000:30"
+            - "--roles=sender,receiver"
+            - "--bootstrap-url=my-cluster-kafka-bootstrap.kafka.svc:9092"
+            - "--topic=perf-topic"
+            - "--aggregator=source-perf-aggregator:10000"
+            - "--pace=500:30"
+            - "--warmup=0"
           env:
             - name: GOGC
               value: "off"
@@ -62,20 +64,20 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: channel-perf-aggregator
+  name: source-perf-aggregator
   namespace: perf-eventing
   labels:
-    role: channel-perf-aggregator
+    role: source-perf-aggregator
 spec:
   serviceAccountName: perf-eventing
   restartPolicy: Never
   containers:
     - name: aggregator
-      image: knative.dev/eventing/test/test_images/performance
+      image: knative.dev/eventing-contrib/test/test_images/kafka_performance
       args:
-        - "--role=aggregator"
+        - "--roles=aggregator"
         # set to the number of sender-receiver
-        - "--expect-records=1"
+        - "--expect-records=2"
       ports:
         - name: grpc
           containerPort: 10000

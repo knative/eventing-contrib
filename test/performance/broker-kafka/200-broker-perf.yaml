@@ -38,7 +38,6 @@ spec:
         - "--sink=http://kafka-test-broker-broker.perf-eventing.svc.cluster.local"
         - "--aggregator=broker-perf-aggregator:10000"
         - "--pace=500:30,600:30,700:30,800:30,900:30,1000:30"
-        - "--verbose"
         env:
         - name: GOGC
           value: "off"
@@ -77,7 +76,6 @@ spec:
     - "--role=aggregator"
       # set to the number of sender-receiver
     - "--expect-records=1"
-    - "--verbose"
     ports:
     - name: grpc
       containerPort: 10000
