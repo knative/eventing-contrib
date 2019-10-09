@@ -14,20 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Generate deepcopy for apis
-//go:generate go run ../../../../vendor/k8s.io/code-generator/cmd/deepcopy-gen/main.go -O zz_generated.deepcopy -i ./... -h ../../../../hack/boilerplate.go.txt
+// Package sources contains sources API versions
+package sources
 
-// Package apis contains Kubernetes API groups.
-package apis
-
-import (
-	"k8s.io/apimachinery/pkg/runtime"
+const (
+	GroupName = "sources.eventing.knative.dev"
 )
-
-// AddToSchemes may be used to add all resources defined in the project to a Scheme
-var AddToSchemes runtime.SchemeBuilder
-
-// AddToScheme adds all Resources to the Scheme
-func AddToScheme(s *runtime.Scheme) error {
-	return AddToSchemes.AddToScheme(s)
-}

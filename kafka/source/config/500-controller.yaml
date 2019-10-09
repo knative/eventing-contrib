@@ -34,6 +34,14 @@ spec:
       - name: manager
         image: knative.dev/eventing-contrib/kafka/source/cmd/controller
         env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: METRICS_DOMAIN
+          value: knative.dev/sources
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: config-observability
         - name: KAFKA_RA_IMAGE
           value: knative.dev/eventing-contrib/kafka/source/cmd/receive_adapter
         volumeMounts:
@@ -43,3 +51,4 @@ spec:
             memory: 20Mi
       serviceAccount: kafka-controller-manager
       terminationGracePeriodSeconds: 10
+

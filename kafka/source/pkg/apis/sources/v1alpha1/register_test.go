@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -34,4 +35,35 @@ func TestResource(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("unexpected resource (-want, +got) = %v", diff)
 	}
+}
+
+// Kind takes an unqualified resource and returns a Group qualified GroupKind
+func TestKind(t *testing.T) {
+	want := schema.GroupKind{
+		Group: "sources.eventing.knative.dev",
+		Kind:  "kind",
+	}
+
+	got := Kind("kind")
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected resource (-want, +got) = %v", diff)
+	}
+}
+
+// TestKnownTypes makes sure that expected types get added.
+func TestKnownTypes(t *testing.T) {
+	scheme := runtime.NewScheme()
+	addKnownTypes(scheme)
+	types := scheme.KnownTypes(SchemeGroupVersion)
+
+	for _, name := range []string{
+		"KafkaSource",
+		"KafkaSourceList",
+	} {
+		if _, ok := types[name]; !ok {
+			t.Errorf("Did not find %q as registered type", name)
+		}
+	}
+
 }

@@ -14,5 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package sources contains sources API versions
-package sources
+package resources
+
+const (
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "kafka-source-controller"
+)
+
+func GetLabels(name string) map[string]string {
+	return map[string]string{
+		"eventing.knative.dev/source":     controllerAgentName,
+		"eventing.knative.dev/SourceName": name,
+	}
+}

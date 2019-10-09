@@ -14,11 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package apis
+package resources
 
-import "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+import (
+	"testing"
 
-func init() {
-	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
-	AddToSchemes = append(AddToSchemes, v1alpha1.SchemeBuilder.AddToScheme)
+	"github.com/google/go-cmp/cmp"
+)
+
+func TestGetLabels(t *testing.T) {
+
+	testLabels := GetLabels("testSourceName")
+
+	wantLabels := map[string]string{
+		"eventing.knative.dev/source":     "kafka-source-controller",
+		"eventing.knative.dev/SourceName": "testSourceName",
+	}
+
+	eq := cmp.Equal(testLabels, wantLabels)
+	if !eq {
+		t.Fatalf("%v is not equal to %v", testLabels, wantLabels)
+	}
 }
