@@ -45,28 +45,12 @@ spec:
           type: object
         spec:
           properties:
-            image:
-              type: string
-            serviceAccountName:
-              type: string
             sink:
               type: object
             source:
               properties:
-                component:
-                  properties:
-                    properties:
-                      type: object
-                    uri:
-                      minLength: 1
-                      type: string
-                    serviceAccountName:
-                      type: string
-                    context:
-                      type: string
-                  type: object
                 flow:
-                  type: string
+                  type: object
                 integration:
                   type: object
               type: object

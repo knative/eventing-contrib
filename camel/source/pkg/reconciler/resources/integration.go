@@ -17,7 +17,6 @@ limitations under the License.
 package resources
 
 import (
-	"errors"
 	"net/url"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
@@ -26,50 +25,33 @@ import (
 )
 
 func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
-	if args.Source.DeprecatedComponent != nil && (args.Source.Integration != nil || args.Source.Flow != nil) {
-		return nil, errors.New("too many kind of sources defined")
-	} else if args.Source.DeprecatedComponent == nil && args.Source.Integration == nil && args.Source.Flow == nil {
-		return nil, errors.New("empty sources")
-	}
-
 	environment, err := makeCamelEnvironment(args.Sink)
 	if err != nil {
 		return nil, err
 	}
 
 	var spec *camelv1alpha1.IntegrationSpec
-	if args.Source.DeprecatedComponent != nil {
-		builtSpec, err := BuildComponentIntegrationSpec(args)
+	if args.Source.Integration != nil {
+		spec = args.Source.Integration.DeepCopy()
+	} else {
+		spec = &camelv1alpha1.IntegrationSpec{}
+	}
+
+	if args.Source.Flow != nil {
+		flows := []map[string]interface{}{*args.Source.Flow}
+		flowData, err := MarshalCamelFlows(flows)
 		if err != nil {
 			return nil, err
 		}
-		spec = &builtSpec
-	} else {
-		if args.Source.Integration != nil {
-			spec = args.Source.Integration.DeepCopy()
-		} else {
-			spec = &camelv1alpha1.IntegrationSpec{}
-		}
+		spec.Sources = append(spec.Sources, camelv1alpha1.SourceSpec{
+			Language: camelv1alpha1.LanguageYaml,
+			DataSpec: camelv1alpha1.DataSpec{
+				Name:    "flow.yaml",
+				Content: flowData,
+			},
+		})
 
-		if args.Source.Flow != nil {
-			flow, err := UnmarshalCamelFlow(*args.Source.Flow)
-			if err != nil {
-				return nil, err
-			}
-			enhancedFlow := AddSinkToCamelFlow(flow, "sink")
-			flows := []map[interface{}]interface{}{enhancedFlow}
-			flowData, err := MarshalCamelFlows(flows)
-			if err != nil {
-				return nil, err
-			}
-			spec.Sources = append(spec.Sources, camelv1alpha1.SourceSpec{
-				Language: camelv1alpha1.LanguageYaml,
-				DataSpec: camelv1alpha1.DataSpec{
-					Name:    "flow.yaml",
-					Content: flowData,
-				},
-			})
-		}
+		spec.Dependencies = append(spec.Dependencies, "mvn:org.apache.camel.k:camel-k-loader-knative")
 	}
 
 	if spec.Traits == nil {

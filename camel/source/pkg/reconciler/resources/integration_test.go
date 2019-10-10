@@ -31,14 +31,24 @@ func TestMakeDeployment_sink(t *testing.T) {
 		Name:      "test-name",
 		Namespace: "test-namespace",
 		Source: v1alpha1.CamelSourceOriginSpec{
-			DeprecatedComponent: &v1alpha1.CamelSourceOriginComponentSpec{
-				URI: "timer:tick",
-				Properties: map[string]string{
-					"k":  "v",
-					"k2": "v2",
+			Flow: &v1alpha1.Flow{
+				"from": map[string]interface{}{
+					"uri": "timer:tick",
 				},
+			},
+			Integration: &camelv1alpha1.IntegrationSpec{
 				ServiceAccountName: "test-service-account",
-				Context:            "test-context",
+				Kit:                "test-kit",
+				Configuration: []camelv1alpha1.ConfigurationSpec{
+					{
+						Type:  "property",
+						Value: "k=v",
+					},
+					{
+						Type:  "property",
+						Value: "k2=v2",
+					},
+				},
 			},
 		},
 		Sink: "http://test-sink",
@@ -58,12 +68,13 @@ func TestMakeDeployment_sink(t *testing.T) {
 		},
 		Spec: camelv1alpha1.IntegrationSpec{
 			ServiceAccountName: "test-service-account",
-			Kit:                "test-context",
+			Kit:                "test-kit",
 			Sources: []camelv1alpha1.SourceSpec{
 				{
+					Language: "yaml",
 					DataSpec: camelv1alpha1.DataSpec{
-						Name:    "source.yaml",
-						Content: "- from:\n    steps:\n    - to:\n        uri: knative://endpoint/sink\n    uri: timer:tick\n",
+						Name:    "flow.yaml",
+						Content: "- from:\n    uri: timer:tick\n",
 					},
 				},
 			},
@@ -83,6 +94,9 @@ func TestMakeDeployment_sink(t *testing.T) {
 						"configuration": `{"services":[{"type":"endpoint","protocol":"http","name":"sink","host":"test-sink","port":80,"metadata":{"service.path":"/"}}]}`,
 					},
 				},
+			},
+			Dependencies: []string{
+				"mvn:org.apache.camel.k:camel-k-loader-knative",
 			},
 		},
 	}

@@ -76,29 +76,22 @@ type CamelSourceSpec struct {
 
 // CamelSourceOriginSpec is the integration flow to run
 type CamelSourceOriginSpec struct {
-	// Component is a kind of source that directly references a Camel component
-	// DEPRECATED
-	DeprecatedComponent *CamelSourceOriginComponentSpec `json:"component,omitempty"`
 	// Integration is a kind of source that contains a Camel K integration
 	Integration *v1alpha1.IntegrationSpec `json:"integration,omitempty"`
 	// Flow is a kind of source that contains a single Camel YAML flow route
-	Flow *string `json:"flow,omitempty"`
+	Flow *Flow `json:"flower,omitempty"`
 }
 
-type CamelSourceOriginComponentSpec struct {
-	// URI is a Camel component URI to use as starting point (e.g. "timer:tick?period=2s")
-	// +kubebuilder:validation:MinLength=1
-	URI string `json:"uri,omitempty"`
+// Flow is an unstructured object representing a Camel Flow in YAML/JSON DSL
+type Flow map[string]interface{}
 
-	Properties map[string]string `json:"properties,omitempty"`
-
-	// ServiceAccountName is the name of the ServiceAccount to use to run this source.
-	// +optional
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
-
-	// The Camel K context to use when running the source
-	// +optional
-	Context string `json:"context,omitempty"`
+// DeepCopy copies the receiver, creating a new Flow.
+func (in *Flow) DeepCopy() *Flow {
+	if in == nil {
+		return nil
+	}
+	out := Flow(runtime.DeepCopyJSON(*in))
+	return &out
 }
 
 // CamelSourceStatus defines the observed state of CamelSource
