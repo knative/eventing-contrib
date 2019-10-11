@@ -179,7 +179,7 @@ func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m 
 	}
 
 	event := cloudevents.Event{
-		Context: cloudevents.EventContextV02{
+		Context: cloudevents.EventContextV03{
 			ID:     *m.MessageId,
 			Type:   sourcesv1alpha1.AwsSqsSourceEventType,
 			Source: *types.ParseURLRef(a.QueueURL),

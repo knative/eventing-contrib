@@ -77,7 +77,7 @@ func main() {
 		}
 
 		event := cloudevents.Event{
-			Context: cloudevents.EventContextV02{
+			Context: cloudevents.EventContextV03{
 				Type:   eventType,
 				Source: *types.ParseURLRef(eventSource),
 			}.AsV02(),

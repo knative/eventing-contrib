@@ -106,7 +106,7 @@ func main() {
 		hb.Sequence++
 
 		event := cloudevents.Event{
-			Context: cloudevents.EventContextV02{
+			Context: cloudevents.EventContextV03{
 				Type:   eventType,
 				Source: *types.ParseURLRef(eventSource),
 				Extensions: map[string]interface{}{
