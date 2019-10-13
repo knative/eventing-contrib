@@ -106,7 +106,7 @@ func (a *adapter) send() (done bool, err error) {
 }
 
 func (a *adapter) makeEvent(changes *couchdb.ChangeResponseResult) (*cloudevents.Event, error) {
-	event := cloudevents.NewEvent()
+	event := cloudevents.NewEvent(cloudevents.VersionV03)
 	event.SetID(changes.ID)
 	event.SetSource(a.source)
 	event.SetType(v1alpha1.CouchDbSourceChangesEventType)

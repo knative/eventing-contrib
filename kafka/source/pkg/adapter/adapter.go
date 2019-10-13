@@ -82,7 +82,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		event = poolRes.(*cloudevents.Event)
 	} else {
 		event = &cloudevents.Event{}
-		event.SetSpecVersion(cloudevents.CloudEventsVersionV02)
+		event.SetSpecVersion(cloudevents.CloudEventsVersionV03)
 	}
 
 	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
