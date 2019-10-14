@@ -38,6 +38,22 @@ spec:
   scope: Namespaced
   subresources:
     status: {}
+  additionalPrinterColumns:
+    - name: Topics
+      type: string
+      JSONPath: ".spec.topics"
+    - name: BootstrapServers
+      type: string
+      JSONPath: ".spec.bootstrapServers"
+    - name: Ready
+      type: string
+      JSONPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      JSONPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
       properties:
