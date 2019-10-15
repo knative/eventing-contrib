@@ -454,14 +454,6 @@
   version = "v1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:aa0434674a14402891f31f393b4dd53792bc67eee05158748d999096a8826ed3"
-  name = "github.com/influxdata/tdigest"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "bf2b5ad3c0a925c44a0d2842c5d8182113cd248e"
-
-[[projects]]
   digest = "1:ac6d01547ec4f7f673311b4663909269bfb8249952de3279799289467837c3cc"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
@@ -498,18 +490,6 @@
   pruneopts = "NUT"
   revision = "3f73b117b61ee5d8fe5dcedd6cca2c96014329a9"
   version = "v0.8.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:927762c6729b4e72957ba3310e485ed09cf8451c5a637a52fd016a9fe09e7936"
-  name = "github.com/mailru/easyjson"
-  packages = [
-    "buffer",
-    "jlexer",
-    "jwriter",
-  ]
-  pruneopts = "NUT"
-  revision = "1b2b06f5f209fea48ff5922d8bfb2b9ed5d8f00b"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -796,14 +776,6 @@
   pruneopts = "NUT"
   revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
   version = "v1.0.3"
-
-[[projects]]
-  digest = "1:435d9fe926ee0d903662215091e27fba6f1b7228d33a30c289cdb5aeff1c8fc8"
-  name = "github.com/tsenart/vegeta"
-  packages = ["lib"]
-  pruneopts = "NUT"
-  revision = "9c95632b3e8562be6df690c639a3f5a6f40d3004"
-  version = "v12.7.0"
 
 [[projects]]
   digest = "1:3a4c90791db3bf894a26cf6ffc0f792a31d0f225664c38b0577f02a36bc0cda7"
@@ -1544,7 +1516,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d380cfa7fc55e76f51e74d5f063890a319733929014e14e9374a2d67dd0057d4"
+  digest = "1:5f6424c1a35ccf71295d35f1951f6eea4a7ac32c9a6a057eb9adccb2866f3a1a"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1600,7 +1572,7 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "96384412d4698fd27470b48a03e6ec64808576f6"
+  revision = "994adba2302ad8a3a010d35e4582a142ccaf6919"
 
 [[projects]]
   branch = "master"
