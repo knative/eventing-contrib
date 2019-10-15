@@ -1516,9 +1516,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5f6424c1a35ccf71295d35f1951f6eea4a7ac32c9a6a057eb9adccb2866f3a1a"
+  digest = "1:c80ae6d56ca33cf67e77c26942af7ba5468b098ebce375845f40fd991a005210"
   name = "knative.dev/eventing"
   packages = [
+    "pkg/adapter",
     "pkg/apis/duck",
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing",
@@ -1620,6 +1621,7 @@
     "ptr",
     "reconciler/testing",
     "signals",
+    "source",
     "system",
     "system/testing",
     "test",
@@ -1825,6 +1827,7 @@
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",
+    "knative.dev/eventing/pkg/adapter",
     "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
@@ -1837,7 +1840,6 @@
     "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/duck",
-    "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
     "knative.dev/eventing/pkg/reconciler",
@@ -1867,6 +1869,7 @@
     "knative.dev/pkg/metrics",
     "knative.dev/pkg/reconciler/testing",
     "knative.dev/pkg/signals",
+    "knative.dev/pkg/source",
     "knative.dev/pkg/system",
     "knative.dev/pkg/system/testing",
     "knative.dev/pkg/tracing",
