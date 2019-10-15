@@ -41,7 +41,6 @@ import (
 	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
-	"knative.dev/eventing/pkg/utils"
 
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
 	versioned "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned"
@@ -81,8 +80,6 @@ type Reconciler struct {
 	eventTypeLister     eventinglisters.EventTypeLister
 
 	couchdbClientSet versioned.Interface
-
-	resourceTracker duck.ResourceTracker
 
 	sinkReconciler *duck.SinkReconciler
 }
@@ -134,8 +131,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.CouchDbSource) error {
 	source.Status.InitializeConditions()
 
-	track := r.resourceTracker.TrackInNamespace(source)
-
 	sinkObjRef := source.Spec.Sink
 	if sinkObjRef.Namespace == "" {
 		sinkObjRef.Namespace = source.Namespace
@@ -156,9 +151,6 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.CouchDbSour
 	}
 	// Update source status// Update source status
 	source.Status.PropagateDeploymentAvailability(ra)
-	if err = track(utils.ObjectRef(ra, deploymentGVK)); err != nil {
-		return fmt.Errorf("unable to track receive adapter: %v", err)
-	}
 
 	err = r.reconcileEventTypes(ctx, source)
 	if err != nil {
