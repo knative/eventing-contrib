@@ -26,6 +26,10 @@ required = [
   name = "knative.dev/test-infra"
   non-go = false
 
+[[override]]
+  name = "gopkg.in/yaml.v2"
+  version = "v2.2.4"
+
 [[prune.project]]
   name = "knative.dev/pkg"
   unused-packages = false
