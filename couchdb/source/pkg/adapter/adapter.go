@@ -18,68 +18,87 @@ package adapter
 
 import (
 	"context"
+	"io/ioutil"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/source"
 
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/couchdb"
 )
 
-// Hold options for the adapter
-type Options struct {
-	EventSource string
-	CouchDbURL  string
-	Username    string
-	Password    string
-	Database    string
-	Namespace   string
+type envConfig struct {
+	adapter.EnvConfig
+
+	CouchDbCredentialsPath string `envconfig:"COUCHDB_CREDENTIALS" required:"true"`
+	Database               string `envconfig:"COUCHDB_DATABASE" required:"true"`
+	EventSource            string `envconfig:"EVENT_SOURCE" required:"true"`
 }
 
-// Adapter converts incoming CouchDb events to CloudEvents
-type Adapter interface {
-	Start(stopCh <-chan struct{}) error
-}
+type couchDbAdapter struct {
+	namespace string
+	ce        cloudevents.Client
+	reporter  source.StatsReporter
+	logger    *zap.SugaredLogger
 
-type adapter struct {
 	source     string
-	ce         cloudevents.Client
-	namespace  string
-	logger     *zap.SugaredLogger
 	couchDB    couchdb.Connection
 	database   string
 	changeArgs couchdb.ChangeArguments
 }
 
-// New creates an adapter to convert incoming CouchDb changes events to CloudEvents and
-// then sends them to the specified Sink
-func New(ceClient cloudevents.Client, logger *zap.SugaredLogger, options *Options) (Adapter, error) {
-	connection, err := couchdb.Connect(options.CouchDbURL, options.Username, options.Password, time.Minute)
-	if err != nil {
-		return nil, err
-	}
-
-	a := &adapter{
-		ce:         ceClient,
-		logger:     logger,
-		namespace:  options.Namespace,
-		couchDB:    connection,
-		source:     options.EventSource,
-		database:   options.Database,
-		changeArgs: couchdb.ChangeArguments{},
-	}
-
-	return a, nil
+func NewEnvConfig() adapter.EnvConfigAccessor {
+	return &envConfig{}
 }
 
-func (a *adapter) Start(stopCh <-chan struct{}) error {
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
+	logger := logging.FromContext(ctx)
+	env := processed.(*envConfig)
+
+	rawurl, err := ioutil.ReadFile(env.CouchDbCredentialsPath + "/url")
+	if err != nil {
+		logger.Fatal("Missing url key in secret", zap.Error(err))
+	}
+
+	rawusername, err := ioutil.ReadFile(env.CouchDbCredentialsPath + "/username")
+	if err != nil {
+		logger.Fatal("Missing username key in secret", zap.Error(err))
+	}
+
+	rawpassword, err := ioutil.ReadFile(env.CouchDbCredentialsPath + "/password")
+	if err != nil {
+		logger.Fatal("Missing username key in secret", zap.Error(err))
+	}
+
+	connection, err := couchdb.Connect(string(rawurl), string(rawusername), string(rawpassword), time.Minute)
+	if err != nil {
+		logger.Fatal("Error creating connection to couchDb", zap.Error(err))
+	}
+
+	return &couchDbAdapter{
+		namespace: env.Namespace,
+		ce:        ceClient,
+		reporter:  reporter,
+		logger:    logger,
+
+		couchDB:    connection,
+		source:     env.EventSource,
+		database:   env.Database,
+		changeArgs: couchdb.ChangeArguments{},
+	}
+}
+
+func (a *couchDbAdapter) Start(stopCh <-chan struct{}) error {
 	// Just Poll for now. Other modes (long running, continues) will be provided later on.
 	return wait.PollUntil(2*time.Second, a.send, stopCh)
 }
 
-func (a *adapter) send() (done bool, err error) {
+func (a *couchDbAdapter) send() (done bool, err error) {
 	changes, err := a.couchDB.Changes(a.database, &a.changeArgs)
 	if err != nil {
 		return false, err
@@ -105,7 +124,7 @@ func (a *adapter) send() (done bool, err error) {
 	return false, nil
 }
 
-func (a *adapter) makeEvent(changes *couchdb.ChangeResponseResult) (*cloudevents.Event, error) {
+func (a *couchDbAdapter) makeEvent(changes *couchdb.ChangeResponseResult) (*cloudevents.Event, error) {
 	event := cloudevents.NewEvent(cloudevents.VersionV03)
 	event.SetID(changes.ID)
 	event.SetSource(a.source)
