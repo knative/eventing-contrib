@@ -215,6 +215,36 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:6f2c823e33811fd83df3f9591807f40bbfb3fbabc5a58fd19901aaecb07e0bfa"
+  name = "github.com/go-kivik/couchdb"
+  packages = [
+    ".",
+    "chttp",
+  ]
+  pruneopts = "NUT"
+  revision = "a8dab644dca9b91c342cf0504dbddc4e822a544a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7fe3c7e158a870fb380d5954a26c7954b8cb0df7979f8920b3b0494a051c387c"
+  name = "github.com/go-kivik/kivik"
+  packages = [
+    ".",
+    "driver",
+  ]
+  pruneopts = "NUT"
+  revision = "fcc1de1f215b1a026cdb37f2e86a0bdee29c65f9"
+
+[[projects]]
+  digest = "1:634ba85f13a58cad11d183a9a6b49710c45c7913e020f10e87f1efa615bcc3fa"
+  name = "github.com/go-kivik/kivikmock"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "da8491ffa707b8a39b25c8bc97712f94bf52c314"
+  version = "v2.0.0-pre3"
+
+[[projects]]
+  branch = "master"
   digest = "1:53becd66889185091b58ea3fc49294996f2179fb05a89702f4de7d15e581b509"
   name = "github.com/go-logr/logr"
   packages = ["."]
@@ -865,7 +895,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b36cbda3305016019734b28b269ca55c6b041d1eb8e3fc1e47c94fac6422894e"
+  digest = "1:88e95054fb03c19288deb4b6a53257edd6e0df1d3e582d618319447a175c47fd"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -879,6 +909,7 @@
     "http2/hpack",
     "idna",
     "internal/timeseries",
+    "publicsuffix",
     "trace",
   ]
   pruneopts = "NUT"
@@ -981,6 +1012,17 @@
   ]
   pruneopts = "NUT"
   revision = "6adeb8aab2ded9eb693b831d5fd090c10a6ebdfa"
+
+[[projects]]
+  branch = "master"
+  digest = "1:c0619d0c0c2f585812ce9f844eafb9c5660f5bd723c9ac0cd60b7fac665d2ac6"
+  name = "golang.org/x/xerrors"
+  packages = [
+    ".",
+    "internal",
+  ]
+  pruneopts = "NUT"
+  revision = "1b5146add8981d58be77b16229c0ff0f8bebd8c1"
 
 [[projects]]
   digest = "1:8392b5c29adedc5f85c66b48bb53b6c49dd91d8540f3cad5d43ef7277946718f"
@@ -1516,7 +1558,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c80ae6d56ca33cf67e77c26942af7ba5468b098ebce375845f40fd991a005210"
+  digest = "1:1ab2af1ca10bbffb43d8197076c8230f02d1922f3f55d6c289313a8f75eab237"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1559,6 +1601,7 @@
     "pkg/defaultchannel",
     "pkg/duck",
     "pkg/kncloudevents",
+    "pkg/kncloudevents/testing",
     "pkg/logconfig",
     "pkg/logging",
     "pkg/reconciler",
@@ -1765,6 +1808,10 @@
     "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/types",
     "github.com/emicklei/go-restful",
+    "github.com/go-kivik/couchdb",
+    "github.com/go-kivik/kivik",
+    "github.com/go-kivik/kivik/driver",
+    "github.com/go-kivik/kivikmock",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
@@ -1840,6 +1887,7 @@
     "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/duck",
+    "knative.dev/eventing/pkg/kncloudevents/testing",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
     "knative.dev/eventing/pkg/reconciler",

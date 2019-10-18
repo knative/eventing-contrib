@@ -416,5 +416,5 @@ func (r *Reconciler) makeEventSource(src *v1alpha1.CouchDbSource) (string, error
 		return "", err
 	}
 
-	return fmt.Sprintf("%s.%s", url.Hostname(), src.Spec.Database), nil
+	return fmt.Sprintf("%s/%s", url.Hostname(), src.Spec.Database), nil
 }

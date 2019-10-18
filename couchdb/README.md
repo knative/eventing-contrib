@@ -19,11 +19,7 @@ configuration parameters will be provided in the future.
      name: couchdb-binding
    stringData:
      # The URL pointing to the CouchDB http server
-     url: "https://..."
-     # CouchDB username
-     username: "me"
-     # CouchDB passwork/token
-     password: "mepassword"
+     url: "https://username:password/..."
    ```
 
 1. Create the `CouchDbSource` custom objects, by configuring the required

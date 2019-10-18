@@ -28,8 +28,10 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/source"
 
+	_ "github.com/go-kivik/couchdb"
+	"github.com/go-kivik/kivik"
+
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/couchdb/source/pkg/couchdb"
 )
 
 type envConfig struct {
@@ -46,16 +48,17 @@ type couchDbAdapter struct {
 	reporter  source.StatsReporter
 	logger    *zap.SugaredLogger
 
-	source     string
-	couchDB    couchdb.Connection
-	database   string
-	changeArgs couchdb.ChangeArguments
+	source  string
+	couchDB *kivik.DB
+	options kivik.Options
 }
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
 	return &envConfig{}
 }
 
+// NewAdapter creates an adapter to convert incoming CouchDb changes events to CloudEvents and
+// then sends them to the specified Sink
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
@@ -64,20 +67,20 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	if err != nil {
 		logger.Fatal("Missing url key in secret", zap.Error(err))
 	}
+	return newAdapter(ctx, env, ceClient, reporter, string(rawurl), "couch")
+}
 
-	rawusername, err := ioutil.ReadFile(env.CouchDbCredentialsPath + "/username")
+func newAdapter(ctx context.Context, env *envConfig, ceClient cloudevents.Client, reporter source.StatsReporter, url string, driver string) adapter.Adapter {
+	logger := logging.FromContext(ctx)
+
+	client, err := kivik.New(driver, url)
 	if err != nil {
-		logger.Fatal("Missing username key in secret", zap.Error(err))
+		logger.Fatal("Error creating connection to couchDB", zap.Error(err))
 	}
 
-	rawpassword, err := ioutil.ReadFile(env.CouchDbCredentialsPath + "/password")
-	if err != nil {
-		logger.Fatal("Missing username key in secret", zap.Error(err))
-	}
-
-	connection, err := couchdb.Connect(string(rawurl), string(rawusername), string(rawpassword), time.Minute)
-	if err != nil {
-		logger.Fatal("Error creating connection to couchDb", zap.Error(err))
+	db := client.DB(context.TODO(), env.Database)
+	if db.Err() != nil {
+		logger.Fatal("Error connection to couchDB database", zap.Any("dabase", env.Database), zap.Error(err))
 	}
 
 	return &couchDbAdapter{
@@ -86,10 +89,12 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 		reporter:  reporter,
 		logger:    logger,
 
-		couchDB:    connection,
-		source:     env.EventSource,
-		database:   env.Database,
-		changeArgs: couchdb.ChangeArguments{},
+		couchDB: db,
+		source:  env.EventSource,
+		options: map[string]interface{}{
+			"feed":  "normal",
+			"since": "0",
+		},
 	}
 }
 
@@ -99,38 +104,36 @@ func (a *couchDbAdapter) Start(stopCh <-chan struct{}) error {
 }
 
 func (a *couchDbAdapter) send() (done bool, err error) {
-	changes, err := a.couchDB.Changes(a.database, &a.changeArgs)
+	changes, err := a.couchDB.Changes(context.TODO(), a.options)
 	if err != nil {
 		return false, err
 	}
 
-	if len(changes.Results) > 0 {
-		for _, r := range changes.Results {
-
-			event, err := a.makeEvent(&r)
-			if err != nil {
-				return false, err
-			}
-
-			if _, _, err := a.ce.Send(context.Background(), *event); err != nil {
-				a.logger.Info("event delivery failed", zap.Error(err))
-				return false, err
-			}
-
-			a.changeArgs.Since = r.Seq
+	for changes.Next() {
+		event, err := a.makeEvent(changes)
+		if err != nil {
+			return false, err
 		}
+
+		if _, _, err := a.ce.Send(context.Background(), *event); err != nil {
+			a.logger.Info("event delivery failed", zap.Error(err))
+			return false, err
+		}
+
+		a.options["since"] = changes.Seq()
 	}
 
 	return false, nil
 }
 
-func (a *couchDbAdapter) makeEvent(changes *couchdb.ChangeResponseResult) (*cloudevents.Event, error) {
+func (a *couchDbAdapter) makeEvent(changes *kivik.Changes) (*cloudevents.Event, error) {
 	event := cloudevents.NewEvent(cloudevents.VersionV03)
-	event.SetID(changes.ID)
+	event.SetID(changes.Seq())
 	event.SetSource(a.source)
+	event.SetSubject(changes.ID())
 	event.SetType(v1alpha1.CouchDbSourceChangesEventType)
 
-	if err := event.SetData(changes); err != nil {
+	if err := event.SetData(changes.Changes()); err != nil {
 		return nil, err
 	}
 	return &event, nil
