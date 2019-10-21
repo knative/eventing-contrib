@@ -17,14 +17,26 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"testing"
+	"context"
+
+	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	"knative.dev/pkg/apis"
 )
 
-func TestGroupVersionKind(t *testing.T) {
-	src := CouchDbSource{}
-	gvk := src.GetGroupVersionKind()
+func (c *CouchDbSource) Validate(ctx context.Context) *apis.FieldError {
+	return c.Spec.Validate(ctx).ViaField("spec")
+}
 
-	if gvk.Kind != "CouchDbSource" {
-		t.Errorf("Should be CouchDbSource.")
+func (cs *CouchDbSourceSpec) Validate(ctx context.Context) *apis.FieldError {
+	var errs *apis.FieldError
+
+	// Validate sink
+	if cs.Sink == nil {
+		fe := apis.ErrMissingField("sink")
+		errs = errs.Also(fe)
+	} else if fe := messagingv1alpha1.IsValidObjectReference(*cs.Sink); fe != nil {
+		errs = errs.Also(fe.ViaField("sink"))
 	}
+
+	return errs
 }

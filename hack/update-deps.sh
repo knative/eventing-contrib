@@ -40,3 +40,7 @@ update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./github/cmd/*" "./camel/s
 # Produced with:
 # git diff origin/master HEAD -- vendor/go.opencensus.io/trace/trace.go > ./hack/set-span-id.patch
 git apply ${REPO_ROOT_DIR}/hack/set-span-id.patch
+
+# Patch Kivik
+# see https://github.com/go-kivik/kivik/issues/420
+git apply ${REPO_ROOT_DIR}/hack/kivik-set-zero.patch

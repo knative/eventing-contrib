@@ -773,6 +773,14 @@
   version = "v3.0.0"
 
 [[projects]]
+  digest = "1:7008ec21a0ce773bd21deefdb7d17fab8cb9f1ae0bc44026cdd2b658ab1582ca"
+  name = "github.com/rogpeppe/go-internal"
+  packages = ["semver"]
+  pruneopts = "NUT"
+  revision = "d89504fbbf2c313df24867a5ffafcc9b847961ff"
+  version = "v1.5.0"
+
+[[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
@@ -1659,6 +1667,7 @@
     "logging/testing",
     "metrics",
     "metrics/metricskey",
+    "metrics/testing",
     "network",
     "profiling",
     "ptr",
@@ -1677,6 +1686,7 @@
     "tracing",
     "tracing/config",
     "tracker",
+    "version",
     "webhook",
   ]
   pruneopts = "T"
@@ -1831,6 +1841,7 @@
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
     "golang.org/x/net/context",
+    "golang.org/x/net/http2",
     "golang.org/x/oauth2",
     "gopkg.in/go-playground/webhooks.v5/github",
     "gopkg.in/yaml.v2",
@@ -1904,6 +1915,7 @@
     "knative.dev/pkg/apis/duck/v1alpha1",
     "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/client/clientset/versioned/fake",
+    "knative.dev/pkg/client/injection/kube/client",
     "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
@@ -1915,12 +1927,14 @@
     "knative.dev/pkg/logging/logkey",
     "knative.dev/pkg/logging/testing",
     "knative.dev/pkg/metrics",
+    "knative.dev/pkg/metrics/testing",
     "knative.dev/pkg/reconciler/testing",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/source",
     "knative.dev/pkg/system",
     "knative.dev/pkg/system/testing",
     "knative.dev/pkg/tracing",
+    "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",
     "knative.dev/serving/pkg/apis/serving/v1",
     "knative.dev/serving/pkg/apis/serving/v1alpha1",

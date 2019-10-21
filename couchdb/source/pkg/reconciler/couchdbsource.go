@@ -63,7 +63,8 @@ const (
 var (
 	deploymentGVK     = appsv1.SchemeGroupVersion.WithKind("Deployment")
 	couchDbEventTypes = []string{
-		v1alpha1.CouchDbSourceChangesEventType,
+		v1alpha1.CouchDbSourceUpdateEventType,
+		v1alpha1.CouchDbSourceDeleteEventType,
 	}
 )
 

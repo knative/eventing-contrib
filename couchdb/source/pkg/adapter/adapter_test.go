@@ -17,12 +17,12 @@ limitations under the License.
 package adapter
 
 import (
-	"testing"
 	"context"
+	"testing"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
-	cloudevents "github.com/cloudevents/sdk-go"
 	"knative.dev/eventing/pkg/adapter"
 	kncetesting "knative.dev/eventing/pkg/kncloudevents/testing"
 	"knative.dev/pkg/logging"
@@ -107,7 +107,7 @@ var _ cloudevents.Client = (*adapterTestClient)(nil)
 func newAdapterTestClient() *adapterTestClient {
 	return &adapterTestClient{
 		kncetesting.NewTestClient(),
-		make(chan struct{}),
+		make(chan struct{}, 1),
 	}
 }
 
@@ -118,40 +118,59 @@ func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) (
 }
 
 func TestReceiveEventPoll(t *testing.T) {
-	ce := newAdapterTestClient()
-
-	env := envConfig{
-		EnvConfig: adapter.EnvConfig{
-			Namespace: "default",
+	testCases := map[string]struct {
+		feed string
+	}{
+		"normal feed": {
+			feed: "normal",
 		},
-		EventSource: "test-source",
-		Database:    "testdb",
+		"continuous feed": {
+			feed: "continuous",
+		},
 	}
-	r := &mockReporter{}
-	ctx, _ := pkgtesting.SetupFakeContext(t)
-	logger := zap.NewExample().Sugar()
-	ctx = logging.WithLogger(ctx, logger)
 
-	c, mock := kivikmock.NewT(t)
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			ce := newAdapterTestClient()
 
-	mockDB := mock.NewDB()
-	mock.ExpectDB().WithName("testdb").WillReturn(mockDB)
-	mockDB.ExpectChanges().WillReturn(kivikmock.NewChanges().AddChange(&driver.Change{
-		ID:      "anid",
-		Seq:     "aseq",
-		Changes: driver.ChangedRevs{"arev"},
-	}))
+			env := envConfig{
+				EnvConfig: adapter.EnvConfig{
+					Namespace: "default",
+				},
+				EventSource: "test-source",
+				Database:    "testdb",
+				Feed:        tc.feed,
+			}
+			r := &mockReporter{}
+			ctx, _ := pkgtesting.SetupFakeContext(t)
+			logger := zap.NewExample().Sugar()
+			ctx = logging.WithLogger(ctx, logger)
 
-	a := newAdapter(ctx, &env, ce, r, c.DSN(), "kivikmock").(*couchDbAdapter)
+			c, mock := kivikmock.NewT(t)
 
-	done := make(chan struct{})
-	go func() {
-		a.Start(ce.stopCh)
-		done <- struct{}{}
-	}()
-	<- done
+			mockDB := mock.NewDB()
+			mock.ExpectDB().WithName("testdb").WillReturn(mockDB)
+			mockDB.ExpectChanges().WillReturn(kivikmock.NewChanges().AddChange(&driver.Change{
+				ID:      "anid",
+				Seq:     "aseq",
+				Changes: driver.ChangedRevs{"arev"},
+			}))
 
-	validateSent(t, ce, `["arev"]`)
+			a := newAdapter(ctx, &env, ce, r, c.DSN(), "kivikmock").(*couchDbAdapter)
+
+			done := make(chan struct{})
+			go func() {
+				err := a.Start(ce.stopCh)
+				if err != nil {
+					t.Errorf("expected no error, got %v", err)
+				}
+				done <- struct{}{}
+			}()
+			<-done
+
+			validateSent(t, ce, `["arev"]`)
+		})
+	}
 }
 
 func validateSent(t *testing.T, ce *adapterTestClient, wantData string) {
