@@ -86,6 +86,7 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	event.SetExtension(GHHeaderEvent, gitHubEventType)
 	event.SetExtension(GHHeaderDelivery, eventID)
 	event.SetSubject(subject)
+	event.SetDataContentType(cloudevents.ApplicationJSON)
 	event.SetData(payload)
 
 	_, _, err := a.client.Send(context.Background(), event)
