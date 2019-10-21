@@ -135,8 +135,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:3e07bcc86130bbdd84341656a26746949f32a710e18ae43d5751f6fe16cb7fdb"
+  digest = "1:902544577dcb868a5ae31529d73a1ce5031e224923290caedf6176241ee304e0"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     ".",
@@ -145,6 +144,7 @@
     "pkg/cloudevents/context",
     "pkg/cloudevents/datacodec",
     "pkg/cloudevents/datacodec/json",
+    "pkg/cloudevents/datacodec/text",
     "pkg/cloudevents/datacodec/xml",
     "pkg/cloudevents/observability",
     "pkg/cloudevents/transport",
@@ -152,7 +152,8 @@
     "pkg/cloudevents/types",
   ]
   pruneopts = "NUT"
-  revision = "a1c7a759c034d9289981dd8ca42ff3663842a8a6"
+  revision = "2fa4bb1fbb4aac4d906b0173a2a408f701439b82"
+  version = "v0.10.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1558,7 +1559,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ab2af1ca10bbffb43d8197076c8230f02d1922f3f55d6c289313a8f75eab237"
+  digest = "1:695d79569effc92b5066807fb97f93438962d747111b159b5b73b48cbdc1d51c"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1616,7 +1617,7 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "994adba2302ad8a3a010d35e4582a142ccaf6919"
+  revision = "6be6c2f4db03b59996d35696097ed861b771f465"
 
 [[projects]]
   branch = "master"
