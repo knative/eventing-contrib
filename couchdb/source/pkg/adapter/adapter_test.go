@@ -18,10 +18,11 @@ package adapter
 
 import (
 	"testing"
-	"time"
+	"context"
 
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"knative.dev/eventing/pkg/adapter"
 	kncetesting "knative.dev/eventing/pkg/kncloudevents/testing"
 	"knative.dev/pkg/logging"
@@ -41,7 +42,7 @@ func (r *mockReporter) ReportEventCount(args *source.ReportArgs, responseCode in
 	return nil
 }
 
-func TestNewAdaptor(t *testing.T) {
+func TestNewAdapter(t *testing.T) {
 	ce := kncetesting.NewTestClient()
 
 	testCases := map[string]struct {
@@ -96,8 +97,28 @@ func TestNewAdaptor(t *testing.T) {
 	}
 }
 
+type adapterTestClient struct {
+	*kncetesting.TestCloudEventsClient
+	stopCh chan struct{}
+}
+
+var _ cloudevents.Client = (*adapterTestClient)(nil)
+
+func newAdapterTestClient() *adapterTestClient {
+	return &adapterTestClient{
+		kncetesting.NewTestClient(),
+		make(chan struct{}),
+	}
+}
+
+func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+	retCtx, retEvent, retError := c.TestCloudEventsClient.Send(ctx, event)
+	c.stopCh <- struct{}{}
+	return retCtx, retEvent, retError
+}
+
 func TestReceiveEventPoll(t *testing.T) {
-	ce := kncetesting.NewTestClient()
+	ce := newAdapterTestClient()
 
 	env := envConfig{
 		EnvConfig: adapter.EnvConfig{
@@ -123,26 +144,17 @@ func TestReceiveEventPoll(t *testing.T) {
 
 	a := newAdapter(ctx, &env, ce, r, c.DSN(), "kivikmock").(*couchDbAdapter)
 
-	stopCh := make(chan struct{})
 	done := make(chan struct{})
-	stopped := false
 	go func() {
-		a.Start(stopCh)
-		stopped = true
+		a.Start(ce.stopCh)
 		done <- struct{}{}
 	}()
-
-	time.Sleep(3 * time.Second) // Run at least onece
+	<- done
 
 	validateSent(t, ce, `["arev"]`)
-
-	if !stopped {
-		stopCh <- struct{}{}
-	}
-	<-done
 }
 
-func validateSent(t *testing.T, ce *kncetesting.TestCloudEventsClient, wantData string) {
+func validateSent(t *testing.T, ce *adapterTestClient, wantData string) {
 	if got := len(ce.Sent()); got != 1 {
 		t.Errorf("Expected 1 event to be sent, got %d", got)
 	}
