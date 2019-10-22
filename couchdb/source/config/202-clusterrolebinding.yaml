@@ -42,3 +42,19 @@ roleRef:
   kind: ClusterRole
   name: addressable-resolver
 
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: couchdb-webhook
+  labels:
+    eventing.knative.dev/release: devel
+subjects:
+  - kind: ServiceAccount
+    name: couchdb-webhook
+    namespace: knative-sources
+roleRef:
+  kind: ClusterRole
+  name: couchdb-webhook
+  apiGroup: rbac.authorization.k8s.io

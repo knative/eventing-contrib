@@ -28,7 +28,7 @@ import (
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
 )
 
-// ReceiveAdapterArgs are the arguments needed to create a CouchDb Receive Adapter.
+// ReceiveAdapterArgs are the arguments needed to create a CouchDB Receive Adapter.
 // Every field is required.
 type ReceiveAdapterArgs struct {
 	EventSource string
@@ -39,7 +39,7 @@ type ReceiveAdapterArgs struct {
 }
 
 // MakeReceiveAdapter generates (but does not insert into K8s) the Receive Adapter Deployment for
-// CpouchDB sources.
+// CouchDB sources.
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	replicas := int32(1)
 	return &v1.Deployment{
@@ -107,11 +107,23 @@ func makeEnv(eventSource, sinkURI string, spec *v1alpha1.CouchDbSourceSpec) []co
 		Name:  "COUCHDB_DATABASE",
 		Value: spec.Database,
 	}, {
-		Name: "SYSTEM_NAMESPACE",
+		Name:  "COUCHDB_FEED",
+		Value: string(spec.Feed),
+	}, {
+		Name: "NAMESPACE",
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
 				FieldPath: "metadata.namespace",
 			},
 		},
+	}, {
+		Name:  "METRICS_DOMAIN",
+		Value: "knative.dev/eventing",
+	}, {
+		Name:  "K_METRICS_CONFIG",
+		Value: "",
+	}, {
+		Name:  "K_LOGGING_CONFIG",
+		Value: "",
 	}}
 }

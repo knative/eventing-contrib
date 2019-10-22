@@ -17,14 +17,15 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"testing"
+	"context"
 )
 
-func TestGroupVersionKind(t *testing.T) {
-	src := CouchDbSource{}
-	gvk := src.GetGroupVersionKind()
+func (c *CouchDbSource) SetDefaults(ctx context.Context) {
+	c.Spec.SetDefaults(ctx)
+}
 
-	if gvk.Kind != "CouchDbSource" {
-		t.Errorf("Should be CouchDbSource.")
+func (cs *CouchDbSourceSpec) SetDefaults(ctx context.Context) {
+	if cs.Feed == "" {
+		cs.Feed = FeedContinuous
 	}
 }

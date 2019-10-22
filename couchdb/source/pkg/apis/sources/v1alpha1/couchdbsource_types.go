@@ -48,9 +48,23 @@ var _ kmeta.OwnerRefable = (*CouchDbSource)(nil)
 // Check that CouchDbSource implements the Conditions duck type.
 var _ = duck.VerifyType(&CouchDbSource{}, &duckv1beta1.Conditions{})
 
+// FeedType is the type of Feed
+type FeedType string
+
 const (
-	// CouchDbSourceChangesEventType is the CouchDbSource CloudEvent type for changes.
-	CouchDbSourceChangesEventType = "dev.knative.couchdb.changes"
+	// CouchDbSourceUpdateEventType is the CouchDbSource CloudEvent type for update.
+	CouchDbSourceUpdateEventType = "org.apache.couchdb.document.update"
+
+	// CouchDbSourceDeleteEventType is the CouchDbSource CloudEvent type for deletion.
+	CouchDbSourceDeleteEventType = "org.apache.couchdb.document.delete"
+
+	// FeedNormal corresponds to the "normal" feed. The connection to the server
+	// is closed after reporting changes.
+	FeedNormal = FeedType("normal")
+
+	// FeedContinuous corresponds to the "continuous" feed. The connection to the
+	// server stays open after reporting changes.
+	FeedContinuous = FeedType("continuous")
 )
 
 // CouchDbSourceSpec defines the desired state of CouchDbSource
@@ -65,6 +79,10 @@ type CouchDbSourceSpec struct {
 	// CouchDbCredentials is the credential to use to access CouchDb.
 	// Must be a secret. Only Name and Namespace are used.
 	CouchDbCredentials corev1.ObjectReference `json:"credentials,omitempty"`
+
+	// Feed changes how CouchDB sends the response.
+	// More information: https://docs.couchdb.org/en/stable/api/database/changes.html#changes-feeds
+	Feed FeedType `json:"feed"`
 
 	// Database is the database to watch for changes
 	Database string `json:"database"`
@@ -100,8 +118,4 @@ type CouchDbSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []CouchDbSource `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&CouchDbSource{}, &CouchDbSourceList{})
 }
