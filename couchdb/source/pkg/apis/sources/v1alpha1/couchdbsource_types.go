@@ -58,10 +58,12 @@ const (
 	// CouchDbSourceDeleteEventType is the CouchDbSource CloudEvent type for deletion.
 	CouchDbSourceDeleteEventType = "org.apache.couchdb.document.delete"
 
-	// FeedNormal corresponds to the "normal" feed
+	// FeedNormal corresponds to the "normal" feed. The connection to the server
+	// is closed after reporting changes.
 	FeedNormal = FeedType("normal")
 
-	// FeedContinuous corresponds to the "continuous" feed
+	// FeedContinuous corresponds to the "continuous" feed. The connection to the
+	// server stays open after reporting changes.
 	FeedContinuous = FeedType("continuous")
 )
 

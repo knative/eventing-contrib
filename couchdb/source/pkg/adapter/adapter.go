@@ -59,6 +59,7 @@ type couchDbAdapter struct {
 }
 
 func init() {
+	// Need to disable compression for Cloudant.
 	var transport = http2.Transport{
 		DisableCompression: true,
 	}
@@ -85,6 +86,8 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	url := string(rawurl)
 
 	driver := "couch"
+
+	// Use cloudant driver only when the server is Cloudant.
 	if strings.Contains(url, "cloudant") {
 		driver = "cloudant"
 	}

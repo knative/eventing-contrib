@@ -30,7 +30,7 @@ The Apache CouchDB Event source enables Knative Eventing integration with
      name: couchdb-photographer
    spec:
      # reference to a secret containing the CouchDB credentials
-     feed: continuous # default value
+     feed: continuous # default value. For polling every 2 seconds, use "normal"
      credentials:
        name: couchdb-binding
      database: photographers
@@ -39,3 +39,4 @@ The Apache CouchDB Event source enables Knative Eventing integration with
        kind: Service
        name: event-display
    ```
+

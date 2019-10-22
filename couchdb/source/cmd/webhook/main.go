@@ -91,11 +91,11 @@ func main() {
 	ctx, _ = injection.Default.SetupInformers(ctx, cfg)
 	kubeClient := kubeclient.Get(ctx)
 
-	config, err := sharedmain.GetLoggingConfig(ctx)
+	loggingConfig, err := sharedmain.GetLoggingConfig(ctx)
 	if err != nil {
 		log.Fatal("Error loading/parsing logging configuration:", err)
 	}
-	logger, atomicLevel := logging.NewLoggerFromConfig(config, logconfig.WebhookName())
+	logger, atomicLevel := logging.NewLoggerFromConfig(loggingConfig, logconfig.WebhookName())
 	defer logger.Sync()
 	logger = logger.With(zap.String(logkey.ControllerType, logconfig.WebhookName()))
 
@@ -103,7 +103,7 @@ func main() {
 		logger.Fatalw("Version check failed", zap.Error(err))
 	}
 
-	logger.Infow("Starting the Eventing Webhook")
+	logger.Infow("Starting the CouchDB Webhook")
 
 	// Watch the logging config map and dynamically update logging levels.
 	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.Namespace())
@@ -118,7 +118,7 @@ func main() {
 
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
-		log.Fatal("Failed to process env var", zap.Error(err))
+		logger.Fatalw("Failed to process env var", zap.Error(err))
 	}
 	registrationDelay := getRegistrationDelayTime(env.RegistrationDelayTime)
 
