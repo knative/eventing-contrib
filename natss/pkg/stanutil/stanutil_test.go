@@ -17,13 +17,13 @@ limitations under the License.
 package stanutil
 
 import (
-	"go.uber.org/zap/zapcore"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/nats-io/nats-streaming-server/server"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"knative.dev/pkg/logging"
 	_ "knative.dev/pkg/system/testing"
 )
