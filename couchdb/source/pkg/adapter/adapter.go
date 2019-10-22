@@ -171,6 +171,7 @@ func (a *couchDbAdapter) makeEvent(changes *kivik.Changes) (*cloudevents.Event, 
 	event.SetID(changes.Seq())
 	event.SetSource(a.source)
 	event.SetSubject(changes.ID())
+	event.SetDataContentType(cloudevents.ApplicationJSON)
 
 	if changes.Deleted() {
 		event.SetType(v1alpha1.CouchDbSourceDeleteEventType)
