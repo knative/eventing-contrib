@@ -39,4 +39,3 @@ The Apache CouchDB Event source enables Knative Eventing integration with
        kind: Service
        name: event-display
    ```
-
