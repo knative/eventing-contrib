@@ -106,7 +106,7 @@ func (client gitHubWebhookClient) Delete(ctx context.Context, options *webhookOp
 		return fmt.Errorf("failed to delete the webhook: %v", err)
 	}
 
-	logger.Infof("deleted hook: %s", hook.Name)
+	logger.Infof("deleted hook: %s", hook.ID)
 	return nil
 }
 
@@ -132,9 +132,7 @@ func (client gitHubWebhookClient) hookConfig(ctx context.Context, options *webho
 	config["secret"] = options.secretToken
 
 	// GitHub hook names are required to be named "web" or the name of a GitHub service
-	hookname := "web"
 	hook := ghclient.Hook{
-		Name:   &hookname,
 		URL:    &domain,
 		Events: options.events,
 		Active: &active,

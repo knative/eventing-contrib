@@ -329,12 +329,12 @@
   revision = "b02d448a3705facf11018efff34f1d2830be5724"
 
 [[projects]]
-  digest = "1:f4f203acd8b11b8747bdcd91696a01dbc95ccb9e2ca2db6abf81c3a4f5e950ce"
+  digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
   name = "github.com/google/go-github"
   packages = ["github"]
   pruneopts = "NUT"
-  revision = "f55b50f38167644bb7e4be03d9a2bde71d435239"
-  version = "v18.2.0"
+  revision = "9686ff0746200cf521ce225525b421e13b4eac1a"
+  version = "v28.1.1"
 
 [[projects]]
   digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
@@ -878,16 +878,23 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ba2be3e8d1836918b69f885227fa1db9ea76bb50ec6effb82161abb72b8f7a7"
+  digest = "1:c5f54e66aecd08886ddcc55184364b33d598b8ed6724205539da41d2026608df"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
     "blowfish",
+    "cast5",
     "chacha20poly1305",
     "ed25519",
     "ed25519/internal/edwards25519",
     "internal/chacha20",
     "internal/subtle",
+    "openpgp",
+    "openpgp/armor",
+    "openpgp/elgamal",
+    "openpgp/errors",
+    "openpgp/packet",
+    "openpgp/s2k",
     "poly1305",
     "ssh/terminal",
   ]
