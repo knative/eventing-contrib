@@ -19,7 +19,7 @@ package clustermanager
 import (
 	"fmt"
 
-	"knative.dev/pkg/testutils/common"
+	"knative.dev/pkg/testutils/clustermanager/e2e-tests/common"
 )
 
 var (
@@ -50,11 +50,4 @@ func getResourceName(rt ResourceType) (string, error) {
 		resName = fmt.Sprintf("%s-%s", resName, buildNumStr)
 	}
 	return resName, nil
-}
-
-func getClusterLocation(region, zone string) string {
-	if zone != "" {
-		region = fmt.Sprintf("%s-%s", region, zone)
-	}
-	return region
 }

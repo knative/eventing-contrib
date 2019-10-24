@@ -275,14 +275,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e2b86e41f3d669fc36b50d31d32d22c8ac656c75aa5ea89717ce7177e134ff2a"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
-
-[[projects]]
-  branch = "master"
   digest = "1:3fb07f8e222402962fa190eb060608b34eddfb64562a18e2167df2de0ece85d8"
   name = "github.com/golang/groupcache"
   packages = ["lru"]
@@ -1567,7 +1559,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:695d79569effc92b5066807fb97f93438962d747111b159b5b73b48cbdc1d51c"
+  digest = "1:cf785d96971778f0eb848afb0bdb934a5cb0d47abfdc3a936e0e695da2cc3912"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1625,11 +1617,11 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "6be6c2f4db03b59996d35696097ed861b771f465"
+  revision = "ec4dcbbd5c35079dcbab80a94d22000338dda55b"
 
 [[projects]]
   branch = "master"
-  digest = "1:e1e8c1c5963fd64151b7810f0f92e4617464f2302d4792686ea1d5797166fd07"
+  digest = "1:2f0bfe47d6d494dfc206af0e4f4e7000db3fef052ed46026c4c6a2ba4c7cac32"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1691,11 +1683,11 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "346b0abf16cdc8d935c8c52469f8ca82d20c7bd6"
+  revision = "0b19b4ad91391699170edab6b36f7545c5ca6ead"
 
 [[projects]]
   branch = "master"
-  digest = "1:7428fa3c29b9122911c62a8dace650c06f65934be4ebab1c0f6fa314ce000c66"
+  digest = "1:dc09bc9bb13641b8da59abc7b3c2616144d41addb40da39a9bfb8d4da5a89c3b"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1712,18 +1704,18 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "aad68e6dabc50d27d921f3cc50f0313b11195a72"
+  revision = "511b4d5881584a07c3cbac174332360ff1c44673"
 
 [[projects]]
   branch = "master"
-  digest = "1:964a4f9e12d5021b9d550e04c36cf23feb880e286ceede1b246d5c0e43b523b9"
+  digest = "1:0041ff0e6be31ac2cd85ffd4cf0b6ccb576b408d4f3c1c7e48c79cbf32a1319c"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "e09d3c7669d2268d5ce11ea53cd7e9429722c1a7"
+  revision = "396164e3db7d2a11ebccb7961a7b01fc441e3084"
 
 [[projects]]
   digest = "1:d7fff5619b391ebfdab093ade4d065a6b8095b43134f18d60a0887971ee886c0"
