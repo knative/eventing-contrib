@@ -3,9 +3,9 @@
 The Prometheus Event Source enables Knative Eventing integration with the
 [Prometheus Monitoring System](https://prometheus.io/).
 
-At the moment the implementation supports only simple PromQL queries. The queries
-run against the Prometheus server every 5 seconds and the results are sent
-to the configured sink as CloudEvents.
+At the moment the implementation supports only simple PromQL queries. The
+queries run against the Prometheus server every 5 seconds and the results are
+sent to the configured sink as CloudEvents.
 
 ## Deployment steps
 
@@ -13,7 +13,7 @@ to the configured sink as CloudEvents.
 1. Create a PrometheusSource CRD, specifying the URL for the Prometheus server,
    the PromQL query to run and the sink to send CloudEvents to:
 
-   ``` yaml
+   ```yaml
    apiVersion: sources.eventing.knative.dev/v1alpha1
    kind: PrometheusSource
    metadata:
