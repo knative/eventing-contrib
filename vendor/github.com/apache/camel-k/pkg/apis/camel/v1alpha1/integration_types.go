@@ -53,6 +53,7 @@ type IntegrationStatus struct {
 	Configuration    []ConfigurationSpec    `json:"configuration,omitempty"`
 	Conditions       []IntegrationCondition `json:"conditions,omitempty"`
 	Version          string                 `json:"version,omitempty"`
+	Replicas         *int32                 `json:"replicas,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -106,6 +107,9 @@ const (
 type SourceSpec struct {
 	DataSpec
 	Language Language `json:"language,omitempty"`
+	// Loader is an optional id of the org.apache.camel.k.RoutesLoader that will
+	// interpret this source at runtime
+	Loader string `json:"loader,omitempty"`
 }
 
 // Language --
@@ -165,8 +169,6 @@ const (
 	IntegrationPhaseRunning IntegrationPhase = "Running"
 	// IntegrationPhaseError --
 	IntegrationPhaseError IntegrationPhase = "Error"
-	// IntegrationPhaseDeleting --
-	IntegrationPhaseDeleting IntegrationPhase = "Deleting"
 
 	// IntegrationConditionKitAvailable --
 	IntegrationConditionKitAvailable IntegrationConditionType = "IntegrationKitAvailable"

@@ -79,7 +79,7 @@ type CamelSourceOriginSpec struct {
 	// Integration is a kind of source that contains a Camel K integration
 	Integration *v1alpha1.IntegrationSpec `json:"integration,omitempty"`
 	// Flow is a kind of source that contains a single Camel YAML flow route
-	Flow *Flow `json:"flower,omitempty"`
+	Flow *Flow `json:"flow,omitempty"`
 }
 
 // Flow is an unstructured object representing a Camel Flow in YAML/JSON DSL

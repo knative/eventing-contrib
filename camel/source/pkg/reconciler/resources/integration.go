@@ -17,6 +17,7 @@ limitations under the License.
 package resources
 
 import (
+	"errors"
 	"net/url"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
@@ -25,7 +26,11 @@ import (
 )
 
 func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
-	environment, err := makeCamelEnvironment(args.Sink)
+	if args.Source.Integration == nil && args.Source.Flow == nil {
+		return nil, errors.New("empty sources")
+	}
+
+	environment, err := makeCamelEnvironment(args.SinkType, args.SinkURL)
 	if err != nil {
 		return nil, err
 	}
@@ -44,14 +49,12 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 			return nil, err
 		}
 		spec.Sources = append(spec.Sources, camelv1alpha1.SourceSpec{
-			Language: camelv1alpha1.LanguageYaml,
+			Loader: "knative-source-yaml",
 			DataSpec: camelv1alpha1.DataSpec{
 				Name:    "flow.yaml",
 				Content: flowData,
 			},
 		})
-
-		spec.Dependencies = append(spec.Dependencies, "mvn:org.apache.camel.k:camel-k-loader-knative")
 	}
 
 	if spec.Traits == nil {
@@ -78,13 +81,20 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 	return &integration, nil
 }
 
-func makeCamelEnvironment(sinkURI string) (string, error) {
-	sink, err := url.Parse(sinkURI)
+func makeCamelEnvironment(sinkType metav1.TypeMeta, sinkURIString string) (string, error) {
+	sinkURI, err := url.Parse(sinkURIString)
 	if err != nil {
 		return "", err
 	}
 	env := camelknativev1alpha1.NewCamelEnvironment()
-	svc, err := camelknativev1alpha1.BuildCamelServiceDefinition("sink", camelknativev1alpha1.CamelServiceTypeEndpoint, *sink)
+	svc, err := camelknativev1alpha1.BuildCamelServiceDefinition(
+		"sink",
+		camelknativev1alpha1.CamelEndpointKindSink,
+		camelknativev1alpha1.CamelServiceTypeEndpoint,
+		*sinkURI,
+		sinkType.APIVersion,
+		sinkType.Kind,
+	)
 	if err != nil {
 		return "", err
 	}

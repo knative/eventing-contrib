@@ -51,7 +51,11 @@ func TestMakeDeployment_sink(t *testing.T) {
 				},
 			},
 		},
-		Sink: "http://test-sink",
+		SinkURL: "http://test-sink",
+		SinkType: metav1.TypeMeta{
+			Kind:       "MyKind",
+			APIVersion: "myapi.dev/v1",
+		},
 	})
 	if err != nil {
 		t.Error(err)
@@ -71,7 +75,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Kit:                "test-kit",
 			Sources: []camelv1alpha1.SourceSpec{
 				{
-					Language: "yaml",
+					Loader: "knative-source-yaml",
 					DataSpec: camelv1alpha1.DataSpec{
 						Name:    "flow.yaml",
 						Content: "- from:\n    uri: timer:tick\n",
@@ -91,12 +95,9 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Traits: map[string]camelv1alpha1.TraitSpec{
 				"knative": {
 					Configuration: map[string]string{
-						"configuration": `{"services":[{"type":"endpoint","protocol":"http","name":"sink","host":"test-sink","port":80,"metadata":{"service.path":"/"}}]}`,
+						"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","knative.apiVersion":"myapi.dev/v1","knative.kind":"MyKind","service.path":"/"}}]}`,
 					},
 				},
-			},
-			Dependencies: []string{
-				"mvn:org.apache.camel.k:camel-k-loader-knative",
 			},
 		},
 	}

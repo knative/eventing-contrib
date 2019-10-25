@@ -420,7 +420,11 @@ func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
-		Sink:      addressableURI,
+		SinkURL:   addressableURI,
+		SinkType: metav1.TypeMeta{
+			Kind:       addressableKind,
+			APIVersion: addressableAPIVersion,
+		},
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
 			Flow: &sourcesv1alpha1.Flow{
 				"from": map[string]interface{}{
@@ -446,7 +450,11 @@ func getRunningCamelKIntegration(t *testing.T) *camelv1alpha1.Integration {
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
-		Sink:      addressableURI,
+		SinkURL:   addressableURI,
+		SinkType: metav1.TypeMeta{
+			Kind:       addressableKind,
+			APIVersion: addressableAPIVersion,
+		},
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
 			Integration: &camelv1alpha1.IntegrationSpec{
 				Sources: []camelv1alpha1.SourceSpec{
@@ -472,20 +480,21 @@ func getRunningCamelKFlowIntegration(t *testing.T) *camelv1alpha1.Integration {
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
-		Sink:      addressableURI,
+		SinkURL:   addressableURI,
+		SinkType: metav1.TypeMeta{
+			Kind:       addressableKind,
+			APIVersion: addressableAPIVersion,
+		},
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
 			Integration: &camelv1alpha1.IntegrationSpec{
 				Sources: []camelv1alpha1.SourceSpec{
 					{
-						Language: camelv1alpha1.LanguageYaml,
+						Loader: "knative-source-yaml",
 						DataSpec: camelv1alpha1.DataSpec{
 							Name:    "flow.yaml",
 							Content: "- from:\n    steps:\n    - set-body:\n        constant: Hello world\n    uri: timer:tick?period=3s\n",
 						},
 					},
-				},
-				Dependencies: []string{
-					"mvn:org.apache.camel.k:camel-k-loader-knative",
 				},
 			},
 		},
