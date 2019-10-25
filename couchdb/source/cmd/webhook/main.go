@@ -135,7 +135,7 @@ func main() {
 		StatsReporter:     stats,
 		RegistrationDelay: registrationDelay * time.Second,
 
-		ResourceMutatingWebhookName:     "webhook.eventing.knative.dev",
+		ResourceMutatingWebhookName:     "webhook.couchdb.messaging.knative.dev",
 		ResourceAdmissionControllerPath: "/",
 	}
 
