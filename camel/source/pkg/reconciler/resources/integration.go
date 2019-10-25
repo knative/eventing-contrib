@@ -18,6 +18,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
@@ -30,7 +31,14 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 		return nil, errors.New("empty sources")
 	}
 
-	environment, err := makeCamelEnvironment(args.SinkType, args.SinkURL)
+	if _, present := args.Overrides["source"]; !present {
+		if args.Overrides == nil {
+			args.Overrides = make(map[string]string)
+		}
+		args.Overrides["source"] = fmt.Sprintf("camel-source:%s/%s", args.Namespace, args.Name)
+	}
+
+	environment, err := makeCamelEnvironment(args.SinkType, args.SinkURL, args.Overrides)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +89,7 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 	return &integration, nil
 }
 
-func makeCamelEnvironment(sinkType metav1.TypeMeta, sinkURIString string) (string, error) {
+func makeCamelEnvironment(sinkType metav1.TypeMeta, sinkURIString string, overrides map[string]string) (string, error) {
 	sinkURI, err := url.Parse(sinkURIString)
 	if err != nil {
 		return "", err
@@ -97,6 +105,12 @@ func makeCamelEnvironment(sinkType metav1.TypeMeta, sinkURIString string) (strin
 	)
 	if err != nil {
 		return "", err
+	}
+	if svc.Metadata == nil {
+		svc.Metadata = make(map[string]string)
+	}
+	for k, v := range overrides {
+		svc.Metadata["ce.override.ce-"+k] = v
 	}
 	env.Services = append(env.Services, svc)
 	return env.Serialize()

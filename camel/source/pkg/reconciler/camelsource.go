@@ -19,6 +19,7 @@ package reconciler
 import (
 	"context"
 	"log"
+	"strings"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"go.uber.org/zap"
@@ -143,6 +144,12 @@ func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 			Kind:       source.Spec.Sink.Kind,
 			APIVersion: source.Spec.Sink.APIVersion,
 		},
+	}
+	if source.Spec.CloudEventOverrides != nil {
+		args.Overrides = make(map[string]string)
+		for k, v := range source.Spec.CloudEventOverrides.Extensions {
+			args.Overrides[strings.ToLower(k)] = v
+		}
 	}
 
 	integration, err := r.getIntegration(ctx, source)

@@ -15,19 +15,13 @@ spec:
           period: 3s
         steps:
           - set-header:
-              name: ce-source
-              constant: camel-timer-source
-          - set-header:
-              name: ce-type
-              constant: timer.camel.apache.org
-          - set-header:
-              name: ce-specversion
-              constant: "0.3"
-          - set-header:
               name: Content-Type
               constant: text/plain
           - set-body:
               constant: Hello world!
+  ceOverrides:
+    extensions:
+      kind: hello-world
   sink:
     apiVersion: messaging.knative.dev/v1alpha1
     kind: InMemoryChannel

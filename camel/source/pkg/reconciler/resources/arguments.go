@@ -27,4 +27,5 @@ type CamelArguments struct {
 	Source    v1alpha1.CamelSourceOriginSpec
 	SinkURL   string
 	SinkType  metav1.TypeMeta
+	Overrides map[string]string
 }
