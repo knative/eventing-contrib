@@ -1624,11 +1624,11 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "5ce6ce57ca189912995dbae4b74d6f9c2088437c"
+  revision = "e2cd2916c45c70e563ce724ac9b2c6508a4febe5"
 
 [[projects]]
   branch = "master"
-  digest = "1:70af147aaa464fa6248d55e038e1db0d7c70ff6a7a2226c33b5f0d6bf820193b"
+  digest = "1:d91a27f79bca7f71b57bdc3581542d646c90dca75862c38d21ad7b1aca6c22aa"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1690,7 +1690,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "f684a1078ac309f4b32e6240d9b622bea092296e"
+  revision = "cad41c40ccb5a40de7a3b65097649703c8d96e0b"
 
 [[projects]]
   branch = "master"
@@ -1711,7 +1711,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "01769145d185a22a0f4eca6615a43cdc5cff36ef"
+  revision = "5c2f5aed121d3aaa0e01d8f3bb8ac2ec96a426d5"
 
 [[projects]]
   branch = "master"
@@ -1722,7 +1722,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "385c6ecc17489d72a2e0927d4552bcdc1f0d08e0"
+  revision = "75f9d5135b8f823b6a663fe49f00dbc498b6ad33"
 
 [[projects]]
   digest = "1:d7fff5619b391ebfdab093ade4d065a6b8095b43134f18d60a0887971ee886c0"
