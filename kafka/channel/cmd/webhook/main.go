@@ -19,7 +19,10 @@ import (
 	"context"
 	"flag"
 	"log"
+	"strconv"
+	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
@@ -38,6 +41,25 @@ import (
 const (
 	component = "kafkachannel_webhook"
 )
+
+type envConfig struct {
+	RegistrationDelayTime string `envconfig:"REG_DELAY_TIME" required:"false"`
+}
+
+func getRegistrationDelayTime(rdt string) time.Duration {
+	var RegistrationDelay time.Duration
+
+	if rdt != "" {
+		rdtime, err := strconv.ParseInt(rdt, 10, 64)
+		if err != nil {
+			log.Fatalf("Error ParseInt: %v", err)
+		}
+
+		RegistrationDelay = time.Duration(rdtime)
+	}
+
+	return RegistrationDelay
+}
 
 func main() {
 	flag.Parse()
@@ -82,14 +104,21 @@ func main() {
 		logger.Fatalw("failed to initialize the stats reporter", zap.Error(err))
 	}
 
+	var env envConfig
+	if err := envconfig.Process("", &env); err != nil {
+		logger.Fatalw("Failed to process env var", zap.Error(err))
+	}
+	registrationDelay := getRegistrationDelayTime(env.RegistrationDelayTime)
+
 	options := webhook.ControllerOptions{
-		ServiceName:                     logconfig.WebhookName(),
-		DeploymentName:                  logconfig.WebhookName(),
-		Namespace:                       system.Namespace(),
-		Port:                            8443,
-		SecretName:                      "messaging-webhook-certs",
-		StatsReporter:                   stats,
-		ResourceMutatingWebhookName:     "webhook.messaging.knative.dev",
+		ServiceName:       logconfig.WebhookName(),
+		Namespace:         system.Namespace(),
+		Port:              8443,
+		SecretName:        "messaging-webhook-certs",
+		StatsReporter:     stats,
+		RegistrationDelay: registrationDelay * time.Second,
+
+		ResourceMutatingWebhookName:     "webhook.kafka.eventing.knative.dev",
 		ResourceAdmissionControllerPath: "/",
 	}
 

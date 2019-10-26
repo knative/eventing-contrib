@@ -128,14 +128,14 @@ func main() {
 	}
 
 	options := webhook.ControllerOptions{
-		ServiceName:                     logconfig.WebhookName(),
-		DeploymentName:                  logconfig.WebhookName(),
-		Namespace:                       system.Namespace(),
-		Port:                            8443,
-		SecretName:                      "eventing-webhook-certs",
-		ResourceMutatingWebhookName:     "webhook.eventing.knative.dev",
-		StatsReporter:                   stats,
-		RegistrationDelay:               registrationDelay * time.Second,
+		ServiceName:       logconfig.WebhookName(),
+		Namespace:         system.Namespace(),
+		Port:              8443,
+		SecretName:        "eventing-webhook-certs",
+		StatsReporter:     stats,
+		RegistrationDelay: registrationDelay * time.Second,
+
+		ResourceMutatingWebhookName:     "webhook.couchdb.messaging.knative.dev",
 		ResourceAdmissionControllerPath: "/",
 	}
 
