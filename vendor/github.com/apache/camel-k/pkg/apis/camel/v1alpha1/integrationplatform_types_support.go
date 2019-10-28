@@ -91,7 +91,6 @@ func (in *IntegrationPlatformStatus) GetCondition(condType IntegrationPlatformCo
 		if c.Type == condType {
 			return &c
 		}
-
 	}
 	return nil
 }
@@ -158,4 +157,13 @@ func (in *IntegrationPlatformStatus) RemoveCondition(condType IntegrationPlatfor
 	}
 
 	in.Conditions = newConditions
+}
+
+// IsKanikoCacheEnabled tells if the KanikoCache is enabled on the integration platform build spec
+func (b IntegrationPlatformBuildSpec) IsKanikoCacheEnabled() bool {
+	if b.KanikoBuildCache == nil {
+		// Cache is enabled unless explicitly disabled
+		return true
+	}
+	return *b.KanikoBuildCache
 }

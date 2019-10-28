@@ -19,6 +19,7 @@ package reconciler
 import (
 	"context"
 	"log"
+	"strings"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
 	"go.uber.org/zap"
@@ -138,7 +139,17 @@ func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 		Name:      source.Name,
 		Namespace: source.Namespace,
 		Source:    source.Spec.Source,
-		Sink:      sinkURI,
+		SinkURL:   sinkURI,
+		SinkType: metav1.TypeMeta{
+			Kind:       source.Spec.Sink.Kind,
+			APIVersion: source.Spec.Sink.APIVersion,
+		},
+	}
+	if source.Spec.CloudEventOverrides != nil {
+		args.Overrides = make(map[string]string)
+		for k, v := range source.Spec.CloudEventOverrides.Extensions {
+			args.Overrides[strings.ToLower(k)] = v
+		}
 	}
 
 	integration, err := r.getIntegration(ctx, source)
@@ -228,35 +239,6 @@ func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.Cam
 		return nil, err
 	}
 	return integration, nil
-}
-
-func (r *reconciler) getIntegrationContext(ctx context.Context, namespace string, image string) (*camelv1alpha1.IntegrationKit, error) {
-	logger := logging.FromContext(ctx)
-
-	list := &camelv1alpha1.IntegrationKitList{}
-	lo := &client.ListOptions{
-		Namespace:     namespace,
-		LabelSelector: labels.Everything(),
-		// TODO this is here because the fake client needs it.
-		// Remove this when it's no longer needed.
-		Raw: &metav1.ListOptions{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
-				Kind:       "IntegrationKit",
-			},
-		},
-	}
-	err := r.client.List(ctx, list, lo)
-	if err != nil {
-		logger.Errorw("Unable to list integration contexts", zap.Error(err))
-		return nil, err
-	}
-	for _, c := range list.Items {
-		if c.Spec.Image == image {
-			return &c, nil
-		}
-	}
-	return nil, k8serrors.NewNotFound(schema.GroupResource{}, "")
 }
 
 func (r *reconciler) InjectClient(c client.Client) error {

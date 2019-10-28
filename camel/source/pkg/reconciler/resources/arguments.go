@@ -17,6 +17,7 @@ limitations under the License.
 package resources
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 )
 
@@ -24,5 +25,7 @@ type CamelArguments struct {
 	Name      string
 	Namespace string
 	Source    v1alpha1.CamelSourceOriginSpec
-	Sink      string
+	SinkURL   string
+	SinkType  metav1.TypeMeta
+	Overrides map[string]string
 }
