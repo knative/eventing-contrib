@@ -21,9 +21,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	duckapis "knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -47,20 +47,20 @@ type CamelSource struct {
 var _ runtime.Object = (*CamelSource)(nil)
 
 // Check that CamelSource implements the Conditions duck type.
-var _ = duck.VerifyType(&CamelSource{}, &duckv1alpha1.Conditions{})
+var _ = duck.VerifyType(&CamelSource{}, &duckv1.Conditions{})
 
 const (
 	// CamelSourceConditionReady has status True when the CamelSource is ready to send events.
-	CamelConditionReady = duckv1alpha1.ConditionReady
+	CamelConditionReady = duckapis.ConditionReady
 
 	// CamelConditionSinkProvided has status True when the CamelSource has been configured with a sink target.
-	CamelConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+	CamelConditionSinkProvided duckapis.ConditionType = "SinkProvided"
 
 	// CamelConditionDeployed has status True when the CamelSource has had it's deployment created.
-	CamelConditionDeployed duckv1alpha1.ConditionType = "Deployed"
+	CamelConditionDeployed duckapis.ConditionType = "Deployed"
 )
 
-var camelCondSet = duckv1alpha1.NewLivingConditionSet(
+var camelCondSet = duckapis.NewLivingConditionSet(
 	CamelConditionSinkProvided,
 	CamelConditionDeployed,
 )
@@ -105,7 +105,7 @@ type CamelSourceStatus struct {
 	// inherits duck/v1alpha1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1alpha1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the CamelSource.
 	// +optional
@@ -113,7 +113,7 @@ type CamelSourceStatus struct {
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (s *CamelSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+func (s *CamelSourceStatus) GetCondition(t duckapis.ConditionType) *duckapis.Condition {
 	return camelCondSet.Manage(s).GetCondition(t)
 }
 
