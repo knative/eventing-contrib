@@ -108,11 +108,13 @@ func NewController(
 	logger.Info("Starting the Kafka dispatcher")
 	logger.Info("Kafka broker configuration", zap.Strings(utils.BrokerConfigMapKey, kafkaConfig.Brokers))
 
+	sh, err := multichannelfanout.NewHandler(logger.Desugar(), multichannelfanout.Config{})
 	r := &Reconciler{
 		Base:                 reconciler.NewBase(ctx, controllerAgentName, cmw),
 		kafkaDispatcher:      kafkaDispatcher,
 		kafkachannelLister:   kafkaChannelInformer.Lister(),
 		kafkachannelInformer: kafkaChannelInformer.Informer(),
+		Handler:              sh,
 		kafkaClientSet:       kafkaclientsetinjection.Get(ctx),
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)

@@ -30,7 +30,6 @@ import (
 
 // TODO remove once we migrate channels to use event_receiver and event_dispatcher.
 //  https://github.com/knative/eventing-contrib/issues/598
-//  https://github.com/knative/eventing-contrib/issues/597
 
 const (
 	// MessageReceiverPort is the port that MessageReceiver opens an HTTP server on.

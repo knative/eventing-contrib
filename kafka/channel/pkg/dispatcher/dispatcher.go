@@ -23,6 +23,7 @@ import (
 	"sync/atomic"
 
 	"github.com/Shopify/sarama"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
@@ -32,6 +33,7 @@ import (
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
+	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 type KafkaDispatcher struct {
@@ -41,8 +43,9 @@ type KafkaDispatcher struct {
 	// hostToChannelMapLock is used to update hostToChannelMap
 	hostToChannelMapLock sync.Mutex
 
-	receiver   *contribchannels.MessageReceiver
-	dispatcher *contribchannels.MessageDispatcher
+	handler    *multichannelfanout.Handler
+	receiver   *eventingchannels.EventReceiver
+	dispatcher *eventingchannels.EventDispatcher
 
 	kafkaAsyncProducer  sarama.AsyncProducer
 	kafkaConsumerGroups map[eventingchannels.ChannelReference]map[subscription]sarama.ConsumerGroup
@@ -57,6 +60,8 @@ type KafkaDispatcher struct {
 type TopicFunc func(separator, namespace, name string) string
 
 type KafkaDispatcherArgs struct {
+	//Need to add a handler here?
+	Handler   *multichannelfanout.Handler
 	ClientID  string
 	Brokers   []string
 	TopicFunc TopicFunc
@@ -190,6 +195,8 @@ func (d *KafkaDispatcher) Start(stopCh <-chan struct{}) error {
 	}()
 
 	return d.receiver.Start(stopCh)
+	//ctx := context.Background()
+	//return d.ceClient.StartReceiver(ctx, d.handler.ServeHTTP)
 }
 
 // subscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
@@ -271,19 +278,15 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 	}
 
 	dispatcher := &KafkaDispatcher{
-		dispatcher:           contribchannels.NewMessageDispatcher(args.Logger.Sugar()),
+		dispatcher:           eventingchannels.NewEventDispatcher(args.Logger),
 		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(client),
 		kafkaConsumerGroups:  make(map[eventingchannels.ChannelReference]map[subscription]sarama.ConsumerGroup),
 		kafkaAsyncProducer:   producer,
 		logger:               args.Logger,
+		handler:              args.Handler,
+		topicFunc:            args.TopicFunc,
 	}
-	receiverFunc, err := contribchannels.NewMessageReceiver(
-		func(channel eventingchannels.ChannelReference, message *contribchannels.Message) error {
-			dispatcher.kafkaAsyncProducer.Input() <- toKafkaMessage(channel, message, args.TopicFunc)
-			return nil
-		},
-		args.Logger.Sugar(),
-		contribchannels.ResolveChannelFromHostHeader(contribchannels.ResolveChannelFromHostFunc(dispatcher.getChannelReferenceFromHost)))
+	receiverFunc, err := eventingchannels.NewEventReceiver(createReceiverFunction(dispatcher), args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -294,6 +297,13 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 	return dispatcher, nil
 }
 
+func createReceiverFunction(d *KafkaDispatcher) func(context.Context, eventingchannels.ChannelReference, cloudevents.Event) error {
+	return func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
+		d.kafkaAsyncProducer.Input() <- toKafkaMessage(channel, event, d.topicFunc)
+		return nil
+	}
+	return nil
+}
 func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchannels.ChannelReference, error) {
 	chMap := d.getHostToChannelMap()
 	cr, ok := chMap[host]
@@ -315,17 +325,16 @@ func fromKafkaMessage(kafkaMessage *sarama.ConsumerMessage) *contribchannels.Mes
 	return &message
 }
 
-func toKafkaMessage(channel eventingchannels.ChannelReference, message *contribchannels.Message, topicFunc TopicFunc) *sarama.ProducerMessage {
+func toKafkaMessage(channel eventingchannels.ChannelReference, event *cloudevents.Event, topicFunc TopicFunc) *sarama.ProducerMessage {
 	kafkaMessage := sarama.ProducerMessage{
-		Topic:   topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
-		Value:   sarama.ByteEncoder(message.Payload),
-		Headers: make([]sarama.RecordHeader, len(message.Headers)),
+		Topic: topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
+		Value: sarama.ByteEncoder(event.Data.([]byte)),
 	}
-	i := 0
-	for h, v := range message.Headers {
-		kafkaMessage.Headers[i].Key = []byte(h)
-		kafkaMessage.Headers[i].Value = []byte(v)
-		i++
+	for h, v := range event.Data.Headers { //fix this to produce the correct headers
+		kafkaMessage.Headers = append(kafkaMessage.Headers, sarama.RecordHeader{
+			Key:   []byte(h),
+			Value: []byte(v),
+		})
 	}
 	return &kafkaMessage
 }
