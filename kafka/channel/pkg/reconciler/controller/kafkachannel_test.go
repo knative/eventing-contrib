@@ -435,6 +435,11 @@ func (ca *mockClusterAdmin) DescribeCluster() (brokers []*sarama.Broker, control
 	return nil, 0, nil
 }
 
+// Delete a consumer group.
+func (ca *mockClusterAdmin) DeleteConsumerGroup(group string) error {
+	return nil
+}
+
 func makeDeployment() *appsv1.Deployment {
 	return &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
