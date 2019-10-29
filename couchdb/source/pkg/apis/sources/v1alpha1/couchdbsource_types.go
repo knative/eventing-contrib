@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis/duck"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -87,10 +88,9 @@ type CouchDbSourceSpec struct {
 	// Database is the database to watch for changes
 	Database string `json:"database"`
 
-	// Sink is a reference to an object that will resolve to a domain
-	// name to use as the sink.
+	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+	Sink *apisv1alpha1.Destination `json:"sink,omitempty"`
 }
 
 // GetGroupVersionKind returns the GroupVersionKind.

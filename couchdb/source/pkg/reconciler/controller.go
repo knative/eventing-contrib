@@ -28,6 +28,7 @@ import (
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/resolver"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client"
@@ -64,6 +65,7 @@ func NewController(
 		couchdbClientSet:    client.Get(ctx),
 	}
 	impl := controller.NewImpl(r, r.Logger, ReconcilerName)
+	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	r.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
 
