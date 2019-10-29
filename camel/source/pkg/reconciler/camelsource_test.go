@@ -404,7 +404,7 @@ func makeContext(namespace string, image string) *camelv1alpha1.IntegrationKit {
 			GenerateName: "ctx-",
 			Namespace:    namespace,
 			Labels: map[string]string{
-				"app": "camel-k",
+				"app":                       "camel-k",
 				"camel.apache.org/kit.type": camelv1alpha1.IntegrationKitTypeExternal,
 			},
 		},
