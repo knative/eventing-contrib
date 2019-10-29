@@ -19,6 +19,7 @@ package reconciler
 import (
 	"context"
 
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
@@ -28,6 +29,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 
+	sourcesv1alpha1 "knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client"
 	couchdbinformer "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/sources/v1alpha1/couchdbsource"
 )
@@ -41,6 +43,10 @@ const (
 	controllerAgentName = "couchdb-source-controller"
 )
 
+func init() {
+	sourcesv1alpha1.AddToScheme(scheme.Scheme)
+}
+
 // NewController initializes the controller and is called by the generated code
 // Registers event handlers to enqueue events
 func NewController(
@@ -50,7 +56,6 @@ func NewController(
 	deploymentInformer := deploymentinformer.Get(ctx)
 	couchdbSourceInformer := couchdbinformer.Get(ctx)
 	eventTypeInformer := eventtypeinformer.Get(ctx)
-	resourceInformer := duck.NewResourceInformer(ctx)
 
 	r := &Reconciler{
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
@@ -60,7 +65,6 @@ func NewController(
 	}
 	impl := controller.NewImpl(r, r.Logger, ReconcilerName)
 
-	r.resourceTracker = resourceInformer.NewTracker(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	r.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
 
 	r.Logger.Info("Setting up event handlers")

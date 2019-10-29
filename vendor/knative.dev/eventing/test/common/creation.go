@@ -23,6 +23,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	sourcesv1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing/test/base"
@@ -96,7 +97,7 @@ func (client *Client) CreateSubscriptionsOrFail(
 }
 
 // CreateBrokerOrFail will create a Broker or fail the test if there is an error.
-func (client *Client) CreateBrokerOrFail(name string, channelTypeMeta *metav1.TypeMeta) {
+func (client *Client) CreateBrokerOrFail(name string, channelTypeMeta *metav1.TypeMeta) *v1alpha1.Broker {
 	namespace := client.Namespace
 	broker := resources.Broker(name, resources.WithChannelTemplateForBroker(*channelTypeMeta))
 
@@ -107,6 +108,7 @@ func (client *Client) CreateBrokerOrFail(name string, channelTypeMeta *metav1.Ty
 		client.T.Fatalf("Failed to create broker %q: %v", name, err)
 	}
 	client.Tracker.AddObj(broker)
+	return broker
 }
 
 // CreateBrokersOrFail will create a list of Brokers.
@@ -117,7 +119,7 @@ func (client *Client) CreateBrokersOrFail(names []string, channelTypeMeta *metav
 }
 
 // CreateTriggerOrFail will create a Trigger or fail the test if there is an error.
-func (client *Client) CreateTriggerOrFail(name string, options ...resources.TriggerOption) {
+func (client *Client) CreateTriggerOrFail(name string, options ...resources.TriggerOption) *v1alpha1.Trigger {
 	namespace := client.Namespace
 	trigger := resources.Trigger(name, options...)
 
@@ -128,6 +130,7 @@ func (client *Client) CreateTriggerOrFail(name string, options ...resources.Trig
 		client.T.Fatalf("Failed to create trigger %q: %v", name, err)
 	}
 	client.Tracker.AddObj(trigger)
+	return trigger
 }
 
 // CreateSequenceOrFail will create a Sequence or fail the test if there is an error.
@@ -210,6 +213,7 @@ func (client *Client) CreatePodOrFail(pod *corev1.Pod, options ...func(*corev1.P
 		client.T.Fatalf("Failed to create pod %q: %v", pod.Name, err)
 	}
 	client.Tracker.Add(coreAPIGroup, coreAPIVersion, "pods", namespace, pod.Name)
+	client.podsCreated = append(client.podsCreated, pod.Name)
 }
 
 // CreateServiceAccountOrFail will create a ServiceAccount or fail the test if there is an error.
@@ -241,10 +245,25 @@ func (client *Client) CreateClusterRoleOrFail(cr *rbacv1.ClusterRole) {
 	client.Tracker.Add(rbacAPIGroup, rbacAPIVersion, "clusterroles", "", cr.Name)
 }
 
+// CreateRoleOrFail creates the given Role in the Client namespace or fail the test if there is an error.
+func (client *Client) CreateRoleOrFail(r *rbacv1.Role) {
+	namespace := client.Namespace
+	rs := client.Kube.Kube.RbacV1().Roles(namespace)
+	if _, err := rs.Create(r); err != nil && !errors.IsAlreadyExists(err) {
+		client.T.Fatalf("Failed to create cluster role %q: %v", r.Name, err)
+	}
+	client.Tracker.Add(rbacAPIGroup, rbacAPIVersion, "roles", namespace, r.Name)
+}
+
+const (
+	ClusterRoleKind = "ClusterRole"
+	RoleKind        = "Role"
+)
+
 // CreateRoleBindingOrFail will create a RoleBinding or fail the test if there is an error.
-func (client *Client) CreateRoleBindingOrFail(saName, crName, rbName, rbNamespace string) {
+func (client *Client) CreateRoleBindingOrFail(saName, rKind, rName, rbName, rbNamespace string) {
 	saNamespace := client.Namespace
-	rb := resources.RoleBinding(saName, saNamespace, crName, rbName, rbNamespace)
+	rb := resources.RoleBinding(saName, saNamespace, rKind, rName, rbName, rbNamespace)
 	rbs := client.Kube.Kube.RbacV1().RoleBindings(rbNamespace)
 
 	if _, err := rbs.Create(rb); err != nil && !errors.IsAlreadyExists(err) {
@@ -283,12 +302,14 @@ func (client *Client) CreateRBACResourcesForBrokers() {
 	// The two RoleBindings are required for running Brokers correctly.
 	client.CreateRoleBindingOrFail(
 		saIngressName,
+		ClusterRoleKind,
 		crIngressName,
 		fmt.Sprintf("%s-%s", saIngressName, crIngressName),
 		client.Namespace,
 	)
 	client.CreateRoleBindingOrFail(
 		saFilterName,
+		ClusterRoleKind,
 		crFilterName,
 		fmt.Sprintf("%s-%s", saFilterName, crFilterName),
 		client.Namespace,
@@ -297,12 +318,14 @@ func (client *Client) CreateRBACResourcesForBrokers() {
 	// tracing, and metrics configuration.
 	client.CreateRoleBindingOrFail(
 		saIngressName,
+		ClusterRoleKind,
 		crConfigReaderName,
 		fmt.Sprintf("%s-%s-%s", saIngressName, helpers.MakeK8sNamePrefix(client.Namespace), crConfigReaderName),
 		resources.SystemNamespace,
 	)
 	client.CreateRoleBindingOrFail(
 		saFilterName,
+		ClusterRoleKind,
 		crConfigReaderName,
 		fmt.Sprintf("%s-%s-%s", saFilterName, helpers.MakeK8sNamePrefix(client.Namespace), crConfigReaderName),
 		resources.SystemNamespace,

@@ -19,11 +19,13 @@ package v1alpha1
 import (
 	"fmt"
 
+	"knative.dev/pkg/apis"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -46,8 +48,11 @@ var (
 	// Check that it is a runtime object.
 	_ runtime.Object = (*CronJobSource)(nil)
 
-	// Check that we can create OwnerReferences to a Configuration.
+	// Check that we can create OwnerReferences to a CronJobSource.
 	_ kmeta.OwnerRefable = (*CronJobSource)(nil)
+
+	// Check that CronJobSource can return its spec untyped.
+	_ apis.HasSpec = (*CronJobSource)(nil)
 )
 
 const (
@@ -103,10 +108,10 @@ func (s *CronJobSource) GetGroupVersionKind() schema.GroupVersionKind {
 
 // CronJobSourceStatus defines the observed state of CronJobSource.
 type CronJobSourceStatus struct {
-	// inherits duck/v1beta1 Status, which currently provides:
+	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the CronJobSource.
 	// +optional
@@ -120,4 +125,9 @@ type CronJobSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []CronJobSource `json:"items"`
+}
+
+// GetUntypedSpec returns the spec of the CronJobSource.
+func (c *CronJobSource) GetUntypedSpec() interface{} {
+	return c.Spec
 }

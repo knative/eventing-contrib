@@ -25,6 +25,13 @@ aliases:
   couchdb-reviewers:
     - lionelvillard
 
+  prometheus-approvers:
+    - syedriko
+    - matzew
+  prometheus-reviewers:
+    - syedriko
+    - matzew
+
   productivity-approvers:
   - adrcunha
   - chaodaiG

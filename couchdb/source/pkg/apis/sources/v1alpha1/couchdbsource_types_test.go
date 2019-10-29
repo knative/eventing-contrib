@@ -18,97 +18,13 @@ package v1alpha1
 
 import (
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	corev1 "k8s.io/api/core/v1"
-	"knative.dev/pkg/apis"
 )
 
-func TestCouchDbSourceStatusIsReady(t *testing.T) {
-	tests := []struct {
-		name string
-		s    *CouchDbSourceStatus
-		want bool
-	}{{
-		name: "uninitialized",
-		s:    &CouchDbSourceStatus{},
-		want: false,
-	}, {
-		name: "initialized",
-		s: func() *CouchDbSourceStatus {
-			s := &CouchDbSourceStatus{}
-			s.InitializeConditions()
-			return s
-		}(),
-		want: false,
-	}, {
-		name: "mark sink",
-		s: func() *CouchDbSourceStatus {
-			s := &CouchDbSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
-			return s
-		}(),
-		want: false,
-	}}
+func TestGroupVersionKind(t *testing.T) {
+	src := CouchDbSource{}
+	gvk := src.GetGroupVersionKind()
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			got := test.s.IsReady()
-			if diff := cmp.Diff(test.want, got); diff != "" {
-				t.Errorf("%s: unexpected condition (-want, +got) = %v", test.name, diff)
-			}
-		})
-	}
-}
-
-func TestCouchDbSourceStatusGetCondition(t *testing.T) {
-	tests := []struct {
-		name      string
-		s         *CouchDbSourceStatus
-		condQuery apis.ConditionType
-		want      *apis.Condition
-	}{{
-		name:      "uninitialized",
-		s:         &CouchDbSourceStatus{},
-		condQuery: CouchDbConditionReady,
-		want:      nil,
-	}, {
-		name: "initialized",
-		s: func() *CouchDbSourceStatus {
-			s := &CouchDbSourceStatus{}
-			s.InitializeConditions()
-			return s
-		}(),
-		condQuery: CouchDbConditionReady,
-		want: &apis.Condition{
-			Type:   CouchDbConditionReady,
-			Status: corev1.ConditionUnknown,
-		},
-	}, {
-		name: "mark sink",
-		s: func() *CouchDbSourceStatus {
-			s := &CouchDbSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
-			return s
-		}(),
-		condQuery: CouchDbConditionReady,
-		want: &apis.Condition{
-			Type:   CouchDbConditionReady,
-			Status: corev1.ConditionUnknown,
-		},
-	}}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			got := test.s.GetCondition(test.condQuery)
-			ignoreTime := cmpopts.IgnoreFields(apis.Condition{},
-				"LastTransitionTime", "Severity")
-			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
-				t.Errorf("unexpected condition (-want, +got) = %v", diff)
-			}
-		})
+	if gvk.Kind != "CouchDbSource" {
+		t.Errorf("Should be CouchDbSource.")
 	}
 }

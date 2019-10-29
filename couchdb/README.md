@@ -3,9 +3,6 @@
 The Apache CouchDB Event source enables Knative Eventing integration with
 [Apache CouchDB](http://couchdb.apache.org/).
 
-This source works by polling every 2 seconds for CouchDB database changes. More
-configuration parameters will be provided in the future.
-
 ## Deployment steps
 
 1. Setup [Knative Eventing](../DEVELOPMENT.md)
@@ -19,11 +16,7 @@ configuration parameters will be provided in the future.
      name: couchdb-binding
    stringData:
      # The URL pointing to the CouchDB http server
-     url: "https://..."
-     # CouchDB username
-     username: "me"
-     # CouchDB passwork/token
-     password: "mepassword"
+     url: "https://username:password/..."
    ```
 
 1. Create the `CouchDbSource` custom objects, by configuring the required
@@ -37,6 +30,7 @@ configuration parameters will be provided in the future.
      name: couchdb-photographer
    spec:
      # reference to a secret containing the CouchDB credentials
+     feed: continuous # default value. For polling every 2 seconds, use "normal"
      credentials:
        name: couchdb-binding
      database: photographers

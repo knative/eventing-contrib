@@ -19,6 +19,7 @@ metadata:
   labels:
     contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
+    duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
   name: camelsources.sources.eventing.knative.dev
 spec:
@@ -34,6 +35,16 @@ spec:
   scope: Namespaced
   subresources:
     status: {}
+  additionalPrinterColumns:
+    - name: Ready
+      type: string
+      JSONPath: '.status.conditions[?(@.type=="Ready")].status'
+    - name: Reason
+      type: string
+      JSONPath: '.status.conditions[?(@.type=="Ready")].reason'
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
       properties:
@@ -45,28 +56,16 @@ spec:
           type: object
         spec:
           properties:
-            image:
-              type: string
-            serviceAccountName:
-              type: string
             sink:
               type: object
+              description: "Reference to an object that will resolve to a domain name to use as the sink."
+            ceOverrides:
+              type: object
+              description: "Defines overrides to control modifications of the event sent to the sink."
             source:
               properties:
-                component:
-                  properties:
-                    properties:
-                      type: object
-                    uri:
-                      minLength: 1
-                      type: string
-                    serviceAccountName:
-                      type: string
-                    context:
-                      type: string
-                  type: object
                 flow:
-                  type: string
+                  type: object
                 integration:
                   type: object
               type: object

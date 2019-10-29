@@ -23,8 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/webhook"
 )
 
@@ -46,11 +47,20 @@ type Channel struct {
 	Status ChannelStatus `json:"status,omitempty"`
 }
 
-// Check that Channel can be validated, can be defaulted, and has immutable fields.
-var _ apis.Validatable = (*Channel)(nil)
-var _ apis.Defaultable = (*Channel)(nil)
-var _ runtime.Object = (*Channel)(nil)
-var _ webhook.GenericCRD = (*Channel)(nil)
+var (
+	// Check that Channel can be validated and defaulted.
+	_ apis.Validatable = (*Channel)(nil)
+	_ apis.Defaultable = (*Channel)(nil)
+
+	// Check that Channel can return its spec untyped.
+	_ apis.HasSpec = (*Channel)(nil)
+
+	_ runtime.Object     = (*Channel)(nil)
+	_ webhook.GenericCRD = (*Channel)(nil)
+
+	// Check that we can create OwnerReferences to a Channel.
+	_ kmeta.OwnerRefable = (*Channel)(nil)
+)
 
 // ChannelSpec defines which subscribers have expressed interest in receiving events from this Channel.
 // It also defines the ChannelTemplate to use in order to create the CRD Channel backing this Channel.
@@ -66,10 +76,10 @@ type ChannelSpec struct {
 
 // ChannelStatus represents the current state of a Channel.
 type ChannelStatus struct {
-	// inherits duck/v1beta1 Status, which currently provides:
+	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// Channel is Addressable. It currently exposes the endpoint as a
 	// fully-qualified DNS name which will distribute traffic over the
@@ -98,4 +108,9 @@ type ChannelList struct {
 // GetGroupVersionKind returns GroupVersionKind for Channels.
 func (dc *Channel) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("Channel")
+}
+
+// GetUntypedSpec returns the spec of the Channel.
+func (c *Channel) GetUntypedSpec() interface{} {
+	return c.Spec
 }

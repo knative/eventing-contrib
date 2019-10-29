@@ -21,7 +21,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -39,11 +40,13 @@ type ContainerSource struct {
 }
 
 var (
-	// Check that ContainerSource can be validated and can be defaulted.
 	_ runtime.Object = (*ContainerSource)(nil)
 
 	// Check that we can create OwnerReferences to a ContainerSource.
 	_ kmeta.OwnerRefable = (*ContainerSource)(nil)
+
+	// Check that ContainerSource can return its spec untyped.
+	_ apis.HasSpec = (*ContainerSource)(nil)
 )
 
 // ContainerSourceSpec defines the desired state of ContainerSource
@@ -91,10 +94,10 @@ func (s *ContainerSource) GetGroupVersionKind() schema.GroupVersionKind {
 
 // ContainerSourceStatus defines the observed state of ContainerSource
 type ContainerSourceStatus struct {
-	// inherits duck/v1beta1 Status, which currently provides:
+	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// SinkURI is the current active sink URI that has been configured for the ContainerSource.
 	// +optional
@@ -108,4 +111,9 @@ type ContainerSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ContainerSource `json:"items"`
+}
+
+// GetUntypedSpec returns the spec of the ContainerSource.
+func (c *ContainerSource) GetUntypedSpec() interface{} {
+	return c.Spec
 }

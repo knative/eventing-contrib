@@ -24,12 +24,8 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/k8s.io/code-
 
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
-# Generate based on annotations
-go generate ./pkg/... ./cmd/... ./github/pkg/... ./camel/source/pkg/... ./kafka/source/pkg/... ./kafka/channel/pkg/... ./awssqs/pkg/... \
-  ./couchdb/source/pkg/... ./natss/pkg/...
-
 # Sources
-API_DIRS_SOURCES=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg)
+API_DIRS_SOURCES=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
 
 for DIR in "${API_DIRS_SOURCES[@]}"; do
   # generate the code with:
@@ -67,6 +63,16 @@ for DIR in "${API_DIRS_CHANNELS[@]}"; do
     "messaging:v1alpha1" \
     --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 done
+
+# Depends on generate-groups.sh to install bin/deepcopy-gen
+${GOPATH}/bin/deepcopy-gen \
+  -O zz_generated.deepcopy \
+  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt \
+  -i knative.dev/eventing-contrib/prometheus/pkg/apis \
+  -i knative.dev/eventing-contrib/awssqs/pkg/apis \
+  -i knative.dev/eventing-contrib/couchdb/source/pkg/apis \
+  -i knative.dev/eventing-contrib/camel/source/pkg/apis \
+  -i knative.dev/eventing-contrib/github/pkg/apis
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh

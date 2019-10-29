@@ -31,17 +31,34 @@ func TestMakeDeployment_sink(t *testing.T) {
 		Name:      "test-name",
 		Namespace: "test-namespace",
 		Source: v1alpha1.CamelSourceOriginSpec{
-			DeprecatedComponent: &v1alpha1.CamelSourceOriginComponentSpec{
-				URI: "timer:tick",
-				Properties: map[string]string{
-					"k":  "v",
-					"k2": "v2",
+			Flow: &v1alpha1.Flow{
+				"from": map[string]interface{}{
+					"uri": "timer:tick",
 				},
+			},
+			Integration: &camelv1alpha1.IntegrationSpec{
 				ServiceAccountName: "test-service-account",
-				Context:            "test-context",
+				Kit:                "test-kit",
+				Configuration: []camelv1alpha1.ConfigurationSpec{
+					{
+						Type:  "property",
+						Value: "k=v",
+					},
+					{
+						Type:  "property",
+						Value: "k2=v2",
+					},
+				},
 			},
 		},
-		Sink: "http://test-sink",
+		SinkURL: "http://test-sink",
+		SinkType: metav1.TypeMeta{
+			Kind:       "MyKind",
+			APIVersion: "myapi.dev/v1",
+		},
+		Overrides: map[string]string{
+			"a": "b",
+		},
 	})
 	if err != nil {
 		t.Error(err)
@@ -58,12 +75,13 @@ func TestMakeDeployment_sink(t *testing.T) {
 		},
 		Spec: camelv1alpha1.IntegrationSpec{
 			ServiceAccountName: "test-service-account",
-			Kit:                "test-context",
+			Kit:                "test-kit",
 			Sources: []camelv1alpha1.SourceSpec{
 				{
+					Loader: "knative-source-yaml",
 					DataSpec: camelv1alpha1.DataSpec{
-						Name:    "source.yaml",
-						Content: "- from:\n    steps:\n    - to:\n        uri: knative://endpoint/sink\n    uri: timer:tick\n",
+						Name:    "flow.yaml",
+						Content: "- from:\n    uri: timer:tick\n",
 					},
 				},
 			},
@@ -80,7 +98,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Traits: map[string]camelv1alpha1.TraitSpec{
 				"knative": {
 					Configuration: map[string]string{
-						"configuration": `{"services":[{"type":"endpoint","protocol":"http","name":"sink","host":"test-sink","port":80,"metadata":{"service.path":"/"}}]}`,
+						"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","ce.override.ce-a":"b","ce.override.ce-source":"camel-source:test-namespace/test-name","knative.apiVersion":"myapi.dev/v1","knative.kind":"MyKind","service.path":"/"}}]}`,
 					},
 				},
 			},

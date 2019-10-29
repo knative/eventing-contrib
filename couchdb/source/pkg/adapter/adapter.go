@@ -18,100 +18,168 @@ package adapter
 
 import (
 	"context"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/go-kivik/couchdb"
+	"github.com/go-kivik/kivik"
 	"go.uber.org/zap"
+	"golang.org/x/net/http2"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/source"
 
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/couchdb/source/pkg/couchdb"
 )
 
-// Hold options for the adapter
-type Options struct {
-	EventSource string
-	CouchDbURL  string
-	Username    string
-	Password    string
-	Database    string
-	Namespace   string
+type envConfig struct {
+	adapter.EnvConfig
+
+	CouchDbCredentialsPath string `envconfig:"COUCHDB_CREDENTIALS" required:"true"`
+	Database               string `envconfig:"COUCHDB_DATABASE" required:"true"`
+	EventSource            string `envconfig:"EVENT_SOURCE" required:"true"`
+	Feed                   string `envconfig:"COUCHDB_FEED" required:"true"`
 }
 
-// Adapter converts incoming CouchDb events to CloudEvents
-type Adapter interface {
-	Start(stopCh <-chan struct{}) error
+type couchDbAdapter struct {
+	namespace string
+	ce        cloudevents.Client
+	reporter  source.StatsReporter
+	logger    *zap.SugaredLogger
+
+	source  string
+	feed    string
+	couchDB *kivik.DB
+	options kivik.Options
 }
 
-type adapter struct {
-	source     string
-	ce         cloudevents.Client
-	namespace  string
-	logger     *zap.SugaredLogger
-	couchDB    couchdb.Connection
-	database   string
-	changeArgs couchdb.ChangeArguments
+func init() {
+	// Need to disable compression for Cloudant.
+	var transport = http2.Transport{
+		DisableCompression: true,
+	}
+	kivik.Register("cloudant", &couchdb.Couch{
+		HTTPClient: &http.Client{Transport: &transport},
+	})
 }
 
-// New creates an adapter to convert incoming CouchDb changes events to CloudEvents and
+// NewEnvConfig creates an empty configuration
+func NewEnvConfig() adapter.EnvConfigAccessor {
+	return &envConfig{}
+}
+
+// NewAdapter creates an adapter to convert incoming CouchDb changes events to CloudEvents and
 // then sends them to the specified Sink
-func New(ceClient cloudevents.Client, logger *zap.SugaredLogger, options *Options) (Adapter, error) {
-	connection, err := couchdb.Connect(options.CouchDbURL, options.Username, options.Password, time.Minute)
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
+	logger := logging.FromContext(ctx)
+	env := processed.(*envConfig)
+
+	rawurl, err := ioutil.ReadFile(env.CouchDbCredentialsPath + "/url")
 	if err != nil {
-		return nil, err
+		logger.Fatal("Missing url key in secret", zap.Error(err))
+	}
+	url := string(rawurl)
+
+	driver := "couch"
+
+	// Use cloudant driver only when the server is Cloudant.
+	if strings.Contains(url, "cloudant") {
+		driver = "cloudant"
 	}
 
-	a := &adapter{
-		ce:         ceClient,
-		logger:     logger,
-		namespace:  options.Namespace,
-		couchDB:    connection,
-		source:     options.EventSource,
-		database:   options.Database,
-		changeArgs: couchdb.ChangeArguments{},
-	}
-
-	return a, nil
+	return newAdapter(ctx, env, ceClient, reporter, url, driver)
 }
 
-func (a *adapter) Start(stopCh <-chan struct{}) error {
-	// Just Poll for now. Other modes (long running, continues) will be provided later on.
-	return wait.PollUntil(2*time.Second, a.send, stopCh)
-}
+func newAdapter(ctx context.Context, env *envConfig, ceClient cloudevents.Client, reporter source.StatsReporter, url string, driver string) adapter.Adapter {
+	logger := logging.FromContext(ctx)
 
-func (a *adapter) send() (done bool, err error) {
-	changes, err := a.couchDB.Changes(a.database, &a.changeArgs)
+	client, err := kivik.New(driver, url)
 	if err != nil {
-		return false, err
+		logger.Fatal("Error creating connection to couchDB", zap.Error(err))
 	}
 
-	if len(changes.Results) > 0 {
-		for _, r := range changes.Results {
+	db := client.DB(context.TODO(), env.Database)
+	if db.Err() != nil {
+		logger.Fatal("Error connection to couchDB database", zap.Any("dabase", env.Database), zap.Error(err))
+	}
 
-			event, err := a.makeEvent(&r)
+	return &couchDbAdapter{
+		namespace: env.Namespace,
+		ce:        ceClient,
+		reporter:  reporter,
+		logger:    logger,
+
+		couchDB: db,
+		source:  env.EventSource,
+		feed:    env.Feed,
+		options: map[string]interface{}{
+			"feed":  env.Feed,
+			"since": "0",
+		},
+	}
+}
+
+func (a *couchDbAdapter) Start(stopCh <-chan struct{}) error {
+	period := 2 * time.Second
+	if a.feed == "continuous" {
+		a.options["heartbeat"] = 6000
+		period = 0
+	}
+	wait.Until(a.processChanges, period, stopCh)
+	return nil
+}
+
+func (a *couchDbAdapter) processChanges() {
+	changes, err := a.couchDB.Changes(context.TODO(), a.options)
+	if err != nil {
+		a.logger.Error("Error getting the list of changes", zap.Error(err))
+		return
+	}
+
+	for changes.Next() {
+		if changes.Seq() != "" {
+			event, err := a.makeEvent(changes)
+
 			if err != nil {
-				return false, err
+				a.logger.Error("error making event", zap.Error(err))
 			}
 
-			if _, _, err := a.ce.Send(context.Background(), *event); err != nil {
-				a.logger.Info("event delivery failed", zap.Error(err))
-				return false, err
+			if _, _, err := a.ce.Send(context.TODO(), *event); err != nil {
+				a.logger.Error("event delivery failed", zap.Error(err))
 			}
 
-			a.changeArgs.Since = r.Seq
+			a.options["since"] = changes.Seq()
 		}
 	}
 
-	return false, nil
+	if changes.Err() != nil {
+		if changes.Err() == io.EOF {
+			a.logger.Error("The connection to the changes feed was interrupted.", zap.Error(changes.Err()))
+		} else {
+			a.logger.Error("Error found in the changes feed.", zap.Error(changes.Err()))
+		}
+	}
 }
 
-func (a *adapter) makeEvent(changes *couchdb.ChangeResponseResult) (*cloudevents.Event, error) {
-	event := cloudevents.NewEvent()
-	event.SetID(changes.ID)
+func (a *couchDbAdapter) makeEvent(changes *kivik.Changes) (*cloudevents.Event, error) {
+	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event.SetID(changes.Seq())
 	event.SetSource(a.source)
-	event.SetType(v1alpha1.CouchDbSourceChangesEventType)
+	event.SetSubject(changes.ID())
+	event.SetDataContentType(cloudevents.ApplicationJSON)
 
-	if err := event.SetData(changes); err != nil {
+	if changes.Deleted() {
+		event.SetType(v1alpha1.CouchDbSourceDeleteEventType)
+	} else {
+		event.SetType(v1alpha1.CouchDbSourceUpdateEventType)
+	}
+
+	if err := event.SetData(changes.Changes()); err != nil {
 		return nil, err
 	}
 	return &event, nil

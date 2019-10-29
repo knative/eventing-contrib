@@ -30,6 +30,7 @@ COMPONENTS=(
   ["natss-channel.yaml"]="natss/config"
   ["awssqs.yaml"]="awssqs/config"
   ["couchdb.yaml"]="couchdb/source/config"
+  ["prometheus-source.yaml"]="prometheus/config"
 )
 readonly COMPONENTS
 

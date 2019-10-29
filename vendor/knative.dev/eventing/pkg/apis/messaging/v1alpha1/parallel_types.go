@@ -23,8 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/webhook"
 )
 
@@ -46,14 +47,23 @@ type Parallel struct {
 	Status ParallelStatus `json:"status,omitempty"`
 }
 
-// Check that Parallel can be validated, can be defaulted, and has immutable fields.
-var _ apis.Validatable = (*Parallel)(nil)
-var _ apis.Defaultable = (*Parallel)(nil)
+var (
+	// Check that Parallel can be validated and defaulted.
+	_ apis.Validatable = (*Parallel)(nil)
+	_ apis.Defaultable = (*Parallel)(nil)
 
-// TODO: make appropriate fields immutable.
-//var _ apis.Immutable = (*Parallel)(nil)
-var _ runtime.Object = (*Parallel)(nil)
-var _ webhook.GenericCRD = (*Parallel)(nil)
+	// Check that Parallel can return its spec untyped.
+	_ apis.HasSpec = (*Parallel)(nil)
+
+	// TODO: make appropriate fields immutable.
+	//_ apis.Immutable = (*Parallel)(nil)
+
+	_ runtime.Object     = (*Parallel)(nil)
+	_ webhook.GenericCRD = (*Parallel)(nil)
+
+	// Check that we can create OwnerReferences to a Parallel.
+	_ kmeta.OwnerRefable = (*Parallel)(nil)
+)
 
 type ParallelSpec struct {
 	// Branches is the list of Filter/Subscribers pairs.
@@ -103,10 +113,10 @@ type ParallelBranch struct {
 
 // ParallelStatus represents the current state of a Parallel.
 type ParallelStatus struct {
-	// inherits duck/v1alpha1 Status, which currently provides:
+	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// IngressChannelStatus corresponds to the ingress channel status.
 	IngressChannelStatus ParallelChannelStatus `json:"ingressChannelStatus"`
@@ -162,4 +172,9 @@ type ParallelList struct {
 // GetGroupVersionKind returns GroupVersionKind for Parallel
 func (p *Parallel) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("Parallel")
+}
+
+// GetUntypedSpec returns the spec of the Parallel.
+func (p *Parallel) GetUntypedSpec() interface{} {
+	return p.Spec
 }

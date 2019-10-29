@@ -54,6 +54,9 @@ spec:
               type: string
             sink:
               type: object
+            feed:
+              type: string
+              enum: ["continuous", "normal"]
             database:
               type: string
             credentials:

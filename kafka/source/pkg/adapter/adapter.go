@@ -82,14 +82,14 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		event = poolRes.(*cloudevents.Event)
 	} else {
 		event = &cloudevents.Event{}
-		event.SetSpecVersion(cloudevents.CloudEventsVersionV02)
+		event.SetSpecVersion(cloudevents.CloudEventsVersionV03)
 	}
 
 	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
 	event.SetTime(msg.Timestamp)
 	event.SetType(sourcesv1alpha1.KafkaEventType)
 	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.Namespace, a.Name, msg.Topic))
-	event.SetDataContentType(*cloudevents.StringOfApplicationJSON())
+	event.SetDataContentType(cloudevents.ApplicationJSON)
 	event.SetExtension("key", string(msg.Key))
 	err := event.SetData(msg.Value)
 

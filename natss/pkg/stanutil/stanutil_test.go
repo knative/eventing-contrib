@@ -23,7 +23,8 @@ import (
 
 	"github.com/nats-io/nats-streaming-server/server"
 	"go.uber.org/zap"
-	channels "knative.dev/eventing/pkg/channel"
+	"go.uber.org/zap/zapcore"
+	"knative.dev/pkg/logging"
 	_ "knative.dev/pkg/system/testing"
 )
 
@@ -38,7 +39,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logger = channels.NewProvisionerLoggerFromConfig(channels.NewLoggingConfig())
+	logger = setupLogger()
 	defer logger.Sync()
 
 	stanServer, err := startNatss()
@@ -88,4 +89,35 @@ func startNatss() (*server.StanServer, error) {
 
 func stopNatss(server *server.StanServer) {
 	server.Shutdown()
+}
+
+func newLoggingConfig() *logging.Config {
+	lc := &logging.Config{}
+	lc.LoggingConfig = `{
+		"level": "info",
+		"development": false,
+		"outputPaths": ["stdout"],
+		"errorOutputPaths": ["stderr"],
+		"encoding": "json",
+		"encoderConfig": {
+			"timeKey": "ts",
+			"levelKey": "level",
+			"nameKey": "logger",
+			"callerKey": "caller",
+			"messageKey": "msg",
+			"stacktraceKey": "stacktrace",
+			"lineEnding": "",
+			"levelEncoder": "",
+			"timeEncoder": "iso8601",
+			"durationEncoder": "",
+			"callerEncoder": ""
+		}
+	}`
+	lc.LoggingLevel = make(map[string]zapcore.Level)
+	return lc
+}
+
+func setupLogger() *zap.SugaredLogger {
+	logger, _ := logging.NewLoggerFromConfig(newLoggingConfig(), "stanutil_test")
+	return logger
 }

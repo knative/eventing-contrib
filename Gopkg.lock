@@ -58,15 +58,15 @@
   version = "v1.21.0"
 
 [[projects]]
-  digest = "1:392b83d75c8af0cd969ca69f8356bf6ad034293fd7906508e9ba5a0b7e81ebd7"
+  digest = "1:f3be81a650cc75f692519f022627efdca6f64fd0601e4775ab36820b14c4c8ca"
   name = "github.com/apache/camel-k"
   packages = [
     "pkg/apis/camel/v1alpha1",
     "pkg/apis/camel/v1alpha1/knative",
   ]
   pruneopts = "NUT"
-  revision = "0e477f416309446cdbdeca8db9a4c26041b0d100"
-  version = "1.0.0-M1"
+  revision = "37ca6c813b29e47d203c0bedbab496e6179d4089"
+  version = "1.0.0-M3"
 
 [[projects]]
   branch = "master"
@@ -135,8 +135,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:3e07bcc86130bbdd84341656a26746949f32a710e18ae43d5751f6fe16cb7fdb"
+  digest = "1:902544577dcb868a5ae31529d73a1ce5031e224923290caedf6176241ee304e0"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     ".",
@@ -145,6 +144,7 @@
     "pkg/cloudevents/context",
     "pkg/cloudevents/datacodec",
     "pkg/cloudevents/datacodec/json",
+    "pkg/cloudevents/datacodec/text",
     "pkg/cloudevents/datacodec/xml",
     "pkg/cloudevents/observability",
     "pkg/cloudevents/transport",
@@ -152,7 +152,8 @@
     "pkg/cloudevents/types",
   ]
   pruneopts = "NUT"
-  revision = "a1c7a759c034d9289981dd8ca42ff3663842a8a6"
+  revision = "2fa4bb1fbb4aac4d906b0173a2a408f701439b82"
+  version = "v0.10.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -215,6 +216,36 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:6f2c823e33811fd83df3f9591807f40bbfb3fbabc5a58fd19901aaecb07e0bfa"
+  name = "github.com/go-kivik/couchdb"
+  packages = [
+    ".",
+    "chttp",
+  ]
+  pruneopts = "NUT"
+  revision = "a8dab644dca9b91c342cf0504dbddc4e822a544a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7fe3c7e158a870fb380d5954a26c7954b8cb0df7979f8920b3b0494a051c387c"
+  name = "github.com/go-kivik/kivik"
+  packages = [
+    ".",
+    "driver",
+  ]
+  pruneopts = "NUT"
+  revision = "fcc1de1f215b1a026cdb37f2e86a0bdee29c65f9"
+
+[[projects]]
+  digest = "1:634ba85f13a58cad11d183a9a6b49710c45c7913e020f10e87f1efa615bcc3fa"
+  name = "github.com/go-kivik/kivikmock"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "da8491ffa707b8a39b25c8bc97712f94bf52c314"
+  version = "v2.0.0-pre3"
+
+[[projects]]
+  branch = "master"
   digest = "1:53becd66889185091b58ea3fc49294996f2179fb05a89702f4de7d15e581b509"
   name = "github.com/go-logr/logr"
   packages = ["."]
@@ -241,14 +272,6 @@
   pruneopts = "NUT"
   revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
   version = "v1.1.1"
-
-[[projects]]
-  branch = "master"
-  digest = "1:e2b86e41f3d669fc36b50d31d32d22c8ac656c75aa5ea89717ce7177e134ff2a"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
   branch = "master"
@@ -306,12 +329,12 @@
   revision = "b02d448a3705facf11018efff34f1d2830be5724"
 
 [[projects]]
-  digest = "1:f4f203acd8b11b8747bdcd91696a01dbc95ccb9e2ca2db6abf81c3a4f5e950ce"
+  digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
   name = "github.com/google/go-github"
   packages = ["github"]
   pruneopts = "NUT"
-  revision = "f55b50f38167644bb7e4be03d9a2bde71d435239"
-  version = "v18.2.0"
+  revision = "9686ff0746200cf521ce225525b421e13b4eac1a"
+  version = "v28.1.1"
 
 [[projects]]
   digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
@@ -454,14 +477,6 @@
   version = "v1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:aa0434674a14402891f31f393b4dd53792bc67eee05158748d999096a8826ed3"
-  name = "github.com/influxdata/tdigest"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "bf2b5ad3c0a925c44a0d2842c5d8182113cd248e"
-
-[[projects]]
   digest = "1:ac6d01547ec4f7f673311b4663909269bfb8249952de3279799289467837c3cc"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
@@ -498,18 +513,6 @@
   pruneopts = "NUT"
   revision = "3f73b117b61ee5d8fe5dcedd6cca2c96014329a9"
   version = "v0.8.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:927762c6729b4e72957ba3310e485ed09cf8451c5a637a52fd016a9fe09e7936"
-  name = "github.com/mailru/easyjson"
-  packages = [
-    "buffer",
-    "jlexer",
-    "jwriter",
-  ]
-  pruneopts = "NUT"
-  revision = "1b2b06f5f209fea48ff5922d8bfb2b9ed5d8f00b"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -763,6 +766,14 @@
   version = "v3.0.0"
 
 [[projects]]
+  digest = "1:7008ec21a0ce773bd21deefdb7d17fab8cb9f1ae0bc44026cdd2b658ab1582ca"
+  name = "github.com/rogpeppe/go-internal"
+  packages = ["semver"]
+  pruneopts = "NUT"
+  revision = "d89504fbbf2c313df24867a5ffafcc9b847961ff"
+  version = "v1.5.0"
+
+[[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
@@ -796,14 +807,6 @@
   pruneopts = "NUT"
   revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
   version = "v1.0.3"
-
-[[projects]]
-  digest = "1:435d9fe926ee0d903662215091e27fba6f1b7228d33a30c289cdb5aeff1c8fc8"
-  name = "github.com/tsenart/vegeta"
-  packages = ["lib"]
-  pruneopts = "NUT"
-  revision = "9c95632b3e8562be6df690c639a3f5a6f40d3004"
-  version = "v12.7.0"
 
 [[projects]]
   digest = "1:3a4c90791db3bf894a26cf6ffc0f792a31d0f225664c38b0577f02a36bc0cda7"
@@ -875,16 +878,23 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ba2be3e8d1836918b69f885227fa1db9ea76bb50ec6effb82161abb72b8f7a7"
+  digest = "1:c5f54e66aecd08886ddcc55184364b33d598b8ed6724205539da41d2026608df"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
     "blowfish",
+    "cast5",
     "chacha20poly1305",
     "ed25519",
     "ed25519/internal/edwards25519",
     "internal/chacha20",
     "internal/subtle",
+    "openpgp",
+    "openpgp/armor",
+    "openpgp/elgamal",
+    "openpgp/errors",
+    "openpgp/packet",
+    "openpgp/s2k",
     "poly1305",
     "ssh/terminal",
   ]
@@ -893,7 +903,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b36cbda3305016019734b28b269ca55c6b041d1eb8e3fc1e47c94fac6422894e"
+  digest = "1:88e95054fb03c19288deb4b6a53257edd6e0df1d3e582d618319447a175c47fd"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -907,6 +917,7 @@
     "http2/hpack",
     "idna",
     "internal/timeseries",
+    "publicsuffix",
     "trace",
   ]
   pruneopts = "NUT"
@@ -1009,6 +1020,17 @@
   ]
   pruneopts = "NUT"
   revision = "6adeb8aab2ded9eb693b831d5fd090c10a6ebdfa"
+
+[[projects]]
+  branch = "master"
+  digest = "1:c0619d0c0c2f585812ce9f844eafb9c5660f5bd723c9ac0cd60b7fac665d2ac6"
+  name = "golang.org/x/xerrors"
+  packages = [
+    ".",
+    "internal",
+  ]
+  pruneopts = "NUT"
+  revision = "1b5146add8981d58be77b16229c0ff0f8bebd8c1"
 
 [[projects]]
   digest = "1:8392b5c29adedc5f85c66b48bb53b6c49dd91d8540f3cad5d43ef7277946718f"
@@ -1146,12 +1168,12 @@
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
-  digest = "1:18108594151654e9e696b27b181b953f9a90b16bf14d253dd1b397b025a1487f"
+  digest = "1:accc3bfe4e404aa53ac3621470e7cf9fce1efe48f0fabcfe6d12a72579d9d91f"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
+  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
+  version = "v2.2.4"
 
 [[projects]]
   digest = "1:2b55f57d7b6d9f0f23478f2432b03273073f1bf93aed18620472e7117eb4451e"
@@ -1544,9 +1566,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d380cfa7fc55e76f51e74d5f063890a319733929014e14e9374a2d67dd0057d4"
+  digest = "1:3e2928701d12688f6cb6b109676e509a6f0ae5a156cfa47d4fd860d90098beeb"
   name = "knative.dev/eventing"
   packages = [
+    "pkg/adapter",
     "pkg/apis/duck",
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing",
@@ -1586,6 +1609,7 @@
     "pkg/defaultchannel",
     "pkg/duck",
     "pkg/kncloudevents",
+    "pkg/kncloudevents/testing",
     "pkg/logconfig",
     "pkg/logging",
     "pkg/reconciler",
@@ -1600,11 +1624,11 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "96384412d4698fd27470b48a03e6ec64808576f6"
+  revision = "5ce6ce57ca189912995dbae4b74d6f9c2088437c"
 
 [[projects]]
-  branch = "master"
-  digest = "1:e1e8c1c5963fd64151b7810f0f92e4617464f2302d4792686ea1d5797166fd07"
+  branch = "release-0.10"
+  digest = "1:d91a27f79bca7f71b57bdc3581542d646c90dca75862c38d21ad7b1aca6c22aa"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1643,11 +1667,13 @@
     "logging/testing",
     "metrics",
     "metrics/metricskey",
+    "metrics/testing",
     "network",
     "profiling",
     "ptr",
     "reconciler/testing",
     "signals",
+    "source",
     "system",
     "system/testing",
     "test",
@@ -1660,14 +1686,15 @@
     "tracing",
     "tracing/config",
     "tracker",
+    "version",
     "webhook",
   ]
   pruneopts = "T"
-  revision = "346b0abf16cdc8d935c8c52469f8ca82d20c7bd6"
+  revision = "cad41c40ccb5a40de7a3b65097649703c8d96e0b"
 
 [[projects]]
   branch = "master"
-  digest = "1:7428fa3c29b9122911c62a8dace650c06f65934be4ebab1c0f6fa314ce000c66"
+  digest = "1:fcfe514b65a5214c809614e8e66bb5aec5c215c2e9e85a2df415ab2969daad47"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1684,18 +1711,18 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "aad68e6dabc50d27d921f3cc50f0313b11195a72"
+  revision = "01769145d185a22a0f4eca6615a43cdc5cff36ef"
 
 [[projects]]
   branch = "master"
-  digest = "1:964a4f9e12d5021b9d550e04c36cf23feb880e286ceede1b246d5c0e43b523b9"
+  digest = "1:15b833e870afd578a79069324b74c9cc2ac07b5547f34d54516d90f781c37461"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "e09d3c7669d2268d5ce11ea53cd7e9429722c1a7"
+  revision = "385c6ecc17489d72a2e0927d4552bcdc1f0d08e0"
 
 [[projects]]
   digest = "1:d7fff5619b391ebfdab093ade4d065a6b8095b43134f18d60a0887971ee886c0"
@@ -1791,6 +1818,10 @@
     "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/types",
     "github.com/emicklei/go-restful",
+    "github.com/go-kivik/couchdb",
+    "github.com/go-kivik/kivik",
+    "github.com/go-kivik/kivik/driver",
+    "github.com/go-kivik/kivikmock",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
@@ -1810,6 +1841,7 @@
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
     "golang.org/x/net/context",
+    "golang.org/x/net/http2",
     "golang.org/x/oauth2",
     "gopkg.in/go-playground/webhooks.v5/github",
     "gopkg.in/yaml.v2",
@@ -1830,6 +1862,7 @@
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
+    "k8s.io/apimachinery/pkg/util/uuid",
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
@@ -1853,6 +1886,7 @@
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",
+    "knative.dev/eventing/pkg/adapter",
     "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
@@ -1865,7 +1899,7 @@
     "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/duck",
-    "knative.dev/eventing/pkg/kncloudevents",
+    "knative.dev/eventing/pkg/kncloudevents/testing",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
     "knative.dev/eventing/pkg/reconciler",
@@ -1882,6 +1916,7 @@
     "knative.dev/pkg/apis/duck/v1alpha1",
     "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/client/clientset/versioned/fake",
+    "knative.dev/pkg/client/injection/kube/client",
     "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment",
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
@@ -1893,11 +1928,14 @@
     "knative.dev/pkg/logging/logkey",
     "knative.dev/pkg/logging/testing",
     "knative.dev/pkg/metrics",
+    "knative.dev/pkg/metrics/testing",
     "knative.dev/pkg/reconciler/testing",
     "knative.dev/pkg/signals",
+    "knative.dev/pkg/source",
     "knative.dev/pkg/system",
     "knative.dev/pkg/system/testing",
     "knative.dev/pkg/tracing",
+    "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",
     "knative.dev/serving/pkg/apis/serving/v1",
     "knative.dev/serving/pkg/apis/serving/v1alpha1",

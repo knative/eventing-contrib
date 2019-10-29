@@ -26,6 +26,10 @@ required = [
   name = "knative.dev/test-infra"
   non-go = false
 
+[[override]]
+  name = "gopkg.in/yaml.v2"
+  version = "v2.2.4"
+
 [[prune.project]]
   name = "knative.dev/pkg"
   unused-packages = false
@@ -42,6 +46,14 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
+  branch = "release-0.10"
+
+[[constraint]]
+  name = "github.com/go-kivik/kivik"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/go-kivik/couchdb"
   branch = "master"
 
 # TODO why is this overridden?
@@ -117,11 +129,11 @@ required = [
 
 [[constraint]]
   name = "github.com/cloudevents/sdk-go"
-  branch = "master"
+  version = "0.10.0"
 
 [[constraint]]
   name = "github.com/apache/camel-k"
-  version = "1.0.0-M1"
+  version = "1.0.0-M3"
 
 # needed because pkg upgraded
 [[override]]

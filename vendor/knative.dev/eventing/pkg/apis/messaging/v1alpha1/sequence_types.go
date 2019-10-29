@@ -23,8 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/webhook"
 )
 
@@ -46,14 +47,23 @@ type Sequence struct {
 	Status SequenceStatus `json:"status,omitempty"`
 }
 
-// Check that Sequence can be validated, can be defaulted, and has immutable fields.
-var _ apis.Validatable = (*Sequence)(nil)
-var _ apis.Defaultable = (*Sequence)(nil)
+var (
+	// Check that Sequence can be validated and defaulted.
+	_ apis.Validatable = (*Sequence)(nil)
+	_ apis.Defaultable = (*Sequence)(nil)
 
-// TODO: make appropriate fields immutable.
-//var _ apis.Immutable = (*Sequence)(nil)
-var _ runtime.Object = (*Sequence)(nil)
-var _ webhook.GenericCRD = (*Sequence)(nil)
+	// Check that Sequence can return its spec untyped.
+	_ apis.HasSpec = (*Sequence)(nil)
+
+	// TODO: make appropriate fields immutable.
+	//_ apis.Immutable = (*Sequence)(nil)
+
+	_ runtime.Object     = (*Sequence)(nil)
+	_ webhook.GenericCRD = (*Sequence)(nil)
+
+	// Check that we can create OwnerReferences to a Sequence.
+	_ kmeta.OwnerRefable = (*Sequence)(nil)
+)
 
 type SequenceSpec struct {
 	// Steps is the list of Subscribers (processors / functions) that will be called in the order
@@ -97,10 +107,10 @@ type SequenceSubscriptionStatus struct {
 
 // SequenceStatus represents the current state of a Sequence.
 type SequenceStatus struct {
-	// inherits duck/v1alpha1 Status, which currently provides:
+	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// SubscriptionStatuses is an array of corresponding Subscription statuses.
 	// Matches the Spec.Steps array in the order.
@@ -129,4 +139,9 @@ type SequenceList struct {
 // GetGroupVersionKind returns GroupVersionKind for InMemoryChannels
 func (p *Sequence) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("Sequence")
+}
+
+// GetUntypedSpec returns the spec of the Sequence.
+func (s *Sequence) GetUntypedSpec() interface{} {
+	return s.Spec
 }
