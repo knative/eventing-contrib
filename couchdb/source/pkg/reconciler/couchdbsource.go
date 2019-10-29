@@ -38,7 +38,6 @@ import (
 	"knative.dev/eventing-contrib/couchdb/source/pkg/reconciler/resources"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -83,7 +82,6 @@ type Reconciler struct {
 
 	couchdbClientSet versioned.Interface
 	sinkResolver     *resolver.URIResolver
-	sinkReconciler   *duck.SinkReconciler
 }
 
 // Reconcile compares the actual state with the desired, and attempts to
