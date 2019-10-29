@@ -77,7 +77,7 @@
   revision = "ec5e00d3c878b2a97bbe0884ef45ffd1b4f669f5"
 
 [[projects]]
-  digest = "1:2174bd92e08d8beb5a10b6885f039821a38dd0fa5774d7e29015829e1297c063"
+  digest = "1:0c3d8b189bf3f193ea2724d45f95f9dd79280499604e997c227681e612425dae"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -115,8 +115,8 @@
     "service/sts/stsiface",
   ]
   pruneopts = "NUT"
-  revision = "13ad2b09f6ff7e16808b4a45c32684e6c66bf86d"
-  version = "v1.25.19"
+  revision = "c7898ed37bb1004a0a1c024bb3e0d206f07f9299"
+  version = "v1.25.21"
 
 [[projects]]
   digest = "1:707ebe952a8b3d00b343c01536c79c73771d100f63ec6babeaed5c79e2b8a8dd"
@@ -569,12 +569,18 @@
   version = "v1.9.1"
 
 [[projects]]
-  digest = "1:8e68f710bfdf3b51dc73089450d099c9b37ca8d8e7e8e826743bf4b3da32e0e7"
+  digest = "1:a277bf39e450e35a8752a7e6bf70f8b78cb01dbd2b7f7f664a2a6c1e2800009e"
   name = "github.com/knative/serving"
-  packages = ["pkg/apis/serving/v1beta1"]
+  packages = [
+    "pkg/apis/autoscaling",
+    "pkg/apis/config",
+    "pkg/apis/networking",
+    "pkg/apis/serving",
+    "pkg/apis/serving/v1beta1",
+  ]
   pruneopts = "NUT"
-  revision = "b066e90ccd6f091e0faf65a759f3ce789d373457"
-  version = "v0.9.0"
+  revision = "a1a35b117afe15ca2c5bd4aec5bb3574a44e802d"
+  version = "v0.10.0"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -983,7 +989,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "f83a4685e1528a5ebee78469d2a3262e2d505b0b"
+  revision = "8986dd9e96cf0a6f74da406c005ba3df38527c04"
 
 [[projects]]
   branch = "master"
@@ -994,7 +1000,7 @@
     "cmd/apidiff",
   ]
   pruneopts = "NUT"
-  revision = "c286b889502e400dfd051daec54da2f45b1d9971"
+  revision = "8994fa331a5331907d718300483a4bc486109420"
 
 [[projects]]
   branch = "master"
@@ -1058,7 +1064,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4d3ff17befb1f08e780f45140bf1bd81d4a58e6af4fe0f660e69e992572245c3"
+  digest = "1:0873f7a72c70afd9ff5651bcb30462a752f365f498be037af7c3f3591222fe39"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -1071,7 +1077,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "NUT"
-  revision = "b67d8b46d239ae60ee1aa65b06e008febd16cf52"
+  revision = "f43be2a4598cf3a47be9f94f0c28197ed9eae611"
 
 [[projects]]
   digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
@@ -1120,7 +1126,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:818e5898274910d9e6cc62316011d26f6aa1a11b354d988351bedee1083b3b8d"
+  digest = "1:612a892d39b73ca287205c15a8b669d4bab547d67db5964402e8e5f65af456a9"
   name = "golang.org/x/tools"
   packages = [
     "cmd/goimports",
@@ -1144,7 +1150,7 @@
     "internal/span",
   ]
   pruneopts = "NUT"
-  revision = "8715e36070db12685b9d4984f05e628c20dd44d9"
+  revision = "9cc4af7d6b2c2a2e47f9cfaa500cd669b42e449b"
 
 [[projects]]
   branch = "master"
@@ -1181,7 +1187,7 @@
     "transport/http/internal/propagation",
   ]
   pruneopts = "NUT"
-  revision = "8038894d941cca8b87f2924d5d7b05711cab0023"
+  revision = "4f42dad4690a01d7f6fa461106c63889ff1be027"
 
 [[projects]]
   digest = "1:be5054b1c190011dca4e1c3c051025294e97f14fdfd354093fc233b4d05dcd98"
@@ -1816,7 +1822,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c6d425392d952d2098170c7466e6332c8885d65206d883cf25685d0c3382f1f0"
+  digest = "1:b2d1e9109cbe2cdd13d2efaa68cf76092b5d5ab7d5f00bd0e46a03259aedca23"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1874,7 +1880,7 @@
     "test/e2e/helpers",
   ]
   pruneopts = "NUT"
-  revision = "e6ae67deb03ff941a7825aa37828cab1f4427245"
+  revision = "a5e27ba1fef25fe517e686be3cff03ad4bcf0e19"
 
 [[projects]]
   branch = "release-0.10"
@@ -1944,7 +1950,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6fadee1beecdcc757781e99293bb322e7fefb8af2b17e966816e6d884d82856e"
+  digest = "1:6014ca96b2c1599dd33c4911906e2e1b573ee62c6e1c77ff2e49a4a90d9322cb"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1961,7 +1967,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "12aeba52d1f8f6e6f914b44274ce719af6116885"
+  revision = "4325ba548efe024d3ec6b96b0ee250cc7fccb285"
 
 [[projects]]
   branch = "master"
@@ -1972,7 +1978,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "027b4ff36fdb3a671f12e4fb1d386a742ee12183"
+  revision = "a8112b1c4064a5788eec87d152498ab5c184ae2b"
 
 [[projects]]
   digest = "1:d7fff5619b391ebfdab093ade4d065a6b8095b43134f18d60a0887971ee886c0"
