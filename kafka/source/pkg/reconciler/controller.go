@@ -27,12 +27,12 @@ import (
 	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource"
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
-	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/resolver"
 )
 
 const (
@@ -65,8 +65,7 @@ func NewController(
 	}
 
 	impl := controller.NewImpl(c, c.Logger, "KafkaSource")
-
-	c.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
+	c.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	c.Logger.Info("Setting up kafka event handlers")
 

@@ -41,9 +41,10 @@ event sink.
      bootstrapServers: REPLACE_WITH_CLUSTER_URL
      topics: knative-demo-topic
      sink:
-       apiVersion: serving.knative.dev/v1alpha1
-       kind: Service
-       name: event-display
+       ref:
+         apiVersion: serving.knative.dev/v1alpha1
+         kind: Service
+         name: event-display
    ```
 
 ## Example

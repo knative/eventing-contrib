@@ -39,6 +39,10 @@ var (
 			},
 		},
 	}
+	condReady = apis.Condition{
+		Type:   KafkaConditionReady,
+		Status: corev1.ConditionTrue,
+	}
 )
 
 // Check that KafkaSource implements the Conditions duck type.
