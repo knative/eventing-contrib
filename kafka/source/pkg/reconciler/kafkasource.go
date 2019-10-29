@@ -48,7 +48,6 @@ import (
 	clientset "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
 	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -77,7 +76,6 @@ type Reconciler struct {
 	eventTypeLister     eventinglisters.EventTypeLister
 	kafkaLister         listers.KafkaSourceLister
 	sinkResolver     	*resolver.URIResolver
-	sinkReconciler   	*duck.SinkReconciler
 	deploymentLister    appsv1listers.DeploymentLister
 	loggingContext      context.Context
 	loggingConfig       *pkgLogging.Config
