@@ -33,6 +33,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/resolver"
 )
 
 const (
@@ -65,6 +66,7 @@ func NewController(
 	}
 
 	impl := controller.NewImpl(c, c.Logger, "KafkaSource")
+	c.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	c.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
 
