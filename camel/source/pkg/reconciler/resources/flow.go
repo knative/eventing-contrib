@@ -17,7 +17,7 @@ limitations under the License.
 package resources
 
 import (
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // MarshalCamelFlows marshals a list of flows into their standard yaml representation
