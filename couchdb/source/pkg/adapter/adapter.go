@@ -128,7 +128,6 @@ func (a *couchDbAdapter) Start(stopCh <-chan struct{}) error {
 	period := 2 * time.Second
 	if a.feed == "continuous" {
 		a.options["heartbeat"] = 6000
-		period = 0
 	}
 	wait.Until(a.processChanges, period, stopCh)
 	return nil
