@@ -2,6 +2,7 @@ approvers:
 - evankanderson
 - grantr
 - vaikas-google
+- vaikas
 - n3wscott
 - matzew
 
@@ -12,6 +13,7 @@ reviewers:
 - evankanderson
 - grantr
 - vaikas-google
+- vaikas
 - n3wscott
 - matzew
 # Add reviewers below
