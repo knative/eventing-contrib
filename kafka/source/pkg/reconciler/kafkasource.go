@@ -75,7 +75,7 @@ type Reconciler struct {
 	receiveAdapterImage string
 	eventTypeLister     eventinglisters.EventTypeLister
 	kafkaLister         listers.KafkaSourceLister
-	sinkResolver     	*resolver.URIResolver
+	sinkResolver        *resolver.URIResolver
 	deploymentLister    appsv1listers.DeploymentLister
 	loggingContext      context.Context
 	loggingConfig       *pkgLogging.Config
