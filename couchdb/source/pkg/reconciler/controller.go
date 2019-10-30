@@ -23,11 +23,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
-	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/resolver"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client"
@@ -64,8 +64,7 @@ func NewController(
 		couchdbClientSet:    client.Get(ctx),
 	}
 	impl := controller.NewImpl(r, r.Logger, ReconcilerName)
-
-	r.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
+	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	r.Logger.Info("Setting up event handlers")
 	couchdbSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))

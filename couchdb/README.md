@@ -35,7 +35,8 @@ The Apache CouchDB Event source enables Knative Eventing integration with
        name: couchdb-binding
      database: photographers
      sink:
-       apiVersion: serving.knative.dev/v1alpha1
-       kind: Service
-       name: event-display
+       ref:
+         apiVersion: serving.knative.dev/v1alpha1
+         kind: Service
+         name: event-display
    ```

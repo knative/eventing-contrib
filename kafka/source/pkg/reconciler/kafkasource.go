@@ -48,8 +48,8 @@ import (
 	clientset "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
 	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 
 	"knative.dev/pkg/controller"
 	pkgLogging "knative.dev/pkg/logging"
@@ -75,7 +75,7 @@ type Reconciler struct {
 	receiveAdapterImage string
 	eventTypeLister     eventinglisters.EventTypeLister
 	kafkaLister         listers.KafkaSourceLister
-	sinkReconciler      *duck.SinkReconciler
+	sinkResolver        *resolver.URIResolver
 	deploymentLister    appsv1listers.DeploymentLister
 	loggingContext      context.Context
 	loggingConfig       *pkgLogging.Config
@@ -130,18 +130,38 @@ func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) e
 		return errors.New("spec.sink missing")
 	}
 
-	sinkObjRef := src.Spec.Sink
-	if sinkObjRef.Namespace == "" {
-		sinkObjRef.Namespace = src.Namespace
+	if src.Spec.Sink == nil {
+		src.Status.MarkNoSink("SinkMissing", "")
+		return fmt.Errorf("spec.sink missing")
 	}
-	kafkaDesc := fmt.Sprintf("%s/%s,%s", src.Namespace, src.Name, src.GroupVersionKind().String())
-	sinkURI, err := r.sinkReconciler.GetSinkURI(sinkObjRef, src, kafkaDesc)
+
+	dest := src.Spec.Sink.DeepCopy()
+	if dest.Ref != nil {
+		// To call URIFromDestination(), dest.Ref must have a Namespace. If there is
+		// no Namespace defined in dest.Ref, we will use the Namespace of the source
+		// as the Namespace of dest.Ref.
+		if dest.Ref.Namespace == "" {
+			//TODO how does this work with deprecated fields
+			dest.Ref.Namespace = src.GetNamespace()
+		}
+	} else if dest.DeprecatedName != "" && dest.DeprecatedNamespace == "" {
+		// If Ref is nil and the deprecated ref is present, we need to check for
+		// DeprecatedNamespace. This can be removed when DeprecatedNamespace is
+		// removed.
+		dest.DeprecatedNamespace = src.GetNamespace()
+	}
+	sinkURI, err := r.sinkResolver.URIFromDestination(*dest, src)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
 		return fmt.Errorf("getting sink URI: %v", err)
 	}
-
-	src.Status.MarkSink(sinkURI)
+	if src.Spec.Sink.DeprecatedAPIVersion != "" &&
+		src.Spec.Sink.DeprecatedKind != "" &&
+		src.Spec.Sink.DeprecatedName != "" {
+		src.Status.MarkSinkWarnRefDeprecated(sinkURI)
+	} else {
+		src.Status.MarkSink(sinkURI)
+	}
 
 	ra, err := r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
@@ -391,7 +411,7 @@ func (r *Reconciler) makeEventTypes(src *v1alpha1.KafkaSource) ([]eventingv1alph
 	// Only create EventTypes for Broker sinks.
 	// We add this check here in case the KafkaSource was changed from Broker to non-Broker sink.
 	// If so, we need to delete the existing ones, thus we return empty expected.
-	if src.Spec.Sink.Kind != "Broker" {
+	if ref := src.Spec.Sink.GetRef(); ref == nil || ref.Kind != "Broker" {
 		return eventTypes, nil
 	}
 	topics := strings.Split(src.Spec.Topics, ",")

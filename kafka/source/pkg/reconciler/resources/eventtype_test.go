@@ -28,6 +28,7 @@ import (
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/utils"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 )
 
 func TestMakeEventType(t *testing.T) {
@@ -42,10 +43,12 @@ func TestMakeEventType(t *testing.T) {
 				Topics:             "topic1,topic2",
 				BootstrapServers:   "server1,server2",
 				ConsumerGroup:      "group",
-				Sink: &corev1.ObjectReference{
-					Name:       "test-sink",
-					Kind:       "Sink",
-					APIVersion: "duck.knative.dev/v1",
+				Sink: &apisv1alpha1.Destination{
+					Ref: &corev1.ObjectReference{
+						Name:       "test-sink",
+						Kind:       "Sink",
+						APIVersion: "duck.knative.dev/v1",
+					},
 				},
 			},
 		},

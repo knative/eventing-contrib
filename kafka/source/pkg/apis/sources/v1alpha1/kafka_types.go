@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -119,7 +120,7 @@ type KafkaSourceSpec struct {
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+	Sink *apisv1alpha1.Destination `json:"sink,omitempty"`
 
 	// ServiceAccoutName is the name of the ServiceAccount that will be used to run the Receive
 	// Adapter Deployment.
