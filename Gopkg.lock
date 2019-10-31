@@ -569,15 +569,9 @@
   version = "v1.9.1"
 
 [[projects]]
-  digest = "1:a277bf39e450e35a8752a7e6bf70f8b78cb01dbd2b7f7f664a2a6c1e2800009e"
+  digest = "1:bd99821e516c607ba2909f93becadfa57a4ca2ff5c1f877f5dbf0e78e080bb23"
   name = "github.com/knative/serving"
-  packages = [
-    "pkg/apis/autoscaling",
-    "pkg/apis/config",
-    "pkg/apis/networking",
-    "pkg/apis/serving",
-    "pkg/apis/serving/v1beta1",
-  ]
+  packages = ["pkg/apis/serving/v1beta1"]
   pruneopts = "NUT"
   revision = "a1a35b117afe15ca2c5bd4aec5bb3574a44e802d"
   version = "v0.10.0"
@@ -687,18 +681,6 @@
   pruneopts = "NUT"
   revision = "1ce767705f3a16654fe0b7d34f4b11eb71499426"
   version = "v0.14.3"
-
-[[projects]]
-  digest = "1:198f52f16bac13d9338ae08d4ab3d16812e840550146ad6097d22ed5cb395629"
-  name = "github.com/nats-io/nats.go"
-  packages = [
-    ".",
-    "encoders/builtin",
-    "util",
-  ]
-  pruneopts = "NUT"
-  revision = "e2837a2879e82886f6e21715e3a0217fdc46d370"
-  version = "v1.8.1"
 
 [[projects]]
   digest = "1:d649fe8fa50df39a525a9acd9fa73a29f8097272467ca3830a2ebc1abcfb33e3"
@@ -1883,8 +1865,8 @@
   revision = "a5e27ba1fef25fe517e686be3cff03ad4bcf0e19"
 
 [[projects]]
-  branch = "release-0.10"
-  digest = "1:d91a27f79bca7f71b57bdc3581542d646c90dca75862c38d21ad7b1aca6c22aa"
+  branch = "master"
+  digest = "1:268f1b56e9be83c7eccdb19d537ab97184ae1290789eac698ba27015b35c5f6c"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1909,6 +1891,7 @@
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
     "client/injection/kube/informers/apps/v1/deployment",
+    "client/injection/kube/informers/core/v1/secret",
     "client/injection/kube/informers/factory",
     "configmap",
     "controller",
@@ -1945,9 +1928,10 @@
     "tracker",
     "version",
     "webhook",
+    "webhook/certificates/resources",
   ]
   pruneopts = "T"
-  revision = "cad41c40ccb5a40de7a3b65097649703c8d96e0b"
+  revision = "0d45f1cc9db54812559fdaebe4a6582a01ef5246"
 
 [[projects]]
   branch = "master"
