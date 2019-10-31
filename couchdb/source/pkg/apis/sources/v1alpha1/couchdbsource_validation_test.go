@@ -21,14 +21,14 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"knative.dev/pkg/webhook"
+	"knative.dev/pkg/webhook/resourcesemantics"
 
 	"knative.dev/pkg/apis"
 )
 
 func TestCouchDbSourceValidation(t *testing.T) {
 	testCases := map[string]struct {
-		cr   webhook.GenericCRD
+		cr   resourcesemantics.GenericCRD
 		want *apis.FieldError
 	}{
 		"missing sink": {
