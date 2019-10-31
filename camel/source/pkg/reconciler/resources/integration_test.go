@@ -52,10 +52,6 @@ func TestMakeDeployment_sink(t *testing.T) {
 			},
 		},
 		SinkURL: "http://test-sink",
-		SinkType: metav1.TypeMeta{
-			Kind:       "MyKind",
-			APIVersion: "myapi.dev/v1",
-		},
 		Overrides: map[string]string{
 			"a": "b",
 		},
@@ -98,7 +94,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Traits: map[string]camelv1alpha1.TraitSpec{
 				"knative": {
 					Configuration: map[string]string{
-						"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","ce.override.ce-a":"b","ce.override.ce-source":"camel-source:test-namespace/test-name","knative.apiVersion":"myapi.dev/v1","knative.kind":"MyKind","service.path":"/"}}]}`,
+						"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","ce.override.ce-a":"b","ce.override.ce-source":"camel-source:test-namespace/test-name","knative.apiVersion":"","knative.kind":"","service.path":"/"}}]}`,
 					},
 				},
 			},
