@@ -118,7 +118,7 @@ func main() {
 		StatsReporter:     stats,
 		RegistrationDelay: registrationDelay * time.Second,
 
-		ResourceMutatingWebhookName:     "webhook.kafka.eventing.knative.dev",
+		ResourceMutatingWebhookName:     "webhook.kafka.messaging.knative.dev",
 		ResourceAdmissionControllerPath: "/",
 	}
 
