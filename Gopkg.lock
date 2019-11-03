@@ -484,20 +484,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:41933d387bfa3eaa6a82647914ed7044f7b8355764c24fb920892bc8c03ef0c3"
-  name = "github.com/hpcloud/tail"
-  packages = [
-    ".",
-    "ratelimiter",
-    "util",
-    "watch",
-    "winfile",
-  ]
-  pruneopts = "NUT"
-  revision = "a30252cb686a21eb2d0b98132633053ec2f7f1e5"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:7c47a990a91ab4922f4009c8ba8dcf35dad08e2b697cf26ea87eaae90e3f7aa1"
   name = "github.com/imdario/mergo"
   packages = ["."]
@@ -569,15 +555,9 @@
   version = "v1.9.1"
 
 [[projects]]
-  digest = "1:a277bf39e450e35a8752a7e6bf70f8b78cb01dbd2b7f7f664a2a6c1e2800009e"
+  digest = "1:bd99821e516c607ba2909f93becadfa57a4ca2ff5c1f877f5dbf0e78e080bb23"
   name = "github.com/knative/serving"
-  packages = [
-    "pkg/apis/autoscaling",
-    "pkg/apis/config",
-    "pkg/apis/networking",
-    "pkg/apis/serving",
-    "pkg/apis/serving/v1beta1",
-  ]
+  packages = ["pkg/apis/serving/v1beta1"]
   pruneopts = "NUT"
   revision = "a1a35b117afe15ca2c5bd4aec5bb3574a44e802d"
   version = "v0.10.0"
@@ -689,18 +669,6 @@
   version = "v0.14.3"
 
 [[projects]]
-  digest = "1:198f52f16bac13d9338ae08d4ab3d16812e840550146ad6097d22ed5cb395629"
-  name = "github.com/nats-io/nats.go"
-  packages = [
-    ".",
-    "encoders/builtin",
-    "util",
-  ]
-  pruneopts = "NUT"
-  revision = "e2837a2879e82886f6e21715e3a0217fdc46d370"
-  version = "v1.8.1"
-
-[[projects]]
   digest = "1:d649fe8fa50df39a525a9acd9fa73a29f8097272467ca3830a2ebc1abcfb33e3"
   name = "github.com/nats-io/nkeys"
   packages = ["."]
@@ -715,56 +683,6 @@
   pruneopts = "NUT"
   revision = "4b96681fa6d28dd0ab5fe79bac63b3a493d9ee94"
   version = "v1.0.1"
-
-[[projects]]
-  digest = "1:b2e5e3f19aaffb7ebb5339521ca335b3aab38b62131c4233eaefc8e8cddcf349"
-  name = "github.com/onsi/ginkgo"
-  packages = [
-    ".",
-    "config",
-    "internal/codelocation",
-    "internal/containernode",
-    "internal/failer",
-    "internal/leafnodes",
-    "internal/remote",
-    "internal/spec",
-    "internal/spec_iterator",
-    "internal/specrunner",
-    "internal/suite",
-    "internal/testingtproxy",
-    "internal/writer",
-    "reporters",
-    "reporters/stenographer",
-    "reporters/stenographer/support/go-colorable",
-    "reporters/stenographer/support/go-isatty",
-    "types",
-  ]
-  pruneopts = "NUT"
-  revision = "72b6ab036f78c4bf1a9748c3941dd7c3de54917a"
-  version = "v1.10.2"
-
-[[projects]]
-  digest = "1:4f242066f025afdf7ecb7eb7120314131d22cad1e348025b3aab0e8fb437a0c7"
-  name = "github.com/onsi/gomega"
-  packages = [
-    ".",
-    "format",
-    "gbytes",
-    "gexec",
-    "internal/assertion",
-    "internal/asyncassertion",
-    "internal/oraclematcher",
-    "internal/testingtsupport",
-    "matchers",
-    "matchers/support/goraph/bipartitegraph",
-    "matchers/support/goraph/edge",
-    "matchers/support/goraph/node",
-    "matchers/support/goraph/util",
-    "types",
-  ]
-  pruneopts = "NUT"
-  revision = "bdebf9e0ece900259084cfa4121b97ce1a540939"
-  version = "v1.7.0"
 
 [[projects]]
   digest = "1:1a0de55901552615e2b2f24bdb51431634165e74745b042a3ec11c3e97ce5843"
@@ -1015,14 +933,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ee228610f331798b7f0921c1c7c0a1c225154af4324f59117e90195fe78947b"
+  digest = "1:df0d218b9fa9056a1281701152498ce98e6508d12fcc9a3392bdb3c33bb6599d"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
-    "html",
-    "html/atom",
-    "html/charset",
     "http/httpguts",
     "http2",
     "http2/h2c",
@@ -1080,21 +995,11 @@
   revision = "f43be2a4598cf3a47be9f94f0c28197ed9eae611"
 
 [[projects]]
-  digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
+  digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
   name = "golang.org/x/text"
   packages = [
     "collate",
     "collate/build",
-    "encoding",
-    "encoding/charmap",
-    "encoding/htmlindex",
-    "encoding/internal",
-    "encoding/internal/identifier",
-    "encoding/japanese",
-    "encoding/korean",
-    "encoding/simplifiedchinese",
-    "encoding/traditionalchinese",
-    "encoding/unicode",
     "internal/colltab",
     "internal/gen",
     "internal/language",
@@ -1102,9 +1007,7 @@
     "internal/tag",
     "internal/triegen",
     "internal/ucd",
-    "internal/utf8internal",
     "language",
-    "runes",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -1372,14 +1275,6 @@
   pruneopts = "NUT"
   revision = "99a8ce2fbf8b8087b6ed12a37c61b10f04070043"
   version = "v1.1.0"
-
-[[projects]]
-  branch = "v1"
-  digest = "1:8fb1ccb16a6cfecbfdfeb84d8ea1cc7afa8f9ef16526bc2326f72d993e32cef1"
-  name = "gopkg.in/tomb.v1"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
   digest = "1:accc3bfe4e404aa53ac3621470e7cf9fce1efe48f0fabcfe6d12a72579d9d91f"
@@ -1822,7 +1717,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b2d1e9109cbe2cdd13d2efaa68cf76092b5d5ab7d5f00bd0e46a03259aedca23"
+  digest = "1:020d65bb5de185f46b44317fba80e8e69e073168cc36abf8c6395690a87d1d42"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1878,6 +1773,9 @@
     "test/base/resources",
     "test/common",
     "test/e2e/helpers",
+    "test/test_images/logevents",
+    "test/test_images/sendevents",
+    "test/test_images/transformevents",
   ]
   pruneopts = "NUT"
   revision = "a5e27ba1fef25fe517e686be3cff03ad4bcf0e19"
@@ -2047,18 +1945,6 @@
   version = "v0.2.2"
 
 [[projects]]
-  digest = "1:79012a83a6630d5e3ec068e6e8dd44d199393f53ab05e741b832abaa1ce3c756"
-  name = "sigs.k8s.io/testing_frameworks"
-  packages = [
-    "integration",
-    "integration/addr",
-    "integration/internal",
-  ]
-  pruneopts = "NUT"
-  revision = "c7087048c932a346b910a2240f3a053e544eb352"
-  version = "v0.1.2"
-
-[[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
   name = "sigs.k8s.io/yaml"
   packages = ["."]
@@ -2094,8 +1980,6 @@
     "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
-    "github.com/onsi/ginkgo",
-    "github.com/onsi/gomega",
     "go.opencensus.io/plugin/ochttp",
     "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.opencensus.io/stats",
@@ -2174,6 +2058,9 @@
     "knative.dev/eventing/test/base/resources",
     "knative.dev/eventing/test/common",
     "knative.dev/eventing/test/e2e/helpers",
+    "knative.dev/eventing/test/test_images/logevents",
+    "knative.dev/eventing/test/test_images/sendevents",
+    "knative.dev/eventing/test/test_images/transformevents",
     "knative.dev/pkg/apis",
     "knative.dev/pkg/apis/duck",
     "knative.dev/pkg/apis/duck/v1",
@@ -2220,7 +2107,6 @@
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
     "sigs.k8s.io/controller-runtime/pkg/source",
     "sigs.k8s.io/controller-tools/cmd/controller-gen",
-    "sigs.k8s.io/testing_frameworks/integration",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

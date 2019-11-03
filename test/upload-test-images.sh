@@ -14,26 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# If gcloud is not available make it a no-op, not an error.
-which gcloud &> /dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
-
 set -o errexit
 
 function upload_test_images() {
-  local image_dirs="$(find $(dirname $0)/test_images -mindepth 1 -maxdepth 1 -type d)"
-  local docker_tag=$1
+  echo ">> Publishing test images"
+  # Script needs to be executed from the root directory
+  # to pickup .ko.yaml
+  cd "$( dirname "$0")/.."
+  local image_dir=$1
+  local docker_tag=$2
+  local tag_option=""
+  if [ -n "${docker_tag}" ]; then
+    tag_option="--tags $docker_tag,latest"
+  fi
 
-  for image_dir in ${image_dirs}; do
-      local image_name="$(basename ${image_dir})"
-      local image="knative.dev/eventing-contrib/test/test_images/${image_name}"
-      ko publish -B ${image}
-      if [ -n "$docker_tag" ]; then
-          image=$KO_DOCKER_REPO/${image_name}
-          local digest=$(gcloud container images list-tags --filter="tags:latest" --format='get(digest)' ${image})
-          echo "Tagging ${image}@${digest} with $docker_tag"
-          gcloud -q container images add-tag ${image}@${digest} ${image}:$docker_tag
-      fi
-  done
+  # ko resolve is being used for the side-effect of publishing images,
+  # so the resulting yaml produced is ignored.
+  ko resolve ${tag_option} -RBf "${image_dir}" > /dev/null
 }
 
 : ${KO_DOCKER_REPO:?"You must set 'KO_DOCKER_REPO', see DEVELOPMENT.md"}
