@@ -38,7 +38,7 @@ func (k KafkaLoadGenerator) SendEndEvent() {
 }
 
 func NewKafkaLoadGeneratorFactory(bootstrapUrl string, topic string, minWorkers uint64) sender.LoadGeneratorFactory {
-	return func(eventSource string, sentCh chan performance_common.EventTimestamp, acceptedCh chan performance_common.EventTimestamp, failedCh chan performance_common.EventTimestamp) (sender.LoadGenerator, error) {
+	return func(eventSource string, sentCh chan performance_common.EventTimestamp, acceptedCh chan performance_common.EventTimestamp) (sender.LoadGenerator, error) {
 		if bootstrapUrl == "" {
 			panic("Missing --bootstrap-url flag")
 		}
@@ -62,9 +62,6 @@ func NewKafkaLoadGeneratorFactory(bootstrapUrl string, topic string, minWorkers 
 			}),
 			kafka.WithAfterSend(func(request kafka.RecordPayload, response interface{}, id uint64, uuid string) {
 				acceptedCh <- performance_common.EventTimestamp{EventId: uuid, At: ptypes.TimestampNow()}
-			}),
-			kafka.WithAfterFailed(func(request kafka.RecordPayload, err error, id uint64, uuid string) {
-				failedCh <- performance_common.EventTimestamp{EventId: uuid, At: ptypes.TimestampNow()}
 			}),
 		)
 

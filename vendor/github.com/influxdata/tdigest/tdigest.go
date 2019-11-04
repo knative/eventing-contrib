@@ -121,6 +121,26 @@ func (t *TDigest) process() {
 	}
 }
 
+// Centroids returns a copy of processed centroids.
+// Useful when aggregating multiple t-digests.
+//
+// Pass in the CentroidList as the buffer to write into.
+func (t *TDigest) Centroids() CentroidList {
+	t.process()
+	cl := make([]Centroid, len(t.processed))
+	copy(cl, t.processed)
+	return cl
+}
+
+func (t *TDigest) Count() float64 {
+	t.process()
+	count := 0.0
+	for _, centroid := range t.processed {
+		count += centroid.Weight
+	}
+	return count
+}
+
 func (t *TDigest) updateCumulative() {
 	if n := t.processed.Len() + 1; n <= cap(t.cumulative) {
 		t.cumulative = t.cumulative[:n]
