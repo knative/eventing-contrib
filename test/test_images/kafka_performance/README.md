@@ -99,8 +99,8 @@ spec:
 For example the configuration `100,200:20,400:60` means:
 
 1. 100 rps for 10 seconds
-2. 200 rps for 20 seconds
-3. 400 rps for 60 seconds
+1. 200 rps for 20 seconds
+1. 400 rps for 60 seconds
 
 ### Warmup phase
 
