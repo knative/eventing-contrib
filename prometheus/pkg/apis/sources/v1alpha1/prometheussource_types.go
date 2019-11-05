@@ -68,7 +68,16 @@ type PrometheusSourceSpec struct {
 	// PromQL is the Prometheus query for this source
 	PromQL string `json:"promQL"`
 
-	// Sink is a reference to an object that will resolve to a domain
+	// The name of the file containing the authenication token
+	// +optional
+	AuthTokenFile string `json:"authTokenFile,omitempty"`
+
+	// The name of the config map containing the CA certificate of the
+	// Prometheus service's signer.
+	// +optional
+	CACertConfigMap string `json:"caCertConfigMap,omitempty"`
+
+	// Sink is a reference to an object that will resolve to a host
 	// name to use as the sink.
 	// +optional
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`

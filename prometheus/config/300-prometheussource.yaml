@@ -64,6 +64,15 @@ spec:
               type: string
               description:
                 The PromQL query to run against the Prometheus server
+            authTokenFile:
+              type: string
+              description:
+                The name of the file containing the authenication token
+            caCertConfigMap:
+              type: string
+              description:
+                The name of the config map containing the CA certificate of the
+                Prometheus service's signer.
             sink:
               type: object
               description: >
