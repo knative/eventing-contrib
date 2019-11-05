@@ -1,0 +1,15 @@
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: KafkaSource
+metadata:
+  name: kafka-source
+  namespace: perf-eventing
+spec:
+  consumerGroup: knative-group
+  # Broker URL. Replace this with the URLs for your kafka cluster,
+  # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+  bootstrapServers: my-cluster-kafka-bootstrap.kafka.svc:9092
+  topics: perf-topic
+  sink:
+    apiVersion: v1
+    kind: Service
+    name: source-perf-consumer
