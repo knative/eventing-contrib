@@ -34,6 +34,7 @@ type ReceiveAdapterArgs struct {
 	Source        *v1alpha1.KafkaSource
 	Labels        map[string]string
 	SinkURI       string
+	MetricsConfig string
 	LoggingConfig string
 }
 
@@ -76,6 +77,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		{
 			Name:  "K_LOGGING_CONFIG",
 			Value: args.LoggingConfig,
+		},
+		{
+			Name:  "K_METRICS_CONFIG",
+			Value: args.MetricsConfig,
 		},
 	}
 

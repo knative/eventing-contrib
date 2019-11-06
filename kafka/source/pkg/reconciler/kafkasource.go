@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"knative.dev/pkg/metrics"
 	"reflect"
 	"strings"
 	"time"
@@ -62,6 +63,7 @@ const (
 	kafkaSourceDeploymentCreated = "KafkaSourceDeploymentCreated"
 	kafkaSourceDeploymentUpdated = "KafkaSourceDeploymentUpdated"
 	kafkaSourceReconciled        = "KafkaSourceReconciled"
+	component                      = "kafkasource"
 )
 
 var (
@@ -79,6 +81,7 @@ type Reconciler struct {
 	deploymentLister    appsv1listers.DeploymentLister
 	loggingContext      context.Context
 	loggingConfig       *pkgLogging.Config
+	metricsConfig  *metrics.ExporterOptions
 }
 
 // Check that our Reconciler implements controller.Reconciler
@@ -221,11 +224,17 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 	if err != nil {
 		logging.FromContext(ctx).Error("error while converting logging config to JSON", zap.Any("receiveAdapter", err))
 	}
+	metricsConfig, err := metrics.MetricsOptionsToJson(r.metricsConfig)
+	if err != nil {
+		logging.FromContext(ctx).Error("error while converting metrics config to JSON", zap.Any("receiveAdapter", err))
+	}
+
 	raArgs := resources.ReceiveAdapterArgs{
 		Image:         r.receiveAdapterImage,
 		Source:        src,
 		Labels:        resources.GetLabels(src.Name),
 		LoggingConfig: loggingConfig,
+		MetricsConfig: metricsConfig,
 		SinkURI:       sinkURI,
 	}
 	expected := resources.MakeReceiveAdapter(&raArgs)
@@ -439,4 +448,17 @@ func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
 	}
 	r.loggingConfig = logcfg
 	logging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
+}
+
+func (r *Reconciler) UpdateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
+	if cfg != nil {
+		delete(cfg.Data, "_example")
+	}
+
+	r.metricsConfig = &metrics.ExporterOptions{
+		Domain:    metrics.Domain(),
+		Component: component,
+		ConfigMap: cfg.Data,
+	}
+	logging.FromContext(r.loggingContext).Info("Update from metrics ConfigMap", zap.Any("ConfigMap", cfg))
 }
