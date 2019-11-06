@@ -24,9 +24,10 @@ sent to the configured sink as CloudEvents.
      serverURL: http://demo.robustperception.io:9090
      promQL: ALERTS
      sink:
-       apiVersion: serving.knative.dev/v1
-       kind: Service
-       name: event-display
+       ref:
+         apiVersion: serving.knative.dev/v1
+         kind: Service
+         name: event-display
    ```
 
 ### OpenShift Monitoring Stack

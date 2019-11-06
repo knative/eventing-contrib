@@ -36,9 +36,9 @@ import (
 	"knative.dev/eventing-contrib/prometheus/pkg/reconciler/resources"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/prometheus/pkg/apis/sources/v1alpha1"
 	versioned "knative.dev/eventing-contrib/prometheus/pkg/client/clientset/versioned"
@@ -78,7 +78,7 @@ type Reconciler struct {
 
 	prometheusClientSet versioned.Interface
 
-	sinkReconciler *duck.SinkReconciler
+	sinkResolver *resolver.URIResolver
 }
 
 // Reconcile compares the actual state with the desired, and attempts to
@@ -128,16 +128,38 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.PrometheusSource) error {
 	source.Status.InitializeConditions()
 
-	sinkObjRef := source.Spec.Sink
-	if sinkObjRef.Namespace == "" {
-		sinkObjRef.Namespace = source.Namespace
+	if source.Spec.Sink == nil {
+		source.Status.MarkNoSink("SinkMissing", "")
+		return fmt.Errorf("spec.sink missing")
 	}
 
-	sourceDesc := source.Namespace + "/" + source.Name + ", " + source.GroupVersionKind().String()
-	sinkURI, err := r.sinkReconciler.GetSinkURI(sinkObjRef, source, sourceDesc)
+	dest := source.Spec.Sink.DeepCopy()
+	if dest.Ref != nil {
+		// To call URIFromDestination(), dest.Ref must have a Namespace. If there is
+		// no Namespace defined in dest.Ref, we will use the Namespace of the source
+		// as the Namespace of dest.Ref.
+		if dest.Ref.Namespace == "" {
+			//TODO how does this work with deprecated fields
+			dest.Ref.Namespace = source.GetNamespace()
+		}
+	} else if dest.DeprecatedName != "" && dest.DeprecatedNamespace == "" {
+		// If Ref is nil and the deprecated ref is present, we need to check for
+		// DeprecatedNamespace. This can be removed when DeprecatedNamespace is
+		// removed.
+		dest.DeprecatedNamespace = source.GetNamespace()
+	}
+
+	sinkURI, err := r.sinkResolver.URIFromDestination(*dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return err
+	}
+	if source.Spec.Sink.DeprecatedAPIVersion != "" &&
+		source.Spec.Sink.DeprecatedKind != "" &&
+		source.Spec.Sink.DeprecatedName != "" {
+		source.Status.MarkSinkWarnRefDeprecated(sinkURI)
+	} else {
+		source.Status.MarkSink(sinkURI)
 	}
 	source.Status.MarkSink(sinkURI)
 
@@ -256,7 +278,7 @@ func (r *Reconciler) makeEventTypes(src *v1alpha1.PrometheusSource) ([]eventingv
 	// Only create EventTypes for Broker sinks.
 	// We add this check here in case the PrometheusSource was changed from Broker to non-Broker sink.
 	// If so, we need to delete the existing ones, thus we return empty expected.
-	if src.Spec.Sink.Kind != "Broker" {
+	if ref := src.Spec.Sink.GetRef(); ref == nil || ref.Kind != "Broker" {
 		return eventTypes, nil
 	}
 
