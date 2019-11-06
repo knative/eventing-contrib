@@ -17,6 +17,7 @@ limitations under the License.
 package reconciler
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -27,12 +28,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
 	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis/v1alpha1"
+	"knative.dev/pkg/injection/clients/dynamicclient"
+	"knative.dev/pkg/resolver"
 )
 
 var (
@@ -53,8 +59,8 @@ const (
 	generation = 1
 
 	addressableName       = "testsink"
-	addressableKind       = "Sink"
-	addressableAPIVersion = "duck.knative.dev/v1alpha1"
+	addressableKind       = "Service"
+	addressableAPIVersion = "serving.knative.dev/v1"
 	addressableDNS        = "addressable.sink.svc.cluster.local"
 	addressableURI        = "http://addressable.sink.svc.cluster.local"
 )
@@ -107,7 +113,7 @@ func TestReconcile(t *testing.T) {
 			WantAbsent: []runtime.Object{
 				getContext(),
 			},
-			WantErrMsg: "sinks.duck.knative.dev \"testsink\" not found",
+			WantErrMsg: `failed to get ref &ObjectReference{Kind:Service,Namespace:testnamespace,Name:testsink,UID:,APIVersion:serving.knative.dev/v1,ResourceVersion:,FieldPath:,}: services.serving.knative.dev "testsink" not found`,
 		},
 		{
 			Name: "Creating integration",
@@ -269,16 +275,22 @@ func TestReconcile(t *testing.T) {
 		}
 
 		c := tc.GetClient()
+		dynClient := fake.NewSimpleDynamicClient(scheme.Scheme, tc.InitialState...)
+		baseContext := context.WithValue(context.Background(), dynamicclient.Key{}, dynClient)
+		ctx, cancel := context.WithCancel(baseContext)
+
 		r := &reconciler{
-			client:   c,
-			scheme:   tc.Scheme,
-			recorder: recorder,
+			client:       c,
+			scheme:       tc.Scheme,
+			recorder:     recorder,
+			sinkResolver: resolver.NewURIResolver(ctx, func(types.NamespacedName) {}),
 		}
 		if err := r.InjectClient(c); err != nil {
 			t.Errorf("cannot inject client: %v", zap.Error(err))
 		}
 
 		t.Run(tc.Name, tc.Runner(t, r, c))
+		cancel()
 	}
 }
 
@@ -297,10 +309,12 @@ func getSource() *sourcesv1alpha1.CamelSource {
 					},
 				},
 			},
-			Sink: &corev1.ObjectReference{
-				Name:       addressableName,
-				Kind:       addressableKind,
-				APIVersion: addressableAPIVersion,
+			Sink: &v1alpha1.Destination{
+				Ref: &corev1.ObjectReference{
+					Name:       addressableName,
+					Kind:       addressableKind,
+					APIVersion: addressableAPIVersion,
+				},
 			},
 		},
 	}
@@ -329,10 +343,12 @@ func getCamelKSource() *sourcesv1alpha1.CamelSource {
 					},
 				},
 			},
-			Sink: &corev1.ObjectReference{
-				Name:       addressableName,
-				Kind:       addressableKind,
-				APIVersion: addressableAPIVersion,
+			Sink: &v1alpha1.Destination{
+				Ref: &corev1.ObjectReference{
+					Name:       addressableName,
+					Kind:       addressableKind,
+					APIVersion: addressableAPIVersion,
+				},
 			},
 		},
 	}
@@ -364,10 +380,12 @@ func getCamelKFlowSource() *sourcesv1alpha1.CamelSource {
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
 				Flow: &flow,
 			},
-			Sink: &corev1.ObjectReference{
-				Name:       addressableName,
-				Kind:       addressableKind,
-				APIVersion: addressableAPIVersion,
+			Sink: &v1alpha1.Destination{
+				Ref: &corev1.ObjectReference{
+					Name:       addressableName,
+					Kind:       addressableKind,
+					APIVersion: addressableAPIVersion,
+				},
 			},
 		},
 	}
@@ -404,7 +422,7 @@ func makeContext(namespace string, image string) *camelv1alpha1.IntegrationKit {
 			GenerateName: "ctx-",
 			Namespace:    namespace,
 			Labels: map[string]string{
-				"app":                       "camel-k",
+				"app": "camel-k",
 				"camel.apache.org/kit.type": camelv1alpha1.IntegrationKitTypeExternal,
 			},
 		},
@@ -421,10 +439,6 @@ func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
 		Name:      sourceName,
 		Namespace: testNS,
 		SinkURL:   addressableURI,
-		SinkType: metav1.TypeMeta{
-			Kind:       addressableKind,
-			APIVersion: addressableAPIVersion,
-		},
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
 			Flow: &sourcesv1alpha1.Flow{
 				"from": map[string]interface{}{
@@ -451,10 +465,6 @@ func getRunningCamelKIntegration(t *testing.T) *camelv1alpha1.Integration {
 		Name:      sourceName,
 		Namespace: testNS,
 		SinkURL:   addressableURI,
-		SinkType: metav1.TypeMeta{
-			Kind:       addressableKind,
-			APIVersion: addressableAPIVersion,
-		},
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
 			Integration: &camelv1alpha1.IntegrationSpec{
 				Sources: []camelv1alpha1.SourceSpec{
@@ -481,10 +491,6 @@ func getRunningCamelKFlowIntegration(t *testing.T) *camelv1alpha1.Integration {
 		Name:      sourceName,
 		Namespace: testNS,
 		SinkURL:   addressableURI,
-		SinkType: metav1.TypeMeta{
-			Kind:       addressableKind,
-			APIVersion: addressableAPIVersion,
-		},
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
 			Integration: &camelv1alpha1.IntegrationSpec{
 				Sources: []camelv1alpha1.SourceSpec{
@@ -569,7 +575,7 @@ func getAddressable() *unstructured.Unstructured {
 			},
 			"status": map[string]interface{}{
 				"address": map[string]interface{}{
-					"hostname": addressableDNS,
+					"url": addressableURI,
 				},
 			},
 		},
