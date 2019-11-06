@@ -17,18 +17,19 @@ limitations under the License.
 package main
 
 import (
-	"log"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"knative.dev/eventing-contrib/github/pkg/apis"
-	controller "knative.dev/eventing-contrib/github/pkg/reconciler"
-	"knative.dev/pkg/logging/logkey"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	github "knative.dev/eventing-contrib/github/pkg/reconciler"
+	"knative.dev/pkg/injection/sharedmain"
 )
 
+const (
+	component = "github_controller"
+)
+
+func main() {
+	sharedmain.Main(component, github.NewController)
+}
+
+/*
 func main() {
 	logCfg := zap.NewProductionConfig()
 	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -67,3 +68,4 @@ func main() {
 	// Start the Cmd
 	log.Fatal(mgr.Start(signals.SetupSignalHandler()))
 }
+*/

@@ -68,7 +68,7 @@ type GitHubSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.
 	// +optional
-	Sink *apisv1alpha1.ObjectReference `json:"sink,omitempty"`
+	Sink *apisv1alpha1.Destination `json:"sink,omitempty"`
 
 	// API URL if using github enterprise (default https://api.github.com)
 	// +optional
