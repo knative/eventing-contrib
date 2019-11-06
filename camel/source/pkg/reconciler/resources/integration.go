@@ -38,7 +38,7 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 		args.Overrides["source"] = fmt.Sprintf("camel-source:%s/%s", args.Namespace, args.Name)
 	}
 
-	environment, err := makeCamelEnvironment(args.SinkType, args.SinkURL, args.Overrides)
+	environment, err := makeCamelEnvironment(args.SinkURL, args.Overrides)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 	return &integration, nil
 }
 
-func makeCamelEnvironment(sinkType metav1.TypeMeta, sinkURIString string, overrides map[string]string) (string, error) {
+func makeCamelEnvironment(sinkURIString string, overrides map[string]string) (string, error) {
 	sinkURI, err := url.Parse(sinkURIString)
 	if err != nil {
 		return "", err
@@ -100,8 +100,8 @@ func makeCamelEnvironment(sinkType metav1.TypeMeta, sinkURIString string, overri
 		camelknativev1alpha1.CamelEndpointKindSink,
 		camelknativev1alpha1.CamelServiceTypeEndpoint,
 		*sinkURI,
-		sinkType.APIVersion,
-		sinkType.Kind,
+		"",
+		"",
 	)
 	if err != nil {
 		return "", err

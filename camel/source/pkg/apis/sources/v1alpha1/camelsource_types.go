@@ -21,9 +21,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	duckapis "knative.dev/pkg/apis"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -51,16 +52,16 @@ var _ = duck.VerifyType(&CamelSource{}, &duckv1.Conditions{})
 
 const (
 	// CamelSourceConditionReady has status True when the CamelSource is ready to send events.
-	CamelConditionReady = duckapis.ConditionReady
+	CamelConditionReady = apis.ConditionReady
 
 	// CamelConditionSinkProvided has status True when the CamelSource has been configured with a sink target.
-	CamelConditionSinkProvided duckapis.ConditionType = "SinkProvided"
+	CamelConditionSinkProvided apis.ConditionType = "SinkProvided"
 
 	// CamelConditionDeployed has status True when the CamelSource has had it's deployment created.
-	CamelConditionDeployed duckapis.ConditionType = "Deployed"
+	CamelConditionDeployed apis.ConditionType = "Deployed"
 )
 
-var camelCondSet = duckapis.NewLivingConditionSet(
+var camelCondSet = apis.NewLivingConditionSet(
 	CamelConditionSinkProvided,
 	CamelConditionDeployed,
 )
@@ -72,7 +73,7 @@ type CamelSourceSpec struct {
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+	Sink *apisv1alpha1.Destination `json:"sink,omitempty"`
 
 	// CloudEventOverrides defines overrides to control the output format and
 	// modifications of the event sent to the sink.
@@ -113,7 +114,7 @@ type CamelSourceStatus struct {
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (s *CamelSourceStatus) GetCondition(t duckapis.ConditionType) *duckapis.Condition {
+func (s *CamelSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return camelCondSet.Manage(s).GetCondition(t)
 }
 
@@ -132,6 +133,22 @@ func (s *CamelSourceStatus) MarkSink(uri string) {
 	s.SinkURI = uri
 	if len(uri) > 0 {
 		camelCondSet.Manage(s).MarkTrue(CamelConditionSinkProvided)
+	} else {
+		camelCondSet.Manage(s).MarkUnknown(CamelConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.")
+	}
+}
+
+// MarkSinkWarnDeprecated sets the condition that the source has a sink configured and warns ref is deprecated.
+func (s *CamelSourceStatus) MarkSinkWarnRefDeprecated(uri string) {
+	s.SinkURI = uri
+	if len(uri) > 0 {
+		c := apis.Condition{
+			Type:     CamelConditionSinkProvided,
+			Status:   corev1.ConditionTrue,
+			Severity: apis.ConditionSeverityError,
+			Message:  "Using deprecated object ref fields when specifying spec.sink. Update to spec.sink.ref. These will be removed in a future release.",
+		}
+		camelCondSet.Manage(s).SetCondition(c)
 	} else {
 		camelCondSet.Manage(s).MarkUnknown(CamelConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.")
 	}

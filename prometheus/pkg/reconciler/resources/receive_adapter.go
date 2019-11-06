@@ -42,7 +42,7 @@ type ReceiveAdapterArgs struct {
 // Prometheus sources.
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	replicas := int32(1)
-	return &v1.Deployment{
+	ret := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: args.Source.Namespace,
 			Name:      utils.GenerateFixedName(args.Source, fmt.Sprintf("prometheussource-%s", args.Source.Name)),
@@ -73,6 +73,28 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 			},
 		},
 	}
+
+	if args.Source.Spec.CACertConfigMap != "" {
+		ret.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
+			{
+				Name:      "openshift-service-serving-signer-cabundle",
+				MountPath: "/etc/" + args.Source.Spec.CACertConfigMap + "/",
+			},
+		}
+		ret.Spec.Template.Spec.Volumes = []corev1.Volume{
+			{
+				Name: args.Source.Spec.CACertConfigMap,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: args.Source.Spec.CACertConfigMap,
+						},
+					},
+				},
+			},
+		}
+	}
+	return ret
 }
 
 func makeEnv(eventSource, sinkURI string, spec *v1alpha1.PrometheusSourceSpec) []corev1.EnvVar {
@@ -88,6 +110,12 @@ func makeEnv(eventSource, sinkURI string, spec *v1alpha1.PrometheusSourceSpec) [
 	}, {
 		Name:  "PROMETHEUS_PROM_QL",
 		Value: spec.PromQL,
+	}, {
+		Name:  "PROMETHEUS_AUTH_TOKEN_FILE",
+		Value: spec.AuthTokenFile,
+	}, {
+		Name:  "PROMETHEUS_CA_CERT_CONFIG_MAP",
+		Value: spec.CACertConfigMap,
 	}, {
 		Name: "NAMESPACE",
 		ValueFrom: &corev1.EnvVarSource{

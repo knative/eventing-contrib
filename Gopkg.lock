@@ -295,6 +295,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:e2b86e41f3d669fc36b50d31d32d22c8ac656c75aa5ea89717ce7177e134ff2a"
+  name = "github.com/golang/glog"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
+
+[[projects]]
+  branch = "master"
   digest = "1:b7cb6054d3dff43b38ad2e92492f220f57ae6087ee797dca298139776749ace8"
   name = "github.com/golang/groupcache"
   packages = ["lru"]
@@ -392,6 +400,23 @@
   ]
   pruneopts = "NUT"
   revision = "842c0d70d7027215932deb13801890992c9ba364"
+
+[[projects]]
+  digest = "1:d7736b4372fa7b6d447118aca5a9a6d90a61d4e0d467316ac631e4ba58458ae4"
+  name = "github.com/google/mako"
+  packages = [
+    "clients/proto/analyzers/threshold_analyzer_go_proto",
+    "clients/proto/analyzers/utest_analyzer_go_proto",
+    "clients/proto/analyzers/window_deviation_go_proto",
+    "go/quickstore",
+    "internal/go/common",
+    "internal/quickstore_microservice/proto/quickstore_go_proto",
+    "proto/quickstore/quickstore_go_proto",
+    "spec/proto/mako_go_proto",
+  ]
+  pruneopts = "NUT"
+  revision = "122f8dcef9e3906310e7dba05849cedb5be43b24"
+  version = "0.1.0"
 
 [[projects]]
   digest = "1:ab3ec1fe3e39bac4b3ab63390767766622be35b7cab03f47f787f9ec60522a53"
@@ -500,6 +525,14 @@
   version = "v1.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:333e1f196b9ac47c4a9df13127abb44a49bb82b960a5074fa1c6d03dc5991ec5"
+  name = "github.com/influxdata/tdigest"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3fbb3e34b87fe64262cbf10ac00562f36ae98235"
+
+[[projects]]
   digest = "1:efc693dbcbe885796a3d46bd1817646d713996bcc2893d42f5434141afc1a86f"
   name = "github.com/jcmturner/gofork"
   packages = [
@@ -561,6 +594,18 @@
   pruneopts = "NUT"
   revision = "a1a35b117afe15ca2c5bd4aec5bb3574a44e802d"
   version = "v0.10.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7bbccd3dd7998f2a180264ec1d12e362ed8e02f55ea7b82ac0d0f48ffa2d8888"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    "buffer",
+    "jlexer",
+    "jwriter",
+  ]
+  pruneopts = "NUT"
+  revision = "6c0755d89d1e153c9986ad90e886a626bd66aad0"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -799,6 +844,17 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:35ddb7a7b22ec9be320bd6b11c88a269dbd8c92487be12d0d6ef586d24143187"
+  name = "github.com/slinkydeveloper/loadastic"
+  packages = [
+    "common",
+    "kafka",
+  ]
+  pruneopts = "NUT"
+  revision = "7ebc5ff3f9d13864e13c23d8e2f2ddbc0614172a"
+
+[[projects]]
   digest = "1:d3533ee568fc00a971617ec09dc0f0b3eddfb4adbc1275f8f6332553d67506b4"
   name = "github.com/spf13/cobra"
   packages = ["."]
@@ -813,6 +869,14 @@
   pruneopts = "NUT"
   revision = "2e9d26c8c37aae03e3f9d4e90b7116f5accb7cab"
   version = "v1.0.5"
+
+[[projects]]
+  digest = "1:435d9fe926ee0d903662215091e27fba6f1b7228d33a30c289cdb5aeff1c8fc8"
+  name = "github.com/tsenart/vegeta"
+  packages = ["lib"]
+  pruneopts = "NUT"
+  revision = "9c95632b3e8562be6df690c639a3f5a6f40d3004"
+  version = "v12.7.0"
 
 [[projects]]
   digest = "1:3a4c90791db3bf894a26cf6ffc0f792a31d0f225664c38b0577f02a36bc0cda7"
@@ -1717,7 +1781,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7574b22e684d087959d6cda97888d3a7d0125db326dbe133241e13926a34b4d0"
+  digest = "1:92d4e50331e3c29b05d7b06cdf7b1902a0612e13b06fde0d3aa736d95de4f002"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1772,13 +1836,19 @@
     "test/base",
     "test/base/resources",
     "test/common",
+    "test/common/performance",
+    "test/common/performance/aggregator",
+    "test/common/performance/common",
+    "test/common/performance/event_state",
+    "test/common/performance/receiver",
+    "test/common/performance/sender",
     "test/e2e/helpers",
     "test/test_images/logevents",
     "test/test_images/sendevents",
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "a5e27ba1fef25fe517e686be3cff03ad4bcf0e19"
+  revision = "b65b7a16cc0ea8e9361143be4ee8767ef52e44b9"
 
 [[projects]]
   branch = "release-0.10"
@@ -1832,10 +1902,17 @@
     "system",
     "system/testing",
     "test",
+    "test/ghutil",
     "test/helpers",
     "test/ingress",
     "test/logging",
+    "test/mako",
+    "test/mako/alerter",
+    "test/mako/alerter/github",
+    "test/mako/alerter/slack",
+    "test/mako/config",
     "test/monitoring",
+    "test/slackutil",
     "test/spoof",
     "test/zipkin",
     "tracing",
@@ -1972,6 +2049,7 @@
     "github.com/go-kivik/kivik",
     "github.com/go-kivik/kivik/driver",
     "github.com/go-kivik/kivikmock",
+    "github.com/golang/protobuf/ptypes",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
@@ -1980,6 +2058,8 @@
     "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
+    "github.com/slinkydeveloper/loadastic/common",
+    "github.com/slinkydeveloper/loadastic/kafka",
     "go.opencensus.io/plugin/ochttp",
     "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.opencensus.io/stats",
@@ -2057,6 +2137,9 @@
     "knative.dev/eventing/test",
     "knative.dev/eventing/test/base/resources",
     "knative.dev/eventing/test/common",
+    "knative.dev/eventing/test/common/performance",
+    "knative.dev/eventing/test/common/performance/common",
+    "knative.dev/eventing/test/common/performance/sender",
     "knative.dev/eventing/test/e2e/helpers",
     "knative.dev/eventing/test/test_images/logevents",
     "knative.dev/eventing/test/test_images/sendevents",
@@ -2073,6 +2156,7 @@
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
+    "knative.dev/pkg/injection/clients/dynamicclient",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/kmp",
