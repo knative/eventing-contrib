@@ -27,6 +27,7 @@ import (
 	"encoding/pem"
 	"io/ioutil"
 	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/source"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -68,6 +69,8 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			sinkServer := httptest.NewServer(h)
 			defer sinkServer.Close()
 
+			statsReporter, _ := source.NewStatsReporter()
+
 			a := &Adapter{
 				config: &adapterConfig{
 					EnvConfig:        adapter.EnvConfig{
@@ -85,6 +88,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 					return c
 				}(),
 				logger: zap.NewNop(),
+				reporter: statsReporter,
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})
