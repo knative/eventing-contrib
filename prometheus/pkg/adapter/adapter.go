@@ -18,6 +18,8 @@ package adapter
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -41,19 +43,23 @@ const (
 type envConfig struct {
 	adapter.EnvConfig
 
-	EventSource string `envconfig:"EVENT_SOURCE" required:"true"`
-	ServerURL   string `envconfig:"PROMETHEUS_SERVER_URL" required:"true"`
-	PromQL      string `envconfig:"PROMETHEUS_PROM_QL" required:"true"`
+	EventSource     string `envconfig:"EVENT_SOURCE" required:"true"`
+	ServerURL       string `envconfig:"PROMETHEUS_SERVER_URL" required:"true"`
+	PromQL          string `envconfig:"PROMETHEUS_PROM_QL" required:"true"`
+	AuthTokenFile   string `envconfig:"PROMETHEUS_AUTH_TOKEN_FILE" required:"false"`
+	CACertConfigMap string `envconfig:"PROMETHEUS_CA_CERT_CONFIG_MAP" required:"false"`
 }
 
 type prometheusAdapter struct {
-	source    string
-	ce        cloudevents.Client
-	reporter  source.StatsReporter
-	namespace string
-	logger    *zap.SugaredLogger
-	serverURL string
-	promQL    string
+	source          string
+	ce              cloudevents.Client
+	reporter        source.StatsReporter
+	namespace       string
+	logger          *zap.SugaredLogger
+	serverURL       string
+	promQL          string
+	authTokenFile   string
+	caCertConfigMap string
 }
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
@@ -66,13 +72,15 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	env := processed.(*envConfig)
 
 	a := &prometheusAdapter{
-		source:    env.EventSource,
-		ce:        ceClient,
-		reporter:  reporter,
-		logger:    logger,
-		namespace: env.Namespace,
-		serverURL: env.ServerURL,
-		promQL:    env.PromQL,
+		source:          env.EventSource,
+		ce:              ceClient,
+		reporter:        reporter,
+		logger:          logger,
+		namespace:       env.Namespace,
+		serverURL:       env.ServerURL,
+		promQL:          env.PromQL,
+		authTokenFile:   env.AuthTokenFile,
+		caCertConfigMap: env.CACertConfigMap,
 	}
 
 	return a
@@ -91,10 +99,37 @@ func (a *prometheusAdapter) send() {
 		a.logger.Error("HTTP request error", zap.Error(err))
 		return
 	}
+	if a.authTokenFile != "" {
+		content, err := ioutil.ReadFile(a.authTokenFile)
+		if err != nil {
+			a.logger.Error("Error reading authentication token from "+a.authTokenFile, zap.Error(err))
+			return
+		}
+		req.Header.Set("Authorization", "Bearer "+string(content))
+	}
 
 	a.logger.Info(req)
 
 	client := &http.Client{}
+
+	if a.caCertConfigMap != "" {
+		caCertFile := "/etc/" + a.caCertConfigMap + "/service-ca.crt"
+		caCert, err := ioutil.ReadFile(caCertFile)
+		if err != nil {
+			a.logger.Error("Error reading CA certificate from "+caCertFile, zap.Error(err))
+			return
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			a.logger.Error("Error parsing CA certificate from " + caCertFile)
+			return
+		}
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		a.logger.Error("HTTP invocation error", zap.Error(err))
@@ -111,12 +146,12 @@ func (a *prometheusAdapter) send() {
 	if len(reply) > 0 {
 		event, err := a.makeEvent(reply)
 		if err != nil {
-			a.logger.Error("event creation error", zap.Error(err))
+			a.logger.Error("Cloud Event creation error", zap.Error(err))
 			return
 		}
 
 		if _, _, err := a.ce.Send(context.Background(), *event); err != nil {
-			a.logger.Error("event delivery error", zap.Error(err))
+			a.logger.Error("Cloud Event delivery error", zap.Error(err))
 			return
 		}
 	}
