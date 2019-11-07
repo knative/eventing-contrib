@@ -21,15 +21,29 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-var condReady = apis.Condition{
-	Type:   PrometheusConditionReady,
-	Status: corev1.ConditionTrue,
-}
+var (
+	availableDeployment = &appsv1.Deployment{
+		Status: appsv1.DeploymentStatus{
+			Conditions: []appsv1.DeploymentCondition{
+				{
+					Type:   appsv1.DeploymentAvailable,
+					Status: corev1.ConditionTrue,
+				},
+			},
+		},
+	}
+
+	condReady = apis.Condition{
+		Type:   PrometheusConditionReady,
+		Status: corev1.ConditionTrue,
+	}
+)
 
 func TestPrometheusGetCondition(t *testing.T) {
 	tests := []struct {
@@ -59,11 +73,41 @@ func TestPrometheusGetCondition(t *testing.T) {
 		},
 		condQuery: apis.ConditionType("foo"),
 		want:      nil,
+	}, {
+		name: "mark deployed",
+		cs: func() *PrometheusSourceStatus {
+			s := &PrometheusSourceStatus{}
+			s.InitializeConditions()
+			s.PropagateDeploymentAvailability(availableDeployment)
+			return s
+		}(),
+		condQuery: PrometheusConditionReady,
+		want: &apis.Condition{
+			Type:   PrometheusConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink and deployed and event types",
+		cs: func() *PrometheusSourceStatus {
+			s := &PrometheusSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.PropagateDeploymentAvailability(availableDeployment)
+			s.MarkEventTypes()
+			return s
+		}(),
+		condQuery: PrometheusConditionReady,
+		want: &apis.Condition{
+			Type:   PrometheusConditionReady,
+			Status: corev1.ConditionTrue,
+		},
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.cs.GetCondition(test.condQuery)
-			if diff := cmp.Diff(test.want, got); diff != "" {
+			ignoreTime := cmpopts.IgnoreFields(apis.Condition{},
+				"LastTransitionTime", "Severity")
+			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
 				t.Errorf("unexpected condition (-want, +got) = %v", diff)
 			}
 		})

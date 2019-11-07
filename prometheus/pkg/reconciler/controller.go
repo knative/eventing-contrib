@@ -22,11 +22,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
-	"knative.dev/eventing/pkg/duck"
 	"knative.dev/eventing/pkg/reconciler"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/prometheus/pkg/client/injection/client"
 	prometheusinformer "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/sources/v1alpha1/prometheussource"
@@ -58,8 +58,7 @@ func NewController(
 		prometheusClientSet:    client.Get(ctx),
 	}
 	impl := controller.NewImpl(r, r.Logger, ReconcilerName)
-
-	r.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
+	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	r.Logger.Info("Setting up event handlers")
 	prometheusSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
