@@ -26,16 +26,21 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
-	messaginginformers "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/messaging/v1alpha1"
-	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/dispatcher"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/logging"
+	"knative.dev/eventing/pkg/reconciler"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
+	kafkaclientsetinjection "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
+	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/dispatcher"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
 
 const (
@@ -58,6 +63,7 @@ type Reconciler struct {
 
 	kafkaDispatcher *dispatcher.KafkaDispatcher
 
+	kafkaClientSet kafkaclientset.Interface
 	kafkachannelLister   listers.KafkaChannelLister
 	kafkachannelInformer cache.SharedIndexInformer
 	impl                 *controller.Impl
@@ -69,23 +75,42 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
 func NewController(
-	opt reconciler.Options,
-	kafkaDispatcher *dispatcher.KafkaDispatcher,
-	kafkachannelInformer messaginginformers.KafkaChannelInformer,
+	ctx context.Context,
+	cmw configmap.Watcher,
 ) *controller.Impl {
 
+	logger := logging.FromContext(ctx)
+
+	kafkaConfig, err := utils.GetKafkaConfig("/etc/config-kafka")
+	if err != nil {
+		logger.Fatal("Error loading kafka config", zap.Error(err))
+	}
+
+	kafkaChannelInformer := kafkachannel.Get(ctx)
+	args := &dispatcher.KafkaDispatcherArgs{
+		ClientID:  "kafka-ch-dispatcher",
+		Brokers:   kafkaConfig.Brokers,
+		TopicFunc: utils.TopicName,
+		Logger:    logger,
+	}
+	kafkaDispatcher, err := dispatcher.NewDispatcher(args)
+	if err != nil {
+		logger.Fatal("Unable to create kafka dispatcher", zap.Error(err))
+	}
+
 	r := &Reconciler{
-		Base:                 reconciler.NewBase(opt, controllerAgentName),
+		Base:                 reconciler.NewBase(ctx, controllerAgentName, cmw),
 		kafkaDispatcher:      kafkaDispatcher,
-		kafkachannelLister:   kafkachannelInformer.Lister(),
-		kafkachannelInformer: kafkachannelInformer.Informer(),
+		kafkachannelLister:   kafkaChannelInformer.Lister(),
+		kafkachannelInformer: kafkaChannelInformer.Informer(),
+		kafkaClientSet:       kafkaclientsetinjection.Get(ctx),
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
 	r.Logger.Info("Setting up event handlers")
 
 	// Watch for kafka channels.
-	kafkachannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
+	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
 
 	return r.impl
 }
@@ -235,6 +260,6 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaCh
 	existing := kc.DeepCopy()
 	existing.Status = desired.Status
 
-	new, err := r.KafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
+	new, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
 	return new, err
 }
