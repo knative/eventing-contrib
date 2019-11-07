@@ -24,7 +24,7 @@ const (
 
 func Labels(name string) map[string]string {
 	return map[string]string{
-		"knative-eventing-source":      controllerAgentName,
-		"knative-eventing-source-name": name,
+		"eventing.knative.dev/source":     controllerAgentName,
+		"eventing.knative.dev/SourceName": name,
 	}
 }
