@@ -1781,7 +1781,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:92d4e50331e3c29b05d7b06cdf7b1902a0612e13b06fde0d3aa736d95de4f002"
+  digest = "1:84f2e54ec060eeaa50356aad6bf716f0291de6161eed37bba6d3920e8714d1e2"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1822,7 +1822,6 @@
     "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
     "pkg/defaultchannel",
-    "pkg/duck",
     "pkg/kncloudevents",
     "pkg/kncloudevents/testing",
     "pkg/logconfig",
@@ -2126,7 +2125,6 @@
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
-    "knative.dev/eventing/pkg/duck",
     "knative.dev/eventing/pkg/kncloudevents/testing",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",

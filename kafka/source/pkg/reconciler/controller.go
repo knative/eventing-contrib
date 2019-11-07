@@ -18,6 +18,7 @@ package kafka
 
 import (
 	"context"
+	"knative.dev/pkg/metrics"
 	"os"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -82,6 +83,7 @@ func NewController(
 	})
 
 	cmw.Watch(logging.ConfigMapName(), c.UpdateFromLoggingConfigMap)
+	cmw.Watch(metrics.ConfigMapName(), c.UpdateFromMetricsConfigMap)
 	return impl
 }
 

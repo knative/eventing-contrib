@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing/pkg/apis/duck"
 	"knative.dev/pkg/apis"
 )
@@ -50,6 +51,22 @@ func (s *PrometheusSourceStatus) GetCondition(t apis.ConditionType) *apis.Condit
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (s *PrometheusSourceStatus) InitializeConditions() {
 	PrometheusCondSet.Manage(s).InitializeConditions()
+}
+
+// MarkSinkWarnDeprecated sets the condition that the source has a sink configured and warns ref is deprecated.
+func (s *PrometheusSourceStatus) MarkSinkWarnRefDeprecated(uri string) {
+	s.SinkURI = uri
+	if len(uri) > 0 {
+		c := apis.Condition{
+			Type:     PrometheusConditionSinkProvided,
+			Status:   corev1.ConditionTrue,
+			Severity: apis.ConditionSeverityError,
+			Message:  "Using deprecated object ref fields when specifying spec.sink. These will be removed in a future release. Update to spec.sink.ref.",
+		}
+		PrometheusCondSet.Manage(s).SetCondition(c)
+	} else {
+		PrometheusCondSet.Manage(s).MarkUnknown(PrometheusConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+	}
 }
 
 // MarkSink sets the condition that the source has a sink configured.

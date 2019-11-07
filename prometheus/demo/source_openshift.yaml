@@ -8,6 +8,7 @@ spec:
   authTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
   caCertConfigMap: openshift-service-serving-signer-cabundle
   sink:
-    apiVersion: serving.knative.dev/v1
-    kind: Service
-    name: event-display
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: event-display

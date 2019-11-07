@@ -26,6 +26,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io/ioutil"
+	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/source"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -67,16 +69,26 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			sinkServer := httptest.NewServer(h)
 			defer sinkServer.Close()
 
+			statsReporter, _ := source.NewStatsReporter()
+
 			a := &Adapter{
-				Topics:           "topic1,topic2",
-				BootstrapServers: "server1,server2",
-				ConsumerGroup:    "group",
-				SinkURI:          sinkServer.URL,
+				config: &adapterConfig{
+					EnvConfig:        adapter.EnvConfig{
+						SinkURI:           sinkServer.URL,
+						Namespace:         "test",
+					},
+					Topics:           "topic1,topic2",
+					BootstrapServers: "server1,server2",
+					ConsumerGroup:    "group",
+					Name:             "test",
+					Net:              AdapterNet{},
+				},
 				ceClient: func() client.Client {
 					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 					return c
 				}(),
 				logger: zap.NewNop(),
+				reporter: statsReporter,
 			}
 
 			data, err := json.Marshal(map[string]string{"key": "value"})
@@ -336,18 +348,18 @@ func TestAdapterStartFailure(t *testing.T) {
 	}()
 
 	adapter := &Adapter{
-		Net: AdapterNet{
-			AdapterSASL{},
-			AdapterTLS{},
+		config: &adapterConfig{
+			EnvConfig:        adapter.EnvConfig{
+				SinkURI:           "example.com",
+				Namespace:         "test",
+			},
+			Topics:           "topic1,topic2",
+			BootstrapServers: "server1,server2",
+			ConsumerGroup:    "group",
+			Name:             "test",
+			Net:              AdapterNet{},
 		},
-		logger:           zap.NewNop(),
-		BootstrapServers: "example.com",
-		Topics:           "bla",
-		ConsumerGroup:    "my-group",
-		SinkURI:          "example.com",
-		Name:             "my-name",
-		Namespace:        "my-namespace",
 	}
 
-	_ = adapter.Start(context.TODO(), make(chan struct{}))
+	_ = adapter.Start(make(chan struct{}))
 }
