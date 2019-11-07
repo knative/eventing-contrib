@@ -121,6 +121,10 @@ const (
 	// GitHubSourceConditionEventTypesProvided has status True when the
 	// GitHubSource has been configured with event types.
 	GitHubSourceConditionEventTypesProvided apis.ConditionType = "EventTypeProvided"
+
+	// GitHubSourceReconciled has status True when the
+	// GitHubSource has been properly reconciled
+	GitHub
 )
 
 var gitHubSourceCondSet = apis.NewLivingConditionSet(
