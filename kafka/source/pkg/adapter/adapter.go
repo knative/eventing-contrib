@@ -21,6 +21,8 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/source"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,25 +33,28 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
 )
 
+const (
+	resourceGroup = "kafkasources.sources.eventing.knative.dev"
+)
+
 type AdapterSASL struct {
-	Enable   bool
-	User     string
-	Password string
+	Enable   bool `envconfig:"KAFKA_NET_SASL_ENABLE" required:"false"`
+	User     string `envconfig:"KAFKA_NET_SASL_USER" required:"false"`
+	Password string `envconfig:"KAFKA_NET_SASL_PASSWORD" required:"false"`
 }
 
 type AdapterTLS struct {
-	Enable bool
-	Cert   string
-	Key    string
-	CACert string
+	Enable bool `envconfig:"KAFKA_NET_TLS_ENABLE" required:"false"`
+	Cert   string `envconfig:"KAFKA_NET_TLS_CERT" required:"false"`
+	Key    string `envconfig:"KAFKA_NET_TLS_KEY" required:"false"`
+	CACert string `envconfig:"KAFKA_NET_TLS_CA_CERT" required:"false"`
 }
 
 type AdapterNet struct {
@@ -57,17 +62,103 @@ type AdapterNet struct {
 	TLS  AdapterTLS
 }
 
-type Adapter struct {
-	BootstrapServers string
-	Topics           string
-	ConsumerGroup    string
+type adapterConfig struct {
+	adapter.EnvConfig
+
+	BootstrapServers string `envconfig:"KAFKA_BOOTSTRAP_SERVERS" required:"true"`
+	Topics           string `envconfig:"KAFKA_TOPICS" required:"true"`
+	ConsumerGroup    string `envconfig:"KAFKA_CONSUMER_GROUP" required:"true"`
+	Name             string `envconfig:"NAME" required:"true"`
 	Net              AdapterNet
-	SinkURI          string
-	Name             string
-	Namespace        string
+}
+
+func NewEnvConfig() adapter.EnvConfigAccessor {
+	return &adapterConfig{}
+}
+
+type Adapter struct {
+	config *adapterConfig
 	ceClient         client.Client
-	logger           *zap.Logger
+	reporter  source.StatsReporter
+	logger    *zap.Logger
 	eventsPool       sync.Pool
+}
+
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient client.Client, reporter source.StatsReporter) adapter.Adapter {
+	logger := logging.FromContext(ctx).Desugar()
+	config := processed.(*adapterConfig)
+
+	// Create the events pool
+	eventsPool := sync.Pool{}
+
+	return &Adapter{
+		config:     config,
+		ceClient:   ceClient,
+		reporter:   reporter,
+		logger:     logger,
+		eventsPool: eventsPool,
+	}
+}
+
+// --------------------------------------------------------------------
+
+func (a *Adapter) Start(stopCh <-chan struct{}) error {
+	a.logger.Info("Starting with config: ",
+		zap.String("BootstrapServers", a.config.BootstrapServers),
+		zap.String("Topics", a.config.Topics),
+		zap.String("ConsumerGroup", a.config.ConsumerGroup),
+		zap.String("SinkURI", a.config.SinkURI),
+		zap.String("Name", a.config.Name),
+		zap.String("Namespace", a.config.Namespace),
+		zap.Bool("SASL", a.config.Net.SASL.Enable),
+		zap.Bool("TLS", a.config.Net.TLS.Enable))
+
+	kafkaConfig := sarama.NewConfig()
+	kafkaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
+	kafkaConfig.Version = sarama.V2_0_0_0
+	kafkaConfig.Consumer.Return.Errors = true
+	kafkaConfig.Net.SASL.Enable = a.config.Net.SASL.Enable
+	kafkaConfig.Net.SASL.User = a.config.Net.SASL.User
+	kafkaConfig.Net.SASL.Password = a.config.Net.SASL.Password
+	kafkaConfig.Net.TLS.Enable = a.config.Net.TLS.Enable
+
+	if a.config.Net.TLS.Enable {
+		tlsConfig, err := newTLSConfig(a.config.Net.TLS.Cert, a.config.Net.TLS.Key, a.config.Net.TLS.CACert)
+		if err != nil {
+			panic(err)
+		}
+		kafkaConfig.Net.TLS.Config = tlsConfig
+	}
+
+	// Start with a ceClient
+	client, err := sarama.NewClient(strings.Split(a.config.BootstrapServers, ","), kafkaConfig)
+	if err != nil {
+		panic(err)
+	}
+	defer func() { _ = client.Close() }()
+
+	// init consumer group
+	consumerGroupFactory := kafka.NewConsumerGroupFactory(client)
+	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, strings.Split(a.config.Topics, ","), a.logger, a)
+	if err != nil {
+		panic(err)
+	}
+	defer func() { _ = group.Close() }()
+
+	// Track errors
+	go func() {
+		for err := range group.Errors() {
+			a.logger.Error("An error has occurred while consuming messages occurred: ", zap.Error(err))
+		}
+	}()
+
+	for {
+		select {
+		case <-stopCh:
+			a.logger.Info("Shutting down...")
+			return nil
+		}
+	}
 }
 
 // --------------------------------------------------------------------
@@ -82,13 +173,13 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		event = poolRes.(*cloudevents.Event)
 	} else {
 		event = &cloudevents.Event{}
-		event.SetSpecVersion(cloudevents.CloudEventsVersionV03)
+		event.SetSpecVersion(cloudevents.VersionV1)
 	}
 
 	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
 	event.SetTime(msg.Timestamp)
 	event.SetType(sourcesv1alpha1.KafkaEventType)
-	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.Namespace, a.Name, msg.Topic))
+	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, msg.Topic))
 	event.SetDataContentType(cloudevents.ApplicationJSON)
 	event.SetExtension("key", string(msg.Key))
 	err := event.SetData(msg.Value)
@@ -102,7 +193,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		a.logger.Debug("Sending cloud event", zap.String("event", event.String()))
 	}
 
-	_, _, err = a.ceClient.Send(ctx, *event)
+	rctx, _, err := a.ceClient.Send(ctx, *event)
 
 	a.eventsPool.Put(event)
 
@@ -110,82 +201,16 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		return false, err // Error while sending, don't commit offset
 	}
 
+	reportArgs := &source.ReportArgs{
+		Namespace:     a.config.Namespace,
+		EventSource:   event.Source(),
+		EventType:     event.Type(),
+		Name:          a.config.Name,
+		ResourceGroup: resourceGroup,
+	}
+
+	_ = a.reporter.ReportEventCount(reportArgs, cloudevents.HTTPTransportContextFrom(rctx).StatusCode)
 	return true, nil
-}
-
-// --------------------------------------------------------------------
-
-func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
-	logger := logging.FromContext(ctx)
-	a.logger = logger.Desugar()
-
-	logger.Infow("Starting with config: ",
-		zap.String("BootstrapServers", a.BootstrapServers),
-		zap.String("Topics", a.Topics),
-		zap.String("ConsumerGroup", a.ConsumerGroup),
-		zap.String("SinkURI", a.SinkURI),
-		zap.String("Name", a.Name),
-		zap.String("Namespace", a.Namespace),
-		zap.Bool("SASL", a.Net.SASL.Enable),
-		zap.Bool("TLS", a.Net.TLS.Enable))
-
-	kafkaConfig := sarama.NewConfig()
-	kafkaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
-	kafkaConfig.Version = sarama.V2_0_0_0
-	kafkaConfig.Consumer.Return.Errors = true
-	kafkaConfig.Net.SASL.Enable = a.Net.SASL.Enable
-	kafkaConfig.Net.SASL.User = a.Net.SASL.User
-	kafkaConfig.Net.SASL.Password = a.Net.SASL.Password
-	kafkaConfig.Net.TLS.Enable = a.Net.TLS.Enable
-
-	if a.Net.TLS.Enable {
-		tlsConfig, err := newTLSConfig(a.Net.TLS.Cert, a.Net.TLS.Key, a.Net.TLS.CACert)
-		if err != nil {
-			panic(err)
-		}
-		kafkaConfig.Net.TLS.Config = tlsConfig
-	}
-
-	// Create the events pool
-	a.eventsPool = sync.Pool{}
-
-	// Start the cloud events client
-	if a.ceClient == nil {
-		var err error
-		if a.ceClient, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
-			return err
-		}
-	}
-
-	// Start with a ceClient
-	client, err := sarama.NewClient(strings.Split(a.BootstrapServers, ","), kafkaConfig)
-	if err != nil {
-		panic(err)
-	}
-	defer func() { _ = client.Close() }()
-
-	// init consumer group
-	consumerGroupFactory := kafka.NewConsumerGroupFactory(client)
-	group, err := consumerGroupFactory.StartConsumerGroup(a.ConsumerGroup, strings.Split(a.Topics, ","), logger.Desugar(), a)
-	if err != nil {
-		panic(err)
-	}
-	defer func() { _ = group.Close() }()
-
-	// Track errors
-	go func() {
-		for err := range group.Errors() {
-			logger.Error("An error has occurred while consuming messages occurred: ", zap.Error(err))
-		}
-	}()
-
-	for {
-		select {
-		case <-stopCh:
-			logger.Infow("Shutting down...")
-			return nil
-		}
-	}
 }
 
 // newTLSConfig returns a *tls.Config using the given ceClient cert, ceClient key,

@@ -19,6 +19,7 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"knative.dev/eventing/pkg/adapter"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -51,10 +52,17 @@ func BenchmarkHandle(b *testing.B) {
 	}
 
 	a := &Adapter{
-		Topics:           "topic1,topic2",
-		BootstrapServers: "server1,server2",
-		ConsumerGroup:    "group",
-		SinkURI:          sinkServer.URL,
+		config: &adapterConfig{
+			EnvConfig:        adapter.EnvConfig{
+				SinkURI:           sinkServer.URL,
+				Namespace:         "test",
+			},
+			Topics:           "topic1,topic2",
+			BootstrapServers: "server1,server2",
+			ConsumerGroup:    "group",
+			Name:             "test",
+			Net:              AdapterNet{},
+		},
 		ceClient: func() client.Client {
 			c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 			return c
