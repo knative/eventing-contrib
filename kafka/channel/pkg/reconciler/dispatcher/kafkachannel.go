@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/channel/fanout"
@@ -36,12 +37,19 @@ import (
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
+	kafkaScheme "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme"
 	kafkaclientsetinjection "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
 	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/dispatcher"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
+
+func init() {
+	// Add run types to the default Kubernetes Scheme so Events can be
+	// logged for run types.
+	_ = kafkaScheme.AddToScheme(scheme.Scheme)
+}
 
 const (
 	// ReconcilerName is the name of the reconciler.
@@ -97,6 +105,8 @@ func NewController(
 	if err != nil {
 		logger.Fatal("Unable to create kafka dispatcher", zap.Error(err))
 	}
+	logger.Info("Starting the Kafka dispatcher")
+	logger.Info("Kafka broker configuration", zap.Strings(utils.BrokerConfigMapKey, kafkaConfig.Brokers))
 
 	r := &Reconciler{
 		Base:                 reconciler.NewBase(ctx, controllerAgentName, cmw),
@@ -111,6 +121,13 @@ func NewController(
 
 	// Watch for kafka channels.
 	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
+
+	logger.Info("Starting dispatcher.")
+	go func() {
+		if err := kafkaDispatcher.Start(ctx.Done()); err != nil {
+			logger.Error("Cannot start dispatcher", zap.Error(err))
+		}
+	}()
 
 	return r.impl
 }

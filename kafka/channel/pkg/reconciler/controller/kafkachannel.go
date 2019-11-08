@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/client-go/kubernetes/scheme"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -47,6 +48,7 @@ import (
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
+	kafkaScheme "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme"
 	kafkaclientsetinjection "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
 	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
@@ -72,6 +74,12 @@ const (
 	dispatcherDeploymentName = "kafka-ch-dispatcher"
 	dispatcherServiceName    = "kafka-ch-dispatcher"
 )
+
+func init() {
+	// Add run types to the default Kubernetes Scheme so Events can be
+	// logged for run types.
+	_ = kafkaScheme.AddToScheme(scheme.Scheme)
+}
 
 // Reconciler reconciles Kafka Channels.
 type Reconciler struct {
@@ -426,7 +434,7 @@ func (r *Reconciler) createTopic(ctx context.Context, channel *v1alpha1.KafkaCha
 		ReplicationFactor: channel.Spec.ReplicationFactor,
 		NumPartitions:     channel.Spec.NumPartitions,
 	}, false)
-	if err == sarama.ErrTopicAlreadyExists {
+	if e, ok := err.(*sarama.TopicError); ok && e.Err == sarama.ErrTopicAlreadyExists {
 		return nil
 	} else if err != nil {
 		logger.Error("Error creating topic", zap.String("topic", topicName), zap.Error(err))
