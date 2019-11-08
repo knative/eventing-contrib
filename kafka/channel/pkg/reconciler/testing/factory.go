@@ -64,6 +64,7 @@ func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 		ctx, dynamicClient := fakedynamicclient.With(ctx, dynamicScheme, ls.GetAllObjects()...)
 
 		eventRecorder := record.NewFakeRecorder(maxEventBufferSize)
+		ctx = controller.WithEventRecorder(ctx, eventRecorder)
 		statsReporter := &FakeStatsReporter{}
 
 		// Set up our Controller from the fakes.

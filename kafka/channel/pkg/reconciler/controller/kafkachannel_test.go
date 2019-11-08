@@ -52,6 +52,8 @@ const (
 	systemNS              = "knative-eventing"
 	testNS                = "test-namespace"
 	kcName                = "test-kc"
+	testDispatcherDeploymentName = "test-deployment"
+	testDispatcherServiceName    = "test-service"
 	channelServiceAddress = "test-kc-kn-channel.test-namespace.svc.cluster.local"
 	brokerName            = "test-broker"
 )
@@ -308,8 +310,8 @@ func TestAllCases(t *testing.T) {
 		return &Reconciler{
 			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
 			dispatcherNamespace:      testNS,
-			dispatcherDeploymentName: dispatcherDeploymentName,
-			dispatcherServiceName:    dispatcherServiceName,
+			dispatcherDeploymentName: testDispatcherDeploymentName,
+			dispatcherServiceName:    testDispatcherServiceName,
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
@@ -413,7 +415,7 @@ func makeDeployment() *appsv1.Deployment {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: testNS,
-			Name:      dispatcherDeploymentName,
+			Name:      testDispatcherDeploymentName,
 		},
 		Status: appsv1.DeploymentStatus{},
 	}
@@ -433,7 +435,7 @@ func makeService() *corev1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: testNS,
-			Name:      dispatcherServiceName,
+			Name:      testDispatcherServiceName,
 		},
 	}
 }
@@ -456,7 +458,7 @@ func makeChannelService(nc *v1alpha1.KafkaChannel) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherServiceName, testNS, utils.GetClusterDomainName()),
+			ExternalName: fmt.Sprintf("%s.%s.svc.%s", testDispatcherServiceName, testNS, utils.GetClusterDomainName()),
 		},
 	}
 }
@@ -476,7 +478,7 @@ func makeChannelServiceNotOwnedByUs(nc *v1alpha1.KafkaChannel) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherServiceName, testNS, utils.GetClusterDomainName()),
+			ExternalName: fmt.Sprintf("%s.%s.svc.%s", testDispatcherServiceName, testNS, utils.GetClusterDomainName()),
 		},
 	}
 }
@@ -489,7 +491,7 @@ func makeEmptyEndpoints() *corev1.Endpoints {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: testNS,
-			Name:      dispatcherServiceName,
+			Name:      testDispatcherServiceName,
 		},
 	}
 }
