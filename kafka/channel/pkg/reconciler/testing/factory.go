@@ -20,19 +20,19 @@ import (
 	"context"
 	"testing"
 
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime"
-
-	fakedynamicclientset "k8s.io/client-go/dynamic/fake"
-	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
-
-	fakeclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/fake"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler"
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	logtesting "knative.dev/pkg/logging/testing"
-
+	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
+	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
+
+	fakekafkaclient "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client/fake"
 )
 
 const (
@@ -42,39 +42,39 @@ const (
 )
 
 // Ctor functions create a k8s controller with given params.
-type Ctor func(*Listers, reconciler.Options) controller.Reconciler
+type Ctor func(context.Context, *Listers, configmap.Watcher) controller.Reconciler
 
 // MakeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
-func MakeFactory(ctor Ctor) Factory {
+func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList, *FakeStatsReporter) {
 		ls := NewListers(r.Objects)
 
-		kubeClient := fakekubeclientset.NewSimpleClientset(ls.GetKubeObjects()...)
-		client := fakeclientset.NewSimpleClientset(ls.GetMessagingObjects()...)
+		ctx := context.Background()
+		ctx = logging.WithLogger(ctx, logger.Sugar())
+
+		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
+		ctx, eventingClient := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
+		ctx, client := fakekafkaclient.With(ctx, ls.GetMessagingObjects()...)
 
 		dynamicScheme := runtime.NewScheme()
 		for _, addTo := range clientSetSchemes {
 			addTo(dynamicScheme)
 		}
 
-		dynamicClient := fakedynamicclientset.NewSimpleDynamicClient(dynamicScheme, ls.GetAllObjects()...)
+		ctx, dynamicClient := fakedynamicclient.With(ctx, dynamicScheme, ls.GetAllObjects()...)
+
 		eventRecorder := record.NewFakeRecorder(maxEventBufferSize)
+		ctx = controller.WithEventRecorder(ctx, eventRecorder)
 		statsReporter := &FakeStatsReporter{}
 
 		// Set up our Controller from the fakes.
-		c := ctor(&ls, reconciler.Options{
-			KubeClientSet:    kubeClient,
-			DynamicClientSet: dynamicClient,
-			KafkaClientSet:   client,
-			Recorder:         eventRecorder,
-			//StatsReporter:    statsReporter,
-			Logger: logtesting.TestLogger(t),
-		})
+		c := ctor(ctx, &ls, configmap.NewStaticWatcher())
 
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
 			client.PrependReactor("*", "*", reactor)
 			dynamicClient.PrependReactor("*", "*", reactor)
+			eventingClient.PrependReactor("*", "*", reactor)
 		}
 
 		// Validate all Create operations through the eventing client.

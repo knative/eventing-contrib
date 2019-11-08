@@ -23,11 +23,6 @@ import (
 	"reflect"
 	"time"
 
-	"knative.dev/pkg/apis"
-
-	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
-	"knative.dev/eventing/pkg/reconciler/names"
-
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
@@ -36,18 +31,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
-	appsv1informers "k8s.io/client-go/informers/apps/v1"
-	corev1informers "k8s.io/client-go/informers/core/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
-	messaginginformers "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/messaging/v1alpha1"
-	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
 	"knative.dev/eventing/pkg/logging"
+	"knative.dev/eventing/pkg/reconciler"
+	"knative.dev/eventing/pkg/reconciler/names"
+	"knative.dev/pkg/apis"
+	"knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
+	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
+	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
+	kafkaScheme "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme"
+	kafkaclientsetinjection "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
+	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
 
 const (
@@ -64,7 +70,16 @@ const (
 	channelReconciled         = "ChannelReconciled"
 	channelReconcileFailed    = "ChannelReconcileFailed"
 	channelUpdateStatusFailed = "ChannelUpdateStatusFailed"
+
+	dispatcherDeploymentName = "kafka-ch-dispatcher"
+	dispatcherServiceName    = "kafka-ch-dispatcher"
 )
+
+func init() {
+	// Add run types to the default Kubernetes Scheme so Events can be
+	// logged for run types.
+	_ = kafkaScheme.AddToScheme(scheme.Scheme)
+}
 
 // Reconciler reconciles Kafka Channels.
 type Reconciler struct {
@@ -74,7 +89,8 @@ type Reconciler struct {
 	dispatcherDeploymentName string
 	dispatcherServiceName    string
 
-	kafkaConfig *utils.KafkaConfig
+	kafkaConfig    *utils.KafkaConfig
+	kafkaClientSet kafkaclientset.Interface
 
 	// Using a shared kafkaClusterAdmin does not work currently because of an issue with
 	// Shopify/sarama, see https://github.com/Shopify/sarama/issues/1162.
@@ -102,33 +118,43 @@ var _ cache.ResourceEventHandler = (*Reconciler)(nil)
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
 func NewController(
-	opt reconciler.Options,
-	kafkaConfig *utils.KafkaConfig,
-	dispatcherNamespace string,
-	dispatcherDeploymentName string,
-	dispatcherServiceName string,
-	kafkachannelInformer messaginginformers.KafkaChannelInformer,
-	deploymentInformer appsv1informers.DeploymentInformer,
-	serviceInformer corev1informers.ServiceInformer,
-	endpointsInformer corev1informers.EndpointsInformer,
+	ctx context.Context,
+	cmw configmap.Watcher,
 ) *controller.Impl {
 
+	logger := logging.FromContext(ctx)
+
+	kafkaConfig, err := utils.GetKafkaConfig("/etc/config-kafka")
+	if err != nil {
+		logger.Fatal("Error loading kafka config", zap.Error(err))
+	}
+
+	kafkaChannelInformer := kafkachannel.Get(ctx)
+	deploymentInformer := deployment.Get(ctx)
+	endpointsInformer := endpoints.Get(ctx)
+	serviceInformer := service.Get(ctx)
+
+	kafkaChannelClientSet := kafkaclientsetinjection.Get(ctx)
+
+	dispatcherNamespace := system.Namespace()
+
 	r := &Reconciler{
-		Base:                     reconciler.NewBase(opt, controllerAgentName),
+		Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
 		dispatcherNamespace:      dispatcherNamespace,
 		dispatcherDeploymentName: dispatcherDeploymentName,
 		dispatcherServiceName:    dispatcherServiceName,
 		kafkaConfig:              kafkaConfig,
-		kafkachannelLister:       kafkachannelInformer.Lister(),
-		kafkachannelInformer:     kafkachannelInformer.Informer(),
+		kafkachannelLister:       kafkaChannelInformer.Lister(),
+		kafkachannelInformer:     kafkaChannelInformer.Informer(),
 		deploymentLister:         deploymentInformer.Lister(),
 		serviceLister:            serviceInformer.Lister(),
 		endpointsLister:          endpointsInformer.Lister(),
+		kafkaClientSet:           kafkaChannelClientSet,
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
 	r.Logger.Info("Setting up event handlers")
-	kafkachannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
+	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
 
 	// Set up watches for dispatcher resources we care about, since any changes to these
 	// resources will affect our Channels. So, set up a watch here, that will cause
@@ -230,7 +256,7 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 			return err
 		}
 		removeFinalizer(kc)
-		_, err := r.KafkaClientSet.MessagingV1alpha1().KafkaChannels(kc.Namespace).Update(kc)
+		_, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(kc.Namespace).Update(kc)
 		return err
 	}
 
@@ -341,7 +367,7 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alp
 			}
 			svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Create(svc)
 			if err != nil {
-				logger.Error("Failed to create the channel service", zap.Error(err))
+				logger.Error("simpleFailed to create the channel service", zap.Error(err))
 				return nil, err
 			}
 			return svc, nil
@@ -372,7 +398,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaCh
 	existing := kc.DeepCopy()
 	existing.Status = desired.Status
 
-	new, err := r.KafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
+	new, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
 	if err == nil && becomesReady {
 		duration := time.Since(new.ObjectMeta.CreationTimestamp.Time)
 		r.Logger.Infof("KafkaChannel %q became ready after %v", kc.Name, duration)
@@ -408,7 +434,7 @@ func (r *Reconciler) createTopic(ctx context.Context, channel *v1alpha1.KafkaCha
 		ReplicationFactor: channel.Spec.ReplicationFactor,
 		NumPartitions:     channel.Spec.NumPartitions,
 	}, false)
-	if err == sarama.ErrTopicAlreadyExists {
+	if e, ok := err.(*sarama.TopicError); ok && e.Err == sarama.ErrTopicAlreadyExists {
 		return nil
 	} else if err != nil {
 		logger.Error("Error creating topic", zap.String("topic", topicName), zap.Error(err))
@@ -452,7 +478,7 @@ func (r *Reconciler) ensureFinalizer(channel *v1alpha1.KafkaChannel) error {
 		return err
 	}
 
-	_, err = r.KafkaClientSet.MessagingV1alpha1().KafkaChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
+	_, err = r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
 	return err
 }
 
