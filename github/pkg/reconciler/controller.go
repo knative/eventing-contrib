@@ -30,6 +30,8 @@ import (
 	githubinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource"
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
+	serviceclient "knative.dev/serving/pkg/client/injection/client"
+	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
 
 	//knative.dev/eventing imports
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
@@ -56,9 +58,12 @@ func NewController(
 	githubInformer := githubinformer.Get(ctx)
 	eventTypeInformer := eventtypeinformer.Get(ctx)
 	deploymentInformer := deploymentinformer.Get(ctx)
+	serviceInformer := kserviceinformer.Get(ctx)
 
 	r := &Reconciler{
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
+		servingLister:       serviceInformer.Lister(),
+		servingClientSet:    serviceclient.Get(ctx),
 		githubClientSet:     githubclient.Get(ctx),
 		githubLister:        githubInformer.Lister(),
 		deploymentLister:    deploymentInformer.Lister(),
@@ -73,6 +78,11 @@ func NewController(
 	r.Logger.Info("Setting up GitHub event handlers")
 
 	githubInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+
+	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitHubSource")),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitHubSource")),

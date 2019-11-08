@@ -39,10 +39,15 @@ import (
 	"k8s.io/client-go/tools/cache"
 	//	"k8s.io/client-go/tools/record"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	//	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	//knative.dev/serving imports
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
+	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
 
 	//knative.dev/eventing-contrib imports
 	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
@@ -79,14 +84,20 @@ var (
 type Reconciler struct {
 	*reconciler.Base
 
-	githubClientSet     clientset.Interface
+	githubClientSet clientset.Interface
+	githubLister    listers.GitHubSourceLister
+
+	servingClientSet servingclientset.Interface
+	servingLister    servinglisters.ServiceLister
+
 	receiveAdapterImage string
 	eventTypeLister     eventinglisters.EventTypeLister
-	githubLister        listers.GitHubSourceLister
-	sinkResolver        *resolver.URIResolver
-	deploymentLister    appsv1listers.DeploymentLister
-	loggingContext      context.Context
-	loggingConfig       *logging.Config
+
+	deploymentLister appsv1listers.DeploymentLister
+	sinkResolver     *resolver.URIResolver
+
+	loggingContext context.Context
+	loggingConfig  *logging.Config
 
 	webhookClient webhookClient
 }
@@ -206,7 +217,7 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		return err
 	}
 
-	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionReady)
+	routeCondition := ksvc.Status.GetCondition(servingv1.ServiceConditionReady)
 	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && ksvc.Status.URL != nil {
 		receiveAdapterDomain := ksvc.Status.URL.Host
 		// TODO: Mark Deployed for the ksvc
@@ -325,7 +336,7 @@ func (r *Reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 
 func (r *Reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
 	secret := &corev1.Secret{}
-	err := r.githubClientSet.Get(ctx, client.ObjectKey{Namespace: namespace, Name: secretKeySelector.Name}, secret)
+	secret, err := r.KubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -353,31 +364,21 @@ func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 	return owner, repo, nil
 }
 
-func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {
-	list := &servingv1alpha1.ServiceList{}
-	lo := &client.ListOptions{
-		Namespace:     source.Namespace,
-		LabelSelector: labels.Everything(),
-		// TODO this is here because the fake client needs it.
-		// Remove this when it's no longer needed.
-		Raw: &metav1.ListOptions{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: servingv1alpha1.SchemeGroupVersion.String(),
-				Kind:       "Service",
-			},
-		},
+func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1.Service, error) {
+	listOptions := &metav1.ListOptions{
+		LabelSelector: labels.Everything().String(),
 	}
-	err := r.githubClientSet.List(ctx, list, lo)
+	serviceList, err := r.servingClientSet.ServingV1().Services(source.Namespace).List(*listOptions)
 	if err != nil {
 		return nil, err
 	}
-	for _, ksvc := range list.Items {
+	for _, ksvc := range serviceList.Items {
 		if metav1.IsControlledBy(&ksvc, source) {
 			//TODO if there are >1 controlled, delete all but first?
 			return &ksvc, nil
 		}
 	}
-	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
+	return nil, apierrors.NewNotFound(servingv1.Resource("services"), "")
 }
 
 func (r *Reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
