@@ -24,7 +24,6 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
-	"knative.dev/pkg/webhook"
 )
 
 // +genclient
@@ -49,7 +48,6 @@ type KafkaChannel struct {
 var _ apis.Validatable = (*KafkaChannel)(nil)
 var _ apis.Defaultable = (*KafkaChannel)(nil)
 var _ runtime.Object = (*KafkaChannel)(nil)
-var _ webhook.GenericCRD = (*KafkaChannel)(nil)
 
 // KafkaChannelSpec defines the specification for a KafkaChannel.
 type KafkaChannelSpec struct {

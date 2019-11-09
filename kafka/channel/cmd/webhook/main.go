@@ -17,139 +17,60 @@ package main
 
 import (
 	"context"
-	"flag"
-	"log"
-	"strconv"
-	"time"
 
-	"github.com/kelseyhightower/envconfig"
-	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	messagingv1alpha1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	"knative.dev/eventing/pkg/logconfig"
 	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/logging/logkey"
-	"knative.dev/pkg/metrics"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
-	"knative.dev/pkg/system"
 	"knative.dev/pkg/webhook"
+	"knative.dev/pkg/webhook/certificates"
+	"knative.dev/pkg/webhook/resourcesemantics"
 )
 
-const (
-	component = "kafkachannel_webhook"
-)
-
-type envConfig struct {
-	RegistrationDelayTime string `envconfig:"REG_DELAY_TIME" required:"false"`
-}
-
-func getRegistrationDelayTime(rdt string) time.Duration {
-	var RegistrationDelay time.Duration
-
-	if rdt != "" {
-		rdtime, err := strconv.ParseInt(rdt, 10, 64)
-		if err != nil {
-			log.Fatalf("Error ParseInt: %v", err)
-		}
-
-		RegistrationDelay = time.Duration(rdtime)
-	}
-
-	return RegistrationDelay
-}
-
-func main() {
-	flag.Parse()
-	// Read the logging config and setup a logger.
-	cm, err := configmap.Load("/etc/config-logging")
-	if err != nil {
-		log.Fatalf("Error loading logging configuration: %v", err)
-	}
-	config, err := logging.NewConfigFromMap(cm)
-	if err != nil {
-		log.Fatalf("Error parsing logging configuration: %v", err)
-	}
-	logger, atomicLevel := logging.NewLoggerFromConfig(config, logconfig.WebhookName())
-	defer flush(logger)
-	logger = logger.With(zap.String(logkey.ControllerType, logconfig.WebhookName()))
-
-	logger.Infow("Starting the Kafka Messaging Webhook")
-
-	// set up signals so we handle the first shutdown signal gracefully
-	stopCh := signals.SetupSignalHandler()
-
-	clusterConfig, err := rest.InClusterConfig()
-	if err != nil {
-		logger.Fatalw("Failed to get in cluster config", zap.Error(err))
-	}
-
-	kubeClient, err := kubernetes.NewForConfig(clusterConfig)
-	if err != nil {
-		logger.Fatalw("Failed to get the client set", zap.Error(err))
-	}
-
-	// Watch the logging config map and dynamically update logging levels.
-	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.Namespace())
-
-	configMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.WebhookName()))
-
-	// Watch the observability config map
-	configMapWatcher.Watch(metrics.ConfigMapName(), metrics.UpdateExporterFromConfigMap(component, logger))
-
-	stats, err := webhook.NewStatsReporter()
-	if err != nil {
-		logger.Fatalw("failed to initialize the stats reporter", zap.Error(err))
-	}
-
-	var env envConfig
-	if err := envconfig.Process("", &env); err != nil {
-		logger.Fatalw("Failed to process env var", zap.Error(err))
-	}
-	registrationDelay := getRegistrationDelayTime(env.RegistrationDelayTime)
-
-	options := webhook.ControllerOptions{
-		ServiceName:       logconfig.WebhookName(),
-		Namespace:         system.Namespace(),
-		Port:              8443,
-		SecretName:        "messaging-webhook-certs",
-		StatsReporter:     stats,
-		RegistrationDelay: registrationDelay * time.Second,
-
-		ResourceMutatingWebhookName:     "webhook.kafka.messaging.knative.dev",
-		ResourceAdmissionControllerPath: "/",
-	}
-
-	resourceHandlers := map[schema.GroupVersionKind]webhook.GenericCRD{
-		// For group messaging.knative.dev
-		messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
-	}
-
+func NewResourceAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
 	// Decorate contexts with the current state of the config.
+	// store := defaultconfig.NewStore(logging.FromContext(ctx).Named("config-store"))
+	// store.WatchConfigs(cmw)
 	ctxFunc := func(ctx context.Context) context.Context {
-		// TODO: implement upgrades when eventing needs it:
-		//  return v1beta1.WithUpgradeViaDefaulting(store.ToContext(ctx))
+		// return v1.WithUpgradeViaDefaulting(store.ToContext(ctx))
 		return ctx
 	}
 
-	resourceAdmissionController := webhook.NewResourceAdmissionController(resourceHandlers, options, true)
-	admissionControllers := map[string]webhook.AdmissionController{
-		options.ResourceAdmissionControllerPath: resourceAdmissionController,
-	}
+	return resourcesemantics.NewAdmissionController(ctx,
+		// Name of the resource webhook.
+		"webhook.kafka.messaging.knative.dev",
 
-	controller, err := webhook.New(kubeClient, options, admissionControllers, logger, ctxFunc)
-	if err != nil {
-		logger.Fatalw("Failed to create the Kafka admission controller", zap.Error(err))
-	}
-	if err = controller.Run(stopCh); err != nil {
-		logger.Errorw("controller.Run() failed", zap.Error(err))
-	}
-	logger.Infow("Kafka webhook stopping")
+		// The path on which to serve the webhook.
+		"/",
+
+		// The resources to validate and default.
+		map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
+			// For group messaging.knative.dev
+			messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
+		},
+
+		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
+		ctxFunc,
+
+		// Whether to disallow unknown fields.
+		true,
+	)
 }
 
-func flush(logger *zap.SugaredLogger) {
-	_ = logger.Sync()
-	metrics.FlushExporter()
+func main() {
+	// Set up a signal context with our webhook options
+	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
+		ServiceName: logconfig.WebhookName(),
+		Port:        8443,
+		SecretName:  "messaging-webhook-certs",
+	})
+
+	sharedmain.MainWithContext(ctx, "kafkachannel_webhook",
+		certificates.NewController,
+		NewResourceAdmissionController,
+		// TODO(mattmoor): Support config validation in eventing-contrib.
+	)
 }

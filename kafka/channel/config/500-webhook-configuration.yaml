@@ -26,4 +26,13 @@ webhooks:
       name: kafka-webhook
       namespace: knative-eventing
   failurePolicy: Fail
-  name: webhook.kafka.eventing.knative.dev
+  name: webhook.kafka.messaging.knative.dev
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: messaging-webhook-certs
+  namespace: knative-eventing
+  labels:
+    contrib.eventing.knative.dev/release: devel
+# The data is populated at install time.

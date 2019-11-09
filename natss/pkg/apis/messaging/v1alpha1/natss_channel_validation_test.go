@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"knative.dev/pkg/webhook"
+	"knative.dev/pkg/webhook/resourcesemantics"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
@@ -29,7 +29,7 @@ import (
 
 func TestNatssChannelValidation(t *testing.T) {
 	testCases := map[string]struct {
-		cr   webhook.GenericCRD
+		cr   resourcesemantics.GenericCRD
 		want *apis.FieldError
 	}{
 		"empty spec": {

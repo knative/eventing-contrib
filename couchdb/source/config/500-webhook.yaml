@@ -50,11 +50,4 @@ spec:
         ports:
           - containerPort: 9090
             name: metrics
-        volumeMounts:
-        - name: config-logging
-          mountPath: /etc/config-logging
         # TODO set proper resource limits.
-      volumes:
-        - name: config-logging
-          configMap:
-            name: config-logging

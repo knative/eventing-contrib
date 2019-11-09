@@ -52,7 +52,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "release-0.10"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/go-kivik/kivik"

@@ -24,7 +24,6 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
-	"knative.dev/pkg/webhook"
 )
 
 // +genclient
@@ -49,7 +48,6 @@ type NatssChannel struct {
 var _ apis.Validatable = (*NatssChannel)(nil)
 var _ apis.Defaultable = (*NatssChannel)(nil)
 var _ runtime.Object = (*NatssChannel)(nil)
-var _ webhook.GenericCRD = (*NatssChannel)(nil)
 
 // NatssChannelSpec defines the specification for a NatssChannel.
 type NatssChannelSpec struct {
