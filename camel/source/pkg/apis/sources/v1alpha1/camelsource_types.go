@@ -24,7 +24,7 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -73,7 +73,7 @@ type CamelSourceSpec struct {
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
-	Sink *apisv1alpha1.Destination `json:"sink,omitempty"`
+	Sink *duckv1beta1.Destination `json:"sink,omitempty"`
 
 	// CloudEventOverrides defines overrides to control the output format and
 	// modifications of the event sent to the sink.

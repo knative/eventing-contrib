@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -80,7 +80,7 @@ type PrometheusSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a host
 	// name to use as the sink.
 	// +optional
-	Sink *apisv1alpha1.Destination `json:"sink,omitempty"`
+	Sink *duckv1beta1.Destination `json:"sink,omitempty"`
 }
 
 // GetGroupVersionKind returns the GroupVersionKind.
