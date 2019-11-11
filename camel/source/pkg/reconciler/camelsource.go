@@ -18,6 +18,7 @@ package reconciler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -30,12 +31,15 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
 	"knative.dev/eventing-contrib/pkg/controller/sdk"
-	"knative.dev/eventing-contrib/pkg/controller/sinks"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/resolver"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -59,17 +63,25 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationPlatform{}, &camelv1alpha1.IntegrationPlatformList{})
 	metav1.AddToGroupVersion(mgr.GetScheme(), camelv1alpha1.SchemeGroupVersion)
 
+	ctx := context.Background()
+	dynamicClient, err := dynamic.NewForConfig(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+	ctx = context.WithValue(ctx, dynamicclient.Key{}, dynamicClient)
+
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.CamelSource{},
 		Owns:      []runtime.Object{&camelv1alpha1.Integration{}},
 		Reconciler: &reconciler{
-			recorder: mgr.GetEventRecorderFor(controllerAgentName),
-			scheme:   mgr.GetScheme(),
+			recorder:     mgr.GetEventRecorderFor(controllerAgentName),
+			scheme:       mgr.GetScheme(),
+			sinkResolver: resolver.NewURIResolver(ctx, func(types.NamespacedName) {}),
 		},
 	}
 
-	err := p.Add(mgr, logger)
+	err = p.Add(mgr, logger)
 	if err != nil {
 		log.Println("Camel K cluster resources not installed correctly. Follow installation instructions at: https://github.com/apache/camel-k")
 	}
@@ -77,9 +89,10 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 }
 
 type reconciler struct {
-	client   client.Client
-	scheme   *runtime.Scheme
-	recorder record.EventRecorder
+	client       client.Client
+	scheme       *runtime.Scheme
+	recorder     record.EventRecorder
+	sinkResolver *resolver.URIResolver
 }
 
 // A CamelSource delegates the task of starting up the required containers to a Camel K Integration resource, that
@@ -113,12 +126,34 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	source.Status.ObservedGeneration = source.Generation
 	source.Status.InitializeConditions()
 
-	sinkURI, err := sinks.GetSinkURI(ctx, r.client, source.Spec.Sink, source.Namespace)
+	if source.Spec.Sink == nil {
+		source.Status.MarkNoSink("SinkMissing", "")
+		return fmt.Errorf("spec.sink missing")
+	}
+
+	dest := source.Spec.Sink.DeepCopy()
+	// fill optional data in destination
+	if dest.Ref != nil {
+		if dest.Ref.Namespace == "" {
+			dest.Ref.Namespace = source.GetNamespace()
+		}
+	} else if dest.DeprecatedName != "" && dest.DeprecatedNamespace == "" {
+		dest.DeprecatedNamespace = source.GetNamespace()
+	}
+
+	sinkURI, err := r.sinkResolver.URIFromDestination(*dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return err
 	}
-	source.Status.MarkSink(sinkURI)
+
+	if dest.DeprecatedAPIVersion != "" &&
+		dest.DeprecatedKind != "" &&
+		dest.DeprecatedName != "" {
+		source.Status.MarkSinkWarnRefDeprecated(sinkURI)
+	} else {
+		source.Status.MarkSink(sinkURI)
+	}
 
 	integration, err := r.reconcileIntegration(ctx, source, sinkURI)
 	if err != nil {
@@ -140,10 +175,6 @@ func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 		Namespace: source.Namespace,
 		Source:    source.Spec.Source,
 		SinkURL:   sinkURI,
-		SinkType: metav1.TypeMeta{
-			Kind:       source.Spec.Sink.Kind,
-			APIVersion: source.Spec.Sink.APIVersion,
-		},
 	}
 	if source.Spec.CloudEventOverrides != nil {
 		args.Overrides = make(map[string]string)
