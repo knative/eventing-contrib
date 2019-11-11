@@ -36,7 +36,7 @@ import (
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
 	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	"knative.dev/pkg/apis/v1alpha1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/pkg/resolver"
 )
@@ -309,7 +309,7 @@ func getSource() *sourcesv1alpha1.CamelSource {
 					},
 				},
 			},
-			Sink: &v1alpha1.Destination{
+			Sink: &duckv1beta1.Destination{
 				Ref: &corev1.ObjectReference{
 					Name:       addressableName,
 					Kind:       addressableKind,
@@ -343,7 +343,7 @@ func getCamelKSource() *sourcesv1alpha1.CamelSource {
 					},
 				},
 			},
-			Sink: &v1alpha1.Destination{
+			Sink: &duckv1beta1.Destination{
 				Ref: &corev1.ObjectReference{
 					Name:       addressableName,
 					Kind:       addressableKind,
@@ -380,7 +380,7 @@ func getCamelKFlowSource() *sourcesv1alpha1.CamelSource {
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
 				Flow: &flow,
 			},
-			Sink: &v1alpha1.Destination{
+			Sink: &duckv1beta1.Destination{
 				Ref: &corev1.ObjectReference{
 					Name:       addressableName,
 					Kind:       addressableKind,
@@ -422,7 +422,7 @@ func makeContext(namespace string, image string) *camelv1alpha1.IntegrationKit {
 			GenerateName: "ctx-",
 			Namespace:    namespace,
 			Labels: map[string]string{
-				"app": "camel-k",
+				"app":                       "camel-k",
 				"camel.apache.org/kit.type": camelv1alpha1.IntegrationKitTypeExternal,
 			},
 		},

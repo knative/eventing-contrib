@@ -1781,7 +1781,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:84f2e54ec060eeaa50356aad6bf716f0291de6161eed37bba6d3920e8714d1e2"
+  digest = "1:74260e08937b041eb94dcde98e7961126dc5e4f032b85b3c3d1fc2759bafb68f"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1789,6 +1789,8 @@
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/eventing",
     "pkg/apis/eventing/v1alpha1",
+    "pkg/apis/flows",
+    "pkg/apis/flows/v1alpha1",
     "pkg/apis/messaging",
     "pkg/apis/messaging/v1alpha1",
     "pkg/apis/sources",
@@ -1801,6 +1803,8 @@
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/flows/v1alpha1",
+    "pkg/client/clientset/versioned/typed/flows/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
@@ -1808,6 +1812,8 @@
     "pkg/client/informers/externalversions",
     "pkg/client/informers/externalversions/eventing",
     "pkg/client/informers/externalversions/eventing/v1alpha1",
+    "pkg/client/informers/externalversions/flows",
+    "pkg/client/informers/externalversions/flows/v1alpha1",
     "pkg/client/informers/externalversions/internalinterfaces",
     "pkg/client/informers/externalversions/messaging",
     "pkg/client/informers/externalversions/messaging/v1alpha1",
@@ -1818,6 +1824,7 @@
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
     "pkg/client/listers/eventing/v1alpha1",
+    "pkg/client/listers/flows/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
@@ -1847,11 +1854,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "b65b7a16cc0ea8e9361143be4ee8767ef52e44b9"
+  revision = "d5d49c26080e997add856ea51183d43fb9872651"
 
 [[projects]]
   branch = "master"
-  digest = "1:c8e0ec560560e16616821b3999e905e6b9085c832b5b57216905711e63679d19"
+  digest = "1:44f1a2f80e6fde07108ca264172aaf06870c8504da8e58ad2e8f8cf0c14f7032"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1864,7 +1871,6 @@
     "apis/istio/authentication/v1alpha1",
     "apis/istio/common/v1alpha1",
     "apis/istio/v1alpha3",
-    "apis/v1alpha1",
     "changeset",
     "client/clientset/versioned",
     "client/clientset/versioned/fake",
@@ -1928,7 +1934,7 @@
     "webhook/resourcesemantics",
   ]
   pruneopts = "T"
-  revision = "d4ce00139499bd3ea11cdb18ef20a41bdb248245"
+  revision = "e4e8788a2c5f8af852c5de3de61c267ac4609900"
 
 [[projects]]
   branch = "master"
@@ -2155,7 +2161,6 @@
     "knative.dev/pkg/apis/duck/v1",
     "knative.dev/pkg/apis/duck/v1alpha1",
     "knative.dev/pkg/apis/duck/v1beta1",
-    "knative.dev/pkg/apis/v1alpha1",
     "knative.dev/pkg/client/clientset/versioned/fake",
     "knative.dev/pkg/client/injection/kube/client/fake",
     "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment",
