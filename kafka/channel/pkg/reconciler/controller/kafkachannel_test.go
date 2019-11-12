@@ -49,13 +49,13 @@ import (
 )
 
 const (
-	systemNS              = "knative-eventing"
-	testNS                = "test-namespace"
-	kcName                = "test-kc"
+	systemNS                     = "knative-eventing"
+	testNS                       = "test-namespace"
+	kcName                       = "test-kc"
 	testDispatcherDeploymentName = "test-deployment"
 	testDispatcherServiceName    = "test-service"
-	channelServiceAddress = "test-kc-kn-channel.test-namespace.svc.cluster.local"
-	brokerName            = "test-broker"
+	channelServiceAddress        = "test-kc-kn-channel.test-namespace.svc.cluster.local"
+	brokerName                   = "test-broker"
 )
 
 var (
@@ -306,7 +306,6 @@ func TestAllCases(t *testing.T) {
 
 	table.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
-
 		return &Reconciler{
 			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
 			dispatcherNamespace:      testNS,
@@ -330,39 +329,38 @@ func TestAllCases(t *testing.T) {
 func TestTopicExists(t *testing.T) {
 	kcKey := testNS + "/" + kcName
 	row := TableRow{
-			Name: "Works, topic already exists",
-			Key:  kcKey,
-			Objects: []runtime.Object{
-				makeReadyDeployment(),
-				makeService(),
-				makeReadyEndpoints(),
-				reconcilekafkatesting.NewKafkaChannel(kcName, testNS,
-					reconcilekafkatesting.WithKafkaFinalizer(finalizerName)),
-			},
-			WantErr: false,
-			WantCreates: []runtime.Object{
-				makeChannelService(reconcilekafkatesting.NewKafkaChannel(kcName, testNS)),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-				Object: reconcilekafkatesting.NewKafkaChannel(kcName, testNS,
-					reconcilekafkatesting.WithInitKafkaChannelConditions,
-					reconcilekafkatesting.WithKafkaFinalizer(finalizerName),
-					reconcilekafkatesting.WithKafkaChannelTopicReady(),
-					reconcilekafkatesting.WithKafkaChannelDeploymentReady(),
-					reconcilekafkatesting.WithKafkaChannelServiceReady(),
-					reconcilekafkatesting.WithKafkaChannelEndpointsReady(),
-					reconcilekafkatesting.WithKafkaChannelChannelServiceReady(),
-					reconcilekafkatesting.WithKafkaChannelAddress(channelServiceAddress),
-				),
-			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, channelReconciled, "KafkaChannel reconciled"),
-			},
+		Name: "Works, topic already exists",
+		Key:  kcKey,
+		Objects: []runtime.Object{
+			makeReadyDeployment(),
+			makeService(),
+			makeReadyEndpoints(),
+			reconcilekafkatesting.NewKafkaChannel(kcName, testNS,
+				reconcilekafkatesting.WithKafkaFinalizer(finalizerName)),
+		},
+		WantErr: false,
+		WantCreates: []runtime.Object{
+			makeChannelService(reconcilekafkatesting.NewKafkaChannel(kcName, testNS)),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: reconcilekafkatesting.NewKafkaChannel(kcName, testNS,
+				reconcilekafkatesting.WithInitKafkaChannelConditions,
+				reconcilekafkatesting.WithKafkaFinalizer(finalizerName),
+				reconcilekafkatesting.WithKafkaChannelTopicReady(),
+				reconcilekafkatesting.WithKafkaChannelDeploymentReady(),
+				reconcilekafkatesting.WithKafkaChannelServiceReady(),
+				reconcilekafkatesting.WithKafkaChannelEndpointsReady(),
+				reconcilekafkatesting.WithKafkaChannelChannelServiceReady(),
+				reconcilekafkatesting.WithKafkaChannelAddress(channelServiceAddress),
+			),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeNormal, channelReconciled, "KafkaChannel reconciled"),
+		},
 	}
 	defer logtesting.ClearAll()
 
 	row.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
-
 
 		return &Reconciler{
 			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
@@ -378,16 +376,16 @@ func TestTopicExists(t *testing.T) {
 			deploymentLister:     listers.GetDeploymentLister(),
 			serviceLister:        listers.GetServiceLister(),
 			endpointsLister:      listers.GetEndpointsLister(),
-			kafkaClusterAdmin:    &mockClusterAdmin{
+			kafkaClusterAdmin: &mockClusterAdmin{
 				mockCreateTopicFunc: func(topic string, detail *sarama.TopicDetail, validateOnly bool) error {
 					errMsg := sarama.ErrTopicAlreadyExists.Error()
 					return &sarama.TopicError{
-						Err: sarama.ErrTopicAlreadyExists,
+						Err:    sarama.ErrTopicAlreadyExists,
 						ErrMsg: &errMsg,
 					}
 				},
 			},
-			kafkaClientSet:       fakekafkaclient.Get(ctx),
+			kafkaClientSet: fakekafkaclient.Get(ctx),
 		}
 	}, zap.L()))
 }
