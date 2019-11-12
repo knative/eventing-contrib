@@ -22,12 +22,11 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/robfig/cron"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	"knative.dev/eventing/pkg/adapter"
 	"knative.dev/pkg/logging"
@@ -48,6 +47,7 @@ type envConfig struct {
 	PromQL          string `envconfig:"PROMETHEUS_PROM_QL" required:"true"`
 	AuthTokenFile   string `envconfig:"PROMETHEUS_AUTH_TOKEN_FILE" required:"false"`
 	CACertConfigMap string `envconfig:"PROMETHEUS_CA_CERT_CONFIG_MAP" required:"false"`
+	Schedule        string `envconfig:"PROMETHEUS_SCHEDULE" required:"true"`
 }
 
 type prometheusAdapter struct {
@@ -60,6 +60,7 @@ type prometheusAdapter struct {
 	promQL          string
 	authTokenFile   string
 	caCertConfigMap string
+	schedule        string
 	req             *http.Request
 	client          *http.Client
 }
@@ -83,6 +84,7 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 		promQL:          env.PromQL,
 		authTokenFile:   env.AuthTokenFile,
 		caCertConfigMap: env.CACertConfigMap,
+		schedule:        env.Schedule,
 	}
 
 	return a
@@ -90,7 +92,6 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 
 func (a *prometheusAdapter) Start(stopCh <-chan struct{}) error {
 	completeURL := a.serverURL + apiChunkOfURL + a.promQL
-
 	var err error
 	a.req, err = http.NewRequest(`GET`, completeURL, nil)
 	if err != nil {
@@ -128,7 +129,17 @@ func (a *prometheusAdapter) Start(stopCh <-chan struct{}) error {
 			},
 		}
 	}
-	wait.Until(a.send, 5*time.Second, stopCh)
+	sched, err := cron.ParseStandard(a.schedule)
+	if err != nil {
+		a.logger.Errorf("Unparseable schedule %s: %v", a.schedule, err)
+		return err
+	}
+
+	c := cron.New()
+	c.Schedule(sched, cron.FuncJob(a.send))
+	c.Start()
+	<-stopCh
+	c.Stop()
 	return nil
 }
 

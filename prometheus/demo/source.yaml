@@ -5,6 +5,7 @@ metadata:
 spec:
   serverURL: http://demo.robustperception.io:9090
   promQL: ALERTS
+  schedule: "* * * * *"
   sink:
     ref:
       apiVersion: serving.knative.dev/v1

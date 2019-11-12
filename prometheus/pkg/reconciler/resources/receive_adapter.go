@@ -117,6 +117,9 @@ func makeEnv(eventSource, sinkURI string, spec *v1alpha1.PrometheusSourceSpec) [
 		Name:  "PROMETHEUS_CA_CERT_CONFIG_MAP",
 		Value: spec.CACertConfigMap,
 	}, {
+		Name:  "PROMETHEUS_SCHEDULE",
+		Value: spec.Schedule,
+	}, {
 		Name: "NAMESPACE",
 		ValueFrom: &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{

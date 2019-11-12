@@ -73,6 +73,10 @@ spec:
               description: >
                 The name of the config map containing the CA certificate of the
                 Prometheus service's signer
+            schedule:
+              type: string
+              description:
+                A crontab-formatted schedule for running the PromQL query
             sink:
               anyOf:
               - type: object
@@ -120,6 +124,7 @@ spec:
           required:
               - serverURL
               - promQL
+              - schedule
               - sink
           type: object
         status:

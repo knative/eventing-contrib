@@ -77,6 +77,9 @@ type PrometheusSourceSpec struct {
 	// +optional
 	CACertConfigMap string `json:"caCertConfigMap,omitempty"`
 
+	// A crontab-formatted schedule for running the PromQL query
+	Schedule string `json:"schedule"`
+
 	// Sink is a reference to an object that will resolve to a host
 	// name to use as the sink.
 	// +optional
