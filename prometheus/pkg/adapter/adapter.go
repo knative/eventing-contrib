@@ -60,6 +60,8 @@ type prometheusAdapter struct {
 	promQL          string
 	authTokenFile   string
 	caCertConfigMap string
+	req             *http.Request
+	client          *http.Client
 }
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
@@ -87,50 +89,51 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 func (a *prometheusAdapter) Start(stopCh <-chan struct{}) error {
-	wait.Until(a.send, 5*time.Second, stopCh)
-	return nil
-}
+	completeURL := a.serverURL + apiChunkOfURL + a.promQL
 
-func (a *prometheusAdapter) send() {
-	var completeURL = a.serverURL + apiChunkOfURL + a.promQL
-
-	req, err := http.NewRequest(`GET`, completeURL, nil)
+	var err error
+	a.req, err = http.NewRequest(`GET`, completeURL, nil)
 	if err != nil {
 		a.logger.Error("HTTP request error", zap.Error(err))
-		return
+		return err
 	}
 	if a.authTokenFile != "" {
 		content, err := ioutil.ReadFile(a.authTokenFile)
 		if err != nil {
 			a.logger.Error("Error reading authentication token from "+a.authTokenFile, zap.Error(err))
-			return
+			return err
 		}
-		req.Header.Set("Authorization", "Bearer "+string(content))
+		a.req.Header.Set("Authorization", "Bearer "+string(content))
 	}
 
-	a.logger.Info(req)
+	a.logger.Info(a.req)
 
-	client := &http.Client{}
+	a.client = &http.Client{}
 
 	if a.caCertConfigMap != "" {
 		caCertFile := "/etc/" + a.caCertConfigMap + "/service-ca.crt"
 		caCert, err := ioutil.ReadFile(caCertFile)
 		if err != nil {
 			a.logger.Error("Error reading CA certificate from "+caCertFile, zap.Error(err))
-			return
+			return err
 		}
 		caCertPool := x509.NewCertPool()
 		if !caCertPool.AppendCertsFromPEM(caCert) {
 			a.logger.Error("Error parsing CA certificate from " + caCertFile)
-			return
+			return err
 		}
-		client.Transport = &http.Transport{
+		a.client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{
 				RootCAs: caCertPool,
 			},
 		}
 	}
-	resp, err := client.Do(req)
+	wait.Until(a.send, 5*time.Second, stopCh)
+	return nil
+}
+
+func (a *prometheusAdapter) send() {
+	resp, err := a.client.Do(a.req)
 	if err != nil {
 		a.logger.Error("HTTP invocation error", zap.Error(err))
 		return
@@ -139,7 +142,7 @@ func (a *prometheusAdapter) send() {
 
 	reply, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		a.logger.Error("HTTP processing error", zap.Error(err))
+		a.logger.Error("HTTP reply error", zap.Error(err))
 		return
 	}
 
