@@ -26,13 +26,14 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io/ioutil"
-	"knative.dev/eventing/pkg/adapter"
-	"knative.dev/pkg/source"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/source"
 
 	"go.uber.org/zap"
 
@@ -73,9 +74,9 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 
 			a := &Adapter{
 				config: &adapterConfig{
-					EnvConfig:        adapter.EnvConfig{
-						SinkURI:           sinkServer.URL,
-						Namespace:         "test",
+					EnvConfig: adapter.EnvConfig{
+						SinkURI:   sinkServer.URL,
+						Namespace: "test",
 					},
 					Topics:           "topic1,topic2",
 					BootstrapServers: "server1,server2",
@@ -87,7 +88,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 					return c
 				}(),
-				logger: zap.NewNop(),
+				logger:   zap.NewNop(),
 				reporter: statsReporter,
 			}
 
@@ -349,9 +350,9 @@ func TestAdapterStartFailure(t *testing.T) {
 
 	adapter := &Adapter{
 		config: &adapterConfig{
-			EnvConfig:        adapter.EnvConfig{
-				SinkURI:           "example.com",
-				Namespace:         "test",
+			EnvConfig: adapter.EnvConfig{
+				SinkURI:   "example.com",
+				Namespace: "test",
 			},
 			Topics:           "topic1,topic2",
 			BootstrapServers: "server1,server2",

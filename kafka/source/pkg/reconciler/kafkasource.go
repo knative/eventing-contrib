@@ -20,10 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"knative.dev/pkg/metrics"
 	"reflect"
 	"strings"
 	"time"
+
+	"knative.dev/pkg/metrics"
 
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
@@ -63,7 +64,7 @@ const (
 	kafkaSourceDeploymentCreated = "KafkaSourceDeploymentCreated"
 	kafkaSourceDeploymentUpdated = "KafkaSourceDeploymentUpdated"
 	kafkaSourceReconciled        = "KafkaSourceReconciled"
-	component                      = "kafkasource"
+	component                    = "kafkasource"
 )
 
 var (
@@ -81,7 +82,7 @@ type Reconciler struct {
 	deploymentLister    appsv1listers.DeploymentLister
 	loggingContext      context.Context
 	loggingConfig       *pkgLogging.Config
-	metricsConfig  *metrics.ExporterOptions
+	metricsConfig       *metrics.ExporterOptions
 }
 
 // Check that our Reconciler implements controller.Reconciler

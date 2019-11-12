@@ -18,8 +18,9 @@ package kafka
 
 import (
 	"context"
-	"knative.dev/pkg/metrics"
 	"os"
+
+	"knative.dev/pkg/metrics"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
