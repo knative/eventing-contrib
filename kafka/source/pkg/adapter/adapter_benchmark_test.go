@@ -19,13 +19,14 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"knative.dev/eventing/pkg/adapter"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	"knative.dev/eventing/pkg/adapter"
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -53,9 +54,9 @@ func BenchmarkHandle(b *testing.B) {
 
 	a := &Adapter{
 		config: &adapterConfig{
-			EnvConfig:        adapter.EnvConfig{
-				SinkURI:           sinkServer.URL,
-				Namespace:         "test",
+			EnvConfig: adapter.EnvConfig{
+				SinkURI:   sinkServer.URL,
+				Namespace: "test",
 			},
 			Topics:           "topic1,topic2",
 			BootstrapServers: "server1,server2",

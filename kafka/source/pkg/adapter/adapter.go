@@ -21,12 +21,13 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"knative.dev/eventing/pkg/adapter"
-	"knative.dev/pkg/source"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/source"
 
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 
@@ -45,13 +46,13 @@ const (
 )
 
 type AdapterSASL struct {
-	Enable   bool `envconfig:"KAFKA_NET_SASL_ENABLE" required:"false"`
+	Enable   bool   `envconfig:"KAFKA_NET_SASL_ENABLE" required:"false"`
 	User     string `envconfig:"KAFKA_NET_SASL_USER" required:"false"`
 	Password string `envconfig:"KAFKA_NET_SASL_PASSWORD" required:"false"`
 }
 
 type AdapterTLS struct {
-	Enable bool `envconfig:"KAFKA_NET_TLS_ENABLE" required:"false"`
+	Enable bool   `envconfig:"KAFKA_NET_TLS_ENABLE" required:"false"`
 	Cert   string `envconfig:"KAFKA_NET_TLS_CERT" required:"false"`
 	Key    string `envconfig:"KAFKA_NET_TLS_KEY" required:"false"`
 	CACert string `envconfig:"KAFKA_NET_TLS_CA_CERT" required:"false"`
@@ -77,11 +78,11 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 }
 
 type Adapter struct {
-	config *adapterConfig
-	ceClient         client.Client
-	reporter  source.StatsReporter
-	logger    *zap.Logger
-	eventsPool       sync.Pool
+	config     *adapterConfig
+	ceClient   client.Client
+	reporter   source.StatsReporter
+	logger     *zap.Logger
+	eventsPool sync.Pool
 }
 
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient client.Client, reporter source.StatsReporter) adapter.Adapter {

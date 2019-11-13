@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
+
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/golang/protobuf/ptypes"
 	loadastic_common "github.com/slinkydeveloper/loadastic/common"
 	"github.com/slinkydeveloper/loadastic/kafka"
 	performance_common "knative.dev/eventing/test/common/performance/common"
 	"knative.dev/eventing/test/common/performance/sender"
-	"math/rand"
-	"time"
 )
 
 func init() {
@@ -18,7 +19,7 @@ func init() {
 
 type KafkaLoadGenerator struct {
 	loadastic kafka.Loadastic
-	sender kafka.Sender
+	sender    kafka.Sender
 }
 
 func (k KafkaLoadGenerator) Warmup(pace performance_common.PaceSpec, msgSize uint) {
@@ -65,7 +66,7 @@ func NewKafkaLoadGeneratorFactory(bootstrapUrl string, topic string, minWorkers 
 			}),
 		)
 
-		return &KafkaLoadGenerator{loadastic:loadastic, sender:sender}, nil
+		return &KafkaLoadGenerator{loadastic: loadastic, sender: sender}, nil
 	}
 }
 
@@ -93,7 +94,7 @@ func generatePayloadWithType(t string) kafka.RecordPayload {
 func paceToStep(pace performance_common.PaceSpec) loadastic_common.Step {
 	return loadastic_common.Step{
 		Duration: pace.Duration,
-		Rps: uint(pace.Rps),
+		Rps:      uint(pace.Rps),
 	}
 }
 
@@ -110,6 +111,3 @@ func JsonIdExtractor(event cloudevents.Event) string {
 	var i = j["id"].(string)
 	return i
 }
-
-
-

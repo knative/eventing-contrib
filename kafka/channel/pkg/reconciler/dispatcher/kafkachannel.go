@@ -71,7 +71,7 @@ type Reconciler struct {
 
 	kafkaDispatcher *dispatcher.KafkaDispatcher
 
-	kafkaClientSet kafkaclientset.Interface
+	kafkaClientSet       kafkaclientset.Interface
 	kafkachannelLister   listers.KafkaChannelLister
 	kafkachannelInformer cache.SharedIndexInformer
 	impl                 *controller.Impl

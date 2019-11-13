@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+
 	"knative.dev/eventing/test/common/performance"
 )
 
