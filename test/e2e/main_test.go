@@ -26,15 +26,10 @@ import (
 	"knative.dev/eventing/test/common"
 )
 
-var setup = common.Setup
-var tearDown = common.TearDown
-var getChannelTypeMeta = common.GetChannelTypeMeta
-var channels eventingTest.Channels
 var channelTestRunner common.ChannelTestRunner
 
 func TestMain(m *testing.M) {
 	eventingTest.InitializeEventingFlags()
-	channels = eventingTest.EventingFlags.Channels
 	channelTestRunner = common.ChannelTestRunner{
 		ChannelFeatureMap: test.ChannelFeatureMap,
 		ChannelsToTest:    eventingTest.EventingFlags.Channels,
