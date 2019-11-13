@@ -32,35 +32,36 @@ sent to the configured sink as CloudEvents.
 
 ### OpenShift Monitoring Stack
 
-The following assumes deployment of the Prometheus Source into the default project to run
-under the default service account.
+The following assumes deployment of the Prometheus Source into the default
+project to run under the default service account.
 
 1. Setup [Knative Eventing](../DEVELOPMENT.md)
 1. Create a ConfigMap for the Service signer CA bundle and annotate it
    accordingly:
 
-``` bash
+```bash
 oc apply -f demo/openshift-service-serving-signer-cabundle.yaml
 oc annotate configmap openshift-service-serving-signer-cabundle service.beta.openshift.io/inject-cabundle=true
 ```
 
 1. Bind the cluster-monitoring-view ClusterRole to the default service account:
 
-``` bash
+```bash
 oc adm policy add-cluster-role-to-user cluster-monitoring-view system:serviceaccount:default:default
 ```
 
-1. Deploy an event-display sink for the events produced by the Prometheus source:
+1. Deploy an event-display sink for the events produced by the Prometheus
+   source:
 
-``` bash
+```bash
 oc apply -f demo/sink.yaml
 ```
 
 1. Create a CR for the Source, configured to communicate to the in-cluster
-   Prometheus server. The authTokenFile field is the conventional location
-   for the service account authentication token. The caCertConfigMap is the
-   name of the Service signer CA ConfigMap.
+   Prometheus server. The authTokenFile field is the conventional location for
+   the service account authentication token. The caCertConfigMap is the name of
+   the Service signer CA ConfigMap.
 
-``` bash
+```bash
 oc apply -f demo/source_openshift.yaml
 ```
