@@ -30,9 +30,16 @@ function upload_test_images() {
 
   # ko resolve is being used for the side-effect of publishing images,
   # so the resulting yaml produced is ignored.
-  ko resolve ${tag_option} -RBf "${image_dir}" > /dev/null
+  tmp=$(mktemp)
+  ko resolve ${tag_option} -RBf "${image_dir}" > "$tmp"
+  if [ -s "$tmp" ]; then
+    echo "ko resolve generated a zero length file"
+    return 1
+  fi
 }
 
 : ${KO_DOCKER_REPO:?"You must set 'KO_DOCKER_REPO', see DEVELOPMENT.md"}
 
+set -x
 upload_test_images $@
+set +x
