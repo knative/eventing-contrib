@@ -34,7 +34,8 @@ function upload_test_images() {
   # so the resulting yaml produced is ignored.
   tmp=$(mktemp)
   ko resolve ${tag_option} -RBf "${image_dir}" > "$tmp"
-  if [ -s "$tmp" ]; then
+  cat "$tmp"
+  if [ ! -s "$tmp" ]; then
     echo "ko resolve generated a zero length file"
     return 1
   fi
