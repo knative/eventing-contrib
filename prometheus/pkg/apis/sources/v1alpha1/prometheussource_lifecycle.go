@@ -27,6 +27,9 @@ const (
 	// PrometheusConditionReady has status True when the PrometheusSource is ready to send events.
 	PrometheusConditionReady = apis.ConditionReady
 
+	// PrometheusConditionValidSchedule has status True when the PrometheusSource has been configured with a valid schedule.
+	PrometheusConditionValidSchedule apis.ConditionType = "ValidSchedule"
+
 	// PrometheusConditionSinkProvided has status True when the PrometheusSource has been configured with a sink target.
 	PrometheusConditionSinkProvided apis.ConditionType = "SinkProvided"
 
@@ -51,6 +54,16 @@ func (s *PrometheusSourceStatus) GetCondition(t apis.ConditionType) *apis.Condit
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (s *PrometheusSourceStatus) InitializeConditions() {
 	PrometheusCondSet.Manage(s).InitializeConditions()
+}
+
+// MarkValidSchedule sets the condition that the source has a valid schedule configured.
+func (s *PrometheusSourceStatus) MarkValidSchedule() {
+	PrometheusCondSet.Manage(s).MarkTrue(PrometheusConditionValidSchedule)
+}
+
+// MarkInvalidSchedule sets the condition that the source does not have a valid schedule configured.
+func (s *PrometheusSourceStatus) MarkInvalidSchedule(reason, messageFormat string, messageA ...interface{}) {
+	PrometheusCondSet.Manage(s).MarkFalse(PrometheusConditionValidSchedule, reason, messageFormat, messageA...)
 }
 
 // MarkSinkWarnDeprecated sets the condition that the source has a sink configured and warns ref is deprecated.

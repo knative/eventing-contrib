@@ -4,8 +4,9 @@ metadata:
   name: prometheus-source
 spec:
   serverURL: http://demo.robustperception.io:9090
-  promQL: ALERTS
+  promQL: 'go_memstats_alloc_bytes{instance="demo.robustperception.io:9090",job="prometheus"}'
   schedule: "* * * * *"
+  step: 15s
   sink:
     ref:
       apiVersion: serving.knative.dev/v1

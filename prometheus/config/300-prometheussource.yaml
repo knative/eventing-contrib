@@ -62,8 +62,11 @@ spec:
                 URL of the Prometheus server to run queries against
             promQL:
               type: string
-              description:
-                The PromQL query to run against the Prometheus server
+              description: >
+                The PromQL query to run against the Prometheus server. This is a range query if
+                the step property is specified and an instant query otherwise. For a range query,
+                the start time is the previous time the query ran and the end time is now, with
+                the step property specifying the resolution step.
             authTokenFile:
               type: string
               description:
@@ -73,6 +76,18 @@ spec:
               description: >
                 The name of the config map containing the CA certificate of the
                 Prometheus service's signer
+            schedule:
+              type: string
+              description:
+                A crontab-formatted schedule for running the PromQL query
+            step:
+              type: string
+              description: >
+                Query resolution step width in duration format or float number of seconds.
+                Prometheus duration strings are of the form [0-9]+[smhdwy]. For example,
+                5m refers to a duration of 5 minutes. This is an optional property that if
+                specified, implies that promQL is a range query. Otherwise, promQL is interpreted
+                as an instant query.
             sink:
               anyOf:
               - type: object
@@ -120,6 +135,7 @@ spec:
           required:
               - serverURL
               - promQL
+              - schedule
               - sink
           type: object
         status:

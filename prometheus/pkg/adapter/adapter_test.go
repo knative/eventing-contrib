@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go"
@@ -53,9 +54,13 @@ func TestNewAdaptor(t *testing.T) {
 				EnvConfig: adapter.EnvConfig{
 					Namespace: "test-ns",
 				},
-				EventSource: "test-source",
-				ServerURL:   "http://server.url",
-				PromQL:      "prom-ql",
+				EventSource:     "test-source",
+				ServerURL:       "http://server.url",
+				PromQL:          "prom-ql",
+				AuthTokenFile:   "auth_token_file",
+				CACertConfigMap: "ca_cert_config_map",
+				Schedule:        "* * * * *",
+				Step:            "30s",
 			},
 		},
 	}
@@ -87,6 +92,93 @@ func TestNewAdaptor(t *testing.T) {
 			if diff := cmp.Diff(tc.opt.PromQL, got.promQL); diff != "" {
 				t.Errorf("unexpected promQL diff (-want, +got) = %v", diff)
 			}
+			if diff := cmp.Diff(tc.opt.AuthTokenFile, got.authTokenFile); diff != "" {
+				t.Errorf("unexpected authTokenFile diff (-want, +got) = %v", diff)
+			}
+			if diff := cmp.Diff(tc.opt.CACertConfigMap, got.caCertConfigMap); diff != "" {
+				t.Errorf("unexpected caCertConfigMap diff (-want, +got) = %v", diff)
+			}
+			if diff := cmp.Diff(tc.opt.Schedule, got.schedule); diff != "" {
+				t.Errorf("unexpected schedule diff (-want, +got) = %v", diff)
+			}
+			if diff := cmp.Diff(tc.opt.Step, got.step); diff != "" {
+				t.Errorf("unexpected step diff (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestStartAdaptor(t *testing.T) {
+	ce := kncetesting.NewTestClient()
+
+	testCases := map[string]struct {
+		opt        envConfig
+		wantErrMsg string
+	}{
+		"bad-schedule": {
+			opt: envConfig{
+				EnvConfig: adapter.EnvConfig{
+					Namespace: "test-ns",
+				},
+				EventSource: "test-source",
+				ServerURL:   "http://server.url",
+				PromQL:      "prom-ql",
+				Schedule:    "bad_schedule",
+			},
+			wantErrMsg: "expected exactly 5 fields, found 1: [bad_schedule]",
+		},
+		"no-schedule": {
+			opt: envConfig{
+				EnvConfig: adapter.EnvConfig{
+					Namespace: "test-ns",
+				},
+				EventSource: "test-source",
+				ServerURL:   "http://server.url",
+				PromQL:      "prom-ql",
+			},
+			wantErrMsg: "empty spec string",
+		},
+		"bad-auth-token-file": {
+			opt: envConfig{
+				EnvConfig: adapter.EnvConfig{
+					Namespace: "test-ns",
+				},
+				EventSource:   "test-source",
+				ServerURL:     "http://server.url",
+				PromQL:        "prom-ql",
+				Schedule:      "* * * * *",
+				AuthTokenFile: "no_such_file",
+			},
+			wantErrMsg: "open no_such_file: no such file or directory",
+		},
+		"bad-ca-cert-config-map": {
+			opt: envConfig{
+				EnvConfig: adapter.EnvConfig{
+					Namespace: "test-ns",
+				},
+				EventSource:     "test-source",
+				ServerURL:       "http://server.url",
+				PromQL:          "prom-ql",
+				Schedule:        "* * * * *",
+				CACertConfigMap: "no_such_config_map",
+			},
+			wantErrMsg: "open /etc/no_such_config_map/service-ca.crt: no such file or directory",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			r := &mockReporter{}
+			ctx, _ := pkgtesting.SetupFakeContext(t)
+			logger := zap.NewExample().Sugar()
+			ctx = logging.WithLogger(ctx, logger)
+
+			a := NewAdapter(ctx, &tc.opt, ce, r)
+			stopCh := make(chan struct{})
+			err := a.Start(stopCh)
+
+			if diff := cmp.Diff(tc.wantErrMsg, err.Error()); diff != "" {
+				t.Errorf("unexpected err diff (-want, +got) = %v", diff)
+			}
 		})
 	}
 }
@@ -112,43 +204,64 @@ func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) (
 }
 
 func TestReceiveEventPoll(t *testing.T) {
-	const promReply = "{\"foo\":\"bar\"}"
 	const promQL = `promQL`
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		wantRequestURI := apiChunkOfURL + promQL
-		if diff := cmp.Diff(wantRequestURI, r.RequestURI); diff != `` {
-			t.Errorf(`unexpected promQL diff (-want, +got) = %v`, diff)
-		}
-		fmt.Fprintln(w, promReply)
+		fmt.Fprintln(w, "{\"request_uri\":\""+r.RequestURI+"\"}")
 	}))
 	defer ts.Close()
 
-	env := envConfig{
-		EnvConfig: adapter.EnvConfig{
-			Namespace: "test-ns",
+	testCases := map[string]struct {
+		opt            envConfig
+		wantRequestURI string
+	}{
+		"instant-query": {
+			opt: envConfig{
+				EnvConfig: adapter.EnvConfig{
+					Namespace: "test-ns",
+				},
+				EventSource: "test-source",
+				ServerURL:   ts.URL,
+				PromQL:      promQL,
+				Schedule:    "* * * * *",
+			},
+			wantRequestURI: "/api/v1/query?query=" + promQL,
 		},
-		EventSource: "test-source",
-		ServerURL:   ts.URL,
-		PromQL:      promQL,
+		"range-query": {
+			opt: envConfig{
+				EnvConfig: adapter.EnvConfig{
+					Namespace: "test-ns",
+				},
+				EventSource: "test-source",
+				ServerURL:   ts.URL,
+				PromQL:      promQL,
+				Schedule:    "* * * * *",
+				Step:        "5s",
+			},
+			wantRequestURI: "/api/v1/query_range?query=" + promQL + "&start=",
+		},
 	}
 
-	ce := newAdapterTestClient()
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			ce := newAdapterTestClient()
 
-	r := &mockReporter{}
-	ctx, _ := pkgtesting.SetupFakeContext(t)
-	logger := zap.NewExample().Sugar()
-	ctx = logging.WithLogger(ctx, logger)
+			r := &mockReporter{}
+			ctx, _ := pkgtesting.SetupFakeContext(t)
+			logger := zap.NewExample().Sugar()
+			ctx = logging.WithLogger(ctx, logger)
 
-	a := NewAdapter(ctx, &env, ce, r)
+			a := NewAdapter(ctx, &tc.opt, ce, r)
 
-	done := make(chan struct{})
-	go func() {
-		a.Start(ce.stopCh)
-		done <- struct{}{}
-	}()
-	<-done
+			done := make(chan struct{})
+			go func() {
+				a.Start(ce.stopCh)
+				done <- struct{}{}
+			}()
+			<-done
 
-	validateSent(t, ce, promReply+"\n")
+			validateSent(t, ce, tc.wantRequestURI)
+		})
+	}
 }
 
 func validateSent(t *testing.T, ce *adapterTestClient, wantData string) {
@@ -156,7 +269,7 @@ func validateSent(t *testing.T, ce *adapterTestClient, wantData string) {
 		t.Errorf("Expected 1 event to be sent, got %d", got)
 	}
 
-	if got := ce.Sent()[0].Data; string(got.([]byte)) != wantData {
+	if got := ce.Sent()[0].Data; !strings.Contains(string(got.([]byte)), wantData) {
 		t.Errorf("Expected %q event to be sent, got %q", wantData, string(got.([]byte)))
 	}
 }

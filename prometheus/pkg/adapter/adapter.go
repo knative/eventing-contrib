@@ -25,19 +25,15 @@ import (
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/robfig/cron"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	"knative.dev/eventing/pkg/adapter"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/source"
 
 	"knative.dev/eventing-contrib/prometheus/pkg/apis/sources/v1alpha1"
-)
-
-const (
-	apiChunkOfURL = `/api/v1/query?query=`
 )
 
 type envConfig struct {
@@ -48,6 +44,8 @@ type envConfig struct {
 	PromQL          string `envconfig:"PROMETHEUS_PROM_QL" required:"true"`
 	AuthTokenFile   string `envconfig:"PROMETHEUS_AUTH_TOKEN_FILE" required:"false"`
 	CACertConfigMap string `envconfig:"PROMETHEUS_CA_CERT_CONFIG_MAP" required:"false"`
+	Schedule        string `envconfig:"PROMETHEUS_SCHEDULE" required:"true"`
+	Step            string `envconfig:"PROMETHEUS_STEP" required:"false"`
 }
 
 type prometheusAdapter struct {
@@ -59,7 +57,11 @@ type prometheusAdapter struct {
 	serverURL       string
 	promQL          string
 	authTokenFile   string
+	authToken       string
 	caCertConfigMap string
+	schedule        string
+	step            string
+	lastRun         time.Time
 	req             *http.Request
 	client          *http.Client
 }
@@ -83,56 +85,50 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 		promQL:          env.PromQL,
 		authTokenFile:   env.AuthTokenFile,
 		caCertConfigMap: env.CACertConfigMap,
+		schedule:        env.Schedule,
+		step:            env.Step,
+		lastRun:         time.Now(),
 	}
 
 	return a
 }
 
 func (a *prometheusAdapter) Start(stopCh <-chan struct{}) error {
-	completeURL := a.serverURL + apiChunkOfURL + a.promQL
-
-	var err error
-	a.req, err = http.NewRequest(`GET`, completeURL, nil)
-	if err != nil {
-		a.logger.Error("HTTP request error", zap.Error(err))
+	if err := a.readAuthTokenIfNeeded(); err != nil {
 		return err
 	}
-	if a.authTokenFile != "" {
-		content, err := ioutil.ReadFile(a.authTokenFile)
-		if err != nil {
-			a.logger.Error("Error reading authentication token from "+a.authTokenFile, zap.Error(err))
+	// pre-make an immutable HTTP Request for an instant query
+	if a.step == "" {
+		if err := a.makeHTTPRequest(); err != nil {
 			return err
-		}
-		a.req.Header.Set("Authorization", "Bearer "+string(content))
-	}
-
-	a.logger.Info(a.req)
-
-	a.client = &http.Client{}
-
-	if a.caCertConfigMap != "" {
-		caCertFile := "/etc/" + a.caCertConfigMap + "/service-ca.crt"
-		caCert, err := ioutil.ReadFile(caCertFile)
-		if err != nil {
-			a.logger.Error("Error reading CA certificate from "+caCertFile, zap.Error(err))
-			return err
-		}
-		caCertPool := x509.NewCertPool()
-		if !caCertPool.AppendCertsFromPEM(caCert) {
-			a.logger.Error("Error parsing CA certificate from " + caCertFile)
-			return err
-		}
-		a.client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: caCertPool,
-			},
 		}
 	}
-	wait.Until(a.send, 5*time.Second, stopCh)
+	if err := a.makeHTTPClient(); err != nil {
+		return err
+	}
+
+	sched, err := cron.ParseStandard(a.schedule)
+	if err != nil {
+		a.logger.Errorf("Unparseable schedule %s: %v", a.schedule, err)
+		return err
+	}
+
+	c := cron.New()
+	c.Schedule(sched, cron.FuncJob(a.send))
+	c.Start()
+	<-stopCh
+	c.Stop()
 	return nil
 }
 
 func (a *prometheusAdapter) send() {
+	// range query
+	if a.step != "" {
+		if err := a.makeHTTPRequest(); err != nil {
+			return
+		}
+		a.lastRun = time.Now()
+	}
 	resp, err := a.client.Do(a.req)
 	if err != nil {
 		a.logger.Error("HTTP invocation error", zap.Error(err))
@@ -145,15 +141,13 @@ func (a *prometheusAdapter) send() {
 		a.logger.Error("HTTP reply error", zap.Error(err))
 		return
 	}
-
 	if len(reply) > 0 {
 		event, err := a.makeEvent(reply)
 		if err != nil {
 			a.logger.Error("Cloud Event creation error", zap.Error(err))
 			return
 		}
-
-		if _, _, err := a.ce.Send(context.Background(), *event); err != nil {
+		if _, _, err = a.ce.Send(context.Background(), *event); err != nil {
 			a.logger.Error("Cloud Event delivery error", zap.Error(err))
 			return
 		}
@@ -174,4 +168,68 @@ func (a *prometheusAdapter) makeEvent(payload interface{}) (*cloudevents.Event, 
 	a.logger.Info(&event)
 
 	return &event, nil
+}
+
+func (a *prometheusAdapter) makeInvocationURL() string {
+	range_query := (a.step != "")
+	ret := a.serverURL + `/api/v1/query`
+	if range_query {
+		ret += `_range`
+	}
+	ret += `?query=` + a.promQL
+	if range_query {
+		ret += `&start=` + a.lastRun.Format(time.RFC3339) +
+			`&end=` + time.Now().Format(time.RFC3339) +
+			`&step=` + a.step
+	}
+	return ret
+}
+
+func (a *prometheusAdapter) makeHTTPRequest() error {
+	var err error
+	if a.req, err = http.NewRequest(`GET`, a.makeInvocationURL(), nil); err != nil {
+		a.logger.Error("HTTP request error", zap.Error(err))
+		return err
+	}
+	if a.authToken != "" {
+		a.req.Header.Set("Authorization", "Bearer "+a.authToken)
+	}
+	a.logger.Info(a.req)
+	return nil
+}
+
+func (a *prometheusAdapter) makeHTTPClient() error {
+	a.client = &http.Client{}
+
+	if a.caCertConfigMap != "" {
+		caCertFile := "/etc/" + a.caCertConfigMap + "/service-ca.crt"
+		caCert, err := ioutil.ReadFile(caCertFile)
+		if err != nil {
+			a.logger.Error("Error reading CA certificate from "+caCertFile+": ", zap.Error(err))
+			return err
+		}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			a.logger.Error("Error parsing CA certificate from " + caCertFile)
+			return err
+		}
+		a.client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		}
+	}
+	return nil
+}
+
+func (a *prometheusAdapter) readAuthTokenIfNeeded() error {
+	if a.authTokenFile != "" {
+		content, err := ioutil.ReadFile(a.authTokenFile)
+		if err != nil {
+			a.logger.Error("Error reading authentication token from "+a.authTokenFile+": ", zap.Error(err))
+			return err
+		}
+		a.authToken = string(content)
+	}
+	return nil
 }

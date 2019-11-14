@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/robfig/cron"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -162,6 +163,13 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.PrometheusS
 		source.Status.MarkSink(sinkURI)
 	}
 	source.Status.MarkSink(sinkURI)
+
+	_, err = cron.ParseStandard(source.Spec.Schedule)
+	if err != nil {
+		source.Status.MarkInvalidSchedule("Invalid", "Reason: "+err.Error())
+		return fmt.Errorf("invalid schedule: %v", err)
+	}
+	source.Status.MarkValidSchedule()
 
 	ra, err := r.createReceiveAdapter(ctx, source, sinkURI)
 	if err != nil {

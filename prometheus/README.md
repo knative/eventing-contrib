@@ -13,7 +13,9 @@ sent to the configured sink as CloudEvents.
 
 1. Setup [Knative Eventing](../DEVELOPMENT.md)
 1. Create a PrometheusSource CR, specifying the URL for the Prometheus server,
-   the PromQL query to run and the sink to send CloudEvents to:
+   the PromQL query to run, a crontab-formatted schedule for how often to run
+   the PromQL query and the sink to send CloudEvents to. The following CR instructs
+   the source to retrieve active alerts every 5 minutes:
 
    ```yaml
    apiVersion: sources.eventing.knative.dev/v1alpha1
@@ -23,12 +25,52 @@ sent to the configured sink as CloudEvents.
    spec:
      serverURL: http://demo.robustperception.io:9090
      promQL: ALERTS
+     schedule: "*/5 * * * *"
      sink:
        ref:
          apiVersion: serving.knative.dev/v1
          kind: Service
          name: event-display
    ```
+
+### Instant and Range Queries
+
+The Prometheus Source supports two kinds of PromQL queries - instant and range.
+The *promQL* property is the basis of a range query if the *step* property is
+specified and an instant query otherwise.
+An instant query returns a snapshot of the corresponding data stream at the
+moment when the query executes on the server. A range query specifies a time
+interval and a resolution step and returns a series of snapshots of the data
+stream, as many as will fit within the specified time interval with the given
+resolution step. For the range queries the Prometheus Source runs, the start
+time is the previous time the query ran and the end time is now, with the
+length of this time interval determined by the *schedule* property.
+
+For example, the following CR specifies a range query
+`go_memstats_alloc_bytes{instance="demo.robustperception.io:9090",job="prometheus"}`
+to be run every minute with resolution step of 15 seconds:
+
+```yaml
+   apiVersion: sources.eventing.knative.dev/v1alpha1
+   kind: PrometheusSource
+   metadata:
+     name: prometheus-source
+   spec:
+     serverURL: http://demo.robustperception.io:9090
+     promQL: 'go_memstats_alloc_bytes{instance="demo.robustperception.io:9090",job="prometheus"}'
+     schedule: "* * * * *"
+     step: 15s
+     sink:
+       ref:
+         apiVersion: serving.knative.dev/v1
+         kind: Service
+         name: event-display
+```
+
+This will produce a CloudEvent every minute, each covering a period of one minute
+between one minute ago and now, inclusive, and containing 5 samples (15 seconds
+between samples) of go_memstats_alloc_bytes of the job `prometheus` on the
+Prometheus instance `demo.robustperception.io:9090`.
 
 ### OpenShift Monitoring Stack
 
