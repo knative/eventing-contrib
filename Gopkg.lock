@@ -555,15 +555,9 @@
   version = "v1.9.1"
 
 [[projects]]
-  digest = "1:a277bf39e450e35a8752a7e6bf70f8b78cb01dbd2b7f7f664a2a6c1e2800009e"
+  digest = "1:bd99821e516c607ba2909f93becadfa57a4ca2ff5c1f877f5dbf0e78e080bb23"
   name = "github.com/knative/serving"
-  packages = [
-    "pkg/apis/autoscaling",
-    "pkg/apis/config",
-    "pkg/apis/networking",
-    "pkg/apis/serving",
-    "pkg/apis/serving/v1beta1",
-  ]
+  packages = ["pkg/apis/serving/v1beta1"]
   pruneopts = "NUT"
   revision = "a1a35b117afe15ca2c5bd4aec5bb3574a44e802d"
   version = "v0.10.0"
@@ -673,18 +667,6 @@
   pruneopts = "NUT"
   revision = "1ce767705f3a16654fe0b7d34f4b11eb71499426"
   version = "v0.14.3"
-
-[[projects]]
-  digest = "1:198f52f16bac13d9338ae08d4ab3d16812e840550146ad6097d22ed5cb395629"
-  name = "github.com/nats-io/nats.go"
-  packages = [
-    ".",
-    "encoders/builtin",
-    "util",
-  ]
-  pruneopts = "NUT"
-  revision = "e2837a2879e82886f6e21715e3a0217fdc46d370"
-  version = "v1.8.1"
 
 [[projects]]
   digest = "1:d649fe8fa50df39a525a9acd9fa73a29f8097272467ca3830a2ebc1abcfb33e3"
@@ -1735,7 +1717,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:84f2e54ec060eeaa50356aad6bf716f0291de6161eed37bba6d3920e8714d1e2"
+  digest = "1:56969dd743ea48841018186ed9434f4a2c7711e7c8a52d497e35b7c444fb0322"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1998,10 +1980,6 @@
     "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
-    "github.com/onsi/ginkgo",
-    "github.com/onsi/gomega",
-    "github.com/slinkydeveloper/loadastic/common",
-    "github.com/slinkydeveloper/loadastic/kafka",
     "go.opencensus.io/plugin/ochttp",
     "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.opencensus.io/stats",
