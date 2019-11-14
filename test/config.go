@@ -21,7 +21,7 @@ import (
 // ChannelFeatureMap saves the channel-features mapping.
 // Each pair means the channel support the list of features.
 var ChannelFeatureMap = map[metav1.TypeMeta][]common.Feature{
-	metav1.TypeMeta{
+	{
 		APIVersion: resources.MessagingAPIVersion,
 		Kind:       KafkaChannelKind,
 	}: {
@@ -29,7 +29,7 @@ var ChannelFeatureMap = map[metav1.TypeMeta][]common.Feature{
 		common.FeatureRedelivery,
 		common.FeaturePersistence,
 	},
-	metav1.TypeMeta{
+	{
 		APIVersion: resources.MessagingAPIVersion,
 		Kind:       NatssChannelKind,
 	}: {
