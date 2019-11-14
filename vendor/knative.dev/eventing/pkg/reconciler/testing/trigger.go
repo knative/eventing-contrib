@@ -137,6 +137,15 @@ func WithUnmarshalFailedDependencyAnnotation() TriggerOption {
 	}
 }
 
+func WithInjectionAnnotation(injectionAnnotation string) TriggerOption {
+	return func(t *v1alpha1.Trigger) {
+		if t.Annotations == nil {
+			t.Annotations = make(map[string]string)
+		}
+		t.Annotations[v1alpha1.InjectionAnnotation] = injectionAnnotation
+	}
+}
+
 func WithDependencyAnnotation(dependencyAnnotation string) TriggerOption {
 	return func(t *v1alpha1.Trigger) {
 		if t.Annotations == nil {
@@ -161,6 +170,24 @@ func WithTriggerDependencyFailed(reason, message string) TriggerOption {
 func WithTriggerDependencyUnknown(reason, message string) TriggerOption {
 	return func(t *v1alpha1.Trigger) {
 		t.Status.MarkDependencyUnknown(reason, message)
+	}
+}
+
+func WithTriggerSubscriberResolvedSucceeded() TriggerOption {
+	return func(t *v1alpha1.Trigger) {
+		t.Status.MarkSubscriberResolvedSucceeded()
+	}
+}
+
+func WithTriggerSubscriberResolvedFailed(reason, message string) TriggerOption {
+	return func(t *v1alpha1.Trigger) {
+		t.Status.MarkSubscriberResolvedFailed(reason, message)
+	}
+}
+
+func WithTriggerSubscriberResolvedUnknown(reason, message string) TriggerOption {
+	return func(t *v1alpha1.Trigger) {
+		t.Status.MarkSubscriberResolvedUnknown(reason, message)
 	}
 }
 
