@@ -28,6 +28,8 @@ function upload_test_images() {
     tag_option="--tags $docker_tag,latest"
   fi
 
+  ls -lR "${image_dir}"
+
   # ko resolve is being used for the side-effect of publishing images,
   # so the resulting yaml produced is ignored.
   tmp=$(mktemp)
