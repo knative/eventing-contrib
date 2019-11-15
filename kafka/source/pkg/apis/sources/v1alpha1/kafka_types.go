@@ -23,7 +23,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
@@ -44,10 +43,6 @@ type KafkaSource struct {
 
 // Check that KafkaSource can be validated and can be defaulted.
 var _ runtime.Object = (*KafkaSource)(nil)
-
-// Check that KafkaSource will be checked for immutable fields.
-var _ apis.Immutable = (*KafkaSource)(nil)
-
 var _ kmeta.OwnerRefable = (*KafkaSource)(nil)
 
 type KafkaSourceSASLSpec struct {

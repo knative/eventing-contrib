@@ -15,7 +15,7 @@
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: webhook.kafka.messaging.knative.dev
+  name: defaulting.webhook.kafka.messaging.knative.dev
   labels:
     contrib.eventing.knative.dev/release: devel
 webhooks:
@@ -26,7 +26,23 @@ webhooks:
       name: kafka-webhook
       namespace: knative-eventing
   failurePolicy: Fail
-  name: webhook.kafka.messaging.knative.dev
+  name: defaulting.webhook.kafka.messaging.knative.dev
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation.webhook.kafka.messaging.knative.dev
+  labels:
+    contrib.eventing.knative.dev/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: kafka-webhook
+      namespace: knative-eventing
+  failurePolicy: Fail
+  name: validation.webhook.kafka.messaging.knative.dev
 ---
 apiVersion: v1
 kind: Secret
