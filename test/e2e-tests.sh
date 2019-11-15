@@ -104,16 +104,9 @@ function test_setup() {
   install_channel_crds || return 1
 
   # Publish test images.
-  echo ">> Publishing test images"
-  if is_release_branch; then
-    echo ">> Publishing test images from vendor"
-    $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
-  else
-    echo ">> Publishing test images from Eventing HEAD"
-    $(dirname $0)/upload-test-images.sh ${HEAD_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
-  fi
-  # TODO: also publish test images in eventing-contrib when there are actual images
-  # for testing
+  echo ">> Publishing test images from vendor"
+  $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
+  # TODO: also publish test images in eventing-contrib when there are actual images for testing
   # $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 }
 
