@@ -44,3 +44,7 @@ git apply ${REPO_ROOT_DIR}/hack/set-span-id.patch
 # Patch Kivik
 # see https://github.com/go-kivik/kivik/issues/420
 git apply ${REPO_ROOT_DIR}/hack/kivik-set-zero.patch
+
+# We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
+# path has to be a GOPATH.
+git apply ${REPO_ROOT_DIR}/hack/update-image-paths.patch
