@@ -8,7 +8,7 @@ index 8e71971b..17c2060f 100644
      - name: logevents
 -      image: knative.dev/eventing/test/test_images/logevents
 +      image: knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images/logevents
- 
+
 diff --git a/vendor/knative.dev/eventing/test/test_images/sendevents/pod.yaml b/vendor/knative.dev/eventing/test/test_images/sendevents/pod.yaml
 index 6cd6f6ee..674df4b2 100644
 --- a/vendor/knative.dev/eventing/test/test_images/sendevents/pod.yaml
@@ -19,7 +19,7 @@ index 6cd6f6ee..674df4b2 100644
      - name: sendevents
 -      image: knative.dev/eventing/test/test_images/sendevents
 +      image: knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images/sendevents
- 
+
 diff --git a/vendor/knative.dev/eventing/test/test_images/transformevents/pod.yaml b/vendor/knative.dev/eventing/test/test_images/transformevents/pod.yaml
 index bcdc5e24..2b56b12d 100644
 --- a/vendor/knative.dev/eventing/test/test_images/transformevents/pod.yaml
@@ -30,4 +30,4 @@ index bcdc5e24..2b56b12d 100644
      - name: transformevents
 -      image: knative.dev/eventing/test/test_images/transformevents
 +      image: knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images/transformevents
- 
+
