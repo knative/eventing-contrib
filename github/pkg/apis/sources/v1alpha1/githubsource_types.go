@@ -122,6 +122,10 @@ const (
 	// GitHubSource has been configured with event types.
 	GitHubSourceConditionEventTypesProvided apis.ConditionType = "EventTypeProvided"
 
+	// GitHubServiceconditiondeployed has status True when then
+	// GitHubSource Service has been deployed
+	//	GitHubServiceConditionDeployed apis.ConditionType = "Deployed"
+
 	// GitHubSourceReconciled has status True when the
 	// GitHubSource has been properly reconciled
 	GitHub
@@ -130,6 +134,8 @@ const (
 var gitHubSourceCondSet = apis.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
 	GitHubSourceConditionSinkProvided)
+
+//	GitHubServiceConditionDeployed)
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {
@@ -213,6 +219,15 @@ func (s *GitHubSourceStatus) MarkEventTypes() {
 func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
+
+// MarkDeployed sets the condition that the source has been deployed.
+//func (s *GitHubSourceStatus) MarkServiceDeployed(d *appsv1.Deployment) {
+//	if duckv1.DeploymentIsAvailable(&d.Status, false) {
+//		gitHubSourceCondSet.Manage(s).MarkTrue(GitHubServiceConditionDeployed)
+//	} else {
+//		gitHubSourceCondSet.Manage(s).MarkFalse(GitHubServiceConditionDeployed, "ServiceDeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
+//	}
+//}
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

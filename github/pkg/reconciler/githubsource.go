@@ -19,8 +19,7 @@ package github
 import (
 	"context"
 	"fmt"
-	//	"log"
-	//	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -29,20 +28,14 @@ import (
 	//k8s.io imports
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	//	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	//	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"k8s.io/client-go/tools/cache"
-	//	"k8s.io/client-go/tools/record"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	//	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	//knative.dev/serving imports
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
@@ -70,6 +63,7 @@ const (
 	controllerAgentName            = "github-source-controller"
 	raImageEnvVar                  = "GH_RA_IMAGE"
 	finalizerName                  = controllerAgentName
+	gitHubSourceReadinessChanged   = "GitHubSourceReadinessChanged"
 	gitHubSourceUpdateStatusFailed = "GitHubSourceUpdateStatusFailed"
 	gitHubSourceDeploymentCreated  = "GitHubSourceDeploymentCreated"
 	gitHubSourceDeploymentUpdated  = "GitHubSourceDeploymentUpdated"
@@ -153,7 +147,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	logger := logging.FromContext(ctx)
+	//	logger := logging.FromContext(ctx)
 
 	source.Status.ObservedGeneration = source.Generation
 	source.Status.InitializeConditions()
@@ -202,17 +196,18 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			ksvc = resources.MakeService(source, r.receiveAdapterImage)
-			if err = controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
+			if _, err := r.servingClientSet.ServingV1().Services(source.Namespace).Create(ksvc); err != nil {
 				return err
 			}
-			if err = r.KubeClientSet.AppsV1().Deployments(source.Namespace).Create(ksvc); err != nil {
-				return err
-			}
-			r.recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
+			r.Recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
+
 			// TODO: Mark Deploying for the ksvc
 			// Wait for the Service to get a status
 			return nil
+		} else if !metav1.IsControlledBy(ksvc, source) {
+			return fmt.Errorf("Service %q is not owned by GitHubSource %q", ksvc.Name, source.Name)
 		}
+
 		// Error was something other than NotFound
 		return err
 	}
@@ -220,6 +215,7 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	routeCondition := ksvc.Status.GetCondition(servingv1.ServiceConditionReady)
 	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && ksvc.Status.URL != nil {
 		receiveAdapterDomain := ksvc.Status.URL.Host
+		// source.Status.MarkServiceDeployed(ra)
 		// TODO: Mark Deployed for the ksvc
 		// TODO: Mark some condition for the webhook status?
 		r.addFinalizer(source)
@@ -244,6 +240,7 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 
 	err = r.reconcileEventTypes(ctx, source)
 	if err != nil {
+		// should we mark no event types here in stat
 		return err
 	}
 	source.Status.MarkEventTypes()
@@ -263,7 +260,7 @@ func (r *Reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 		accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 		if err != nil {
 			source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			r.Recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
 			return err
 		}
 
@@ -276,7 +273,7 @@ func (r *Reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 		// Delete the webhook using the access token and stored webhook ID
 		err = r.deleteWebhook(ctx, args)
 		if err != nil {
-			r.recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			r.Recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
 			return err
 		}
 		// Webhook deleted, clear ID
@@ -382,26 +379,53 @@ func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 }
 
 func (r *Reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	args := r.newEventTypeReconcilerArgs(source)
-	return r.eventTypeReconciler.Reconcile(ctx, source, args)
+	current, err := r.getEventTypes(ctx, source)
+	if err != nil {
+		logging.FromContext(ctx).Error("Unable to get existing event types", zap.Error(err))
+		return err
+	}
+
+	expected, err := r.newEventTypes(source)
+	if err != nil {
+		return err
+	}
+
+	toCreate, toDelete := r.computeDiff(current, expected) // will need to add this
+
+	for _, eventType := range toDelete {
+		if err = r.EventingClientSet.EventingV1alpha1().EventTypes(source.Namespace).Delete(eventType.Name, &metav1.DeleteOptions{}); err != nil {
+			logging.FromContext(ctx).Error("Error deleting eventType", zap.Any("eventType", eventType))
+			return err
+		}
+	}
+
+	for _, eventType := range toCreate {
+		if _, err = r.EventingClientSet.EventingV1alpha1().EventTypes(source.Namespace).Create(&eventType); err != nil {
+			logging.FromContext(ctx).Error("Error creating eventType", zap.Any("eventType", eventType))
+			return err
+		}
+	}
+
+	return err
 }
 
-func (r *Reconciler) newEventTypeReconcilerArgs(source *sourcesv1alpha1.GitHubSource) *eventtype.ReconcilerArgs {
-	specs := make([]eventingv1alpha1.EventTypeSpec, 0)
+func (r *Reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) ([]eventingv1alpha1.EventType, error) {
+	eventTypes := make([]eventingv1alpha1.EventType, 0)
+
+	if ref := source.Spec.Sink.GetRef(); ref == nil || ref.Kind != "Broker" {
+		return eventTypes, nil
+	}
+
 	for _, et := range source.Spec.EventTypes {
-		spec := eventingv1alpha1.EventTypeSpec{
+		args := &resources.EventTypeArgs{
 			Type:   sourcesv1alpha1.GitHubEventType(et),
 			Source: sourcesv1alpha1.GitHubEventSource(source.Spec.OwnerAndRepository),
-			Broker: source.Spec.Sink.Name,
+			Src:    source,
 		}
-		specs = append(specs, spec)
+		eventType := resources.MakeEventType(args)
+		eventTypes = append(eventTypes, eventType)
 	}
-	return &eventtype.ReconcilerArgs{
-		Specs:     specs,
-		Namespace: source.Namespace,
-		Labels:    resources.Labels(source.Name),
-		Kind:      source.Spec.Sink.Kind,
-	}
+	return eventTypes, nil
 }
 
 func (r *Reconciler) addFinalizer(s *sourcesv1alpha1.GitHubSource) {
@@ -414,12 +438,6 @@ func (r *Reconciler) removeFinalizer(s *sourcesv1alpha1.GitHubSource) {
 	finalizers := sets.NewString(s.Finalizers...)
 	finalizers.Delete(finalizerName)
 	s.Finalizers = finalizers.List()
-}
-
-func (r *Reconciler) InjectClient(c client.Client) error {
-	r.client = c
-	r.eventTypeReconciler.Client = c
-	return nil
 }
 
 func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
@@ -457,7 +475,79 @@ func (r *Reconciler) updateStatus(ctx context.Context, source *sourcesv1alpha1.G
 	if err == nil && becomesReady {
 		duration := time.Since(result.ObjectMeta.CreationTimestamp.Time)
 		logging.FromContext(ctx).Info("GitHubSource became ready after", zap.Duration("duration", duration))
-		r.Recorder.Event(github, corev1.EventTypeNormal, GitHubReadinessChanged, fmt.Sprintf("GitHubSource %q became ready", github.Name))
+		r.Recorder.Event(github, corev1.EventTypeNormal, gitHubSourceReadinessChanged, fmt.Sprintf("GitHubSource %q became ready", github.Name))
 	}
 	return result, err
+}
+
+func (r *Reconciler) getEventTypes(ctx context.Context, src *sourcesv1alpha1.GitHubSource) ([]eventingv1alpha1.EventType, error) {
+	etl, err := r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).List(metav1.ListOptions{
+		LabelSelector: labels.Everything().String(),
+	})
+	if err != nil {
+		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
+		return nil, err
+	}
+	eventTypes := make([]eventingv1alpha1.EventType, 0)
+	for _, et := range etl.Items {
+		if metav1.IsControlledBy(&et, src) {
+			eventTypes = append(eventTypes, et)
+		}
+	}
+	return eventTypes, nil
+}
+
+func (r *Reconciler) computeDiff(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) ([]eventingv1alpha1.EventType, []eventingv1alpha1.EventType) {
+	toCreate := make([]eventingv1alpha1.EventType, 0)
+	toDelete := make([]eventingv1alpha1.EventType, 0)
+	currentMap := asMap(current, keyFromEventType)
+	expectedMap := asMap(expected, keyFromEventType)
+
+	// Iterate over the slices instead of the maps for predictable UT expectations.
+	for _, e := range expected {
+		if c, ok := currentMap[keyFromEventType(&e)]; !ok {
+			toCreate = append(toCreate, e)
+		} else {
+			if !equality.Semantic.DeepEqual(e.Spec, c.Spec) {
+				toDelete = append(toDelete, c)
+				toCreate = append(toCreate, e)
+			}
+		}
+	}
+	// Need to check whether the current EventTypes are not in the expected map. If so, we have to delete them.
+	// This could happen if the GitHubSource CO changes its broker.
+	for _, c := range current {
+		if _, ok := expectedMap[keyFromEventType(&c)]; !ok {
+			toDelete = append(toDelete, c)
+		}
+	}
+	return toCreate, toDelete
+}
+
+func asMap(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv1alpha1.EventType) string) map[string]eventingv1alpha1.EventType {
+	eventTypesAsMap := make(map[string]eventingv1alpha1.EventType, 0)
+	for _, eventType := range eventTypes {
+		key := keyFunc(&eventType)
+		eventTypesAsMap[key] = eventType
+	}
+	return eventTypesAsMap
+}
+
+func keyFromEventType(eventType *eventingv1alpha1.EventType) string {
+	return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
+}
+
+func (r *Reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
+	if !equality.Semantic.DeepDerivative(newPodSpec, oldPodSpec) {
+		return true
+	}
+	if len(oldPodSpec.Containers) != len(newPodSpec.Containers) {
+		return true
+	}
+	for i := range newPodSpec.Containers {
+		if !equality.Semantic.DeepEqual(newPodSpec.Containers[i].Env, oldPodSpec.Containers[i].Env) {
+			return true
+		}
+	}
+	return false
 }
