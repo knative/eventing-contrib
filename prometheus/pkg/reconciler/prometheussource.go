@@ -190,10 +190,7 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.PrometheusS
 }
 
 func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.PrometheusSource, sinkURI string) (*appsv1.Deployment, error) {
-	eventSource, err := r.makeEventSource(src)
-	if err != nil {
-		return nil, err
-	}
+	eventSource := r.makeEventSource(src)
 	logging.FromContext(ctx).Debug("event source", zap.Any("source", eventSource))
 
 	env := &envConfig{}
@@ -290,14 +287,9 @@ func (r *Reconciler) makeEventTypes(src *v1alpha1.PrometheusSource) ([]eventingv
 		return eventTypes, nil
 	}
 
-	source, err := r.makeEventSource(src)
-	if err != nil {
-		return nil, err
-	}
-
 	args := &resources.EventTypeArgs{
 		Src:    src,
-		Source: source,
+		Source: r.makeEventSource(src),
 	}
 	for _, apiEventType := range prometheusEventTypes {
 		args.Type = apiEventType
@@ -412,8 +404,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.Prometh
 	return cj, err
 }
 
-// MakeEventSource computes the Cloud Event source attribute for the given source
-func (r *Reconciler) makeEventSource(src *v1alpha1.PrometheusSource) (string, error) {
-	return fmt.Sprintf("/apis/v1/namespaces/%s/prometheussources/%s#%s?%s",
-		src.Namespace, src.Name, src.Spec.ServerURL, src.Spec.PromQL), nil
+// makeEventSource computes the Cloud Event source attribute for the given source
+func (r *Reconciler) makeEventSource(src *v1alpha1.PrometheusSource) string {
+	return src.Namespace + "/" + src.Name
 }
