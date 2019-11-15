@@ -1781,7 +1781,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0c464c2c46603f145a966ea96bf46afdb183e4f0e9f2df7275b2221d7acca78e"
+  digest = "1:7c962a7df7eb2cf5d8d6c468ae809de86a5e1811033c34ddb349703f2369417d"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1854,11 +1854,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "1cd8d631541bdfb9af78c3fdb7b627417dfa8cfe"
+  revision = "e29ff99789f323ed0da9531d67de2841bb63ff34"
 
 [[projects]]
   branch = "master"
-  digest = "1:ff0b6b2483ef9341cc0c524f1e5bdbba37b56dde366791986e098a01de81dcac"
+  digest = "1:b1b3870d2746e5277761a3c2811d2b486db20a09763a1d98476cf82f2afbc0fc"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1882,6 +1882,7 @@
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
     "client/injection/kube/informers/admissionregistration/v1beta1/mutatingwebhookconfiguration",
+    "client/injection/kube/informers/admissionregistration/v1beta1/validatingwebhookconfiguration",
     "client/injection/kube/informers/apps/v1/deployment",
     "client/injection/kube/informers/core/v1/endpoints",
     "client/injection/kube/informers/core/v1/secret",
@@ -1932,9 +1933,11 @@
     "webhook/certificates",
     "webhook/certificates/resources",
     "webhook/resourcesemantics",
+    "webhook/resourcesemantics/defaulting",
+    "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "d3841ea2c3cb7246076d771abd5cef8b94ef9031"
+  revision = "4836f680bbe5dc615e9c822f21c6685d97c6d553"
 
 [[projects]]
   branch = "master"
@@ -1955,7 +1958,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "6ca9635c1f1d10737ae8544288015471a6bf1188"
+  revision = "916ab9f5ac54c9cd041ad7c502e02b3bc8f6ea17"
 
 [[projects]]
   branch = "master"
@@ -2190,6 +2193,8 @@
     "knative.dev/pkg/webhook",
     "knative.dev/pkg/webhook/certificates",
     "knative.dev/pkg/webhook/resourcesemantics",
+    "knative.dev/pkg/webhook/resourcesemantics/defaulting",
+    "knative.dev/pkg/webhook/resourcesemantics/validation",
     "knative.dev/serving/pkg/apis/serving/v1",
     "knative.dev/serving/pkg/apis/serving/v1alpha1",
     "knative.dev/test-infra/scripts",

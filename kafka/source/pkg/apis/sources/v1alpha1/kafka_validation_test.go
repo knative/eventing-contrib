@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	"knative.dev/pkg/apis"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
@@ -158,16 +159,18 @@ func TestKafkaSourceCheckImmutableFields(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			var orig *KafkaSource
+			ctx := context.TODO()
 			if tc.orig != nil {
-				orig = &KafkaSource{
+				orig := &KafkaSource{
 					Spec: *tc.orig,
 				}
+				ctx = apis.WithinUpdate(ctx, orig)
 			}
 			updated := &KafkaSource{
 				Spec: tc.updated,
 			}
-			err := updated.CheckImmutableFields(context.TODO(), orig)
+
+			err := updated.Validate(ctx)
 			if tc.allowed != (err == nil) {
 				t.Fatalf("Unexpected immutable field check. Expected %v. Actual %v", tc.allowed, err)
 			}

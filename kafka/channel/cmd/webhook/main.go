@@ -28,32 +28,51 @@ import (
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
 	"knative.dev/pkg/webhook/resourcesemantics"
+	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
+	"knative.dev/pkg/webhook/resourcesemantics/validation"
 )
 
-func NewResourceAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-	// Decorate contexts with the current state of the config.
-	// store := defaultconfig.NewStore(logging.FromContext(ctx).Named("config-store"))
-	// store.WatchConfigs(cmw)
-	ctxFunc := func(ctx context.Context) context.Context {
-		// return v1.WithUpgradeViaDefaulting(store.ToContext(ctx))
-		return ctx
-	}
+var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
+	// For group messaging.knative.dev
+	messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
+}
 
-	return resourcesemantics.NewAdmissionController(ctx,
+func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	return defaulting.NewAdmissionController(ctx,
 		// Name of the resource webhook.
-		"webhook.kafka.messaging.knative.dev",
+		"defaulting.webhook.kafka.messaging.knative.dev",
 
 		// The path on which to serve the webhook.
-		"/",
+		"/defaulting",
 
 		// The resources to validate and default.
-		map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
-			// For group messaging.knative.dev
-			messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
-		},
+		types,
 
 		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
-		ctxFunc,
+		func(ctx context.Context) context.Context {
+			return ctx
+		},
+
+		// Whether to disallow unknown fields.
+		true,
+	)
+}
+
+func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	return validation.NewAdmissionController(ctx,
+		// Name of the resource webhook.
+		"validation.webhook.kafka.messaging.knative.dev",
+
+		// The path on which to serve the webhook.
+		"/resource-validation",
+
+		// The resources to validate and default.
+		types,
+
+		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
+		func(ctx context.Context) context.Context {
+			return ctx
+		},
 
 		// Whether to disallow unknown fields.
 		true,
@@ -70,7 +89,8 @@ func main() {
 
 	sharedmain.MainWithContext(ctx, "kafkachannel_webhook",
 		certificates.NewController,
-		NewResourceAdmissionController,
+		NewDefaultingAdmissionController,
+		NewValidationAdmissionController,
 		// TODO(mattmoor): Support config validation in eventing-contrib.
 	)
 }

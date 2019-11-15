@@ -28,31 +28,50 @@ import (
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
 	"knative.dev/pkg/webhook/resourcesemantics"
+	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
+	"knative.dev/pkg/webhook/resourcesemantics/validation"
 )
 
-func NewResourceAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
-	// Decorate contexts with the current state of the config.
-	// store := defaultconfig.NewStore(logging.FromContext(ctx).Named("config-store"))
-	// store.WatchConfigs(cmw)
-	ctxFunc := func(ctx context.Context) context.Context {
-		// return v1.WithUpgradeViaDefaulting(store.ToContext(ctx))
-		return ctx
-	}
+var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
+	couchdbv1alpha1.SchemeGroupVersion.WithKind("CouchDbSource"): &couchdbv1alpha1.CouchDbSource{},
+}
 
-	return resourcesemantics.NewAdmissionController(ctx,
+func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	return defaulting.NewAdmissionController(ctx,
 		// Name of the resource webhook.
-		"webhook.couchdb.messaging.knative.dev",
+		"defaulting.webhook.couchdb.messaging.knative.dev",
 
 		// The path on which to serve the webhook.
-		"/",
+		"/defaulting",
 
 		// The resources to validate and default.
-		map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
-			couchdbv1alpha1.SchemeGroupVersion.WithKind("CouchDbSource"): &couchdbv1alpha1.CouchDbSource{},
-		},
+		types,
 
 		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
-		ctxFunc,
+		func(ctx context.Context) context.Context {
+			return ctx
+		},
+
+		// Whether to disallow unknown fields.
+		true,
+	)
+}
+
+func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	return validation.NewAdmissionController(ctx,
+		// Name of the resource webhook.
+		"validation.webhook.couchdb.messaging.knative.dev",
+
+		// The path on which to serve the webhook.
+		"/validation",
+
+		// The resources to validate and default.
+		types,
+
+		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
+		func(ctx context.Context) context.Context {
+			return ctx
+		},
 
 		// Whether to disallow unknown fields.
 		true,
@@ -69,7 +88,8 @@ func main() {
 
 	sharedmain.MainWithContext(ctx, logconfig.WebhookName(),
 		certificates.NewController,
-		NewResourceAdmissionController,
+		NewDefaultingAdmissionController,
+		NewValidationAdmissionController,
 		// TODO(mattmoor): Support config validation in eventing-contrib.
 	)
 }

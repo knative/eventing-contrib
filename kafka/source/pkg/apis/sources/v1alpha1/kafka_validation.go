@@ -19,28 +19,28 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/google/go-cmp/cmp"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/kmp"
 )
 
-func (current *KafkaSource) CheckImmutableFields(ctx context.Context, og apis.Immutable) *apis.FieldError {
-	original, ok := og.(*KafkaSource)
-	if !ok {
-		return &apis.FieldError{Message: "The provided original was not a KafkaSource"}
-	}
-	if original == nil {
-		return nil
-	}
-
-	// All of the fields are immutable because the controller doesn't understand when it would need
-	// to delete and create a new Receive Adapter with updated arguments. We could relax it slightly
-	// to allow a nil Sink -> non-nil Sink, but I don't think it is needed yet.
-	if diff := cmp.Diff(original.Spec, current.Spec); diff != "" {
-		return &apis.FieldError{
-			Message: "Immutable fields changed (-old +new)",
-			Paths:   []string{"spec"},
-			Details: diff,
+// Validate ensures KafkaSource is properly configured.
+func (r *KafkaSource) Validate(ctx context.Context) *apis.FieldError {
+	if apis.IsInUpdate(ctx) {
+		original := apis.GetBaseline(ctx).(*KafkaSource)
+		if diff, err := kmp.ShortDiff(original.Spec, r.Spec); err != nil {
+			return &apis.FieldError{
+				Message: "Failed to diff KafkaSource",
+				Paths:   []string{"spec"},
+				Details: err.Error(),
+			}
+		} else if diff != "" {
+			return &apis.FieldError{
+				Message: "Immutable fields changed (-old +new)",
+				Paths:   []string{"spec"},
+				Details: diff,
+			}
 		}
 	}
+
 	return nil
 }
