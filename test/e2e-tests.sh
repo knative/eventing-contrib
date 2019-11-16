@@ -35,8 +35,13 @@ if [ "$(uname)" == "Darwin" ]; then
   grep=ggrep
 fi
 
-# Eventing main config.
-readonly EVENTING_CONFIG="config/"
+# Eventing main config path from HEAD.
+readonly EVENTING_CONFIG="${GOPATH}/src/knative.dev/eventing/config/"
+
+# Vendored eventing test iamges.
+readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
+# HEAD eventing test images.
+readonly HEAD_EVENTING_TEST_IMAGES="${GOPATH}/src/knative.dev/eventing/test/test_images/"
 
 # NATS Streaming installation config.
 readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
@@ -68,9 +73,8 @@ function knative_setup() {
     pushd .
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
     git clone https://github.com/knative/eventing
-    cd ${GOPATH}/src/knative.dev/eventing
-    ko apply -f ${EVENTING_CONFIG}
     popd
+    ko apply -f ${EVENTING_CONFIG}
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
 
@@ -79,16 +83,17 @@ function knative_setup() {
   kubectl create namespace istio-system
   kubectl apply --filename "${KNATIVE_MONITORING_RELEASE}" || return 1
   wait_until_pods_running istio-system || fail_test "Knative Monitoring did not come up"
-
 }
 
 function knative_teardown() {
   echo ">> Stopping Knative Eventing"
-  echo "Uninstalling Knative Eventing"
-  pushd .
-  cd ${GOPATH}/src/knative.dev/eventing
-  ko delete --ignore-not-found=true --now --timeout 60s -f ${EVENTING_CONFIG}
-  popd
+  if is_release_branch; then
+    echo ">> Uninstalling Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
+    kubectl delete -f ${KNATIVE_EVENTING_RELEASE}
+  else
+    echo ">> Uninstalling Knative Eventing from HEAD"
+    ko delete --ignore-not-found=true --now --timeout 60s -f ${EVENTING_CONFIG}
+  fi
   wait_until_object_does_not_exist namespaces knative-eventing
 }
 
@@ -99,11 +104,10 @@ function test_setup() {
   install_channel_crds || return 1
 
   # Publish test images.
-  echo ">> Publishing test images"
-  pushd .
-  cd ${GOPATH}/src/knative.dev/eventing
-  ./test/upload-test-images.sh e2e || fail_test "Error uploading test images"
-  popd
+  echo ">> Publishing test images from vendor"
+  $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
+  # TODO: also publish test images in eventing-contrib when there are actual images for testing
+  # $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 }
 
 function test_teardown() {
