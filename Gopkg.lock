@@ -345,7 +345,6 @@
   ]
   pruneopts = "NUT"
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
-  version = "v0.3.0"
 
 [[projects]]
   digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
@@ -1717,7 +1716,7 @@
 
 [[projects]]
   branch = "release-0.10"
-  digest = "1:7574b22e684d087959d6cda97888d3a7d0125db326dbe133241e13926a34b4d0"
+  digest = "1:0a7eb8abc751265b1e339297ab867cb47da92f1d8e9133cfea3fc802b961ed02"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1778,7 +1777,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "a5e27ba1fef25fe517e686be3cff03ad4bcf0e19"
+  revision = "fce0712a35ac4fe0578c6b3222e6121345208bf5"
 
 [[projects]]
   branch = "release-0.10"
