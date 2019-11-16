@@ -13,18 +13,26 @@ limitations under the License.
 package test
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing/test/base/resources"
 	"knative.dev/eventing/test/common"
 )
 
 // ChannelFeatureMap saves the channel-features mapping.
 // Each pair means the channel support the list of features.
-var ChannelFeatureMap = map[string][]common.Feature{
-	KafkaChannelKind: {
+var ChannelFeatureMap = map[metav1.TypeMeta][]common.Feature{
+	metav1.TypeMeta{
+		APIVersion: resources.MessagingAPIVersion,
+		Kind:       KafkaChannelKind,
+	}: {
 		common.FeatureBasic,
 		common.FeatureRedelivery,
 		common.FeaturePersistence,
 	},
-	NatssChannelKind: {
+	metav1.TypeMeta{
+		APIVersion: resources.MessagingAPIVersion,
+		Kind:       NatssChannelKind,
+	}: {
 		common.FeatureBasic,
 		common.FeatureRedelivery,
 		common.FeaturePersistence,

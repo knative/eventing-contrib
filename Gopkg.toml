@@ -107,7 +107,7 @@ required = [
 
 [[constraint]]
   name = "knative.dev/eventing"
-  branch = "master"
+  branch = "release-0.10"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
