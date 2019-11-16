@@ -43,34 +43,33 @@ the Prometheus instance `demo.robustperception.io:9090`.
 
 ## Using the Prometheus Event Source with an off-cluster Prometheus server
 
-1. Set up [Knative Serving, Knative Eventing](../DEVELOPMENT.md)
+- Set up [Knative Serving, Knative Eventing](../DEVELOPMENT.md)
 
-1. Deploy an event-display sink for the events produced by the Prometheus
-   source:
+- Deploy an event-display sink for the events produced by the Prometheus source:
 
 ```bash
 kubectl apply -f demo/sink.yaml
 ```
 
-1. Deploy the Prometheus source, configured to communicate with an off-cluster
-   Prometheus server:
+- Deploy the Prometheus source, configured to communicate with an off-cluster
+  Prometheus server:
 
 ```bash
 kubectl apply -f demo/source.yaml
 ```
 
-1. Tail the log of the even-display sink to watch the CloudEvents produced by
-   the Prometheus source. There may be a brief pause while Knative Serving
-   launches the event-display pod.
+- Tail the log of the even-display sink to watch the CloudEvents produced by the
+  Prometheus source. There may be a brief pause while Knative Serving launches
+  the event-display pod.
 
 ```bash
-kubectl logs -f $(k get pods | grep event-display | awk '{print $1}') -c user-container
+kubectl logs -f -l serving.knative.dev/service=event-display -c user-container
 ```
 
-1. A PrometheusSource CR specifies the URL for the Prometheus server, the PromQL
-   query to run, the crontab-formatted schedule for how often to run the PromQL
-   query and the sink to send CloudEvents to. demo/source.yaml instructs the
-   source to retrieve active alerts every minute:
+- A PrometheusSource CR specifies the URL for the Prometheus server, the PromQL
+  query to run, the crontab-formatted schedule for how often to run the PromQL
+  query and the sink to send CloudEvents to. demo/source.yaml instructs the
+  source to retrieve active alerts every minute:
 
 ```yaml
 apiVersion: sources.eventing.knative.dev/v1alpha1
@@ -88,41 +87,40 @@ spec:
       name: event-display
 ```
 
-Please note that demo.robustperception.io is a publicly accessible Prometheus
-server that is outside of Knative project's control.
+**Note:** demo.robustperception.io is a publicly accessible Prometheus server
+that is outside of Knative project's control.
 
 ## Using the Prometheus Event Source with Knative Monitoring
 
-1. Set up [Knative Serving, Knative Eventing](../DEVELOPMENT.md) and
-   [Knative Monitoring](https://knative.dev/docs/serving/installing-logging-metrics-traces/)
-1. Enable collection of Knative Serving request metrics by setting
-   `metrics.request-metrics-backend-destination: prometheus` in the
-   config-observability ConfigMap:
+- Set up [Knative Serving, Knative Eventing](../DEVELOPMENT.md) and
+  [Knative Monitoring](https://knative.dev/docs/serving/installing-logging-metrics-traces/)
+- Enable collection of Knative Serving request metrics by setting
+  `metrics.request-metrics-backend-destination: prometheus` in the
+  config-observability ConfigMap:
 
 ```bash
 kubectl edit cm -n knative-serving config-observability
 ```
 
-1. Deploy an event-display sink for the events produced by the Prometheus
-   source:
+- Deploy an event-display sink for the events produced by the Prometheus source:
 
 ```bash
 kubectl apply -f demo/sink.yaml
 ```
 
-1. Create a CR for the source, configured to communicate with the in-cluster
-   Prometheus server deployed as part of Knative Monitoring:
+- Create a CR for the source, configured to communicate with the in-cluster
+  Prometheus server deployed as part of Knative Monitoring:
 
 ```bash
 kubectl apply -f demo/source_knative.yaml
 ```
 
-1. Tail the log of the even-display sink to watch the CloudEvents produced by
-   the Prometheus source. There may be a brief pause while Knative Serving
-   launches the event-display pod.
+- Tail the log of the even-display sink to watch the CloudEvents produced by the
+  Prometheus source. There may be a brief pause while Knative Serving launches
+  the event-display pod.
 
 ```bash
-kubectl logs -f $(k get pods | grep event-display | awk '{print $1}') -c user-container
+kubectl logs -f -l serving.knative.dev/service=event-display -c user-container
 ```
 
 The Prometheus server in Knative Monitoring is fronted by the
@@ -153,41 +151,157 @@ spec:
 The following assumes deployment of the Prometheus Source into the default
 project to run under the default service account.
 
-1. Set up [Knative Serving and Knative Eventing](../DEVELOPMENT.md)
-1. Create a ConfigMap for the Service signer CA bundle and annotate it
-   accordingly:
+- Set up [Knative Serving and Knative Eventing](../DEVELOPMENT.md)
+- Create a ConfigMap for the Service signer CA bundle and annotate it
+  accordingly:
 
 ```bash
 oc apply -f demo/openshift-service-serving-signer-cabundle.yaml
 oc annotate configmap openshift-service-serving-signer-cabundle service.beta.openshift.io/inject-cabundle=true
 ```
 
-1. Bind the cluster-monitoring-view ClusterRole to the default service account:
+- Bind the cluster-monitoring-view ClusterRole to the default service account:
 
 ```bash
 oc adm policy add-cluster-role-to-user cluster-monitoring-view system:serviceaccount:default:default
 ```
 
-1. Deploy an event-display sink for the events produced by the Prometheus
-   source:
+- Deploy an event-display sink for the events produced by the Prometheus source:
 
 ```bash
 oc apply -f demo/sink.yaml
 ```
 
-1. Create a CR for the source, configured to communicate with the in-cluster
-   Prometheus server. The authTokenFile field is the conventional location for
-   the service account authentication token. The caCertConfigMap is the name of
-   the Service signer CA ConfigMap.
+- Create a CR for the source, configured to communicate with the in-cluster
+  Prometheus server. The authTokenFile field is the conventional location for
+  the service account authentication token. The caCertConfigMap is the name of
+  the Service signer CA ConfigMap.
 
 ```bash
 oc apply -f demo/source_openshift.yaml
 ```
 
-1. Tail the log of the even-display sink to watch the CloudEvents produced by
-   the Prometheus source. There may be a brief pause while Knative Serving
-   launches the event-display pod.
+- Tail the log of the even-display sink to watch the CloudEvents produced by the
+  Prometheus source. There may be a brief pause while Knative Serving launches
+  the event-display pod.
 
 ```bash
-oc logs -f $(k get pods | grep event-display | awk '{print $1}') -c user-container
+oc logs -f -l serving.knative.dev/service=event-display -c user-container
 ```
+
+## Using Triggers to filter events from the Prometheus Event Source
+
+This example builds from many of the same building blocks as
+[Using the Prometheus Event Source with Knative Monitoring](#user-content-using-the-prometheus-event-source-with-knative-monitoring).
+
+- Set up [Knative Serving, Knative Eventing](../DEVELOPMENT.md) and
+  [Knative Monitoring](https://knative.dev/docs/serving/installing-logging-metrics-traces/)
+- Enable collection of Knative Serving request metrics by setting
+  `metrics.request-metrics-backend-destination: prometheus` in the
+  config-observability ConfigMap:
+
+```bash
+kubectl edit cm -n knative-serving config-observability
+```
+
+- Check that the In-Memory Channel is deployed. There should be the
+  imc-controller and imc-dispatcher pods running in the knative-eventing
+  namespace:
+
+```bash
+$ kubectl get pods -n knative-eventing
+NAME                                  READY   STATUS    RESTARTS   AGE
+...
+imc-controller-7fcd9b75fc-d5nnx       1/1     Running   0          105m
+imc-dispatcher-85b9b77759-pcmsr       1/1     Running   0          105m
+...
+$
+```
+
+- Create the default Broker in the default namespace:
+
+```bash
+kubectl label namespace default knative-eventing-injection=enabled
+```
+
+- Check that the default Broker is running:
+
+```bash
+$ kubectl get brokers
+NAME      READY   REASON   URL                                               AGE
+default   True             http://default-broker.default.svc.cluster.local   115m
+$
+```
+
+- Deploy two Prometheus Sources with the default Broker as their sink, two
+  event-display Knative Services that serve as the ultimate destinations for the
+  Prometheus events and two Triggers that subscribe to events from the
+  corresponding sources and forward them to the event-display sinks:
+
+```bash
+kubectl apply -f demo/broker_trigger.yaml
+```
+
+- Check the event types now available from the Broker. The type of events
+  generated by the Prometheus Event Source is 'dev.knative.prometheus.promql'.
+  The event sources are named according to the 'namespace/source-name'
+  convention:
+
+```bash
+[syedriko@localhost prometheus]$ k get eventtypes
+NAME                                  TYPE                            SOURCE                    SCHEMA   BROKER    DESCRIPTION   READY   REASON
+dev.knative.prometheus.promql-j7ltk   dev.knative.prometheus.promql   default/request-count-2            default                 True
+dev.knative.prometheus.promql-t4rc9   dev.knative.prometheus.promql   default/request-count-1            default                 True
+```
+
+- The Triggers filter the events based on their type and source:
+
+```yaml
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: request-count-1
+spec:
+  broker: default
+  filter:
+    sourceAndType:
+      type: dev.knative.prometheus.promql
+      source: default/request-count-1
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: event-display-1
+```
+
+- Tail the logs of the even-display sinks to watch the CloudEvents produced by
+  the Prometheus sources and note that event-display-1 only receives events from
+  source request-count-1 and event-display-2 only receives events from source
+  request-count-2:
+
+```bash
+$ kubectl logs -f -l serving.knative.dev/service=event-display-1 -c user-container
+...
+cloudevents.Event
+Validation: valid
+Context Attributes,
+  specversion: 0.3
+  type: dev.knative.prometheus.promql
+  source: default/request-count-1
+...
+```
+
+```bash
+$ kubectl logs -f -l serving.knative.dev/service=event-display-2 -c user-container
+...
+cloudevents.Event
+Validation: valid
+Context Attributes,
+  specversion: 0.3
+  type: dev.knative.prometheus.promql
+  source: default/request-count-2
+...
+```
+
+There may be a brief pause while Knative Serving launches the event-display
+pods.
