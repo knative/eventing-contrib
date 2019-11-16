@@ -1717,7 +1717,7 @@
 
 [[projects]]
   branch = "release-0.10"
-  digest = "1:2bb3097a9562497b3b907cc73cbbc5181f02c3d57acaf9e619460f5d0bb10d81"
+  digest = "1:7574b22e684d087959d6cda97888d3a7d0125db326dbe133241e13926a34b4d0"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
