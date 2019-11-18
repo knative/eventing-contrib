@@ -69,7 +69,9 @@ func (consumer *saramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 	// The `ConsumeClaim` itself is called within a goroutine, see:
 	// https://github.com/Shopify/sarama/blob/master/consumer_group.go#L27-L29
 	for message := range claim.Messages() {
-		consumer.logger.Debug(fmt.Sprintf("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic))
+		if ce := consumer.logger.Check(zap.DebugLevel, "debugging"); ce != nil {
+			consumer.logger.Debug("Message claimed", zap.String("topic", message.Topic), zap.Binary("value", message.Value))
+		}
 
 		mustMark, err := consumer.handler.Handle(session.Context(), message)
 
@@ -78,7 +80,9 @@ func (consumer *saramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 		}
 		if mustMark {
 			session.MarkMessage(message, "") // Mark kafka message as processed
-			consumer.logger.Debug(fmt.Sprintf("Message marked: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic))
+			if ce := consumer.logger.Check(zap.DebugLevel, "debugging"); ce != nil {
+				consumer.logger.Debug("Message marked", zap.String("topic", message.Topic), zap.Binary("value", message.Value))
+			}
 		}
 
 	}
