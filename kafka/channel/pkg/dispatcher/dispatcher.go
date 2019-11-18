@@ -300,7 +300,7 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 }
 
 func fromKafkaMessage(kafkaMessage *sarama.ConsumerMessage) *contribchannels.Message {
-	headers := make(map[string]string)
+	headers := make(map[string]string, len(kafkaMessage.Headers))
 	for _, header := range kafkaMessage.Headers {
 		headers[string(header.Key)] = string(header.Value)
 	}
@@ -315,12 +315,13 @@ func toKafkaMessage(channel eventingchannels.ChannelReference, message *contribc
 	kafkaMessage := sarama.ProducerMessage{
 		Topic: topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
 		Value: sarama.ByteEncoder(message.Payload),
+		Headers: make([]sarama.RecordHeader, len(message.Headers)),
 	}
+	i := 0
 	for h, v := range message.Headers {
-		kafkaMessage.Headers = append(kafkaMessage.Headers, sarama.RecordHeader{
-			Key:   []byte(h),
-			Value: []byte(v),
-		})
+		kafkaMessage.Headers[i].Key = []byte(h)
+		kafkaMessage.Headers[i].Value = []byte(v)
+		i++
 	}
 	return &kafkaMessage
 }
