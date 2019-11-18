@@ -82,8 +82,9 @@ func randomStringFromCharset(length uint, charset string) string {
 }
 
 func JsonKafkaRequestFactory(messageSize uint, messageType string) kafka.RequestFactory {
+	randomStuff := randomStringFromCharset(messageSize, charset)
 	return func(tickerTimestamp time.Time, id uint64, uuid string) kafka.RecordPayload {
-		return []byte(fmt.Sprintf("{\"type\":\"%s\",\"id\":\"%s\",\"randomStuff\":\"%s\"}", messageType, uuid, randomStringFromCharset(messageSize, charset)))
+		return []byte(fmt.Sprintf("{\"type\":\"%s\",\"id\":\"%s\",\"randomStuff\":\"%s\"}", messageType, uuid, randomStuff))
 	}
 }
 

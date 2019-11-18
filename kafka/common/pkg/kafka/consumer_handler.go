@@ -62,7 +62,7 @@ func (consumer *saramaConsumerHandler) Cleanup(session sarama.ConsumerGroupSessi
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (consumer *saramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	consumer.logger.Info(fmt.Sprintf("Starting Consumer Group Handler, topic: %s", claim.Topic()))
+	consumer.logger.Info(fmt.Sprintf("Starting partition consumer, topic: %s, partition: %d", claim.Topic(), claim.Partition()))
 
 	// NOTE:
 	// Do not move the code below to a goroutine.
@@ -87,8 +87,7 @@ func (consumer *saramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 
 	}
 
-	consumer.logger.Info(fmt.Sprintf("Stopping Consumer Group Handler, topic: %s", claim.Topic()))
-
+	consumer.logger.Info(fmt.Sprintf("Stopping partition consumer, topic: %s, partition: %d", claim.Topic(), claim.Partition()))
 	return nil
 }
 
