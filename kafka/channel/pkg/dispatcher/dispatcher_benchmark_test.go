@@ -75,7 +75,7 @@ func genChannelMessage(payloadSize uint, headersNumber uint, headersSize uint) c
 	payload := randBytes(payloadSize)
 
 	headers := make(map[string]string, headersNumber)
-	for i := uint(0); i < headersNumber; i++  {
+	for i := uint(0); i < headersNumber; i++ {
 		headers[randString(10)] = randString(headersSize)
 	}
 
@@ -89,12 +89,12 @@ func genKafkaMessage(payloadSize uint, headersNumber uint, headersSize uint) *sa
 	payload := randBytes(payloadSize)
 
 	headers := make([]*sarama.RecordHeader, headersNumber)
-	for i := uint(0); i < headersNumber; i++  {
-		headers[i] = &sarama.RecordHeader{Key:randBytes(10), Value:randBytes(headersSize)}
+	for i := uint(0); i < headersNumber; i++ {
+		headers[i] = &sarama.RecordHeader{Key: randBytes(10), Value: randBytes(headersSize)}
 	}
 
 	return &sarama.ConsumerMessage{
-		Value: payload,
+		Value:   payload,
 		Headers: headers,
 	}
 }

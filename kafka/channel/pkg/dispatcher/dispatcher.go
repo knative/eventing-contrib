@@ -313,8 +313,8 @@ func fromKafkaMessage(kafkaMessage *sarama.ConsumerMessage) *contribchannels.Mes
 
 func toKafkaMessage(channel eventingchannels.ChannelReference, message *contribchannels.Message, topicFunc TopicFunc) *sarama.ProducerMessage {
 	kafkaMessage := sarama.ProducerMessage{
-		Topic: topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
-		Value: sarama.ByteEncoder(message.Payload),
+		Topic:   topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
+		Value:   sarama.ByteEncoder(message.Payload),
 		Headers: make([]sarama.RecordHeader, len(message.Headers)),
 	}
 	i := 0
