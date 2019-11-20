@@ -22,6 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
@@ -151,6 +152,10 @@ type GitHubSourceStatus struct {
 	// for the GitHubSource.
 	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
+}
+
+func (s *GitHubSource) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("GitHubSource")
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.

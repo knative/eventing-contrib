@@ -31,7 +31,7 @@ import (
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	serviceclient "knative.dev/serving/pkg/client/injection/client"
-	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
+	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service"
 
 	//knative.dev/eventing imports
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
@@ -67,6 +67,7 @@ func NewController(
 		githubClientSet:     githubclient.Get(ctx),
 		githubLister:        githubInformer.Lister(),
 		deploymentLister:    deploymentInformer.Lister(),
+		webhookClient:       gitHubWebhookClient{},
 		receiveAdapterImage: raImage,
 		eventTypeLister:     eventTypeInformer.Lister(),
 		loggingContext:      ctx,

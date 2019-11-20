@@ -38,9 +38,9 @@ import (
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 
 	//knative.dev/serving imports
-	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
 	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
-	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
+	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1alpha1"
 
 	//knative.dev/eventing-contrib imports
 	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
@@ -147,7 +147,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	//	logger := logging.FromContext(ctx)
 
 	source.Status.ObservedGeneration = source.Generation
 	source.Status.InitializeConditions()
@@ -195,24 +194,26 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	ksvc, err := r.getOwnedService(ctx, source)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			ksvc = resources.MakeService(source, r.receiveAdapterImage)
-			if _, err := r.servingClientSet.ServingV1().Services(source.Namespace).Create(ksvc); err != nil {
+			ksvcArgs := resources.ServiceArgs{
+				Source:              source,
+				ReceiveAdapterImage: r.receiveAdapterImage,
+			}
+			ksvc := resources.MakeService(&ksvcArgs)
+			if _, err := r.servingClientSet.ServingV1alpha1().Services(source.Namespace).Create(ksvc); err != nil {
 				return err
 			}
 			r.Recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
-
 			// TODO: Mark Deploying for the ksvc
 			// Wait for the Service to get a status
 			return nil
 		} else if !metav1.IsControlledBy(ksvc, source) {
 			return fmt.Errorf("Service %q is not owned by GitHubSource %q", ksvc.Name, source.Name)
 		}
-
 		// Error was something other than NotFound
 		return err
 	}
 
-	routeCondition := ksvc.Status.GetCondition(servingv1.ServiceConditionReady)
+	routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionReady)
 	if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && ksvc.Status.URL != nil {
 		receiveAdapterDomain := ksvc.Status.URL.Host
 		// source.Status.MarkServiceDeployed(ra)
@@ -227,7 +228,6 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 				secretToken:           secretToken,
 				alternateGitHubAPIURL: source.Spec.GitHubAPIURL,
 			}
-
 			hookID, err := r.createWebhook(ctx, args)
 			if err != nil {
 				return err
@@ -361,11 +361,11 @@ func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 	return owner, repo, nil
 }
 
-func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1.Service, error) {
+func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*servingv1alpha1.Service, error) {
 	listOptions := &metav1.ListOptions{
 		LabelSelector: labels.Everything().String(),
 	}
-	serviceList, err := r.servingClientSet.ServingV1().Services(source.Namespace).List(*listOptions)
+	serviceList, err := r.servingClientSet.ServingV1alpha1().Services(source.Namespace).List(*listOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +375,7 @@ func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 			return &ksvc, nil
 		}
 	}
-	return nil, apierrors.NewNotFound(servingv1.Resource("services"), "")
+	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
 }
 
 func (r *Reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
