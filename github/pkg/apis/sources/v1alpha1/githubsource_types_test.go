@@ -330,3 +330,11 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 		})
 	}
 }
+func TestGitHubSource_GetGroupVersionKind(t *testing.T) {
+	src := GitHubSource{}
+	gvk := src.GetGroupVersionKind()
+
+	if gvk.Kind != "GitHubSource" {
+		t.Errorf("Should be 'GitHubSource'.")
+	}
+}
