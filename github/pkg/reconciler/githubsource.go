@@ -31,6 +31,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -242,6 +243,13 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 	} else {
 		return nil
 	}
+	accessor, err := meta.Accessor(source)
+	if accessor.GetDeletionTimestamp() != nil {
+		err = r.finalize(ctx, source)
+		if err != nil {
+			return err
+		}
+	}
 
 	err = r.reconcileEventTypes(ctx, source)
 	if err != nil {
@@ -258,6 +266,10 @@ func (r *Reconciler) finalize(ctx context.Context, source *sourcesv1alpha1.GitHu
 	// will be recorded allowing the webhook to be removed manually by the
 	// operator.
 	r.removeFinalizer(source)
+	_, err := r.githubClientSet.SourcesV1alpha1().GitHubSources(source.Namespace).Update(source)
+	if err != nil {
+		return err
+	}
 
 	// If a webhook was created, try to delete it
 	if source.Status.WebhookIDKey != "" {
