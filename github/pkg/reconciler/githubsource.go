@@ -18,6 +18,7 @@ package github
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -32,6 +33,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"k8s.io/client-go/tools/cache"
@@ -219,7 +221,10 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		// source.Status.MarkServiceDeployed(ra)
 		// TODO: Mark Deployed for the ksvc
 		// TODO: Mark some condition for the webhook status?
-		r.addFinalizer(source)
+		err := r.addFinalizer(source)
+		if err != nil {
+			return err
+		}
 		if source.Status.WebhookIDKey == "" {
 			args := &webhookArgs{
 				source:                source,
@@ -428,10 +433,25 @@ func (r *Reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) ([]even
 	return eventTypes, nil
 }
 
-func (r *Reconciler) addFinalizer(s *sourcesv1alpha1.GitHubSource) {
-	finalizers := sets.NewString(s.Finalizers...)
-	finalizers.Insert(finalizerName)
-	s.Finalizers = finalizers.List()
+func (r *Reconciler) addFinalizer(src *sourcesv1alpha1.GitHubSource) error {
+	finalizers := sets.NewString(src.Finalizers...)
+	if finalizers.Has(finalizerName) {
+		return nil
+	}
+
+	mergePatch := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"finalizers":      append(src.Finalizers, finalizerName),
+			"resourceVersion": src.ResourceVersion,
+		},
+	}
+
+	patch, err := json.Marshal(mergePatch)
+	if err != nil {
+		return nil
+	}
+	_, err = r.githubClientSet.SourcesV1alpha1().GitHubSources(src.Namespace).Patch(src.Name, types.MergePatchType, patch)
+	return err
 }
 
 func (r *Reconciler) removeFinalizer(s *sourcesv1alpha1.GitHubSource) {
