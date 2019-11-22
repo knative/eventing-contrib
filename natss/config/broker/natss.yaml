@@ -37,7 +37,7 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - name: client
+  - name: tcp-client
     port: 4222
     protocol: TCP
     targetPort: client

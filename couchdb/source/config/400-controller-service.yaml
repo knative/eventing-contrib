@@ -23,4 +23,5 @@ spec:
   selector:
     control-plane: couchdb-controller-manager
   ports:
-  - port: 443
+  - name: https-couchdb
+    port: 443

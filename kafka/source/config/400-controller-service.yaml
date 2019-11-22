@@ -24,4 +24,5 @@ spec:
   selector:
     control-plane: kafka-controller-manager
   ports:
-  - port: 443
+  - name: https-kafka
+    port: 443

@@ -24,4 +24,5 @@ spec:
   selector:
     control-plane: camel-controller-manager
   ports:
-  - port: 443
+  - name: https-camel
+    port: 443

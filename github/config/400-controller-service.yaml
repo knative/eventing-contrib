@@ -24,4 +24,5 @@ spec:
   selector:
     control-plane: github-controller-manager
   ports:
-  - port: 443
+  - name: https-github
+    port: 443

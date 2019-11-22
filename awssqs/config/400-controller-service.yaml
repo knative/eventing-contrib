@@ -24,4 +24,5 @@ spec:
   selector:
     control-plane: awssqs-controller-manager
   ports:
-  - port: 443
+  - name: https-awssqs
+    port: 443

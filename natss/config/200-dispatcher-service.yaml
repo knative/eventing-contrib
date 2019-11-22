@@ -26,6 +26,7 @@ spec:
     messaging.knative.dev/channel: natss-channel
     messaging.knative.dev/role: dispatcher
   ports:
-  - port: 80
+  - name: http-dispatcher
+    port: 80
     protocol: TCP
     targetPort: 8080
