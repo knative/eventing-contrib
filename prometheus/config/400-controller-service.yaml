@@ -23,4 +23,5 @@ spec:
   selector:
     control-plane: prometheus-controller-manager
   ports:
-  - port: 443
+  - name: https-prom
+    port: 443
