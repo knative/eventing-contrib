@@ -15,4 +15,4 @@ limitations under the License.
 */
 
 // Package githubsource implements a GitHubSource controller.
-package reconciler
+package github

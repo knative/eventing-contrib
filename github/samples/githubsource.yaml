@@ -28,9 +28,10 @@ spec:
       name: githubsecret
       key: secretToken
   sink:
-    apiVersion: messaging.knative.dev/v1alpha1
-    kind: Channel
-    name: githubchannel
+    ref:
+      apiVersion: messaging.knative.dev/v1alpha1
+      kind: InMemoryChannel
+      name: githubchannel
 
 ---
 
@@ -46,10 +47,6 @@ stringData:
 ---
 
 apiVersion: messaging.knative.dev/v1alpha1
-kind: Channel
+kind: InMemoryChannel
 metadata:
   name: githubchannel
-spec:
-  channelTemplate:
-    apiVersion: messaging.knative.dev/v1alpha1
-    kind: InMemoryChannel

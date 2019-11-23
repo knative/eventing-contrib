@@ -80,6 +80,7 @@ rules:
   - ""
   resources:
   - events
+  - configmaps
   verbs: *everything
 
 # EventTypes admin

@@ -22,8 +22,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis"
+	"knative.dev/pkg/apis/duck"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
+
+var _ = duck.VerifyType(&GitHubSource{}, &duckv1.Conditions{})
 
 func TestGitHubSourceStatusIsReady(t *testing.T) {
 	tests := []struct {
@@ -155,8 +159,8 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 	tests := []struct {
 		name      string
 		s         *GitHubSourceStatus
-		condQuery duckv1alpha1.ConditionType
-		want      *duckv1alpha1.Condition
+		condQuery apis.ConditionType
+		want      *apis.Condition
 	}{{
 		name:      "uninitialized",
 		s:         &GitHubSourceStatus{},
@@ -170,7 +174,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   GitHubSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -183,7 +187,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   GitHubSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -196,7 +200,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   GitHubSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -209,7 +213,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   GitHubSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -224,7 +228,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   GitHubSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		},
@@ -240,7 +244,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:    GitHubSourceConditionReady,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Testing",
@@ -258,7 +262,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:    GitHubSourceConditionReady,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Testing",
@@ -276,7 +280,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   GitHubSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		},
@@ -291,7 +295,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:    GitHubSourceConditionReady,
 			Status:  corev1.ConditionUnknown,
 			Reason:  "SinkEmpty",
@@ -309,7 +313,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   GitHubSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		},
@@ -318,11 +322,19 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.s.GetCondition(test.condQuery)
-			ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{},
+			ignoreTime := cmpopts.IgnoreFields(apis.Condition{},
 				"LastTransitionTime", "Severity")
 			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
 				t.Errorf("unexpected condition (-want, +got) = %v", diff)
 			}
 		})
+	}
+}
+func TestGitHubSource_GetGroupVersionKind(t *testing.T) {
+	src := GitHubSource{}
+	gvk := src.GetGroupVersionKind()
+
+	if gvk.Kind != "GitHubSource" {
+		t.Errorf("Should be 'GitHubSource'.")
 	}
 }

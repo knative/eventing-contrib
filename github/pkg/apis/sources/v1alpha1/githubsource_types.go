@@ -22,15 +22,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"knative.dev/pkg/apis/duck"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // Check that GitHubSource can be validated and can be defaulted.
 var _ runtime.Object = (*GitHubSource)(nil)
-
-// Check that GitHubSource implements the Conditions duck type.
-var _ = duck.VerifyType(&GitHubSource{}, &duckv1alpha1.Conditions{})
 
 // GitHubSourceSpec defines the desired state of GitHubSource
 // +kubebuilder:categories=all,knative,eventing,sources
@@ -70,7 +69,7 @@ type GitHubSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.
 	// +optional
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+	Sink *duckv1beta1.Destination `json:"sink,omitempty"`
 
 	// API URL if using github enterprise (default https://api.github.com)
 	// +optional
@@ -110,31 +109,41 @@ func GitHubEventSource(ownerAndRepo string) string {
 const (
 	// GitHubSourceConditionReady has status True when the
 	// GitHubSource is ready to send events.
-	GitHubSourceConditionReady = duckv1alpha1.ConditionReady
+	GitHubSourceConditionReady = apis.ConditionReady
 
 	// GitHubSourceConditionSecretsProvided has status True when the
 	// GitHubSource has valid secret references
-	GitHubSourceConditionSecretsProvided duckv1alpha1.ConditionType = "SecretsProvided"
+	GitHubSourceConditionSecretsProvided apis.ConditionType = "SecretsProvided"
 
 	// GitHubSourceConditionSinkProvided has status True when the
 	// GitHubSource has been configured with a sink target.
-	GitHubSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+	GitHubSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
 
 	// GitHubSourceConditionEventTypesProvided has status True when the
 	// GitHubSource has been configured with event types.
-	GitHubSourceConditionEventTypesProvided duckv1alpha1.ConditionType = "EventTypeProvided"
+	GitHubSourceConditionEventTypesProvided apis.ConditionType = "EventTypeProvided"
+
+	// GitHubServiceconditiondeployed has status True when then
+	// GitHubSource Service has been deployed
+	//	GitHubServiceConditionDeployed apis.ConditionType = "Deployed"
+
+	// GitHubSourceReconciled has status True when the
+	// GitHubSource has been properly reconciled
+	GitHub
 )
 
-var gitHubSourceCondSet = duckv1alpha1.NewLivingConditionSet(
+var gitHubSourceCondSet = apis.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
 	GitHubSourceConditionSinkProvided)
+
+//	GitHubServiceConditionDeployed)
 
 // GitHubSourceStatus defines the observed state of GitHubSource
 type GitHubSourceStatus struct {
 	// inherits duck/v1alpha1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1alpha1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// WebhookIDKey is the ID of the webhook registered with GitHub
 	WebhookIDKey string `json:"webhookIDKey,omitempty"`
@@ -145,8 +154,12 @@ type GitHubSourceStatus struct {
 	SinkURI string `json:"sinkUri,omitempty"`
 }
 
+func (s *GitHubSource) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("GitHubSource")
+}
+
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (s *GitHubSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+func (s *GitHubSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return gitHubSourceCondSet.Manage(s).GetCondition(t)
 }
 
@@ -181,6 +194,22 @@ func (s *GitHubSourceStatus) MarkSink(uri string) {
 	}
 }
 
+// MarkSinkWarnDeprecated sets the condition that the source has a sink configured and warns ref is deprecated.
+func (s *GitHubSourceStatus) MarkSinkWarnRefDeprecated(uri string) {
+	s.SinkURI = uri
+	if len(uri) > 0 {
+		c := apis.Condition{
+			Type:     GitHubSourceConditionSinkProvided,
+			Status:   corev1.ConditionTrue,
+			Severity: apis.ConditionSeverityError,
+			Message:  "Using deprecated object ref fields when specifying spec.sink. Update to spec.sink.ref. These will be removed in 0.11.",
+		}
+		gitHubSourceCondSet.Manage(s).SetCondition(c)
+	} else {
+		gitHubSourceCondSet.Manage(s).MarkUnknown(GitHubSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+	}
+}
+
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *GitHubSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionSinkProvided, reason, messageFormat, messageA...)
@@ -195,6 +224,15 @@ func (s *GitHubSourceStatus) MarkEventTypes() {
 func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
+
+// MarkDeployed sets the condition that the source has been deployed.
+//func (s *GitHubSourceStatus) MarkServiceDeployed(d *appsv1.Deployment) {
+//	if duckv1.DeploymentIsAvailable(&d.Status, false) {
+//		gitHubSourceCondSet.Manage(s).MarkTrue(GitHubServiceConditionDeployed)
+//	} else {
+//		gitHubSourceCondSet.Manage(s).MarkFalse(GitHubServiceConditionDeployed, "ServiceDeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
+//	}
+//}
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
