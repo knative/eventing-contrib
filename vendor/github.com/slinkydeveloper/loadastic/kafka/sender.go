@@ -12,17 +12,18 @@ type RecordPayload []byte
 type KafkaSender struct {
 	topic string
 
-	producer sarama.SyncProducer
+	producer sarama.AsyncProducer
 }
 
 func NewKafkaSender(bootstrapUrl string, topicName string) (Sender, error) {
 	config := sarama.NewConfig()
 
-	config.Producer.Partitioner = sarama.NewRoundRobinPartitioner
-	config.Producer.Return.Successes = true
+	config.Producer.Partitioner = sarama.NewRandomPartitioner
+	config.Producer.Return.Successes = false
+	config.Producer.Flush.Messages = 1
 	config.Version = sarama.V2_0_0_0
 
-	producer, err := sarama.NewSyncProducer(strings.Split(bootstrapUrl, ","), config)
+	producer, err := sarama.NewAsyncProducer(strings.Split(bootstrapUrl, ","), config)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +40,9 @@ func (ks KafkaSender) Send(payload RecordPayload) (interface{}, error) {
 		Value: sarama.ByteEncoder(payload),
 	}
 
-	_, _, err := ks.producer.SendMessage(&message)
+	ks.producer.Input() <- &message
 
-	return nil, err
+	return nil, nil
 }
 
 func (ks KafkaSender) Close() {
