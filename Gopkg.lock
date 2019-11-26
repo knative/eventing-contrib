@@ -1789,7 +1789,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6017fc0c20bc04dddb02e4134525982a89db1f498bed579dc4de693536914114"
+  digest = "1:a31afce20f4d92f69b2a19f45ae583b1ffd87eac39d14a5b05a9e8a60dbccaee"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1862,11 +1862,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "67225efe772a97d170029be0930f877ab7121cc2"
+  revision = "fa3e8321d2c014a4f9ce30971f9d68547e0e758d"
 
 [[projects]]
   branch = "master"
-  digest = "1:c2a4335822f3689f4322e6b814a280932b3064079e9792ff3da51987313602de"
+  digest = "1:4835d8c504bc12fd7e44d97f9e6ab5e84e0384be0ffba1f264efc61043c733c5"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1887,6 +1887,7 @@
     "client/clientset/versioned/typed/authentication/v1alpha1/fake",
     "client/clientset/versioned/typed/istio/v1alpha3",
     "client/clientset/versioned/typed/istio/v1alpha3/fake",
+    "client/injection/ducks/duck/v1beta1/addressable",
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
     "client/injection/kube/informers/admissionregistration/v1beta1/mutatingwebhookconfiguration",
@@ -1945,11 +1946,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "2ec0f8da50578dcc3d830571d0de24de834579c8"
+  revision = "6305a6322febad96fdb4f0d879d0e2b34c8a79b1"
 
 [[projects]]
   branch = "master"
-  digest = "1:766a70046a983dd788d6a7276ae8e1e90c397af74c9aef494710b0d7bc0c0dfa"
+  digest = "1:a4a68048de2c0d5327144c05f36502217da77b7fba5f53505196830826612d1b"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1991,7 +1992,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "78673fad137e66d5d37f88731dc7efbb2dfcb805"
+  revision = "be9cdc9f64859b91abbc2afef27cec82d59c4480"
 
 [[projects]]
   branch = "master"
@@ -2002,7 +2003,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "fad831028edbe066665977ea7bf366c3d5c0a2d1"
+  revision = "4aaba3b76d04d8bbb0b3289ec05df0ee6051fa52"
 
 [[projects]]
   digest = "1:d7fff5619b391ebfdab093ade4d065a6b8095b43134f18d60a0887971ee886c0"
