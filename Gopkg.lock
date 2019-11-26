@@ -824,6 +824,14 @@
   version = "v3.0.0"
 
 [[projects]]
+  digest = "1:7842cc48c908d9d765c23193906a22f10f5b44ea048c2c2749443e6ccd7eacf4"
+  name = "github.com/rogpeppe/fastuuid"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "10c3923834d38e951ae8f627bfec2dc632c5b6cb"
+  version = "v1.2.0"
+
+[[projects]]
   digest = "1:e09ada96a5a41deda4748b1659cc8953961799e798aea557257b56baee4ecaf3"
   name = "github.com/rogpeppe/go-internal"
   packages = [
@@ -1781,7 +1789,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6e1759ddc37ee622e6b1b57cc3e98b3eb24c01f337b8fe7e2da2c790edd7ca2e"
+  digest = "1:6017fc0c20bc04dddb02e4134525982a89db1f498bed579dc4de693536914114"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1854,11 +1862,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "093a7387df24074061ff5f5df058150fccc1d3f5"
+  revision = "67225efe772a97d170029be0930f877ab7121cc2"
 
 [[projects]]
   branch = "master"
-  digest = "1:49220d16c158be486a1667e9d7b7b71d01fbbfa5b10672cd2745c6dede01ecad"
+  digest = "1:c2a4335822f3689f4322e6b814a280932b3064079e9792ff3da51987313602de"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1937,7 +1945,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "8c1fb5fe0446c1f1e534e6d9a97ff3b3c53be140"
+  revision = "2ec0f8da50578dcc3d830571d0de24de834579c8"
 
 [[projects]]
   branch = "master"
@@ -1983,7 +1991,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "ef0674da65c6d385b1e67e493bc673c73b19ce9c"
+  revision = "78673fad137e66d5d37f88731dc7efbb2dfcb805"
 
 [[projects]]
   branch = "master"
