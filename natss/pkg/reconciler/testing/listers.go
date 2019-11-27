@@ -28,13 +28,11 @@ import (
 	fakemessagingclientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/fake"
 	messaginglisters "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 	fakeeventsclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
-	fakesharedclientset "knative.dev/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
-	fakesharedclientset.AddToScheme,
 	fakeeventsclientset.AddToScheme,
 	fakemessagingclientset.AddToScheme,
 }
@@ -80,10 +78,6 @@ func (l *Listers) GetAllObjects() []runtime.Object {
 	all = append(all, l.GetEventsObjects()...)
 	all = append(all, l.GetKubeObjects()...)
 	return all
-}
-
-func (l *Listers) GetSharedObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakesharedclientset.AddToScheme)
 }
 
 func (l *Listers) GetServiceLister() corev1listers.ServiceLister {
