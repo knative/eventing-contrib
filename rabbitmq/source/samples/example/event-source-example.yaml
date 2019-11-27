@@ -1,0 +1,33 @@
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: RabbitmqSource
+metadata:
+  name: rabbitmq-source
+spec:
+  brokers: "rabbitmq:5672/"
+  topic: ""
+  user:
+    secretKeyRef:
+      name: "rabbitmq-source-key"
+      key: "user"
+  password:
+    secretKeyRef:
+      name: "rabbitmq-source-key"
+      key: "password"
+  exchange_config:
+    type: "fanout"
+    durable: true
+    auto_deleted: false
+    internal: false
+    nowait: false
+  queue_config:
+    name: ""
+    routing_key: ""
+    durable: false
+    delete_when_unused: false
+    exclusive: false
+    nowait: false
+
+  sink:
+    apiVersion: serving.knative.dev/v1alpha1
+    kind: Service
+    name: event-display

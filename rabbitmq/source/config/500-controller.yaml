@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-controller-manager
+  namespace: knative-sources
+  labels:
+    contrib.eventing.knative.dev/release: devel
+    control-plane: rabbitmq-controller-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &labels
+      control-plane: rabbitmq-controller-manager
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      serviceAccountName: rabbitmq-controller-manager
+      containers:
+        - name: manager
+          image: ko://knative.dev/eventing-contrib/rabbitmq/source/cmd/controller
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: METRICS_DOMAIN
+              value: knative.dev/sources
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
+            - name: RABBITMQ_RA_IMAGE
+              value: ko://knative.dev/eventing-contrib/rabbitmq/source/cmd/receive_adapter
+          volumeMounts:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 30Mi
+            requests:
+              cpu: 20m
+              memory: 20Mi
+      serviceAccount: rabbitmq-controller-manager
+      terminationGracePeriodSeconds: 10

@@ -35,6 +35,7 @@ COMPONENTS=(
   ["kafka-channel.yaml"]="kafka/channel/config"
   ["natss-channel.yaml"]="natss/config"
   ["prometheus-source.yaml"]="prometheus/config"
+  ["rabbitmq.yaml"]="rabbitmq/source/config"
 )
 readonly COMPONENTS
 

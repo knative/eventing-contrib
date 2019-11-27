@@ -1,0 +1,37 @@
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: RabbitmqSource
+metadata:
+  name: rabbitmq-source
+spec:
+  brokers: RABBITMQ_BROKERS
+  topic: RABBITMQ_TOPIC
+  user:
+    secretKeyRef:
+      name: RABBITMQ_USER
+      key: RABBITMQ_USER
+  password:
+    secretKeyRef:
+      name: RABBITMQ_PASSWORD
+      key: RABBITMQ_PASSWORD
+  channel_config:
+    prefetch_count: RABBITMQ_CHANNEL_CONFIG_PREFETCH_COUNT
+    global_qos: RABBITMQ_CHANNEL_CONFIG_QOS_GLOBAL
+  exchange_config:
+    name: RABBITMQ_EXCHANGE_CONFIG_NAME
+    type: RABBITMQ_EXCHANGE_CONFIG_TYPE
+    durable: RABBITMQ_EXCHANGE_CONFIG_DURABLE
+    auto_deleted: RABBITMQ_EXCHANGE_CONFIG_AUTO_DELETED
+    internal: RABBITMQ_EXCHANGE_CONFIG_INTERNAL
+    nowait: RABBITMQ_EXCHANGE_CONFIG_NOWAIT
+  queue_config:
+    name: RABBITMQ_QUEUE_CONFIG_NAME
+    routing_key: RABBITMQ_ROUTING_KEY
+    durable: RABBITMQ_QUEUE_CONFIG_DURABLE
+    delete_when_unused: RABBITMQ_QUEUE_CONFIG_AUTO_DELETED
+    exclusive: RABBITMQ_QUEUE_CONFIG_EXCLUSIVE
+    nowait: RABBITMQ_QUEUE_CONFIG_NOWAIT
+
+  sink:
+    apiVersion: serving.knative.dev/v1alpha1
+    kind: Service
+    name: event-display

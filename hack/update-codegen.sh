@@ -41,7 +41,7 @@ chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 )
 
 # Just Sources
-API_DIRS_SOURCES=(camel/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
+API_DIRS_SOURCES=(camel/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg rabbitmq/source/pkg )
 
 for DIR in "${API_DIRS_SOURCES[@]}"; do
   # generate the code with:
@@ -109,7 +109,8 @@ ${GOPATH}/bin/deepcopy-gen \
   -i knative.dev/eventing-contrib/couchdb/source/pkg/apis \
   -i knative.dev/eventing-contrib/camel/source/pkg/apis \
   -i knative.dev/eventing-contrib/github/pkg/apis \
-  -i knative.dev/eventing-contrib/gitlab/pkg/apis
+  -i knative.dev/eventing-contrib/gitlab/pkg/apis \
+  -i knative.dev/eventing-contrib/rabbitmq/pkg/apis
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
