@@ -26,7 +26,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	fakeeventsclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
-	fakesharedclientset "knative.dev/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 
 	messagingv1alpha1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
@@ -36,7 +35,6 @@ import (
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
-	fakesharedclientset.AddToScheme,
 	fakeeventsclientset.AddToScheme,
 	fakemessagingclientset.AddToScheme,
 	fakeeventingclientset.AddToScheme,
@@ -87,10 +85,6 @@ func (l *Listers) GetAllObjects() []runtime.Object {
 	all = append(all, l.GetEventsObjects()...)
 	all = append(all, l.GetKubeObjects()...)
 	return all
-}
-
-func (l *Listers) GetSharedObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakesharedclientset.AddToScheme)
 }
 
 func (l *Listers) GetServiceLister() corev1listers.ServiceLister {
