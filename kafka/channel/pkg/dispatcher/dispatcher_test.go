@@ -20,9 +20,10 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-	v1 "k8s.io/api/core/v1"
 	"net/http"
 	"testing"
+
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/Shopify/sarama"
 	"github.com/google/go-cmp/cmp"
