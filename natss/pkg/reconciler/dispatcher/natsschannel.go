@@ -130,7 +130,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		logging.FromContext(ctx).Error("Failed to update NatssChannel status", zap.Error(updateStatusErr))
 		return updateStatusErr
 	}
-	return nil
+
+	// Trigger reconciliation in case of errors
+	return reconcileErr
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.NatssChannel) error {
