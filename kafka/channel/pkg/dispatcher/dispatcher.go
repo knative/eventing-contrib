@@ -75,6 +75,8 @@ func (c consumerMessageHandler) Handle(ctx context.Context, message *sarama.Cons
 var _ kafka.KafkaConsumerHandler = (*consumerMessageHandler)(nil)
 
 type subscription struct {
+	Namespace     string
+	Name          string
 	UID           string
 	SubscriberURI string
 	ReplyURI      string
@@ -104,7 +106,9 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 			Namespace: cc.Namespace,
 		}
 		for _, subSpec := range cc.FanoutConfig.Subscriptions {
-			sub := newSubscription(subSpec)
+			// TODO: use better way to get the provided Name/Namespce for the Subscription
+			// we NEED this for better consumer groups
+			sub := newSubscription(subSpec, subSpec.DeprecatedRef.Name, subSpec.DeprecatedRef.Namespace)
 			if _, ok := d.kafkaConsumerGroups[channelRef][sub]; !ok {
 				// only subscribe when not exists in channel-subscriptions map
 				// do not need to resubscribe every time channel fanout config is updated
@@ -194,7 +198,7 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
 
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
-	groupID := fmt.Sprintf("kafka.%s", sub.UID)
+	groupID := fmt.Sprintf("kafka.%s.%s.%s", sub.Namespace, channelRef.Name, sub.Name)
 
 	handler := consumerMessageHandler{sub, d.dispatcher}
 
@@ -326,8 +330,10 @@ func toKafkaMessage(channel eventingchannels.ChannelReference, message *contribc
 	return &kafkaMessage
 }
 
-func newSubscription(spec eventingduck.SubscriberSpec) subscription {
+func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace string) subscription {
 	return subscription{
+		Name:          name,
+		Namespace:     namespace,
 		UID:           string(spec.UID),
 		SubscriberURI: spec.SubscriberURI,
 		ReplyURI:      spec.ReplyURI,

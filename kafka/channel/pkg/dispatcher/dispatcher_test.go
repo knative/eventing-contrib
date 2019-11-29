@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	v1 "k8s.io/api/core/v1"
 	"net/http"
 	"testing"
 
@@ -146,10 +147,16 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 						FanoutConfig: fanout.Config{
 							Subscriptions: []eventingduck.SubscriberSpec{
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-1",
+									},
 									UID:           "subscription-1",
 									SubscriberURI: "http://test/subscriber",
 								},
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-2",
+									},
 									UID:           "subscription-2",
 									SubscriberURI: "http://test/subscriber",
 								},
@@ -175,10 +182,16 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 						FanoutConfig: fanout.Config{
 							Subscriptions: []eventingduck.SubscriberSpec{
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-1",
+									},
 									UID:           "subscription-1",
 									SubscriberURI: "http://test/subscriber",
 								},
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-2",
+									},
 									UID:           "subscription-2",
 									SubscriberURI: "http://test/subscriber",
 								}}}}},
@@ -192,10 +205,16 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 						FanoutConfig: fanout.Config{
 							Subscriptions: []eventingduck.SubscriberSpec{
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-2",
+									},
 									UID:           "subscription-2",
 									SubscriberURI: "http://test/subscriber",
 								},
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-3",
+									},
 									UID:           "subscription-3",
 									SubscriberURI: "http://test/subscriber",
 								},
@@ -224,10 +243,16 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 						FanoutConfig: fanout.Config{
 							Subscriptions: []eventingduck.SubscriberSpec{
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-1",
+									},
 									UID:           "subscription-1",
 									SubscriberURI: "http://test/subscriber",
 								},
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-2",
+									},
 									UID:           "subscription-2",
 									SubscriberURI: "http://test/subscriber",
 								},
@@ -242,6 +267,9 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 						FanoutConfig: fanout.Config{
 							Subscriptions: []eventingduck.SubscriberSpec{
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-1",
+									},
 									UID:           "subscription-1",
 									SubscriberURI: "http://test/subscriber",
 								},
@@ -255,10 +283,16 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 						FanoutConfig: fanout.Config{
 							Subscriptions: []eventingduck.SubscriberSpec{
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-3",
+									},
 									UID:           "subscription-3",
 									SubscriberURI: "http://test/subscriber",
 								},
 								{
+									DeprecatedRef: &v1.ObjectReference{
+										Name: "subscription-4",
+									},
 									UID:           "subscription-4",
 									SubscriberURI: "http://test/subscriber",
 								},
