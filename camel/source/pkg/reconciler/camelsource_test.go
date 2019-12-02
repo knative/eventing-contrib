@@ -38,6 +38,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/pkg/resolver"
 )
@@ -279,8 +280,9 @@ func TestReconcile(t *testing.T) {
 
 		c := tc.GetClient()
 		dynClient := fake.NewSimpleDynamicClient(scheme.Scheme, tc.InitialState...)
-		baseContext := context.WithValue(context.Background(), dynamicclient.Key{}, dynClient)
-		ctx, cancel := context.WithCancel(baseContext)
+		ctx := context.WithValue(context.Background(), dynamicclient.Key{}, dynClient)
+		ctx, cancel := context.WithCancel(ctx)
+		ctx = addressable.WithDuck(ctx)
 
 		r := &reconciler{
 			client:       c,
