@@ -353,7 +353,6 @@
   ]
   pruneopts = "NUT"
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
-  version = "v0.3.0"
 
 [[projects]]
   digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
@@ -1789,7 +1788,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6017fc0c20bc04dddb02e4134525982a89db1f498bed579dc4de693536914114"
+  digest = "1:9c54f056233c67e84b689e3a8d4ba2d6a1f41e334e062f2dba5acc0e8a6c9095"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1862,11 +1861,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "67225efe772a97d170029be0930f877ab7121cc2"
+  revision = "b597f0cfb4974ccfb5b82f2623c6e32b36137c41"
 
 [[projects]]
   branch = "master"
-  digest = "1:c2a4335822f3689f4322e6b814a280932b3064079e9792ff3da51987313602de"
+  digest = "1:bcb478b77fb59d3544df5006027f725d7c081cf4b47bf064d70cb7e5baf3b934"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1874,19 +1873,8 @@
     "apis/duck/v1",
     "apis/duck/v1alpha1",
     "apis/duck/v1beta1",
-    "apis/istio",
-    "apis/istio/authentication",
-    "apis/istio/authentication/v1alpha1",
-    "apis/istio/common/v1alpha1",
-    "apis/istio/v1alpha3",
     "changeset",
-    "client/clientset/versioned",
-    "client/clientset/versioned/fake",
-    "client/clientset/versioned/scheme",
-    "client/clientset/versioned/typed/authentication/v1alpha1",
-    "client/clientset/versioned/typed/authentication/v1alpha1/fake",
-    "client/clientset/versioned/typed/istio/v1alpha3",
-    "client/clientset/versioned/typed/istio/v1alpha3/fake",
+    "client/injection/ducks/duck/v1/addressable",
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
     "client/injection/kube/informers/admissionregistration/v1beta1/mutatingwebhookconfiguration",
@@ -1945,11 +1933,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "2ec0f8da50578dcc3d830571d0de24de834579c8"
+  revision = "891c2876dd3de4c88a1126e49c2ad920eedf0212"
 
 [[projects]]
   branch = "master"
-  digest = "1:766a70046a983dd788d6a7276ae8e1e90c397af74c9aef494710b0d7bc0c0dfa"
+  digest = "1:9e5398c6bb804efe72993f7b5f50e5ac530a1b8335101ac8e8dc32225dcd02c4"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1991,7 +1979,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "78673fad137e66d5d37f88731dc7efbb2dfcb805"
+  revision = "2ef3665924aa3812ff4067726e2b52600afe7f92"
 
 [[projects]]
   branch = "master"
@@ -2198,6 +2186,7 @@
     "knative.dev/pkg/apis/duck/v1",
     "knative.dev/pkg/apis/duck/v1alpha1",
     "knative.dev/pkg/apis/duck/v1beta1",
+    "knative.dev/pkg/client/injection/ducks/duck/v1/addressable",
     "knative.dev/pkg/client/injection/kube/client/fake",
     "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment",
     "knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints",
