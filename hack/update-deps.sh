@@ -32,7 +32,7 @@ rm -rf $(find vendor/ -name 'BUILD.bazel')
 
 update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./github/cmd/*" "./camel/source/cmd/*" \
 		"./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" \
-		"./natss/cmd/*" "./couchdb/source/cmd/*"
+		"./natss/cmd/*" "./couchdb/source/cmd/*" "./ceph/cmd/*"
 
 # HACK HACK HACK
 # The only way we found to create a consistent Trace tree without any missing Spans is to

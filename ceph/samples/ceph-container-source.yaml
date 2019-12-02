@@ -1,0 +1,14 @@
+apiVersion: sources.eventing.knative.dev/v1alpha1
+kind: ContainerSource
+metadata:
+  name: ceph-bucket-notification-source
+  labels:
+      app: ceph-source
+spec:
+  image: knative.dev/eventing-contrib/ceph/cmd/receive_adapter
+  args:
+    - '--port=19090'
+  sink:
+    apiVersion: messaging.knative.dev/v1alpha1
+    kind: Channel
+    name: ceph-event-channel
