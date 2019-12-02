@@ -35,6 +35,7 @@ import (
 	sourcesv1alpha1 "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
 	controllertesting "knative.dev/eventing-contrib/pkg/controller/testing"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/injection/clients/dynamicclient"
@@ -72,7 +73,9 @@ func init() {
 		corev1.AddToScheme,
 		sourcesv1alpha1.SchemeBuilder.AddToScheme,
 		duckv1alpha1.AddToScheme,
+		duckv1beta1.AddToScheme,
 		camelv1alpha1.SchemeBuilder.AddToScheme,
+		duckv1.SchemeBuilder.AddToScheme,
 	)
 }
 
