@@ -3,7 +3,7 @@ package common
 import "time"
 
 type Step struct {
-	Rps uint
+	Rps      uint
 	Duration time.Duration
 }
 
