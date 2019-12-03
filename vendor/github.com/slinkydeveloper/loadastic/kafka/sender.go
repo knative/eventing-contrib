@@ -18,9 +18,11 @@ type KafkaSender struct {
 func NewKafkaSender(bootstrapUrl string, topicName string) (Sender, error) {
 	config := sarama.NewConfig()
 
+	config.Net.MaxOpenRequests = 100
+	config.Net.KeepAlive = 10 * time.Second
 	config.Producer.Partitioner = sarama.NewRandomPartitioner
 	config.Producer.Return.Successes = false
-	config.Producer.Flush.Messages = 1
+	config.Producer.Flush.MaxMessages = 5
 	config.Version = sarama.V2_0_0_0
 
 	producer, err := sarama.NewAsyncProducer(strings.Split(bootstrapUrl, ","), config)
