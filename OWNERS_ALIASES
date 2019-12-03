@@ -4,15 +4,19 @@ aliases:
 
   github-approvers:
     - bbrowning
+    - lberk
   github-reviewers:
     - bbrowning
+    - lberk
     - rootfs
 
   kafka-approvers:
     - bbrowning
+    - lberk
     - matzew
   kafka-reviewers:
     - bbrowning
+    - lberk
     - matzew
 
   natss-approvers:
