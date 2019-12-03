@@ -30,4 +30,13 @@ index bcdc5e24..b69c997c 100644
      - name: transformevents
 -      image: knative.dev/eventing/test/test_images/transformevents
 +      image: knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images/transformevents
- 
+
+--- a/vendor/knative.dev/eventing/test/test_images/performance/pod.yaml	(date 1575299196000)
++++ b/vendor/knative.dev/eventing/test/test_images/performance/pod.yaml	(date 1575299271341)
+@@ -8,5 +8,5 @@
+ spec:
+   containers:
+     - name: performance
+-      image: knative.dev/eventing/test/test_images/performance
++      image: knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images/performance
+

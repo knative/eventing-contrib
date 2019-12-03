@@ -199,6 +199,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 	a.eventsPool.Put(event)
 
 	if err != nil {
+		a.logger.Debug("Error while sending the message", zap.Error(err))
 		return false, err // Error while sending, don't commit offset
 	}
 

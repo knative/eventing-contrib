@@ -5,6 +5,7 @@ required = [
     "knative.dev/eventing/test/test_images/logevents",
     "knative.dev/eventing/test/test_images/sendevents",
     "knative.dev/eventing/test/test_images/transformevents",
+    "knative.dev/eventing/test/test_images/performance",
 
     "github.com/emicklei/go-restful",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp", # for development against gcp

@@ -852,14 +852,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:35ddb7a7b22ec9be320bd6b11c88a269dbd8c92487be12d0d6ef586d24143187"
+  digest = "1:f50593e5d8b313ef6ae9c80233e056c596207b4e484795bd9b0a88b31e3a329b"
   name = "github.com/slinkydeveloper/loadastic"
   packages = [
     "common",
     "kafka",
   ]
   pruneopts = "NUT"
-  revision = "7ebc5ff3f9d13864e13c23d8e2f2ddbc0614172a"
+  revision = "9afe5a010a57f0589f8a2f2a119d1d4d6b07acae"
 
 [[projects]]
   digest = "1:d3533ee568fc00a971617ec09dc0f0b3eddfb4adbc1275f8f6332553d67506b4"
@@ -1788,7 +1788,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9c54f056233c67e84b689e3a8d4ba2d6a1f41e334e062f2dba5acc0e8a6c9095"
+  digest = "1:122fe64f59262d967b0223a6b54a8f25ddc6ab50629e2a9d08e661aa5fb6cb21"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1857,15 +1857,16 @@
     "test/common/performance/sender",
     "test/e2e/helpers",
     "test/test_images/logevents",
+    "test/test_images/performance",
     "test/test_images/sendevents",
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "b597f0cfb4974ccfb5b82f2623c6e32b36137c41"
+  revision = "33b715568284fbd507396064cd5017ae98b42238"
 
 [[projects]]
   branch = "master"
-  digest = "1:bcb478b77fb59d3544df5006027f725d7c081cf4b47bf064d70cb7e5baf3b934"
+  digest = "1:09a00f21eaeeae387d973fd3f82cf06a8627f88566b4e6811ba97003dd207eac"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1933,7 +1934,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "891c2876dd3de4c88a1126e49c2ad920eedf0212"
+  revision = "944655d6cc17ceb861b0764046c56a465fe5bb75"
 
 [[projects]]
   branch = "master"
@@ -2179,6 +2180,7 @@
     "knative.dev/eventing/test/common/performance/sender",
     "knative.dev/eventing/test/e2e/helpers",
     "knative.dev/eventing/test/test_images/logevents",
+    "knative.dev/eventing/test/test_images/performance",
     "knative.dev/eventing/test/test_images/sendevents",
     "knative.dev/eventing/test/test_images/transformevents",
     "knative.dev/pkg/apis",
@@ -2210,6 +2212,7 @@
     "knative.dev/pkg/source",
     "knative.dev/pkg/system",
     "knative.dev/pkg/system/testing",
+    "knative.dev/pkg/test",
     "knative.dev/pkg/tracing",
     "knative.dev/pkg/webhook",
     "knative.dev/pkg/webhook/certificates",

@@ -48,3 +48,8 @@ git apply ${REPO_ROOT_DIR}/hack/kivik-set-zero.patch
 # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
 # path has to be a GOPATH.
 git apply ${REPO_ROOT_DIR}/hack/update-image-paths.patch
+
+## Hack to vendor performance image from eventing
+rm -rf ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/*
+ln -s ../../../../../../../.git/HEAD ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/HEAD
+ln -s ../../../../../../../.git/refs ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/refs

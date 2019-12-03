@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
+	"github.com/Shopify/sarama"
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/golang/protobuf/ptypes"
 	loadastic_common "github.com/slinkydeveloper/loadastic/common"
@@ -22,20 +24,20 @@ type KafkaLoadGenerator struct {
 	sender    kafka.Sender
 }
 
-func (k KafkaLoadGenerator) Warmup(pace performance_common.PaceSpec, msgSize uint) {
+func (k *KafkaLoadGenerator) Warmup(pace performance_common.PaceSpec, msgSize uint) {
 	k.loadastic.StartSteps(JsonKafkaRequestFactory(msgSize, performance_common.WarmupEventType), paceToStep(pace))
 }
 
-func (k KafkaLoadGenerator) RunPace(i int, pace performance_common.PaceSpec, msgSize uint) {
+func (k *KafkaLoadGenerator) RunPace(i int, pace performance_common.PaceSpec, msgSize uint) {
 	k.loadastic.StartSteps(JsonKafkaRequestFactory(msgSize, performance_common.MeasureEventType), paceToStep(pace))
 }
 
-func (k KafkaLoadGenerator) SendGCEvent() {
-	_, _ = k.sender.Send(generatePayloadWithType(performance_common.GCEventType))
+func (k *KafkaLoadGenerator) SendGCEvent() {
+	_, _ = k.sender.Send(k.sender.InitializeWorker(), generatePayloadWithType(performance_common.GCEventType))
 }
 
-func (k KafkaLoadGenerator) SendEndEvent() {
-	_, _ = k.sender.Send(generatePayloadWithType(performance_common.EndEventType))
+func (k *KafkaLoadGenerator) SendEndEvent() {
+	_, _ = k.sender.Send(k.sender.InitializeWorker(), generatePayloadWithType(performance_common.EndEventType))
 }
 
 func NewKafkaLoadGeneratorFactory(bootstrapUrl string, topic string, minWorkers uint64) sender.LoadGeneratorFactory {
@@ -48,7 +50,19 @@ func NewKafkaLoadGeneratorFactory(bootstrapUrl string, topic string, minWorkers 
 			panic("Missing --topic flag")
 		}
 
-		sender, err := kafka.NewKafkaSender(bootstrapUrl, topic)
+		config := sarama.NewConfig()
+		config.Net.MaxOpenRequests = 1000
+		config.Producer.Flush.Messages = 1
+		config.Producer.RequiredAcks = sarama.NoResponse
+		config.Producer.Retry.Max = 0
+		config.Version = sarama.V2_3_0_0
+
+		client, err := sarama.NewClient(strings.Split(bootstrapUrl, ","), config)
+		if err != nil {
+			return nil, err
+		}
+
+		sender, err := kafka.NewKafkaSenderFromSaramaClient(client, topic)
 		if err != nil {
 			return nil, err
 		}

@@ -49,12 +49,12 @@ readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
 readonly NATSS_CRD_CONFIG_DIR="natss/config"
 
 # Strimzi installation config template used for starting up Kafka clusters.
-readonly STRIMZI_VERSION="0.11.4"
-readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-${STRIMZI_VERSION}.yaml"
+readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.14.0.yaml"
 # Strimzi installation config.
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp)"
 # Kafka cluster CR config file.
-readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-persistent-single-2.1.0.yaml"
+readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-persistent-single-2.3.0.yaml"
+readonly KAFKA_TOPIC_INSTALLATION_CONFIG="test/config/100-kafka-topic.yaml"
 # Kafka cluster URL for our installation
 readonly KAFKA_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka:9092"
 # Kafka channel CRD config template directory.
@@ -63,6 +63,8 @@ readonly KAFKA_CRD_CONFIG_TEMPLATE_DIR="kafka/channel/config"
 readonly KAFKA_CRD_CONFIG_TEMPLATE="400-kafka-config.yaml"
 # Real Kafka channel CRD config , generated from the template directory and modified template file.
 readonly KAFKA_CRD_CONFIG_DIR="$(mktemp -d)"
+# Kafka channel CRD config template directory.
+readonly KAFKA_SOURCE_CRD_CONFIG_DIR="kafka/source/config"
 
 function knative_setup() {
   if is_release_branch; then
@@ -102,12 +104,12 @@ function test_setup() {
   kafka_setup || return 1
 
   install_channel_crds || return 1
+  install_sources_crds || return 1
 
   # Publish test images.
   echo ">> Publishing test images from vendor"
   $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
-  # TODO: also publish test images in eventing-contrib when there are actual images for testing
-  # $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
+  $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 }
 
 function test_teardown() {
@@ -115,6 +117,7 @@ function test_teardown() {
   kafka_teardown
 
   uninstall_channel_crds
+  uninstall_sources_crds
 }
 
 function install_channel_crds() {
@@ -129,12 +132,24 @@ function install_channel_crds() {
   wait_until_pods_running knative-eventing || fail_test "Failed to install the Kafka Channel CRD"
 }
 
+function install_sources_crds() {
+  echo "Installing Kafka Source CRD"
+  ko apply -f ${KAFKA_SOURCE_CRD_CONFIG_DIR} || return 1
+  wait_until_pods_running knative-eventing || fail_test "Failed to install the Kafka Source CRD"
+  wait_until_pods_running knative-sources || fail_test "Failed to install the Kafka Source CRD"
+}
+
 function uninstall_channel_crds() {
   echo "Uninstalling NATSS Channel CRD"
   ko delete --ignore-not-found=true --now --timeout 60s -f ${NATSS_CRD_CONFIG_DIR}
 
   echo "Uninstalling Kafka Channel CRD"
   ko delete --ignore-not-found=true --now --timeout 60s -f ${KAFKA_CRD_CONFIG_DIR}
+}
+
+function uninstall_sources_crds() {
+  echo "Uninstalling Kafka Source CRD"
+  ko delete --ignore-not-found=true --now --timeout 60s -f ${KAFKA_SOURCE_CRD_CONFIG_DIR}
 }
 
 # Create resources required for NATSS provisioner setup
@@ -155,20 +170,25 @@ function kafka_setup() {
   echo "Installing Kafka cluster"
   kubectl create namespace kafka || return 1
   sed 's/namespace: .*/namespace: kafka/' ${STRIMZI_INSTALLATION_CONFIG_TEMPLATE} > ${STRIMZI_INSTALLATION_CONFIG}
-  kubectl apply -f ${STRIMZI_INSTALLATION_CONFIG} -n kafka
+  kubectl apply -f "${STRIMZI_INSTALLATION_CONFIG}" -n kafka
   kubectl apply -f ${KAFKA_INSTALLATION_CONFIG} -n kafka
+  kubectl apply -f ${KAFKA_TOPIC_INSTALLATION_CONFIG} -n kafka
   wait_until_pods_running kafka || fail_test "Failed to start up a Kafka cluster"
 }
 
 function kafka_teardown() {
   echo "Uninstalling Kafka cluster"
-  kubectl delete -f ${STRIMZI_INSTALLATION_CONFIG} -n kafka
+  kubectl delete -f ${KAFKA_TOPIC_INSTALLATION_CONFIG} -n kafka
   kubectl delete -f ${KAFKA_INSTALLATION_CONFIG} -n kafka
+  kubectl delete -f "${STRIMZI_INSTALLATION_CONFIG}" -n kafka
   kubectl delete namespace kafka
 }
 
 initialize $@ --skip-istio-addon
 
 go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel || fail_test
+
+# If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands
+# trap - SIGINT SIGQUIT SIGTSTP EXIT
 
 success
