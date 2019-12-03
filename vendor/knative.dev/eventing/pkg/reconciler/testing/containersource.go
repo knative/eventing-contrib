@@ -24,46 +24,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/tracker"
 )
 
-// SinkBindingOption enables further configuration of a SinkBinding.
-type SinkBindingOption func(*v1alpha1.SinkBinding)
-
-// NewSinkBinding creates a SinkBinding with SinkBindingOptions
-func NewSinkBinding(name, namespace string, o ...SinkBindingOption) *v1alpha1.SinkBinding {
-	c := &v1alpha1.SinkBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-	for _, opt := range o {
-		opt(c)
-	}
-	//c.SetDefaults(context.Background()) // TODO: We should add defaults and validation.
-	return c
-}
-
-// WithSubject assigns the subject of the SinkBinding.
-func WithSubject(subject tracker.Reference) SinkBindingOption {
-	return func(sb *v1alpha1.SinkBinding) {
-		sb.Spec.Subject = subject
-	}
-}
-
-// WithSink assigns the sink of the SinkBinding.
-func WithSink(sink duckv1.Destination) SinkBindingOption {
-	return func(sb *v1alpha1.SinkBinding) {
-		sb.Spec.Sink = sink
-	}
-}
-
-// ContainerSourceOption enables further configuration of a ContainerSource.
+// ContainerSourceOption enables further configuration of a CronJob.
 type ContainerSourceOption func(*v1alpha1.ContainerSource)
 
-// NewContainerSource creates a ContainerSource with ContainerSourceOptions
+// NewCronJob creates a CronJob with CronJobOptions
 func NewContainerSource(name, namespace string, o ...ContainerSourceOption) *v1alpha1.ContainerSource {
 	c := &v1alpha1.ContainerSource{
 		ObjectMeta: metav1.ObjectMeta{
