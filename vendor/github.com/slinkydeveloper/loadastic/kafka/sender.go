@@ -9,46 +9,54 @@ import (
 
 type RecordPayload []byte
 
-type KafkaSender struct {
-	topic string
-
+type KafkaWorker struct {
 	producer sarama.AsyncProducer
+}
+
+type KafkaSender struct {
+	topic  string
+	client sarama.Client
 }
 
 func NewKafkaSender(bootstrapUrl string, topicName string) (Sender, error) {
 	config := sarama.NewConfig()
 
-	config.Net.MaxOpenRequests = 100
-	config.Net.KeepAlive = 10 * time.Second
 	config.Producer.Partitioner = sarama.NewRandomPartitioner
 	config.Producer.Return.Successes = false
-	config.Producer.Flush.MaxMessages = 5
 	config.Version = sarama.V2_0_0_0
 
-	producer, err := sarama.NewAsyncProducer(strings.Split(bootstrapUrl, ","), config)
+	client, err := sarama.NewClient(strings.Split(bootstrapUrl, ","), config)
 	if err != nil {
 		return nil, err
 	}
 
 	return &KafkaSender{
-		topic:    topicName,
-		producer: producer,
+		topic:  topicName,
+		client: client,
 	}, nil
 }
 
-func (ks KafkaSender) Send(payload RecordPayload) (interface{}, error) {
+func NewKafkaSenderFromSaramaClient(client sarama.Client, topicName string) (Sender, error) {
+	return &KafkaSender{
+		topic:  topicName,
+		client: client,
+	}, nil
+}
+
+func (ks *KafkaSender) InitializeWorker() *KafkaWorker {
+	producer, _ := sarama.NewAsyncProducerFromClient(ks.client)
+	return &KafkaWorker{producer: producer}
+}
+
+func (ks *KafkaSender) Send(worker *KafkaWorker, payload RecordPayload) (interface{}, error) {
 	message := sarama.ProducerMessage{
 		Topic: ks.topic,
 		Value: sarama.ByteEncoder(payload),
 	}
 
-	ks.producer.Input() <- &message
+	worker.producer.Input() <- &message
 
 	return nil, nil
-}
-
-func (ks KafkaSender) Close() {
-	_ = ks.producer.Close()
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +

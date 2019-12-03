@@ -852,14 +852,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7d1e7989d0f7b171c40f8db0ebc5119b9128af268cb824f19b1c1471804b629d"
+  digest = "1:f50593e5d8b313ef6ae9c80233e056c596207b4e484795bd9b0a88b31e3a329b"
   name = "github.com/slinkydeveloper/loadastic"
   packages = [
     "common",
     "kafka",
   ]
   pruneopts = "NUT"
-  revision = "7b0c32f355928d1584c03e343c9383d9e5755a80"
+  revision = "9afe5a010a57f0589f8a2f2a119d1d4d6b07acae"
 
 [[projects]]
   digest = "1:d3533ee568fc00a971617ec09dc0f0b3eddfb4adbc1275f8f6332553d67506b4"
