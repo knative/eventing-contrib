@@ -124,7 +124,7 @@ func NewController(
 
 	logger.Info("Starting dispatcher.")
 	go func() {
-		if err := kafkaDispatcher.Start(ctx.Done()); err != nil {
+		if err := kafkaDispatcher.Start(ctx); err != nil {
 			logger.Error("Cannot start dispatcher", zap.Error(err))
 		}
 	}()
