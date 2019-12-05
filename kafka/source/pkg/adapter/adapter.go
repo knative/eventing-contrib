@@ -181,6 +181,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 	event.SetTime(msg.Timestamp)
 	event.SetType(sourcesv1alpha1.KafkaEventType)
 	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, msg.Topic))
+	event.SetSubject(sourcesv1alpha1.KafkaEventSubject(msg.Partition, msg.Offset))
 	event.SetDataContentType(cloudevents.ApplicationJSON)
 	event.SetExtension("key", string(msg.Key))
 	err := event.SetData(msg.Value)

@@ -109,15 +109,15 @@ func main() {
 		hb.Sequence++
 
 		event := cloudevents.Event{
-			Context: cloudevents.EventContextV03{
+			Context: cloudevents.EventContextV1{
 				Type:   eventType,
-				Source: *types.ParseURLRef(eventSource),
+				Source: *types.ParseURIRef(eventSource),
 				Extensions: map[string]interface{}{
 					"the":   42,
 					"heart": "yes",
 					"beats": true,
 				},
-			}.AsV02(),
+			}.AsV1(),
 			Data: hb,
 		}
 

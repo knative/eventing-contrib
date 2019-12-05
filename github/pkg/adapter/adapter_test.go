@@ -539,13 +539,13 @@ func TestHandleEvent(t *testing.T) {
 
 	expectedRequest := requestValidation{
 		Headers: map[string][]string{
-			"ce-specversion":     {"0.3"},
+			"ce-specversion":     {"1.0"},
 			"ce-id":              {"12345"},
 			"ce-time":            {"2019-01-29T09:35:10.69383396-08:00"},
 			"ce-type":            {"dev.knative.source.github.pull_request"},
 			"ce-source":          {testSource},
-			"ce-github-delivery": {"12345"},
-			"ce-github-event":    {"pull_request"},
+			"ce-delivery": {"12345"},
+			"ce-event":    {"pull_request"},
 			"ce-subject":         {testSubject},
 			"content-type":       {"application/json"},
 		},
