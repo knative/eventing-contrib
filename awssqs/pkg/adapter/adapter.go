@@ -25,8 +25,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudevents "github.com/cloudevents/sdk-go"
+	ce_client "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
 	"go.uber.org/zap"
@@ -54,7 +54,7 @@ type Adapter struct {
 	OnFailedPollWaitSecs time.Duration
 
 	// Client sends cloudevents to the target.
-	client client.Client
+	client ce_client.Client
 }
 
 // getRegion takes an AWS SQS URL and extracts the region from it
@@ -168,28 +168,40 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 	}
 }
 
-// postMessage sends an SQS event to the SinkURI
-func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
+func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 
 	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)
 	if err != nil {
-		logger.Errorw("Failed to unmarshal the message.", zap.Error(err), zap.Any("message", m.Body))
 		timestamp = time.Now().UnixNano()
 	}
 
-	event := cloudevents.Event{
-		Context: cloudevents.EventContextV03{
-			ID:     *m.MessageId,
-			Type:   sourcesv1alpha1.AwsSqsSourceEventType,
-			Source: *types.ParseURLRef(a.QueueURL),
-			Time:   &types.Timestamp{Time: time.Unix(timestamp, 0)},
-		}.AsV02(),
-		Data: m,
-	}
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
+	event.SetID(*m.MessageId)
+	event.SetType(sourcesv1alpha1.AwsSqsSourceEventType)
+	event.SetSource(types.ParseURIRef(a.QueueURL).String())
+	event.SetTime(time.Unix(timestamp, 0))
 
-	_, _, err = a.client.Send(context.TODO(), event)
-	return err
+	if err := event.SetData(m); err != nil {
+		return nil, err
+	}
+	return &event, nil
+}
+
+// postMessage sends an SQS event to the SinkURI
+func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
+
+	event, err := a.makeEvent(m)
+
+	if err != nil {
+		logger.Error("Cloud Event creation error", zap.Error(err))
+		return err
+	}
+	if _, _, err = a.client.Send(context.TODO(), *event); err != nil {
+		logger.Error("Cloud Event delivery error", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 // poll reads messages from the queue in batches of a given maximum size.

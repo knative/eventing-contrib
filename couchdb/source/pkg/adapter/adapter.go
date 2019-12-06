@@ -166,7 +166,7 @@ func (a *couchDbAdapter) processChanges() {
 }
 
 func (a *couchDbAdapter) makeEvent(changes *kivik.Changes) (*cloudevents.Event, error) {
-	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	event.SetID(changes.Seq())
 	event.SetSource(a.source)
 	event.SetSubject(changes.ID())

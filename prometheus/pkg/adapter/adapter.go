@@ -155,7 +155,7 @@ func (a *prometheusAdapter) send() {
 }
 
 func (a *prometheusAdapter) makeEvent(payload interface{}) (*cloudevents.Event, error) {
-	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	event.SetSource(a.source)
 	event.SetID(string(uuid.NewUUID()))
 	event.SetType(v1alpha1.PromQLPrometheusSourceEventType)

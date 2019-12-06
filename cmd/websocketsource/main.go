@@ -77,10 +77,10 @@ func main() {
 		}
 
 		event := cloudevents.Event{
-			Context: cloudevents.EventContextV03{
+			Context: cloudevents.EventContextV1{
 				Type:   eventType,
-				Source: *types.ParseURLRef(eventSource),
-			}.AsV02(),
+				Source: *types.ParseURIRef(eventSource),
+			}.AsV1(),
 			Data: message,
 		}
 		if _, _, err := ce.Send(context.TODO(), event); err != nil {
