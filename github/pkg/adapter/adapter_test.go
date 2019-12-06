@@ -544,8 +544,6 @@ func TestHandleEvent(t *testing.T) {
 			"ce-time":            {"2019-01-29T09:35:10.69383396-08:00"},
 			"ce-type":            {"dev.knative.source.github.pull_request"},
 			"ce-source":          {testSource},
-			"ce-delivery": {"12345"},
-			"ce-event":    {"pull_request"},
 			"ce-subject":         {testSubject},
 			"content-type":       {"application/json"},
 		},

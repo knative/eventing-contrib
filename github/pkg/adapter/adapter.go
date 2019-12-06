@@ -34,8 +34,6 @@ import (
 const (
 	GHHeaderEvent    = "GitHub-Event"
 	GHHeaderDelivery = "GitHub-Delivery"
-	GHCEHeaderEvent    = "event"
-	GHCEHeaderDelivery = "delivery"
 )
 
 // Adapter converts incoming GitHub webhook events to CloudEvents
@@ -85,8 +83,6 @@ func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {
 	event.SetID(eventID)
 	event.SetType(cloudEventType)
 	event.SetSource(a.source)
-	event.SetExtension(GHCEHeaderEvent, gitHubEventType)
-	event.SetExtension(GHCEHeaderDelivery, eventID)
 	event.SetSubject(subject)
 	event.SetDataContentType(cloudevents.ApplicationJSON)
 	event.SetData(payload)

@@ -135,11 +135,6 @@ func KafkaEventSource(namespace, kafkaSourceName, topic string) string {
 	return fmt.Sprintf("/apis/v1/namespaces/%s/kafkasources/%s#%s", namespace, kafkaSourceName, topic)
 }
 
-// KafkaEventSource returns the Kafka CloudEvent subject of the message.
-func KafkaEventSubject(partion int32, offset int64) string {
-	return fmt.Sprintf("partion:%d#%d", partion, offset)
-}
-
 // KafkaSourceStatus defines the observed state of KafkaSource.
 type KafkaSourceStatus struct {
 	// inherits duck/v1alpha1 Status, which currently provides:
