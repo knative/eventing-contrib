@@ -21,23 +21,23 @@ type RequestParametersSpec struct {
 }
 
 type ResponseElementsSpec struct {
-	XAmzRequestId string `json:"x-amz-request-id"`
-	XAmzId2       string `json:"x-amz-id-2"`
+	XAmzRequestID string `json:"x-amz-request-id"`
+	XAmzID2       string `json:"x-amz-id-2"`
 }
 
 type UserIdentitySpec struct {
-	PrincipalId string `json:"principalId"`
+	PrincipalID string `json:"principalId"`
 }
 
-type OwnerdentitySpec struct {
-	PrincipalId string `json:"principalId"`
+type OwnerIdentitySpec struct {
+	PrincipalID string `json:"principalId"`
 }
 
 type BucketSpec struct {
-	Name          string           `json:"name"`
-	OwnerIdentity OwnerdentitySpec `json:"ownerIdentity"`
-	Arn           string           `json:"arn"`
-	Id            string           `json:"id"`
+	Name          string            `json:"name"`
+	OwnerIdentity OwnerIdentitySpec `json:"ownerIdentity"`
+	Arn           string            `json:"arn"`
+	ID            string            `json:"id"`
 }
 
 type MetadataEntry struct {
@@ -49,14 +49,14 @@ type ObjectSpec struct {
 	Key       string          `json:"key"`
 	Size      uint            `json:"size"`
 	ETag      string          `json:"eTag"`
-	VersionId string          `json:"versionId"`
+	VersionID string          `json:"versionId"`
 	Sequencer string          `json:"sequencer"`
 	Metadata  []MetadataEntry `json:"metadata"`
 }
 
 type S3Spec struct {
 	S3SchemaVersion string     `json:"s3SchemaVersion"`
-	ConfigurationId string     `json:"configurationId"`
+	ConfigurationID string     `json:"configurationId"`
 	Bucket          BucketSpec `json:"bucket"`
 	Object          ObjectSpec `json:"object"`
 }
@@ -71,7 +71,7 @@ type BucketNotification struct {
 	RequestParameters RequestParametersSpec `json:"requestParameters"`
 	ResponseElements  ResponseElementsSpec  `json:"responseElements"`
 	S3                S3Spec                `json:"s3"`
-	EventId           string                `json:"eventId"`
+	EventID           string                `json:"eventId"`
 }
 
 type BucketNotifications struct {

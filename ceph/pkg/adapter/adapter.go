@@ -29,6 +29,7 @@ import (
 )
 
 var theClient cloudevents.Client
+var stopCh chan struct{}
 
 // postMessage convert bucket notifications to knative events and sent them to knative
 func postMessage(notification ceph.BucketNotification) error {
@@ -39,7 +40,7 @@ func postMessage(notification ceph.BucketNotification) error {
 	}
 
 	event := cloudevents.NewEvent(cloudevents.VersionV1)
-	event.SetID(notification.ResponseElements.XAmzRequestId + notification.ResponseElements.XAmzId2)
+	event.SetID(notification.ResponseElements.XAmzRequestID + notification.ResponseElements.XAmzID2)
 	event.SetSource(notification.EventSource + "." + notification.AwsRegion + "." + notification.S3.Bucket.Name)
 	event.SetType("com.amazonaws." + notification.EventName)
 	event.SetDataContentType(cloudevents.ApplicationJSON)
@@ -80,9 +81,9 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 	for _, notification := range notifications.Records {
 		log.Printf("Received Ceph bucket notification: %+v", notification)
 		if err := postMessage(notification); err == nil {
-			log.Printf("Event %s was successfully posted to knative", notification.EventId)
+			log.Printf("Event %s was successfully posted to knative", notification.EventID)
 		} else {
-			log.Printf("Failed to post event %s: %s", notification.EventId, err.Error())
+			log.Printf("Failed to post event %s: %s", notification.EventID, err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -91,13 +92,22 @@ func postHandler(w http.ResponseWriter, r *http.Request) {
 
 // Start the ceph bucket notifications to knative adapter
 func Start(sinkURI string, port string) {
-	client, err := kncloudevents.NewDefaultClient(sinkURI)
+	var err error
+	theClient, err = kncloudevents.NewDefaultClient(sinkURI)
 	if err != nil {
 		log.Printf("Failed to configure knative sink: %s", err.Error())
 		return
 	}
 	log.Printf("Successfully configure knative sink: %s", sinkURI)
-	theClient = client
 	http.HandleFunc("/", postHandler)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	stopCh = make(chan struct{})
+	go http.ListenAndServe(":"+port, nil)
+	log.Println("Ceph to Knative adapter spawned HTTP server")
+	<-stopCh
+	log.Println("Ceph to Knative adapter terminated")
+}
+
+// Stop the ceph bucket notifications to knative adapter
+func Stop() {
+	close(stopCh)
 }
