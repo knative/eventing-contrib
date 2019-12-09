@@ -20,11 +20,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	ceph "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	ceph "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1"
 )
 
 var notification1 = ceph.BucketNotification{

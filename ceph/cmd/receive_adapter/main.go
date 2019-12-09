@@ -18,8 +18,9 @@ package main
 
 import (
 	"flag"
-	"knative.dev/eventing-contrib/ceph/pkg/adapter"
 	"log"
+
+	"knative.dev/eventing-contrib/ceph/pkg/adapter"
 )
 
 func main() {
