@@ -256,7 +256,6 @@ func makeEventSubject(partion int32, offset int64) string {
 	return fmt.Sprintf("partion:%d#%d", partion, offset)
 }
 
-
 // verifyCertSkipHostname verifies certificates in the same way that the
 // default TLS handshake does, except it skips hostname verification. It must
 // be used with InsecureSkipVerify.

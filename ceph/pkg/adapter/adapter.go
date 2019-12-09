@@ -19,13 +19,14 @@ package adapter
 import (
 	"context"
 	"encoding/json"
-	cloudevents "github.com/cloudevents/sdk-go"
 	"io/ioutil"
-	ceph "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	"log"
 	"net/http"
 	"time"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	ceph "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
 
 var theClient cloudevents.Client
