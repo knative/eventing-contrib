@@ -19,7 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-//	"strings"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,11 +31,12 @@ import (
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
+	"knative.dev/eventing/pkg/channel/swappable"
 	"knative.dev/pkg/logging"
-	//	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 type KafkaDispatcher struct {
@@ -45,7 +46,8 @@ type KafkaDispatcher struct {
 	// hostToChannelMapLock is used to update hostToChannelMap
 	hostToChannelMapLock sync.Mutex
 
-//	handler    *multichannelfanout.Handler
+	handler    *swappable.Handler
+	ceClient   cloudevents.Client
 	receiver   *eventingchannels.EventReceiver
 	dispatcher *eventingchannels.EventDispatcher
 
@@ -62,7 +64,7 @@ type KafkaDispatcher struct {
 type TopicFunc func(separator, namespace, name string) string
 
 type KafkaDispatcherArgs struct {
-	//Need to add a handler here?
+	Handler   *swappable.Handler
 	ClientID  string
 	Brokers   []string
 	TopicFunc TopicFunc
@@ -175,8 +177,6 @@ func createHostToChannelMap(config *multichannelfanout.Config) (map[string]event
 
 // Start starts the kafka dispatcher's message processing.
 func (d *KafkaDispatcher) Start(ctx context.Context) error {
-	//	ctx, cancel := context.WithCancel(ctx)
-	//	defer cancel()
 	if d.receiver == nil {
 		return fmt.Errorf("message receiver is not set")
 	}
@@ -198,7 +198,7 @@ func (d *KafkaDispatcher) Start(ctx context.Context) error {
 		}
 	}()
 
-	return d.receiver.Start(ctx)
+	return d.ceClient.StartReceiver(ctx, d.receiver.ServeHTTP)
 }
 
 // subscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
@@ -279,38 +279,38 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 		return nil, fmt.Errorf("unable to create kafka producer: %v", err)
 	}
 
-/*	handler, err := multichannelfanout.NewHandler(args.Logger, multichannelfanout.Config{})
+	ceClient, err := kncloudevents.NewDefaultClient()
 	if err != nil {
-		args.Logger.Fatal("Error creating multichannelfanout.Handler", zap.Error(err))
-	}*/
-
+		args.Logger.Fatal("failed to create cloudevents client", zap.Error(err))
+	}
 	dispatcher := &KafkaDispatcher{
 		dispatcher:           eventingchannels.NewEventDispatcher(args.Logger),
 		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(client),
 		kafkaConsumerGroups:  make(map[eventingchannels.ChannelReference]map[subscription]sarama.ConsumerGroup),
 		kafkaAsyncProducer:   producer,
 		logger:               args.Logger,
-//		handler:              handler,
+		ceClient:             ceClient,
+		handler:              args.Handler,
 		topicFunc:            args.TopicFunc,
 	}
-	receiverFunc, err := eventingchannels.NewEventReceiver(createReceiverFunction(dispatcher), args.Logger)
+	receiverFunc, err := eventingchannels.NewEventReceiver(
+		func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
+			dispatcher.kafkaAsyncProducer.Input() <- toKafkaMessage(ctx, channel, event, args.TopicFunc)
+			return nil
+		},
+		args.Logger,
+		eventingchannels.ResolveChannelFromHostHeader(eventingchannels.ResolveChannelFromHostFunc(dispatcher.getChannelReferenceFromHost)))
 	if err != nil {
 		return nil, err
 	}
+
 	dispatcher.receiver = receiverFunc
 	dispatcher.setConfig(&multichannelfanout.Config{})
 	dispatcher.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
+	dispatcher.topicFunc = args.TopicFunc
 	return dispatcher, nil
 }
 
-func createReceiverFunction(d *KafkaDispatcher) func(context.Context, eventingchannels.ChannelReference, cloudevents.Event) error {
-	return func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
-		logging.FromContext(ctx).Infof("here in channel %s", channel.String())
-		d.kafkaAsyncProducer.Input() <- toKafkaMessage(ctx, channel, event, d.topicFunc)
-		return nil
-	}
-	return nil
-}
 func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchannels.ChannelReference, error) {
 	chMap := d.getHostToChannelMap()
 	cr, ok := chMap[host]
@@ -321,13 +321,11 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 }
 
 func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage) *cloudevents.Event {
-	event := cloudevents.NewEvent("1.0")
-	event.SetSource("kafka") //added to avoid crash, remove me
-	logging.FromContext(ctx).Infof("number of headers, %d", len(kafkaMessage.Headers))
+	var event = &cloudevents.Event{}
 	for _, header := range kafkaMessage.Headers {
 		h := string(header.Key)
 		v := string(header.Value)
-		logging.FromContext(ctx).Infof("key: %s, value %s", h, v)
+		logging.FromContext(ctx).Debugf("key: %s, value %s", h, v)
 		switch h {
 		case "ce_datacontenttype":
 			event.SetDataContentType(v)
@@ -348,15 +346,13 @@ func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage)
 			event.SetDataSchema(v)
 		default:
 			// Extensions
-			//event.SetExtension(strings.ToLower(h), strings.ToLower(v))
-			continue
+			event.SetExtension(strings.ToLower(h), strings.ToLower(v))
 		}
 	}
-	return &event
+	return event
 }
 
 func toKafkaMessage(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event, topicFunc TopicFunc) *sarama.ProducerMessage {
-	logging.FromContext(ctx).Info("--------------------------toKafkaMessage")
 	data, err := event.DataBytes()
 	if err != nil {
 		return &sarama.ProducerMessage{} //this should probably be something else indicating an error
