@@ -18,6 +18,7 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -37,6 +38,9 @@ const (
 	DefaultReplicationFactor = 1
 
 	knativeKafkaTopicPrefix = "knative-messaging-kafka"
+
+	DefaultMaxIdleConns        = 1000
+	DefaultMaxIdleConnsPerHost = 1000
 )
 
 var (
@@ -44,7 +48,9 @@ var (
 )
 
 type KafkaConfig struct {
-	Brokers []string
+	Brokers             []string
+	MaxIdleConns        int
+	MaxIdleConnsPerHost int
 }
 
 // GetKafkaConfig returns the details of the Kafka cluster.
@@ -70,6 +76,26 @@ func GetKafkaConfig(path string) (*KafkaConfig, error) {
 		config.Brokers = bootstrapServers
 	} else {
 		return nil, fmt.Errorf("missing key %s in configuration", BrokerConfigMapKey)
+	}
+
+	if maxConns, ok := configMap["maxIdleConns"]; ok {
+		mc, err := strconv.Atoi(maxConns)
+		if err != nil {
+			config.MaxIdleConns = DefaultMaxIdleConns
+		}
+		config.MaxIdleConns = mc
+	} else {
+		config.MaxIdleConns = DefaultMaxIdleConns
+	}
+	if maxConnsPerHost, ok := configMap["maxIdleConnsPerHost"]; ok {
+		mcph, err := strconv.Atoi(maxConnsPerHost)
+		if err != nil {
+			config.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
+		}
+		config.MaxIdleConnsPerHost = mcph
+
+	} else {
+		config.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
 	}
 
 	return config, nil

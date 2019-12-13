@@ -2191,6 +2191,7 @@
     "knative.dev/eventing/pkg/client/injection/client/fake",
     "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
+    "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/kncloudevents/testing",
     "knative.dev/eventing/pkg/legacyclient/clientset/versioned/fake",
     "knative.dev/eventing/pkg/legacyclient/injection/client/fake",

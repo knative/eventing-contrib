@@ -31,12 +31,13 @@ import (
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/channel/swappable"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/tracing"
 )
 
 type KafkaDispatcher struct {
@@ -64,11 +65,12 @@ type KafkaDispatcher struct {
 type TopicFunc func(separator, namespace, name string) string
 
 type KafkaDispatcherArgs struct {
-	Handler   *swappable.Handler
-	ClientID  string
-	Brokers   []string
-	TopicFunc TopicFunc
-	Logger    *zap.Logger
+	KnCEConnectionArgs kncloudevents.ConnectionArgs
+	Handler            *swappable.Handler
+	ClientID           string
+	Brokers            []string
+	TopicFunc          TopicFunc
+	Logger             *zap.Logger
 }
 
 type consumerMessageHandler struct {
@@ -279,7 +281,12 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 		return nil, fmt.Errorf("unable to create kafka producer: %v", err)
 	}
 
-	ceClient, err := kncloudevents.NewDefaultClient()
+	httpTransport, err := cloudevents.NewHTTPTransport(cloudevents.WithBinaryEncoding(), cloudevents.WithMiddleware(tracing.HTTPSpanIgnoringPaths("/readyz")))
+	if err != nil {
+		args.Logger.Fatal("failed to create httpTransport", zap.Error(err))
+	}
+
+	ceClient, err := kncloudevents.NewDefaultClientGivenHttpTransport(httpTransport, args.KnCEConnectionArgs)
 	if err != nil {
 		args.Logger.Fatal("failed to create cloudevents client", zap.Error(err))
 	}

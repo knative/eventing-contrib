@@ -31,6 +31,7 @@ import (
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/channel/swappable"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/configmap"
@@ -96,6 +97,11 @@ func NewController(
 		logger.Fatal("Error loading kafka config", zap.Error(err))
 	}
 
+	connectionArgs := kncloudevents.ConnectionArgs{
+		MaxIdleConns:        kafkaConfig.MaxIdleConns,
+		MaxIdleConnsPerHost: kafkaConfig.MaxIdleConnsPerHost,
+	}
+
 	handler, err := swappable.NewEmptyHandler(base.Logger.Desugar())
 	if err != nil {
 		logger.Fatal("Error creating multichannelfanout.Handler", zap.Error(err))
@@ -103,11 +109,12 @@ func NewController(
 
 	kafkaChannelInformer := kafkachannel.Get(ctx)
 	args := &dispatcher.KafkaDispatcherArgs{
-		Handler:   handler,
-		ClientID:  "kafka-ch-dispatcher",
-		Brokers:   kafkaConfig.Brokers,
-		TopicFunc: utils.TopicName,
-		Logger:    logger,
+		KnCEConnectionArgs: connectionArgs,
+		Handler:            handler,
+		ClientID:           "kafka-ch-dispatcher",
+		Brokers:            kafkaConfig.Brokers,
+		TopicFunc:          utils.TopicName,
+		Logger:             logger,
 	}
 	kafkaDispatcher, err := dispatcher.NewDispatcher(args)
 	if err != nil {
