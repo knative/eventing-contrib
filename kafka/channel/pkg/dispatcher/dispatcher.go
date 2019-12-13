@@ -19,13 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/Shopify/sarama"
 	cloudevents "github.com/cloudevents/sdk-go"
+	. "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
@@ -321,11 +321,11 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 }
 
 func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage) *cloudevents.Event {
-	var event = &cloudevents.Event{}
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	for _, header := range kafkaMessage.Headers {
 		h := string(header.Key)
 		v := string(header.Value)
-		logging.FromContext(ctx).Debugf("key: %s, value %s", h, v)
+		logging.FromContext(ctx).Debugf("key: %s, value: %s", h, v)
 		switch h {
 		case "ce_datacontenttype":
 			event.SetDataContentType(v)
@@ -346,10 +346,13 @@ func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage)
 			event.SetDataSchema(v)
 		default:
 			// Extensions
-			event.SetExtension(strings.ToLower(h), strings.ToLower(v))
+			if IsAlphaNumericLowercaseLetters(h) {
+				event.SetExtension(h, v)
+			}
 		}
 	}
-	return event
+	event.SetData(kafkaMessage.Value)
+	return &event
 }
 
 func toKafkaMessage(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event, topicFunc TopicFunc) *sarama.ProducerMessage {

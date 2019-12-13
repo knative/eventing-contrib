@@ -17,11 +17,13 @@ limitations under the License.
 package dispatcher
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/Shopify/sarama"
+	cloudevents "github.com/cloudevents/sdk-go"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 
 	contribchannels "knative.dev/eventing-contrib/pkg/channel"
@@ -52,6 +54,7 @@ func BenchmarkToKafkaMessage(b *testing.B) {
 
 // Avoid DCE
 var message contribchannels.Message
+var event cloudevents.Event
 var saramaProducerMessage *sarama.ProducerMessage
 var saramaConsumerMessage *sarama.ConsumerMessage
 
@@ -85,6 +88,20 @@ func genChannelMessage(payloadSize uint, headersNumber uint, headersSize uint) c
 	}
 }
 
+func genChannelEvent(payloadSize uint, headersNumber uint, headersSize uint) cloudevents.Event {
+
+	payload := randBytes(payloadSize)
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
+	event.SetData(payload)
+	event.SetID(string(randBytes(10)))
+	event.SetSource("genChannelEvent")
+	event.SetType("genChannelEventType")
+	for i := uint(0); i < headersNumber; i++ {
+		event.SetExtension(string(randBytes(10)), randBytes(headersSize))
+	}
+	return event
+}
+
 func genKafkaMessage(payloadSize uint, headersNumber uint, headersSize uint) *sarama.ConsumerMessage {
 	payload := randBytes(payloadSize)
 
@@ -101,14 +118,14 @@ func genKafkaMessage(payloadSize uint, headersNumber uint, headersSize uint) *sa
 
 func baselineToKafkaMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		message = genChannelMessage(1024, 10, 64)
+		event = genChannelEvent(1024, 10, 64)
 	}
 }
 
 func benchmarkToKafkaMessage(b *testing.B, ref eventingchannels.ChannelReference) {
 	for i := 0; i < b.N; i++ {
-		message = genChannelMessage(1024, 10, 64)
-		saramaProducerMessage = toKafkaMessage(ref, &message, mockTopicFunc)
+		event := genChannelEvent(1024, 10, 64)
+		saramaProducerMessage = toKafkaMessage(context.TODO(), ref, event, mockTopicFunc)
 	}
 }
 
@@ -121,6 +138,6 @@ func baselineFromKafkaMessage(b *testing.B) {
 func benchmarkFromKafkaMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		saramaConsumerMessage = genKafkaMessage(1024, 10, 64)
-		message = *fromKafkaMessage(saramaConsumerMessage)
+		event = *fromKafkaMessage(context.TODO(), saramaConsumerMessage)
 	}
 }

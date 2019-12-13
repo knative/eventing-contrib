@@ -26,6 +26,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Shopify/sarama"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
@@ -33,7 +34,6 @@ import (
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
-	contribchannels "knative.dev/eventing-contrib/pkg/channel"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/fanout"
@@ -398,53 +398,97 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 
 func TestFromKafkaMessage(t *testing.T) {
 	data := []byte("data")
+	ctx := context.Background()
 	kafkaMessage := &sarama.ConsumerMessage{
 		Headers: []*sarama.RecordHeader{
 			{
 				Key:   []byte("k1"),
 				Value: []byte("v1"),
 			},
+			{
+				Key:   []byte("ce_id"),
+				Value: []byte("im-a-snowflake"),
+			},
+			{
+				Key:   []byte("ce_source"),
+				Value: []byte("testsource"),
+			},
+			{
+				Key:   []byte("ce_type"),
+				Value: []byte("testtype"),
+			},
 		},
 		Value: data,
 	}
-	want := &contribchannels.Message{
-		Headers: map[string]string{
-			"k1": "v1",
-		},
-		Payload: data,
-	}
-	got := fromKafkaMessage(kafkaMessage)
-	if diff := cmp.Diff(want, got); diff != "" {
+	want := cloudevents.NewEvent(cloudevents.VersionV1)
+	want.SetExtension("k1", "v1")
+	want.SetSource("testsource")
+	want.SetType("testtype")
+	want.SetID("im-a-snowflake")
+	want.SetData(data)
+
+	var got *cloudevents.Event
+	got = fromKafkaMessage(ctx, kafkaMessage)
+	if diff := cmp.Diff(&want, got); diff != "" {
 		t.Errorf("unexpected message (-want, +got) = %s", diff)
 	}
 }
 
 func TestToKafkaMessage(t *testing.T) {
 	data := []byte("data")
+
 	channelRef := eventingchannels.ChannelReference{
 		Name:      "test-channel",
 		Namespace: "test-ns",
 	}
-	msg := &contribchannels.Message{
-		Headers: map[string]string{
-			"k1": "v1",
-		},
-		Payload: data,
-	}
+
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
+	event.SetExtension("k1", "v1")
+	event.SetID("im-a-snowflake")
+	event.SetSource("testsource")
+	event.SetType("testtype")
+	event.SetData(data)
+
 	want := &sarama.ProducerMessage{
 		Topic: "knative-messaging-kafka.test-ns.test-channel",
 		Headers: []sarama.RecordHeader{
 			{
-				Key:   []byte("k1"),
+				Key:   []byte("ce_specversion"),
+				Value: []byte("1.0"),
+			},
+			{
+				Key:   []byte("ce_type"),
+				Value: []byte("testtype"),
+			},
+			{
+				Key:   []byte("ce_source"),
+				Value: []byte("testsource"),
+			},
+			{
+				Key:   []byte("ce_id"),
+				Value: []byte("im-a-snowflake"),
+			},
+			{
+				Key:   []byte("ce_time"),
+				Value: []byte("ignoreme"),
+			},
+			{
+				Key:   []byte("ce_k1"),
 				Value: []byte("v1"),
 			},
 		},
 		Value: sarama.ByteEncoder(data),
 	}
-	got := toKafkaMessage(channelRef, msg, utils.TopicName)
+
+	got := toKafkaMessage(context.TODO(), channelRef, event, utils.TopicName)
+	got.Headers[4] = sarama.RecordHeader{
+		Key:   []byte("ce_time"),
+		Value: []byte("ignoreme"),
+	}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(sarama.ProducerMessage{})); diff != "" {
 		t.Errorf("unexpected message (-want, +got) = %s", diff)
 	}
+	t.Logf("specversion %s", event.SpecVersion())
 }
 
 type dispatchTestHandler struct {
@@ -510,19 +554,21 @@ func TestUnsubscribeUnknownSub(t *testing.T) {
 
 func TestKafkaDispatcher_Start(t *testing.T) {
 	d := &KafkaDispatcher{}
-	err := d.Start(make(chan struct{}))
+
+	err := d.Start(context.TODO())
 	if err == nil {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}
 
-	receiver, err := contribchannels.NewMessageReceiver(func(channel eventingchannels.ChannelReference, message *contribchannels.Message) error {
+	receiver, err := eventingchannels.NewEventReceiver(func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
 		return nil
-	}, zap.NewNop().Sugar())
+	}, zap.NewNop(),
+		eventingchannels.ResolveChannelFromHostHeader(eventingchannels.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
 	if err != nil {
 		t.Fatalf("Error creating new message receiver. Error:%s", err)
 	}
 	d.receiver = receiver
-	err = d.Start(make(chan struct{}))
+	err = d.Start(context.TODO())
 	if err == nil {
 		t.Errorf("Expected error want %s, got %s", "kafkaAsyncProducer is not set", err)
 	}
