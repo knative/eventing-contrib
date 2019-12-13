@@ -488,7 +488,6 @@ func TestToKafkaMessage(t *testing.T) {
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(sarama.ProducerMessage{})); diff != "" {
 		t.Errorf("unexpected message (-want, +got) = %s", diff)
 	}
-	t.Logf("specversion %s", event.SpecVersion())
 }
 
 type dispatchTestHandler struct {
