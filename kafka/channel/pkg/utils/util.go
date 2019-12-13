@@ -40,7 +40,7 @@ const (
 	knativeKafkaTopicPrefix = "knative-messaging-kafka"
 
 	DefaultMaxIdleConns        = 1000
-	DefaultMaxIdleConnsPerHost = 1000
+	DefaultMaxIdleConnsPerHost = 100
 )
 
 var (
