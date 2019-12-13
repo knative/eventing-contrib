@@ -18,7 +18,7 @@ package testing
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -29,7 +29,7 @@ import (
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 // SubscriptionOption enables further configuration of a Subscription.
@@ -121,7 +121,7 @@ func WithSubscriptionChannel(gvk metav1.GroupVersionKind, name string) Subscript
 
 func WithSubscriptionSubscriberRef(gvk metav1.GroupVersionKind, name string) SubscriptionOption {
 	return func(s *v1alpha1.Subscription) {
-		s.Spec.Subscriber = &duckv1beta1.Destination{
+		s.Spec.Subscriber = &duckv1.Destination{
 			Ref: &corev1.ObjectReference{
 				APIVersion: apiVersion(gvk),
 				Kind:       gvk.Kind,
@@ -131,23 +131,21 @@ func WithSubscriptionSubscriberRef(gvk metav1.GroupVersionKind, name string) Sub
 	}
 }
 
-func WithSubscriptionPhysicalSubscriptionSubscriber(uri string) SubscriptionOption {
+func WithSubscriptionPhysicalSubscriptionSubscriber(uri *apis.URL) SubscriptionOption {
 	return func(s *v1alpha1.Subscription) {
-		u, err := apis.ParseURL(uri)
-		if err != nil {
-			panic(fmt.Sprintf("failed to parse URL: %s", err))
+		if uri == nil {
+			panic(errors.New("nil URI"))
 		}
-		s.Status.PhysicalSubscription.SubscriberURI = u
+		s.Status.PhysicalSubscription.SubscriberURI = uri
 	}
 }
 
-func WithSubscriptionPhysicalSubscriptionReply(uri string) SubscriptionOption {
+func WithSubscriptionPhysicalSubscriptionReply(uri *apis.URL) SubscriptionOption {
 	return func(s *v1alpha1.Subscription) {
-		u, err := apis.ParseURL(uri)
-		if err != nil {
-			panic(fmt.Sprintf("failed to parse URL: %s", err))
+		if uri == nil {
+			panic(errors.New("nil URI"))
 		}
-		s.Status.PhysicalSubscription.ReplyURI = u
+		s.Status.PhysicalSubscription.ReplyURI = uri
 	}
 }
 
@@ -171,32 +169,12 @@ func WithSubscriptionReferencesNotResolved(reason, msg string) SubscriptionOptio
 
 func WithSubscriptionReply(gvk metav1.GroupVersionKind, name string) SubscriptionOption {
 	return func(s *v1alpha1.Subscription) {
-		s.Spec.Reply = &v1alpha1.ReplyStrategy{
-			Destination: &duckv1beta1.Destination{
-				DeprecatedAPIVersion: apiVersion(gvk),
-				DeprecatedKind:       gvk.Kind,
-				DeprecatedName:       name,
+		s.Spec.Reply = &duckv1.Destination{
+			Ref: &corev1.ObjectReference{
+				APIVersion: apiVersion(gvk),
+				Kind:       gvk.Kind,
+				Name:       name,
 			},
 		}
-	}
-}
-
-func WithSubscriptionReplyNotDeprecated(gvk metav1.GroupVersionKind, name string) SubscriptionOption {
-	return func(s *v1alpha1.Subscription) {
-		s.Spec.Reply = &v1alpha1.ReplyStrategy{
-			Destination: &duckv1beta1.Destination{
-				Ref: &corev1.ObjectReference{
-					APIVersion: apiVersion(gvk),
-					Kind:       gvk.Kind,
-					Name:       name,
-				},
-			},
-		}
-	}
-}
-
-func WithSubscriptionReplyDeprecated() SubscriptionOption {
-	return func(s *v1alpha1.Subscription) {
-		s.Status.MarkReplyDeprecatedRef("ReplyFieldsDeprecated", "Using deprecated object ref fields when specifying spec.reply. Update to spec.reply.ref. These will be removed in the future.")
 	}
 }

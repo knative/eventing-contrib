@@ -402,7 +402,7 @@ func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace st
 		Name:          name,
 		Namespace:     namespace,
 		UID:           string(spec.UID),
-		SubscriberURI: spec.SubscriberURI,
-		ReplyURI:      spec.ReplyURI,
+		SubscriberURI: spec.SubscriberURI.String(),
+		ReplyURI:      spec.ReplyURI.String(),
 	}
 }

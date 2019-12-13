@@ -28,6 +28,8 @@ import (
 )
 
 func TestKafkaChannelValidation(t *testing.T) {
+	aURL, _ := apis.ParseURL("http://example.com/")
+
 	testCases := map[string]struct {
 		cr   resourcesemantics.GenericCRD
 		want *apis.FieldError
@@ -76,8 +78,8 @@ func TestKafkaChannelValidation(t *testing.T) {
 					ReplicationFactor: 1,
 					Subscribable: &eventingduck.Subscribable{
 						Subscribers: []eventingduck.SubscriberSpec{{
-							SubscriberURI: "subscriberendpoint",
-							ReplyURI:      "resultendpoint",
+							SubscriberURI: aURL,
+							ReplyURI:      aURL,
 						}},
 					}},
 			},
@@ -90,8 +92,8 @@ func TestKafkaChannelValidation(t *testing.T) {
 					ReplicationFactor: 1,
 					Subscribable: &eventingduck.Subscribable{
 						Subscribers: []eventingduck.SubscriberSpec{{
-							SubscriberURI: "subscriberendpoint",
-							ReplyURI:      "replyendpoint",
+							SubscriberURI: aURL,
+							ReplyURI:      aURL,
 						}, {}},
 					}},
 			},
