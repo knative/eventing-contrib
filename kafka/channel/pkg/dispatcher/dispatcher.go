@@ -21,17 +21,22 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/Shopify/sarama"
+	cloudevents "github.com/cloudevents/sdk-go"
+	. "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
-	contribchannels "knative.dev/eventing-contrib/pkg/channel"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
+	"knative.dev/eventing/pkg/channel/swappable"
+	"knative.dev/pkg/logging"
 )
 
 type KafkaDispatcher struct {
@@ -41,8 +46,10 @@ type KafkaDispatcher struct {
 	// hostToChannelMapLock is used to update hostToChannelMap
 	hostToChannelMapLock sync.Mutex
 
-	receiver   *contribchannels.MessageReceiver
-	dispatcher *contribchannels.MessageDispatcher
+	handler    *swappable.Handler
+	ceClient   cloudevents.Client
+	receiver   *eventingchannels.EventReceiver
+	dispatcher *eventingchannels.EventDispatcher
 
 	kafkaAsyncProducer  sarama.AsyncProducer
 	kafkaConsumerGroups map[eventingchannels.ChannelReference]map[subscription]sarama.ConsumerGroup
@@ -57,6 +64,7 @@ type KafkaDispatcher struct {
 type TopicFunc func(separator, namespace, name string) string
 
 type KafkaDispatcherArgs struct {
+	Handler   *swappable.Handler
 	ClientID  string
 	Brokers   []string
 	TopicFunc TopicFunc
@@ -65,11 +73,12 @@ type KafkaDispatcherArgs struct {
 
 type consumerMessageHandler struct {
 	sub        subscription
-	dispatcher *contribchannels.MessageDispatcher
+	dispatcher *eventingchannels.EventDispatcher
 }
 
 func (c consumerMessageHandler) Handle(ctx context.Context, message *sarama.ConsumerMessage) (bool, error) {
-	return true, c.dispatcher.DispatchMessage(fromKafkaMessage(message), c.sub.SubscriberURI, c.sub.ReplyURI, contribchannels.DispatchDefaults{})
+	event := fromKafkaMessage(ctx, message)
+	return true, c.dispatcher.DispatchEvent(ctx, *event, c.sub.SubscriberURI, c.sub.ReplyURI)
 }
 
 var _ kafka.KafkaConsumerHandler = (*consumerMessageHandler)(nil)
@@ -167,7 +176,7 @@ func createHostToChannelMap(config *multichannelfanout.Config) (map[string]event
 }
 
 // Start starts the kafka dispatcher's message processing.
-func (d *KafkaDispatcher) Start(stopCh <-chan struct{}) error {
+func (d *KafkaDispatcher) Start(ctx context.Context) error {
 	if d.receiver == nil {
 		return fmt.Errorf("message receiver is not set")
 	}
@@ -183,13 +192,13 @@ func (d *KafkaDispatcher) Start(stopCh <-chan struct{}) error {
 				d.logger.Warn("Got", zap.Error(e))
 			case s := <-d.kafkaAsyncProducer.Successes():
 				d.logger.Info("Sent", zap.Any("success", s))
-			case <-stopCh:
+			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
-	return d.receiver.Start(stopCh)
+	return d.ceClient.StartReceiver(ctx, d.receiver.ServeHTTP)
 }
 
 // subscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
@@ -200,7 +209,7 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
 	groupID := fmt.Sprintf("kafka.%s.%s.%s", sub.Namespace, channelRef.Name, sub.Name)
 
-	handler := consumerMessageHandler{sub, d.dispatcher}
+	handler := &consumerMessageHandler{sub, d.dispatcher}
 
 	consumerGroup, err := d.kafkaConsumerFactory.StartConsumerGroup(groupID, []string{topicName}, d.logger, handler)
 
@@ -270,23 +279,31 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 		return nil, fmt.Errorf("unable to create kafka producer: %v", err)
 	}
 
+	ceClient, err := kncloudevents.NewDefaultClient()
+	if err != nil {
+		args.Logger.Fatal("failed to create cloudevents client", zap.Error(err))
+	}
 	dispatcher := &KafkaDispatcher{
-		dispatcher:           contribchannels.NewMessageDispatcher(args.Logger.Sugar()),
+		dispatcher:           eventingchannels.NewEventDispatcher(args.Logger),
 		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(client),
 		kafkaConsumerGroups:  make(map[eventingchannels.ChannelReference]map[subscription]sarama.ConsumerGroup),
 		kafkaAsyncProducer:   producer,
 		logger:               args.Logger,
+		ceClient:             ceClient,
+		handler:              args.Handler,
+		topicFunc:            args.TopicFunc,
 	}
-	receiverFunc, err := contribchannels.NewMessageReceiver(
-		func(channel eventingchannels.ChannelReference, message *contribchannels.Message) error {
-			dispatcher.kafkaAsyncProducer.Input() <- toKafkaMessage(channel, message, args.TopicFunc)
+	receiverFunc, err := eventingchannels.NewEventReceiver(
+		func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
+			dispatcher.kafkaAsyncProducer.Input() <- toKafkaMessage(ctx, channel, event, args.TopicFunc)
 			return nil
 		},
-		args.Logger.Sugar(),
-		contribchannels.ResolveChannelFromHostHeader(contribchannels.ResolveChannelFromHostFunc(dispatcher.getChannelReferenceFromHost)))
+		args.Logger,
+		eventingchannels.ResolveChannelFromHostHeader(eventingchannels.ResolveChannelFromHostFunc(dispatcher.getChannelReferenceFromHost)))
 	if err != nil {
 		return nil, err
 	}
+
 	dispatcher.receiver = receiverFunc
 	dispatcher.setConfig(&multichannelfanout.Config{})
 	dispatcher.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
@@ -303,31 +320,81 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 	return cr, nil
 }
 
-func fromKafkaMessage(kafkaMessage *sarama.ConsumerMessage) *contribchannels.Message {
-	headers := make(map[string]string, len(kafkaMessage.Headers))
+func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage) *cloudevents.Event {
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	for _, header := range kafkaMessage.Headers {
-		headers[string(header.Key)] = string(header.Value)
+		h := string(header.Key)
+		v := string(header.Value)
+		logging.FromContext(ctx).Debugf("key: %s, value: %s", h, v)
+		switch h {
+		case "ce_datacontenttype":
+			event.SetDataContentType(v)
+		case "ce_specversion":
+			event.SetSpecVersion(v)
+		case "ce_type":
+			event.SetType(v)
+		case "ce_source":
+			event.SetSource(v)
+		case "ce_id":
+			event.SetID(v)
+		case "ce_time":
+			t, _ := time.Parse(time.RFC3339, v)
+			event.SetTime(t)
+		case "ce_subject":
+			event.SetSubject(v)
+		case "ce_dataschema":
+			event.SetDataSchema(v)
+		default:
+			// Extensions
+			if IsAlphaNumericLowercaseLetters(h) {
+				event.SetExtension(h, v)
+			}
+		}
 	}
-	message := contribchannels.Message{
-		Headers: headers,
-		Payload: kafkaMessage.Value,
-	}
-	return &message
+	event.SetData(kafkaMessage.Value)
+	return &event
 }
 
-func toKafkaMessage(channel eventingchannels.ChannelReference, message *contribchannels.Message, topicFunc TopicFunc) *sarama.ProducerMessage {
+func toKafkaMessage(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event, topicFunc TopicFunc) *sarama.ProducerMessage {
+	data, err := event.DataBytes()
+	if err != nil {
+		return &sarama.ProducerMessage{} //this should probably be something else indicating an error
+	}
+
 	kafkaMessage := sarama.ProducerMessage{
-		Topic:   topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
-		Value:   sarama.ByteEncoder(message.Payload),
-		Headers: make([]sarama.RecordHeader, len(message.Headers)),
+		Topic: topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
+		Value: sarama.ByteEncoder(data),
 	}
-	i := 0
-	for h, v := range message.Headers {
-		kafkaMessage.Headers[i].Key = []byte(h)
-		kafkaMessage.Headers[i].Value = []byte(v)
-		i++
-	}
+	kafkaMessage = attachKafkaHeaders(kafkaMessage, event)
 	return &kafkaMessage
+}
+
+func attachKafkaHeaders(message sarama.ProducerMessage, event cloudevents.Event) sarama.ProducerMessage {
+	addHeader(&message, "ce_specversion", event.SpecVersion())
+	addHeader(&message, "ce_type", event.Type())
+	addHeader(&message, "ce_source", event.Source())
+	addHeader(&message, "ce_id", event.ID())
+	addHeader(&message, "ce_time", event.Time().Format(time.RFC3339))
+	if event.DataContentType() != "" {
+		addHeader(&message, "ce_datacontenttype", event.DataContentType())
+	}
+	if event.Subject() != "" {
+		addHeader(&message, "ce_subject", event.Subject())
+	}
+	if event.DataSchema() != "" {
+		addHeader(&message, "ce_dataschema", event.DataSchema())
+	}
+	// Only setting string extensions.
+	for k, v := range event.Extensions() {
+		if vs, ok := v.(string); ok {
+			addHeader(&message, "ce_"+k, vs)
+		}
+	}
+	return message
+}
+
+func addHeader(kafkaMessage *sarama.ProducerMessage, key, value string) {
+	kafkaMessage.Headers = append(kafkaMessage.Headers, sarama.RecordHeader{Key: []byte(key), Value: []byte(value)})
 }
 
 func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace string) subscription {
