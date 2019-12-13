@@ -31,8 +31,8 @@ type subscriptionReference struct {
 func newSubscriptionReference(spec eventingduck.SubscriberSpec) subscriptionReference {
 	return subscriptionReference{
 		UID:           string(spec.UID),
-		SubscriberURI: spec.SubscriberURI,
-		ReplyURI:      spec.ReplyURI,
+		SubscriberURI: spec.SubscriberURI.String(),
+		ReplyURI:      spec.ReplyURI.String(),
 	}
 }
 

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"knative.dev/pkg/apis"
 	"net/http"
 	"testing"
 
@@ -94,6 +95,8 @@ func (d *KafkaDispatcher) checkConfigAndUpdate(config *multichannelfanout.Config
 }
 
 func TestDispatcher_UpdateConfig(t *testing.T) {
+	subscriber, _ := apis.ParseURL("http://test/subscriber")
+
 	testCases := []struct {
 		name             string
 		oldConfig        *multichannelfanout.Config
@@ -152,14 +155,14 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-1",
 									},
 									UID:           "subscription-1",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 								{
 									DeprecatedRef: &v1.ObjectReference{
 										Name: "subscription-2",
 									},
 									UID:           "subscription-2",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 							},
 						},
@@ -187,14 +190,14 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-1",
 									},
 									UID:           "subscription-1",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI:subscriber,
 								},
 								{
 									DeprecatedRef: &v1.ObjectReference{
 										Name: "subscription-2",
 									},
 									UID:           "subscription-2",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								}}}}},
 			},
 			newConfig: &multichannelfanout.Config{
@@ -210,14 +213,14 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-2",
 									},
 									UID:           "subscription-2",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 								{
 									DeprecatedRef: &v1.ObjectReference{
 										Name: "subscription-3",
 									},
 									UID:           "subscription-3",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI:subscriber,
 								},
 							},
 						},
@@ -248,14 +251,14 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-1",
 									},
 									UID:           "subscription-1",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 								{
 									DeprecatedRef: &v1.ObjectReference{
 										Name: "subscription-2",
 									},
 									UID:           "subscription-2",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 							},
 						}}}},
@@ -272,7 +275,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-1",
 									},
 									UID:           "subscription-1",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 							},
 						},
@@ -288,14 +291,14 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-3",
 									},
 									UID:           "subscription-3",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 								{
 									DeprecatedRef: &v1.ObjectReference{
 										Name: "subscription-4",
 									},
 									UID:           "subscription-4",
-									SubscriberURI: "http://test/subscriber",
+									SubscriberURI: subscriber,
 								},
 							},
 						},
