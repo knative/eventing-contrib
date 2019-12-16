@@ -20,9 +20,10 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-	"knative.dev/pkg/apis"
 	"net/http"
 	"testing"
+
+	"knative.dev/pkg/apis"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -190,7 +191,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-1",
 									},
 									UID:           "subscription-1",
-									SubscriberURI:subscriber,
+									SubscriberURI: subscriber,
 								},
 								{
 									DeprecatedRef: &v1.ObjectReference{
@@ -220,7 +221,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 										Name: "subscription-3",
 									},
 									UID:           "subscription-3",
-									SubscriberURI:subscriber,
+									SubscriberURI: subscriber,
 								},
 							},
 						},
