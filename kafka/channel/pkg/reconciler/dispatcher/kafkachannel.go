@@ -103,11 +103,11 @@ func NewController(
 
 	kafkaChannelInformer := kafkachannel.Get(ctx)
 	args := &dispatcher.KafkaDispatcherArgs{
-		Handler:    handler,
-		ClientID:   "kafka-ch-dispatcher",
-		Brokers:    kafkaConfig.Brokers,
-		TopicFunc:  utils.TopicName,
-		Logger:     logger,
+		Handler:   handler,
+		ClientID:  "kafka-ch-dispatcher",
+		Brokers:   kafkaConfig.Brokers,
+		TopicFunc: utils.TopicName,
+		Logger:    logger,
 	}
 	kafkaDispatcher, err := dispatcher.NewDispatcher(args)
 	if err != nil {
