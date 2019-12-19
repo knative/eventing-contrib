@@ -37,6 +37,7 @@ import (
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
 	"knative.dev/eventing-contrib/pkg/controller/sdk"
+	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
@@ -69,6 +70,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		return err
 	}
 	ctx = context.WithValue(ctx, dynamicclient.Key{}, dynamicClient)
+	ctx = addressable.WithDuck(ctx)
 
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
