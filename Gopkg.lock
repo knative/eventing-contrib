@@ -1787,7 +1787,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f9ac1c9fa0e3471db45fb185f84d31ecbf817201d3fac43961ddc88f006bcf47"
+  digest = "1:1b7d54b21611d322b891b350056a02e61f638bd429a3c2ae3bca9861d49ed374"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1797,10 +1797,10 @@
     "pkg/apis/eventing/v1alpha1",
     "pkg/apis/flows",
     "pkg/apis/flows/v1alpha1",
+    "pkg/apis/legacysources",
+    "pkg/apis/legacysources/v1alpha1",
     "pkg/apis/messaging",
     "pkg/apis/messaging/v1alpha1",
-    "pkg/apis/sources",
-    "pkg/apis/sources/v1alpha1",
     "pkg/channel",
     "pkg/channel/fanout",
     "pkg/channel/multichannelfanout",
@@ -1814,8 +1814,6 @@
     "pkg/client/clientset/versioned/typed/flows/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
     "pkg/client/informers/externalversions",
     "pkg/client/informers/externalversions/eventing",
     "pkg/client/informers/externalversions/eventing/v1alpha1",
@@ -1824,8 +1822,6 @@
     "pkg/client/informers/externalversions/internalinterfaces",
     "pkg/client/informers/externalversions/messaging",
     "pkg/client/informers/externalversions/messaging/v1alpha1",
-    "pkg/client/informers/externalversions/sources",
-    "pkg/client/informers/externalversions/sources/v1alpha1",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
@@ -1833,11 +1829,18 @@
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/flows/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
-    "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
     "pkg/defaultchannel",
     "pkg/kncloudevents",
     "pkg/kncloudevents/testing",
+    "pkg/legacyclient/clientset/versioned",
+    "pkg/legacyclient/clientset/versioned/fake",
+    "pkg/legacyclient/clientset/versioned/scheme",
+    "pkg/legacyclient/clientset/versioned/typed/legacysources/v1alpha1",
+    "pkg/legacyclient/clientset/versioned/typed/legacysources/v1alpha1/fake",
+    "pkg/legacyclient/injection/client",
+    "pkg/legacyclient/injection/client/fake",
+    "pkg/legacyclient/listers/legacysources/v1alpha1",
     "pkg/logconfig",
     "pkg/logging",
     "pkg/reconciler",
@@ -1862,7 +1865,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "5631d771968bbf00e64988a0e4217c2915ee778e"
+  revision = "d4433cda4bc7ebb094b7f82a0212a59c12eba7e2"
 
 [[projects]]
   branch = "master"
@@ -2157,7 +2160,6 @@
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
-    "knative.dev/eventing/pkg/apis/sources/v1alpha1",
     "knative.dev/eventing/pkg/channel",
     "knative.dev/eventing/pkg/channel/fanout",
     "knative.dev/eventing/pkg/channel/multichannelfanout",

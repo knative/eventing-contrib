@@ -34,7 +34,7 @@ import (
 	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service"
 
 	//knative.dev/eventing imports
-	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
