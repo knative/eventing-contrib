@@ -22,7 +22,7 @@ They do not offer:
 ## Deployment steps
 
 1. Setup
-   [Knative Eventing](https://knative.dev/eventing/blob/master/DEVELOPMENT.md).
+   [Knative Eventing](https://knative.dev/docs/eventing/getting-started/).
 1. If not done already, install a [NATS Streaming](./broker/README.md)
 1. Apply the NATSS configuration:
 
