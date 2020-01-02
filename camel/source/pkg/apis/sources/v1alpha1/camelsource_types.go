@@ -21,10 +21,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/kmeta"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -46,6 +48,7 @@ type CamelSource struct {
 
 // Check that CamelSource can be validated and can be defaulted.
 var _ runtime.Object = (*CamelSource)(nil)
+var _ kmeta.OwnerRefable = (*CamelSource)(nil)
 
 // Check that CamelSource implements the Conditions duck type.
 var _ = duck.VerifyType(&CamelSource{}, &duckv1.Conditions{})
@@ -172,6 +175,10 @@ func (s *CamelSourceStatus) MarkDeploying(reason, messageFormat string, messageA
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *CamelSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
 	camelCondSet.Manage(s).MarkFalse(CamelConditionDeployed, reason, messageFormat, messageA...)
+}
+
+func (s *CamelSource) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("CamelSource")
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
