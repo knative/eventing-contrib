@@ -301,7 +301,7 @@ spec:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: RoleBinding
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-builder
@@ -310,8 +310,9 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: camel-k-builder
+  namespace: camelk
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: camel-k-builder
   apiGroup: rbac.authorization.k8s.io
 
@@ -333,7 +334,7 @@ roleRef:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-builder
@@ -388,7 +389,7 @@ rules:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-builder
@@ -4120,9 +4121,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
+              value: ""
             - name: OPERATOR_NAME
               value: "camel-k"
             - name: POD_NAME
@@ -4153,7 +4152,7 @@ spec:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: RoleBinding
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-operator-knative
@@ -4162,8 +4161,9 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: camel-k-operator
+  namespace: camelk
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: camel-k-operator-knative
   apiGroup: rbac.authorization.k8s.io
 
@@ -4185,7 +4185,7 @@ roleRef:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: RoleBinding
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-operator
@@ -4194,8 +4194,9 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: camel-k-operator
+  namespace: camelk
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: camel-k-operator
   apiGroup: rbac.authorization.k8s.io
 
@@ -4217,7 +4218,7 @@ roleRef:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-operator-knative
@@ -4270,7 +4271,7 @@ rules:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-operator
@@ -4380,7 +4381,7 @@ rules:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-operator
@@ -4582,7 +4583,7 @@ rules:
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: Role
+kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: camel-k-operator
