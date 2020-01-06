@@ -1787,7 +1787,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1b7d54b21611d322b891b350056a02e61f638bd429a3c2ae3bca9861d49ed374"
+  digest = "1:24821cb1a124d738c55d9faa5fed8725c4a4e40f8b1ca6ccdd3c581a74b3d830"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1865,7 +1865,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "d4433cda4bc7ebb094b7f82a0212a59c12eba7e2"
+  revision = "6bfffff565f5f353e6fc0e69d71fcff16b75ccf9"
 
 [[projects]]
   branch = "master"
@@ -2169,6 +2169,8 @@
     "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/kncloudevents/testing",
+    "knative.dev/eventing/pkg/legacyclient/clientset/versioned/fake",
+    "knative.dev/eventing/pkg/legacyclient/injection/client/fake",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
     "knative.dev/eventing/pkg/reconciler",
