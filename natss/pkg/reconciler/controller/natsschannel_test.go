@@ -112,7 +112,19 @@ func TestAllCases(t *testing.T) {
 			Name: "key not found",
 			// Make sure Reconcile handles good keys that don't exist.
 			Key: "foo/not-found",
-		}, {
+		},{
+			Name: "remove finalizer even though channel is not ready",
+			Key:  ncKey,
+			Objects: []runtime.Object{
+				reconciletesting.NewNatssChannel(ncName, testNS,
+					reconciletesting.WithNatssInitChannelConditions,
+					reconciletesting.WithNatssChannelServicetNotReady("ChannelServiceFailed", "Channel Service failed: services \"default-kne-ingress-kn-channel\" is forbidden: unable to create new content in namespace e2e-mesh-ns because it is being terminated"),
+					reconciletesting.WithNatssChannelDeleted)},
+			WantErr: false,
+			WantEvents: []string{
+				Eventf(corev1.EventTypeNormal, channelReconciled, "NatssChannel reconciled"),
+			},
+		},  {
 			Name: "deleting",
 			Key:  ncKey,
 			Objects: []runtime.Object{
