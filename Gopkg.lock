@@ -1869,7 +1869,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fc3b67f0e6eb15b4137fe05cd4e9c9541fb743cab8f0ecc2ded1026c78d743ae"
+  digest = "1:453e21d9c4385548ef0829f4509961f2d6b19b573fd830a5739a7fea8a8d6290"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1937,11 +1937,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "a43659c656a7ddc2a04e74b7e5b8ca3a5d4a04ed"
+  revision = "298f22bea61fb6a0e8d55546563908e4787f9ac2"
 
 [[projects]]
   branch = "master"
-  digest = "1:975e31326465da4a36e4d8b7c7e1a0626a4dd0bf215d71ba8548d631bd65da4b"
+  digest = "1:c6e9297f65841f30a1d97372e0aca3913b66481a274782b3f720c438869d640d"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1983,7 +1983,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "be0e1f12ff72bc33e4a794045fc20b0111e3942d"
+  revision = "25658ef8c7b1bee4e0996566833e2ced22cdef9b"
 
 [[projects]]
   branch = "master"
@@ -1994,7 +1994,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "67effe44de5d3500046a77220f90cba376b2c104"
+  revision = "ce144eee3f441f9810581755d291ecbc4765a06e"
 
 [[projects]]
   digest = "1:d7fff5619b391ebfdab093ade4d065a6b8095b43134f18d60a0887971ee886c0"
