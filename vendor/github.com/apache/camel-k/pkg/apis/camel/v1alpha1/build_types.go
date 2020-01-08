@@ -29,16 +29,17 @@ import (
 type BuildSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	Meta           metav1.ObjectMeta       `json:"meta,omitempty"`
-	Image          string                  `json:"image,omitempty"`
-	Steps          []string                `json:"steps,omitempty"`
-	CamelVersion   string                  `json:"camelVersion,omitempty"`
-	RuntimeVersion string                  `json:"runtimeVersion,omitempty"`
-	Platform       IntegrationPlatformSpec `json:"platform,omitempty"`
-	Sources        []SourceSpec            `json:"sources,omitempty"`
-	Resources      []ResourceSpec          `json:"resources,omitempty"`
-	Dependencies   []string                `json:"dependencies,omitempty"`
-	BuildDir       string                  `json:"buildDir,omitempty"`
+	Meta            metav1.ObjectMeta       `json:"meta,omitempty"`
+	Image           string                  `json:"image,omitempty"`
+	Steps           []string                `json:"steps,omitempty"`
+	CamelVersion    string                  `json:"camelVersion,omitempty"`
+	RuntimeVersion  string                  `json:"runtimeVersion,omitempty"`
+	RuntimeProvider *RuntimeProvider        `json:"runtimeProvider,omitempty"`
+	Platform        IntegrationPlatformSpec `json:"platform,omitempty"`
+	Sources         []SourceSpec            `json:"sources,omitempty"`
+	Resources       []ResourceSpec          `json:"resources,omitempty"`
+	Dependencies    []string                `json:"dependencies,omitempty"`
+	BuildDir        string                  `json:"buildDir,omitempty"`
 }
 
 // BuildStatus defines the observed state of Build
@@ -99,6 +100,7 @@ const (
 
 // Build is the Schema for the builds API
 // +k8s:openapi-gen=true
+// +genclient
 type Build struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -116,7 +118,7 @@ type BuildList struct {
 	Items           []Build `json:"items"`
 }
 
-// Condition describes the state of a resource at a certain point.
+// BuildCondition describes the state of a resource at a certain point.
 type BuildCondition struct {
 	// Type of integration condition.
 	Type BuildConditionType `json:"type"`

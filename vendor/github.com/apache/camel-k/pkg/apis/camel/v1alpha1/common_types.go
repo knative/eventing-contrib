@@ -22,6 +22,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// RuntimeProvider --
+type RuntimeProvider struct {
+	Quarkus *QuarkusRuntimeProvider `json:"quarkus,omitempty"`
+}
+
+// QuarkusRuntimeProvider --
+type QuarkusRuntimeProvider struct {
+	CamelQuarkusVersion string `json:"camelQuarkusVersion,omitempty" yaml:"camelQuarkusVersion"`
+	QuarkusVersion      string `json:"quarkusVersion,omitempty" yaml:"quarkusVersion"`
+}
+
 // ConfigurationSpec --
 type ConfigurationSpec struct {
 	Type  string `json:"type"`
@@ -66,8 +77,9 @@ type PlatformInjectable interface {
 
 // MavenSpec --
 type MavenSpec struct {
-	Settings ValueSource     `json:"settings,omitempty"`
-	Timeout  metav1.Duration `json:"timeout,omitempty"`
+	LocalRepository string          `json:"localRepository,omitempty"`
+	Settings        ValueSource     `json:"settings,omitempty"`
+	Timeout         metav1.Duration `json:"timeout,omitempty"`
 }
 
 // ValueSource --
