@@ -1865,7 +1865,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "0bc32de6e5699df82f2a7e230ded3b0eb89ee4ee"
+  revision = "bd98c4f8c10111fa5cd0f44c4f94cb1767fb9a08"
 
 [[projects]]
   branch = "master"
