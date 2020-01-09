@@ -117,7 +117,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 		for _, subSpec := range cc.FanoutConfig.Subscriptions {
 			// TODO: use better way to get the provided Name/Namespce for the Subscription
 			// we NEED this for better consumer groups
-			sub := newSubscription(subSpec, subSpec.DeprecatedRef.Name, subSpec.DeprecatedRef.Namespace)
+			sub := newSubscription(subSpec, string(subSpec.UID), cc.Namespace)
 			if _, ok := d.kafkaConsumerGroups[channelRef][sub]; !ok {
 				// only subscribe when not exists in channel-subscriptions map
 				// do not need to resubscribe every time channel fanout config is updated
