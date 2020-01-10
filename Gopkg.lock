@@ -1801,7 +1801,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6099e564e6941fab3aba7c3c802d858dd4cdf753c10b90a8425249556e02e89a"
+  digest = "1:33fabef655fd6c6c4ba5d8187f30fbd00e7cfcea5eebc65021082bc45708450e"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1815,6 +1815,8 @@
     "pkg/apis/legacysources/v1alpha1",
     "pkg/apis/messaging",
     "pkg/apis/messaging/v1alpha1",
+    "pkg/apis/sources",
+    "pkg/apis/sources/v1alpha1",
     "pkg/channel",
     "pkg/channel/fanout",
     "pkg/channel/multichannelfanout",
@@ -1828,6 +1830,8 @@
     "pkg/client/clientset/versioned/typed/flows/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
     "pkg/client/informers/externalversions",
     "pkg/client/informers/externalversions/eventing",
     "pkg/client/informers/externalversions/eventing/v1alpha1",
@@ -1836,6 +1840,8 @@
     "pkg/client/informers/externalversions/internalinterfaces",
     "pkg/client/informers/externalversions/messaging",
     "pkg/client/informers/externalversions/messaging/v1alpha1",
+    "pkg/client/informers/externalversions/sources",
+    "pkg/client/informers/externalversions/sources/v1alpha1",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
@@ -1843,6 +1849,7 @@
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/flows/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
+    "pkg/client/listers/sources/v1alpha1",
     "pkg/configmap",
     "pkg/defaultchannel",
     "pkg/kncloudevents",
@@ -1879,11 +1886,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "37eaeaa40e7b3a272aff631b7722906b792cb405"
+  revision = "e7e42e9581adb8401517c06227898e8f186cda7b"
 
 [[projects]]
   branch = "master"
-  digest = "1:b21a3ea7ad9b920c6d1c2b26d11eba1d2ed4ee5d88b03f20f1efd46a6eaab902"
+  digest = "1:9ef7bffae626f41005f2a2514ade223263b3ba2566baabd257b924bdf5dbb428"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1951,7 +1958,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "8c62412074275c22632e23fbe726555bf970ba6c"
+  revision = "79d67498c2c48baf2b8cd114f23cef3f55f91262"
 
 [[projects]]
   branch = "master"
@@ -1997,7 +2004,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "437753a7621009da9972219e4f1e5168e0874c57"
+  revision = "5ace82e9d4d4e2ecff0020be1deaa70a7eaf436a"
 
 [[projects]]
   branch = "master"
