@@ -332,13 +332,17 @@ func getSource() *sourcesv1alpha1.CamelSource {
 }
 
 func withBumpedResourceVersion(cs *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
+	cs.ResourceVersion = bumpVersion(cs.ResourceVersion)
+	return cs
+}
+
+func bumpVersion(version string) string {
 	v := 0
-	if len(cs.ResourceVersion) != 0 {
-		v, _ = strconv.Atoi(cs.ResourceVersion)
+	if len(version) != 0 {
+		v, _ = strconv.Atoi(version)
 	}
 	v++
-	cs.ResourceVersion = fmt.Sprintf("%d", v)
-	return cs
+	return fmt.Sprintf("%d", v)
 }
 
 func getCamelKSource() *sourcesv1alpha1.CamelSource {
@@ -421,12 +425,7 @@ func withAlternativeContext(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.C
 }
 
 func withBumpedResourceVersionIn(in *camelv1alpha1.Integration) *camelv1alpha1.Integration {
-	v := 0
-	if len(in.ResourceVersion) != 0 {
-		v, _ = strconv.Atoi(in.ResourceVersion)
-	}
-	v++
-	in.ResourceVersion = fmt.Sprintf("%d", v)
+	in.ResourceVersion = bumpVersion(in.ResourceVersion)
 	return in
 }
 
