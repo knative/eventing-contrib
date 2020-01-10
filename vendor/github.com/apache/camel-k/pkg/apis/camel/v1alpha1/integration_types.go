@@ -50,6 +50,7 @@ type IntegrationStatus struct {
 	Failure          *Failure               `json:"failure,omitempty"`
 	CamelVersion     string                 `json:"camelVersion,omitempty"`
 	RuntimeVersion   string                 `json:"runtimeVersion,omitempty"`
+	RuntimeProvider  *RuntimeProvider       `json:"runtimeProvider,omitempty"`
 	Configuration    []ConfigurationSpec    `json:"configuration,omitempty"`
 	Conditions       []IntegrationCondition `json:"conditions,omitempty"`
 	Version          string                 `json:"version,omitempty"`
@@ -60,6 +61,7 @@ type IntegrationStatus struct {
 
 // Integration is the Schema for the integrations API
 // +k8s:openapi-gen=true
+// +genclient
 type Integration struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -118,8 +120,6 @@ type Language string
 const (
 	// LanguageJavaSource --
 	LanguageJavaSource Language = "java"
-	// LanguageJavaClass --
-	LanguageJavaClass Language = "class"
 	// LanguageGroovy --
 	LanguageGroovy Language = "groovy"
 	// LanguageJavaScript --
@@ -135,7 +135,6 @@ const (
 // Languages is the list of all supported languages
 var Languages = []Language{
 	LanguageJavaSource,
-	LanguageJavaClass,
 	LanguageGroovy,
 	LanguageJavaScript,
 	LanguageXML,

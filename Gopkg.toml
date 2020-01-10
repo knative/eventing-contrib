@@ -69,34 +69,34 @@ required = [
   version = "1.21.0"
 
 # Overridden to ensure compatibility with GKE
-# GKE version as of 2019-09-19 is 1.14
+# GKE version as of 2020-01-06 is 1.15
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.15.3"
+  version = "kubernetes-1.16.4"
 
 # Overridden to ensure compatibility with GKE
-# GKE version as of 2019-09-19 is 1.14
+# GKE version as of 2020-01-06 is 1.15
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.15.3"
+  version = "kubernetes-1.16.4"
 
 # Overridden to ensure compatibility with GKE
-# GKE version as of 2019-09-19 is 1.14
+# GKE version as of 2020-01-06 is 1.15
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.15.3"
+  version = "kubernetes-1.16.4"
 
 # Overridden to ensure compatibility with GKE
-# GKE version as of 2019-09-19 is 1.14
+# GKE version as of 2020-01-06 is 1.15
 [[override]]
   name = "k8s.io/code-generator"
-  version = "kubernetes-1.15.3"
+  version = "kubernetes-1.16.4"
 
 # Overridden to ensure compatibility with GKE
-# GKE version as of 2019-09-19 is 1.14
+# GKE version as of 2020-01-06 is 1.15
 [[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.15.3"
+  version = "kubernetes-1.16.4"
 
 [[override]]
   name = "cloud.google.com/go"
@@ -112,7 +112,8 @@ required = [
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
-  version = "=0.2.2"
+  # Bump it to latest version to be compatible with k8s 1.16.4
+  version = "=0.4.0"
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]
