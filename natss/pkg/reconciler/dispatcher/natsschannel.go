@@ -52,14 +52,14 @@ const (
 	// itself when creating events.
 	controllerAgentName = "natss-ch-dispatcher"
 
-	finalizerName = controllerAgentName
+	FinalizerName = controllerAgentName
 )
 
 // Reconciler reconciles NATSS Channels.
 type Reconciler struct {
 	*reconciler.Base
 
-	natssDispatcher *dispatcher.SubscriptionsSupervisor
+	natssDispatcher dispatcher.NatssDispatcher
 
 	natsschannelLister   listers.NatssChannelLister
 	natsschannelInformer cache.SharedIndexInformer
@@ -73,7 +73,7 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 // Registers event handlers to enqueue events.
 func NewController(
 	opt reconciler.Options,
-	natssDispatcher *dispatcher.SubscriptionsSupervisor,
+	natssDispatcher dispatcher.NatssDispatcher,
 	natsschannelInformer messaginginformers.NatssChannelInformer,
 ) *controller.Impl {
 
@@ -259,13 +259,13 @@ func (r *Reconciler) newConfigFromNatssChannels(channels []*v1alpha1.NatssChanne
 
 func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
 	finalizers := sets.NewString(channel.Finalizers...)
-	if finalizers.Has(finalizerName) {
+	if finalizers.Has(FinalizerName) {
 		return nil
 	}
 
 	mergePatch := map[string]interface{}{
 		"metadata": map[string]interface{}{
-			"finalizers":      append(channel.Finalizers, finalizerName),
+			"finalizers":      append(channel.Finalizers, FinalizerName),
 			"resourceVersion": channel.ResourceVersion,
 		},
 	}
@@ -281,7 +281,7 @@ func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
 
 func removeFinalizer(channel *v1alpha1.NatssChannel) {
 	finalizers := sets.NewString(channel.Finalizers...)
-	finalizers.Delete(finalizerName)
+	finalizers.Delete(FinalizerName)
 	channel.Finalizers = finalizers.List()
 }
 
