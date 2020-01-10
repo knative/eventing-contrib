@@ -19,7 +19,7 @@ package main
 import (
 	"flag"
 
-	"knative.dev/eventing/test/common/performance"
+	"knative.dev/eventing/test/performance/infra"
 )
 
 var minWorkers uint64
@@ -27,7 +27,7 @@ var bootstrapUrl string
 var topic string
 
 func init() {
-	performance.DeclareFlags()
+	infra.DeclareFlags()
 
 	// Specific to http load generator
 	flag.Uint64Var(&minWorkers, "min-workers", 10, "Number of vegeta workers")
@@ -38,5 +38,5 @@ func init() {
 func main() {
 	flag.Parse()
 
-	performance.StartPerformanceImage(NewKafkaLoadGeneratorFactory(bootstrapUrl, topic, minWorkers), JsonTypeExtractor, JsonIdExtractor)
+	infra.StartPerformanceImage(NewKafkaLoadGeneratorFactory(bootstrapUrl, topic, minWorkers), JsonTypeExtractor, JsonIdExtractor)
 }

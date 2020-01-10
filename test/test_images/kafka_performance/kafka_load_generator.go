@@ -11,8 +11,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	loadastic_common "github.com/slinkydeveloper/loadastic/common"
 	"github.com/slinkydeveloper/loadastic/kafka"
-	performance_common "knative.dev/eventing/test/common/performance/common"
-	"knative.dev/eventing/test/common/performance/sender"
+	performance_common "knative.dev/eventing/test/performance/infra/common"
+	"knative.dev/eventing/test/performance/infra/sender"
 )
 
 func init() {

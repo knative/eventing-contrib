@@ -23,12 +23,12 @@ import (
 	"testing"
 
 	"k8s.io/client-go/dynamic"
-	"knative.dev/eventing/test/base/resources"
-	"knative.dev/eventing/test/common"
 	"knative.dev/eventing/test/e2e/helpers"
+	"knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/resources"
 
-	contribresources "knative.dev/eventing-contrib/test/base/resources"
-	contribcommon "knative.dev/eventing-contrib/test/common"
+	lib2 "knative.dev/eventing-contrib/test/lib"
+	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
 // This test take for granted that the kafka cluster already exists together with the test-topic topic
@@ -45,9 +45,9 @@ var expectedStruct = helpers.PerformanceImageResults{
 }
 
 func TestKafkaSource(t *testing.T) {
-	helpers.TestWithPerformanceImage(t, 2, func(t *testing.T, consumerHostname string, aggregatorHostname string, client *common.Client) {
+	helpers.TestWithPerformanceImage(t, 2, func(t *testing.T, consumerHostname string, aggregatorHostname string, client *lib.Client) {
 		t.Logf("Creating KafkaSource")
-		contribcommon.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+		lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
 			kafkaBootstrapUrl,
 			kafkaTestTopic,
 			resources.ServiceRef(resources.PerfConsumerService),

@@ -1801,7 +1801,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:33fabef655fd6c6c4ba5d8187f30fbd00e7cfcea5eebc65021082bc45708450e"
+  digest = "1:b30622eeeedc6dadcfe172635ed17ebfe60529926d4c251a17f14c2c4cd0afd9"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1870,23 +1870,24 @@
     "pkg/tracing",
     "pkg/utils",
     "test",
-    "test/base",
-    "test/base/resources",
-    "test/common",
-    "test/common/performance",
-    "test/common/performance/aggregator",
-    "test/common/performance/common",
-    "test/common/performance/event_state",
-    "test/common/performance/receiver",
-    "test/common/performance/sender",
     "test/e2e/helpers",
+    "test/lib",
+    "test/lib/cloudevents",
+    "test/lib/duck",
+    "test/lib/resources",
+    "test/performance/infra",
+    "test/performance/infra/aggregator",
+    "test/performance/infra/common",
+    "test/performance/infra/event_state",
+    "test/performance/infra/receiver",
+    "test/performance/infra/sender",
     "test/test_images/logevents",
     "test/test_images/performance",
     "test/test_images/sendevents",
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "e7e42e9581adb8401517c06227898e8f186cda7b"
+  revision = "e1b5a33c1a102d72005a971a57be86c998fb0270"
 
 [[projects]]
   branch = "master"
@@ -2200,12 +2201,12 @@
     "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/eventing/test",
-    "knative.dev/eventing/test/base/resources",
-    "knative.dev/eventing/test/common",
-    "knative.dev/eventing/test/common/performance",
-    "knative.dev/eventing/test/common/performance/common",
-    "knative.dev/eventing/test/common/performance/sender",
     "knative.dev/eventing/test/e2e/helpers",
+    "knative.dev/eventing/test/lib",
+    "knative.dev/eventing/test/lib/resources",
+    "knative.dev/eventing/test/performance/infra",
+    "knative.dev/eventing/test/performance/infra/common",
+    "knative.dev/eventing/test/performance/infra/sender",
     "knative.dev/eventing/test/test_images/logevents",
     "knative.dev/eventing/test/test_images/performance",
     "knative.dev/eventing/test/test_images/sendevents",
