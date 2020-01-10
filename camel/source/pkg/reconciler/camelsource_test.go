@@ -19,6 +19,7 @@ package reconciler
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
@@ -96,7 +97,9 @@ func TestReconcile(t *testing.T) {
 				getDeletedSource(),
 			},
 			WantPresent: []runtime.Object{
-				getDeletedSource(),
+				// ResourceVersion needs to be bumped because of the change
+				// https://github.com/kubernetes-sigs/controller-runtime/pull/620
+				withBumpedResourceVersion(getDeletedSource()),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -109,7 +112,7 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := getSourceWithNoSink()
+					s := withBumpedResourceVersion(getSourceWithNoSink())
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
@@ -127,7 +130,7 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := getDeployingSource()
+					s := withBumpedResourceVersion(getDeployingSource())
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
@@ -145,7 +148,7 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := asDeployedSource(getSource())
+					s := withBumpedResourceVersion(asDeployedSource(getSource()))
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
@@ -165,7 +168,7 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := asDeployedSource(getCamelKSource())
+					s := withBumpedResourceVersion(asDeployedSource(getCamelKSource()))
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
@@ -184,11 +187,11 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := withUpdatingIntegration(getSource())
+					s := withBumpedResourceVersion(withUpdatingIntegration(getSource()))
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
-				getRunningIntegration(t),
+				withBumpedResourceVersionIn(getRunningIntegration(t)),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -204,11 +207,11 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := withUpdatingIntegration(getCamelKSource())
+					s := withBumpedResourceVersion(withUpdatingIntegration(getCamelKSource()))
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
-				getRunningCamelKIntegration(t),
+				withBumpedResourceVersionIn(getRunningCamelKIntegration(t)),
 			},
 			WantAbsent: []runtime.Object{
 				getContext(),
@@ -224,7 +227,7 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := withAlternativeContext(asDeployedSource(getSource()))
+					s := withBumpedResourceVersion(withAlternativeContext(asDeployedSource(getSource())))
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
@@ -243,7 +246,7 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := withAlternativeContext(asDeployedSource(getCamelKSource()))
+					s := withBumpedResourceVersion(withAlternativeContext(asDeployedSource(getCamelKSource())))
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
@@ -261,7 +264,7 @@ func TestReconcile(t *testing.T) {
 			},
 			WantPresent: []runtime.Object{
 				func() runtime.Object {
-					s := asDeployedSource(getCamelKFlowSource())
+					s := withBumpedResourceVersion(asDeployedSource(getCamelKFlowSource()))
 					s.Status.ObservedGeneration = generation
 					return s
 				}(),
@@ -326,6 +329,16 @@ func getSource() *sourcesv1alpha1.CamelSource {
 	// selflink is not filled in when we create the object, so clear it
 	obj.ObjectMeta.SelfLink = ""
 	return obj
+}
+
+func withBumpedResourceVersion(cs *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
+	v := 0
+	if len(cs.ResourceVersion) != 0 {
+		v, _ = strconv.Atoi(cs.ResourceVersion)
+	}
+	v++
+	cs.ResourceVersion = fmt.Sprintf("%d", v)
+	return cs
 }
 
 func getCamelKSource() *sourcesv1alpha1.CamelSource {
@@ -405,6 +418,16 @@ func withAlternativeContext(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.C
 	}
 	src.Spec.Source.Integration.Kit = alternativeKitName
 	return src
+}
+
+func withBumpedResourceVersionIn(in *camelv1alpha1.Integration) *camelv1alpha1.Integration {
+	v := 0
+	if len(in.ResourceVersion) != 0 {
+		v, _ = strconv.Atoi(in.ResourceVersion)
+	}
+	v++
+	in.ResourceVersion = fmt.Sprintf("%d", v)
+	return in
 }
 
 func getContext() *camelv1alpha1.IntegrationKit {
