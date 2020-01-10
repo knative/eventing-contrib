@@ -46,6 +46,10 @@ var (
 	retryInterval = 1 * time.Second
 )
 
+type (
+	SubscriptionChannelMapping map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription
+)
+
 // SubscriptionsSupervisor manages the state of NATS Streaming subscriptions
 type SubscriptionsSupervisor struct {
 	logger *zap.Logger
@@ -54,7 +58,7 @@ type SubscriptionsSupervisor struct {
 	dispatcher *contribchannels.MessageDispatcher
 
 	subscriptionsMux sync.Mutex
-	subscriptions    map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription
+	subscriptions    SubscriptionChannelMapping
 
 	connect   chan struct{}
 	natssURL  string
@@ -69,6 +73,19 @@ type SubscriptionsSupervisor struct {
 	hostToChannelMap atomic.Value
 }
 
+type NatssDispatcher interface {
+	Connect(stopCh <-chan struct{})
+	UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error)
+	UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error
+
+	connectWithRetry(stopCh <-chan struct{})
+	subscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error)
+	unsubscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) error
+	getHostToChannelMap() map[string]eventingchannels.ChannelReference
+	setHostToChannelMap(hcMap map[string]eventingchannels.ChannelReference)
+	getChannelReferenceFromHost(host string) (eventingchannels.ChannelReference, error)
+}
+
 // NewDispatcher returns a new SubscriptionsSupervisor.
 func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (*SubscriptionsSupervisor, error) {
 	d := &SubscriptionsSupervisor{
@@ -78,7 +95,7 @@ func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (*S
 		natssURL:      natssURL,
 		clusterID:     clusterID,
 		clientID:      clientID,
-		subscriptions: make(map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription),
+		subscriptions: make(SubscriptionChannelMapping),
 	}
 	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 	receiver, err := contribchannels.NewMessageReceiver(
@@ -335,6 +352,7 @@ func (s *SubscriptionsSupervisor) setHostToChannelMap(hcMap map[string]eventingc
 func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]eventingchannels.ChannelReference, error) {
 	hostToChanMap := make(map[string]eventingchannels.ChannelReference, len(cList))
 	for _, c := range cList {
+		fmt.Printf("newHostNameToChannelRefMap: %+v\n", cList)
 		url := c.Status.Address.GetURL()
 		if cr, present := hostToChanMap[url.Host]; present {
 			return nil, fmt.Errorf(
@@ -346,6 +364,7 @@ func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]e
 				cr.Name)
 		}
 		hostToChanMap[url.Host] = eventingchannels.ChannelReference{Name: c.Name, Namespace: c.Namespace}
+		fmt.Printf("hostToChanMap: %+v\n", hostToChanMap)
 	}
 	return hostToChanMap, nil
 }
