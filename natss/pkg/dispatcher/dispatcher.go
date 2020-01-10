@@ -74,20 +74,13 @@ type SubscriptionsSupervisor struct {
 }
 
 type NatssDispatcher interface {
-	Connect(stopCh <-chan struct{})
+	Start(stopCh <-chan struct{}) error
 	UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error)
 	UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error
-
-	connectWithRetry(stopCh <-chan struct{})
-	subscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error)
-	unsubscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) error
-	getHostToChannelMap() map[string]eventingchannels.ChannelReference
-	setHostToChannelMap(hcMap map[string]eventingchannels.ChannelReference)
-	getChannelReferenceFromHost(host string) (eventingchannels.ChannelReference, error)
 }
 
 // NewDispatcher returns a new SubscriptionsSupervisor.
-func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (*SubscriptionsSupervisor, error) {
+func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (NatssDispatcher, error) {
 	d := &SubscriptionsSupervisor{
 		logger:        logger,
 		dispatcher:    contribchannels.NewMessageDispatcher(logger.Sugar()),
