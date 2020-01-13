@@ -9,7 +9,7 @@ import (
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
-	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
+	dispatchertesting "knative.dev/eventing-contrib/natss/pkg/dispatcher/testing"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
 )
@@ -51,7 +51,7 @@ func TestAllCases(t *testing.T) {
 	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatcher.NewTestingDispatcher()
+		natssDispatcher := dispatchertesting.NewTestingDispatcher(t)
 
 		r := Reconciler{
 			Base:                 reconciler.NewBase(opt, controllerAgentName),

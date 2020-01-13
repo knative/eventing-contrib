@@ -26,14 +26,13 @@ import (
 
 	stan "github.com/nats-io/go-nats-streaming"
 	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
-	"knative.dev/eventing-contrib/natss/pkg/stanutil"
-	contribchannels "knative.dev/eventing-contrib/pkg/channel"
-	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/logging"
+
+	"knative.dev/eventing-contrib/natss/pkg/stanutil"
+	contribchannels "knative.dev/eventing-contrib/pkg/channel"
 )
 
 const (
@@ -79,7 +78,7 @@ type NatssDispatcher interface {
 	UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error
 }
 
-// NewDispatcher returns a new SubscriptionsSupervisor.
+// NewDispatcher returns a new NatssDispatcher.
 func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (NatssDispatcher, error) {
 	d := &SubscriptionsSupervisor{
 		logger:        logger,
@@ -258,18 +257,6 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 		delete(s.subscriptions, cRef)
 	}
 	return failedToSubscribe, nil
-}
-
-func toSubscriberStatus(subSpec *v1alpha1.SubscriberSpec, condition corev1.ConditionStatus, msg string) *v1alpha1.SubscriberStatus {
-	if subSpec == nil {
-		return nil
-	}
-	return &v1alpha1.SubscriberStatus{
-		UID:                subSpec.UID,
-		ObservedGeneration: subSpec.Generation,
-		Message:            msg,
-		Ready:              condition,
-	}
 }
 
 func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {

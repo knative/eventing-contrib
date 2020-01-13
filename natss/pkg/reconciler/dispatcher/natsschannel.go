@@ -52,7 +52,7 @@ const (
 	// itself when creating events.
 	controllerAgentName = "natss-ch-dispatcher"
 
-	FinalizerName = controllerAgentName
+	finalizerName = controllerAgentName
 )
 
 // Reconciler reconciles NATSS Channels.
@@ -259,13 +259,13 @@ func (r *Reconciler) newConfigFromNatssChannels(channels []*v1alpha1.NatssChanne
 
 func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
 	finalizers := sets.NewString(channel.Finalizers...)
-	if finalizers.Has(FinalizerName) {
+	if finalizers.Has(finalizerName) {
 		return nil
 	}
 
 	mergePatch := map[string]interface{}{
 		"metadata": map[string]interface{}{
-			"finalizers":      append(channel.Finalizers, FinalizerName),
+			"finalizers":      append(channel.Finalizers, finalizerName),
 			"resourceVersion": channel.ResourceVersion,
 		},
 	}
@@ -281,7 +281,7 @@ func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
 
 func removeFinalizer(channel *v1alpha1.NatssChannel) {
 	finalizers := sets.NewString(channel.Finalizers...)
-	finalizers.Delete(FinalizerName)
+	finalizers.Delete(finalizerName)
 	channel.Finalizers = finalizers.List()
 }
 

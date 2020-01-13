@@ -52,8 +52,6 @@ func WithNatssInitChannelConditions(nc *v1alpha1.NatssChannel) {
 }
 
 func WithNatssChannelFinalizer(nc *v1alpha1.NatssChannel) {
-	// TODO(nachtmaar):
-	//nc.Finalizers = []string{controller.FinalizerName}
 	nc.Finalizers = []string{"natss-ch-dispatcher"}
 }
 
