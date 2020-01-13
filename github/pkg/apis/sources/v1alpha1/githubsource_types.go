@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	"knative.dev/pkg/webhook/resourcesemantics"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +31,8 @@ import (
 
 // Check that GitHubSource can be validated and can be defaulted.
 var _ runtime.Object = (*GitHubSource)(nil)
+
+var _ resourcesemantics.GenericCRD = (*GitHubSource)(nil)
 
 // GitHubSourceSpec defines the desired state of GitHubSource
 // +kubebuilder:categories=all,knative,eventing,sources
