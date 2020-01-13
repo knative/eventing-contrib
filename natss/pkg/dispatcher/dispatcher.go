@@ -332,7 +332,6 @@ func (s *SubscriptionsSupervisor) setHostToChannelMap(hcMap map[string]eventingc
 func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]eventingchannels.ChannelReference, error) {
 	hostToChanMap := make(map[string]eventingchannels.ChannelReference, len(cList))
 	for _, c := range cList {
-		fmt.Printf("newHostNameToChannelRefMap: %+v\n", cList)
 		url := c.Status.Address.GetURL()
 		if cr, present := hostToChanMap[url.Host]; present {
 			return nil, fmt.Errorf(
@@ -344,7 +343,6 @@ func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]e
 				cr.Name)
 		}
 		hostToChanMap[url.Host] = eventingchannels.ChannelReference{Name: c.Name, Namespace: c.Namespace}
-		fmt.Printf("hostToChanMap: %+v\n", hostToChanMap)
 	}
 	return hostToChanMap, nil
 }

@@ -18,7 +18,7 @@ type SubscriptionsSupervisorTesting struct {
 
 var _ dispatcher.NatssDispatcher = (*SubscriptionsSupervisorTesting)(nil)
 
-func NewTestingDispatcher(t *testing.T) dispatcher.NatssDispatcher {
+func NewDispatcher(t *testing.T) dispatcher.NatssDispatcher {
 	return &SubscriptionsSupervisorTesting{logger: logtesting.TestLogger(t).Desugar()}
 }
 

@@ -27,8 +27,6 @@ func TestAllCases(t *testing.T) {
 			Name: "remove finalizer even though channel is not ready",
 			Key:  ncKey,
 			Objects: []runtime.Object{
-				// channel which is not marked for deletion yet
-				// channel is marked for deletion now
 				reconciletesting.NewNatssChannel(ncName, testNS,
 					// the finalizer should get removed
 					reconciletesting.WithNatssChannelFinalizer,
@@ -51,7 +49,7 @@ func TestAllCases(t *testing.T) {
 	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewTestingDispatcher(t)
+		natssDispatcher := dispatchertesting.NewDispatcher(t)
 
 		r := Reconciler{
 			Base:                 reconciler.NewBase(opt, controllerAgentName),
