@@ -73,12 +73,18 @@ spec:
   subresources:
     status: {}
   additionalPrinterColumns:
-  - name: Ready
-    type: string
-    JSONPath: ".status.conditions[?(@.type=='Ready')].status"
-  - name: Reason
-    type: string
-    JSONPath: ".status.conditions[?(@.type=='Ready')].reason"
+    - name: Ready
+      type: string
+      JSONPath: ".status.conditions[?(@.type=='Ready')].status"
+    - name: Reason
+      type: string
+      JSONPath: ".status.conditions[?(@.type=='Ready')].reason"
+    - name: Sink
+      type: string
+      JSONPath: ".status.sinkUri"
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
   validation:
     openAPIV3Schema:
       properties:
