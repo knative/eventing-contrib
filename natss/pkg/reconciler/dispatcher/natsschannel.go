@@ -148,6 +148,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return reconcileErr
 }
 
+// reconcile performs the following steps
+// * add finalizer
+// * update natss subscriptions
+// * set SubscribableStatus
+// * update host2channel map
 func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.NatssChannel) error {
 	// TODO update dispatcher API and use Channelable or NatssChannel.
 	c := toChannel(natssChannel)

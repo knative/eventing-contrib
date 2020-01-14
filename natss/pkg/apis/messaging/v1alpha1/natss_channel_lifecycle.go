@@ -72,12 +72,6 @@ func (cs *NatssChannelStatus) InitializeConditions() {
 	nc.Manage(cs).InitializeConditions()
 }
 
-// TODO(nachtmaar):
-// InitializeConditions sets relevant unset conditions to Unknown state.
-func (cs *NatssChannelStatus) MarkReady() {
-	nc.Manage(cs).MarkTrue(apis.ConditionReady)
-}
-
 // SetAddress sets the address (as part of Addressable contract) and marks the correct condition.
 func (cs *NatssChannelStatus) SetAddress(url *apis.URL) {
 	if cs.Address == nil {

@@ -50,16 +50,6 @@ func TestAllCases(t *testing.T) {
 			Key: "foo/not-found",
 		},
 		{
-			Name: "reconcile error: channel not ready",
-			Key:  ncKey,
-			Objects: []runtime.Object{
-				reconciletesting.NewNatssChannel(ncName, testNS,
-					reconciletesting.WithNatssChannelServicetNotReady("ChannelServiceFailed", "some message"),
-				),
-			},
-			WantErr: true,
-		},
-		{
 			Name: "reconcile ok: channel ready",
 			Key:  ncKey,
 			Objects: []runtime.Object{
@@ -73,6 +63,16 @@ func TestAllCases(t *testing.T) {
 			WantErr: false,
 		},
 		{
+			Name: "reconcile error: channel not ready",
+			Key:  ncKey,
+			Objects: []runtime.Object{
+				reconciletesting.NewNatssChannel(ncName, testNS,
+					reconciletesting.WithNatssChannelServiceNotReady("ChannelServiceFailed", "some message"),
+				),
+			},
+			WantErr: true,
+		},
+		{
 			Name: "remove finalizer even though channel is not ready",
 			Key:  ncKey,
 			Objects: []runtime.Object{
@@ -80,7 +80,7 @@ func TestAllCases(t *testing.T) {
 					// the finalizer should get removed
 					reconciletesting.WithNatssChannelFinalizer,
 					// make sure that finalizer can get removed even if channel is not ready
-					reconciletesting.WithNatssChannelServicetNotReady("ChannelServiceFailed", "Channel Service failed: services \"default-kne-ingress-kn-channel\" is forbidden: unable to create new content in namespace e2e-mesh-ns because it is being terminated"),
+					reconciletesting.WithNatssChannelServiceNotReady("ChannelServiceFailed", "Channel Service failed: services \"default-kne-ingress-kn-channel\" is forbidden: unable to create new content in namespace e2e-mesh-ns because it is being terminated"),
 					reconciletesting.WithNatssChannelDeleted),
 			},
 			WantErr: false,
@@ -89,7 +89,7 @@ func TestAllCases(t *testing.T) {
 					Object: reconciletesting.NewNatssChannel(ncName, testNS,
 						// finalizer is removed
 						// make sure that finalizer can get removed even if channel is not ready
-						reconciletesting.WithNatssChannelServicetNotReady("ChannelServiceFailed", "Channel Service failed: services \"default-kne-ingress-kn-channel\" is forbidden: unable to create new content in namespace e2e-mesh-ns because it is being terminated"),
+						reconciletesting.WithNatssChannelServiceNotReady("ChannelServiceFailed", "Channel Service failed: services \"default-kne-ingress-kn-channel\" is forbidden: unable to create new content in namespace e2e-mesh-ns because it is being terminated"),
 						reconciletesting.WithNatssChannelDeleted),
 				},
 			},
