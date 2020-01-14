@@ -127,7 +127,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		return err
 	}
 
-	if !original.Status.IsReady() {
+	if !natssChannel.Status.IsReady() {
 		return fmt.Errorf("Channel is not ready. Cannot configure and update subscriber status")
 	}
 

@@ -40,6 +40,39 @@ func TestAllCases(t *testing.T) {
 
 	table := TableTest{
 		{
+			Name: "bad workqueue key",
+			// Make sure Reconcile handles bad keys.
+			Key: "too/many/parts",
+		},
+		{
+			Name: "key not found",
+			// Make sure Reconcile handles good keys that don't exist.
+			Key: "foo/not-found",
+		},
+		{
+			Name: "reconcile error: channel not ready",
+			Key:  ncKey,
+			Objects: []runtime.Object{
+				reconciletesting.NewNatssChannel(ncName, testNS,
+					reconciletesting.WithNatssChannelServicetNotReady("ChannelServiceFailed", "some message"),
+				),
+			},
+			WantErr: true,
+		},
+		{
+			Name: "reconcile ok: channel ready",
+			Key:  ncKey,
+			Objects: []runtime.Object{
+				reconciletesting.NewNatssChannel(ncName, testNS,
+					reconciletesting.WithReady,
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizer(testNS, ncName),
+			},
+			WantErr: false,
+		},
+		{
 			Name: "remove finalizer even though channel is not ready",
 			Key:  ncKey,
 			Objects: []runtime.Object{
@@ -78,4 +111,13 @@ func TestAllCases(t *testing.T) {
 		return &r
 	},
 	))
+}
+
+func patchFinalizer(namespace, name string) clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = name
+	action.Namespace = namespace
+	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }

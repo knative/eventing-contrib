@@ -46,6 +46,9 @@ func NewNatssChannel(name, namespace string, ncopt ...NatssChannelOption) *v1alp
 	nc.SetDefaults(context.Background())
 	return nc
 }
+func WithReady(nc *v1alpha1.NatssChannel) {
+	nc.Status.MarkReady()
+}
 
 func WithNatssInitChannelConditions(nc *v1alpha1.NatssChannel) {
 	nc.Status.InitializeConditions()
