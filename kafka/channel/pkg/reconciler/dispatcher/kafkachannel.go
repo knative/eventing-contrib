@@ -97,7 +97,7 @@ func NewController(
 		logger.Fatal("Error loading kafka config", zap.Error(err))
 	}
 
-	connectionArgs := kncloudevents.ConnectionArgs{
+	connectionArgs := &kncloudevents.ConnectionArgs{
 		MaxIdleConns:        kafkaConfig.MaxIdleConns,
 		MaxIdleConnsPerHost: kafkaConfig.MaxIdleConnsPerHost,
 	}

@@ -65,7 +65,7 @@ type KafkaDispatcher struct {
 type TopicFunc func(separator, namespace, name string) string
 
 type KafkaDispatcherArgs struct {
-	KnCEConnectionArgs kncloudevents.ConnectionArgs
+	KnCEConnectionArgs *kncloudevents.ConnectionArgs
 	Handler            *swappable.Handler
 	ClientID           string
 	Brokers            []string
