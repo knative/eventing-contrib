@@ -31,17 +31,16 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/cache"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/controller"
+
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 	messaginginformers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1"
 	listers "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
-	"knative.dev/eventing/pkg/channel/fanout"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
-	"knative.dev/eventing/pkg/logging"
-	"knative.dev/pkg/controller"
 )
 
 const (
@@ -169,6 +168,7 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 		logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
 		return err
 	}
+
 	natssChannel.Status.SubscribableStatus = r.createSubscribableStatus(natssChannel.Spec.Subscribable, failedSubscriptions)
 	if len(failedSubscriptions) > 0 {
 		var b strings.Builder
@@ -201,6 +201,10 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 
 	return nil
 }
+
+// createSubscribableStatus creates the SubscribableStatus based on the failedSubscriptions
+// checks for each subscriber on the natss channel if there is a failed subscription on natss side
+// if there is no failed subscription => set ready status
 func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscribable, failedSubscriptions map[eventingduck.SubscriberSpec]error) *eventingduck.SubscribableStatus {
 	if subscribable == nil {
 		return nil
@@ -238,28 +242,6 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	existing.Status = desired.Status
 
 	return r.NatssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
-}
-
-// newConfigFromNatssChannels creates a new Config from the list of natss channels.
-func (r *Reconciler) newConfigFromNatssChannels(channels []*v1alpha1.NatssChannel) *multichannelfanout.Config {
-	cc := make([]multichannelfanout.ChannelConfig, 0)
-	for _, c := range channels {
-		channelConfig := multichannelfanout.ChannelConfig{
-			Namespace: c.Namespace,
-			Name:      c.Name,
-			HostName:  c.Status.Address.Hostname,
-		}
-		if c.Spec.Subscribable != nil {
-			channelConfig.FanoutConfig = fanout.Config{
-				AsyncHandler:  true,
-				Subscriptions: c.Spec.Subscribable.Subscribers,
-			}
-		}
-		cc = append(cc, channelConfig)
-	}
-	return &multichannelfanout.Config{
-		ChannelConfigs: cc,
-	}
 }
 
 func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
