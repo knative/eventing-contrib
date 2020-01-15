@@ -31,8 +31,7 @@ func TestCouchDbDefaults(t *testing.T) {
 		"nil spec": {
 			initial: GitHubSource{},
 			expected: GitHubSource{
-				Spec: GitHubSourceSpec{
-				},
+				Spec: GitHubSourceSpec{},
 			},
 		},
 	}
