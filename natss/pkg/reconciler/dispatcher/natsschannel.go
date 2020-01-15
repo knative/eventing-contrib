@@ -92,6 +92,10 @@ func NewController(
 	return r.impl
 }
 
+// Reconcile a NatssChannel and perform the following actions:
+// - update natss subscriptions based on NatssChannel subscribers
+// - set NatssChannel subscriber status based on natss subscriptions
+// - maintain mapping between host header and natss channel which is used by the dispatcher
 func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	// Convert the namespace/name string into a distinct namespace and name.
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
@@ -148,10 +152,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 }
 
 // reconcile performs the following steps
-// * add finalizer
-// * update natss subscriptions
-// * set SubscribableStatus
-// * update host2channel map
+// - add finalizer
+// - update natss subscriptions
+// - set NatssChannel SubscribableStatus
+// - update host2channel map
 func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.NatssChannel) error {
 	// TODO update dispatcher API and use Channelable or NatssChannel.
 	c := toChannel(natssChannel)

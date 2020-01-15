@@ -49,12 +49,19 @@ func NewNatssChannel(name, namespace string, ncopt ...NatssChannelOption) *v1alp
 	return nc
 }
 
-// WithReady mark a NatssChannel as being ready
+// WithReady marks a NatssChannel as being ready
 // The dispatcher reconciler does not set the ready status, instead the controller reconciler does
 // For testing, we need to be able to set the status to ready
 func WithReady(nc *v1alpha1.NatssChannel) {
 	cs := apis.NewLivingConditionSet()
 	cs.Manage(&nc.Status).MarkTrue(v1alpha1.NatssChannelConditionReady)
+}
+
+func WithNotReady(reason, messageFormat string) NatssChannelOption {
+	return func(nc *v1alpha1.NatssChannel) {
+		cs := apis.NewLivingConditionSet()
+		cs.Manage(&nc.Status).MarkFalse(v1alpha1.NatssChannelConditionReady, reason, messageFormat)
+	}
 }
 
 func WithNatssInitChannelConditions(nc *v1alpha1.NatssChannel) {

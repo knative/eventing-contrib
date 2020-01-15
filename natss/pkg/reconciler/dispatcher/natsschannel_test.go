@@ -17,25 +17,19 @@ limitations under the License.
 package controller
 
 import (
-	"context"
-	"errors"
 	"testing"
 
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 	clientgotesting "k8s.io/client-go/testing"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	"knative.dev/pkg/controller"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
 	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
 	informers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions"
-	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	dispatchertesting "knative.dev/eventing-contrib/natss/pkg/dispatcher/testing"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
@@ -78,7 +72,7 @@ func TestAllCases(t *testing.T) {
 			Key:  ncKey,
 			Objects: []runtime.Object{
 				reconciletesting.NewNatssChannel(ncName, testNS,
-					reconciletesting.WithNatssChannelServiceNotReady("ChannelServiceFailed", "some message"),
+					reconciletesting.WithNotReady("ups", ""),
 				),
 			},
 			WantErr: true,
@@ -91,7 +85,7 @@ func TestAllCases(t *testing.T) {
 					// the finalizer should get removed
 					reconciletesting.WithNatssChannelFinalizer,
 					// make sure that finalizer can get removed even if channel is not ready
-					reconciletesting.WithNatssChannelServiceNotReady("ChannelServiceFailed", "Channel Service failed: services \"default-kne-ingress-kn-channel\" is forbidden: unable to create new content in namespace e2e-mesh-ns because it is being terminated"),
+					reconciletesting.WithNotReady("ups", ""),
 					reconciletesting.WithNatssChannelDeleted),
 			},
 			WantErr: false,
@@ -100,7 +94,7 @@ func TestAllCases(t *testing.T) {
 					Object: reconciletesting.NewNatssChannel(ncName, testNS,
 						// finalizer is removed
 						// make sure that finalizer can get removed even if channel is not ready
-						reconciletesting.WithNatssChannelServiceNotReady("ChannelServiceFailed", "Channel Service failed: services \"default-kne-ingress-kn-channel\" is forbidden: unable to create new content in namespace e2e-mesh-ns because it is being terminated"),
+						reconciletesting.WithNotReady("ups", ""),
 						reconciletesting.WithNatssChannelDeleted),
 				},
 			},
@@ -109,7 +103,7 @@ func TestAllCases(t *testing.T) {
 	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewDispatcher(t)
+		natssDispatcher := dispatchertesting.NewDispatcherDoNothing(t)
 
 		r := Reconciler{
 			Base:                 reconciler.NewBase(opt, controllerAgentName),
@@ -123,11 +117,10 @@ func TestAllCases(t *testing.T) {
 	},
 	))
 }
-func TestBrokenUpdate(t *testing.T) {
+func TestFailedNatssSubscription(t *testing.T) {
 	ncKey := testNS + "/" + ncName
 
 	table := TableTest{
-		// test that a
 		{
 			Name: "a failed natss subscription is reflected in Status.SubscribableStatus",
 			Objects: []runtime.Object{
@@ -158,7 +151,7 @@ func TestBrokenUpdate(t *testing.T) {
 	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := NewSubscriptionsSupervisorUpdateBroken(t)
+		natssDispatcher := dispatchertesting.NewDispatcherFailNatssSubscription(t)
 
 		r := Reconciler{
 			Base:                 reconciler.NewBase(opt, controllerAgentName),
@@ -181,7 +174,7 @@ func TestNewController(t *testing.T) {
 	}
 
 	messagingInformerFactory := informers.NewSharedInformerFactory(messagingClientSet, 0)
-	y := messagingInformerFactory.Messaging().V1alpha1().NatssChannels()
+	natssChannelInformer := messagingInformerFactory.Messaging().V1alpha1().NatssChannels()
 
 	c := NewController(reconciler.Options{
 		KubeClientSet:    fakekubeclientset.NewSimpleClientset(),
@@ -193,7 +186,7 @@ func TestNewController(t *testing.T) {
 		Logger:           logtesting.TestLogger(t),
 		ResyncPeriod:     0,
 		StopChannel:      nil,
-	}, dispatchertesting.NewDispatcher(t), y)
+	}, dispatchertesting.NewDispatcherDoNothing(t), natssChannelInformer)
 	if c == nil {
 		t.Errorf("unable to create dispatcher controller")
 	}
@@ -206,33 +199,4 @@ func makeFinalizerPatch(namespace, name string) clientgotesting.PatchActionImpl 
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
-}
-
-type FailNatssSubscriptionSimulator struct {
-	logger *zap.Logger
-}
-
-var _ dispatcher.NatssDispatcher = (*FailNatssSubscriptionSimulator)(nil)
-
-func NewSubscriptionsSupervisorUpdateBroken(t *testing.T) *FailNatssSubscriptionSimulator {
-	return &FailNatssSubscriptionSimulator{logger: logtesting.TestLogger(t).Desugar()}
-}
-
-func (s *FailNatssSubscriptionSimulator) Start(_ <-chan struct{}) error {
-	s.logger.Info("start")
-	return errors.New("ups")
-}
-
-func (s *FailNatssSubscriptionSimulator) UpdateSubscriptions(channel *messagingv1alpha1.Channel, _ bool) (map[eventingduck.SubscriberSpec]error, error) {
-	s.logger.Info("updating subscriptions")
-	failedSubscriptions := make(map[eventingduck.SubscriberSpec]error, 0)
-	for _, sub := range channel.Spec.Subscribable.Subscribers {
-		failedSubscriptions[sub] = errors.New("ups")
-	}
-	return failedSubscriptions, nil
-}
-
-func (s *FailNatssSubscriptionSimulator) UpdateHostToChannelMap(_ context.Context, _ []messagingv1alpha1.Channel) error {
-	s.logger.Info("updating hosttochannel map")
-	return errors.New("ups")
 }

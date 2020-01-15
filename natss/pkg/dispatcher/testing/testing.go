@@ -18,6 +18,7 @@ package testing
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"go.uber.org/zap"
@@ -28,27 +29,58 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 )
 
-type SubscriptionsSupervisorTesting struct {
+// DispatcherDoNothing is a stupid mock which doesn't do anything
+type DispatcherDoNothing struct {
 	logger *zap.Logger
 }
 
-var _ dispatcher.NatssDispatcher = (*SubscriptionsSupervisorTesting)(nil)
+var _ dispatcher.NatssDispatcher = (*DispatcherDoNothing)(nil)
 
-func NewDispatcher(t *testing.T) dispatcher.NatssDispatcher {
-	return &SubscriptionsSupervisorTesting{logger: logtesting.TestLogger(t).Desugar()}
+func NewDispatcherDoNothing(t *testing.T) dispatcher.NatssDispatcher {
+	return &DispatcherDoNothing{logger: logtesting.TestLogger(t).Desugar()}
 }
 
-func (s *SubscriptionsSupervisorTesting) Start(stopCh <-chan struct{}) error {
+func (s *DispatcherDoNothing) Start(_ <-chan struct{}) error {
 	s.logger.Info("start")
 	return nil
 }
 
-func (s *SubscriptionsSupervisorTesting) UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error) {
+func (s *DispatcherDoNothing) UpdateSubscriptions(_ *messagingv1alpha1.Channel, _ bool) (map[eventingduck.SubscriberSpec]error, error) {
 	s.logger.Info("updating subscriptions")
 	return nil, nil
 }
 
-func (s *SubscriptionsSupervisorTesting) UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
+func (s *DispatcherDoNothing) UpdateHostToChannelMap(_ context.Context, _ []messagingv1alpha1.Channel) error {
 	s.logger.Info("updating hosttochannel map")
+	return nil
+}
+
+// DispatcherFailNatssSubscription simulates that natss has a failed subscription
+type DispatcherFailNatssSubscription struct {
+	logger *zap.Logger
+}
+
+var _ dispatcher.NatssDispatcher = (*DispatcherFailNatssSubscription)(nil)
+
+func NewDispatcherFailNatssSubscription(t *testing.T) *DispatcherFailNatssSubscription {
+	return &DispatcherFailNatssSubscription{logger: logtesting.TestLogger(t).Desugar()}
+}
+
+func (s *DispatcherFailNatssSubscription) Start(_ <-chan struct{}) error {
+	s.logger.Info("start")
+	return nil
+}
+
+// UpdateSubscriptions returns a failed natss subscription
+func (s *DispatcherFailNatssSubscription) UpdateSubscriptions(channel *messagingv1alpha1.Channel, _ bool) (map[eventingduck.SubscriberSpec]error, error) {
+	s.logger.Info("updating subscriptions")
+	failedSubscriptions := make(map[eventingduck.SubscriberSpec]error, 0)
+	for _, sub := range channel.Spec.Subscribable.Subscribers {
+		failedSubscriptions[sub] = errors.New("ups")
+	}
+	return failedSubscriptions, nil
+}
+
+func (s *DispatcherFailNatssSubscription) UpdateHostToChannelMap(_ context.Context, _ []messagingv1alpha1.Channel) error {
 	return nil
 }
