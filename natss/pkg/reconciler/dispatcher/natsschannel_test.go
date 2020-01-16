@@ -45,13 +45,11 @@ func TestAllCases(t *testing.T) {
 
 	table := TableTest{
 		{
-			Name: "bad workqueue key",
-			// Make sure Reconcile handles bad keys.
+			Name: "make sure reconcile handles bad keys",
 			Key: "too/many/parts",
 		},
 		{
-			Name: "key not found",
-			// Make sure Reconcile handles good keys that don't exist.
+			Name: "make sure reconcile handles good keys that don't exist",
 			Key: "foo/not-found",
 		},
 		{
