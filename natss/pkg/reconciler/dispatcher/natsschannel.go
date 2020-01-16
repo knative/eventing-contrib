@@ -61,7 +61,6 @@ type Reconciler struct {
 	natssDispatcher dispatcher.NatssDispatcher
 
 	natsschannelLister   listers.NatssChannelLister
-	natsschannelInformer cache.SharedIndexInformer
 	impl                 *controller.Impl
 }
 
@@ -80,7 +79,6 @@ func NewController(
 		Base:                 reconciler.NewBase(opt, controllerAgentName),
 		natssDispatcher:      natssDispatcher,
 		natsschannelLister:   natsschannelInformer.Lister(),
-		natsschannelInformer: natsschannelInformer.Informer(),
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
