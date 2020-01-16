@@ -109,7 +109,6 @@ func TestAllCases(t *testing.T) {
 			Base:                 reconciler.NewBase(opt, controllerAgentName),
 			natssDispatcher:      natssDispatcher,
 			natsschannelLister:   listers.GetNatssChannelLister(),
-			natsschannelInformer: nil,
 			impl:                 nil,
 		}
 
@@ -157,7 +156,6 @@ func TestFailedNatssSubscription(t *testing.T) {
 			Base:                 reconciler.NewBase(opt, controllerAgentName),
 			natssDispatcher:      natssDispatcher,
 			natsschannelLister:   listers.GetNatssChannelLister(),
-			natsschannelInformer: nil,
 			impl:                 nil,
 		}
 
