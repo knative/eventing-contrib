@@ -21,6 +21,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
+
 	awssqs "knative.dev/eventing-contrib/awssqs/pkg/adapter"
 	"knative.dev/pkg/signals"
 
@@ -60,10 +62,13 @@ func main() {
 		log.Fatalf("Unable to create logger: %v", err)
 	}
 
+	profileName := ""
+	creds := credentials.NewSharedCredentials(getRequiredEnv(envCredsFile), profileName)
+
 	adapter := &awssqs.Adapter{
 		QueueURL:             getRequiredEnv(envQueueURL),
 		SinkURI:              getRequiredEnv(envSinkURI),
-		CredsFile:            getRequiredEnv(envCredsFile),
+		Credentials:          creds,
 		OnFailedPollWaitSecs: 2,
 	}
 

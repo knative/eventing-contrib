@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/defaults"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	cloudevents "github.com/cloudevents/sdk-go"
@@ -46,8 +48,8 @@ type Adapter struct {
 	// SinkURI is the URI messages will be forwarded on to.
 	SinkURI string
 
-	// CredsFile is the full path of the AWS credentials file
-	CredsFile string
+	// Credentials is a credentials chain to be used by the SQS client
+	Credentials *credentials.Credentials
 
 	// OnFailedPollWaitSecs determines the interval to wait after a
 	// failed poll before making another one
@@ -104,10 +106,15 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		return err
 	}
 
+	creds := a.Credentials
+	if creds == nil {
+		// default to default credential chain: 1) env vars, 2) files, 3) instance metadata
+		creds = defaults.CredChain(defaults.Config().WithRegion(region), defaults.Handlers())
+	}
+
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigDisable,
-		Config:            aws.Config{Region: &region},
-		SharedConfigFiles: []string{a.CredsFile},
+		Config:            *aws.NewConfig().WithRegion(region).WithCredentials(creds),
 	}))
 
 	q := sqs.New(sess)
