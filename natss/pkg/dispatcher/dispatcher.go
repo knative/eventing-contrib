@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -364,11 +365,11 @@ func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, ch
 	return nil
 }
 
-func (s *SubscriptionsSupervisor) getChannelReferenceFromHost(host string) (eventingchannels.ChannelReference, error) {
+func (s *SubscriptionsSupervisor) getChannelReferenceFromHost(host url.URL) (eventingchannels.ChannelReference, error) {
 	chMap := s.getHostToChannelMap()
-	cr, ok := chMap[host]
+	cr, ok := chMap[host.Path]
 	if !ok {
-		return cr, fmt.Errorf("Invalid HostName:%q. HostName not found in any of the watched natss channels", host)
+		return cr, fmt.Errorf("Invalid HostName:%v. HostName not found in any of the watched natss channels", host)
 	}
 	return cr, nil
 }
