@@ -29,7 +29,7 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 )
 
-// DispatcherDoNothing is a stupid mock which doesn't do anything
+// DispatcherDoNothing is a dummy mock which doesn't do anything
 type DispatcherDoNothing struct {
 	logger *zap.Logger
 }
