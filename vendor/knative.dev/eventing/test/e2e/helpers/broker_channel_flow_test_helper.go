@@ -29,7 +29,9 @@ import (
 )
 
 // BrokerChannelFlowTestHelper is the helper function for broker_channel_flow_test
-func BrokerChannelFlowTestHelper(t *testing.T, channelTestRunner lib.ChannelTestRunner) {
+func BrokerChannelFlowTestHelper(t *testing.T,
+	channelTestRunner lib.ChannelTestRunner,
+	options ...lib.SetupClientOption) {
 	const (
 		senderName = "e2e-brokerchannel-sender"
 		brokerName = "e2e-brokerchannel-broker"
@@ -54,14 +56,14 @@ func BrokerChannelFlowTestHelper(t *testing.T, channelTestRunner lib.ChannelTest
 	)
 
 	channelTestRunner.RunTests(t, lib.FeatureBasic, func(st *testing.T, channel metav1.TypeMeta) {
-		client := lib.Setup(st, true)
+		client := lib.Setup(st, true, options...)
 		defer lib.TearDown(client)
 
 		// create required RBAC resources including ServiceAccounts and ClusterRoleBindings for Brokers
 		client.CreateRBACResourcesForBrokers()
 
 		// create a new broker
-		client.CreateBrokerOrFail(brokerName, &channel)
+		client.CreateBrokerOrFail(brokerName, resources.WithChannelTemplateForBroker(&channel))
 		client.WaitForResourceReadyOrFail(brokerName, lib.BrokerTypeMeta)
 
 		// create the event we want to transform to
