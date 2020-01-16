@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"go.uber.org/zap"
+
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	logtesting "knative.dev/pkg/logging/testing"

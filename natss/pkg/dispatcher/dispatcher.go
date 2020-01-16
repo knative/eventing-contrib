@@ -26,6 +26,7 @@ import (
 
 	stan "github.com/nats-io/go-nats-streaming"
 	"go.uber.org/zap"
+
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
