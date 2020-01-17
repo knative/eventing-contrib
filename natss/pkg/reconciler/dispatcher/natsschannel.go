@@ -60,8 +60,8 @@ type Reconciler struct {
 
 	natssDispatcher dispatcher.NatssDispatcher
 
-	natsschannelLister listers.NatssChannelLister
-	impl               *controller.Impl
+	natsschannelLister   listers.NatssChannelLister
+	impl                 *controller.Impl
 }
 
 // Check that our Reconciler implements controller.Reconciler.
@@ -76,9 +76,9 @@ func NewController(
 ) *controller.Impl {
 
 	r := &Reconciler{
-		Base:               reconciler.NewBase(opt, controllerAgentName),
-		natssDispatcher:    natssDispatcher,
-		natsschannelLister: natsschannelInformer.Lister(),
+		Base:                 reconciler.NewBase(opt, controllerAgentName),
+		natssDispatcher:      natssDispatcher,
+		natsschannelLister:   natsschannelInformer.Lister(),
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
@@ -196,7 +196,7 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 		}
 	}
 
-	if err := r.natssDispatcher.ProcessChannels(ctx, channels); err != nil {
+	if err := r.natssDispatcher.UpdateHostToChannelMap(ctx, channels); err != nil {
 		logging.FromContext(ctx).Error("Error updating host to channel map", zap.Error(err))
 		return err
 	}

@@ -76,7 +76,7 @@ type SubscriptionsSupervisor struct {
 type NatssDispatcher interface {
 	Start(stopCh <-chan struct{}) error
 	UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error)
-	ProcessChannels(ctx context.Context, chanList []messagingv1alpha1.Channel) error
+	UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error
 }
 
 // NewDispatcher returns a new NatssDispatcher.
@@ -348,13 +348,13 @@ func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]e
 	return hostToChanMap, nil
 }
 
-// ProcessChannels will be called from the controller that watches natss channels.
+// UpdateHostToChannelMap will be called from the controller that watches natss channels.
 // It will update internal hostToChannelMap which is used to resolve the hostHeader of the
 // incoming request to the correct ChannelReference in the receiver function.
-func (s *SubscriptionsSupervisor) ProcessChannels(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
+func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
 	hostToChanMap, err := newHostNameToChannelRefMap(chanList)
 	if err != nil {
-		logging.FromContext(ctx).Info("ProcessChannels: Error occurred when creating the new hostToChannel map.", zap.Error(err))
+		logging.FromContext(ctx).Info("UpdateHostToChannelMap: Error occurred when creating the new hostToChannel map.", zap.Error(err))
 		return err
 	}
 	s.setHostToChannelMap(hostToChanMap)
