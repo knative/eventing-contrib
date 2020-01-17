@@ -63,10 +63,10 @@ type PrometheusSourceSpec struct {
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// ServerURL is the URL of the Prometheus server
-	ServerURL string `json:"serverURL"`
+	ServerURL string `json:"serverUrl"`
 
 	// PromQL is the Prometheus query for this source
-	PromQL string `json:"promQL"`
+	PromQL string `json:"promQl"`
 
 	// The name of the file containing the authenication token
 	// +optional

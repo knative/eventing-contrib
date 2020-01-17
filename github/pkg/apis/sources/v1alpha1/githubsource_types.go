@@ -77,7 +77,7 @@ type GitHubSourceSpec struct {
 
 	// API URL if using github enterprise (default https://api.github.com)
 	// +optional
-	GitHubAPIURL string `json:"githubAPIURL,omitempty"`
+	GitHubAPIURL string `json:"githubApiUrl,omitempty"`
 
 	// Secure can be set to true to configure the webhook to use https.
 	// +optional
@@ -150,7 +150,7 @@ type GitHubSourceStatus struct {
 	duckv1.Status `json:",inline"`
 
 	// WebhookIDKey is the ID of the webhook registered with GitHub
-	WebhookIDKey string `json:"webhookIDKey,omitempty"`
+	WebhookIDKey string `json:"webhookIdKey,omitempty"`
 
 	// SinkURI is the current active sink URI that has been configured
 	// for the GitHubSource.
