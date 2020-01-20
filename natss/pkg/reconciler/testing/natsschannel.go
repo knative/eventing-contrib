@@ -18,13 +18,16 @@ package testing
 
 import (
 	"context"
+	"testing"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
+	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+
+	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 )
 
 // NatssChannelOption enables further configuration of a NatssChannel.
@@ -46,8 +49,27 @@ func NewNatssChannel(name, namespace string, ncopt ...NatssChannelOption) *v1alp
 	return nc
 }
 
+// WithReady marks a NatssChannel as being ready
+// The dispatcher reconciler does not set the ready status, instead the controller reconciler does
+// For testing, we need to be able to set the status to ready
+func WithReady(nc *v1alpha1.NatssChannel) {
+	cs := apis.NewLivingConditionSet()
+	cs.Manage(&nc.Status).MarkTrue(v1alpha1.NatssChannelConditionReady)
+}
+
+func WithNotReady(reason, messageFormat string) NatssChannelOption {
+	return func(nc *v1alpha1.NatssChannel) {
+		cs := apis.NewLivingConditionSet()
+		cs.Manage(&nc.Status).MarkFalse(v1alpha1.NatssChannelConditionReady, reason, messageFormat)
+	}
+}
+
 func WithNatssInitChannelConditions(nc *v1alpha1.NatssChannel) {
 	nc.Status.InitializeConditions()
+}
+
+func WithNatssChannelFinalizer(nc *v1alpha1.NatssChannel) {
+	nc.Finalizers = []string{"natss-ch-dispatcher"}
 }
 
 func WithNatssChannelDeleted(nc *v1alpha1.NatssChannel) {
@@ -67,7 +89,7 @@ func WithNatssChannelDeploymentReady() NatssChannelOption {
 	}
 }
 
-func WithNatssChannelServicetNotReady(reason, message string) NatssChannelOption {
+func WithNatssChannelServiceNotReady(reason, message string) NatssChannelOption {
 	return func(nc *v1alpha1.NatssChannel) {
 		nc.Status.MarkServiceFailed(reason, message)
 	}
@@ -100,6 +122,39 @@ func WithNatssChannelEndpointsNotReady(reason, message string) NatssChannelOptio
 func WithNatssChannelEndpointsReady() NatssChannelOption {
 	return func(nc *v1alpha1.NatssChannel) {
 		nc.Status.MarkEndpointsTrue()
+	}
+}
+
+func WithNatssChannelSubscribers(t *testing.T, subscriberURI string) NatssChannelOption {
+	s, err := apis.ParseURL(subscriberURI)
+	if err != nil {
+		t.Errorf("cannot parse url: %v", err)
+	}
+	return func(nc *v1alpha1.NatssChannel) {
+		nc.Spec.Subscribable = &duckv1alpha1.Subscribable{
+			Subscribers: []duckv1alpha1.SubscriberSpec{
+				{
+					UID:               "",
+					Generation:        0,
+					SubscriberURI:     s,
+					ReplyURI:          nil,
+					DeadLetterSinkURI: nil,
+				},
+			},
+		}
+	}
+}
+
+func WithNatssChannelSubscribableStatus(ready corev1.ConditionStatus, message string) NatssChannelOption {
+	return func(nc *v1alpha1.NatssChannel) {
+		nc.Status.SubscribableStatus = &duckv1alpha1.SubscribableStatus{
+			Subscribers: []duckv1alpha1.SubscriberStatus{
+				{
+					Ready:   ready,
+					Message: message,
+				},
+			},
+		}
 	}
 }
 

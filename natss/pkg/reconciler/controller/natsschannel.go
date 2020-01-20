@@ -52,8 +52,6 @@ const (
 	// itself when creating events.
 	controllerAgentName = "natss-ch-controller"
 
-	finalizerName = controllerAgentName
-
 	// Name of the corev1.Events emitted from the reconciliation process.
 	channelReconciled         = "ChannelReconciled"
 	channelReconcileFailed    = "ChannelReconcileFailed"

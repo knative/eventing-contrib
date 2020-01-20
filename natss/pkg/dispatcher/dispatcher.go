@@ -26,14 +26,14 @@ import (
 
 	stan "github.com/nats-io/go-nats-streaming"
 	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
-	"knative.dev/eventing-contrib/natss/pkg/stanutil"
-	contribchannels "knative.dev/eventing-contrib/pkg/channel"
-	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
+
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/logging"
+
+	"knative.dev/eventing-contrib/natss/pkg/stanutil"
+	contribchannels "knative.dev/eventing-contrib/pkg/channel"
 )
 
 const (
@@ -46,6 +46,8 @@ var (
 	retryInterval = 1 * time.Second
 )
 
+type SubscriptionChannelMapping map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription
+
 // SubscriptionsSupervisor manages the state of NATS Streaming subscriptions
 type SubscriptionsSupervisor struct {
 	logger *zap.Logger
@@ -54,7 +56,7 @@ type SubscriptionsSupervisor struct {
 	dispatcher *contribchannels.MessageDispatcher
 
 	subscriptionsMux sync.Mutex
-	subscriptions    map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription
+	subscriptions    SubscriptionChannelMapping
 
 	connect   chan struct{}
 	natssURL  string
@@ -69,8 +71,14 @@ type SubscriptionsSupervisor struct {
 	hostToChannelMap atomic.Value
 }
 
-// NewDispatcher returns a new SubscriptionsSupervisor.
-func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (*SubscriptionsSupervisor, error) {
+type NatssDispatcher interface {
+	Start(stopCh <-chan struct{}) error
+	UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error)
+	ProcessChannels(ctx context.Context, chanList []messagingv1alpha1.Channel) error
+}
+
+// NewDispatcher returns a new NatssDispatcher.
+func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (NatssDispatcher, error) {
 	d := &SubscriptionsSupervisor{
 		logger:        logger,
 		dispatcher:    contribchannels.NewMessageDispatcher(logger.Sugar()),
@@ -78,7 +86,7 @@ func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (*S
 		natssURL:      natssURL,
 		clusterID:     clusterID,
 		clientID:      clientID,
-		subscriptions: make(map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription),
+		subscriptions: make(SubscriptionChannelMapping),
 	}
 	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 	receiver, err := contribchannels.NewMessageReceiver(
@@ -250,18 +258,6 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 	return failedToSubscribe, nil
 }
 
-func toSubscriberStatus(subSpec *v1alpha1.SubscriberSpec, condition corev1.ConditionStatus, msg string) *v1alpha1.SubscriberStatus {
-	if subSpec == nil {
-		return nil
-	}
-	return &v1alpha1.SubscriberStatus{
-		UID:                subSpec.UID,
-		ObservedGeneration: subSpec.Generation,
-		Message:            msg,
-		Ready:              condition,
-	}
-}
-
 func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
@@ -350,13 +346,13 @@ func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]e
 	return hostToChanMap, nil
 }
 
-// UpdateHostToChannelMap will be called from the controller that watches natss channels.
+// ProcessChannels will be called from the controller that watches natss channels.
 // It will update internal hostToChannelMap which is used to resolve the hostHeader of the
 // incoming request to the correct ChannelReference in the receiver function.
-func (s *SubscriptionsSupervisor) UpdateHostToChannelMap(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
+func (s *SubscriptionsSupervisor) ProcessChannels(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
 	hostToChanMap, err := newHostNameToChannelRefMap(chanList)
 	if err != nil {
-		logging.FromContext(ctx).Info("UpdateHostToChannelMap: Error occurred when creating the new hostToChannel map.", zap.Error(err))
+		logging.FromContext(ctx).Info("ProcessChannels: Error occurred when creating the new hostToChannel map.", zap.Error(err))
 		return err
 	}
 	s.setHostToChannelMap(hostToChanMap)
