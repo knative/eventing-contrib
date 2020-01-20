@@ -19,62 +19,50 @@ package testing
 import (
 	"context"
 	"errors"
-	"testing"
-
-	"go.uber.org/zap"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
-	logtesting "knative.dev/pkg/logging/testing"
 
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 )
 
 // DispatcherDoNothing is a dummy mock which doesn't do anything
-type DispatcherDoNothing struct {
-	logger *zap.Logger
-}
+type DispatcherDoNothing struct {}
 
 var _ dispatcher.NatssDispatcher = (*DispatcherDoNothing)(nil)
 
-func NewDispatcherDoNothing(t *testing.T) dispatcher.NatssDispatcher {
-	return &DispatcherDoNothing{logger: logtesting.TestLogger(t).Desugar()}
+func NewDispatcherDoNothing() dispatcher.NatssDispatcher {
+	return &DispatcherDoNothing{}
 }
 
 func (s *DispatcherDoNothing) Start(_ <-chan struct{}) error {
-	s.logger.Info("start")
 	return nil
 }
 
 func (s *DispatcherDoNothing) UpdateSubscriptions(_ *messagingv1alpha1.Channel, _ bool) (map[eventingduck.SubscriberSpec]error, error) {
-	s.logger.Info("updating subscriptions")
 	return nil, nil
 }
 
 func (s *DispatcherDoNothing) ProcessChannels(_ context.Context, _ []messagingv1alpha1.Channel) error {
-	s.logger.Info("updating hosttochannel map")
 	return nil
 }
 
 // DispatcherFailNatssSubscription simulates that natss has a failed subscription
 type DispatcherFailNatssSubscription struct {
-	logger *zap.Logger
 }
 
 var _ dispatcher.NatssDispatcher = (*DispatcherFailNatssSubscription)(nil)
 
-func NewDispatcherFailNatssSubscription(t *testing.T) *DispatcherFailNatssSubscription {
-	return &DispatcherFailNatssSubscription{logger: logtesting.TestLogger(t).Desugar()}
+func NewDispatcherFailNatssSubscription() *DispatcherFailNatssSubscription {
+	return &DispatcherFailNatssSubscription{}
 }
 
 func (s *DispatcherFailNatssSubscription) Start(_ <-chan struct{}) error {
-	s.logger.Info("start")
 	return nil
 }
 
 // UpdateSubscriptions returns a failed natss subscription
 func (s *DispatcherFailNatssSubscription) UpdateSubscriptions(channel *messagingv1alpha1.Channel, _ bool) (map[eventingduck.SubscriberSpec]error, error) {
-	s.logger.Info("updating subscriptions")
 	failedSubscriptions := make(map[eventingduck.SubscriberSpec]error, 0)
 	for _, sub := range channel.Spec.Subscribable.Subscribers {
 		failedSubscriptions[sub] = errors.New("ups")

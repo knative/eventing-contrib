@@ -46,9 +46,7 @@ var (
 	retryInterval = 1 * time.Second
 )
 
-type (
-	SubscriptionChannelMapping map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription
-)
+type SubscriptionChannelMapping map[eventingchannels.ChannelReference]map[subscriptionReference]*stan.Subscription
 
 // SubscriptionsSupervisor manages the state of NATS Streaming subscriptions
 type SubscriptionsSupervisor struct {

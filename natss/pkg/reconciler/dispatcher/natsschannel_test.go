@@ -101,7 +101,7 @@ func TestAllCases(t *testing.T) {
 	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewDispatcherDoNothing(t)
+		natssDispatcher := dispatchertesting.NewDispatcherDoNothing()
 
 		r := Reconciler{
 			Base:                 reconciler.NewBase(opt, controllerAgentName),
@@ -148,7 +148,7 @@ func TestFailedNatssSubscription(t *testing.T) {
 	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewDispatcherFailNatssSubscription(t)
+		natssDispatcher := dispatchertesting.NewDispatcherFailNatssSubscription()
 
 		r := Reconciler{
 			Base:                 reconciler.NewBase(opt, controllerAgentName),
@@ -182,7 +182,7 @@ func TestNewController(t *testing.T) {
 		Logger:           logtesting.TestLogger(t),
 		ResyncPeriod:     0,
 		StopChannel:      nil,
-	}, dispatchertesting.NewDispatcherDoNothing(t), natssChannelInformer)
+	}, dispatchertesting.NewDispatcherDoNothing(), natssChannelInformer)
 	if c == nil {
 		t.Errorf("unable to create dispatcher controller")
 	}
