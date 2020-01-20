@@ -51,7 +51,7 @@ func (s *DispatcherDoNothing) UpdateSubscriptions(_ *messagingv1alpha1.Channel, 
 	return nil, nil
 }
 
-func (s *DispatcherDoNothing) UpdateHostToChannelMap(_ context.Context, _ []messagingv1alpha1.Channel) error {
+func (s *DispatcherDoNothing) ProcessChannels(_ context.Context, _ []messagingv1alpha1.Channel) error {
 	s.logger.Info("updating hosttochannel map")
 	return nil
 }
@@ -82,6 +82,6 @@ func (s *DispatcherFailNatssSubscription) UpdateSubscriptions(channel *messaging
 	return failedSubscriptions, nil
 }
 
-func (s *DispatcherFailNatssSubscription) UpdateHostToChannelMap(_ context.Context, _ []messagingv1alpha1.Channel) error {
+func (s *DispatcherFailNatssSubscription) ProcessChannels(_ context.Context, _ []messagingv1alpha1.Channel) error {
 	return nil
 }
