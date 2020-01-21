@@ -46,11 +46,11 @@ func TestAllCases(t *testing.T) {
 	table := TableTest{
 		{
 			Name: "make sure reconcile handles bad keys",
-			Key: "too/many/parts",
+			Key:  "too/many/parts",
 		},
 		{
 			Name: "make sure reconcile handles good keys that don't exist",
-			Key: "foo/not-found",
+			Key:  "foo/not-found",
 		},
 		{
 			Name: "reconcile ok: channel ready",
@@ -104,10 +104,10 @@ func TestAllCases(t *testing.T) {
 		natssDispatcher := dispatchertesting.NewDispatcherDoNothing()
 
 		r := Reconciler{
-			Base:                 reconciler.NewBase(opt, controllerAgentName),
-			natssDispatcher:      natssDispatcher,
-			natsschannelLister:   listers.GetNatssChannelLister(),
-			impl:                 nil,
+			Base:               reconciler.NewBase(opt, controllerAgentName),
+			natssDispatcher:    natssDispatcher,
+			natsschannelLister: listers.GetNatssChannelLister(),
+			impl:               nil,
 		}
 
 		return &r
@@ -151,10 +151,10 @@ func TestFailedNatssSubscription(t *testing.T) {
 		natssDispatcher := dispatchertesting.NewDispatcherFailNatssSubscription()
 
 		r := Reconciler{
-			Base:                 reconciler.NewBase(opt, controllerAgentName),
-			natssDispatcher:      natssDispatcher,
-			natsschannelLister:   listers.GetNatssChannelLister(),
-			impl:                 nil,
+			Base:               reconciler.NewBase(opt, controllerAgentName),
+			natssDispatcher:    natssDispatcher,
+			natsschannelLister: listers.GetNatssChannelLister(),
+			impl:               nil,
 		}
 
 		return &r

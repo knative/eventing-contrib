@@ -27,7 +27,7 @@ import (
 )
 
 // DispatcherDoNothing is a dummy mock which doesn't do anything
-type DispatcherDoNothing struct {}
+type DispatcherDoNothing struct{}
 
 var _ dispatcher.NatssDispatcher = (*DispatcherDoNothing)(nil)
 
