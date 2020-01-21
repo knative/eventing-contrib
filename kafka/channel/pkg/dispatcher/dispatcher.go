@@ -353,7 +353,7 @@ func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage)
 			event.SetDataSchema(v)
 		default:
 			// Extensions
-			if IsAlphaNumericLowercaseLetters(h) {
+			if IsAlphaNumeric(h) {
 				event.SetExtension(h, v)
 			}
 		}
