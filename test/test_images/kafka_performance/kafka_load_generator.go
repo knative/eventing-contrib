@@ -24,12 +24,12 @@ type KafkaLoadGenerator struct {
 	sender    kafka.Sender
 }
 
-func (k *KafkaLoadGenerator) Warmup(pace performance_common.PaceSpec, msgSize uint) {
-	k.loadastic.StartSteps(JsonKafkaRequestFactory(msgSize, performance_common.WarmupEventType), paceToStep(pace))
+func (k *KafkaLoadGenerator) Warmup(pace performance_common.PaceSpec, msgSize uint, fixedBody bool) {
+	k.loadastic.StartSteps(JsonKafkaRequestFactory(msgSize, performance_common.WarmupEventType, fixedBody), paceToStep(pace))
 }
 
-func (k *KafkaLoadGenerator) RunPace(i int, pace performance_common.PaceSpec, msgSize uint) {
-	k.loadastic.StartSteps(JsonKafkaRequestFactory(msgSize, performance_common.MeasureEventType), paceToStep(pace))
+func (k *KafkaLoadGenerator) RunPace(i int, pace performance_common.PaceSpec, msgSize uint, fixedBody bool) {
+	k.loadastic.StartSteps(JsonKafkaRequestFactory(msgSize, performance_common.MeasureEventType, fixedBody), paceToStep(pace))
 }
 
 func (k *KafkaLoadGenerator) SendGCEvent() {
@@ -95,9 +95,16 @@ func randomStringFromCharset(length uint, charset string) string {
 	return string(b)
 }
 
-func JsonKafkaRequestFactory(messageSize uint, messageType string) kafka.RequestFactory {
-	randomStuff := randomStringFromCharset(messageSize, charset)
+func JsonKafkaRequestFactory(messageSize uint, messageType string, fixedBody bool) kafka.RequestFactory {
+	randomFixedStuff := randomStringFromCharset(messageSize, charset)
+
 	return func(tickerTimestamp time.Time, id uint64, uuid string) kafka.RecordPayload {
+		var randomStuff string
+		if fixedBody {
+			randomStuff = randomFixedStuff
+		} else {
+			randomStuff = randomStringFromCharset(messageSize, charset)
+		}
 		return []byte(fmt.Sprintf("{\"type\":\"%s\",\"id\":\"%s\",\"randomStuff\":\"%s\"}", messageType, uuid, randomStuff))
 	}
 }
