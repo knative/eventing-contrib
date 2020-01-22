@@ -31,17 +31,16 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/cache"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/controller"
+
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 	messaginginformers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1"
 	listers "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
-	"knative.dev/eventing/pkg/channel/fanout"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
-	"knative.dev/eventing/pkg/logging"
-	"knative.dev/pkg/controller"
 )
 
 const (
@@ -59,11 +58,10 @@ const (
 type Reconciler struct {
 	*reconciler.Base
 
-	natssDispatcher *dispatcher.SubscriptionsSupervisor
+	natssDispatcher dispatcher.NatssDispatcher
 
-	natsschannelLister   listers.NatssChannelLister
-	natsschannelInformer cache.SharedIndexInformer
-	impl                 *controller.Impl
+	natsschannelLister listers.NatssChannelLister
+	impl               *controller.Impl
 }
 
 // Check that our Reconciler implements controller.Reconciler.
@@ -73,15 +71,14 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 // Registers event handlers to enqueue events.
 func NewController(
 	opt reconciler.Options,
-	natssDispatcher *dispatcher.SubscriptionsSupervisor,
+	natssDispatcher dispatcher.NatssDispatcher,
 	natsschannelInformer messaginginformers.NatssChannelInformer,
 ) *controller.Impl {
 
 	r := &Reconciler{
-		Base:                 reconciler.NewBase(opt, controllerAgentName),
-		natssDispatcher:      natssDispatcher,
-		natsschannelLister:   natsschannelInformer.Lister(),
-		natsschannelInformer: natsschannelInformer.Informer(),
+		Base:               reconciler.NewBase(opt, controllerAgentName),
+		natssDispatcher:    natssDispatcher,
+		natsschannelLister: natsschannelInformer.Lister(),
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
@@ -93,6 +90,10 @@ func NewController(
 	return r.impl
 }
 
+// Reconcile a NatssChannel and perform the following actions:
+// - update natss subscriptions based on NatssChannel subscribers
+// - set NatssChannel subscriber status based on natss subscriptions
+// - maintain mapping between host header and natss channel which is used by the dispatcher
 func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	// Convert the namespace/name string into a distinct namespace and name.
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
@@ -111,12 +112,25 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		return err
 	}
 
-	if !original.Status.IsReady() {
-		return fmt.Errorf("Channel is not ready. Cannot configure and update subscriber status")
-	}
-
 	// Don't modify the informers copy.
 	natssChannel := original.DeepCopy()
+
+	// See if the channel has been deleted.
+	if natssChannel.DeletionTimestamp != nil {
+		c := toChannel(natssChannel)
+
+		if _, err := r.natssDispatcher.UpdateSubscriptions(c, true); err != nil {
+			logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
+			return err
+		}
+		removeFinalizer(natssChannel)
+		_, err := r.NatssClientSet.MessagingV1alpha1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
+		return err
+	}
+
+	if !natssChannel.Status.IsReady() {
+		return fmt.Errorf("Channel is not ready. Cannot configure and update subscriber status")
+	}
 
 	reconcileErr := r.reconcile(ctx, natssChannel)
 	if reconcileErr != nil {
@@ -135,20 +149,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return reconcileErr
 }
 
+// reconcile performs the following steps
+// - add finalizer
+// - update natss subscriptions
+// - set NatssChannel SubscribableStatus
+// - update host2channel map
 func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.NatssChannel) error {
 	// TODO update dispatcher API and use Channelable or NatssChannel.
 	c := toChannel(natssChannel)
-
-	// See if the channel has been deleted.
-	if natssChannel.DeletionTimestamp != nil {
-		if _, err := r.natssDispatcher.UpdateSubscriptions(c, true); err != nil {
-			logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
-			return err
-		}
-		removeFinalizer(natssChannel)
-		_, err := r.NatssClientSet.MessagingV1alpha1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
-		return err
-	}
 
 	// If we are adding the finalizer for the first time, then ensure that finalizer is persisted
 	// before manipulating Natss.
@@ -162,6 +170,7 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 		logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
 		return err
 	}
+
 	natssChannel.Status.SubscribableStatus = r.createSubscribableStatus(natssChannel.Spec.Subscribable, failedSubscriptions)
 	if len(failedSubscriptions) > 0 {
 		var b strings.Builder
@@ -187,13 +196,17 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 		}
 	}
 
-	if err := r.natssDispatcher.UpdateHostToChannelMap(ctx, channels); err != nil {
+	if err := r.natssDispatcher.ProcessChannels(ctx, channels); err != nil {
 		logging.FromContext(ctx).Error("Error updating host to channel map", zap.Error(err))
 		return err
 	}
 
 	return nil
 }
+
+// createSubscribableStatus creates the SubscribableStatus based on the failedSubscriptions
+// checks for each subscriber on the natss channel if there is a failed subscription on natss side
+// if there is no failed subscription => set ready status
 func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscribable, failedSubscriptions map[eventingduck.SubscriberSpec]error) *eventingduck.SubscribableStatus {
 	if subscribable == nil {
 		return nil
@@ -231,28 +244,6 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	existing.Status = desired.Status
 
 	return r.NatssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
-}
-
-// newConfigFromNatssChannels creates a new Config from the list of natss channels.
-func (r *Reconciler) newConfigFromNatssChannels(channels []*v1alpha1.NatssChannel) *multichannelfanout.Config {
-	cc := make([]multichannelfanout.ChannelConfig, 0)
-	for _, c := range channels {
-		channelConfig := multichannelfanout.ChannelConfig{
-			Namespace: c.Namespace,
-			Name:      c.Name,
-			HostName:  c.Status.Address.Hostname,
-		}
-		if c.Spec.Subscribable != nil {
-			channelConfig.FanoutConfig = fanout.Config{
-				AsyncHandler:  true,
-				Subscriptions: c.Spec.Subscribable.Subscribers,
-			}
-		}
-		cc = append(cc, channelConfig)
-	}
-	return &multichannelfanout.Config{
-		ChannelConfigs: cc,
-	}
 }
 
 func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {

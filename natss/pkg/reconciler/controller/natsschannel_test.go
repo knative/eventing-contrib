@@ -150,7 +150,7 @@ func TestAllCases(t *testing.T) {
 				Object: reconciletesting.NewNatssChannel(ncName, testNS,
 					reconciletesting.WithNatssInitChannelConditions,
 					reconciletesting.WithNatssChannelDeploymentReady(),
-					reconciletesting.WithNatssChannelServicetNotReady("DispatcherServiceDoesNotExist", "Dispatcher Service does not exist")),
+					reconciletesting.WithNatssChannelServiceNotReady("DispatcherServiceDoesNotExist", "Dispatcher Service does not exist")),
 			}},
 			WantEvents: []string{
 				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "NatssChannel reconciliation failed: service \"test-service\" not found"),
