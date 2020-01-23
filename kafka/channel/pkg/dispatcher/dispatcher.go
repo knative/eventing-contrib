@@ -323,7 +323,7 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host url.URL) (eventingcha
 	chMap := d.getHostToChannelMap()
 	cr, ok := chMap[host.Path]
 	if !ok {
-		return cr, fmt.Errorf("invalid Hostname:%v. Hostname not found in ConfigMap for any Channel", host)
+		return cr, fmt.Errorf("invalid Host: %q. Host not found in ConfigMap for any Channel", host.Path)
 	}
 	return cr, nil
 }

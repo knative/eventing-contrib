@@ -221,7 +221,7 @@ func (r *MessageReceiver) fromHTTPHeaders(headers http.Header) map[string]string
 func ParseChannel(host url.URL) (channel.ChannelReference, error) {
 	chunks := strings.Split(host.Path, ".")
 	if len(chunks) < 2 {
-		return channel.ChannelReference{}, fmt.Errorf("bad host format %v", host)
+		return channel.ChannelReference{}, fmt.Errorf("bad host format '%v'", host)
 	}
 	return channel.ChannelReference{
 		Name:      chunks[0],
