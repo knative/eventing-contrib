@@ -239,6 +239,7 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 
 	logger := logging.FromContext(ctx)
 	// Verify channel is valid.
+	kc.SetDefaults(ctx)
 	if err := kc.Validate(ctx); err != nil {
 		logger.Error("Invalid kafka channel", zap.String("channel", kc.Name), zap.Error(err))
 		return err
