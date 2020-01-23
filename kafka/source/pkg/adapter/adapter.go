@@ -177,13 +177,18 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		event.SetSpecVersion(cloudevents.VersionV1)
 	}
 
-	event.SetID(fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(msg.Partition)), strconv.FormatInt(msg.Offset, 10)))
+	event.SetID(makeEventId(msg.Partition, msg.Offset))
 	event.SetTime(msg.Timestamp)
 	event.SetType(sourcesv1alpha1.KafkaEventType)
 	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, msg.Topic))
 	event.SetSubject(makeEventSubject(msg.Partition, msg.Offset))
 	event.SetDataContentType(cloudevents.ApplicationJSON)
 	event.SetExtension("key", string(msg.Key))
+
+	for _, h := range msg.Headers {
+		event.SetExtension("kafkaheader"+string(h.Key), string(h.Value))
+	}
+
 	err := event.SetData(msg.Value)
 
 	if err != nil {
@@ -249,6 +254,10 @@ func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
 	}
 
 	return config, nil
+}
+
+func makeEventId(partion int32, offset int64) string {
+	return fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(partion)), strconv.FormatInt(offset, 10))
 }
 
 // KafkaEventSubject returns the Kafka CloudEvent subject of the message.
