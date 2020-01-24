@@ -25,65 +25,65 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	sourcesv1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	versioned "knative.dev/eventing/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/eventing/pkg/client/listers/messaging/v1alpha1"
+	v1alpha1 "knative.dev/eventing/pkg/client/listers/sources/v1alpha1"
 )
 
-// SequenceInformer provides access to a shared informer and lister for
-// Sequences.
-type SequenceInformer interface {
+// PingSourceInformer provides access to a shared informer and lister for
+// PingSources.
+type PingSourceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.SequenceLister
+	Lister() v1alpha1.PingSourceLister
 }
 
-type sequenceInformer struct {
+type pingSourceInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewSequenceInformer constructs a new informer for Sequence type.
+// NewPingSourceInformer constructs a new informer for PingSource type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewSequenceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredSequenceInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewPingSourceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredPingSourceInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredSequenceInformer constructs a new informer for Sequence type.
+// NewFilteredPingSourceInformer constructs a new informer for PingSource type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredSequenceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredPingSourceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MessagingV1alpha1().Sequences(namespace).List(options)
+				return client.SourcesV1alpha1().PingSources(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MessagingV1alpha1().Sequences(namespace).Watch(options)
+				return client.SourcesV1alpha1().PingSources(namespace).Watch(options)
 			},
 		},
-		&messagingv1alpha1.Sequence{},
+		&sourcesv1alpha1.PingSource{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *sequenceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredSequenceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *pingSourceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredPingSourceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *sequenceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&messagingv1alpha1.Sequence{}, f.defaultInformer)
+func (f *pingSourceInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&sourcesv1alpha1.PingSource{}, f.defaultInformer)
 }
 
-func (f *sequenceInformer) Lister() v1alpha1.SequenceLister {
-	return v1alpha1.NewSequenceLister(f.Informer().GetIndexer())
+func (f *pingSourceInformer) Lister() v1alpha1.PingSourceLister {
+	return v1alpha1.NewPingSourceLister(f.Informer().GetIndexer())
 }
