@@ -162,14 +162,20 @@ func updateDefaultChannelCM(client *lib.Client, updateConfig func(config *defaul
 	}
 	// update the defaultchannel configmap
 	configMap.Data[channelDefaulterKey] = string(configBytes)
+	client.T.Logf("Update configmap to: %v", configMap)
 	_, err = cmInterface.Update(configMap)
+	cm, err := cmInterface.Get(configMapName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	client.T.Logf("Updated configmap is: %v", cm)
 	// In cmd/webhook.go, configMapWatcher watches the configmap changes and set the config for channeldefaulter,
 	// the resync time is set to 0, which means the the resync will be delayed as long as possible (until the upstream
 	// source closes the watch or times out, or you stop the controller)
 	// Wait for 1 minute to let the ConfigMap be synced up.
 	// TODO(chizhg): 1 minute is an empirical duration, and does not solve the problem from the root.
 	// To make it work reliably, we may need to manually restart the controller.
-	time.Sleep(1 * time.Minute)
+	time.Sleep(10 * time.Second)
 	return nil
 }
 
