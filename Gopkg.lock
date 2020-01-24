@@ -1827,7 +1827,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f92d858e8df7a0043f634e9dbb80ec06c9cc889770827e812725aafb671584a6"
+  digest = "1:fbd3e9194f3414622e10b9e02dd2c48f12b8d81d945834065940c89bc7ebe3f1"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1919,11 +1919,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "c53e33b0875b186493e68cb7c5f26b62b5440cbe"
+  revision = "765959e1b0d19089c9b65b6d245297fdf9cb1a78"
 
 [[projects]]
   branch = "master"
-  digest = "1:6a467fb3198c259dffa78ca86c8b7acfdaa73db62439d21b135558c6dab76473"
+  digest = "1:58629d6925d6d46c36a962612e40ed0accf8cd74f8cf6675517d44c6589c8827"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1991,7 +1991,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "4e81bc3c320ff3e4ed0ab600963a8685b629c09e"
+  revision = "62801f1d34cf8cf71e45f6c398a9a095a74db637"
 
 [[projects]]
   branch = "master"
@@ -2037,7 +2037,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "571e4db2392839082c559870ea8d4b72ef61e59d"
+  revision = "0ce2a6f27936ccae35380b139c0620b890989afc"
 
 [[projects]]
   branch = "master"
@@ -2048,7 +2048,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "dfeb254e57938f9e30b179034e9833e196ec899f"
+  revision = "087ff9c87533fd594ac02a41ad4b70d6cdbfc161"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
