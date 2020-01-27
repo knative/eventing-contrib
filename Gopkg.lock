@@ -1924,7 +1924,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "7875e34927224d43fa3a242d98c3e50736aa1855"
+  revision = "6e12eaba52d4ee62cff8747ff13da761b7d931b4"
 
 [[projects]]
   branch = "master"
@@ -2042,7 +2042,7 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "d7378eefd35d4ac895386b1879788d92e6da1552"
+  revision = "2236942db89eaa52c40462e9a38bc8dc57ba9483"
 
 [[projects]]
   branch = "master"
@@ -2053,7 +2053,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "087ff9c87533fd594ac02a41ad4b70d6cdbfc161"
+  revision = "b0c4c4e1691282f24ccb3b5b0399952bf086edfc"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
