@@ -52,7 +52,7 @@ func TestKafkaRequestFactory(t *testing.T) {
 
 		id := (decode["id"]).(string)
 		if id != expectedUuid {
-			t.Errorf("Unexpected id in decode = %s, wnat %s", id, expectedUuid)
+			t.Errorf("Unexpected id in decode = %s, want %s", id, expectedUuid)
 		}
 		typeDec := (decode["type"]).(string)
 		if typeDec != expectedMessageType {
