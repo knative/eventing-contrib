@@ -269,7 +269,9 @@ func makeEventSubject(partion int32, offset int64) string {
 }
 
 func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, msg *sarama.ConsumerMessage) {
-	event.SetExtension("key", keyTypeMapper(msg.Key))
+	if msg.Key != nil {
+		event.SetExtension("key", keyTypeMapper(msg.Key))
+	}
 	for _, h := range msg.Headers {
 		event.SetExtension("kafkaheader"+string(h.Key), string(h.Value))
 	}
