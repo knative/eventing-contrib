@@ -24,7 +24,6 @@ import (
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"knative.dev/pkg/configmap"
 )
 
 const (
@@ -54,12 +53,7 @@ type KafkaConfig struct {
 }
 
 // GetKafkaConfig returns the details of the Kafka cluster.
-func GetKafkaConfig(path string) (*KafkaConfig, error) {
-	configMap, err := configmap.Load(path)
-	if err != nil {
-		return nil, fmt.Errorf("error loading configuration: %s", err)
-	}
-
+func GetKafkaConfig(configMap map[string]string) (*KafkaConfig, error) {
 	if len(configMap) == 0 {
 		return nil, fmt.Errorf("missing configuration")
 	}

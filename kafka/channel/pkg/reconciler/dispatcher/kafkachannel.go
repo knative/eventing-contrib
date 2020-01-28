@@ -92,7 +92,12 @@ func NewController(
 	logger := logging.FromContext(ctx)
 	base := reconciler.NewBase(ctx, controllerAgentName, cmw)
 
-	kafkaConfig, err := utils.GetKafkaConfig("/etc/config-kafka")
+	configMap, err := configmap.Load("/etc/config-kafka")
+	if err != nil {
+		logger.Fatal("error loading configuration", zap.Error(err))
+	}
+
+	kafkaConfig, err := utils.GetKafkaConfig(configMap)
 	if err != nil {
 		logger.Fatal("Error loading kafka config", zap.Error(err))
 	}
