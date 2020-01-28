@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"knative.dev/eventing/pkg/adapter"
 
 	"github.com/Shopify/sarama"
@@ -68,8 +69,15 @@ func BenchmarkHandle(b *testing.B) {
 			c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 			return c
 		}(),
-		logger:     zap.NewNop(),
-		eventsPool: sync.Pool{},
+		logger: zap.NewNop(),
+		eventsPool: &sync.Pool{
+			New: func() interface{} {
+				ev := &cloudevents.Event{}
+				ev.SetSpecVersion(cloudevents.VersionV1)
+				return ev
+			},
+		},
+		keyTypeMapper: getKeyTypeMapper(""),
 	}
 	b.SetParallelism(1)
 	b.Run("Baseline", func(b *testing.B) {

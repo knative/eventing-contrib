@@ -167,6 +167,20 @@ func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) e
 		src.Status.MarkSink(sinkURI)
 	}
 
+	if val, ok := src.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
+		found := false
+		for _, allowed := range v1alpha1.KafkaKeyTypeAllowed {
+			if allowed == val {
+				found = true
+			}
+		}
+		if found == false {
+			src.Status.MarkResourcesIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
+			logger.Errorf("Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
+			return errors.New("IncorrectKafkaKeyTypeLabel")
+		}
+	}
+
 	ra, err := r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
 		logger.Error("Unable to create the receive adapter", zap.Error(err))

@@ -128,7 +128,11 @@ type KafkaSourceSpec struct {
 const (
 	// KafkaEventType is the Kafka CloudEvent type.
 	KafkaEventType = "dev.knative.kafka.event"
+
+	KafkaKeyTypeLabel = "kafkasources.sources.eventing.knative.dev/key-type"
 )
+
+var KafkaKeyTypeAllowed = []string{"string", "int", "float", "byte-array"}
 
 // KafkaEventSource returns the Kafka CloudEvent source.
 func KafkaEventSource(namespace, kafkaSourceName, topic string) string {

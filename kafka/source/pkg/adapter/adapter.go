@@ -19,8 +19,10 @@ package kafka
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -37,8 +39,9 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
-	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/pkg/logging"
+
+	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
 const (
@@ -70,6 +73,7 @@ type adapterConfig struct {
 	Topics           string `envconfig:"KAFKA_TOPICS" required:"true"`
 	ConsumerGroup    string `envconfig:"KAFKA_CONSUMER_GROUP" required:"true"`
 	Name             string `envconfig:"NAME" required:"true"`
+	KeyType          string `envconfig:"KEY_TYPE" required:"false"`
 	Net              AdapterNet
 }
 
@@ -78,11 +82,12 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 }
 
 type Adapter struct {
-	config     *adapterConfig
-	ceClient   client.Client
-	reporter   source.StatsReporter
-	logger     *zap.Logger
-	eventsPool sync.Pool
+	config        *adapterConfig
+	ceClient      client.Client
+	reporter      source.StatsReporter
+	logger        *zap.Logger
+	eventsPool    *sync.Pool
+	keyTypeMapper func([]byte) interface{}
 }
 
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient client.Client, reporter source.StatsReporter) adapter.Adapter {
@@ -90,14 +95,21 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	config := processed.(*adapterConfig)
 
 	// Create the events pool
-	eventsPool := sync.Pool{}
+	eventsPool := sync.Pool{
+		New: func() interface{} {
+			ev := &cloudevents.Event{}
+			ev.SetSpecVersion(cloudevents.VersionV1)
+			return ev
+		},
+	}
 
 	return &Adapter{
-		config:     config,
-		ceClient:   ceClient,
-		reporter:   reporter,
-		logger:     logger,
-		eventsPool: eventsPool,
+		config:        config,
+		ceClient:      ceClient,
+		reporter:      reporter,
+		logger:        logger,
+		eventsPool:    &eventsPool,
+		keyTypeMapper: getKeyTypeMapper(config.KeyType),
 	}
 }
 
@@ -169,13 +181,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
 	}
 
-	var event *cloudevents.Event
-	if poolRes := a.eventsPool.Get(); poolRes != nil {
-		event = poolRes.(*cloudevents.Event)
-	} else {
-		event = &cloudevents.Event{}
-		event.SetSpecVersion(cloudevents.VersionV1)
-	}
+	event := a.eventsPool.Get().(*cloudevents.Event)
 
 	event.SetID(makeEventId(msg.Partition, msg.Offset))
 	event.SetTime(msg.Timestamp)
@@ -183,11 +189,8 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, msg.Topic))
 	event.SetSubject(makeEventSubject(msg.Partition, msg.Offset))
 	event.SetDataContentType(cloudevents.ApplicationJSON)
-	event.SetExtension("key", string(msg.Key))
 
-	for _, h := range msg.Headers {
-		event.SetExtension("kafkaheader"+string(h.Key), string(h.Value))
-	}
+	dumpKafkaMetaToEvent(event, a.keyTypeMapper, msg)
 
 	err := event.SetData(msg.Value)
 
@@ -263,6 +266,67 @@ func makeEventId(partion int32, offset int64) string {
 // KafkaEventSubject returns the Kafka CloudEvent subject of the message.
 func makeEventSubject(partion int32, offset int64) string {
 	return fmt.Sprintf("partion:%d#%d", partion, offset)
+}
+
+func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, msg *sarama.ConsumerMessage) {
+	event.SetExtension("key", keyTypeMapper(msg.Key))
+	for _, h := range msg.Headers {
+		event.SetExtension("kafkaheader"+string(h.Key), string(h.Value))
+	}
+}
+
+func getKeyTypeMapper(keyType string) func([]byte) interface{} {
+	var keyTypeMapper func([]byte) interface{}
+	switch keyType {
+	case "int":
+		keyTypeMapper = func(by []byte) interface{} {
+			// Took from https://github.com/axbaretto/kafka/blob/master/clients/src/main/java/org/apache/kafka/common/serialization/LongDeserializer.java
+			if len(by) == 4 {
+				var res int32
+				for _, b := range by {
+					res <<= 8
+					res |= int32(b & 0xFF)
+				}
+				return res
+			} else if len(by) == 8 {
+				var res int64
+				for _, b := range by {
+					res <<= 8
+					res |= int64(b & 0xFF)
+				}
+				return res
+			} else {
+				// Fallback to byte array
+				return by
+			}
+		}
+	case "float":
+		keyTypeMapper = func(by []byte) interface{} {
+			// BigEndian is specified in https://kafka.apache.org/protocol#protocol_types
+			// Number is converted to string because
+			if len(by) == 4 {
+				intermediate := binary.BigEndian.Uint32(by)
+				fl := math.Float32frombits(intermediate)
+				return strconv.FormatFloat(float64(fl), 'f', -1, 64)
+			} else if len(by) == 8 {
+				intermediate := binary.BigEndian.Uint64(by)
+				fl := math.Float64frombits(intermediate)
+				return strconv.FormatFloat(fl, 'f', -1, 64)
+			} else {
+				// Fallback to byte array
+				return by
+			}
+		}
+	case "byte-array":
+		keyTypeMapper = func(bytes []byte) interface{} {
+			return bytes
+		}
+	default:
+		keyTypeMapper = func(bytes []byte) interface{} {
+			return string(bytes)
+		}
+	}
+	return keyTypeMapper
 }
 
 // verifyCertSkipHostname verifies certificates in the same way that the
