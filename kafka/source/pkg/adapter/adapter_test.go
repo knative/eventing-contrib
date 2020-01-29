@@ -29,6 +29,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -50,6 +51,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 
 	testCases := map[string]struct {
 		sink            func(http.ResponseWriter, *http.Request)
+		keyTypeMapper   string
 		message         *sarama.ConsumerMessage
 		expectedHeaders map[string]string
 		expectedBody    string
@@ -76,6 +78,75 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			},
 			expectedBody: `{"key":"value"}`,
 			error:        false,
+		},
+		"accepted_int_key": {
+			sink: sinkAccepted,
+			message: &sarama.ConsumerMessage{
+				Key:       []byte{255, 0, 23, 23},
+				Topic:     "topic1",
+				Value:     mustJsonMarshal(t, map[string]string{"key": "value"}),
+				Partition: 1,
+				Offset:    2,
+				Timestamp: aTimestamp,
+			},
+			expectedHeaders: map[string]string{
+				"ce-id":        makeEventId(1, 2),
+				"ce-time":      types.FormatTime(aTimestamp),
+				"ce-type":      sourcesv1alpha1.KafkaEventType,
+				"ce-source":    sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":   makeEventSubject(1, 2),
+				"ce-key":       "-16771305",
+				"content-type": cloudevents.ApplicationJSON,
+			},
+			expectedBody:  `{"key":"value"}`,
+			error:         false,
+			keyTypeMapper: "int",
+		},
+		"accepted_float_key": {
+			sink: sinkAccepted,
+			message: &sarama.ConsumerMessage{
+				Key:       []byte{1, 10, 23, 23},
+				Topic:     "topic1",
+				Value:     mustJsonMarshal(t, map[string]string{"key": "value"}),
+				Partition: 1,
+				Offset:    2,
+				Timestamp: aTimestamp,
+			},
+			expectedHeaders: map[string]string{
+				"ce-id":        makeEventId(1, 2),
+				"ce-time":      types.FormatTime(aTimestamp),
+				"ce-type":      sourcesv1alpha1.KafkaEventType,
+				"ce-source":    sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":   makeEventSubject(1, 2),
+				"ce-key":       "0.00000000000000000000000000000000000002536316309005082",
+				"content-type": cloudevents.ApplicationJSON,
+			},
+			expectedBody:  `{"key":"value"}`,
+			error:         false,
+			keyTypeMapper: "float",
+		},
+		"accepted_byte-array_key": {
+			sink: sinkAccepted,
+			message: &sarama.ConsumerMessage{
+				Key:       []byte{1, 10, 23, 23},
+				Topic:     "topic1",
+				Value:     mustJsonMarshal(t, map[string]string{"key": "value"}),
+				Partition: 1,
+				Offset:    2,
+				Timestamp: aTimestamp,
+			},
+			expectedHeaders: map[string]string{
+				"ce-id":        makeEventId(1, 2),
+				"ce-time":      types.FormatTime(aTimestamp),
+				"ce-type":      sourcesv1alpha1.KafkaEventType,
+				"ce-source":    sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":   makeEventSubject(1, 2),
+				"ce-key":       "AQoXFw==",
+				"content-type": cloudevents.ApplicationJSON,
+			},
+			expectedBody:  `{"key":"value"}`,
+			error:         false,
+			keyTypeMapper: "byte-array",
 		},
 		"accepted_complex": {
 			sink: sinkAccepted,
@@ -161,6 +232,14 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				}(),
 				logger:   zap.NewNop(),
 				reporter: statsReporter,
+				eventsPool: &sync.Pool{
+					New: func() interface{} {
+						ev := &cloudevents.Event{}
+						ev.SetSpecVersion(cloudevents.VersionV1)
+						return ev
+					},
+				},
+				keyTypeMapper: getKeyTypeMapper(tc.keyTypeMapper),
 			}
 
 			_, err := a.Handle(context.TODO(), tc.message)

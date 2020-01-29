@@ -84,6 +84,13 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		},
 	}
 
+	if val, ok := args.Source.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
+		env = append(env, corev1.EnvVar{
+			Name:  "KEY_TYPE",
+			Value: val,
+		})
+	}
+
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_USER", args.Source.Spec.Net.SASL.User.SecretKeyRef)
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_SASL_PASSWORD", args.Source.Spec.Net.SASL.Password.SecretKeyRef)
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CERT", args.Source.Spec.Net.TLS.Cert.SecretKeyRef)
