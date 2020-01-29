@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -27,6 +28,7 @@ import (
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -39,6 +41,7 @@ import (
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
@@ -89,8 +92,9 @@ type Reconciler struct {
 	dispatcherDeploymentName string
 	dispatcherServiceName    string
 
-	kafkaConfig    *utils.KafkaConfig
-	kafkaClientSet kafkaclientset.Interface
+	kafkaConfig      *utils.KafkaConfig
+	kafkaConfigError error
+	kafkaClientSet   kafkaclientset.Interface
 
 	// Using a shared kafkaClusterAdmin does not work currently because of an issue with
 	// Shopify/sarama, see https://github.com/Shopify/sarama/issues/1162.
@@ -121,13 +125,7 @@ func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-
 	logger := logging.FromContext(ctx)
-
-	kafkaConfig, err := utils.GetKafkaConfig("/etc/config-kafka")
-	if err != nil {
-		logger.Fatal("Error loading kafka config", zap.Error(err))
-	}
 
 	kafkaChannelInformer := kafkachannel.Get(ctx)
 	deploymentInformer := deployment.Get(ctx)
@@ -143,7 +141,6 @@ func NewController(
 		dispatcherNamespace:      dispatcherNamespace,
 		dispatcherDeploymentName: dispatcherDeploymentName,
 		dispatcherServiceName:    dispatcherServiceName,
-		kafkaConfig:              kafkaConfig,
 		kafkachannelLister:       kafkaChannelInformer.Lister(),
 		kafkachannelInformer:     kafkaChannelInformer.Informer(),
 		deploymentLister:         deploymentInformer.Lister(),
@@ -152,6 +149,13 @@ func NewController(
 		kafkaClientSet:           kafkaChannelClientSet,
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
+
+	// Get and Watch the Kakfa config map and dynamically update Kafka configuration.
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get("config-kafka", metav1.GetOptions{}); err == nil {
+		cmw.Watch("config-kafka", r.updateKafkaConfig)
+	} else if !apierrors.IsNotFound(err) {
+		logger.With(zap.Error(err)).Fatal("Error reading ConfigMap 'config-kafka'")
+	}
 
 	r.Logger.Info("Setting up event handlers")
 	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
@@ -245,16 +249,14 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 		return err
 	}
 
-	kafkaClusterAdmin, err := r.createClient(ctx, kc)
-	if err != nil {
-		logger.Error("Unable to build kafka admin client", zap.String("channel", kc.Name), zap.Error(err))
-		return err
-	}
-
 	// See if the channel has been deleted.
 	if kc.DeletionTimestamp != nil {
-		if err := r.deleteTopic(ctx, kc, kafkaClusterAdmin); err != nil {
-			return err
+		// Do not attempt retrying creating the client because it might be a permanent error
+		// in which case the finalizer will never get removed.
+		if kafkaClusterAdmin, err := r.createClient(ctx, kc); err == nil && r.kafkaConfig != nil {
+			if err := r.deleteTopic(ctx, kc, kafkaClusterAdmin); err != nil {
+				return err
+			}
 		}
 		removeFinalizer(kc)
 		_, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(kc.Namespace).Update(kc)
@@ -266,6 +268,22 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 	if err := r.ensureFinalizer(kc); err != nil {
 		return err
 	}
+
+	if r.kafkaConfig == nil {
+		if r.kafkaConfigError == nil {
+			r.kafkaConfigError = errors.New("The config map 'config-kafka' does not exist")
+		}
+		kc.Status.MarkConfigFailed("MissingConfiguration", "%v", r.kafkaConfigError)
+		return r.kafkaConfigError
+	}
+
+	kafkaClusterAdmin, err := r.createClient(ctx, kc)
+	if err != nil {
+		kc.Status.MarkConfigFailed("InvalidConfiguration", "Unable to build Kafka admin client for channel %s: %v", kc.Name, err)
+		return err
+	}
+
+	kc.Status.MarkConfigTrue()
 
 	// We reconcile the status of the Channel by looking at:
 	// 1. Kafka topic used by the channel.
@@ -481,6 +499,22 @@ func (r *Reconciler) ensureFinalizer(channel *v1alpha1.KafkaChannel) error {
 
 	_, err = r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
 	return err
+}
+
+func (r *Reconciler) updateKafkaConfig(configMap *corev1.ConfigMap) {
+	r.Logger.Info("Reloading Kafka configuration")
+	kafkaConfig, err := utils.GetKafkaConfig(configMap.Data)
+	if err != nil {
+		r.Logger.Errorw("Error reading Kafka configuration", zap.Error(err))
+	}
+	// For now just override the previous config.
+	// Eventually the previous config should be snapshotted to delete Kafka topics
+	r.kafkaConfig = kafkaConfig
+	r.kafkaConfigError = err
+
+	// Trigger global resync
+	r.impl.GlobalResync(r.kafkachannelInformer)
+
 }
 
 func removeFinalizer(channel *v1alpha1.KafkaChannel) {

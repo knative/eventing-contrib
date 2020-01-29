@@ -17,9 +17,6 @@ limitations under the License.
 package utils
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -47,14 +44,13 @@ func TestGetKafkaConfig(t *testing.T) {
 	testCases := []struct {
 		name     string
 		data     map[string]string
-		path     string
 		getError string
 		expected *KafkaConfig
 	}{
 		{
 			name:     "invalid config path",
-			path:     "/tmp/does_not_exist",
-			getError: "error loading configuration: lstat /tmp/does_not_exist: no such file or directory",
+			data:     nil,
+			getError: "missing configuration",
 		},
 		{
 			name:     "configmap with no data",
@@ -149,25 +145,7 @@ func TestGetKafkaConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Logf("Running %s", t.Name())
 
-			if tc.path == "" {
-				dir, err := ioutil.TempDir("", "util_test")
-				if err != nil {
-					t.Errorf("error creating tmp directory")
-				}
-				defer os.RemoveAll(dir)
-
-				for k, v := range tc.data {
-					if k != "" {
-						path := filepath.Join(dir, k)
-						if err := ioutil.WriteFile(path, []byte(v), 0600); err != nil {
-							t.Errorf("error writing file %s: %s", path, err)
-						}
-					}
-				}
-
-				tc.path = dir
-			}
-			got, err := GetKafkaConfig(tc.path)
+			got, err := GetKafkaConfig(tc.data)
 
 			if tc.getError != "" {
 				if err == nil {

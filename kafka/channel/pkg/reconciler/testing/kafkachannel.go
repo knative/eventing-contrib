@@ -63,6 +63,12 @@ func WithKafkaChannelTopicReady() KafkaChannelOption {
 	}
 }
 
+func WithKafkaChannelConfigReady() KafkaChannelOption {
+	return func(nc *v1alpha1.KafkaChannel) {
+		nc.Status.MarkConfigTrue()
+	}
+}
+
 func WithKafkaChannelDeploymentNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1alpha1.KafkaChannel) {
 		nc.Status.MarkDispatcherFailed(reason, message)

@@ -29,7 +29,8 @@ var kc = apis.NewLivingConditionSet(
 	KafkaChannelConditionServiceReady,
 	KafkaChannelConditionEndpointsReady,
 	KafkaChannelConditionAddressable,
-	KafkaChannelConditionChannelServiceReady)
+	KafkaChannelConditionChannelServiceReady,
+	KafkaChannelConditionConfigReady)
 
 const (
 	// KafkaChannelConditionReady has status True when all subconditions below have been set to True.
@@ -59,6 +60,10 @@ const (
 
 	// KafkaChannelConditionTopicReady has status True when the Kafka topic to use by the channel exists.
 	KafkaChannelConditionTopicReady apis.ConditionType = "TopicReady"
+
+	// KafkaChannelConditionConfigReady has status True when the Kafka configuration to use by the channel exists and is valid
+	// (ie. the connection has been established).
+	KafkaChannelConditionConfigReady apis.ConditionType = "ConfigurationReady"
 )
 
 // GetCondition returns the condition currently associated with the given type, or nil.
@@ -139,4 +144,12 @@ func (cs *KafkaChannelStatus) MarkTopicTrue() {
 
 func (cs *KafkaChannelStatus) MarkTopicFailed(reason, messageFormat string, messageA ...interface{}) {
 	kc.Manage(cs).MarkFalse(KafkaChannelConditionTopicReady, reason, messageFormat, messageA...)
+}
+
+func (cs *KafkaChannelStatus) MarkConfigTrue() {
+	kc.Manage(cs).MarkTrue(KafkaChannelConditionConfigReady)
+}
+
+func (cs *KafkaChannelStatus) MarkConfigFailed(reason, messageFormat string, messageA ...interface{}) {
+	kc.Manage(cs).MarkFalse(KafkaChannelConditionConfigReady, reason, messageFormat, messageA...)
 }
