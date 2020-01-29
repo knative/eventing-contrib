@@ -29,11 +29,11 @@ import (
 )
 
 const (
-	serviceName    = "my-test-service"
-	kcName         = "my-test-kc"
-	testNS         = "my-test-ns"
-	dispatcherNS   = "dispatcher-namespace"
-	dispatcherName = "dispatcher-name"
+	serviceName        = "my-test-service"
+	kcName             = "my-test-kc"
+	testNS             = "my-test-ns"
+	testDispatcherNS   = "dispatcher-namespace"
+	testDispatcherName = "dispatcher-name"
 )
 
 func TestMakeExternalServiceAddress(t *testing.T) {
@@ -119,7 +119,7 @@ func TestMakeServiceWithExternal(t *testing.T) {
 		},
 	}
 
-	got, err := MakeK8sService(imc, ExternalService(dispatcherNS, dispatcherName))
+	got, err := MakeK8sService(imc, ExternalService(testDispatcherNS, testDispatcherName))
 	if err != nil {
 		t.Fatalf("Failed to create new service: %s", err)
 	}
