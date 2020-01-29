@@ -97,6 +97,8 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_KEY", args.Source.Spec.Net.TLS.Key.SecretKeyRef)
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CA_CERT", args.Source.Spec.Net.TLS.CACert.SecretKeyRef)
 
+	env = appendEnvFromSpecOrSecretKeyRef(env, "KAFKA_BOOTSTRAP_SERVERS", args.Source.Spec.BootstrapServers, args.Source.Spec.BootstrapServersSecret.SecretKeyRef)
+
 	RequestResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceCPU)
 	if err != nil {
 		RequestResourceCPU = resource.MustParse("250m")
@@ -178,5 +180,21 @@ func appendEnvFromSecretKeyRef(env []corev1.EnvVar, key string, ref *corev1.Secr
 		},
 	})
 
+	return env
+}
+
+func appendEnvFromSpecOrSecretKeyRef(env []corev1.EnvVar, key, value string, ref *corev1.SecretKeySelector) []corev1.EnvVar {
+	if value == "" && ref == nil {
+		return env
+	}
+
+	if value != "" {
+		env = append(env, corev1.EnvVar{
+			Name:  key,
+			Value: value,
+		})
+	} else {
+		env = appendEnvFromSecretKeyRef(env, key, ref)
+	}
 	return env
 }

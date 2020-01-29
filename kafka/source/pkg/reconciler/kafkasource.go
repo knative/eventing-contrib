@@ -244,6 +244,10 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 		logging.FromContext(ctx).Error("error while converting metrics config to JSON", zap.Any("receiveAdapter", err))
 	}
 
+	if src.Spec.BootstrapServers == "" && src.Spec.BootstrapServersSecret.SecretKeyRef == nil {
+		logging.FromContext(ctx).Error("both BootstrapServers and BootstrapServersSecret are empty, one must be specified")
+	}
+
 	raArgs := resources.ReceiveAdapterArgs{
 		Image:         r.receiveAdapterImage,
 		Source:        src,

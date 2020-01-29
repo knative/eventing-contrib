@@ -68,6 +68,11 @@ spec:
             consumerGroup:
               type: string
               minLength: 1
+            bootstrapServersSecret:
+              properties:
+                secretKeyRef:
+                  type: object
+              type: object
             net:
               properties:
                 sasl:
@@ -171,7 +176,6 @@ spec:
                     description: "the target URI. If ref is provided, this must be relative URI reference."
           type: object
           required:
-              - bootstrapServers
               - topics
               - consumerGroup
         status:

@@ -100,8 +100,12 @@ type KafkaResourceSpec struct {
 // KafkaSourceSpec defines the desired state of the KafkaSource.
 type KafkaSourceSpec struct {
 	// Bootstrap servers are the Kafka servers the consumer will connect to.
-	// +required
+	// +optional
 	BootstrapServers string `json:"bootstrapServers"`
+
+	//Bootstrap server secret
+	// +optional
+	BootstrapServersSecret SecretValueFromSource `json:"bootstrapServersSecret,omitempty"`
 
 	// Topic topics to consume messages from
 	// +required
