@@ -21,7 +21,7 @@ limitations under the License.
 // +k8s:deepcopy-gen=package,register
 // +k8s:conversion-gen=knative.dev/eventing-contrib/pkg/apis/sources
 // +k8s:defaulter-gen=TypeMeta
-// +groupName=sources.eventing.knative.dev
+// +groupName=sources.knative.dev
 package v1alpha1
 
 import (
@@ -32,7 +32,7 @@ import (
 
 var (
 	// SchemeGroupVersion is group version used to register these objects
-	SchemeGroupVersion = schema.GroupVersion{Group: "sources.eventing.knative.dev", Version: "v1alpha1"}
+	SchemeGroupVersion = schema.GroupVersion{Group: "sources.knative.dev", Version: "v1alpha1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)

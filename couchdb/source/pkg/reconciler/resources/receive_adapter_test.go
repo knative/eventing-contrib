@@ -66,7 +66,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
-					APIVersion:         "sources.eventing.knative.dev/v1alpha1",
+					APIVersion:         "sources.knative.dev/v1alpha1",
 					Kind:               "CouchDbSource",
 					Name:               name,
 					UID:                "1234",

@@ -69,7 +69,7 @@ rules:
 
   # Our own resources and statuses we care about.
   - apiGroups:
-      - "sources.eventing.knative.dev"
+      - "sources.knative.dev"
     resources:
       - "couchdbsources"
       - "couchdbsources/status"
