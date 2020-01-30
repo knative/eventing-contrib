@@ -34,9 +34,9 @@ type FakeGitHubSources struct {
 	ns   string
 }
 
-var githubsourcesResource = schema.GroupVersionResource{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Resource: "githubsources"}
+var githubsourcesResource = schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1alpha1", Resource: "githubsources"}
 
-var githubsourcesKind = schema.GroupVersionKind{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Kind: "GitHubSource"}
+var githubsourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "GitHubSource"}
 
 // Get takes name of the gitHubSource, and returns the corresponding gitHubSource object, and an error if there is any.
 func (c *FakeGitHubSources) Get(name string, options v1.GetOptions) (result *v1alpha1.GitHubSource, err error) {
