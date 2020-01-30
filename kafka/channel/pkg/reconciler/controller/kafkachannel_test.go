@@ -124,8 +124,8 @@ func TestAllCases(t *testing.T) {
 				patchFinalizers(testNS, kcName),
 			},
 			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, dispatcherDeploymentCreated, "Dispatcher Deployment created"),
-				Eventf(corev1.EventTypeNormal, dispatcherServiceCreated, "Dispatcher Service created"),
+				Eventf(corev1.EventTypeNormal, dispatcherDeploymentCreated, "Dispatcher deployment created"),
+				Eventf(corev1.EventTypeNormal, dispatcherServiceCreated, "Dispatcher service created"),
 				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"test-service\" not found"),
 			},
 		}, {
@@ -151,7 +151,7 @@ func TestAllCases(t *testing.T) {
 					reconcilekafkatesting.WithKafkaChannelEndpointsNotReady("DispatcherEndpointsDoesNotExist", "Dispatcher Endpoints does not exist")),
 			}},
 			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, dispatcherServiceCreated, "Dispatcher Service created"),
+				Eventf(corev1.EventTypeNormal, dispatcherServiceCreated, "Dispatcher service created"),
 				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"test-service\" not found"),
 			},
 		}, {
