@@ -34,9 +34,9 @@ type FakeCouchDbSources struct {
 	ns   string
 }
 
-var couchdbsourcesResource = schema.GroupVersionResource{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Resource: "couchdbsources"}
+var couchdbsourcesResource = schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1alpha1", Resource: "couchdbsources"}
 
-var couchdbsourcesKind = schema.GroupVersionKind{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Kind: "CouchDbSource"}
+var couchdbsourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "CouchDbSource"}
 
 // Get takes name of the couchDbSource, and returns the corresponding couchDbSource object, and an error if there is any.
 func (c *FakeCouchDbSources) Get(name string, options v1.GetOptions) (result *v1alpha1.CouchDbSource, err error) {

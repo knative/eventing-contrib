@@ -24,7 +24,7 @@ The Apache CouchDB Event source enables Knative Eventing integration with
    an example:
 
    ```yaml
-   apiVersion: sources.eventing.knative.dev/v1alpha1
+   apiVersion: sources.knative.dev/v1alpha1
    kind: CouchDbSource
    metadata:
      name: couchdb-photographer
