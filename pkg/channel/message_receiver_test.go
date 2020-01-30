@@ -60,10 +60,6 @@ func TestMessageReceiver_HandleRequest(t *testing.T) {
 			host:     "no-dot",
 			expected: http.StatusInternalServerError,
 		},
-		"unparseable host name": {
-			host:     ":abc.def.ghi",
-			expected: http.StatusInternalServerError,
-		},
 		"unreadable body": {
 			bodyReader: &errorReader{},
 			expected:   http.StatusInternalServerError,
