@@ -1,4 +1,4 @@
-apiVersion: sources.eventing.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: PrometheusSource
 metadata:
   name: request-count-1
@@ -13,7 +13,7 @@ spec:
       kind: Broker
       name: default
 ---
-apiVersion: sources.eventing.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: PrometheusSource
 metadata:
   name: request-count-2

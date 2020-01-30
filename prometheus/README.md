@@ -20,7 +20,7 @@ For example, the following CR specifies a range query
 to be run every minute with resolution step of 15 seconds:
 
 ```yaml
-apiVersion: sources.eventing.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: PrometheusSource
 metadata:
   name: prometheus-source
@@ -72,7 +72,7 @@ kubectl logs -f -l serving.knative.dev/service=event-display -c user-container
   source to retrieve active alerts every minute:
 
 ```yaml
-apiVersion: sources.eventing.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: PrometheusSource
 metadata:
   name: prometheus-source
@@ -130,7 +130,7 @@ monotonically increasing number of requests that the event-display service has
 handled so far, making this example feed off its own activity:
 
 ```yaml
-apiVersion: sources.eventing.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: PrometheusSource
 metadata:
   name: prometheus-source

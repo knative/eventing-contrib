@@ -24,9 +24,9 @@ metadata:
       [
         { "type": "dev.knative.prometheus.promql" }
       ]
-  name: prometheussources.sources.eventing.knative.dev
+  name: prometheussources.sources.knative.dev
 spec:
-  group: sources.eventing.knative.dev
+  group: sources.knative.dev
   names:
     categories:
     - all
