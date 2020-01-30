@@ -43,10 +43,6 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 
 	env := []corev1.EnvVar{
 		{
-			Name:  "KAFKA_BOOTSTRAP_SERVERS",
-			Value: args.Source.Spec.BootstrapServers,
-		},
-		{
 			Name:  "KAFKA_TOPICS",
 			Value: args.Source.Spec.Topics,
 		},
