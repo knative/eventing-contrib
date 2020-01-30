@@ -18,5 +18,5 @@ limitations under the License.
 package sources
 
 const (
-	GroupName = "sources.eventing.knative.dev"
+	GroupName = "sources.knative.dev"
 )
