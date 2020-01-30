@@ -365,7 +365,7 @@ func (s *SubscriptionsSupervisor) getChannelReferenceFromHost(host url.URL) (eve
 	chMap := s.getHostToChannelMap()
 	cr, ok := chMap[host.Path]
 	if !ok {
-		return cr, fmt.Errorf("Invalid Host: %q. Host not found in any of the watched natss channels", host.Path)
+		return cr, fmt.Errorf("Invalid HostName:%v. HostName not found in any of the watched natss channels", host)
 	}
 	return cr, nil
 }
