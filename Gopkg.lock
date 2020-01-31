@@ -2294,6 +2294,7 @@
     "knative.dev/pkg/system/testing",
     "knative.dev/pkg/test",
     "knative.dev/pkg/tracing",
+    "knative.dev/pkg/tracing/config",
     "knative.dev/pkg/webhook",
     "knative.dev/pkg/webhook/certificates",
     "knative.dev/pkg/webhook/resourcesemantics",
