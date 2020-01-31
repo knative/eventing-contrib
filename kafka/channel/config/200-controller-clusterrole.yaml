@@ -50,7 +50,12 @@ rules:
       - "" # Core API group.
     resources:
       - services
-    verbs:
+    verbs: &everything
+      - get
+      - list
+      - watch
+      - create
+      - patch
       - update
   - apiGroups:
       - "" # Core API Group.
@@ -89,7 +94,4 @@ rules:
     resources:
       - deployments
       - deployments/status
-    verbs:
-      - get
-      - list
-      - watch
+    verbs: *everything
