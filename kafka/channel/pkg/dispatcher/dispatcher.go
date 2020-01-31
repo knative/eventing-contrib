@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -319,11 +318,11 @@ func NewDispatcher(args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
 	return dispatcher, nil
 }
 
-func (d *KafkaDispatcher) getChannelReferenceFromHost(host url.URL) (eventingchannels.ChannelReference, error) {
+func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchannels.ChannelReference, error) {
 	chMap := d.getHostToChannelMap()
-	cr, ok := chMap[host.Path]
+	cr, ok := chMap[host]
 	if !ok {
-		return cr, fmt.Errorf("invalid Host: %q. Host not found in ConfigMap for any Channel", host.Path)
+		return cr, fmt.Errorf("invalid Hostname:%s. Hostname not found in ConfigMap for any Channel", host)
 	}
 	return cr, nil
 }

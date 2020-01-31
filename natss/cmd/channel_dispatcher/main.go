@@ -38,6 +38,7 @@ import (
 	kncontroller "knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
+	tracingconfig "knative.dev/pkg/tracing/config"
 )
 
 var (
@@ -106,7 +107,7 @@ func main() {
 	opt.ConfigMapWatcher.Watch(metrics.ConfigMapName(), metrics.UpdateExporterFromConfigMap(component, logger))
 
 	// Setup zipkin tracing.
-	if err = tracing.SetupDynamicPublishing(logger, opt.ConfigMapWatcher, "natss-ch-dispatcher"); err != nil {
+	if err = tracing.SetupDynamicPublishing(logger, opt.ConfigMapWatcher, "natss-ch-dispatcher", tracingconfig.ConfigName); err != nil {
 		logger.Fatalw("Error setting up Zipkin publishing", zap.Error(err))
 	}
 

@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"go.uber.org/zap"
@@ -52,7 +51,7 @@ type ReceiverOptions func(*MessageReceiver) error
 
 // ResolveChannelFromHostFunc function enables MessageReceiver to get the Channel Reference from incoming request HostHeader
 // before calling receiverFunc.
-type ResolveChannelFromHostFunc func(url.URL) (channel.ChannelReference, error)
+type ResolveChannelFromHostFunc func(string) (channel.ChannelReference, error)
 
 // ResolveChannelFromHostHeader is a ReceiverOption for NewMessageReceiver which enables the caller to overwrite the
 // default behaviour defined by ParseChannel function.
@@ -143,13 +142,7 @@ func (r *MessageReceiver) handler() http.Handler {
 func (r *MessageReceiver) HandleRequest(res http.ResponseWriter, req *http.Request) {
 	host := req.Host
 	r.logger.Infof("Received request for %s", host)
-	hostURL, err := url.Parse(host)
-	if err != nil {
-		r.logger.Infow("Could not parse host as URL", zap.Error(err))
-		res.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	channel, err := r.hostToChannelFunc(*hostURL)
+	channel, err := r.hostToChannelFunc(host)
 	if err != nil {
 		r.logger.Infow("Could not extract channel", zap.Error(err))
 		res.WriteHeader(http.StatusInternalServerError)
@@ -218,10 +211,10 @@ func (r *MessageReceiver) fromHTTPHeaders(headers http.Header) map[string]string
 
 // ParseChannel converts the channel's hostname into a channel
 // reference.
-func ParseChannel(host url.URL) (channel.ChannelReference, error) {
-	chunks := strings.Split(host.Path, ".")
+func ParseChannel(host string) (channel.ChannelReference, error) {
+	chunks := strings.Split(host, ".")
 	if len(chunks) < 2 {
-		return channel.ChannelReference{}, fmt.Errorf("bad host format '%v'", host)
+		return channel.ChannelReference{}, fmt.Errorf("bad host format '%s'", host)
 	}
 	return channel.ChannelReference{
 		Name:      chunks[0],
