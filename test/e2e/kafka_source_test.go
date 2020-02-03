@@ -19,11 +19,9 @@ limitations under the License.
 package e2e
 
 import (
-	"reflect"
 	"testing"
 
-	"k8s.io/client-go/dynamic"
-	"knative.dev/eventing/test/e2e/helpers"
+	"knative.dev/eventing-contrib/test/e2e/helpers"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 
@@ -33,41 +31,36 @@ import (
 
 // This test take for granted that the kafka cluster already exists together with the test-topic topic
 const (
-	kafkaBootstrapUrl         = "my-cluster-kafka-bootstrap.kafka.svc:9092"
-	kafkaTestTopic            = "test-topic"
-	testPace                  = "1:10"
-	kafkaPerformanceImageName = "kafka_performance"
-	testWarmup                = "0"
+	kafkaBootstrapUrl = "my-cluster-kafka-bootstrap.kafka.svc:9092"
+	kafkaTestTopic    = "test-topic"
 )
 
-var expectedStruct = helpers.PerformanceImageResults{
-	SentEvents: 10, AcceptedEvents: 10, ReceivedEvents: 10, PublishFailuresEvents: 0, DeliveryFailuresEvents: 0,
-}
-
 func TestKafkaSource(t *testing.T) {
-	helpers.TestWithPerformanceImage(t, 2, func(t *testing.T, consumerHostname string, aggregatorHostname string, client *lib.Client) {
-		t.Logf("Creating KafkaSource")
-		lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
-			kafkaBootstrapUrl,
-			kafkaTestTopic,
-			resources.ServiceRef(resources.PerfConsumerService),
-		))
+	client := lib.Setup(t, true)
+	defer lib.TearDown(client)
 
-		client.Dynamic = dynamic.NewForConfigOrDie(client.Config)
+	loggerPodName := "e2e-kafka-source-event-logger"
 
-		t.Logf("Waiting for all resources ready")
-		client.WaitForAllTestResourcesReadyOrFail()
+	t.Logf("Creating EventLogger")
+	pod := resources.EventLoggerPod(loggerPodName)
+	client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
 
-		t.Logf("Starting receiver pod")
-		client.CreatePodOrFail(resources.PerformanceImageReceiverPod(kafkaPerformanceImageName, testPace, testWarmup, aggregatorHostname))
-		client.WaitForServiceEndpointsOrFail(resources.PerfConsumerService, 1)
+	t.Logf("Creating KafkaSource")
+	lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+		kafkaBootstrapUrl,
+		kafkaTestTopic,
+		resources.ServiceRef(loggerPodName),
+	))
 
-		t.Logf("Starting sender pod")
-		client.CreatePodOrFail(contribresources.KafkaPerformanceImageSenderPod(testPace, testWarmup, kafkaBootstrapUrl, kafkaTestTopic, aggregatorHostname))
-	}, func(t *testing.T, results *helpers.PerformanceImageResults) {
-		t.Logf("Received results %+v", *results)
-		if !reflect.DeepEqual(*results, expectedStruct) {
-			t.Fatalf("Have %+v, Expecting %+v", *results, expectedStruct)
-		}
-	})
+	client.WaitForAllTestResourcesReadyOrFail()
+
+	eventPayload := "{\"value\":5}"
+
+	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTestTopic, "0", map[string]string{}, eventPayload)
+
+	// verify the logger service receives the event
+	if err := client.CheckLog(loggerPodName, lib.CheckerContains(eventPayload)); err != nil {
+		t.Fatalf("String %q not found in logs of logger pod %q: %v", eventPayload, loggerPodName, err)
+	}
+
 }
