@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/google/uuid"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
@@ -32,15 +33,21 @@ import (
 
 // This test take for granted that the kafka cluster already exists together with the test-topic topic
 const (
-	kafkaBootstrapUrl = "my-cluster-kafka-bootstrap.kafka.svc:9092"
-	kafkaTestTopic    = "test-topic"
+	kafkaBootstrapUrl     = "my-cluster-kafka-bootstrap.kafka.svc:9092"
+	kafkaClusterName      = "my-cluster"
+	kafkaClusterNamespace = "kafka"
 )
 
 func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedCheckInLog string) {
 	client := lib.Setup(t, true)
-	defer lib.TearDown(client)
 
+	kafkaTopicName := uuid.New().String()
 	loggerPodName := "e2e-kafka-source-event-logger"
+
+	defer lib.TearDown(client)
+	defer helpers.MustDeleteTopic(client, kafkaClusterNamespace, kafkaTopicName)
+
+	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
 	t.Logf("Creating EventLogger")
 	pod := resources.EventLoggerPod(loggerPodName)
@@ -49,13 +56,13 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 	t.Logf("Creating KafkaSource")
 	lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
 		kafkaBootstrapUrl,
-		kafkaTestTopic,
+		kafkaTopicName,
 		resources.ServiceRef(loggerPodName),
 	))
 
 	client.WaitForAllTestResourcesReadyOrFail()
 
-	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTestTopic, messageKey, messageHeaders, messagePayload)
+	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 
 	// verify the logger service receives the event
 	if err := client.CheckLog(loggerPodName, lib.CheckerContains(expectedCheckInLog)); err != nil {
