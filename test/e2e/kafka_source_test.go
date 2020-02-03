@@ -45,7 +45,6 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 	loggerPodName := "e2e-kafka-source-event-logger"
 
 	defer lib.TearDown(client)
-	defer helpers.MustDeleteTopic(client, kafkaClusterNamespace, kafkaTopicName)
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 

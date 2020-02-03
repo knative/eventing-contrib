@@ -130,11 +130,6 @@ func MustCreateTopic(client *testlib.Client, clusterName string, clusterNamespac
 	if err != nil {
 		client.T.Fatalf("Error while creating the topic %s: %v", topicName, err)
 	}
-}
 
-func MustDeleteTopic(client *testlib.Client, clusterNamespace string, topicName string) {
-	err := client.Dynamic.Resource(topicGVR).Namespace(clusterNamespace).Delete(topicName, &metav1.DeleteOptions{})
-	if err != nil {
-		client.T.Fatalf("Error while deleting the topic %s: %v", topicName, err)
-	}
+	client.Tracker.Add(topicGVR.Group, topicGVR.Version, topicGVR.Resource, clusterNamespace, topicName)
 }
