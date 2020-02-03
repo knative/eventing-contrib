@@ -46,7 +46,7 @@ type Request struct {
 	// MaxNodes: the maximum number of nodes of the cluster
 	MaxNodes int64
 
-	// NodeType: node type of the cluster, e.g. n1-standard-4, n1-standard-8
+	// NodeType: node type of the cluster, e.g. e2-standard-4, e2-standard-8
 	NodeType string
 
 	// Region: region of the cluster, e.g. us-west1, us-central1
@@ -114,6 +114,15 @@ func NewCreateClusterRequest(request *Request) (*container.CreateClusterRequest,
 					},
 					Config: &container.NodeConfig{
 						MachineType: request.NodeType,
+						// The set of Google API scopes to be made available on all
+						// of the node VMs under the "default" service account.
+						// If unspecified, no scopes are added, unless Cloud Logging or
+						// Cloud Monitoring are enabled, in which case their required
+						// scopes will be added.
+						// `https://www.googleapis.com/auth/devstorage.read_only` is required
+						// for communicating with **gcr.io**, and it's included in cloud-platform scope.
+						// TODO(chizhg): give more fine granular scope based on the actual needs.
+						OauthScopes: []string{container.CloudPlatformScope},
 					},
 				},
 			},
