@@ -41,11 +41,9 @@ rules:
     resources:
       - events
     verbs:
-      - get
-      - list
-      - watch
-      - patch
       - create
+      - patch
+      - update
   - apiGroups:
       - messaging.knative.dev
     resources:

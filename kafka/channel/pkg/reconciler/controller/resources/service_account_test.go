@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,26 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package resources
 
 import (
-	"os"
+	"testing"
 
-	"knative.dev/pkg/injection"
-	"knative.dev/pkg/injection/sharedmain"
-	"knative.dev/pkg/signals"
-
-	controller "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/dispatcher"
+	"github.com/google/go-cmp/cmp"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const component = "kafkachannel_dispatcher"
-
-func main() {
-	ctx := signals.NewContext()
-	ns := os.Getenv("NAMESPACE")
-	if ns != "" {
-		ctx = injection.WithNamespaceScope(ctx, ns)
+func TestNewServiceAccount(t *testing.T) {
+	want := &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: testNS,
+			Name:      serviceAccountName,
+		},
 	}
 
-	sharedmain.MainWithContext(ctx, component, controller.NewController)
+	got := MakeServiceAccount(testNS, serviceAccountName)
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected condition (-want, +got) = %v", diff)
+	}
 }

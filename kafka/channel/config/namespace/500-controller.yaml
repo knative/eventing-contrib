@@ -45,7 +45,7 @@ spec:
             - name: DISPATCHER_IMAGE
               value: knative.dev/eventing-contrib/kafka/channel/cmd/channel_dispatcher
             - name: DISPATCHER_SCOPE
-              value: cluster
+              value: namespace
           ports:
             - containerPort: 9090
               name: metrics

@@ -329,7 +329,7 @@ func TestAllCases(t *testing.T) {
 
 		return &Reconciler{
 			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-			dispatcherNamespace:      testNS,
+			systemNamespace:          testNS,
 			dispatcherDeploymentName: testDispatcherDeploymentName,
 			dispatcherServiceName:    testDispatcherServiceName,
 			dispatcherImage:          testDispatcherImage,
@@ -387,7 +387,7 @@ func TestTopicExists(t *testing.T) {
 
 		return &Reconciler{
 			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-			dispatcherNamespace:      testNS,
+			systemNamespace:          testNS,
 			dispatcherDeploymentName: testDispatcherDeploymentName,
 			dispatcherServiceName:    testDispatcherServiceName,
 			dispatcherImage:          testDispatcherImage,
@@ -457,7 +457,7 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 
 		return &Reconciler{
 			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-			dispatcherNamespace:      testNS,
+			systemNamespace:          testNS,
 			dispatcherDeploymentName: testDispatcherDeploymentName,
 			dispatcherServiceName:    testDispatcherServiceName,
 			dispatcherImage:          testDispatcherImage,
