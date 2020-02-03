@@ -2166,6 +2166,7 @@
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/go-github/github",
+    "github.com/google/uuid",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
     "github.com/knative/serving/pkg/apis/serving/v1beta1",

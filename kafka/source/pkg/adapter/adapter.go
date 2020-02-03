@@ -17,21 +17,23 @@ limitations under the License.
 package kafka
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"knative.dev/eventing/pkg/adapter"
 	"knative.dev/pkg/source"
 
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 
 	"context"
 
@@ -40,8 +42,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
-
-	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
 const (
@@ -86,7 +86,6 @@ type Adapter struct {
 	ceClient      client.Client
 	reporter      source.StatsReporter
 	logger        *zap.Logger
-	eventsPool    *sync.Pool
 	keyTypeMapper func([]byte) interface{}
 }
 
@@ -94,21 +93,11 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	logger := logging.FromContext(ctx).Desugar()
 	config := processed.(*adapterConfig)
 
-	// Create the events pool
-	eventsPool := sync.Pool{
-		New: func() interface{} {
-			ev := &cloudevents.Event{}
-			ev.SetSpecVersion(cloudevents.VersionV1)
-			return ev
-		},
-	}
-
 	return &Adapter{
 		config:        config,
 		ceClient:      ceClient,
 		reporter:      reporter,
 		logger:        logger,
-		eventsPool:    &eventsPool,
 		keyTypeMapper: getKeyTypeMapper(config.KeyType),
 	}
 }
@@ -177,25 +166,31 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 // --------------------------------------------------------------------
 
 func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool, error) {
-	if !json.Valid(msg.Value) {
-		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
+	var err error
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
+
+	if strings.Contains(getContentType(msg), "application/cloudevents+json") {
+		err = json.Unmarshal(msg.Value, &event)
+	} else {
+		// Check if payload is a valid json
+		if !json.Valid(msg.Value) {
+			return true, nil // Message is malformed, commit the offset so it won't be reprocessed
+		}
+
+		event.SetID(makeEventId(msg.Partition, msg.Offset))
+		event.SetTime(msg.Timestamp)
+		event.SetType(sourcesv1alpha1.KafkaEventType)
+		event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, msg.Topic))
+		event.SetSubject(makeEventSubject(msg.Partition, msg.Offset))
+		event.SetDataContentType(cloudevents.ApplicationJSON)
+
+		dumpKafkaMetaToEvent(&event, a.keyTypeMapper, msg)
+
+		err = event.SetData(msg.Value)
 	}
 
-	event := a.eventsPool.Get().(*cloudevents.Event)
-
-	event.SetID(makeEventId(msg.Partition, msg.Offset))
-	event.SetTime(msg.Timestamp)
-	event.SetType(sourcesv1alpha1.KafkaEventType)
-	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, msg.Topic))
-	event.SetSubject(makeEventSubject(msg.Partition, msg.Offset))
-	event.SetDataContentType(cloudevents.ApplicationJSON)
-
-	dumpKafkaMetaToEvent(event, a.keyTypeMapper, msg)
-
-	err := event.SetData(msg.Value)
-
 	if err != nil {
-		return true, nil // Message is malformed, commit the offset so it won't be reprocessed
+		return true, err // Message is malformed, commit the offset so it won't be reprocessed
 	}
 
 	// Check before writing log since event.String() allocates and uses a lot of time
@@ -203,9 +198,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		a.logger.Debug("Sending cloud event", zap.String("event", event.String()))
 	}
 
-	rctx, _, err := a.ceClient.Send(ctx, *event)
-
-	a.eventsPool.Put(event)
+	rctx, _, err := a.ceClient.Send(ctx, event)
 
 	if err != nil {
 		a.logger.Debug("Error while sending the message", zap.Error(err))
@@ -264,16 +257,27 @@ func makeEventId(partion int32, offset int64) string {
 }
 
 // KafkaEventSubject returns the Kafka CloudEvent subject of the message.
-func makeEventSubject(partion int32, offset int64) string {
-	return fmt.Sprintf("partion:%d#%d", partion, offset)
+func makeEventSubject(partition int32, offset int64) string {
+	return fmt.Sprintf("partition:%d#%d", partition, offset)
 }
+
+func getContentType(msg *sarama.ConsumerMessage) string {
+	for _, h := range msg.Headers {
+		if bytes.Equal(h.Key, []byte("content-type")) {
+			return string(h.Value)
+		}
+	}
+	return ""
+}
+
+var replaceBadCharacters = regexp.MustCompile(`[^a-zA-Z0-9]`).ReplaceAllString
 
 func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, msg *sarama.ConsumerMessage) {
 	if msg.Key != nil {
 		event.SetExtension("key", keyTypeMapper(msg.Key))
 	}
 	for _, h := range msg.Headers {
-		event.SetExtension("kafkaheader"+string(h.Key), string(h.Value))
+		event.SetExtension("kafkaheader"+replaceBadCharacters(string(h.Key), ""), string(h.Value))
 	}
 }
 

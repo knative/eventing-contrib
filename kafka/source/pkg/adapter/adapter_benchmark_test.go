@@ -22,16 +22,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"knative.dev/eventing/pkg/adapter"
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
+
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
 
@@ -69,14 +68,7 @@ func BenchmarkHandle(b *testing.B) {
 			c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 			return c
 		}(),
-		logger: zap.NewNop(),
-		eventsPool: &sync.Pool{
-			New: func() interface{} {
-				ev := &cloudevents.Event{}
-				ev.SetSpecVersion(cloudevents.VersionV1)
-				return ev
-			},
-		},
+		logger:        zap.NewNop(),
 		keyTypeMapper: getKeyTypeMapper(""),
 	}
 	b.SetParallelism(1)

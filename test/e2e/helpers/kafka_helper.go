@@ -21,8 +21,20 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	testlib "knative.dev/eventing/test/lib"
 	pkgtest "knative.dev/pkg/test"
+)
+
+const (
+	strimziApiGroup      = "kafka.strimzi.io"
+	strimziApiVersion    = "v1beta1"
+	strimziTopicResource = "kafkatopics"
+)
+
+var (
+	topicGVR = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
 )
 
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {
@@ -93,4 +105,31 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	if err != nil {
 		client.T.Fatalf("Failed waiting for pod for completeness %q: %v", pod.Name, err)
 	}
+}
+
+func MustCreateTopic(client *testlib.Client, clusterName string, clusterNamespace string, topicName string) {
+	obj := unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": topicGVR.GroupVersion().String(),
+			"kind":       "KafkaTopic",
+			"metadata": map[string]interface{}{
+				"name": topicName,
+				"labels": map[string]interface{}{
+					"strimzi.io/cluster": clusterName,
+				},
+			},
+			"spec": map[string]interface{}{
+				"partitions": 10,
+				"replicas":   1,
+			},
+		},
+	}
+
+	_, err := client.Dynamic.Resource(topicGVR).Namespace(clusterNamespace).Create(&obj, metav1.CreateOptions{})
+
+	if err != nil {
+		client.T.Fatalf("Error while creating the topic %s: %v", topicName, err)
+	}
+
+	client.Tracker.Add(topicGVR.Group, topicGVR.Version, topicGVR.Resource, clusterNamespace, topicName)
 }
