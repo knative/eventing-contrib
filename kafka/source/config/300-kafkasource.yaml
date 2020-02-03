@@ -24,9 +24,9 @@ metadata:
       [
         { "type": "dev.knative.kafka.event" }
       ]
-  name: kafkasources.sources.knative.dev
+  name: kafkasources.sources.eventing.knative.dev
 spec:
-  group: sources.knative.dev
+  group: sources.eventing.knative.dev
   names:
     categories:
     - all

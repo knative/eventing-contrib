@@ -45,7 +45,7 @@ import (
 )
 
 const (
-	resourceGroup = "kafkasources.sources.knative.dev"
+	resourceGroup = "kafkasources.sources.eventing.knative.dev"
 )
 
 type AdapterSASL struct {

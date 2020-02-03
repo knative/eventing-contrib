@@ -26,7 +26,7 @@ import (
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
 func TestResource(t *testing.T) {
 	want := schema.GroupResource{
-		Group:    "sources.knative.dev",
+		Group:    "sources.eventing.knative.dev",
 		Resource: "foo",
 	}
 
@@ -40,7 +40,7 @@ func TestResource(t *testing.T) {
 // Kind takes an unqualified resource and returns a Group qualified GroupKind
 func TestKind(t *testing.T) {
 	want := schema.GroupKind{
-		Group: "sources.knative.dev",
+		Group: "sources.eventing.knative.dev",
 		Kind:  "kind",
 	}
 

@@ -129,7 +129,7 @@ const (
 	// KafkaEventType is the Kafka CloudEvent type.
 	KafkaEventType = "dev.knative.kafka.event"
 
-	KafkaKeyTypeLabel = "kafkasources.sources.knative.dev/key-type"
+	KafkaKeyTypeLabel = "kafkasources.sources.eventing.knative.dev/key-type"
 )
 
 var KafkaKeyTypeAllowed = []string{"string", "int", "float", "byte-array"}
