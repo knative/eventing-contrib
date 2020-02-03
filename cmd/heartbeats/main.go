@@ -18,8 +18,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"log"
 	"os"
 	"strconv"
@@ -27,8 +29,7 @@ import (
 
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -57,6 +58,9 @@ type envConfig struct {
 	// Sink URL where to send heartbeat cloudevents
 	Sink string `envconfig:"K_SINK"`
 
+	// CEOverrides are the CloudEvents overrides to be applied to the outbound event.
+	CEOverrides string `envconfig:"K_CE_OVERRIDES"`
+
 	// Name of this pod.
 	Name string `envconfig:"POD_NAME" required:"true"`
 
@@ -78,6 +82,17 @@ func main() {
 
 	if env.Sink != "" {
 		sink = env.Sink
+	}
+
+	var ceOverrides *duckv1.CloudEventOverrides
+	if len(env.CEOverrides) > 0 {
+		overrides := duckv1.CloudEventOverrides{}
+		err := json.Unmarshal([]byte(env.CEOverrides), &overrides)
+		if err != nil {
+			log.Printf("[ERROR] Unparseable CloudEvents overrides %s: %v", env.CEOverrides, err)
+			os.Exit(1)
+		}
+		ceOverrides = &overrides
 	}
 
 	c, err := kncloudevents.NewDefaultClient(sink)
@@ -108,19 +123,25 @@ func main() {
 	for {
 		hb.Sequence++
 
-		event := cloudevents.Event{
-			Context: cloudevents.EventContextV1{
-				Type:   eventType,
-				Source: *types.ParseURIRef(eventSource),
-				Extensions: map[string]interface{}{
-					"the":   42,
-					"heart": "yes",
-					"beats": true,
-				},
-			}.AsV1(),
-			Data: hb,
+		event := cloudevents.NewEvent("1.0")
+		event.SetType(eventType)
+		event.SetSource(eventSource)
+		event.SetDataContentType(cloudevents.ApplicationJSON)
+		event.SetExtension("the", 42)
+		event.SetExtension("heart", "yes")
+		event.SetExtension("beats", true)
+
+		if ceOverrides != nil && ceOverrides.Extensions != nil {
+			for n, v := range ceOverrides.Extensions {
+				event.SetExtension(n, v)
+			}
 		}
 
+		if err := event.SetData(hb); err != nil {
+			log.Printf("failed to set cloudevents data: %s", err.Error())
+		}
+
+		log.Printf("sending cloudevent to %s", sink)
 		if _, _, err := c.Send(context.Background(), event); err != nil {
 			log.Printf("failed to send cloudevent: %s", err.Error())
 		}
