@@ -72,11 +72,11 @@ func MakeDispatcher(args DispatcherArgs) *v1.Deployment {
 								ContainerPort: 9090,
 							}},
 							VolumeMounts: []corev1.VolumeMount{
-								corev1.VolumeMount{
+								{
 									Name:      "config-logging",
 									MountPath: "/etc/config-logging",
 								},
-								corev1.VolumeMount{
+								{
 									Name:      "config-kafka",
 									MountPath: "/etc/config-kafka",
 								},
@@ -84,7 +84,7 @@ func MakeDispatcher(args DispatcherArgs) *v1.Deployment {
 						},
 					},
 					Volumes: []corev1.Volume{
-						corev1.Volume{
+						{
 							Name: "config-logging",
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
@@ -94,7 +94,7 @@ func MakeDispatcher(args DispatcherArgs) *v1.Deployment {
 								},
 							},
 						},
-						corev1.Volume{
+						{
 							Name: "config-kafka",
 							VolumeSource: corev1.VolumeSource{
 								ConfigMap: &corev1.ConfigMapVolumeSource{
