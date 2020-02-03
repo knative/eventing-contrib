@@ -80,26 +80,12 @@ func TestNewDispatcher(t *testing.T) {
 							}},
 							VolumeMounts: []corev1.VolumeMount{
 								corev1.VolumeMount{
-									Name:      "config-logging",
-									MountPath: "/etc/config-logging",
-								},
-								corev1.VolumeMount{
 									Name:      "config-kafka",
 									MountPath: "/etc/config-kafka",
 								},
 							},
 						}},
 					Volumes: []corev1.Volume{
-						corev1.Volume{
-							Name: "config-logging",
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "config-logging",
-									},
-								},
-							},
-						},
 						corev1.Volume{
 							Name: "config-kafka",
 							VolumeSource: corev1.VolumeSource{
