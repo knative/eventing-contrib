@@ -31,6 +31,7 @@ type mockConsumerGroup struct {
 	mockInputMessageCh             chan *sarama.ConsumerMessage
 	mustGenerateConsumerGroupError bool
 	mustGenerateHandlerError       bool
+	consumeMustReturnError         bool
 }
 
 func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
@@ -40,6 +41,9 @@ func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler
 			h.errors <- errors.New("cgh")
 			_ = h.Cleanup(nil)
 		}()
+	}
+	if m.consumeMustReturnError {
+		return errors.New("boom!")
 	}
 	return nil
 }
@@ -59,13 +63,14 @@ func (m mockConsumerGroup) Close() error {
 	return nil
 }
 
-func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMessage, mustGenerateConsumerGroupError bool, mustGenerateHandlerError bool, mustFail bool) func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
+func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMessage, mustGenerateConsumerGroupError bool, mustGenerateHandlerError bool, consumeMustReturnError bool, mustFail bool) func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
 	if !mustFail {
 		return func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
 			return mockConsumerGroup{
 				mockInputMessageCh:             mockInputMessageCh,
 				mustGenerateConsumerGroupError: mustGenerateConsumerGroupError,
 				mustGenerateHandlerError:       mustGenerateHandlerError,
+				consumeMustReturnError:         consumeMustReturnError,
 			}, nil
 		}
 	} else {
@@ -79,7 +84,7 @@ func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMe
 
 func TestErrorPropagationCustomConsumerGroup(t *testing.T) {
 	// Mock newConsumerGroupFromClient to return our custom stuff
-	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, false)
+	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, false, false)
 
 	factory := NewConsumerGroupFactory(nil)
 	consumerGroup, err := factory.StartConsumerGroup("bla", []string{}, zap.NewNop(), nil)
@@ -113,12 +118,26 @@ func assertContainsError(t *testing.T, collection []error, errorStr string) {
 
 func TestErrorWhileCreatingNewConsumerGroup(t *testing.T) {
 	// Mock newConsumerGroupFromClient to return our custom stuff
-	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, true)
+	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, false, true)
 
 	factory := NewConsumerGroupFactory(nil)
 	_, err := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
 
 	if err == nil || err.Error() != "failed" {
 		t.Errorf("Should contain an error with message failed. Got %v", err)
+	}
+}
+
+func TestErrorWhileNewConsumerGroup(t *testing.T) {
+	// Mock newConsumerGroupFromClient to return our custom stuff
+	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, false, false, true, false)
+
+	factory := NewConsumerGroupFactory(nil)
+	cg, _ := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
+
+	err := <-cg.Errors()
+
+	if err == nil || err.Error() != "boom!" {
+		t.Errorf("Should contain an error with message boom!. Got %v", err)
 	}
 }

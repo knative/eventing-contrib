@@ -77,8 +77,10 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 	consumerHandler := NewConsumerHandler(logger, handler)
 
 	go func() {
-		// If any error, they are reported in error channel, so we can skip this message
-		_ = consumerGroup.Consume(context.TODO(), topics, &consumerHandler)
+		err2 := consumerGroup.Consume(context.TODO(), topics, &consumerHandler)
+		if err2 != nil {
+			consumerHandler.errors <- err2
+		}
 	}()
 
 	return customConsumerGroup{consumerHandler.errors, consumerGroup}, err
