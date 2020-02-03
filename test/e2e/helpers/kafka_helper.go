@@ -28,13 +28,13 @@ import (
 )
 
 const (
-	strimziApiGroup   = "kafka.strimzi.io"
-	strimziApiVersion = "v1beta1"
-	strimziKafkaTopic = "KafkaTopic"
+	strimziApiGroup      = "kafka.strimzi.io"
+	strimziApiVersion    = "v1beta1"
+	strimziTopicResource = "kafkatopics"
 )
 
 var (
-	topicGVR = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: "kafkatopics"}
+	topicGVR = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
 )
 
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {
@@ -110,7 +110,7 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 func MustCreateTopic(client *testlib.Client, clusterName string, clusterNamespace string, topicName string) {
 	obj := unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": strimziApiGroup + "/" + strimziApiVersion,
+			"apiVersion": topicGVR.GroupVersion().String(),
 			"kind":       "KafkaTopic",
 			"metadata": map[string]interface{}{
 				"name": topicName,
