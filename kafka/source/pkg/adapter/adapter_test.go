@@ -29,7 +29,6 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"testing"
 	"time"
 
@@ -42,6 +41,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
@@ -180,6 +180,80 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			expectedBody: `{"key":"value"}`,
 			error:        false,
 		},
+		"accepted_fix_bad_headers": {
+			sink: sinkAccepted,
+			message: &sarama.ConsumerMessage{
+				Key:   []byte("key"),
+				Topic: "topic1",
+				Headers: []*sarama.RecordHeader{
+					{
+						Key: []byte("hello-bla"), Value: []byte("world"),
+					},
+					{
+						Key: []byte("name"), Value: []byte("Francesco"),
+					},
+				},
+				Value:     mustJsonMarshal(t, map[string]string{"key": "value"}),
+				Partition: 1,
+				Offset:    2,
+				Timestamp: aTimestamp,
+			},
+			expectedHeaders: map[string]string{
+				"ce-id":                  makeEventId(1, 2),
+				"ce-time":                types.FormatTime(aTimestamp),
+				"ce-type":                sourcesv1alpha1.KafkaEventType,
+				"ce-source":              sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":             makeEventSubject(1, 2),
+				"ce-key":                 "key",
+				"content-type":           cloudevents.ApplicationJSON,
+				"ce-kafkaheaderhellobla": "world",
+				"ce-kafkaheadername":     "Francesco",
+			},
+			expectedBody: `{"key":"value"}`,
+			error:        false,
+		},
+		"accepted_structured": {
+			sink: sinkAccepted,
+			message: &sarama.ConsumerMessage{
+				Key:   []byte("key"),
+				Topic: "topic1",
+				Value: mustJsonMarshal(t, map[string]interface{}{
+					"specversion":          "1.0",
+					"type":                 "com.github.pull.create",
+					"source":               "https://github.com/cloudevents/spec/pull",
+					"subject":              "123",
+					"id":                   "A234-1234-1234",
+					"time":                 "2018-04-05T17:31:00Z",
+					"comexampleextension1": "value",
+					"comexampleothervalue": 5,
+					"datacontenttype":      "application/json",
+					"data": map[string]string{
+						"hello": "Francesco",
+					},
+				}),
+				Partition: 0,
+				Offset:    0,
+				Headers: []*sarama.RecordHeader{
+					{
+						Key: []byte("content-type"), Value: []byte("application/cloudevents+json; charset=UTF-8"),
+					},
+				},
+				Timestamp: aTimestamp,
+			},
+			expectedHeaders: map[string]string{
+				"ce-specversion":          "1.0",
+				"ce-id":                   "A234-1234-1234",
+				"ce-time":                 "2018-04-05T17:31:00Z",
+				"ce-type":                 "com.github.pull.create",
+				"ce-subject":              "123",
+				"ce-source":               "https://github.com/cloudevents/spec/pull",
+				"ce-comexampleextension1": "value",
+				"ce-comexampleothervalue": "5",
+				"content-type":            "application/json",
+			},
+			expectedBody: `{"hello":"Francesco"}`,
+			error:        false,
+		},
 		"rejected": {
 			sink: sinkRejected,
 			message: &sarama.ConsumerMessage{
@@ -230,15 +304,8 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 					c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
 					return c
 				}(),
-				logger:   zap.NewNop(),
-				reporter: statsReporter,
-				eventsPool: &sync.Pool{
-					New: func() interface{} {
-						ev := &cloudevents.Event{}
-						ev.SetSpecVersion(cloudevents.VersionV1)
-						return ev
-					},
-				},
+				logger:        zap.NewNop(),
+				reporter:      statsReporter,
 				keyTypeMapper: getKeyTypeMapper(tc.keyTypeMapper),
 			}
 

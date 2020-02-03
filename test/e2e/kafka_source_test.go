@@ -19,6 +19,7 @@ limitations under the License.
 package e2e
 
 import (
+	"encoding/json"
 	"testing"
 
 	"knative.dev/eventing-contrib/test/e2e/helpers"
@@ -35,7 +36,7 @@ const (
 	kafkaTestTopic    = "test-topic"
 )
 
-func TestKafkaSource(t *testing.T) {
+func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedCheckInLog string) {
 	client := lib.Setup(t, true)
 	defer lib.TearDown(client)
 
@@ -54,13 +55,61 @@ func TestKafkaSource(t *testing.T) {
 
 	client.WaitForAllTestResourcesReadyOrFail()
 
-	eventPayload := "{\"value\":5}"
-
-	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTestTopic, "0", map[string]string{}, eventPayload)
+	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTestTopic, messageKey, messageHeaders, messagePayload)
 
 	// verify the logger service receives the event
-	if err := client.CheckLog(loggerPodName, lib.CheckerContains(eventPayload)); err != nil {
-		t.Fatalf("String %q not found in logs of logger pod %q: %v", eventPayload, loggerPodName, err)
+	if err := client.CheckLog(loggerPodName, lib.CheckerContains(expectedCheckInLog)); err != nil {
+		t.Fatalf("String %q not found in logs of logger pod %q: %v", expectedCheckInLog, loggerPodName, err)
 	}
+}
 
+func TestKafkaSource(t *testing.T) {
+
+	tests := map[string]struct {
+		messageKey         string
+		messageHeaders     map[string]string
+		messagePayload     string
+		expectedCheckInLog string
+	}{
+		"no_event": {
+			messageKey:         "0",
+			messageHeaders:     map[string]string{},
+			messagePayload:     "{\"value\":5}",
+			expectedCheckInLog: "{\"value\":5}",
+		},
+		"structured": {
+			messageKey: "0",
+			messageHeaders: map[string]string{
+				"content-type": "application/cloudevents+json",
+			},
+			messagePayload: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":          "1.0",
+				"type":                 "com.github.pull.create",
+				"source":               "https://github.com/cloudevents/spec/pull",
+				"subject":              "123",
+				"id":                   "A234-1234-1234",
+				"time":                 "2018-04-05T17:31:00Z",
+				"comexampleextension1": "value",
+				"comexampleothervalue": 5,
+				"datacontenttype":      "application/json",
+				"data": map[string]string{
+					"hello": "Francesco",
+				},
+			}),
+			expectedCheckInLog: "{\"hello\":\"Francesco\"}",
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			testKafkaSource(t, test.messageKey, test.messageHeaders, test.messagePayload, test.expectedCheckInLog)
+		})
+	}
+}
+
+func mustJsonMarshal(t *testing.T, val interface{}) string {
+	data, err := json.Marshal(val)
+	if err != nil {
+		t.Errorf("unexpected error, %v", err)
+	}
+	return string(data)
 }
