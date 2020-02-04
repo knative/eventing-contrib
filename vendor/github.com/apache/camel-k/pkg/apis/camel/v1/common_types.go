@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1
 
 import (
 	corev1 "k8s.io/api/core/v1"
@@ -77,9 +77,9 @@ type PlatformInjectable interface {
 
 // MavenSpec --
 type MavenSpec struct {
-	LocalRepository string          `json:"localRepository,omitempty"`
-	Settings        ValueSource     `json:"settings,omitempty"`
-	Timeout         metav1.Duration `json:"timeout,omitempty"`
+	LocalRepository string           `json:"localRepository,omitempty"`
+	Settings        ValueSource      `json:"settings,omitempty"`
+	Timeout         *metav1.Duration `json:"timeout,omitempty"`
 }
 
 // ValueSource --
@@ -87,7 +87,7 @@ type ValueSource struct {
 	// Selects a key of a ConfigMap.
 	ConfigMapKeyRef *corev1.ConfigMapKeySelector `json:"configMapKeyRef,omitempty"`
 	// Selects a key of a secret.
-	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty" `
+	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
 const (

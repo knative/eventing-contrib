@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha1 contains API Schema definitions for the camel v1alpha1 API group
+// Package v1 contains API Schema definitions for the camel v1 API group
 // +k8s:deepcopy-gen=package,register
 // +groupName=camel.apache.org
-package v1alpha1
+package v1
