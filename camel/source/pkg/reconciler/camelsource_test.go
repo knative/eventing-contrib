@@ -443,7 +443,7 @@ func makeContext(namespace string, image string) *camelv1.IntegrationKit {
 	ct := camelv1.IntegrationKit{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IntegrationKit",
-			APIVersion: "camel.apache.org/v1alpha1",
+			APIVersion: "camel.apache.org/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "ctx-",

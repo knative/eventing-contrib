@@ -62,7 +62,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 
 	want := &camelv1.Integration{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "camel.apache.org/v1alpha1",
+			APIVersion: "camel.apache.org/v1",
 			Kind:       "Integration",
 		},
 		ObjectMeta: metav1.ObjectMeta{
