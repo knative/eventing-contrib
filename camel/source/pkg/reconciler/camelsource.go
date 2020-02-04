@@ -22,7 +22,7 @@ import (
 	"log"
 	"strings"
 
-	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
+	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -59,10 +59,10 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	log.Println("Adding the Camel Source controller.")
 
 	// Register Camel specific types
-	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.Integration{}, &camelv1alpha1.IntegrationList{})
-	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationKit{}, &camelv1alpha1.IntegrationKitList{})
-	mgr.GetScheme().AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationPlatform{}, &camelv1alpha1.IntegrationPlatformList{})
-	metav1.AddToGroupVersion(mgr.GetScheme(), camelv1alpha1.SchemeGroupVersion)
+	mgr.GetScheme().AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.Integration{}, &camelv1.IntegrationList{})
+	mgr.GetScheme().AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationKit{}, &camelv1.IntegrationKitList{})
+	mgr.GetScheme().AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationPlatform{}, &camelv1.IntegrationPlatformList{})
+	metav1.AddToGroupVersion(mgr.GetScheme(), camelv1.SchemeGroupVersion)
 
 	ctx := context.Background()
 	dynamicClient, err := dynamic.NewForConfig(mgr.GetConfig())
@@ -75,7 +75,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	p := &sdk.Provider{
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.CamelSource{},
-		Owns:      []runtime.Object{&camelv1alpha1.Integration{}},
+		Owns:      []runtime.Object{&camelv1.Integration{}},
 		Reconciler: &reconciler{
 			recorder:     mgr.GetEventRecorderFor(controllerAgentName),
 			scheme:       mgr.GetScheme(),
@@ -163,14 +163,14 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	}
 
 	// Update source status
-	if integration != nil && integration.Status.Phase == camelv1alpha1.IntegrationPhaseRunning {
+	if integration != nil && integration.Status.Phase == camelv1.IntegrationPhaseRunning {
 		source.Status.MarkDeployed()
 	}
 
 	return nil
 }
 
-func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, sinkURI string) (*camelv1alpha1.Integration, error) {
+func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, sinkURI string) (*camelv1.Integration, error) {
 	logger := logging.FromContext(ctx)
 	args := &resources.CamelArguments{
 		Name:      source.Name,
@@ -229,10 +229,10 @@ func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 	return integration, nil
 }
 
-func (r *reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelSource) (*camelv1alpha1.Integration, error) {
+func (r *reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelSource) (*camelv1.Integration, error) {
 	logger := logging.FromContext(ctx)
 
-	list := &camelv1alpha1.IntegrationList{}
+	list := &camelv1.IntegrationList{}
 	lo := &client.ListOptions{
 		Namespace:     source.Namespace,
 		LabelSelector: labels.Everything(),
@@ -240,7 +240,7 @@ func (r *reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelS
 		// Remove this when it's no longer needed.
 		Raw: &metav1.ListOptions{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: camelv1.SchemeGroupVersion.String(),
 				Kind:       "Integration",
 			},
 		},
@@ -258,7 +258,7 @@ func (r *reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelS
 	return nil, k8serrors.NewNotFound(schema.GroupResource{}, "")
 }
 
-func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.CamelSource, args *resources.CamelArguments) (*camelv1alpha1.Integration, error) {
+func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.CamelSource, args *resources.CamelArguments) (*camelv1.Integration, error) {
 	integration, err := resources.MakeIntegration(args)
 	if err != nil {
 		return nil, err

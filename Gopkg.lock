@@ -65,15 +65,15 @@
   version = "v1.24.0"
 
 [[projects]]
-  digest = "1:0ad405199147262a1c019c42de8789af06be972ab76f80eebb030c6e3b66f2ad"
+  digest = "1:e2c0a049c5ce352f6a387f7327d86ce2ce4371ec4584e89df7541ff911b397d7"
   name = "github.com/apache/camel-k"
   packages = [
-    "pkg/apis/camel/v1alpha1",
-    "pkg/apis/camel/v1alpha1/knative",
+    "pkg/apis/camel/v1",
+    "pkg/apis/camel/v1/knative",
   ]
   pruneopts = "NUT"
-  revision = "f8e38a00085fc5ce142e676834af68544116c499"
-  version = "1.0.0-M4"
+  revision = "f448eb9e21f8df79950e7b93ccafbaa922bdeea6"
+  version = "1.0.0-RC1"
 
 [[projects]]
   branch = "master"
@@ -2147,8 +2147,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Shopify/sarama",
-    "github.com/apache/camel-k/pkg/apis/camel/v1alpha1",
-    "github.com/apache/camel-k/pkg/apis/camel/v1alpha1/knative",
+    "github.com/apache/camel-k/pkg/apis/camel/v1",
+    "github.com/apache/camel-k/pkg/apis/camel/v1/knative",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",

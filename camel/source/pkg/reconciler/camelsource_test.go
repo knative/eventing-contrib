@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"testing"
 
-	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
+	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -76,7 +76,7 @@ func init() {
 		sourcesv1alpha1.SchemeBuilder.AddToScheme,
 		duckv1alpha1.AddToScheme,
 		duckv1beta1.AddToScheme,
-		camelv1alpha1.SchemeBuilder.AddToScheme,
+		camelv1.SchemeBuilder.AddToScheme,
 		duckv1.SchemeBuilder.AddToScheme,
 	)
 }
@@ -354,10 +354,10 @@ func getCamelKSource() *sourcesv1alpha1.CamelSource {
 		ObjectMeta: om(testNS, sourceName, generation),
 		Spec: sourcesv1alpha1.CamelSourceSpec{
 			Source: sourcesv1alpha1.CamelSourceOriginSpec{
-				Integration: &camelv1alpha1.IntegrationSpec{
-					Sources: []camelv1alpha1.SourceSpec{
+				Integration: &camelv1.IntegrationSpec{
+					Sources: []camelv1.SourceSpec{
 						{
-							DataSpec: camelv1alpha1.DataSpec{
+							DataSpec: camelv1.DataSpec{
 								Name:    "integration.groovy",
 								Content: "from('timer:tick?period=3s').to('knative://endpoint/sink')",
 							},
@@ -418,29 +418,29 @@ func getCamelKFlowSource() *sourcesv1alpha1.CamelSource {
 
 func withAlternativeContext(src *sourcesv1alpha1.CamelSource) *sourcesv1alpha1.CamelSource {
 	if src.Spec.Source.Integration == nil {
-		src.Spec.Source.Integration = &camelv1alpha1.IntegrationSpec{}
+		src.Spec.Source.Integration = &camelv1.IntegrationSpec{}
 	}
 	src.Spec.Source.Integration.Kit = alternativeKitName
 	return src
 }
 
-func withBumpedResourceVersionIn(in *camelv1alpha1.Integration) *camelv1alpha1.Integration {
+func withBumpedResourceVersionIn(in *camelv1.Integration) *camelv1.Integration {
 	in.ResourceVersion = bumpVersion(in.ResourceVersion)
 	return in
 }
 
-func getContext() *camelv1alpha1.IntegrationKit {
+func getContext() *camelv1.IntegrationKit {
 	return makeContext(testNS, alternativeImage)
 }
 
-func getAlternativeContext() *camelv1alpha1.IntegrationKit {
+func getAlternativeContext() *camelv1.IntegrationKit {
 	ctx := makeContext(testNS, alternativeImage)
 	ctx.Name = alternativeKitName
 	return ctx
 }
 
-func makeContext(namespace string, image string) *camelv1alpha1.IntegrationKit {
-	ct := camelv1alpha1.IntegrationKit{
+func makeContext(namespace string, image string) *camelv1.IntegrationKit {
+	ct := camelv1.IntegrationKit{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "IntegrationKit",
 			APIVersion: "camel.apache.org/v1alpha1",
@@ -450,18 +450,18 @@ func makeContext(namespace string, image string) *camelv1alpha1.IntegrationKit {
 			Namespace:    namespace,
 			Labels: map[string]string{
 				"app":                       "camel-k",
-				"camel.apache.org/kit.type": camelv1alpha1.IntegrationKitTypeExternal,
+				"camel.apache.org/kit.type": camelv1.IntegrationKitTypeExternal,
 			},
 		},
-		Spec: camelv1alpha1.IntegrationKitSpec{
+		Spec: camelv1.IntegrationKitSpec{
 			Image:   image,
-			Profile: camelv1alpha1.TraitProfileKnative,
+			Profile: camelv1.TraitProfileKnative,
 		},
 	}
 	return &ct
 }
 
-func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
+func getRunningIntegration(t *testing.T) *camelv1.Integration {
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
@@ -478,25 +478,25 @@ func getRunningIntegration(t *testing.T) *camelv1alpha1.Integration {
 		t.Error("failed to create integration", err)
 	}
 	it.ObjectMeta.OwnerReferences = getOwnerReferences()
-	it.Status.Phase = camelv1alpha1.IntegrationPhaseRunning
+	it.Status.Phase = camelv1.IntegrationPhaseRunning
 	return it
 }
 
-func integrationWithAlternativeContext(integration *camelv1alpha1.Integration) *camelv1alpha1.Integration {
+func integrationWithAlternativeContext(integration *camelv1.Integration) *camelv1.Integration {
 	integration.Spec.Kit = alternativeKitName
 	return integration
 }
 
-func getRunningCamelKIntegration(t *testing.T) *camelv1alpha1.Integration {
+func getRunningCamelKIntegration(t *testing.T) *camelv1.Integration {
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
 		SinkURL:   addressableURI,
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
-			Integration: &camelv1alpha1.IntegrationSpec{
-				Sources: []camelv1alpha1.SourceSpec{
+			Integration: &camelv1.IntegrationSpec{
+				Sources: []camelv1.SourceSpec{
 					{
-						DataSpec: camelv1alpha1.DataSpec{
+						DataSpec: camelv1.DataSpec{
 							Name:    "integration.groovy",
 							Content: "from('timer:tick?period=3s').to('knative://endpoint/sink')",
 						},
@@ -509,21 +509,21 @@ func getRunningCamelKIntegration(t *testing.T) *camelv1alpha1.Integration {
 		t.Error("failed to create integration", err)
 	}
 	it.ObjectMeta.OwnerReferences = getOwnerReferences()
-	it.Status.Phase = camelv1alpha1.IntegrationPhaseRunning
+	it.Status.Phase = camelv1.IntegrationPhaseRunning
 	return it
 }
 
-func getRunningCamelKFlowIntegration(t *testing.T) *camelv1alpha1.Integration {
+func getRunningCamelKFlowIntegration(t *testing.T) *camelv1.Integration {
 	it, err := resources.MakeIntegration(&resources.CamelArguments{
 		Name:      sourceName,
 		Namespace: testNS,
 		SinkURL:   addressableURI,
 		Source: sourcesv1alpha1.CamelSourceOriginSpec{
-			Integration: &camelv1alpha1.IntegrationSpec{
-				Sources: []camelv1alpha1.SourceSpec{
+			Integration: &camelv1.IntegrationSpec{
+				Sources: []camelv1.SourceSpec{
 					{
 						Loader: "knative-source-yaml",
-						DataSpec: camelv1alpha1.DataSpec{
+						DataSpec: camelv1.DataSpec{
 							Name:    "flow.yaml",
 							Content: "- from:\n    steps:\n    - set-body:\n        constant: Hello world\n    uri: timer:tick?period=3s\n",
 						},
@@ -536,11 +536,11 @@ func getRunningCamelKFlowIntegration(t *testing.T) *camelv1alpha1.Integration {
 		t.Error("failed to create integration", err)
 	}
 	it.ObjectMeta.OwnerReferences = getOwnerReferences()
-	it.Status.Phase = camelv1alpha1.IntegrationPhaseRunning
+	it.Status.Phase = camelv1.IntegrationPhaseRunning
 	return it
 }
 
-func getWrongIntegration(t *testing.T) *camelv1alpha1.Integration {
+func getWrongIntegration(t *testing.T) *camelv1.Integration {
 	it := getRunningIntegration(t)
 	it.Spec.Sources[0].Content = "wrong"
 	return it

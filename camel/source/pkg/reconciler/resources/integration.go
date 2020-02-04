@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"net/url"
 
-	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
-	camelknativev1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1/knative"
+	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
+	camelknativev1 "github.com/apache/camel-k/pkg/apis/camel/v1/knative"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
+func MakeIntegration(args *CamelArguments) (*camelv1.Integration, error) {
 	if args.Source.Integration == nil && args.Source.Flow == nil {
 		return nil, errors.New("empty sources")
 	}
@@ -43,11 +43,11 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 		return nil, err
 	}
 
-	var spec *camelv1alpha1.IntegrationSpec
+	var spec *camelv1.IntegrationSpec
 	if args.Source.Integration != nil {
 		spec = args.Source.Integration.DeepCopy()
 	} else {
-		spec = &camelv1alpha1.IntegrationSpec{}
+		spec = &camelv1.IntegrationSpec{}
 	}
 
 	if args.Source.Flow != nil {
@@ -56,9 +56,9 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 		if err != nil {
 			return nil, err
 		}
-		spec.Sources = append(spec.Sources, camelv1alpha1.SourceSpec{
+		spec.Sources = append(spec.Sources, camelv1.SourceSpec{
 			Loader: "knative-source-yaml",
-			DataSpec: camelv1alpha1.DataSpec{
+			DataSpec: camelv1.DataSpec{
 				Name:    "flow.yaml",
 				Content: flowData,
 			},
@@ -66,17 +66,17 @@ func MakeIntegration(args *CamelArguments) (*camelv1alpha1.Integration, error) {
 	}
 
 	if spec.Traits == nil {
-		spec.Traits = make(map[string]camelv1alpha1.TraitSpec)
+		spec.Traits = make(map[string]camelv1.TraitSpec)
 	}
-	spec.Traits["knative"] = camelv1alpha1.TraitSpec{
+	spec.Traits["knative"] = camelv1.TraitSpec{
 		Configuration: map[string]string{
 			"configuration": environment,
 		},
 	}
 
-	integration := camelv1alpha1.Integration{
+	integration := camelv1.Integration{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: camelv1alpha1.SchemeGroupVersion.String(),
+			APIVersion: camelv1.SchemeGroupVersion.String(),
 			Kind:       "Integration",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -94,11 +94,11 @@ func makeCamelEnvironment(sinkURIString string, overrides map[string]string) (st
 	if err != nil {
 		return "", err
 	}
-	env := camelknativev1alpha1.NewCamelEnvironment()
-	svc, err := camelknativev1alpha1.BuildCamelServiceDefinition(
+	env := camelknativev1.NewCamelEnvironment()
+	svc, err := camelknativev1.BuildCamelServiceDefinition(
 		"sink",
-		camelknativev1alpha1.CamelEndpointKindSink,
-		camelknativev1alpha1.CamelServiceTypeEndpoint,
+		camelknativev1.CamelEndpointKindSink,
+		camelknativev1.CamelServiceTypeEndpoint,
 		*sinkURI,
 		"",
 		"",
