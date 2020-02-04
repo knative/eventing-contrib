@@ -34,9 +34,9 @@ type FakePrometheusSources struct {
 	ns   string
 }
 
-var prometheussourcesResource = schema.GroupVersionResource{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Resource: "prometheussources"}
+var prometheussourcesResource = schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1alpha1", Resource: "prometheussources"}
 
-var prometheussourcesKind = schema.GroupVersionKind{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Kind: "PrometheusSource"}
+var prometheussourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "PrometheusSource"}
 
 // Get takes name of the prometheusSource, and returns the corresponding prometheusSource object, and an error if there is any.
 func (c *FakePrometheusSources) Get(name string, options v1.GetOptions) (result *v1alpha1.PrometheusSource, err error) {

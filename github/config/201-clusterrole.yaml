@@ -21,7 +21,7 @@ metadata:
 rules:
 # Sources admin
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - githubsources
   verbs: &everything
@@ -35,14 +35,14 @@ rules:
 
 # Sources finalizer
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - githubsources/finalizers
   verbs: *everything
 
 # Source statuses update
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - githubsources/status
   verbs:
@@ -102,7 +102,7 @@ metadata:
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
-      - "sources.eventing.knative.dev"
+      - "sources.knative.dev"
     resources:
       - "githubsources"
     verbs:

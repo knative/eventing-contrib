@@ -48,7 +48,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - prometheussources
   verbs:
@@ -60,7 +60,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - prometheussources/status
   - prometheussources/finalizers
@@ -97,7 +97,7 @@ metadata:
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
-      - "sources.eventing.knative.dev"
+      - "sources.knative.dev"
     resources:
       - "prometheussources"
     verbs:
