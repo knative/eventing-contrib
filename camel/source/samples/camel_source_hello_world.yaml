@@ -2,7 +2,7 @@
 #
 # Full documentation and other examples at: https://knative.dev/docs/eventing/samples/apache-camel-source/
 #
-apiVersion: sources.eventing.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: CamelSource
 metadata:
   name: camel-timer-source
