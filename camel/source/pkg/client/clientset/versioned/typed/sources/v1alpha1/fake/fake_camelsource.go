@@ -34,9 +34,9 @@ type FakeCamelSources struct {
 	ns   string
 }
 
-var camelsourcesResource = schema.GroupVersionResource{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Resource: "camelsources"}
+var camelsourcesResource = schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1alpha1", Resource: "camelsources"}
 
-var camelsourcesKind = schema.GroupVersionKind{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Kind: "CamelSource"}
+var camelsourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "CamelSource"}
 
 // Get takes name of the camelSource, and returns the corresponding camelSource object, and an error if there is any.
 func (c *FakeCamelSources) Get(name string, options v1.GetOptions) (result *v1alpha1.CamelSource, err error) {
