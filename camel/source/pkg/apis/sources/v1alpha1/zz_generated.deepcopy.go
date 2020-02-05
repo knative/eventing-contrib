@@ -21,9 +21,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
+	v1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	v1 "knative.dev/pkg/apis/duck/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	v1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
@@ -93,7 +93,7 @@ func (in *CamelSourceOriginSpec) DeepCopyInto(out *CamelSourceOriginSpec) {
 	*out = *in
 	if in.Integration != nil {
 		in, out := &in.Integration, &out.Integration
-		*out = new(camelv1alpha1.IntegrationSpec)
+		*out = new(v1.IntegrationSpec)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Flow != nil {
@@ -124,7 +124,7 @@ func (in *CamelSourceSpec) DeepCopyInto(out *CamelSourceSpec) {
 	}
 	if in.CloudEventOverrides != nil {
 		in, out := &in.CloudEventOverrides, &out.CloudEventOverrides
-		*out = new(v1.CloudEventOverrides)
+		*out = new(duckv1.CloudEventOverrides)
 		(*in).DeepCopyInto(*out)
 	}
 	return

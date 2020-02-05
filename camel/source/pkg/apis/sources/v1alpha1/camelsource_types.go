@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
+	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -84,7 +84,7 @@ type CamelSourceSpec struct {
 // CamelSourceOriginSpec is the integration flow to run
 type CamelSourceOriginSpec struct {
 	// Integration is a kind of source that contains a Camel K integration
-	Integration *v1alpha1.IntegrationSpec `json:"integration,omitempty"`
+	Integration *camelv1.IntegrationSpec `json:"integration,omitempty"`
 	// Flow is a kind of source that contains a single Camel YAML flow route
 	Flow *Flow `json:"flow,omitempty"`
 }

@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1
 
 import (
 	corev1 "k8s.io/api/core/v1"
@@ -41,6 +41,8 @@ type IntegrationPlatformResourcesSpec struct {
 
 // IntegrationPlatformStatus defines the observed state of IntegrationPlatform
 type IntegrationPlatformStatus struct {
+	IntegrationPlatformSpec `json:",inline"`
+
 	Phase      IntegrationPlatformPhase       `json:"phase,omitempty"`
 	Conditions []IntegrationPlatformCondition `json:"conditions,omitempty"`
 	Version    string                         `json:"version,omitempty"`
@@ -73,24 +75,30 @@ type IntegrationPlatformCluster string
 
 const (
 	// IntegrationPlatformClusterOpenShift is used when targeting a OpenShift cluster
-	IntegrationPlatformClusterOpenShift = "OpenShift"
+	IntegrationPlatformClusterOpenShift IntegrationPlatformCluster = "OpenShift"
 	// IntegrationPlatformClusterKubernetes is used when targeting a Kubernetes cluster
-	IntegrationPlatformClusterKubernetes = "Kubernetes"
+	IntegrationPlatformClusterKubernetes IntegrationPlatformCluster = "Kubernetes"
 )
+
+// AllIntegrationPlatformClusters --
+var AllIntegrationPlatformClusters = []IntegrationPlatformCluster{IntegrationPlatformClusterOpenShift, IntegrationPlatformClusterKubernetes}
 
 // TraitProfile represents lists of traits that are enabled for the specific installation/integration
 type TraitProfile string
 
 const (
 	// TraitProfileOpenShift is used by default on OpenShift clusters
-	TraitProfileOpenShift = "OpenShift"
+	TraitProfileOpenShift TraitProfile = "OpenShift"
 	// TraitProfileKubernetes is used by default on Kubernetes clusters
-	TraitProfileKubernetes = "Kubernetes"
+	TraitProfileKubernetes TraitProfile = "Kubernetes"
 	// TraitProfileKnative is used by default on OpenShift/Kubernetes clusters powered by Knative
-	TraitProfileKnative = "Knative"
+	TraitProfileKnative TraitProfile = "Knative"
+	// DefaultTraitProfile is the trait profile used as default when no other profile is set
+	DefaultTraitProfile = TraitProfileKubernetes
 )
 
-var allTraitProfiles = []TraitProfile{TraitProfileOpenShift, TraitProfileKubernetes, TraitProfileKnative}
+// AllTraitProfiles contains all allowed profiles
+var AllTraitProfiles = []TraitProfile{TraitProfileKubernetes, TraitProfileKnative, TraitProfileOpenShift}
 
 // IntegrationPlatformBuildSpec contains platform related build information
 type IntegrationPlatformBuildSpec struct {
@@ -102,7 +110,7 @@ type IntegrationPlatformBuildSpec struct {
 	BaseImage             string                                  `json:"baseImage,omitempty"`
 	Properties            map[string]string                       `json:"properties,omitempty"`
 	Registry              IntegrationPlatformRegistrySpec         `json:"registry,omitempty"`
-	Timeout               metav1.Duration                         `json:"timeout,omitempty"`
+	Timeout               *metav1.Duration                        `json:"timeout,omitempty"`
 	PersistentVolumeClaim string                                  `json:"persistentVolumeClaim,omitempty"`
 	Maven                 MavenSpec                               `json:"maven,omitempty"`
 	HTTPProxySecret       string                                  `json:"httpProxySecret,omitempty"`

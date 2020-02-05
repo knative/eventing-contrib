@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1
 
 import (
 	corev1 "k8s.io/api/core/v1"
@@ -44,6 +44,7 @@ type IntegrationStatus struct {
 	Digest           string                 `json:"digest,omitempty"`
 	Image            string                 `json:"image,omitempty"`
 	Dependencies     []string               `json:"dependencies,omitempty"`
+	Profile          TraitProfile           `json:"profile,omitempty"`
 	Kit              string                 `json:"kit,omitempty"`
 	Platform         string                 `json:"platform,omitempty"`
 	GeneratedSources []SourceSpec           `json:"generatedSources,omitempty"`
