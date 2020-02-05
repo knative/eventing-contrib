@@ -28,8 +28,8 @@ import (
 	clientscheme "k8s.io/client-go/kubernetes/scheme"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
-	"knative.dev/eventing/test/base/resources"
-	"knative.dev/eventing/test/common"
+	"knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/resources"
 	knativeduck "knative.dev/pkg/apis/duck/v1beta1"
 	runtime "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -42,12 +42,12 @@ func TestCamelSource(t *testing.T) {
 		body            = "Hello, world!"
 	)
 
-	client := common.Setup(t, true)
-	defer common.TearDown(client)
+	client := lib.Setup(t, true)
+	defer lib.TearDown(client)
 
 	t.Logf("Creating logger Pod")
 	pod := resources.EventLoggerPod(loggerPodName)
-	client.CreatePodOrFail(pod, common.WithService(loggerPodName))
+	client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
 
 	camelClient := getCamelKClient(client)
 
@@ -89,12 +89,12 @@ func TestCamelSource(t *testing.T) {
 	t.Logf("Sleeping for 3s to let the timer tick at least once")
 	time.Sleep(3 * time.Second)
 
-	if err := client.CheckLog(loggerPodName, common.CheckerContains(body)); err != nil {
+	if err := client.CheckLog(loggerPodName, lib.CheckerContains(body)); err != nil {
 		t.Fatalf("Strings %q not found in logs of logger pod %q: %v", body, loggerPodName, err)
 	}
 }
 
-func createCamelSourceOrFail(c *common.Client, camelSource *v1alpha1.CamelSource) {
+func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
 	camelSourceClientSet, err := camelsourceclient.NewForConfig(c.Config)
 	if err != nil {
 		c.T.Fatalf("Failed to create CamelSource client: %v", err)
@@ -108,7 +108,7 @@ func createCamelSourceOrFail(c *common.Client, camelSource *v1alpha1.CamelSource
 	}
 }
 
-func createCamelPlatformOrFail(c *common.Client, camelClient runtime.Client, camelSourceName string) {
+func createCamelPlatformOrFail(c *lib.Client, camelClient runtime.Client, camelSourceName string) {
 	platform := camelv1alpha1.IntegrationPlatform{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "camel-k",
@@ -121,7 +121,7 @@ func createCamelPlatformOrFail(c *common.Client, camelClient runtime.Client, cam
 	}
 }
 
-func createCamelKitOrFail(c *common.Client, camelClient runtime.Client, camelSourceName string) {
+func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSourceName string) {
 	// Creating this kit manually because the Camel K platform is not configured to do it on its own.
 	// Testing that Camel K works is not in scope for this test.
 	kit := camelv1alpha1.IntegrationKit{
@@ -149,7 +149,7 @@ func createCamelKitOrFail(c *common.Client, camelClient runtime.Client, camelSou
 	}
 }
 
-func getCamelKClient(c *common.Client) runtime.Client {
+func getCamelKClient(c *lib.Client) runtime.Client {
 	scheme := clientscheme.Scheme
 	scheme.AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationPlatform{}, &camelv1alpha1.IntegrationPlatformList{})
 	scheme.AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationKit{}, &camelv1alpha1.IntegrationKitList{})
