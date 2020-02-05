@@ -25,7 +25,7 @@ import (
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientscheme "k8s.io/client-go/kubernetes/scheme"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
 	"knative.dev/eventing/test/lib"
@@ -150,7 +150,7 @@ func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSource
 }
 
 func getCamelKClient(c *lib.Client) runtime.Client {
-	scheme := clientscheme.Scheme
+	scheme := k8sruntime.NewScheme()
 	scheme.AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationPlatform{}, &camelv1.IntegrationPlatformList{})
 	scheme.AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationKit{}, &camelv1.IntegrationKitList{})
 	meta.AddToGroupVersion(scheme, camelv1.SchemeGroupVersion)
