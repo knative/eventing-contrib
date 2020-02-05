@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	camelv1alpha1 "github.com/apache/camel-k/pkg/apis/camel/v1alpha1"
+	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientscheme "k8s.io/client-go/kubernetes/scheme"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
@@ -109,7 +109,7 @@ func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
 }
 
 func createCamelPlatformOrFail(c *lib.Client, camelClient runtime.Client, camelSourceName string) {
-	platform := camelv1alpha1.IntegrationPlatform{
+	platform := camelv1.IntegrationPlatform{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "camel-k",
 			Namespace: c.Namespace,
@@ -124,7 +124,7 @@ func createCamelPlatformOrFail(c *lib.Client, camelClient runtime.Client, camelS
 func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSourceName string) {
 	// Creating this kit manually because the Camel K platform is not configured to do it on its own.
 	// Testing that Camel K works is not in scope for this test.
-	kit := camelv1alpha1.IntegrationKit{
+	kit := camelv1.IntegrationKit{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test-kit",
 			Namespace: c.Namespace,
@@ -132,7 +132,7 @@ func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSource
 				"camel.apache.org/kit.type": "external",
 			},
 		},
-		Spec: camelv1alpha1.IntegrationKitSpec{
+		Spec: camelv1.IntegrationKitSpec{
 			Dependencies: []string{
 				"camel:timer",
 				"mvn:org.apache.camel.k/camel-k-loader-knative",
@@ -151,9 +151,9 @@ func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSource
 
 func getCamelKClient(c *lib.Client) runtime.Client {
 	scheme := clientscheme.Scheme
-	scheme.AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationPlatform{}, &camelv1alpha1.IntegrationPlatformList{})
-	scheme.AddKnownTypes(camelv1alpha1.SchemeGroupVersion, &camelv1alpha1.IntegrationKit{}, &camelv1alpha1.IntegrationKitList{})
-	meta.AddToGroupVersion(scheme, camelv1alpha1.SchemeGroupVersion)
+	scheme.AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationPlatform{}, &camelv1.IntegrationPlatformList{})
+	scheme.AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationKit{}, &camelv1.IntegrationKitList{})
+	meta.AddToGroupVersion(scheme, camelv1.SchemeGroupVersion)
 	options := runtime.Options{
 		Scheme: scheme,
 	}
