@@ -134,6 +134,14 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:45c41cd27a8d986998680bfc86da0bbff5fa4f90d0f446c00636c8b099028ffe"
+  name = "github.com/blang/semver"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ba2c2ddd89069b46a7011d4106f6868f17ee1705"
+  version = "v3.6.1"
+
+[[projects]]
   digest = "1:8f5acd4d4462b5136af644d25101f0968a7a94ee90fcb2059cec5b7cc42e0b20"
   name = "github.com/census-instrumentation/opencensus-proto"
   packages = [
@@ -390,12 +398,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
+  digest = "1:3ec6c8e4b700377066dbb5ab3155c55f97109ab6147fee9423a68506d79bbafa"
   name = "github.com/google/gofuzz"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "f140a6486e521aad38f5917de355cbf147cc0496"
-  version = "v1.0.0"
+  revision = "db92cf7ae75e4a7a28abc005addab2b394362888"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -1491,9 +1499,10 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:344d59274094672d7c6816d86b5c79768a9743f694268fbed3619834590eb98c"
+  digest = "1:59dd2de0d797a63acc4aacc74edd83819c44b18cc269dba797d607458cd23832"
   name = "k8s.io/apimachinery"
   packages = [
+    "pkg/api/apitesting/fuzzer",
     "pkg/api/equality",
     "pkg/api/errors",
     "pkg/api/meta",
@@ -1827,7 +1836,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a6d89ccc2878c634dce7e97d6b70c7c3e5a261f5e8e63822a3eec973ddaaaf57"
+  digest = "1:13815f73140d923987375e4d6db25c18c53096c2b7bdc1e0fdee2fcbfd2adcb7"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1937,11 +1946,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "4f82e983a9968cece0b70a7190b54acdd0fead06"
+  revision = "109d948ba2ee9cb0a534fa261361ab0bfe848449"
 
 [[projects]]
   branch = "master"
-  digest = "1:92b7055a014502a4b66d16ddc846de570f2d42ebdf9e6dfdc1b6eb2efc573294"
+  digest = "1:50ad80e619992aab730865192c7ea1f17359a14548760bb8360180eb0797f514"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1949,6 +1958,7 @@
     "apis/duck/v1",
     "apis/duck/v1alpha1",
     "apis/duck/v1beta1",
+    "apis/testing/fuzzer",
     "changeset",
     "client/injection/ducks/duck/v1/addressable",
     "client/injection/kube/client",
@@ -2009,11 +2019,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "5ff923b836abcbeb6ac3ff2784db0d5b5786ade2"
+  revision = "87875e3b427a09be8c6c688811a54c43ea8be1b1"
 
 [[projects]]
   branch = "master"
-  digest = "1:baf655983ebe350388dc59cb56ff0cc9f273a787cba05824ccd700f1c5a7442a"
+  digest = "1:292c7e755c2df6090ee890a39c6f7eb9921ce7fa88f5d9aa18519106bd5476b6"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2055,18 +2065,18 @@
     "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
-  revision = "2236942db89eaa52c40462e9a38bc8dc57ba9483"
+  revision = "0cc84adf0eafedc462b45b2df6b4f599241c6501"
 
 [[projects]]
   branch = "master"
-  digest = "1:4ba0f80b3feed917d2c9a1aa79ea95836c3aef84589431cff77ffd01615a1150"
+  digest = "1:becb98d0dc7f7201c23df580e99e64253d79cf8894fa77bce76cfbf69009557d"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "b0c4c4e1691282f24ccb3b5b0399952bf086edfc"
+  revision = "b09617df210766782b2b8f164476ac3887c2baec"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
