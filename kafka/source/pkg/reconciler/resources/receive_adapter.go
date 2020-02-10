@@ -127,10 +127,9 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:         utils.GenerateFixedName(args.Source, fmt.Sprintf("kafkasource-%s", args.Source.Name)),
-			Namespace:    args.Source.Namespace,
-			GenerateName: fmt.Sprintf("%s-", args.Source.Name),
-			Labels:       args.Labels,
+			Name:      utils.GenerateFixedName(args.Source, fmt.Sprintf("kafkasource-%s", args.Source.Name)),
+			Namespace: args.Source.Namespace,
+			Labels:    args.Labels,
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(args.Source),
 			},
