@@ -252,8 +252,8 @@ func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
 	return config, nil
 }
 
-func makeEventId(partion int32, offset int64) string {
-	return fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(partion)), strconv.FormatInt(offset, 10))
+func makeEventId(partition int32, offset int64) string {
+	return fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(partition)), strconv.FormatInt(offset, 10))
 }
 
 // KafkaEventSubject returns the Kafka CloudEvent subject of the message.
