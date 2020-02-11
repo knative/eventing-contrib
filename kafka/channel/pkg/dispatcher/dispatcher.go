@@ -394,7 +394,7 @@ func attachKafkaHeaders(message sarama.ProducerMessage, event cloudevents.Event)
 	// Only setting string extensions.
 	for k, v := range event.Extensions() {
 		if vs, ok := v.(string); ok {
-			addHeader(&message, "ce_"+k, vs)
+			addHeader(&message, k, vs)
 		}
 	}
 	return message
