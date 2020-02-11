@@ -442,7 +442,7 @@ func TestToKafkaMessage(t *testing.T) {
 				Value: []byte("ignoreme"),
 			},
 			{
-				Key:   []byte("ce_k1"),
+				Key:   []byte("k1"),
 				Value: []byte("v1"),
 			},
 		},
