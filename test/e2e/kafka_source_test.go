@@ -81,7 +81,7 @@ func TestKafkaSource(t *testing.T) {
 			messageKey:         "0",
 			messageHeaders:     map[string]string{},
 			messagePayload:     "{\"value\":5}",
-			expectedCheckInLog: "{\"value\":5}",
+			expectedCheckInLog: "\"value\": 5",
 		},
 		"structured": {
 			messageKey: "0",
@@ -102,7 +102,7 @@ func TestKafkaSource(t *testing.T) {
 					"hello": "Francesco",
 				},
 			}),
-			expectedCheckInLog: "{\"hello\":\"Francesco\"}",
+			expectedCheckInLog: "\"hello\": \"Francesco\"",
 		},
 	}
 	for name, test := range tests {
