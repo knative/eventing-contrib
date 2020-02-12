@@ -71,13 +71,15 @@ const (
 	finalizerName = controllerAgentName
 
 	// Name of the corev1.Events emitted from the reconciliation process.
-	channelReconciled           = "ChannelReconciled"
-	channelReconcileFailed      = "ChannelReconcileFailed"
-	channelUpdateStatusFailed   = "ChannelUpdateStatusFailed"
-	dispatcherDeploymentCreated = "DispatcherDeploymentCreated"
-	dispatcherDeploymentFailed  = "DispatcherDeploymentFailed"
-	dispatcherServiceCreated    = "DispatcherServiceCreated"
-	dispatcherServiceFailed     = "DispatcherServiceFailed"
+	channelReconciled                = "ChannelReconciled"
+	channelReconcileFailed           = "ChannelReconcileFailed"
+	channelUpdateStatusFailed        = "ChannelUpdateStatusFailed"
+	dispatcherDeploymentCreated      = "DispatcherDeploymentCreated"
+	dispatcherDeploymentUpdated      = "DispatcherDeploymentUpdated"
+	dispatcherDeploymentFailed       = "DispatcherDeploymentFailed"
+	dispatcherDeploymentUpdateFailed = "DispatcherDeploymentUpdateFailed"
+	dispatcherServiceCreated         = "DispatcherServiceCreated"
+	dispatcherServiceFailed          = "DispatcherServiceFailed"
 
 	dispatcherDeploymentName = "kafka-ch-dispatcher"
 	dispatcherServiceName    = "kafka-ch-dispatcher"
@@ -376,14 +378,14 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 }
 
 func (r *Reconciler) reconcileDispatcher(ctx context.Context, dispatcherNamespace string, kc *v1alpha1.KafkaChannel) (*appsv1.Deployment, error) {
+	args := resources.DispatcherArgs{
+		DispatcherNamespace: dispatcherNamespace,
+		Image:               r.dispatcherImage,
+	}
+	expected := resources.MakeDispatcher(args)
 	d, err := r.deploymentLister.Deployments(dispatcherNamespace).Get(dispatcherDeploymentName)
 	if err != nil {
 		if apierrs.IsNotFound(err) {
-			args := resources.DispatcherArgs{
-				DispatcherNamespace: dispatcherNamespace,
-				Image:               r.dispatcherImage,
-			}
-			expected := resources.MakeDispatcher(args)
 			d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Create(expected)
 			if err == nil {
 				r.Recorder.Event(kc, corev1.EventTypeNormal, dispatcherDeploymentCreated, "Dispatcher deployment created")
@@ -391,7 +393,7 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, dispatcherNamespac
 			} else {
 				logging.FromContext(ctx).Error("Unable to create the dispatcher deployment", zap.Error(err))
 				r.Recorder.Eventf(kc, corev1.EventTypeWarning, dispatcherDeploymentFailed, "Failed to create the dispatcher deployment: %v", err)
-				kc.Status.MarkServiceFailed("DispatcherDeploymentFailed", "Failed to create the dispatcher deployment: %v", err)
+				kc.Status.MarkServiceFailed(dispatcherDeploymentFailed, "Failed to create the dispatcher deployment: %v", err)
 			}
 			return d, err
 		}
@@ -399,6 +401,18 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, dispatcherNamespac
 		logging.FromContext(ctx).Error("Unable to get the dispatcher deployment", zap.Error(err))
 		kc.Status.MarkServiceUnknown("DispatcherDeploymentFailed", "Failed to get dispatcher deployment: %v", err)
 		return nil, err
+	} else if !reflect.DeepEqual(expected.Spec, d.Spec) {
+		logging.FromContext(ctx).Info("Deployment is not what we expect it to be, updating Deployment")
+		d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
+		if err == nil {
+			r.Recorder.Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
+			kc.Status.PropagateDispatcherStatus(&d.Status)
+		} else {
+			logging.FromContext(ctx).Error("Unable to update the dispatcher deployment", zap.Error(err))
+			r.Recorder.Eventf(kc, corev1.EventTypeWarning, dispatcherDeploymentUpdateFailed, "Failed to update the dispatcher deployment: %v", err)
+			kc.Status.MarkServiceFailed("DispatcherDeploymentUpdateFailed", "Failed to update the dispatcher deployment: %v", err)
+		}
+		return d, err
 	}
 
 	kc.Status.PropagateDispatcherStatus(&d.Status)
