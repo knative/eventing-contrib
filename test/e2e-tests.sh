@@ -49,11 +49,11 @@ readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
 readonly NATSS_CRD_CONFIG_DIR="natss/config"
 
 # Strimzi installation config template used for starting up Kafka clusters.
-readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.14.0.yaml"
+readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.16.2.yaml"
 # Strimzi installation config.
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp)"
 # Kafka cluster CR config file.
-readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-persistent-single-2.3.0.yaml"
+readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-2.4.0.yaml"
 readonly KAFKA_TOPIC_INSTALLATION_CONFIG="test/config/100-kafka-topic.yaml"
 # Kafka cluster URL for our installation
 readonly KAFKA_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka:9092"
@@ -210,7 +210,8 @@ function camel_teardown() {
 
 initialize $@ --skip-istio-addon
 
-go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel || fail_test
+# DO NOT SUBMIT
+go_test_e2e -timeout=20m -parallel=1 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
 
 # If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands
 # trap - SIGINT SIGQUIT SIGTSTP EXIT
