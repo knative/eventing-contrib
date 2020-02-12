@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -352,9 +353,13 @@ func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage)
 		case "ce_dataschema":
 			event.SetDataSchema(v)
 		default:
-			// Extensions
-			if IsAlphaNumeric(h) {
-				event.SetExtension(h, v)
+			// Extensions. Strip ce_ first before calling IsAlphaNumeric
+			// because _ is not valid...
+			// TODO: Should we even allow headers to be added as extensions
+			// if they do not have the ce_ prefix.
+			strippedHeader := strings.TrimPrefix(h, "ce_")
+			if IsAlphaNumeric(strippedHeader) {
+				event.SetExtension(strippedHeader, v)
 			}
 		}
 	}
@@ -394,7 +399,7 @@ func attachKafkaHeaders(message sarama.ProducerMessage, event cloudevents.Event)
 	// Only setting string extensions.
 	for k, v := range event.Extensions() {
 		if vs, ok := v.(string); ok {
-			addHeader(&message, k, vs)
+			addHeader(&message, "ce_"+k, vs)
 		}
 	}
 	return message
