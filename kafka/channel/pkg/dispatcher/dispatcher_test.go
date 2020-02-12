@@ -371,7 +371,7 @@ func TestFromKafkaMessage(t *testing.T) {
 	kafkaMessage := &sarama.ConsumerMessage{
 		Headers: []*sarama.RecordHeader{
 			{
-				Key:   []byte("k1"),
+				Key:   []byte("ce_k1"),
 				Value: []byte("v1"),
 			},
 			{
@@ -386,6 +386,10 @@ func TestFromKafkaMessage(t *testing.T) {
 				Key:   []byte("ce_type"),
 				Value: []byte("testtype"),
 			},
+			{
+				Key:   []byte("ce_extensionfield"),
+				Value: []byte("testextension"),
+			},
 		},
 		Value: data,
 	}
@@ -394,6 +398,7 @@ func TestFromKafkaMessage(t *testing.T) {
 	want.SetSource("testsource")
 	want.SetType("testtype")
 	want.SetID("im-a-snowflake")
+	want.SetExtension("extensionfield", "testextension")
 	want.SetData(data)
 
 	var got *cloudevents.Event
@@ -442,7 +447,7 @@ func TestToKafkaMessage(t *testing.T) {
 				Value: []byte("ignoreme"),
 			},
 			{
-				Key:   []byte("k1"),
+				Key:   []byte("ce_k1"),
 				Value: []byte("v1"),
 			},
 		},
