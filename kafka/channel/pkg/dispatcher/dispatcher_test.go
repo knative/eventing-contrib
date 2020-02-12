@@ -390,6 +390,10 @@ func TestFromKafkaMessage(t *testing.T) {
 				Key:   []byte("ce_extensionfield"),
 				Value: []byte("testextension"),
 			},
+			{
+				Key:   []byte("anotherkafkaheader"),
+				Value: []byte("notpassedthrough"),
+			},
 		},
 		Value: data,
 	}
