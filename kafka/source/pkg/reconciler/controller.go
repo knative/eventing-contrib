@@ -20,25 +20,23 @@ import (
 	"context"
 	"os"
 
-	"knative.dev/pkg/metrics"
-
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
-	sourcescheme "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/scheme"
+
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client"
 	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource"
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
+	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
-	"knative.dev/eventing/pkg/reconciler"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
+
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/resolver"
-)
 
-const (
-	controllerAgentName = "kafka-source-controller"
+	"knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
 )
 
 func NewController(
@@ -57,7 +55,8 @@ func NewController(
 	deploymentInformer := deploymentinformer.Get(ctx)
 
 	c := &Reconciler{
-		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
+		KubeClientSet:       kubeclient.Get(ctx),
+		EventingClientSet:   eventingclient.Get(ctx),
 		kafkaClientSet:      kafkaclient.Get(ctx),
 		kafkaLister:         kafkaInformer.Lister(),
 		deploymentLister:    deploymentInformer.Lister(),
@@ -66,10 +65,10 @@ func NewController(
 		loggingContext:      ctx,
 	}
 
-	impl := controller.NewImpl(c, c.Logger, "KafkaSource")
+	impl := kafkasource.NewImpl(ctx, c)
 	c.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
-	c.Logger.Info("Setting up kafka event handlers")
+	logging.FromContext(ctx).Info("Setting up kafka event handlers")
 
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
@@ -86,8 +85,4 @@ func NewController(
 	cmw.Watch(logging.ConfigMapName(), c.UpdateFromLoggingConfigMap)
 	cmw.Watch(metrics.ConfigMapName(), c.UpdateFromMetricsConfigMap)
 	return impl
-}
-
-func init() {
-	sourcescheme.AddToScheme(scheme.Scheme)
 }

@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	component = "kafka_controller"
+	component = "kafka-controller"
 )
 
 func main() {

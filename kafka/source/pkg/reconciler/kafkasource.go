@@ -20,15 +20,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
-	"time"
 
 	"knative.dev/pkg/metrics"
 
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,21 +37,18 @@ import (
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/resources"
 
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-
-	"knative.dev/pkg/logging"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 
 	// NewController stuff
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	"k8s.io/client-go/tools/cache"
-	clientset "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
+	versioned "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
+	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
 	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/reconciler"
-	"knative.dev/pkg/resolver"
-
-	"knative.dev/pkg/controller"
 	pkgLogging "knative.dev/pkg/logging"
+	pkgreconciler "knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 )
 
 const (
@@ -63,6 +57,7 @@ const (
 	kafkaUpdateStatusFailed      = "KafkaSourceUpdateStatusFailed"
 	kafkaSourceDeploymentCreated = "KafkaSourceDeploymentCreated"
 	kafkaSourceDeploymentUpdated = "KafkaSourceDeploymentUpdated"
+	kafkaSourceDeploymentFailed  = "KafkaSourceDeploymentUpdated"
 	kafkaSourceReconciled        = "KafkaSourceReconciled"
 	component                    = "kafkasource"
 )
@@ -71,24 +66,49 @@ var (
 	deploymentGVK = appsv1.SchemeGroupVersion.WithKind("Deployment")
 )
 
-type Reconciler struct {
-	*reconciler.Base
+// newDeploymentCreated makes a new reconciler event with event type Normal, and
+// reason KafkaSourceDeploymentCreated.
+func newDeploymentCreated(namespace, name string) pkgreconciler.Event {
+	return pkgreconciler.NewEvent(corev1.EventTypeNormal, kafkaSourceDeploymentCreated, "KafkaSource created deployment: \"%s/%s\"", namespace, name)
+}
 
-	kafkaClientSet      clientset.Interface
+// deploymentUpdated makes a new reconciler event with event type Normal, and
+// reason KafkaSourceDeploymentUpdated.
+func deploymentUpdated(namespace, name string) pkgreconciler.Event {
+	return pkgreconciler.NewEvent(corev1.EventTypeNormal, kafkaSourceDeploymentUpdated, "KafkaSource updated deployment: \"%s/%s\"", namespace, name)
+}
+
+// newDeploymentFailed makes a new reconciler event with event type Warning, and
+// reason KafkaSourceDeploymentFailed.
+func newDeploymentFailed(namespace, name string, err error) pkgreconciler.Event {
+	return pkgreconciler.NewEvent(corev1.EventTypeWarning, kafkaSourceDeploymentFailed, "KafkaSource failed to create deployment: \"%s/%s\", %w", namespace, name, err)
+}
+
+type Reconciler struct {
+	// KubeClientSet allows us to talk to the k8s for core APIs
+	KubeClientSet kubernetes.Interface
+
+	// EventingClientSet allows us to configure Eventing objects
+	EventingClientSet eventingclientset.Interface
+
 	receiveAdapterImage string
-	eventTypeLister     eventinglisters.EventTypeLister
-	kafkaLister         listers.KafkaSourceLister
-	sinkResolver        *resolver.URIResolver
-	deploymentLister    appsv1listers.DeploymentLister
-	loggingContext      context.Context
-	loggingConfig       *pkgLogging.Config
-	metricsConfig       *metrics.ExporterOptions
+
+	eventTypeLister  eventinglisters.EventTypeLister
+	kafkaLister      listers.KafkaSourceLister
+	deploymentLister appsv1listers.DeploymentLister
+
+	kafkaClientSet versioned.Interface
+	loggingContext context.Context
+	loggingConfig  *pkgLogging.Config
+	metricsConfig  *metrics.ExporterOptions
+
+	sinkResolver *resolver.URIResolver
 }
 
 // Check that our Reconciler implements controller.Reconciler
-var _ controller.Reconciler = (*Reconciler)(nil)
+var _ reconcilerkafkasource.Interface = (*Reconciler)(nil)
 
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
+/*func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	logger := logging.FromContext(ctx).Desugar()
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
@@ -115,24 +135,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	}
 
 	if _, updateStatusErr := r.updateStatus(ctx, kafka.DeepCopy()); updateStatusErr != nil {
-		logging.FromContext(ctx).Warn("Failed to update the KafkaSource", zap.Error(err))
+		pkgLogging.FromContext(ctx).Warn("Failed to update the KafkaSource", zap.Error(err))
 		r.Recorder.Eventf(kafka, corev1.EventTypeWarning, kafkaUpdateStatusFailed, "Failed to update KafkaSource's status: %v", err)
 		return updateStatusErr
 	}
 
 	return err
-}
+}*/
 
-func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) error {
-	logger := logging.FromContext(ctx)
-
-	src.Status.ObservedGeneration = src.Generation
+func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSource) pkgreconciler.Event {
 	src.Status.InitializeConditions()
-
-	if src.Spec.Sink == nil {
-		src.Status.MarkNoSink("Missing", "Sink missing from spec")
-		return errors.New("spec.sink missing")
-	}
 
 	if src.Spec.Sink == nil {
 		src.Status.MarkNoSink("SinkMissing", "")
@@ -176,14 +188,14 @@ func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) e
 		}
 		if found == false {
 			src.Status.MarkResourcesIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
-			logger.Errorf("Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
+			pkgLogging.FromContext(ctx).Errorf("Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
 			return errors.New("IncorrectKafkaKeyTypeLabel")
 		}
 	}
 
 	ra, err := r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
-		logger.Error("Unable to create the receive adapter", zap.Error(err))
+		pkgLogging.FromContext(ctx).Error("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
 	src.Status.MarkDeployed(ra)
@@ -191,7 +203,7 @@ func (r *Reconciler) reconcile(ctx context.Context, src *v1alpha1.KafkaSource) e
 	err = r.reconcileEventTypes(ctx, src)
 	if err != nil {
 		src.Status.MarkNoEventTypes("EventTypesreconcileFailed", "")
-		logger.Error("Unable to reconcile the event types", zap.Error(err))
+		pkgLogging.FromContext(ctx).Error("Unable to reconcile the event types", zap.Error(err))
 		return err
 	}
 	src.Status.MarkEventTypes()
@@ -229,7 +241,7 @@ func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
 	return nil
 }
 
-func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource, sinkURI string) (*v1.Deployment, error) {
+func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource, sinkURI string) (*appsv1.Deployment, error) {
 
 	if err := checkResourcesStatus(src); err != nil {
 		return nil, err
@@ -237,11 +249,11 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 
 	loggingConfig, err := pkgLogging.LoggingConfigToJson(r.loggingConfig)
 	if err != nil {
-		logging.FromContext(ctx).Error("error while converting logging config to JSON", zap.Any("receiveAdapter", err))
+		pkgLogging.FromContext(ctx).Error("error while converting logging config to JSON", zap.Any("receiveAdapter", err))
 	}
 	metricsConfig, err := metrics.MetricsOptionsToJson(r.metricsConfig)
 	if err != nil {
-		logging.FromContext(ctx).Error("error while converting metrics config to JSON", zap.Any("receiveAdapter", err))
+		pkgLogging.FromContext(ctx).Error("error while converting metrics config to JSON", zap.Any("receiveAdapter", err))
 	}
 
 	raArgs := resources.ReceiveAdapterArgs{
@@ -257,14 +269,12 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
-		msg := "Deployment created"
 		if err != nil {
-			msg = fmt.Sprintf("Deployment created, error: %v", err)
+			return nil, newDeploymentFailed(ra.Namespace, ra.Name, err)
 		}
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, kafkaSourceDeploymentCreated, "%s", msg)
-		return ra, err
+		return ra, newDeploymentCreated(ra.Namespace, ra.Name)
 	} else if err != nil {
-		logging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
+		pkgLogging.FromContext(ctx).Error("Unable to get an existing receive adapter", zap.Error(err))
 		return nil, err
 	} else if !metav1.IsControlledBy(ra, src) {
 		return nil, fmt.Errorf("deployment %q is not owned by KafkaSource %q", ra.Name, src.Name)
@@ -273,10 +283,9 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 		if ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
 			return ra, err
 		}
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, kafkaSourceDeploymentUpdated, "Deployment updated")
-		return ra, nil
+		return ra, deploymentUpdated(ra.Namespace, ra.Name)
 	} else {
-		logging.FromContext(ctx).Debug("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
+		pkgLogging.FromContext(ctx).Debug("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 	}
 	return ra, nil
 }
@@ -296,13 +305,13 @@ func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
 	return false
 }
 
-func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource) (*v1.Deployment, error) {
+func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource) (*appsv1.Deployment, error) {
 	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).List(metav1.ListOptions{
 		LabelSelector: r.getLabelSelector(src).String(),
 	})
 
 	if err != nil {
-		logging.FromContext(ctx).Desugar().Error("Unable to list deployments: %v", zap.Error(err))
+		pkgLogging.FromContext(ctx).Desugar().Error("Unable to list deployments: %v", zap.Error(err))
 		return nil, err
 	}
 	for _, dep := range ra.Items {
@@ -316,7 +325,7 @@ func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaS
 func (r *Reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.KafkaSource) error {
 	current, err := r.getEventTypes(ctx, src)
 	if err != nil {
-		logging.FromContext(ctx).Error("Unable to get existing event types", zap.Error(err))
+		pkgLogging.FromContext(ctx).Error("Unable to get existing event types", zap.Error(err))
 		return err
 	}
 
@@ -329,14 +338,14 @@ func (r *Reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.Kafk
 
 	for _, eventType := range toDelete {
 		if err = r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).Delete(eventType.Name, &metav1.DeleteOptions{}); err != nil {
-			logging.FromContext(ctx).Error("Error deleting eventType", zap.Any("eventType", eventType))
+			pkgLogging.FromContext(ctx).Error("Error deleting eventType", zap.Any("eventType", eventType))
 			return err
 		}
 	}
 
 	for _, eventType := range toCreate {
 		if _, err = r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).Create(&eventType); err != nil {
-			logging.FromContext(ctx).Error("Error creating eventType", zap.Any("eventType", eventType))
+			pkgLogging.FromContext(ctx).Error("Error creating eventType", zap.Any("eventType", eventType))
 			return err
 		}
 	}
@@ -348,7 +357,7 @@ func (r *Reconciler) getEventTypes(ctx context.Context, src *v1alpha1.KafkaSourc
 		LabelSelector: r.getLabelSelector(src).String(),
 	})
 	if err != nil {
-		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
+		pkgLogging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
 		return nil, err
 	}
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
@@ -362,32 +371,6 @@ func (r *Reconciler) getEventTypes(ctx context.Context, src *v1alpha1.KafkaSourc
 
 func (r *Reconciler) getLabelSelector(src *v1alpha1.KafkaSource) labels.Selector {
 	return labels.SelectorFromSet(resources.GetLabels(src.Name))
-}
-
-func (r *Reconciler) updateStatus(ctx context.Context, src *v1alpha1.KafkaSource) (*v1alpha1.KafkaSource, error) {
-	kafka, err := r.kafkaLister.KafkaSources(src.Namespace).Get(src.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	// If there's nothing to update, just return.
-	if reflect.DeepEqual(kafka.Status, src.Status) {
-		return src, nil
-	}
-
-	becomesReady := src.Status.IsReady() && !kafka.Status.IsReady()
-
-	// Don't modify the informers copy.
-	existing := kafka.DeepCopy()
-	existing.Status = src.Status
-
-	result, err := r.kafkaClientSet.SourcesV1alpha1().KafkaSources(src.Namespace).UpdateStatus(existing)
-	if err == nil && becomesReady {
-		duration := time.Since(result.ObjectMeta.CreationTimestamp.Time)
-		logging.FromContext(ctx).Info("KafkaSource became ready after", zap.Duration("duration", duration))
-		r.Recorder.Event(kafka, corev1.EventTypeNormal, kafkaReadinessChanged, fmt.Sprintf("KafkaSource %q became ready", kafka.Name))
-	}
-	return result, err
 }
 
 func (r *Reconciler) computeDiff(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) ([]eventingv1alpha1.EventType, []eventingv1alpha1.EventType) {
@@ -458,11 +441,11 @@ func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
 
 	logcfg, err := pkgLogging.NewConfigFromConfigMap(cfg)
 	if err != nil {
-		logging.FromContext(r.loggingContext).Warn("failed to create logging config from configmap", zap.String("cfg.Name", cfg.Name))
+		pkgLogging.FromContext(r.loggingContext).Warn("failed to create logging config from configmap", zap.String("cfg.Name", cfg.Name))
 		return
 	}
 	r.loggingConfig = logcfg
-	logging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
+	pkgLogging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
 }
 
 func (r *Reconciler) UpdateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
@@ -475,5 +458,5 @@ func (r *Reconciler) UpdateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
 		Component: component,
 		ConfigMap: cfg.Data,
 	}
-	logging.FromContext(r.loggingContext).Info("Update from metrics ConfigMap", zap.Any("ConfigMap", cfg))
+	pkgLogging.FromContext(r.loggingContext).Info("Update from metrics ConfigMap", zap.Any("ConfigMap", cfg))
 }
