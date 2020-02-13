@@ -25,7 +25,7 @@ topics.
    `bootstrapServers` value in the `config-kafka` ConfigMap, located inside the
    `config/400-kafka-config.yaml` file.
 
-   * **cluster-scoped**: make sure `namespace` is set to `knative-eventing`:
+   - **cluster-scoped**: make sure `namespace` is set to `knative-eventing`:
 
    ```yaml
    apiVersion: v1
@@ -39,7 +39,7 @@ topics.
      bootstrapServers: REPLACE_WITH_CLUSTER_URL
    ```
 
-   * **namespace-scoped**: set `namespace` to where you are planning to create `KafkaChannel` objects. You can also omit it:
+   - **namespace-scoped**: set `namespace` to where you are planning to create `KafkaChannel` objects. You can also omit it:
 
    ```yaml
    apiVersion: v1
@@ -54,13 +54,15 @@ topics.
 
 1. Apply the Kafka config:
 
-    * Either **cluster-scoped**:
-   ```
+    - Either **cluster-scoped**:
+
+   ```sh
    ko apply -f config
    ```
 
-    * or **namespace-scoped**:
-   ```
+    - or **namespace-scoped**:
+
+   ```sh
    ko apply -f config/namespace
    ```
 
@@ -100,12 +102,14 @@ kubectl get deployment -n knative-eventing kafka-ch-controller
 The Kafka Channel Dispatcher receives and distributes all events to the
 appropriate consumers:
 
-* **cluster-scoped**:
+- **cluster-scoped**:
+
 ```shell
 kubectl get deployment -n knative-eventing kafka-ch-dispatcher
 ```
 
-* **namespace-scoped**:
+- **namespace-scoped**:
+
 ```shell
 kubectl get deployment kafka-ch-dispatcher
 ```
@@ -120,13 +124,14 @@ kubectl get deployment -n knative-eventing kafka-webhook
 The Kafka Config Map is used to configure the `bootstrapServers` of your Apache
 Kafka installation:
 
-* **cluster-scoped**:
+- **cluster-scoped**:
 
 ```shell
 kubectl get configmap -n knative-eventing config-kafka
 ```
 
-* **namespace-scoped**:
+- **namespace-scoped**:
+
 ```shell
 kubectl get configmap   config-kafka
 ```
