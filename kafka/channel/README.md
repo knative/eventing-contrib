@@ -18,14 +18,14 @@ topics.
    > installation.
 
 1. Decide on where you want the Kafka Channel Dispatcher to be installed,
-   either in `knative-eventing` (Cluster) or in the same namespace as KafkaChannel
-   objects (Namespace).
+   either in `knative-eventing` (cluster-scoped) or in the same namespace as KafkaChannel
+   objects (namespace-scoped).
 
 1. Now that Apache Kafka is installed, you need to configure the
    `bootstrapServers` value in the `config-kafka` ConfigMap, located inside the
-   `config/400-kafka-config.yaml`.
+   `config/400-kafka-config.yaml` file.
 
-   * **Cluster**: make sure `namespace` is set to `knative-eventing`:
+   * **cluster-scoped**: make sure `namespace` is set to `knative-eventing`:
 
    ```yaml
    apiVersion: v1
@@ -39,7 +39,7 @@ topics.
      bootstrapServers: REPLACE_WITH_CLUSTER_URL
    ```
 
-   * **Namespace**: set `namespace` to where you are planning to create `KafkaChannel` objects. You can also omit it:
+   * **namespace-scoped**: set `namespace` to where you are planning to create `KafkaChannel` objects. You can also omit it:
 
    ```yaml
    apiVersion: v1
@@ -54,12 +54,12 @@ topics.
 
 1. Apply the Kafka config:
 
-    * Either **Cluster**:
+    * Either **cluster-scoped**:
    ```
    ko apply -f config
    ```
 
-    * or **Namespace**:
+    * or **namespace-scoped**:
    ```
    ko apply -f config/namespace
    ```
@@ -100,12 +100,12 @@ kubectl get deployment -n knative-eventing kafka-ch-controller
 The Kafka Channel Dispatcher receives and distributes all events to the
 appropriate consumers:
 
-* **Cluster**:
+* **cluster-scoped**:
 ```shell
 kubectl get deployment -n knative-eventing kafka-ch-dispatcher
 ```
 
-* **Namespace**:
+* **namespace-scoped**:
 ```shell
 kubectl get deployment kafka-ch-dispatcher
 ```
@@ -120,13 +120,13 @@ kubectl get deployment -n knative-eventing kafka-webhook
 The Kafka Config Map is used to configure the `bootstrapServers` of your Apache
 Kafka installation:
 
-* **Cluster**:
+* **cluster-scoped**:
 
 ```shell
 kubectl get configmap -n knative-eventing config-kafka
 ```
 
-* **Namespace**:
+* **namespace-scoped**:
 ```shell
 kubectl get configmap   config-kafka
 ```
