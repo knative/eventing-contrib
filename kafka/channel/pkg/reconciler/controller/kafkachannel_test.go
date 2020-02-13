@@ -49,14 +49,12 @@ import (
 )
 
 const (
-	systemNS                     = "knative-eventing"
-	testNS                       = "test-namespace"
-	kcName                       = "test-kc"
-	testDispatcherDeploymentName = "test-deployment"
-	testDispatcherServiceName    = "test-service"
-	testDispatcherImage          = "test-image"
-	channelServiceAddress        = "test-kc-kn-channel.test-namespace.svc.cluster.local"
-	brokerName                   = "test-broker"
+	systemNS              = "knative-eventing"
+	testNS                = "test-namespace"
+	kcName                = "test-kc"
+	testDispatcherImage   = "test-image"
+	channelServiceAddress = "test-kc-kn-channel.test-namespace.svc.cluster.local"
+	brokerName            = "test-broker"
 )
 
 var (
@@ -328,11 +326,9 @@ func TestAllCases(t *testing.T) {
 	table.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
 		return &Reconciler{
-			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-			systemNamespace:          testNS,
-			dispatcherDeploymentName: testDispatcherDeploymentName,
-			dispatcherServiceName:    testDispatcherServiceName,
-			dispatcherImage:          testDispatcherImage,
+			Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
+			systemNamespace: testNS,
+			dispatcherImage: testDispatcherImage,
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
@@ -386,11 +382,9 @@ func TestTopicExists(t *testing.T) {
 	row.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
 		return &Reconciler{
-			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-			systemNamespace:          testNS,
-			dispatcherDeploymentName: testDispatcherDeploymentName,
-			dispatcherServiceName:    testDispatcherServiceName,
-			dispatcherImage:          testDispatcherImage,
+			Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
+			systemNamespace: testNS,
+			dispatcherImage: testDispatcherImage,
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
@@ -456,11 +450,9 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 	row.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
 		return &Reconciler{
-			Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-			systemNamespace:          testNS,
-			dispatcherDeploymentName: testDispatcherDeploymentName,
-			dispatcherServiceName:    testDispatcherServiceName,
-			dispatcherImage:          testDispatcherImage,
+			Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
+			systemNamespace: testNS,
+			dispatcherImage: testDispatcherImage,
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
@@ -603,7 +595,7 @@ func makeChannelService(nc *v1alpha1.KafkaChannel) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.svc.%s", testDispatcherServiceName, testNS, utils.GetClusterDomainName()),
+			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherName, testNS, utils.GetClusterDomainName()),
 		},
 	}
 }
@@ -623,7 +615,7 @@ func makeChannelServiceNotOwnedByUs(nc *v1alpha1.KafkaChannel) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.svc.%s", testDispatcherServiceName, testNS, utils.GetClusterDomainName()),
+			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherName, testNS, utils.GetClusterDomainName()),
 		},
 	}
 }
@@ -636,7 +628,7 @@ func makeEmptyEndpoints() *corev1.Endpoints {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: testNS,
-			Name:      testDispatcherServiceName,
+			Name:      dispatcherName,
 		},
 	}
 }
