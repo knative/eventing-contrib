@@ -25,32 +25,32 @@ topics.
    `bootstrapServers` value in the `config-kafka` ConfigMap, located inside the
    `config/400-kafka-config.yaml` file.
 
-   - **cluster-scoped**: make sure `namespace` is set to `knative-eventing`:
+    - **cluster-scoped**: make sure `namespace` is set to `knative-eventing`:
 
-   ```yaml
-   apiVersion: v1
-   kind: ConfigMap
-   metadata:
-     name: config-kafka
-     namespace: knative-eventing
-   data:
-     # Broker URL. Replace this with the URLs for your kafka cluster,
-     # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
-     bootstrapServers: REPLACE_WITH_CLUSTER_URL
-   ```
+      ```yaml
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: config-kafka
+        namespace: knative-eventing
+      data:
+        # Broker URL. Replace this with the URLs for your kafka cluster,
+        # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+        bootstrapServers: REPLACE_WITH_CLUSTER_URL
+      ```
 
-   - **namespace-scoped**: set `namespace` to where you are planning to create `KafkaChannel` objects. You can also omit it:
+    - **namespace-scoped**: set `namespace` to where you are planning to create `KafkaChannel` objects. You can also omit it:
 
-   ```yaml
-   apiVersion: v1
-   kind: ConfigMap
-   metadata:
-     name: config-kafka
-   data:
-     # Broker URL. Replace this with the URLs for your kafka cluster,
-     # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
-     bootstrapServers: REPLACE_WITH_CLUSTER_URL
-   ```
+      ```yaml
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: config-kafka
+      data:
+        # Broker URL. Replace this with the URLs for your kafka cluster,
+        # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+        bootstrapServers: REPLACE_WITH_CLUSTER_URL
+      ```
 
 1. Apply the Kafka config:
 
