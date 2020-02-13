@@ -124,7 +124,7 @@ func TestAllCases(t *testing.T) {
 			WantEvents: []string{
 				Eventf(corev1.EventTypeNormal, dispatcherDeploymentCreated, "Dispatcher deployment created"),
 				Eventf(corev1.EventTypeNormal, dispatcherServiceCreated, "Dispatcher service created"),
-				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"test-service\" not found"),
+				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"kafka-ch-dispatcher\" not found"),
 			},
 		}, {
 			Name: "Service does not exist, automatically created",
@@ -150,7 +150,7 @@ func TestAllCases(t *testing.T) {
 			}},
 			WantEvents: []string{
 				Eventf(corev1.EventTypeNormal, dispatcherServiceCreated, "Dispatcher service created"),
-				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"test-service\" not found"),
+				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"kafka-ch-dispatcher\" not found"),
 			},
 		}, {
 			Name: "Endpoints does not exist",
@@ -174,7 +174,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantEvents: []string{
-				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"test-service\" not found"),
+				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: endpoints \"kafka-ch-dispatcher\" not found"),
 			},
 		}, {
 			Name: "Endpoints not ready",
@@ -199,7 +199,7 @@ func TestAllCases(t *testing.T) {
 				),
 			}},
 			WantEvents: []string{
-				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: there are no endpoints ready for Dispatcher service test-service"),
+				Eventf(corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: there are no endpoints ready for Dispatcher service kafka-ch-dispatcher"),
 			},
 		}, {
 			Name: "Works, creates new channel",
