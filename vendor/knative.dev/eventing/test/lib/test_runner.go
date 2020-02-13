@@ -147,8 +147,8 @@ func TearDown(client *Client) {
 			client.T.Logf("EVENT: %v", e)
 		}
 	}
-
-	if err = DeleteNameSpace(client); err != nil {
+	client.Tracker.Clean(true)
+	if err := DeleteNameSpace(client); err != nil {
 		client.T.Logf("Could not delete the namespace %q: %v", client.Namespace, err)
 	}
 }
