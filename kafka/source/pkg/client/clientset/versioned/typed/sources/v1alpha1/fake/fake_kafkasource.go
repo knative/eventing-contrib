@@ -34,9 +34,9 @@ type FakeKafkaSources struct {
 	ns   string
 }
 
-var kafkasourcesResource = schema.GroupVersionResource{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Resource: "kafkasources"}
+var kafkasourcesResource = schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1alpha1", Resource: "kafkasources"}
 
-var kafkasourcesKind = schema.GroupVersionKind{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Kind: "KafkaSource"}
+var kafkasourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "KafkaSource"}
 
 // Get takes name of the kafkaSource, and returns the corresponding kafkaSource object, and an error if there is any.
 func (c *FakeKafkaSources) Get(name string, options v1.GetOptions) (result *v1alpha1.KafkaSource, err error) {

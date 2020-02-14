@@ -372,7 +372,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, src *v1alpha1.KafkaSource
 
 	// If there's nothing to update, just return.
 	if reflect.DeepEqual(kafka.Status, src.Status) {
-		return kafka, nil
+		return src, nil
 	}
 
 	becomesReady := src.Status.IsReady() && !kafka.Status.IsReady()

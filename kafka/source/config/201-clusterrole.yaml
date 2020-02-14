@@ -21,7 +21,7 @@ metadata:
 rules:
 
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - kafkasources
   - kafkasources/finalizers
@@ -35,7 +35,7 @@ rules:
   - delete
 
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - kafkasources/status
   verbs:
@@ -79,7 +79,7 @@ metadata:
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
-      - "sources.eventing.knative.dev"
+      - "sources.knative.dev"
     resources:
       - "kafkasources"
     verbs:

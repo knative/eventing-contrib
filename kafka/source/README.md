@@ -30,7 +30,7 @@ event sink.
    your source. Below is an example:
 
    ```yaml
-   apiVersion: sources.eventing.knative.dev/v1alpha1
+   apiVersion: sources.knative.dev/v1alpha1
    kind: KafkaSource
    metadata:
      name: kafka-source
