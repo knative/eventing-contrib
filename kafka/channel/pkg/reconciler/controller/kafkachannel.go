@@ -401,8 +401,8 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, dispatcherNamespac
 		logging.FromContext(ctx).Error("Unable to get the dispatcher deployment", zap.Error(err))
 		kc.Status.MarkServiceUnknown("DispatcherDeploymentFailed", "Failed to get dispatcher deployment: %v", err)
 		return nil, err
-	} else if !reflect.DeepEqual(expected.Spec, d.Spec) {
-		logging.FromContext(ctx).Info("Deployment is not what we expect it to be, updating Deployment")
+	} else if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image) {
+		r.Logger.Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
 		d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
 		if err == nil {
 			r.Recorder.Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
