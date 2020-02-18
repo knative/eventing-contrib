@@ -101,9 +101,11 @@ rules:
       - serviceaccounts
     verbs:
       - list
+      - watch
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
       - rolebindings
     verbs:
       - list
+      - watch
