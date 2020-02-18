@@ -137,17 +137,6 @@ func TearDown(client *Client) {
 		}
 	}
 	client.Tracker.Clean(true)
-
-	// Dump the events in the namespace
-	el, err := client.Kube.Kube.CoreV1().Events(client.Namespace).List(metav1.ListOptions{})
-	if err != nil {
-		client.T.Logf("Could not list events in the namespace %q: %v", client.Namespace, err)
-	} else {
-		for _, e := range el.Items {
-			client.T.Logf("EVENT: %v", e)
-		}
-	}
-	client.Tracker.Clean(true)
 	if err := DeleteNameSpace(client); err != nil {
 		client.T.Logf("Could not delete the namespace %q: %v", client.Namespace, err)
 	}

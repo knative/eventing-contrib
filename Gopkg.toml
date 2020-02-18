@@ -108,8 +108,7 @@ required = [
 
 [[constraint]]
   name = "knative.dev/eventing"
-  source = "github.com/vaikas/eventing"
-  branch = "dump-events"
+  branch = "master"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
