@@ -37,6 +37,8 @@ rules:
     verbs:
       - "get"
       - "create"
+      - "list"
+      - "watch"
 
   # For getting our Deployment so we can decorate with ownerref.
   - apiGroups:
