@@ -31,7 +31,9 @@ import (
 	configsv1alpha1 "knative.dev/eventing/pkg/apis/configs/v1alpha1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	eventingv1beta1 "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing/pkg/reconciler/namespace/resources"
 )
 
@@ -41,8 +43,14 @@ type BrokerOption func(*eventingv1alpha1.Broker)
 // TriggerOption enables further configuration of a Trigger.
 type TriggerOption func(*eventingv1alpha1.Trigger)
 
+// TriggerOptionV1Beta1 enables further configuration of a v1beta1 Trigger.
+type TriggerOptionV1Beta1 func(*eventingv1beta1.Trigger)
+
 // SubscriptionOption enables further configuration of a Subscription.
 type SubscriptionOption func(*messagingv1alpha1.Subscription)
+
+// SubscriptionOptionV1Beta1 enables further configuration of a Subscription.
+type SubscriptionOptionV1Beta1 func(*messagingv1beta1.Subscription)
 
 // DeliveryOption enables further configuration of DeliverySpec.
 type DeliveryOption func(*eventingduckv1alpha1.DeliverySpec)
@@ -64,6 +72,18 @@ func KnativeRefForService(name, namespace string) *duckv1.KReference {
 // WithSubscriberForSubscription returns an option that adds a Subscriber for the given Subscription.
 func WithSubscriberForSubscription(name string) SubscriptionOption {
 	return func(s *messagingv1alpha1.Subscription) {
+		if name != "" {
+			s.Spec.Subscriber = &duckv1.Destination{
+				Ref: KnativeRefForService(name, ""),
+			}
+		}
+	}
+}
+
+// WithSubscriberForSubscriptionV1Beta1 returns an option that adds a Subscriber for the given
+// v1beta1 Subscription.
+func WithSubscriberForSubscriptionV1Beta1(name string) SubscriptionOptionV1Beta1 {
+	return func(s *messagingv1beta1.Subscription) {
 		if name != "" {
 			s.Spec.Subscriber = &duckv1.Destination{
 				Ref: KnativeRefForService(name, ""),
@@ -116,6 +136,26 @@ func Subscription(
 			Name: name,
 		},
 		Spec: messagingv1alpha1.SubscriptionSpec{
+			Channel: *channelRef(channelName, channelTypeMeta),
+		},
+	}
+	for _, option := range options {
+		option(subscription)
+	}
+	return subscription
+}
+
+// SubscriptionV1Beta1 returns a v1beta1 Subscription.
+func SubscriptionV1Beta1(
+	name, channelName string,
+	channelTypeMeta *metav1.TypeMeta,
+	options ...SubscriptionOptionV1Beta1,
+) *messagingv1beta1.Subscription {
+	subscription := &messagingv1beta1.Subscription{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: messagingv1beta1.SubscriptionSpec{
 			Channel: *channelRef(channelName, channelTypeMeta),
 		},
 	}
@@ -216,6 +256,31 @@ func WithAttributesTriggerFilter(eventSource, eventType string, extensions map[s
 	}
 }
 
+// WithAttributesTriggerFilter returns an option that adds a TriggerFilter with Attributes for the given Trigger.
+func WithAttributesTriggerFilterV1Beta1(eventSource, eventType string, extensions map[string]interface{}) TriggerOptionV1Beta1 {
+	attrs := make(map[string]string)
+	attrs["type"] = eventType
+	attrs["source"] = eventSource
+	for k, v := range extensions {
+		attrs[k] = fmt.Sprintf("%v", v)
+	}
+	return func(t *eventingv1beta1.Trigger) {
+		t.Spec.Filter = &eventingv1beta1.TriggerFilter{
+			Attributes: eventingv1beta1.TriggerFilterAttributes(attrs),
+		}
+	}
+}
+
+// WithDependencyAnnotaionTrigger returns an option that adds a dependency annotation to the given Trigger.
+func WithDependencyAnnotaionTrigger(dependencyAnnotation string) TriggerOption {
+	return func(t *eventingv1alpha1.Trigger) {
+		if t.Annotations == nil {
+			t.Annotations = make(map[string]string)
+		}
+		t.Annotations[eventingv1alpha1.DependencyAnnotation] = dependencyAnnotation
+	}
+}
+
 // WithBroker returns an option that adds a Broker for the given Trigger.
 func WithBroker(brokerName string) TriggerOption {
 	return func(t *eventingv1alpha1.Trigger) {
@@ -255,9 +320,33 @@ func WithSubscriberURIForTrigger(uri string) TriggerOption {
 	}
 }
 
+// WithSubscriberServiceRefForTriggerV1Beta1 returns an option that adds a Subscriber Knative Service Ref for the given Trigger.
+func WithSubscriberServiceRefForTriggerV1Beta1(name string) TriggerOptionV1Beta1 {
+	return func(t *eventingv1beta1.Trigger) {
+		if name != "" {
+			t.Spec.Subscriber = duckv1.Destination{
+				Ref: KnativeRefForService(name, t.Namespace),
+			}
+		}
+	}
+}
+
 // Trigger returns a Trigger.
 func Trigger(name string, options ...TriggerOption) *eventingv1alpha1.Trigger {
 	trigger := &eventingv1alpha1.Trigger{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+	for _, option := range options {
+		option(trigger)
+	}
+	return trigger
+}
+
+// TriggerV1Beta1 returns a v1beta1 Trigger.
+func TriggerV1Beta1(name string, options ...TriggerOptionV1Beta1) *eventingv1beta1.Trigger {
+	trigger := &eventingv1beta1.Trigger{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
