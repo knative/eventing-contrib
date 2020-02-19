@@ -105,43 +105,8 @@ type Reconciler struct {
 	sinkResolver *resolver.URIResolver
 }
 
-// Check that our Reconciler implements controller.Reconciler
+// Check that our Reconciler implements Interface
 var _ reconcilerkafkasource.Interface = (*Reconciler)(nil)
-
-/*func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	logger := logging.FromContext(ctx).Desugar()
-
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		logger.Error("invalid resource key: %s", zap.Any("key", key))
-		return nil
-	}
-
-	src, ok := r.kafkaLister.KafkaSources(namespace).Get(name)
-	if apierrs.IsNotFound(ok) {
-		logger.Error("could not find Apache Kafka source", zap.Any("key", key))
-		return nil
-	} else if ok != nil {
-		return err
-	}
-	kafka := src.DeepCopy()
-	err = r.reconcile(ctx, kafka)
-
-	if err != nil {
-		logger.Warn("Error Reconciling KafkaSource", zap.Error(err))
-	} else {
-		logger.Debug("KafkaSource reconciled")
-		r.Recorder.Eventf(kafka, corev1.EventTypeNormal, kafkaSourceReconciled, "`KafkaSource reconciled: %s/%s", kafka.Namespace, kafka.Name)
-	}
-
-	if _, updateStatusErr := r.updateStatus(ctx, kafka.DeepCopy()); updateStatusErr != nil {
-		pkgLogging.FromContext(ctx).Warn("Failed to update the KafkaSource", zap.Error(err))
-		r.Recorder.Eventf(kafka, corev1.EventTypeWarning, kafkaUpdateStatusFailed, "Failed to update KafkaSource's status: %v", err)
-		return updateStatusErr
-	}
-
-	return err
-}*/
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSource) pkgreconciler.Event {
 	src.Status.InitializeConditions()
