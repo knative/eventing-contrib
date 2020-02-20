@@ -360,12 +360,14 @@ func TestNatssChannelStatus_SetAddressable(t *testing.T) {
 					},
 				},
 				Status: duckv1beta1.Status{
-					Conditions: []apis.Condition{
-						{
-							Type:   NatssChannelConditionAddressable,
-							Status: corev1.ConditionTrue,
-						},
-					},
+					Conditions: []apis.Condition{{
+						Type:   NatssChannelConditionAddressable,
+						Status: corev1.ConditionTrue,
+					}, {
+						// Ready unknown comes from other dependent conditions via MarkTrue.
+						Type:   NatssChannelConditionReady,
+						Status: corev1.ConditionUnknown,
+					}},
 				},
 			},
 		},
