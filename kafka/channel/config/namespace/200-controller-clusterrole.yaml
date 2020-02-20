@@ -1,4 +1,4 @@
-# Copyright 2019 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kafka-ch-dispatcher
+  name: kafka-ch-controller
   labels:
     contrib.eventing.knative.dev/release: devel
 rules:
@@ -23,36 +23,56 @@ rules:
       - messaging.knative.dev
     resources:
       - kafkachannels
+      - kafkachannels/status
     verbs:
       - get
       - list
       - watch
+      - update
       - patch
   - apiGroups:
       - messaging.knative.dev
     resources:
-      - kafkachannels/status
+      - kafkachannels/finalizers
     verbs:
-      - get
       - update
-      - patch
   - apiGroups:
       - "" # Core API group.
+    resources:
+      - services
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+  - apiGroups:
+      - "" # Core API group.
+    resources:
+      - services
+    verbs: &everything
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - update
+  - apiGroups:
+      - "" # Core API Group.
+    resources:
+      - configmaps
+    resourceNames:
+      - kafka-ch-dispatcher
+    verbs:
+      - update
+  - apiGroups:
+      - "" # Core API Group.
     resources:
       - events
     verbs:
       - create
       - patch
       - update
-  - apiGroups:
-      - messaging.knative.dev
-    resources:
-      - kafkachannels
-    verbs:
-      - get
-      - list
-      - watch
-      - patch
   - apiGroups:
       - ""
     resources:
@@ -62,9 +82,26 @@ rules:
       - list
       - watch
   - apiGroups:
-      - "" # Core API Group.
+      - "" # Core API group.
     resources:
-      - events
+      - endpoints
     verbs:
-      - create
-      - patch
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - deployments/status
+    verbs: *everything
+  - apiGroups:
+      - "" # Core API group.
+    resources:
+      - serviceaccounts
+    verbs: *everything
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - rolebindings
+    verbs: *everything
