@@ -1,0 +1,38 @@
+apiVersion: messaging.knative.dev/v1alpha1
+kind: InMemoryChannel
+metadata:
+  name: gitlabchannel
+  
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlabsecret
+type: Opaque
+stringData:
+  accessToken: "<access_token>"
+  secretToken: "asdfasfdsaf"
+  
+---
+apiVersion: sources.eventing.triggermesh.dev/v1alpha1
+kind: GitLabSource
+metadata:
+  name: gitlabsource-sample
+spec:
+  eventTypes:
+  - push_events
+  - issues_events
+  projectUrl: "https://gitlab.com/tzununbekov/lab-test"
+  accessToken:
+    secretKeyRef:
+      name: gitlabsecret
+      key: accessToken
+  secretToken:
+    secretKeyRef:
+      name: gitlabsecret
+      key: secretToken
+  sink:
+    apiVersion: messaging.knative.dev/v1alpha1
+    kind: InMemoryChannel
+    name: gitlabchannel
+
