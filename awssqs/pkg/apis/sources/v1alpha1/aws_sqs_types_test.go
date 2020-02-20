@@ -22,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis"
 )
 
 func TestAwsSqsSourceStatusIsReady(t *testing.T) {
@@ -179,8 +179,8 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 	tests := []struct {
 		name      string
 		s         *AwsSqsSourceStatus
-		condQuery duckv1alpha1.ConditionType
-		want      *duckv1alpha1.Condition
+		condQuery apis.ConditionType
+		want      *apis.Condition
 	}{{
 		name:      "uninitialized",
 		s:         &AwsSqsSourceStatus{},
@@ -194,7 +194,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -207,7 +207,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -220,7 +220,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -233,7 +233,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionUnknown,
 		},
@@ -248,7 +248,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		},
@@ -264,7 +264,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:    AwsSqsSourceConditionReady,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Testing",
@@ -282,7 +282,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:    AwsSqsSourceConditionReady,
 			Status:  corev1.ConditionUnknown,
 			Reason:  "Testing",
@@ -300,7 +300,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:    AwsSqsSourceConditionReady,
 			Status:  corev1.ConditionFalse,
 			Reason:  "Testing",
@@ -318,7 +318,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		},
@@ -336,7 +336,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		},
@@ -351,7 +351,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:    AwsSqsSourceConditionReady,
 			Status:  corev1.ConditionUnknown,
 			Reason:  "SinkEmpty",
@@ -369,7 +369,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 			return s
 		}(),
 		condQuery: AwsSqsSourceConditionReady,
-		want: &duckv1alpha1.Condition{
+		want: &apis.Condition{
 			Type:   AwsSqsSourceConditionReady,
 			Status: corev1.ConditionTrue,
 		},
@@ -378,7 +378,7 @@ func TestAwsSqsSourceStatusGetCondition(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.s.GetCondition(test.condQuery)
-			ignoreTime := cmpopts.IgnoreFields(duckv1alpha1.Condition{},
+			ignoreTime := cmpopts.IgnoreFields(apis.Condition{},
 				"LastTransitionTime", "Severity")
 			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
 				t.Errorf("unexpected condition (-want, +got) = %v", diff)

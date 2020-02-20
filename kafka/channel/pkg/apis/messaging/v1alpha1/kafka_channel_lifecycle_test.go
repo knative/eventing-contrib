@@ -415,12 +415,14 @@ func TestKafkaChannelStatus_SetAddressable(t *testing.T) {
 						Hostname: "test-domain",
 					}},
 				Status: duckv1beta1.Status{
-					Conditions: []apis.Condition{
-						{
-							Type:   KafkaChannelConditionAddressable,
-							Status: corev1.ConditionTrue,
-						},
-					},
+					Conditions: []apis.Condition{{
+						Type:   KafkaChannelConditionAddressable,
+						Status: corev1.ConditionTrue,
+					}, {
+						// Ready unknown comes from other dependent conditions via MarkTrue.
+						Type:   KafkaChannelConditionReady,
+						Status: corev1.ConditionUnknown,
+					}},
 				},
 			},
 		},
