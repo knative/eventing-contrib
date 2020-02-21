@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/onsi/gomega"
-	"gitlab.com/triggermesh/gitlabsource/pkg/apis"
+	"github.com/tzununbekov/eventing-sources/gitlab/pkg/apis"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"

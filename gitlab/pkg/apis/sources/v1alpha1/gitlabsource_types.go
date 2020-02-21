@@ -38,7 +38,7 @@ type GitLabSourceSpec struct {
 	// ProjectUrl is the url of the GitLab project for which we are interested
 	// to receive events from.
 	// Examples:
-	//   https://gitlab.com/triggermesh/gitlabsource
+	//   https://github.com/tzununbekov/eventing-sources/gitlab
 	// +kubebuilder:validation:MinLength=1
 	ProjectUrl string `json:"projectUrl"`
 

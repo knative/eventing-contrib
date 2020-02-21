@@ -26,8 +26,7 @@ import (
 
 	"github.com/knative/pkg/apis/duck"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
-	sourcesv1alpha1 "gitlab.com/triggermesh/gitlabsource/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/tzununbekov/eventing-sources/gitlab/pkg/apis/sources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -85,7 +85,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &servingv1alpha1.Service{}}, &handler.EnqueueRequestForOwner{OwnerType: &servingv1alpha1.Service{}, IsController: true})
+	err = c.Watch(&source.Kind{Type: &servingv1.Service{}}, &handler.EnqueueRequestForOwner{OwnerType: &servingv1.Service{}, IsController: true})
 	if err != nil {
 		return err
 	}
@@ -316,7 +316,7 @@ func (r *ReconcileGitLabSource) hasFinalizer(source *sourcesv1alpha1.GitLabSourc
 	return false
 }
 
-func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1alpha1.GitLabSource, receiveAdapterImage string) *servingv1alpha1.Service {
+func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1alpha1.GitLabSource, receiveAdapterImage string) *servingv1.Service {
 	labels := map[string]string{
 		"receive-adapter": "gitlab",
 	}
@@ -330,17 +330,17 @@ func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1al
 		},
 	}
 	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI)}
-	return &servingv1alpha1.Service{
+	return &servingv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),
 			Namespace:    source.Namespace,
 			Labels:       labels,
 		},
-		Spec: servingv1alpha1.ServiceSpec{
-			RunLatest: &servingv1alpha1.RunLatestType{
-				Configuration: servingv1alpha1.ConfigurationSpec{
-					RevisionTemplate: servingv1alpha1.RevisionTemplateSpec{
-						Spec: servingv1alpha1.RevisionSpec{
+		Spec: servingv1.ServiceSpec{
+			RunLatest: &servingv1.RunLatestType{
+				Configuration: servingv1.ConfigurationSpec{
+					RevisionTemplate: servingv1.RevisionTemplateSpec{
+						Spec: servingv1.RevisionSpec{
 							ServiceAccountName: source.Spec.ServiceAccountName,
 							Container: corev1.Container{
 								Image: receiveAdapterImage,
@@ -355,15 +355,15 @@ func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1al
 	}
 }
 
-func (r *ReconcileGitLabSource) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource) (*servingv1alpha1.Service, error) {
+func (r *ReconcileGitLabSource) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
 	ctx := context.TODO()
-	list := &servingv1alpha1.ServiceList{}
+	list := &servingv1.ServiceList{}
 	err := r.List(ctx, &client.ListOptions{
 		Namespace:     source.Namespace,
 		LabelSelector: labels.Everything(),
 		Raw: &metav1.ListOptions{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: servingv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: servingv1.SchemeGroupVersion.String(),
 				Kind:       "Service",
 			},
 		},
@@ -378,16 +378,16 @@ func (r *ReconcileGitLabSource) getOwnedKnativeService(source *sourcesv1alpha1.G
 		}
 	}
 
-	return nil, apierrors.NewNotFound(servingv1alpha1.Resource("services"), "")
+	return nil, apierrors.NewNotFound(servingv1.Resource("services"), "")
 }
 
-func (r *ReconcileGitLabSource) waitForKnativeServiceReady(source *sourcesv1alpha1.GitLabSource) (*servingv1alpha1.Service, error) {
+func (r *ReconcileGitLabSource) waitForKnativeServiceReady(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
 	for attempts := 0; attempts < 4; attempts++ {
 		ksvc, err := r.getOwnedKnativeService(source)
 		if err != nil {
 			return nil, err
 		}
-		routeCondition := ksvc.Status.GetCondition(servingv1alpha1.ServiceConditionRoutesReady)
+		routeCondition := ksvc.Status.GetCondition(servingv1.ServiceConditionRoutesReady)
 		receiveAdapterDomain := ksvc.Status.Domain
 		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
 			return ksvc, nil

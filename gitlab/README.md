@@ -17,13 +17,13 @@ You will need to:
 1. Create the new API definition:
 
     ```shell
-    kubectl apply -f https://gitlab.com/triggermesh/gitlabsource/raw/master/config/crds/sources_v1alpha1_gitlabsource.yaml
+    kubectl apply -f https://github.com/tzununbekov/eventing-sources/gitlab/raw/master/config/crds/sources_v1alpha1_gitlabsource.yaml
     ```
 
 2. Launch the controller and set all the required objects:
 
     ```shell
-    wget -O release.yaml https://gitlab.com/triggermesh/gitlabsource/-/jobs/artifacts/master/raw/release.yaml?job=manifests
+    wget -O release.yaml https://github.com/tzununbekov/eventing-sources/gitlab/-/jobs/artifacts/master/raw/release.yaml?job=manifests
     kubectl apply -f release.yaml
     ```
 
@@ -91,7 +91,7 @@ spec:
 Enter the following command to create the service from `service.yaml`:
 
 ```shell
-kubectl -n default apply -f https://gitlab.com/triggermesh/gitlabsource/raw/master/message-dumper.yaml
+kubectl -n default apply -f https://github.com/tzununbekov/eventing-sources/gitlab/raw/master/message-dumper.yaml
 ```
 
 ### Create GitLab Tokens

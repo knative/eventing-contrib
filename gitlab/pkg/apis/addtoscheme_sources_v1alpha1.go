@@ -17,7 +17,7 @@ limitations under the License.
 package apis
 
 import (
-	"gitlab.com/triggermesh/gitlabsource/pkg/apis/sources/v1alpha1"
+	"github.com/tzununbekov/eventing-sources/gitlab/pkg/apis/sources/v1alpha1"
 )
 
 func init() {

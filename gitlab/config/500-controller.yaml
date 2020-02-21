@@ -37,14 +37,14 @@ spec:
         - /manager
         env:
         - name: GL_RA_IMAGE
-          value: registry.gitlab.com/triggermesh/gitlabsource/receive-adapter:0.1.4
+          value: registry.github.com/tzununbekov/eventing-sources/gitlab/receive-adapter:0.1.4
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
         - name: SECRET_NAME
           value: gitlabsource-webhook-server-secret
-        image: registry.gitlab.com/triggermesh/gitlabsource/controller:0.1.4
+        image: registry.github.com/tzununbekov/eventing-sources/gitlab/controller:0.1.4
         imagePullPolicy: Always
         name: manager
         ports:

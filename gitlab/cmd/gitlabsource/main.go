@@ -22,7 +22,7 @@ import (
 	"log"
 	"os"
 
-	"gitlab.com/triggermesh/gitlabsource/pkg/ra"
+	"github.com/tzununbekov/eventing-sources/gitlab/pkg/ra"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )

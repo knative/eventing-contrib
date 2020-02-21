@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"gitlab.com/triggermesh/gitlabsource/pkg/controller/gitlabsource"
+	"github.com/tzununbekov/eventing-sources/gitlab/pkg/controller/gitlabsource"
 )
 
 func init() {

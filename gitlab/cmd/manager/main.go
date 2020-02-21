@@ -20,9 +20,9 @@ import (
 	"flag"
 	"os"
 
-	"gitlab.com/triggermesh/gitlabsource/pkg/apis"
-	"gitlab.com/triggermesh/gitlabsource/pkg/controller"
-	"gitlab.com/triggermesh/gitlabsource/pkg/webhook"
+	"github.com/tzununbekov/eventing-sources/gitlab/pkg/apis"
+	"github.com/tzununbekov/eventing-sources/gitlab/pkg/controller"
+	"github.com/tzununbekov/eventing-sources/gitlab/pkg/webhook"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

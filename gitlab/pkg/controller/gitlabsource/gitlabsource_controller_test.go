@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/onsi/gomega"
-	sourcesv1alpha1 "gitlab.com/triggermesh/gitlabsource/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "github.com/tzununbekov/eventing-sources/gitlab/pkg/apis/sources/v1alpha1"
 	"golang.org/x/net/context"
 	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
