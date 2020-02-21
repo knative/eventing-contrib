@@ -24,8 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/knative/pkg/apis/duck"
-	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
 	sourcesv1alpha1 "github.com/tzununbekov/eventing-sources/gitlab/pkg/apis/sources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -35,6 +33,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"knative.dev/pkg/apis/duck"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -233,11 +233,9 @@ func (r *ReconcileGitLabSource) reconcile(source *sourcesv1alpha1.GitLabSource) 
 	if err != nil {
 		return err
 	}
+	hookOptions.url = ksvc.Status.URL.String()
 	if source.Spec.SslVerify {
-		hookOptions.url = "https://" + ksvc.Status.Domain
 		hookOptions.EnableSSLVerification = true
-	} else {
-		hookOptions.url = "http://" + ksvc.Status.Domain
 	}
 
 	baseUrl, err := getGitlabBaseUrl(source.Spec.ProjectUrl)
@@ -337,15 +335,17 @@ func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1al
 			Labels:       labels,
 		},
 		Spec: servingv1.ServiceSpec{
-			RunLatest: &servingv1.RunLatestType{
-				Configuration: servingv1.ConfigurationSpec{
-					RevisionTemplate: servingv1.RevisionTemplateSpec{
-						Spec: servingv1.RevisionSpec{
+			ConfigurationSpec: servingv1.ConfigurationSpec{
+				Template: servingv1.RevisionTemplateSpec{
+					Spec: servingv1.RevisionSpec{
+						PodSpec: corev1.PodSpec{
 							ServiceAccountName: source.Spec.ServiceAccountName,
-							Container: corev1.Container{
-								Image: receiveAdapterImage,
-								Env:   env,
-								Args:  containerArgs,
+							Containers: []corev1.Container{
+								{
+									Image: receiveAdapterImage,
+									Env:   env,
+									Args:  containerArgs,
+								},
 							},
 						},
 					},
@@ -358,7 +358,7 @@ func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1al
 func (r *ReconcileGitLabSource) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
 	ctx := context.TODO()
 	list := &servingv1.ServiceList{}
-	err := r.List(ctx, &client.ListOptions{
+	err := r.List(ctx, list, &client.ListOptions{
 		Namespace:     source.Namespace,
 		LabelSelector: labels.Everything(),
 		Raw: &metav1.ListOptions{
@@ -367,8 +367,7 @@ func (r *ReconcileGitLabSource) getOwnedKnativeService(source *sourcesv1alpha1.G
 				Kind:       "Service",
 			},
 		},
-	},
-		list)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +387,7 @@ func (r *ReconcileGitLabSource) waitForKnativeServiceReady(source *sourcesv1alph
 			return nil, err
 		}
 		routeCondition := ksvc.Status.GetCondition(servingv1.ServiceConditionRoutesReady)
-		receiveAdapterDomain := ksvc.Status.Domain
+		receiveAdapterDomain := ksvc.Status.URL.String()
 		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
 			return ksvc, nil
 		}

@@ -31,26 +31,18 @@ spec:
     spec:
       serviceAccountName: gitlab-controller-manager
       containers:
-      - args:
-        - --metrics-addr=127.0.0.1:8080
-        command:
-        - /manager
+      - name: manager
         env:
         - name: GL_RA_IMAGE
-          value: registry.github.com/tzununbekov/eventing-sources/gitlab/receive-adapter:0.1.4
+          value: github.com/tzununbekov/eventing-sources/gitlab/cmd/receive_adapter
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
         - name: SECRET_NAME
           value: gitlabsource-webhook-server-secret
-        image: registry.github.com/tzununbekov/eventing-sources/gitlab/controller:0.1.4
+        image: github.com/tzununbekov/eventing-sources/gitlab/cmd/controller
         imagePullPolicy: Always
-        name: manager
-        ports:
-        - containerPort: 9876
-          name: webhook-server
-          protocol: TCP
         resources:
           limits:
             cpu: 100m

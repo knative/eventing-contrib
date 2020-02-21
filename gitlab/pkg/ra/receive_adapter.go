@@ -17,14 +17,16 @@ limitations under the License.
 package ra
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/knative/pkg/cloudevents"
+	"github.com/tzununbekov/eventing-sources/pkg/kncloudevents"
+
+	// "knative.dev/pkg/cloudevents"
+	cloudevents "github.com/cloudevents/sdk-go"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
@@ -36,8 +38,17 @@ const (
 // GitLabReceiveAdapter converts incoming GitLab webhook events to
 // CloudEvents and then sends them to the specified Sink
 type GitLabReceiveAdapter struct {
-	Sink   string
-	Client *http.Client
+	// source string
+	client cloudevents.Client
+}
+
+// New creates an adapter to convert incoming GitHub webhook events to CloudEvents and
+// then sends them to the specified Sink
+func New(sinkURI string) (*GitLabReceiveAdapter, error) {
+	a := new(GitLabReceiveAdapter)
+	var err error
+	a.client, err = kncloudevents.NewDefaultClient(sinkURI)
+	return a, err
 }
 
 // HandleEvent is invoked whenever an event comes in from GitHub
@@ -50,10 +61,9 @@ func (ra *GitLabReceiveAdapter) HandleEvent(payload interface{}, header webhooks
 }
 
 func (ra *GitLabReceiveAdapter) handleEvent(payload interface{}, hdr http.Header) error {
-
 	gitLabEventType := hdr.Get("X-" + GLHeaderEvent)
 	extensions := map[string]interface{}{
-		cloudevents.HeaderExtensionsPrefix + GLHeaderEvent: hdr.Get("X-" + GLHeaderEvent),
+		GLHeaderEvent: gitLabEventType,
 	}
 
 	log.Printf("Handling %s", gitLabEventType)
@@ -71,48 +81,25 @@ func (ra *GitLabReceiveAdapter) handleEvent(payload interface{}, hdr http.Header
 
 func (ra *GitLabReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
 	extensions map[string]interface{}) error {
-	ctx := cloudevents.EventContext{
-		CloudEventsVersion: cloudevents.CloudEventsVersion,
-		EventType:          eventType,
-		EventID:            eventID,
-		EventTime:          time.Now(),
-		Source:             source,
-		Extensions:         extensions,
-	}
-	req, err := cloudevents.Binary.NewRequest(ra.Sink, payload, ctx)
-	if err != nil {
-		log.Printf("Failed to marshal the message: %+v : %s", payload, err)
-		return err
-	}
+	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event.SetID(eventID)
+	event.SetType(eventType)
+	event.SetSource(source)
+	event.SetDataContentType(cloudevents.ApplicationJSON)
+	event.SetData(payload)
 
-	log.Printf("Posting to %q", ra.Sink)
-	client := ra.Client
-	if client == nil {
-		client = &http.Client{}
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// TODO: in general, receive adapters may have to be able to retry for error cases.
-		log.Printf("response Status: %s", resp.Status)
-		body, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("response Body: %s", string(body))
-	}
-	return nil
+	_, _, err := ra.client.Send(context.Background(), event)
+	return err
 }
 
 func sourceFromGitLabEvent(gitLabEvent gitlab.Event, payload interface{}) string {
 	switch gitLabEvent {
 	case gitlab.PushEvents:
 		pe := payload.(gitlab.PushEventPayload)
-		return pe.Repository.URL
+		return pe.Project.HTTPURL
 	case gitlab.TagEvents:
 		te := payload.(gitlab.TagEventPayload)
-		return te.Repository.URL
+		return te.Project.HTTPURL
 	case gitlab.IssuesEvents:
 		ie := payload.(gitlab.IssueEventPayload)
 		return ie.ObjectAttributes.URL
@@ -133,7 +120,7 @@ func sourceFromGitLabEvent(gitLabEvent gitlab.Event, payload interface{}) string
 		return pe.ObjectAttributes.URL
 	case gitlab.BuildEvents:
 		be := payload.(gitlab.BuildEventPayload)
-		return be.Repository.URL
+		return be.Repository.Homepage
 	}
 	return ""
 }

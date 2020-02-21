@@ -287,6 +287,14 @@
   version = "v0.1.0"
 
 [[projects]]
+  digest = "1:340497a512995aa69c0add901d79a2096b3449d35a44a6f1f1115091a9f8c687"
+  name = "github.com/go-logr/zapr"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "03f06a783fbb7dfaf3f629c7825480e43a7105e6"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:fcd8ddc48ce648d5fbb36029fe3dd98f29c03377eea5c4a3c436701b0e3f2774"
   name = "github.com/gobuffalo/envy"
   packages = ["."]
@@ -544,6 +552,20 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:41933d387bfa3eaa6a82647914ed7044f7b8355764c24fb920892bc8c03ef0c3"
+  name = "github.com/hpcloud/tail"
+  packages = [
+    ".",
+    "ratelimiter",
+    "util",
+    "watch",
+    "winfile",
+  ]
+  pruneopts = "NUT"
+  revision = "a30252cb686a21eb2d0b98132633053ec2f7f1e5"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:7c47a990a91ab4922f4009c8ba8dcf35dad08e2b697cf26ea87eaae90e3f7aa1"
   name = "github.com/imdario/mergo"
   packages = ["."]
@@ -760,6 +782,56 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:dbcdf7f85e0ba1aa714561730c7b07e37bce658a00d6f7376378564d4db1587a"
+  name = "github.com/onsi/ginkgo"
+  packages = [
+    ".",
+    "config",
+    "internal/codelocation",
+    "internal/containernode",
+    "internal/failer",
+    "internal/leafnodes",
+    "internal/remote",
+    "internal/spec",
+    "internal/spec_iterator",
+    "internal/specrunner",
+    "internal/suite",
+    "internal/testingtproxy",
+    "internal/writer",
+    "reporters",
+    "reporters/stenographer",
+    "reporters/stenographer/support/go-colorable",
+    "reporters/stenographer/support/go-isatty",
+    "types",
+  ]
+  pruneopts = "NUT"
+  revision = "40598150331533e3cd497f21dcce387dae84b561"
+  version = "v1.12.0"
+
+[[projects]]
+  digest = "1:8aa564e1aef6dd87089b6ccea4b75ab30cf368088fc8bd87ff435ba82f59a7b3"
+  name = "github.com/onsi/gomega"
+  packages = [
+    ".",
+    "format",
+    "gbytes",
+    "gexec",
+    "internal/assertion",
+    "internal/asyncassertion",
+    "internal/oraclematcher",
+    "internal/testingtsupport",
+    "matchers",
+    "matchers/support/goraph/bipartitegraph",
+    "matchers/support/goraph/edge",
+    "matchers/support/goraph/node",
+    "matchers/support/goraph/util",
+    "types",
+  ]
+  pruneopts = "NUT"
+  revision = "6be6c439588487cd908a3a700795660c2a16dfec"
+  version = "v1.9.0"
+
+[[projects]]
   digest = "1:1a0de55901552615e2b2f24bdb51431634165e74745b042a3ec11c3e97ce5843"
   name = "github.com/openzipkin/zipkin-go"
   packages = [
@@ -917,6 +989,14 @@
   version = "v12.7.0"
 
 [[projects]]
+  digest = "1:b87b1d9d5f1c930120d25bc4e9d10e5f8c8bca3c8e56480f97b3c9ea4d4eadc9"
+  name = "github.com/xanzy/go-gitlab"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e42c1f92fca9b60ede60a0a92d43056d33dbfb75"
+  version = "v0.26.0"
+
+[[projects]]
   digest = "1:3a4c90791db3bf894a26cf6ffc0f792a31d0f225664c38b0577f02a36bc0cda7"
   name = "go.etcd.io/bbolt"
   packages = ["."]
@@ -1036,11 +1116,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:df0d218b9fa9056a1281701152498ce98e6508d12fcc9a3392bdb3c33bb6599d"
+  digest = "1:1ee228610f331798b7f0921c1c7c0a1c225154af4324f59117e90195fe78947b"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
+    "html",
+    "html/atom",
+    "html/charset",
     "http/httpguts",
     "http2",
     "http2/h2c",
@@ -1098,11 +1181,21 @@
   revision = "f43be2a4598cf3a47be9f94f0c28197ed9eae611"
 
 [[projects]]
-  digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
+  digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
   name = "golang.org/x/text"
   packages = [
     "collate",
     "collate/build",
+    "encoding",
+    "encoding/charmap",
+    "encoding/htmlindex",
+    "encoding/internal",
+    "encoding/internal/identifier",
+    "encoding/japanese",
+    "encoding/korean",
+    "encoding/simplifiedchinese",
+    "encoding/traditionalchinese",
+    "encoding/unicode",
     "internal/colltab",
     "internal/gen",
     "internal/language",
@@ -1110,7 +1203,9 @@
     "internal/tag",
     "internal/triegen",
     "internal/ucd",
+    "internal/utf8internal",
     "language",
+    "runes",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -1299,6 +1394,17 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:c63d2fd3adc66af961b402d198452965c07126f0945be5fb721f6a9526652004"
+  name = "gopkg.in/go-playground/webhooks.v3"
+  packages = [
+    ".",
+    "gitlab",
+  ]
+  pruneopts = "NUT"
+  revision = "8ffb2ffc32b7af2c7e940944eccba4dcd66c692a"
+  version = "v3.13.0"
+
+[[projects]]
   digest = "1:b5744640002f710f652b21873d0b70324531b67fc65a0dbab20bca45bac224ca"
   name = "gopkg.in/go-playground/webhooks.v5"
   packages = ["github"]
@@ -1379,6 +1485,14 @@
   pruneopts = "NUT"
   revision = "99a8ce2fbf8b8087b6ed12a37c61b10f04070043"
   version = "v1.1.0"
+
+[[projects]]
+  branch = "v1"
+  digest = "1:8fb1ccb16a6cfecbfdfeb84d8ea1cc7afa8f9ef16526bc2326f72d993e32cef1"
+  name = "gopkg.in/tomb.v1"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
   digest = "1:accc3bfe4e404aa53ac3621470e7cf9fce1efe48f0fabcfe6d12a72579d9d91f"
@@ -2080,7 +2194,7 @@
   revision = "01c075fbeae4b089793fcca6fc855d31e1628cad"
 
 [[projects]]
-  digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
+  digest = "1:8c0691e0782560c6dc4f48e90e7c0c5c3ce9eb7f2b8a6562100e8a65ad6234ef"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/cache",
@@ -2091,6 +2205,8 @@
     "pkg/client/fake",
     "pkg/controller",
     "pkg/controller/controllerutil",
+    "pkg/envtest",
+    "pkg/envtest/printer",
     "pkg/event",
     "pkg/handler",
     "pkg/healthz",
@@ -2101,6 +2217,7 @@
     "pkg/internal/recorder",
     "pkg/leaderelection",
     "pkg/log",
+    "pkg/log/zap",
     "pkg/manager",
     "pkg/manager/signals",
     "pkg/metrics",
@@ -2108,6 +2225,7 @@
     "pkg/reconcile",
     "pkg/recorder",
     "pkg/runtime/inject",
+    "pkg/runtime/log",
     "pkg/runtime/scheme",
     "pkg/runtime/signals",
     "pkg/scheme",
@@ -2146,6 +2264,18 @@
   version = "v0.2.2"
 
 [[projects]]
+  digest = "1:79012a83a6630d5e3ec068e6e8dd44d199393f53ab05e741b832abaa1ce3c756"
+  name = "sigs.k8s.io/testing_frameworks"
+  packages = [
+    "integration",
+    "integration/addr",
+    "integration/internal",
+  ]
+  pruneopts = "NUT"
+  revision = "c7087048c932a346b910a2240f3a053e544eb352"
+  version = "v0.1.2"
+
+[[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
   name = "sigs.k8s.io/yaml"
   packages = ["."]
@@ -2182,9 +2312,11 @@
     "github.com/kelseyhightower/envconfig",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
+    "github.com/onsi/gomega",
     "github.com/robfig/cron",
     "github.com/slinkydeveloper/loadastic/common",
     "github.com/slinkydeveloper/loadastic/kafka",
+    "github.com/xanzy/go-gitlab",
     "go.opencensus.io/plugin/ochttp",
     "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.opencensus.io/stats",
@@ -2196,6 +2328,8 @@
     "golang.org/x/net/context",
     "golang.org/x/net/http2",
     "golang.org/x/oauth2",
+    "gopkg.in/go-playground/webhooks.v3",
+    "gopkg.in/go-playground/webhooks.v3/gitlab",
     "gopkg.in/go-playground/webhooks.v5/github",
     "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
@@ -2241,6 +2375,193 @@
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/code-generator/cmd/deepcopy-gen",
+    "knative.dev/eventing-contrib/awssqs/pkg/adapter",
+    "knative.dev/eventing-contrib/awssqs/pkg/apis",
+    "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/informers/externalversions/sources",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/informers/externalversions/sources/v1alpha1",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/injection/informers/sources/factory",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/injection/informers/sources/v1alpha1/awssqssource",
+    "knative.dev/eventing-contrib/awssqs/pkg/client/listers/sources/v1alpha1",
+    "knative.dev/eventing-contrib/awssqs/pkg/reconciler",
+    "knative.dev/eventing-contrib/awssqs/pkg/reconciler/resources",
+    "knative.dev/eventing-contrib/camel/source/pkg/apis",
+    "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/informers/externalversions/sources",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/informers/externalversions/sources/v1alpha1",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/injection/informers/sources/factory",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/injection/informers/sources/v1alpha1/camelsource",
+    "knative.dev/eventing-contrib/camel/source/pkg/client/listers/sources/v1alpha1",
+    "knative.dev/eventing-contrib/camel/source/pkg/install",
+    "knative.dev/eventing-contrib/camel/source/pkg/reconciler",
+    "knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources",
+    "knative.dev/eventing-contrib/ceph/pkg/adapter",
+    "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/adapter",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/informers/externalversions/sources",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/informers/externalversions/sources/v1alpha1",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/sources/factory",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/sources/v1alpha1/couchdbsource",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/client/listers/sources/v1alpha1",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/reconciler",
+    "knative.dev/eventing-contrib/couchdb/source/pkg/reconciler/resources",
+    "knative.dev/eventing-contrib/github/pkg/adapter",
+    "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "knative.dev/eventing-contrib/github/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/github/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/github/pkg/client/informers/externalversions/sources",
+    "knative.dev/eventing-contrib/github/pkg/client/informers/externalversions/sources/v1alpha1",
+    "knative.dev/eventing-contrib/github/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/github/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/github/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/github/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/factory",
+    "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource",
+    "knative.dev/eventing-contrib/github/pkg/client/listers/sources/v1alpha1",
+    "knative.dev/eventing-contrib/github/pkg/reconciler",
+    "knative.dev/eventing-contrib/github/pkg/reconciler/resources",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/messaging",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/dispatcher",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/dispatcher",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/testing",
+    "knative.dev/eventing-contrib/kafka/channel/pkg/utils",
+    "knative.dev/eventing-contrib/kafka/common/pkg/kafka",
+    "knative.dev/eventing-contrib/kafka/source/pkg/adapter",
+    "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources",
+    "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/informers/externalversions/sources",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/informers/externalversions/sources/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource",
+    "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1",
+    "knative.dev/eventing-contrib/kafka/source/pkg/reconciler",
+    "knative.dev/eventing-contrib/kafka/source/pkg/reconciler/resources",
+    "knative.dev/eventing-contrib/natss/pkg/apis/messaging",
+    "knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
+    "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging",
+    "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/natss/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/natss/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/natss/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel",
+    "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1",
+    "knative.dev/eventing-contrib/natss/pkg/dispatcher",
+    "knative.dev/eventing-contrib/natss/pkg/dispatcher/testing",
+    "knative.dev/eventing-contrib/natss/pkg/reconciler",
+    "knative.dev/eventing-contrib/natss/pkg/reconciler/controller",
+    "knative.dev/eventing-contrib/natss/pkg/reconciler/controller/resources",
+    "knative.dev/eventing-contrib/natss/pkg/reconciler/dispatcher",
+    "knative.dev/eventing-contrib/natss/pkg/reconciler/testing",
+    "knative.dev/eventing-contrib/natss/pkg/stanutil",
+    "knative.dev/eventing-contrib/natss/pkg/util",
+    "knative.dev/eventing-contrib/pkg/apis/sources",
+    "knative.dev/eventing-contrib/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing-contrib/pkg/channel",
+    "knative.dev/eventing-contrib/pkg/controller/sdk",
+    "knative.dev/eventing-contrib/pkg/controller/sinks",
+    "knative.dev/eventing-contrib/pkg/controller/testing",
+    "knative.dev/eventing-contrib/pkg/kncloudevents",
+    "knative.dev/eventing-contrib/pkg/reconciler/eventtype",
+    "knative.dev/eventing-contrib/pkg/reconciler/eventtype/resources",
+    "knative.dev/eventing-contrib/prometheus/pkg/adapter",
+    "knative.dev/eventing-contrib/prometheus/pkg/apis/sources/v1alpha1",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/clientset/versioned",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/clientset/versioned/scheme",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/informers/externalversions",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/informers/externalversions/sources",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/informers/externalversions/sources/v1alpha1",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/injection/client",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/injection/client/fake",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/factory",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/factory/fake",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/sources/v1alpha1/prometheussource",
+    "knative.dev/eventing-contrib/prometheus/pkg/client/listers/sources/v1alpha1",
+    "knative.dev/eventing-contrib/prometheus/pkg/reconciler",
+    "knative.dev/eventing-contrib/prometheus/pkg/reconciler/resources",
+    "knative.dev/eventing-contrib/test",
+    "knative.dev/eventing-contrib/test/e2e/helpers",
+    "knative.dev/eventing-contrib/test/lib",
+    "knative.dev/eventing-contrib/test/lib/resources",
     "knative.dev/eventing/pkg/adapter",
     "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
@@ -2333,10 +2654,12 @@
     "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
+    "sigs.k8s.io/controller-runtime/pkg/envtest",
     "sigs.k8s.io/controller-runtime/pkg/handler",
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
     "sigs.k8s.io/controller-runtime/pkg/runtime/inject",
+    "sigs.k8s.io/controller-runtime/pkg/runtime/log",
     "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
     "sigs.k8s.io/controller-runtime/pkg/source",

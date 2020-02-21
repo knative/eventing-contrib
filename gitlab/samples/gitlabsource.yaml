@@ -10,8 +10,8 @@ metadata:
   name: gitlabsecret
 type: Opaque
 stringData:
-  accessToken: "<access_token>"
-  secretToken: "asdfasfdsaf"
+  accessToken: "<access token>"
+  secretToken: "<webhook secret>"
   
 ---
 apiVersion: sources.eventing.triggermesh.dev/v1alpha1
@@ -22,7 +22,7 @@ spec:
   eventTypes:
   - push_events
   - issues_events
-  projectUrl: "https://gitlab.com/tzununbekov/lab-test"
+  projectUrl: "<project url>"
   accessToken:
     secretKeyRef:
       name: gitlabsecret
