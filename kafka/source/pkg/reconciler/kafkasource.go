@@ -85,10 +85,10 @@ func newDeploymentFailed(namespace, name string, err error) pkgreconciler.Event 
 }
 
 type Reconciler struct {
-	// KubeClientSet allows us to talk to the k8s for core APIs
+	// kubeClientSet allows us to talk to the k8s for core APIs
 	KubeClientSet kubernetes.Interface
 
-	// EventingClientSet allows us to configure Eventing objects
+	// eventingClientSet allows us to configure Eventing objects
 	EventingClientSet eventingclientset.Interface
 
 	receiveAdapterImage string
