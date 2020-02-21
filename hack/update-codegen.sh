@@ -73,7 +73,7 @@ ${GOPATH}/bin/deepcopy-gen \
   -i knative.dev/eventing-contrib/couchdb/source/pkg/apis \
   -i knative.dev/eventing-contrib/camel/source/pkg/apis \
   -i knative.dev/eventing-contrib/github/pkg/apis \
-  -i knative.dev/eventing-contrib/github/pkg/apis
+  -i knative.dev/eventing-contrib/gitlab/pkg/apis
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
