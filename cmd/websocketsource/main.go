@@ -19,9 +19,9 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
-
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"log"
+	"os"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -47,6 +47,11 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	k_sink := os.Getenv("K_SINK")
+	if k_sink != "" {
+		sink = k_sink
+	}
 
 	// "source" flag must not be empty for operation.
 	if source == "" {
