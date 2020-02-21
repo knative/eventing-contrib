@@ -287,7 +287,7 @@ func TestReconcile(t *testing.T) {
 		ctx, cancel := context.WithCancel(ctx)
 		ctx = addressable.WithDuck(ctx)
 
-		r := &reconciler{
+		r := &reconcilerxx{
 			client:       c,
 			scheme:       tc.Scheme,
 			recorder:     recorder,

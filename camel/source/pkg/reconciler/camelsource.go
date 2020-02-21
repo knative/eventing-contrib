@@ -76,7 +76,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 		AgentName: controllerAgentName,
 		Parent:    &v1alpha1.CamelSource{},
 		Owns:      []runtime.Object{&camelv1.Integration{}},
-		Reconciler: &reconciler{
+		Reconciler: &reconcilerxx{
 			recorder:     mgr.GetEventRecorderFor(controllerAgentName),
 			scheme:       mgr.GetScheme(),
 			sinkResolver: resolver.NewURIResolver(ctx, func(types.NamespacedName) {}),
@@ -90,7 +90,7 @@ func Add(mgr manager.Manager, logger *zap.SugaredLogger) error {
 	return err
 }
 
-type reconciler struct {
+type reconcilerxx struct {
 	client       client.Client
 	scheme       *runtime.Scheme
 	recorder     record.EventRecorder
@@ -110,7 +110,7 @@ type reconciler struct {
 // When no specific image is requested by the user, the Camel K operator will figure out how to construct an IntegrationContext.
 
 // Reconcile compares the actual state with the desired, and attempts to converge the two.
-func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error {
+func (r *reconcilerxx) Reconcile(ctx context.Context, object runtime.Object) error {
 	logger := logging.FromContext(ctx)
 
 	source, ok := object.(*v1alpha1.CamelSource)
@@ -170,7 +170,7 @@ func (r *reconciler) Reconcile(ctx context.Context, object runtime.Object) error
 	return nil
 }
 
-func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, sinkURI string) (*camelv1.Integration, error) {
+func (r *reconcilerxx) reconcileIntegration(ctx context.Context, source *v1alpha1.CamelSource, sinkURI string) (*camelv1.Integration, error) {
 	logger := logging.FromContext(ctx)
 	args := &resources.CamelArguments{
 		Name:      source.Name,
@@ -229,7 +229,7 @@ func (r *reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 	return integration, nil
 }
 
-func (r *reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelSource) (*camelv1.Integration, error) {
+func (r *reconcilerxx) getIntegration(ctx context.Context, source *v1alpha1.CamelSource) (*camelv1.Integration, error) {
 	logger := logging.FromContext(ctx)
 
 	list := &camelv1.IntegrationList{}
@@ -258,7 +258,7 @@ func (r *reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelS
 	return nil, k8serrors.NewNotFound(schema.GroupResource{}, "")
 }
 
-func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.CamelSource, args *resources.CamelArguments) (*camelv1.Integration, error) {
+func (r *reconcilerxx) createIntegration(ctx context.Context, source *v1alpha1.CamelSource, args *resources.CamelArguments) (*camelv1.Integration, error) {
 	integration, err := resources.MakeIntegration(args)
 	if err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func (r *reconciler) createIntegration(ctx context.Context, source *v1alpha1.Cam
 	return integration, nil
 }
 
-func (r *reconciler) InjectClient(c client.Client) error {
+func (r *reconcilerxx) InjectClient(c client.Client) error {
 	r.client = c
 	return nil
 }

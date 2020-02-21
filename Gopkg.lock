@@ -65,11 +65,16 @@
   version = "v1.24.0"
 
 [[projects]]
-  digest = "1:e2c0a049c5ce352f6a387f7327d86ce2ce4371ec4584e89df7541ff911b397d7"
+  digest = "1:4e83ce4303951d1712f2e4b9773687378d5e504bd392deb29530cb59456e8db4"
   name = "github.com/apache/camel-k"
   packages = [
+    "pkg/apis",
     "pkg/apis/camel/v1",
     "pkg/apis/camel/v1/knative",
+    "pkg/client",
+    "pkg/util/log",
+    "pkg/util/monitoring",
+    "pkg/util/openshift",
   ]
   pruneopts = "NUT"
   revision = "f448eb9e21f8df79950e7b93ccafbaa922bdeea6"
@@ -175,6 +180,17 @@
   ]
   pruneopts = "NUT"
   revision = "427e8cf75237fdc7d4bb6c496398d7288efb8921"
+
+[[projects]]
+  digest = "1:2a3bd11bcca3a9f261030069917f4fe95056d66f7c2f9525217f294ce0522622"
+  name = "github.com/coreos/prometheus-operator"
+  packages = [
+    "pkg/apis/monitoring",
+    "pkg/apis/monitoring/v1",
+  ]
+  pruneopts = "NUT"
+  revision = "89f35ef22db0dc24c523bf8be473bcbcf9ac81f6"
+  version = "v0.36.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -626,6 +642,14 @@
   version = "v0.10.0"
 
 [[projects]]
+  digest = "1:58999a98719fddbac6303cb17e8d85b945f60b72f48e3a2df6b950b97fa926f1"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
+
+[[projects]]
   branch = "master"
   digest = "1:7bbccd3dd7998f2a180264ec1d12e362ed8e02f55ea7b82ac0d0f48ffa2d8888"
   name = "github.com/mailru/easyjson"
@@ -752,6 +776,26 @@
   version = "v1.0.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ee39d416c356010fed76c995fb6bd64af15b689545ae4565caa29a2cb08e99e1"
+  name = "github.com/openshift/api"
+  packages = [
+    "apps/v1",
+    "authorization/v1",
+    "build/v1",
+    "console/v1",
+    "image/docker10",
+    "image/dockerpre012",
+    "image/v1",
+    "pkg/serialization",
+    "project/v1",
+    "route/v1",
+    "template/v1",
+  ]
+  pruneopts = "NUT"
+  revision = "c99157bc6492218400b18cde7f66510f9ee56a9a"
+
+[[projects]]
   digest = "1:1a0de55901552615e2b2f24bdb51431634165e74745b042a3ec11c3e97ce5843"
   name = "github.com/openzipkin/zipkin-go"
   packages = [
@@ -765,6 +809,14 @@
   pruneopts = "NUT"
   revision = "c29478e51bfb2e9c93e0e9f5e015e5993a490399"
   version = "v0.2.2"
+
+[[projects]]
+  digest = "1:78a7e493e6a516c6a3f7a88b2fc79b3cf332278bad7e85c32417af9506aee39a"
+  name = "github.com/operator-framework/operator-sdk"
+  packages = ["pkg/k8sutil"]
+  pruneopts = "NUT"
+  revision = "ffaf278993c8fcb00c6f527c9f20091eb8dd3352"
+  version = "v0.15.2"
 
 [[projects]]
   digest = "1:ea86ccc0e0aee36342acb8960743166c68667d499a0db97ca416f3fd0113c58a"
@@ -872,6 +924,14 @@
   pruneopts = "NUT"
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:f4aaa07a6c33f2b354726d0571acbc8ca118837c75709f6353203ae1a3f8eeab"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
+  version = "v1.4.2"
 
 [[projects]]
   branch = "master"
@@ -2153,6 +2213,7 @@
     "github.com/Shopify/sarama",
     "github.com/apache/camel-k/pkg/apis/camel/v1",
     "github.com/apache/camel-k/pkg/apis/camel/v1/knative",
+    "github.com/apache/camel-k/pkg/client",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",
