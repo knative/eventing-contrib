@@ -17,6 +17,7 @@ aliases:
 
   gitlab-approvers:
     - sebgoa
+    - tzununbekov
   gitlab-reviewers:
     - sebgoa
     - tzununbekov
