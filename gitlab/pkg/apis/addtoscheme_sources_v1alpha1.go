@@ -17,7 +17,7 @@ limitations under the License.
 package apis
 
 import (
-	"github.com/tzununbekov/eventing-sources/gitlab/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
 )
 
 func init() {

@@ -22,9 +22,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/tzununbekov/eventing-sources/gitlab/pkg/adapter"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	gitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
+	ra "knative.dev/eventing-contrib/gitlab/pkg/adapter"
 )
 
 const (
@@ -56,7 +56,7 @@ func main() {
 
 	log.Printf("Sink is: %q", *sink)
 
-	ra, err := adapter.New(*sink)
+	ra, err := ra.New(*sink)
 	if err != nil {
 		log.Fatalf("Failed to create gitlab adapter: %s", err)
 	}

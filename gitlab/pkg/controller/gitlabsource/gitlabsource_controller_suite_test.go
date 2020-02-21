@@ -24,9 +24,9 @@ import (
 	"testing"
 
 	"github.com/onsi/gomega"
-	"github.com/tzununbekov/eventing-sources/gitlab/pkg/apis"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"knative.dev/eventing-contrib/gitlab/pkg/apis"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"

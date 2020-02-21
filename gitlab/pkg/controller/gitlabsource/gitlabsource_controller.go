@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	sourcesv1alpha1 "github.com/tzununbekov/eventing-sources/gitlab/pkg/apis/sources/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
 	"knative.dev/pkg/apis/duck"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"

@@ -20,10 +20,10 @@ import (
 	"flag"
 	"os"
 
-	"github.com/tzununbekov/eventing-sources/gitlab/pkg/apis"
-	"github.com/tzununbekov/eventing-sources/gitlab/pkg/controller"
-	"github.com/tzununbekov/eventing-sources/gitlab/pkg/webhook"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"knative.dev/eventing-contrib/gitlab/pkg/apis"
+	"knative.dev/eventing-contrib/gitlab/pkg/controller"
+	"knative.dev/eventing-contrib/gitlab/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"

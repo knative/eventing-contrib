@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/tzununbekov/eventing-sources/gitlab/pkg/controller/gitlabsource"
+	"knative.dev/eventing-contrib/gitlab/pkg/controller/gitlabsource"
 )
 
 func init() {

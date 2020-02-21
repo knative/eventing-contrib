@@ -21,12 +21,12 @@ import (
 	"time"
 
 	"github.com/onsi/gomega"
-	sourcesv1alpha1 "github.com/tzununbekov/eventing-sources/gitlab/pkg/apis/sources/v1alpha1"
 	"golang.org/x/net/context"
 	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"

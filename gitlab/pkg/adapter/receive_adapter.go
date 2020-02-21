@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/tzununbekov/eventing-sources/pkg/kncloudevents"
+	"knative.dev/eventing-contrib/pkg/kncloudevents"
 
 	// "knative.dev/pkg/cloudevents"
 	cloudevents "github.com/cloudevents/sdk-go"
