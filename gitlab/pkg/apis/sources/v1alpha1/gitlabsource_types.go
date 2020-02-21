@@ -19,12 +19,13 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 // Check that GitLabSource implements the Conditions duck type.
-var _ = duck.VerifyType(&GitLabSource{}, &duckv1alpha1.Conditions{})
+var _ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
 
 // GitLabSourceSpec defines the desired state of GitLabSource
 type GitLabSourceSpec struct {
@@ -75,14 +76,14 @@ type SecretValueFromSource struct {
 const (
 	// GitLabSourceConditionReady has status True when the
 	// GitLabSource is ready to send events.
-	GitLabSourceConditionReady = duckv1alpha1.ConditionReady
+	GitLabSourceConditionReady = apis.ConditionReady
 
 	// GitLabSourceConditionSinkProvided has status True when the
 	// GitlabbSource has been configured with a sink target.
-	GitLabSourceConditionSinkProvided duckv1alpha1.ConditionType = "SinkProvided"
+	GitLabSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
 )
 
-var gitLabSourceCondSet = duckv1alpha1.NewLivingConditionSet(
+var gitLabSourceCondSet = apis.NewLivingConditionSet(
 	GitLabSourceConditionSinkProvided)
 
 // GitLabSourceStatus defines the observed state of GitLabSource
@@ -92,7 +93,7 @@ type GitLabSourceStatus struct {
 	// +optional
 	// +patchMergeKey=type
 	// +patchStrategy=merge
-	Conditions duckv1alpha1.Conditions `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	duckv1.Status `json:",inline"`
 
 	// ID of the project hook registered with GitLab
 	Id string `json:"Id,omitempty"`
@@ -104,7 +105,7 @@ type GitLabSourceStatus struct {
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
-func (s *GitLabSourceStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1alpha1.Condition {
+func (s *GitLabSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return gitLabSourceCondSet.Manage(s).GetCondition(t)
 }
 
