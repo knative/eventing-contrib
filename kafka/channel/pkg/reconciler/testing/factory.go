@@ -47,7 +47,7 @@ type Ctor func(context.Context, *Listers, configmap.Watcher) controller.Reconcil
 
 // MakeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
 func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
-	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList, *FakeStatsReporter) {
+	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList) {
 		ls := NewListers(r.Objects)
 
 		ctx := context.Background()
@@ -67,7 +67,6 @@ func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 
 		eventRecorder := record.NewFakeRecorder(maxEventBufferSize)
 		ctx = controller.WithEventRecorder(ctx, eventRecorder)
-		statsReporter := &FakeStatsReporter{}
 
 		// Set up our Controller from the fakes.
 		c := ctor(ctx, &ls, configmap.NewStaticWatcher())
@@ -99,6 +98,6 @@ func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient, legacy}
 		eventList := EventList{Recorder: eventRecorder}
 
-		return c, actionRecorderList, eventList, statsReporter
+		return c, actionRecorderList, eventList
 	}
 }

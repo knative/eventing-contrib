@@ -87,7 +87,7 @@ func main() {
 		SecretName:  "messaging-webhook-certs",
 	})
 
-	sharedmain.MainWithContext(ctx, "kafkachannel_webhook",
+	sharedmain.WebhookMainWithContext(ctx, "kafkachannel_webhook",
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewValidationAdmissionController,

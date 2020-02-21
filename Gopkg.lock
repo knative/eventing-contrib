@@ -1827,7 +1827,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d724b1d56db9ddb96244c9af7442b89a2fc30c66d14e3ee78be6a498b33af98e"
+  digest = "1:901914fe9b0501359274028ab7610991322c62b19ca58d91d76470e3e348b1ea"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1937,11 +1937,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "da0255d70cbe0d7598a02aa64ac2da4639a564a8"
+  revision = "dd11517ceb055d44e3703e164f2b216bef3dc7c2"
 
 [[projects]]
   branch = "master"
-  digest = "1:f44b87ebe4aefb51530107b1d09dce6b81fc35c45117e4025f1dbcb33315a4a8"
+  digest = "1:16814131a4f11940f3aaac583cd2189b4d40b68025c241306105a0d47d078bde"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2013,7 +2013,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "d9a38f13e8b9aa736f714b793ee28788de1b30e0"
+  revision = "3bada55aab374d14436636b9f2aafc1108f5c81a"
 
 [[projects]]
   branch = "master"
