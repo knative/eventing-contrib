@@ -86,7 +86,7 @@ func (o Options) GetTrackerLease() time.Duration {
 
 // Base implements the core controller logic, given a Reconciler.
 type Base struct {
-	// kubeClientSet allows us to talk to the k8s for core APIs
+	// KubeClientSet allows us to talk to the k8s for core APIs
 	KubeClientSet kubernetes.Interface
 
 	// DynamicClientSet allows us to configure pluggable Build objects
