@@ -618,14 +618,6 @@
   version = "v1.9.1"
 
 [[projects]]
-  digest = "1:5a77e05693f7047aea75418c1a1d28f141d1fd3dd25c82392d91972a59937a30"
-  name = "github.com/knative/serving"
-  packages = ["pkg/apis/serving/v1beta1"]
-  pruneopts = "NUT"
-  revision = "e4922e8a9ec460e78ab02ef598e042650131d6fe"
-  version = "v0.12.1"
-
-[[projects]]
   branch = "master"
   digest = "1:7bbccd3dd7998f2a180264ec1d12e362ed8e02f55ea7b82ac0d0f48ffa2d8888"
   name = "github.com/mailru/easyjson"
@@ -2017,7 +2009,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8b392d7f7602c1139aa94093a9419367f1af4e69ced37e502817ef1123d7c102"
+  digest = "1:d4bc8e95da49615e127d2b66e001a1ae3399e5e8cb6c850335c1ff9bfa28afe1"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2054,9 +2046,6 @@
     "pkg/client/listers/serving/v1",
     "pkg/client/listers/serving/v1alpha1",
     "pkg/client/listers/serving/v1beta1",
-    "pkg/gc",
-    "pkg/network",
-    "pkg/reconciler/route/config",
   ]
   pruneopts = "NUT"
   revision = "52ad6dacd360230a133fdc71b498edda49de6186"
@@ -2173,7 +2162,6 @@
     "github.com/google/uuid",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
-    "github.com/knative/serving/pkg/apis/serving/v1beta1",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
     "github.com/robfig/cron",
@@ -2315,6 +2303,7 @@
     "knative.dev/pkg/webhook/resourcesemantics/validation",
     "knative.dev/serving/pkg/apis/serving/v1",
     "knative.dev/serving/pkg/apis/serving/v1alpha1",
+    "knative.dev/serving/pkg/apis/serving/v1beta1",
     "knative.dev/serving/pkg/client/clientset/versioned",
     "knative.dev/serving/pkg/client/injection/client",
     "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service",
