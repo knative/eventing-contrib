@@ -366,6 +366,50 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 }
 
 func TestFromKafkaMessage(t *testing.T) {
+	testCases := map[string]struct {
+		message         *sarama.ConsumerMessage
+		want            *cloudevents.Event
+	}{
+		"1.0": {
+			message: &sarama.ConsumerMessage{
+			Headers: []*sarama.RecordHeader{
+		{
+			Key:   []byte("ce_k1"),
+			Value: []byte("v1"),
+		},
+		{
+			Key:   []byte("ce_id"),
+			Value: []byte("im-a-snowflake"),
+		},
+		{
+			Key:   []byte("ce_source"),
+			Value: []byte("testsource"),
+		},
+		{
+			Key:   []byte("ce_type"),
+			Value: []byte("testtype"),
+		},
+		{
+			Key:   []byte("ce_extensionfield"),
+			Value: []byte("testextension"),
+		},
+		{
+			Key:   []byte("anotherkafkaheader"),
+			Value: []byte("notpassedthrough"),
+		},
+		},
+			Value: []byte("data"),
+		},
+		want: cloudevents.NewEvent(cloudevents.VersionV1)
+			want.SetExtension("k1", "v1")
+			want.SetSource("testsource")
+			want.SetType("testtype")
+			want.SetID("im-a-snowflake")
+			want.SetExtension("extensionfield", "testextension")
+			want.SetData(data)
+
+
+
 	data := []byte("data")
 	ctx := context.Background()
 	kafkaMessage := &sarama.ConsumerMessage{

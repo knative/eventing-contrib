@@ -328,8 +328,20 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 	return cr, nil
 }
 
+func stupidFilter(headers []*sarama.RecordHeader) string {
+	for _, header := range headers {
+		h := string(header.Key)
+		v := string(header.Value)
+		switch h {
+		case "ce_specversion":
+			return v
+		}
+	}
+	return "1.0"
+}
+
 func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage) *cloudevents.Event {
-	event := &Event{}
+	event := cloudevents.NewEvent(stupidFilter(kafkaMessage.Headers))
 	for _, header := range kafkaMessage.Headers {
 		h := string(header.Key)
 		v := string(header.Value)
@@ -366,7 +378,7 @@ func fromKafkaMessage(ctx context.Context, kafkaMessage *sarama.ConsumerMessage)
 		}
 	}
 	event.SetData(kafkaMessage.Value)
-	return event
+	return &event
 }
 
 func toKafkaMessage(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event, topicFunc TopicFunc) *sarama.ProducerMessage {
