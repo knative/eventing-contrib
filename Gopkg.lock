@@ -618,6 +618,14 @@
   version = "v1.9.1"
 
 [[projects]]
+  digest = "1:5a77e05693f7047aea75418c1a1d28f141d1fd3dd25c82392d91972a59937a30"
+  name = "github.com/knative/serving"
+  packages = ["pkg/apis/serving/v1beta1"]
+  pruneopts = "NUT"
+  revision = "e4922e8a9ec460e78ab02ef598e042650131d6fe"
+  version = "v0.12.1"
+
+[[projects]]
   branch = "master"
   digest = "1:7bbccd3dd7998f2a180264ec1d12e362ed8e02f55ea7b82ac0d0f48ffa2d8888"
   name = "github.com/mailru/easyjson"
