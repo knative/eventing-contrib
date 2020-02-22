@@ -1,14 +1,43 @@
 Fixes #
 
+<!-- Please include the 'why' behind your changes if no issue exists -->
+
 ## Proposed Changes
 
-  *
-  *
-  *
+-
+-
+-
+
+<!--
+If this change has user-visible impact, follow the instructions below.
+Examples include:
+
+- 🎁 Add new feature
+- 🐛 Fix bug
+- 🧽 Update or clean up current behavior
+- 🗑️ Remove feature or internal logic
+
+Otherwise delete the rest of this template.
+-->
 
 **Release Note**
-<!-- Enter your extended release note in the below block. If the PR requires
-additional action from users switching to the new release, include the string
-"action required". If no release note is required, write "NONE". -->
+
+<!--
+🗒️ If this change has user-visible impact, write a release note in the block
+below. Include the string "action required" if additional action is required of
+users switching to the new release, for example in case of a breaking change.
+
+Write as if you are speaking to users, not other Knative contributors. If this
+change has no user-visible impact, no release-note is needed.
+-->
+
 ```release-note
+
 ```
+
+**Docs**
+
+<!--
+📖 If this change has user-visible impact, link to an issue or PR in
+https://github.com/knative/docs.
+-->
