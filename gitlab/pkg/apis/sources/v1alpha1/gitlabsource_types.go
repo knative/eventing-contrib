@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -73,22 +74,8 @@ type SecretValueFromSource struct {
 	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
-const (
-	// GitLabSourceConditionReady has status True when the
-	// GitLabSource is ready to send events.
-	GitLabSourceConditionReady = apis.ConditionReady
-
-	// GitLabSourceConditionSinkProvided has status True when the
-	// GitlabbSource has been configured with a sink target.
-	GitLabSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
-)
-
-var gitLabSourceCondSet = apis.NewLivingConditionSet(
-	GitLabSourceConditionSinkProvided)
-
 // GitLabSourceStatus defines the observed state of GitLabSource
 type GitLabSourceStatus struct {
-
 	// Conditions holds the state of a source at a point in time.
 	// +optional
 	// +patchMergeKey=type
@@ -102,6 +89,28 @@ type GitLabSourceStatus struct {
 	// for the GitHubSource.
 	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
+}
+
+const (
+	// GitLabSourceConditionReady has status True when the
+	// GitLabSource is ready to send events.
+	GitLabSourceConditionReady = apis.ConditionReady
+
+	// GitLabSourceConditionSinkProvided has status True when the
+	// GitlabSource has been configured with a sink target.
+	GitLabSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
+
+	// GitLabSourceConditionSecretProvided has status True when the
+	// GitlabSource can read secret with gitlab tokens.
+	GitLabSourceConditionSecretProvided apis.ConditionType = "SecretProvided"
+)
+
+var gitLabSourceCondSet = apis.NewLivingConditionSet(
+	GitLabSourceConditionSecretProvided,
+	GitLabSourceConditionSinkProvided)
+
+func (s *GitLabSource) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("GitLabSource")
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
@@ -132,6 +141,16 @@ func (s *GitLabSourceStatus) MarkSink(uri string) {
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *GitLabSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
+// MarkNoSecret sets the condition that the source does not have a gitlab secret created.
+func (s *GitLabSourceStatus) MarkNoSecret(reason, messageFormat string, messageA ...interface{}) {
+	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionSecretProvided, reason, messageFormat, messageA...)
+}
+
+// MarkSecret sets the condition that the source have a gitlab secret.
+func (s *GitLabSourceStatus) MarkSecret() {
+	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionSecretProvided)
 }
 
 // +genclient

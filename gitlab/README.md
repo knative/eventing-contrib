@@ -5,7 +5,7 @@ by a Knative Service.
 
 ## Deploy the GitLab source controller
 
-We recommend to use [ko](https://github.com/google/ko) tool to deploy GitLal source: 
+We recommend to use [ko](https://github.com/google/ko) tool to deploy GitLal source:
 
 ```shell
 ko apply -f gitlab/config/
@@ -31,7 +31,7 @@ We will:
 
 ### Create a Knative Service
 
-Create a simple Knative `service` that dumps incoming messages to its log. The [event-display.yaml](samples/event-display.yaml) file defines this basic service which will receive the configured GitLab event from the GitLabSource object. 
+Create a simple Knative `service` that dumps incoming messages to its log. The [event-display.yaml](samples/event-display.yaml) file defines this basic service which will receive the configured GitLab event from the GitLabSource object.
 The contents of the [event-display.yaml](samples/event-display.yaml) file are as follows:
 
 ```yaml
@@ -56,7 +56,7 @@ kubectl -n default apply -f samples/event-display.yaml
 
 1. Create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
 which the GitLab source will use to register webhooks with the GitLab API.
-The token must have an "api" access scope in order to create repository webhooks. 
+The token must have an "api" access scope in order to create repository webhooks.
 Also decide on a secret token that your code will use to authenticate the
 incoming webhooks from GitLab ([_secretToken_](https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#secret-token)).
 
@@ -74,7 +74,7 @@ incoming webhooks from GitLab ([_secretToken_](https://docs.gitlab.com/ee/user/p
     ```
 
     Where `accessToken` is the personal access token created in step 1. and `secretToken` (`random_string` above) is any token of your choosing.
-    
+
     Hint: you can generate a random _secretToken_ with:
 
     ```shell
@@ -89,10 +89,11 @@ incoming webhooks from GitLab ([_secretToken_](https://docs.gitlab.com/ee/user/p
 
 ### Create Event Source for GitLab Events
 
-1. In order to receive GitLab events, you have to create a concrete Event
-Source for a specific namespace. Replace the `projectUrl` value in the file `gitlabeventbinding.yaml`
-  with your GitLab username and project name. For example, if your repo URL is 
-  `https://gitlab.com/knative-examples/functions` then use it as the value for `projectUrl`.
+1. In order to receive GitLab events, you have to create a concrete Event Source
+ for a specific namespace. Replace the `projectUrl` value in the file
+ `gitlabeventbinding.yaml` with your GitLab username and project name. For example,
+ if your repo URL is `https://gitlab.com/knative-examples/functions`
+ then use it as the value for `projectUrl`.
 
     ```yaml
     apiVersion: sources.eventing.triggermesh.dev/v1alpha1
@@ -131,4 +132,3 @@ webhooks under **Settings >> Integrations** in your GitLab project. A hook
 should be listed that points to your Knative cluster.
 
 Create a push event and check the logs of the Pod backing the `event-display`. You will see the GitLab event.
-

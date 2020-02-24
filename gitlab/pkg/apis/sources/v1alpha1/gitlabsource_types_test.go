@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The TriggerMesh Authors.
+Copyright 2020 The TriggerMesh Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,40 +19,252 @@ package v1alpha1
 import (
 	"testing"
 
-	"github.com/onsi/gomega"
-	"golang.org/x/net/context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	corev1 "k8s.io/api/core/v1"
+	"knative.dev/pkg/apis"
+	"knative.dev/pkg/apis/duck"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-func TestStorageGitLabSource(t *testing.T) {
-	key := types.NamespacedName{
-		Name:      "foo",
-		Namespace: "default",
+var _ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
+
+func TestGitLabSourceStatusIsReady(t *testing.T) {
+	tests := []struct {
+		name string
+		s    *GitLabSourceStatus
+		want bool
+	}{{
+		name: "uninitialized",
+		s:    &GitLabSourceStatus{},
+		want: false,
+	}, {
+		name: "initialized",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSecret()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink, secrets, then no sink",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecret()
+			s.MarkNoSink("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink, secrets, then no secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecret()
+			s.MarkNoSecret("Testing", "")
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink empty and secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkSecret()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark sink empty, secrets, then sink",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkSecret()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		want: true,
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.s.IsReady()
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("%s: unexpected condition (-want, +got) = %v", test.name, diff)
+			}
+		})
 	}
-	created := &GitLabSource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "default",
-		}}
-	g := gomega.NewGomegaWithT(t)
+}
 
-	// Test Create
-	fetched := &GitLabSource{}
-	g.Expect(c.Create(context.TODO(), created)).NotTo(gomega.HaveOccurred())
+func TestGitLabSourceStatusGetCondition(t *testing.T) {
+	tests := []struct {
+		name      string
+		s         *GitLabSourceStatus
+		condQuery apis.ConditionType
+		want      *apis.Condition
+	}{{
+		name:      "uninitialized",
+		s:         &GitLabSourceStatus{},
+		condQuery: GitLabSourceConditionReady,
+		want:      nil,
+	}, {
+		name: "initialized",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:   GitLabSourceConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:   GitLabSourceConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSecret()
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:   GitLabSourceConditionReady,
+			Status: corev1.ConditionUnknown,
+		},
+	}, {
+		name: "mark sink, secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecret()
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:   GitLabSourceConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}, {
+		name: "mark sink, secrets, then no sink",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecret()
+			s.MarkNoSink("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:    GitLabSourceConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink, secrets, then no secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("uri://example")
+			s.MarkSecret()
+			s.MarkNoSecret("Testing", "hi%s", "")
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:    GitLabSourceConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink empty, secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkSecret()
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:    GitLabSourceConditionReady,
+			Status:  corev1.ConditionUnknown,
+			Reason:  "SinkEmpty",
+			Message: "Sink has resolved to empty.",
+		},
+	}, {
+		name: "mark sink empty, secrets, then sink",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink("")
+			s.MarkSecret()
+			s.MarkSink("uri://example")
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:   GitLabSourceConditionReady,
+			Status: corev1.ConditionTrue,
+		},
+	}}
 
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(created))
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.s.GetCondition(test.condQuery)
+			ignoreTime := cmpopts.IgnoreFields(apis.Condition{},
+				"LastTransitionTime", "Severity")
+			if diff := cmp.Diff(test.want, got, ignoreTime); diff != "" {
+				t.Errorf("unexpected condition (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+func TestGitLabSource_GetGroupVersionKind(t *testing.T) {
+	src := GitLabSource{}
+	gvk := src.GetGroupVersionKind()
 
-	// Test Updating the Labels
-	updated := fetched.DeepCopy()
-	updated.Labels = map[string]string{"hello": "world"}
-	g.Expect(c.Update(context.TODO(), updated)).NotTo(gomega.HaveOccurred())
-
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(updated))
-
-	// Test Delete
-	g.Expect(c.Delete(context.TODO(), fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(c.Get(context.TODO(), key, fetched)).To(gomega.HaveOccurred())
+	if gvk.Kind != "GitLabSource" {
+		t.Errorf("Should be 'GitLabSource'.")
+	}
 }

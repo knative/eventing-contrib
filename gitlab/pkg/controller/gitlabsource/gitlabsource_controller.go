@@ -200,12 +200,15 @@ func (r *ReconcileGitLabSource) reconcile(source *sourcesv1alpha1.GitLabSource) 
 	}
 	hookOptions.accessToken, err = r.secretFrom(source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 	if err != nil {
+		source.Status.MarkNoSecret("NotFound", "%s", err)
 		return err
 	}
 	hookOptions.secretToken, err = r.secretFrom(source.Namespace, source.Spec.SecretToken.SecretKeyRef)
 	if err != nil {
+		source.Status.MarkNoSecret("NotFound", "%s", err)
 		return err
 	}
+	source.Status.MarkSecret()
 
 	uri, err := r.getSinkURI(source.Spec.Sink, source.Namespace)
 	if err != nil {
