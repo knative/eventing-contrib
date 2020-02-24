@@ -18,6 +18,7 @@ package resources
 
 import (
 	"fmt"
+	"knative.dev/pkg/kmeta"
 
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -49,6 +50,9 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 			Namespace:    args.Source.Namespace,
 			GenerateName: fmt.Sprintf("awssqs-%s-", args.Source.Name),
 			Labels:       args.Labels,
+			OwnerReferences: []metav1.OwnerReference{
+				*kmeta.NewControllerRef(args.Source),
+			},
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
