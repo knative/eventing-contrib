@@ -36,6 +36,8 @@ import (
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection"
+	pkgreconciler "knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
@@ -140,7 +142,11 @@ func NewController(
 	r.Logger.Info("Setting up event handlers")
 
 	// Watch for kafka channels.
-	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
+	kafkaChannelInformer.Informer().AddEventHandler(
+		cache.FilteringResourceEventHandler{
+			FilterFunc: filterWithAnnotation(injection.HasNamespaceScope(ctx)),
+			Handler:    controller.HandleAll(r.impl.Enqueue),
+		})
 
 	logger.Info("Starting dispatcher.")
 	go func() {
@@ -150,6 +156,13 @@ func NewController(
 	}()
 
 	return r.impl
+}
+
+func filterWithAnnotation(namespaced bool) func(obj interface{}) bool {
+	if namespaced {
+		return pkgreconciler.AnnotationFilterFunc("eventing.knative.dev/scope", "namespace", false)
+	}
+	return pkgreconciler.AnnotationFilterFunc("eventing.knative.dev/scope", "cluster", true)
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
