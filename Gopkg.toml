@@ -53,7 +53,8 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  branch = "convert-x"
+  source = "github.com/dprotaso/pkg"
 
 [[constraint]]
   name = "github.com/go-kivik/kivik"
