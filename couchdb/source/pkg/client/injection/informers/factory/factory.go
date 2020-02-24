@@ -19,7 +19,7 @@ limitations under the License.
 package factory
 
 import (
-	"context"
+	context "context"
 
 	externalversions "knative.dev/eventing-contrib/couchdb/source/pkg/client/informers/externalversions"
 	client "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client"
