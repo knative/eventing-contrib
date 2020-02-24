@@ -105,7 +105,8 @@ required = [
 
 [[constraint]]
   name = "knative.dev/serving"
-  branch = "master"
+  branch = "convert-x"
+  source = "github.com/dprotaso/serving"
 
 [[constraint]]
   name = "knative.dev/eventing"

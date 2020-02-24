@@ -2010,8 +2010,8 @@
   source = "github.com/dprotaso/pkg"
 
 [[projects]]
-  branch = "master"
-  digest = "1:7c8ce633dda6f281e1d3773e6d77e87cd3750ebc1787225f0ce959937996e935"
+  branch = "convert-x"
+  digest = "1:297cc1a1634d7a73d5d8c81b1931ba1c52a803b0619e93aef696ae9a733ef456"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2050,7 +2050,8 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "0bfeecd7cb285da82360a4705234fecc6abd87c8"
+  revision = "fa6704c13986c0814c599a85e51aba96feaf889c"
+  source = "github.com/dprotaso/serving"
 
 [[projects]]
   branch = "master"
