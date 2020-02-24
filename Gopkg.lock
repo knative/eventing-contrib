@@ -1818,8 +1818,8 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:e899596ff93b4afbb3be83c195098c6cfbf1fb6ca058bcc2eeb46cf2b5331dea"
+  branch = "convert-x"
+  digest = "1:58dc194ddff0266d5ab94cdd4b947fb999d685759d739092f22960ec3410c831"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1929,7 +1929,8 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "41eb2f9dbd30153060d8b5fdf5c213f557d64d7e"
+  revision = "4d33f55bf57c0dcf7a4f2d0ac698d995d28ca43d"
+  source = "github.com/dprotaso/eventing"
 
 [[projects]]
   branch = "convert-x"

@@ -109,7 +109,8 @@ required = [
 
 [[constraint]]
   name = "knative.dev/eventing"
-  branch = "master"
+  branch = "convert-x"
+  source = "github.com/dprotaso/eventing"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
