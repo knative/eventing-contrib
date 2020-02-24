@@ -19,7 +19,7 @@ limitations under the License.
 package prometheussource
 
 import (
-	"context"
+	context "context"
 
 	v1alpha1 "knative.dev/eventing-contrib/prometheus/pkg/client/informers/externalversions/sources/v1alpha1"
 	factory "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/factory"

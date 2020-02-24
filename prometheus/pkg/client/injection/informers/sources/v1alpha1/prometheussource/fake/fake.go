@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	"context"
+	context "context"
 
 	fake "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/factory/fake"
 	prometheussource "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/sources/v1alpha1/prometheussource"

@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	"context"
+	context "context"
 
 	fake "knative.dev/eventing-contrib/awssqs/pkg/client/injection/informers/factory/fake"
 	awssqssource "knative.dev/eventing-contrib/awssqs/pkg/client/injection/informers/sources/v1alpha1/awssqssource"

@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	"context"
+	context "context"
 
 	externalversions "knative.dev/eventing-contrib/couchdb/source/pkg/client/informers/externalversions"
 	fake "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client/fake"
