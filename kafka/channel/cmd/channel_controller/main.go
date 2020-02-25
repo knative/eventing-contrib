@@ -22,7 +22,7 @@ import (
 	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller"
 )
 
-const component = "kafkachannel_controller"
+const component = "kafkachannel-controller"
 
 func main() {
 	sharedmain.Main(component, controller.NewController)

@@ -108,6 +108,9 @@ func makeEnv(args DispatcherArgs) []corev1.EnvVar {
 	}, {
 		Name:  "CONFIG_LOGGING_NAME",
 		Value: "config-logging",
+	}, {
+		Name:  "CONFIG_LEADERELECTION_NAME",
+		Value: "config-leader-election-kafka",
 	}}
 
 	if args.DispatcherScope == "namespace" {
