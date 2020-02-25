@@ -41,6 +41,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	rbacv1listers "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
@@ -332,7 +333,7 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 	}
 	kc.Status.MarkTopicTrue()
 
-	scope, ok := kc.Annotations["eventing.knative.dev/scope"]
+	scope, ok := kc.Annotations[eventing.ScopeAnnotationKey]
 	if !ok {
 		scope = scopeCluster
 	}

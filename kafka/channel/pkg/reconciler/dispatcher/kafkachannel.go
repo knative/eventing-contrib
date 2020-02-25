@@ -28,6 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/channel/swappable"
@@ -160,9 +161,9 @@ func NewController(
 
 func filterWithAnnotation(namespaced bool) func(obj interface{}) bool {
 	if namespaced {
-		return pkgreconciler.AnnotationFilterFunc("eventing.knative.dev/scope", "namespace", false)
+		return pkgreconciler.AnnotationFilterFunc(eventing.ScopeAnnotationKey, "namespace", false)
 	}
-	return pkgreconciler.AnnotationFilterFunc("eventing.knative.dev/scope", "cluster", true)
+	return pkgreconciler.AnnotationFilterFunc(eventing.ScopeAnnotationKey, "cluster", true)
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, key string) error {

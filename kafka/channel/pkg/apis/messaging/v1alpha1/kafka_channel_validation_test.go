@@ -25,6 +25,7 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/pkg/apis"
 )
 
@@ -129,7 +130,7 @@ func TestKafkaChannelValidation(t *testing.T) {
 			cr: &KafkaChannel{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						"eventing.knative.dev/scope": "notvalid",
+						eventing.ScopeAnnotationKey: "notvalid",
 					},
 				},
 				Spec: KafkaChannelSpec{

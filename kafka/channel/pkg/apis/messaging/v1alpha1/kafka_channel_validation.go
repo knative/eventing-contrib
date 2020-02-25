@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/pkg/apis"
 )
 
@@ -28,11 +29,11 @@ func (c *KafkaChannel) Validate(ctx context.Context) *apis.FieldError {
 
 	// Validate annotations
 	if c.Annotations != nil {
-		if scope, ok := c.Annotations["eventing.knative.dev/scope"]; ok {
+		if scope, ok := c.Annotations[eventing.ScopeAnnotationKey]; ok {
 			if scope != "namespace" && scope != "cluster" {
 				iv := apis.ErrInvalidValue(scope, "")
 				iv.Details = "expected either 'cluster' or 'namespace'"
-				errs = errs.Also(iv.ViaFieldKey("annotations", "eventing.knative.dev/scope").ViaField("metadata"))
+				errs = errs.Also(iv.ViaFieldKey("annotations", eventing.ScopeAnnotationKey).ViaField("metadata"))
 			}
 		}
 	}
