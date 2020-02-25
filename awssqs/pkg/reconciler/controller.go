@@ -18,13 +18,14 @@ package reconciler
 
 import (
 	context "context"
+	"os"
+
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/resolver"
-	"os"
 
 	awssqssource "knative.dev/eventing-contrib/awssqs/pkg/client/injection/informers/sources/v1alpha1/awssqssource"
 	v1alpha1awssqssource "knative.dev/eventing-contrib/awssqs/pkg/client/injection/reconciler/sources/v1alpha1/awssqssource"
