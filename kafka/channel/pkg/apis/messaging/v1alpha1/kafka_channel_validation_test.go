@@ -133,6 +133,7 @@ func TestKafkaChannelValidation(t *testing.T) {
 						eventing.ScopeAnnotationKey: "notvalid",
 					},
 				},
+
 				Spec: KafkaChannelSpec{
 					NumPartitions:     1,
 					ReplicationFactor: 1,
