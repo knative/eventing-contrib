@@ -68,69 +68,69 @@ kubectl -n default apply -f samples/event-display.yaml
 
 1. Update a secret defined in [secret.yaml](samples/secret.yaml):
 
-    ```yaml
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: gitlabsecret
-    type: Opaque
-    stringData:
-      accessToken: <personal_access_token_value>
-      secretToken: <random_string>
-    ```
+  ```yaml
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: gitlabsecret
+  type: Opaque
+  stringData:
+    accessToken: <personal_access_token_value>
+    secretToken: <random_string>
+  ```
 
-    Where `accessToken` is the personal access token created in step 1.
-    and `secretToken` (`random_string` above) is any token of your choosing.
+  Where `accessToken` is the personal access token created in step 1.
+  and `secretToken` (`random_string` above) is any token of your choosing.
 
-    Hint: you can generate a random _secretToken_ with:
+  Hint: you can generate a random _secretToken_ with:
 
-    ```shell
-    head -c 8 /dev/urandom | base64
-    ```
+  ```shell
+  head -c 8 /dev/urandom | base64
+  ```
 
 1. Apply the gitlabsecret using `kubectl`.
 
-    ```shell
-    kubectl -n default apply -f samples/secret.yaml
-    ```
+  ```shell
+  kubectl -n default apply -f samples/secret.yaml
+  ```
 
 ### Create Event Source for GitLab Events
 
 1. In order to receive GitLab events, you have to create a concrete Event Source
- for a specific namespace. Replace the `projectUrl` value in the file
- `gitlabeventbinding.yaml` with your GitLab username and project name. For example,
- if your repo URL is `https://gitlab.com/knative-examples/functions`
- then use it as the value for `projectUrl`.
+  for a specific namespace. Replace the `projectUrl` value in the file
+  `gitlabeventbinding.yaml` with your GitLab username and project name. For example,
+  if your repo URL is `https://gitlab.com/knative-examples/functions`
+  then use it as the value for `projectUrl`.
 
-    ```yaml
-    apiVersion: sources.eventing.triggermesh.dev/v1alpha1
-    kind: GitLabSource
-    metadata:
-      name: gitlabsource-sample
-    spec:
-      eventTypes:
-      - push_events
-      - issues_events
-      projectUrl: "<project url>"
-      accessToken:
-        secretKeyRef:
-          name: gitlabsecret
-          key: accessToken
-      secretToken:
-        secretKeyRef:
-          name: gitlabsecret
-          key: secretToken
-      sink:
-        apiVersion: serving.knative.dev/v1alpha1
-        kind: Service
-        name: gitlab-event-display
-    ```
+  ```yaml
+  apiVersion: sources.eventing.triggermesh.dev/v1alpha1
+  kind: GitLabSource
+  metadata:
+    name: gitlabsource-sample
+  spec:
+    eventTypes:
+    - push_events
+    - issues_events
+    projectUrl: "<project url>"
+    accessToken:
+      secretKeyRef:
+        name: gitlabsecret
+        key: accessToken
+    secretToken:
+      secretKeyRef:
+        name: gitlabsecret
+        key: secretToken
+    sink:
+      apiVersion: serving.knative.dev/v1alpha1
+      kind: Service
+      name: gitlab-event-display
+  ```
 
 1. Apply the yaml file using `kubectl`:
 
-    ```shell
-    kubectl -n default apply -f samples/gitlabsource.yaml
-    ```
+  ```shell
+  kubectl -n default apply -f samples/gitlabsource.yaml
+  ```
 
 ### Verify
 
