@@ -31,6 +31,8 @@ import (
 	gitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
+// TODO: Add webhook request token verification
+
 const (
 	GLHeaderEvent = "Gitlab-Event"
 )
