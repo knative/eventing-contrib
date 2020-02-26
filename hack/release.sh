@@ -30,7 +30,6 @@ COMPONENTS=(
   ["github.yaml"]="github/config"
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
-  ["kafka-channel-namespace.yaml"]="kafka/channel/config/namespace"
   ["natss-channel.yaml"]="natss/config"
   ["prometheus-source.yaml"]="prometheus/config"
 )

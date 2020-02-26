@@ -30,6 +30,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +41,7 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	rbacv1listers "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
@@ -103,7 +105,6 @@ type Reconciler struct {
 	*reconciler.Base
 
 	systemNamespace string
-	dispatcherScope string
 	dispatcherImage string
 
 	kafkaConfig      *utils.KafkaConfig
@@ -133,15 +134,11 @@ var (
 )
 
 type envConfig struct {
-	Scope string `envconfig:"DISPATCHER_SCOPE" required:"true"`
 	Image string `envconfig:"DISPATCHER_IMAGE" required:"true"`
 }
 
 // Check that our Reconciler implements controller.Reconciler.
 var _ controller.Reconciler = (*Reconciler)(nil)
-
-// Check that our Reconciler implements cache.ResourceEventHandler
-var _ cache.ResourceEventHandler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
@@ -169,6 +166,8 @@ func NewController(
 		deploymentLister:     deploymentInformer.Lister(),
 		serviceLister:        serviceInformer.Lister(),
 		endpointsLister:      endpointsInformer.Lister(),
+		serviceAccountLister: serviceAccountInformer.Lister(),
+		roleBindingLister:    roleBindingInformer.Lister(),
 		kafkaClientSet:       kafkaChannelClientSet,
 	}
 
@@ -176,12 +175,12 @@ func NewController(
 	if err := envconfig.Process("", env); err != nil {
 		r.Logger.Panicf("unable to process Kafka channel's required environment variables: %v", err)
 	}
-	r.dispatcherImage = env.Image
-	if r.dispatcherImage == "" {
+
+	if env.Image == "" {
 		r.Logger.Panic("unable to process Kafka channel's required environment variables (missing DISPATCHER_IMAGE)")
 	}
 
-	r.dispatcherScope = env.Scope
+	r.dispatcherImage = env.Image
 
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
@@ -198,64 +197,35 @@ func NewController(
 	// Set up watches for dispatcher resources we care about, since any changes to these
 	// resources will affect our Channels. So, set up a watch here, that will cause
 	// a global Resync for all the channels to take stock of their health when these change.
-	filterFn := r.ScopedFilter(r.systemNamespace, dispatcherName)
+	filterFn := controller.FilterWithName(dispatcherName)
+
+	// Call GlobalResync on kafkachannels.
+	grCh := func(obj interface{}) {
+		r.impl.GlobalResync(r.kafkachannelInformer)
+	}
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterFn,
-		Handler:    r,
+		Handler:    controller.HandleAll(grCh),
 	})
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterFn,
-		Handler:    r,
+		Handler:    controller.HandleAll(grCh),
 	})
 	endpointsInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterFn,
-		Handler:    r,
+		Handler:    controller.HandleAll(grCh),
+	})
+	serviceAccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: filterFn,
+		Handler:    controller.HandleAll(grCh),
+	})
+	roleBindingInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: filterFn,
+		Handler:    controller.HandleAll(grCh),
 	})
 
-	if r.dispatcherScope == "namespace" {
-		r.serviceAccountLister = serviceAccountInformer.Lister()
-		r.roleBindingLister = roleBindingInformer.Lister()
-
-		serviceAccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: filterFn,
-			Handler:    r,
-		})
-		roleBindingInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: filterFn,
-			Handler:    r,
-		})
-	}
-
 	return r.impl
-}
-
-// ScopedFilter either filter with namespace and name for cluster-deployed dispatcher,
-// and just by name for namespace-deployed dispatcher
-func (r *Reconciler) ScopedFilter(namespace, name string) func(obj interface{}) bool {
-	fnn := controller.FilterWithNameAndNamespace(namespace, name)
-	fn := controller.FilterWithName(name)
-	return func(obj interface{}) bool {
-		if r.dispatcherScope == scopeCluster {
-			return fnn(obj)
-		}
-		return fn(obj)
-	}
-}
-
-// cache.ResourceEventHandler implementation.
-// These 3 functions just cause a Global Resync of the channels, because any changes here
-// should be reflected onto the channels.
-func (r *Reconciler) OnAdd(obj interface{}) {
-	r.impl.GlobalResync(r.kafkachannelInformer)
-}
-
-func (r *Reconciler) OnUpdate(old, new interface{}) {
-	r.impl.GlobalResync(r.kafkachannelInformer)
-}
-
-func (r *Reconciler) OnDelete(obj interface{}) {
-	r.impl.GlobalResync(r.kafkachannelInformer)
 }
 
 // Reconcile compares the actual state with the desired, and attempts to
@@ -363,13 +333,18 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 	}
 	kc.Status.MarkTopicTrue()
 
+	scope, ok := kc.Annotations[eventing.ScopeAnnotationKey]
+	if !ok {
+		scope = scopeCluster
+	}
+
 	dispatcherNamespace := r.systemNamespace
-	if r.dispatcherScope == scopeNamespace {
+	if scope == scopeNamespace {
 		dispatcherNamespace = kc.Namespace
 	}
 
 	// Make sure the dispatcher deployment exists and propagate the status to the Channel
-	_, err = r.reconcileDispatcher(ctx, dispatcherNamespace, kc)
+	_, err = r.reconcileDispatcher(ctx, scope, dispatcherNamespace, kc)
 	if err != nil {
 		return err
 	}
@@ -426,8 +401,8 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 	return nil
 }
 
-func (r *Reconciler) reconcileDispatcher(ctx context.Context, dispatcherNamespace string, kc *v1alpha1.KafkaChannel) (*appsv1.Deployment, error) {
-	if r.dispatcherScope == scopeNamespace {
+func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, dispatcherNamespace string, kc *v1alpha1.KafkaChannel) (*appsv1.Deployment, error) {
+	if scope == scopeNamespace {
 		// Configure RBAC in namespace to access the configmaps
 		sa, err := r.reconcileServiceAccount(ctx, dispatcherNamespace, kc)
 		if err != nil {
@@ -450,7 +425,7 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, dispatcherNamespac
 		}
 	}
 	args := resources.DispatcherArgs{
-		DispatcherScope:     r.dispatcherScope,
+		DispatcherScope:     scope,
 		DispatcherNamespace: dispatcherNamespace,
 		Image:               r.dispatcherImage,
 	}
@@ -569,23 +544,33 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, dispatcherName
 	// We don't do anything with the service because it's status contains nothing useful, so just do
 	// an existence check. Then below we check the endpoints targeting it.
 	// We may change this name later, so we have to ensure we use proper addressable when resolving these.
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(dispatcherNamespace, dispatcherName))
+	if err != nil {
+		logger.Error("Failed to create the channel service object", zap.Error(err))
+		return nil, err
+	}
+
 	svc, err := r.serviceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
 	if err != nil {
 		if apierrs.IsNotFound(err) {
-			svc, err = resources.MakeK8sService(channel, resources.ExternalService(dispatcherNamespace, dispatcherName))
+			svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Create(expected)
 			if err != nil {
-				logger.Error("Failed to create the channel service object", zap.Error(err))
-				return nil, err
-			}
-			svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Create(svc)
-			if err != nil {
-				logger.Error("simpleFailed to create the channel service", zap.Error(err))
+				logger.Error("Failed to create the channel service", zap.Error(err))
 				return nil, err
 			}
 			return svc, nil
 		}
 		logger.Error("Unable to get the channel service", zap.Error(err))
 		return nil, err
+	} else if !equality.Semantic.DeepEqual(svc.Spec, expected.Spec) {
+		svc = svc.DeepCopy()
+		svc.Spec = expected.Spec
+
+		svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Update(svc)
+		if err != nil {
+			logging.FromContext(ctx).Error("Failed to update the channel service", zap.Error(err))
+			return nil, err
+		}
 	}
 	// Check to make sure that the KafkaChannel owns this service and if not, complain.
 	if !metav1.IsControlledBy(svc, channel) {

@@ -1819,7 +1819,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f122de17dcc592236b1165861eaf6f4f3677dee38f77b1d1029a0cc93c11cc24"
+  digest = "1:6362342bc5afcb644079b3d1a2e1ad321ccc175dfeb7a4665fe457e793d50fa3"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1934,7 +1934,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "337d020e029811764b947fb89d10761839a1606a"
+  revision = "977d0db295dc211840a7cd53a6d22c2d4bbbd5f8"
 
 [[projects]]
   branch = "release-0.13"
@@ -2231,6 +2231,7 @@
     "knative.dev/eventing/pkg/adapter",
     "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
+    "knative.dev/eventing/pkg/apis/eventing",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",
