@@ -5,7 +5,8 @@ topics.
 
 ## Deployment steps
 
-1. Setup [Knative Eventing](../../DEVELOPMENT.md) Install an Apache Kafka
+1. Setup [Knative Eventing](../../DEVELOPMENT.md)
+1. Install an Apache Kafka
    cluster, if you have not done so already.
 
    For Kubernetes a simple installation is done using the
@@ -48,7 +49,7 @@ topics.
      name: my-kafka-channel
    spec:
      numPartitions: 1
-     replicationFactor: 3
+     replicationFactor: 1
    ```
 
    You can configure the number of partitions with `numPartitions`, as well as
@@ -93,7 +94,9 @@ kubectl get configmap -n knative-eventing config-kafka
 
 ### Namespace Dispatchers
 
-By default events are received and dispatched by a single cluster-scoped dispatcher components. You can also specify whether events should be received and dispatched by the dispatcher in the same namespace as the channel definition by adding the
+By default events are received and dispatched by a single cluster-scoped dispatcher components.
+You can also specify whether events should be received and dispatched by the dispatcher in the
+same namespace as the channel definition by adding the
 `eventing.knative.dev/scope: namespace` annotation.
 
 First, you need to create the configMap `config-kafka` in the same namespace as the KafkaChannel.
@@ -110,6 +113,9 @@ data:
   bootstrapServers: REPLACE_WITH_CLUSTER_URL
 ```
 
+ > Note: the `bootstrapServers` value does not have to be the same as the one
+   specified in `knative-eventing/config-kafka`.
+
 Then create a KafkaChannel:
 
 ```yaml
@@ -122,7 +128,7 @@ metadata:
     eventing.knative.dev/scope: namespace
 spec:
   numPartitions: 1
-  replicationFactor: 3
+  replicationFactor: 1
 ```
 
 The dispatcher is created in `<YOUR_NAMESPACE>`:
@@ -130,3 +136,6 @@ The dispatcher is created in `<YOUR_NAMESPACE>`:
 ```sh
 kubectl get deployment -n <YOUR_NAMESPACE> kafka-ch-dispatcher
 ```
+
+Both cluster-scoped and namespace-scoped dispatcher can coexist. However once the annotation
+is set (or not set), its value is immutable.
