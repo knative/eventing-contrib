@@ -19,7 +19,7 @@ limitations under the License.
 package gitlabsource
 
 import (
-	"context"
+	context "context"
 
 	v1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/informers/externalversions/sources/v1alpha1"
 	factory "knative.dev/eventing-contrib/gitlab/pkg/client/injection/informers/factory"

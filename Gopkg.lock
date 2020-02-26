@@ -552,20 +552,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:41933d387bfa3eaa6a82647914ed7044f7b8355764c24fb920892bc8c03ef0c3"
-  name = "github.com/hpcloud/tail"
-  packages = [
-    ".",
-    "ratelimiter",
-    "util",
-    "watch",
-    "winfile",
-  ]
-  pruneopts = "NUT"
-  revision = "a30252cb686a21eb2d0b98132633053ec2f7f1e5"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:7c47a990a91ab4922f4009c8ba8dcf35dad08e2b697cf26ea87eaae90e3f7aa1"
   name = "github.com/imdario/mergo"
   packages = ["."]
@@ -780,56 +766,6 @@
   pruneopts = "NUT"
   revision = "4b96681fa6d28dd0ab5fe79bac63b3a493d9ee94"
   version = "v1.0.1"
-
-[[projects]]
-  digest = "1:dbcdf7f85e0ba1aa714561730c7b07e37bce658a00d6f7376378564d4db1587a"
-  name = "github.com/onsi/ginkgo"
-  packages = [
-    ".",
-    "config",
-    "internal/codelocation",
-    "internal/containernode",
-    "internal/failer",
-    "internal/leafnodes",
-    "internal/remote",
-    "internal/spec",
-    "internal/spec_iterator",
-    "internal/specrunner",
-    "internal/suite",
-    "internal/testingtproxy",
-    "internal/writer",
-    "reporters",
-    "reporters/stenographer",
-    "reporters/stenographer/support/go-colorable",
-    "reporters/stenographer/support/go-isatty",
-    "types",
-  ]
-  pruneopts = "NUT"
-  revision = "40598150331533e3cd497f21dcce387dae84b561"
-  version = "v1.12.0"
-
-[[projects]]
-  digest = "1:8aa564e1aef6dd87089b6ccea4b75ab30cf368088fc8bd87ff435ba82f59a7b3"
-  name = "github.com/onsi/gomega"
-  packages = [
-    ".",
-    "format",
-    "gbytes",
-    "gexec",
-    "internal/assertion",
-    "internal/asyncassertion",
-    "internal/oraclematcher",
-    "internal/testingtsupport",
-    "matchers",
-    "matchers/support/goraph/bipartitegraph",
-    "matchers/support/goraph/edge",
-    "matchers/support/goraph/node",
-    "matchers/support/goraph/util",
-    "types",
-  ]
-  pruneopts = "NUT"
-  revision = "6be6c439588487cd908a3a700795660c2a16dfec"
-  version = "v1.9.0"
 
 [[projects]]
   digest = "1:1a0de55901552615e2b2f24bdb51431634165e74745b042a3ec11c3e97ce5843"
@@ -1116,14 +1052,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ee228610f331798b7f0921c1c7c0a1c225154af4324f59117e90195fe78947b"
+  digest = "1:df0d218b9fa9056a1281701152498ce98e6508d12fcc9a3392bdb3c33bb6599d"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
-    "html",
-    "html/atom",
-    "html/charset",
     "http/httpguts",
     "http2",
     "http2/h2c",
@@ -1181,21 +1114,11 @@
   revision = "f43be2a4598cf3a47be9f94f0c28197ed9eae611"
 
 [[projects]]
-  digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
+  digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
   name = "golang.org/x/text"
   packages = [
     "collate",
     "collate/build",
-    "encoding",
-    "encoding/charmap",
-    "encoding/htmlindex",
-    "encoding/internal",
-    "encoding/internal/identifier",
-    "encoding/japanese",
-    "encoding/korean",
-    "encoding/simplifiedchinese",
-    "encoding/traditionalchinese",
-    "encoding/unicode",
     "internal/colltab",
     "internal/gen",
     "internal/language",
@@ -1203,9 +1126,7 @@
     "internal/tag",
     "internal/triegen",
     "internal/ucd",
-    "internal/utf8internal",
     "language",
-    "runes",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -1485,14 +1406,6 @@
   pruneopts = "NUT"
   revision = "99a8ce2fbf8b8087b6ed12a37c61b10f04070043"
   version = "v1.1.0"
-
-[[projects]]
-  branch = "v1"
-  digest = "1:8fb1ccb16a6cfecbfdfeb84d8ea1cc7afa8f9ef16526bc2326f72d993e32cef1"
-  name = "gopkg.in/tomb.v1"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
   digest = "1:accc3bfe4e404aa53ac3621470e7cf9fce1efe48f0fabcfe6d12a72579d9d91f"
@@ -2194,7 +2107,7 @@
   revision = "01c075fbeae4b089793fcca6fc855d31e1628cad"
 
 [[projects]]
-  digest = "1:8c0691e0782560c6dc4f48e90e7c0c5c3ce9eb7f2b8a6562100e8a65ad6234ef"
+  digest = "1:56a804463a1f35592f1730a32b29d37b091b4ae09c929cf7f3bf7deb7f79ce7a"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/cache",
@@ -2205,8 +2118,6 @@
     "pkg/client/fake",
     "pkg/controller",
     "pkg/controller/controllerutil",
-    "pkg/envtest",
-    "pkg/envtest/printer",
     "pkg/event",
     "pkg/handler",
     "pkg/healthz",
@@ -2264,18 +2175,6 @@
   version = "v0.2.2"
 
 [[projects]]
-  digest = "1:79012a83a6630d5e3ec068e6e8dd44d199393f53ab05e741b832abaa1ce3c756"
-  name = "sigs.k8s.io/testing_frameworks"
-  packages = [
-    "integration",
-    "integration/addr",
-    "integration/internal",
-  ]
-  pruneopts = "NUT"
-  revision = "c7087048c932a346b910a2240f3a053e544eb352"
-  version = "v0.1.2"
-
-[[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
   name = "sigs.k8s.io/yaml"
   packages = ["."]
@@ -2312,7 +2211,6 @@
     "github.com/kelseyhightower/envconfig",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
-    "github.com/onsi/gomega",
     "github.com/robfig/cron",
     "github.com/slinkydeveloper/loadastic/common",
     "github.com/slinkydeveloper/loadastic/kafka",
@@ -2467,7 +2365,6 @@
     "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
-    "sigs.k8s.io/controller-runtime/pkg/envtest",
     "sigs.k8s.io/controller-runtime/pkg/handler",
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
