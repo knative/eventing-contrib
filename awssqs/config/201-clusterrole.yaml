@@ -47,6 +47,19 @@ rules:
   - delete
 
 - apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+
+- apiGroups:
   - sources.knative.dev
   resources:
   - awssqssources

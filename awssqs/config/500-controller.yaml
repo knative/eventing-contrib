@@ -54,6 +54,8 @@ spec:
               value: config-logging
             - name: CONFIG_OBSERVABILITY_NAME
               value: config-observability
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-leader-election-awssqs
             - name: METRICS_DOMAIN
               value: knative.dev/sources
             # AwsSqsSource RA image:
