@@ -1,7 +1,7 @@
 # Replace the following before applying this file:
 #   QUEUE_URL: Replace with the AWS SQS queue.
 
-apiVersion: sources.eventing.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: AwsSqsSource
 metadata:
   name: awssqs-sample-source

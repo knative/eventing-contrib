@@ -24,9 +24,9 @@ metadata:
       [
         { "type": "aws.sqs.message" }
       ]
-  name: awssqssources.sources.eventing.knative.dev
+  name: awssqssources.sources.knative.dev
 spec:
-  group: sources.eventing.knative.dev
+  group: sources.knative.dev
   names:
     categories:
     - all

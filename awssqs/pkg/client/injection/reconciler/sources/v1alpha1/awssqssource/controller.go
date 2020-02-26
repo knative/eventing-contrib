@@ -36,7 +36,7 @@ import (
 
 const (
 	defaultControllerAgentName = "awssqssource-controller"
-	defaultFinalizerName       = "awssqssources.sources.eventing.knative.dev"
+	defaultFinalizerName       = "awssqssources.sources.knative.dev"
 	defaultQueueName           = "awssqssources"
 )
 
