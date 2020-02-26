@@ -1934,11 +1934,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "39829071d79dab64f5e742bdfbdfc3004bcf2da2"
+  revision = "337d020e029811764b947fb89d10761839a1606a"
 
 [[projects]]
-  branch = "master"
-  digest = "1:82eaafe1b10a648afe37de603c6d9f4fe69fb5c129ecc832a5997335f3a0ee89"
+  branch = "release-0.13"
+  digest = "1:f8d227da9c1b062805ff9b98c500f19f02c9015d7bcd3134bfac26829df537fb"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2010,7 +2010,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "7af3fab62ce2bf2f861fee510eeb15eccb47925e"
+  revision = "1033748a7ec0f07204774c163436291841855779"
 
 [[projects]]
   branch = "master"
@@ -2053,7 +2053,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "744090c517077e65c6d806357532d96507a6b0b9"
+  revision = "ca5f921b9429b8e79caad6a0b6f540dda95ff4d2"
 
 [[projects]]
   branch = "master"
