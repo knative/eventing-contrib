@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	sharedmain.Main("controller",
+	sharedmain.Main("awssqs-controller",
 		awssqssource.NewController,
 	)
 }

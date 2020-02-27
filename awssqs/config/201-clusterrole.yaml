@@ -23,7 +23,7 @@ rules:
   - apps
   resources:
   - deployments
-  verbs:
+  verbs: &everything
   - get
   - list
   - watch
@@ -37,27 +37,13 @@ rules:
   resources:
   - events
   - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything
 
 - apiGroups:
   - coordination.k8s.io
   resources:
   - leases
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything
 
 - apiGroups:
   - sources.knative.dev

@@ -61,5 +61,5 @@ data:
     # enabledComponents is a comma-delimited list of component names for which
     # leader election is enabled. Valid values are:
     #
-    # - controller
-    enabledComponents: "controller"
+    # - awssqs-controller
+    enabledComponents: "awssqs-controller"
