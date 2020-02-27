@@ -16,8 +16,8 @@ Add the following job entries under
 **data**.**prometheus.yml**.**scrape_configs**:
 
 ```yaml
-# kafkachannel_controller
-- job_name: kafkachannel_controller
+# kafkachannel-controller
+- job_name: kafkachannel-controller
   scrape_interval: 3s
   scrape_timeout: 3s
   kubernetes_sd_configs:
@@ -41,8 +41,8 @@ Add the following job entries under
     - source_labels: [__meta_kubernetes_service_name]
       target_label: service
 
-# kafkachannel_dispatcher
-- job_name: kafkachannel_dispatcher
+# kafkachannel-dispatcher
+- job_name: kafkachannel-dispatcher
   scrape_interval: 3s
   scrape_timeout: 3s
   kubernetes_sd_configs:
@@ -66,8 +66,8 @@ Add the following job entries under
     - source_labels: [__meta_kubernetes_service_name]
       target_label: service
 
-# kafkachannel_webhook
-- job_name: kafkachannel_webhook
+# kafkachannel-webhook
+- job_name: kafkachannel-webhook
   scrape_interval: 3s
   scrape_timeout: 3s
   kubernetes_sd_configs:
@@ -111,8 +111,8 @@ kubectl port-forward -n knative-monitoring \
 
 Access Prometheus targets endpoint
 [http://localhost:9090/targets](http://localhost:9090/targets). Now, the
-**kafkachannel_controller**, **kafkachannel_dispatcher** and
-**kafkachannel_webhook** jobs should be up.
+**kafkachannel-controller**, **kafkachannel-dispatcher** and
+**kafkachannel-webhook** jobs should be up.
 
 ## Check KafkaChannel controller metrics
 

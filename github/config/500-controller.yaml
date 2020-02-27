@@ -42,6 +42,8 @@ spec:
           value: config-logging
         - name: CONFIG_OBSERVABILITY_NAME
           value: config-observability
+        - name: CONFIG_LEADERELECTION_NAME
+          value: config-leader-election-github
         - name: METRICS_DOMAIN
           value: knative.dev/sources
         - name: GH_RA_IMAGE

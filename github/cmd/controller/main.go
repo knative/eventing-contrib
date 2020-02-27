@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	component = "github_controller"
+	component = "github-controller"
 )
 
 func main() {

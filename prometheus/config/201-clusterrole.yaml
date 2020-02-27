@@ -85,6 +85,12 @@ rules:
     - eventtypes
   verbs: *everything
 
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs: *everything
+
 ---
 # The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
 # See https://github.com/knative/eventing/blob/master/config/200-source-observer-clusterrole.yaml.

@@ -1841,7 +1841,6 @@
     "pkg/apis/messaging/v1beta1",
     "pkg/apis/sources",
     "pkg/apis/sources/v1alpha1",
-    "pkg/apis/sources/v1alpha2",
     "pkg/channel",
     "pkg/channel/fanout",
     "pkg/channel/multichannelfanout",
@@ -1865,8 +1864,6 @@
     "pkg/client/clientset/versioned/typed/messaging/v1beta1/fake",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha2",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha2/fake",
     "pkg/client/informers/externalversions",
     "pkg/client/informers/externalversions/configs",
     "pkg/client/informers/externalversions/configs/v1alpha1",
@@ -1882,7 +1879,6 @@
     "pkg/client/informers/externalversions/messaging/v1beta1",
     "pkg/client/informers/externalversions/sources",
     "pkg/client/informers/externalversions/sources/v1alpha1",
-    "pkg/client/informers/externalversions/sources/v1alpha2",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
@@ -1895,7 +1891,6 @@
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/messaging/v1beta1",
     "pkg/client/listers/sources/v1alpha1",
-    "pkg/client/listers/sources/v1alpha2",
     "pkg/configmap",
     "pkg/defaultchannel",
     "pkg/kncloudevents",
@@ -1938,7 +1933,7 @@
 
 [[projects]]
   branch = "release-0.13"
-  digest = "1:f8d227da9c1b062805ff9b98c500f19f02c9015d7bcd3134bfac26829df537fb"
+  digest = "1:77db7d7e7364e6acb7fe627ddb377f94e5199b020be96aa0e8654cd864db2d7a"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1968,6 +1963,7 @@
     "injection/sharedmain",
     "kmeta",
     "kmp",
+    "leaderelection",
     "logging",
     "logging/logkey",
     "logging/testing",
@@ -2010,7 +2006,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "1033748a7ec0f07204774c163436291841855779"
+  revision = "2006e107e39eb0e661e4437ba76b16465162689e"
 
 [[projects]]
   branch = "master"

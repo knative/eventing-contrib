@@ -45,6 +45,8 @@ spec:
           value: config-observability
         - name: METRICS_DOMAIN
           value: knative.dev/sources
+        - name: CONFIG_LEADERELECTION_NAME
+          value: config-leader-election-couchdb
         - name: COUCHDB_RA_IMAGE
           value: knative.dev/eventing-contrib/couchdb/source/cmd/receive_adapter
         resources:

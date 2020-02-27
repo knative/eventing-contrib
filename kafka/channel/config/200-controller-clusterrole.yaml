@@ -105,3 +105,8 @@ rules:
     resources:
       - rolebindings
     verbs: *everything
+  - apiGroups:
+      - "coordination.k8s.io"
+    resources:
+      - leases
+    verbs: *everything
