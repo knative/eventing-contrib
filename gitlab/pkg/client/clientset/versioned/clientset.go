@@ -24,24 +24,24 @@ import (
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
-	sourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/typed/sources/v1alpha1"
+	sourcev1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/typed/sources/v1alpha1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	SourcesV1alpha1() sourcesv1alpha1.SourcesV1alpha1Interface
+	SourceV1alpha1() sourcev1alpha1.SourceV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	sourcesV1alpha1 *sourcesv1alpha1.SourcesV1alpha1Client
+	sourceV1alpha1 *sourcev1alpha1.SourceV1alpha1Client
 }
 
-// SourcesV1alpha1 retrieves the SourcesV1alpha1Client
-func (c *Clientset) SourcesV1alpha1() sourcesv1alpha1.SourcesV1alpha1Interface {
-	return c.sourcesV1alpha1
+// SourceV1alpha1 retrieves the SourceV1alpha1Client
+func (c *Clientset) SourceV1alpha1() sourcev1alpha1.SourceV1alpha1Interface {
+	return c.sourceV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -65,7 +65,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.sourcesV1alpha1, err = sourcesv1alpha1.NewForConfig(&configShallowCopy)
+	cs.sourceV1alpha1, err = sourcev1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.sourcesV1alpha1 = sourcesv1alpha1.NewForConfigOrDie(c)
+	cs.sourceV1alpha1 = sourcev1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -90,7 +90,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.sourcesV1alpha1 = sourcesv1alpha1.New(c)
+	cs.sourceV1alpha1 = sourcev1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

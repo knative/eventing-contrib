@@ -18,9 +18,9 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
-  name: gitlabsources.sources.eventing.triggermesh.dev
+  name: gitlabsources.source.knative.dev
 spec:
-  group: sources.eventing.triggermesh.dev
+  group: source.knative.dev
   names:
     kind: GitLabSource
     plural: gitlabsources

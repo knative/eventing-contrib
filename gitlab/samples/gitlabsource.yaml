@@ -1,4 +1,4 @@
-apiVersion: sources.eventing.triggermesh.dev/v1alpha1
+apiVersion: source.knative.dev/v1alpha1
 kind: GitLabSource
 metadata:
   name: gitlabsource-sample

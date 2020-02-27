@@ -103,7 +103,7 @@ kubectl -n default apply -f samples/event-display.yaml
   then use it as the value for `projectUrl`.
 
   ```yaml
-  apiVersion: sources.eventing.triggermesh.dev/v1alpha1
+  apiVersion: source.knative.dev/v1alpha1
   kind: GitLabSource
   metadata:
     name: gitlabsource-sample

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   labels:
     control-plane: gitlab-controller-manager
@@ -23,7 +23,6 @@ spec:
   selector:
     matchLabels:
       control-plane: gitlab-controller-manager
-  serviceName: gitlab-controller-manager-service
   template:
     metadata:
       labels:
@@ -33,6 +32,16 @@ spec:
       containers:
       - name: manager
         env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_LOGGING_NAME
+          value: config-logging
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: config-observability
+        - name: METRICS_DOMAIN
+          value: knative.dev/sources
         - name: GL_RA_IMAGE
           value: knative.dev/eventing-contrib/gitlab/cmd/receive_adapter
         - name: POD_NAMESPACE

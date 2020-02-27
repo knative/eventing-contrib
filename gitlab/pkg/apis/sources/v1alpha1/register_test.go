@@ -25,7 +25,7 @@ import (
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
 func TestResource(t *testing.T) {
 	want := schema.GroupResource{
-		Group:    "sources.eventing.triggermesh.dev",
+		Group:    "source.knative.dev",
 		Resource: "foo",
 	}
 

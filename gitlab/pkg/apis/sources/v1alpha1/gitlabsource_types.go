@@ -23,6 +23,7 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // Check that GitLabSource implements the Conditions duck type.
@@ -65,7 +66,7 @@ type GitLabSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.
 	// +optional
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+	Sink *duckv1beta1.Destination `json:"sink,omitempty"`
 }
 
 // SecretValueFromSource represents the source of a secret value

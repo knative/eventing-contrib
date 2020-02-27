@@ -30,13 +30,13 @@ import (
 
 // FakeGitLabSources implements GitLabSourceInterface
 type FakeGitLabSources struct {
-	Fake *FakeSourcesV1alpha1
+	Fake *FakeSourceV1alpha1
 	ns   string
 }
 
-var gitlabsourcesResource = schema.GroupVersionResource{Group: "sources.eventing.triggermesh.dev", Version: "v1alpha1", Resource: "gitlabsources"}
+var gitlabsourcesResource = schema.GroupVersionResource{Group: "source.knative.dev", Version: "v1alpha1", Resource: "gitlabsources"}
 
-var gitlabsourcesKind = schema.GroupVersionKind{Group: "sources.eventing.triggermesh.dev", Version: "v1alpha1", Kind: "GitLabSource"}
+var gitlabsourcesKind = schema.GroupVersionKind{Group: "source.knative.dev", Version: "v1alpha1", Kind: "GitLabSource"}
 
 // Get takes name of the gitLabSource, and returns the corresponding gitLabSource object, and an error if there is any.
 func (c *FakeGitLabSources) Get(name string, options v1.GetOptions) (result *v1alpha1.GitLabSource, err error) {

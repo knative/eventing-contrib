@@ -14,134 +14,124 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gitlabsource
+package gitlab
 
 import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
+	"reflect"
 	"strings"
 	"time"
 
+	//k8s.io imports
+
+	"github.com/juju/errors"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	sourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
-	"knative.dev/pkg/apis/duck"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	appsv1listers "k8s.io/client-go/listers/apps/v1"
+	"k8s.io/client-go/tools/cache"
+	"knative.dev/pkg/kmeta"
+
+	//knative.dev/serving imports
+
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
+	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
+	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1alpha1"
+
+	//knative.dev/eventing-contrib imports
+	sourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
+	clientset "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned"
+	listers "knative.dev/eventing-contrib/gitlab/pkg/client/listers/sources/v1alpha1"
+
+	//knative.dev/eventing imports
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/reconciler"
+
+	//knative.dev/pkg imports
+
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/resolver"
 )
 
 const (
 	controllerAgentName = "gitlab-source-controller"
 	finalizerName       = controllerAgentName
 	raImageEnvVar       = "GL_RA_IMAGE"
+
+	gitLabSourceUpdateStatusFailed = "GitLabSourceUpdateStatusFailed"
+	gitLabSourceReadinessChanged   = "GitLabSourceReadinessChanged"
 )
 
-var log = logf.Log.WithName("controller")
 var receiveAdapterImage string
 
-// Add creates a new GitLabSource Controller and adds it to the Manager with default RBAC. The Manager will set fields on the Controller
-// and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
-	var defined bool
-	receiveAdapterImage, defined = os.LookupEnv(raImageEnvVar)
-	if !defined {
-		return fmt.Errorf("required environment variable %q not defined", raImageEnvVar)
-	}
-	return add(mgr, newReconciler(mgr))
-}
+// Reconciler reconciles a GitLabSource object
+type Reconciler struct {
+	*reconciler.Base
 
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileGitLabSource{Client: mgr.GetClient(), scheme: mgr.GetScheme(), receiveAdapterImage: receiveAdapterImage}
-}
+	gitlabClientSet clientset.Interface
+	gitlabLister    listers.GitLabSourceLister
 
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
-	c, err := controller.New("gitlabsource-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
+	servingClientSet servingclientset.Interface
+	servingLister    servinglisters.ServiceLister
 
-	// Watch for changes to GitLabSource
-	err = c.Watch(&source.Kind{Type: &sourcesv1alpha1.GitLabSource{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &servingv1.Service{}}, &handler.EnqueueRequestForOwner{OwnerType: &servingv1.Service{}, IsController: true})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-var _ reconcile.Reconciler = &ReconcileGitLabSource{}
-
-// ReconcileGitLabSource reconciles a GitLabSource object
-type ReconcileGitLabSource struct {
-	client.Client
-	scheme              *runtime.Scheme
 	receiveAdapterImage string
+	eventTypeLister     eventinglisters.EventTypeLister
+
+	deploymentLister appsv1listers.DeploymentLister
+	sinkResolver     *resolver.URIResolver
+
+	loggingContext context.Context
+	loggingConfig  *logging.Config
+
+	// webhookClient webhookClient
 }
 
 // Reconcile reads that state of the cluster for a GitLabSource object and makes changes based on the state read
 // and what is in the GitLabSource.Spec
-// Automatically generate RBAC rules to allow the Controller to read and write Deployments
-// +kubebuilder:rbac:groups=sources.eventing.triggermesh.dev,resources=gitlabsources,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=sources.eventing.triggermesh.dev,resources=gitlabsources/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=serving.knative.dev,resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
-// +kubebuilder:rbac:groups=eventing.knative.dev,resources=channels,verbs=get;list;watch
-func (r *ReconcileGitLabSource) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.TODO()
+func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
+	logger := logging.FromContext(ctx)
 
-	log.Info("Reconciling " + request.NamespacedName.String())
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		logger.Error("invalid resource key: %s", zap.Any("key", key))
+	}
+
+	logger.Info("Reconciling " + namespace)
 
 	// Fetch the GitLabSource instance
-	sourceOrg := &sourcesv1alpha1.GitLabSource{}
-	err := r.Get(ctx, request.NamespacedName, sourceOrg)
+	source, err := r.gitlabLister.GitLabSources(namespace).Get(name)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Object not found, return.  Created objects are automatically garbage collected.
 			// Finalizers ensure that controller gets chance to process gitlabsource  delete
-			return reconcile.Result{}, nil
+			return nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return err
 	}
 
-	source := sourceOrg.DeepCopyObject()
+	// Don't modify the original (informers) copy
+	gitlab := source.DeepCopy()
+
 	var reconcileErr error
-	if sourceOrg.ObjectMeta.DeletionTimestamp == nil {
-		reconcileErr = r.reconcile(source.(*sourcesv1alpha1.GitLabSource))
+	if gitlab.ObjectMeta.DeletionTimestamp == nil {
+		reconcileErr = r.reconcile(gitlab)
 	} else {
-		if r.hasFinalizer(source.(*sourcesv1alpha1.GitLabSource)) {
-			reconcileErr = r.finalize(source.(*sourcesv1alpha1.GitLabSource))
+		if r.hasFinalizer(gitlab) {
+			reconcileErr = r.finalize(gitlab)
 		}
 	}
-	if err := r.Update(ctx, source); err != nil {
-		log.Error(err, "Failed to update")
-		return reconcile.Result{}, err
+	if _, updateStatusErr := r.updateStatus(ctx, gitlab.DeepCopy()); updateStatusErr != nil {
+		logging.FromContext(ctx).Warn("Failed to update the GitLabSource", zap.Error(updateStatusErr))
+		r.Recorder.Eventf(gitlab, corev1.EventTypeWarning, gitLabSourceUpdateStatusFailed, "Failed to update GitLabSource's status: %v", updateStatusErr)
+		return updateStatusErr
 	}
-	return reconcile.Result{}, reconcileErr
+	return reconcileErr
 }
 
 func getGitlabBaseUrl(projectUrl string) (string, error) {
@@ -163,11 +153,10 @@ func getProjectName(projectUrl string) (string, error) {
 	return projectName, nil
 }
 
-func (r *ReconcileGitLabSource) reconcile(source *sourcesv1alpha1.GitLabSource) error {
+func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 
 	source.Status.InitializeConditions()
 
-	ctx := context.TODO()
 	hookOptions := projectHookOptions{}
 	projectName, err := getProjectName(source.Spec.ProjectUrl)
 	if err != nil {
@@ -210,7 +199,23 @@ func (r *ReconcileGitLabSource) reconcile(source *sourcesv1alpha1.GitLabSource) 
 	}
 	source.Status.MarkSecret()
 
-	uri, err := r.getSinkURI(source.Spec.Sink, source.Namespace)
+	sink := source.Spec.Sink.DeepCopy()
+	if sink.Ref != nil {
+		// To call URIFromDestination(), dest.Ref must have a Namespace. If there is
+		// no Namespace defined in dest.Ref, we will use the Namespace of the source
+		// as the Namespace of dest.Ref.
+		if sink.Ref.Namespace == "" {
+			//TODO how does this work with deprecated fields
+			sink.Ref.Namespace = source.GetNamespace()
+		}
+	} else if sink.DeprecatedName != "" && sink.DeprecatedNamespace == "" {
+		// If Ref is nil and the deprecated ref is present, we need to check for
+		// DeprecatedNamespace. This can be removed when DeprecatedNamespace is
+		// removed.
+		sink.DeprecatedNamespace = source.GetNamespace()
+	}
+
+	uri, err := r.sinkResolver.URIFromDestination(*sink, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
@@ -221,10 +226,10 @@ func (r *ReconcileGitLabSource) reconcile(source *sourcesv1alpha1.GitLabSource) 
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			ksvc = r.generateKnativeServiceObject(source, r.receiveAdapterImage)
-			if err = controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
-				return fmt.Errorf("Failed to create knative service for the gitlabsource: " + err.Error())
-			}
-			if err = r.Create(ctx, ksvc); err != nil {
+			// if err = controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
+			// return fmt.Errorf("Failed to create knative service for the gitlabsource: " + err.Error())
+			// }
+			if _, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ksvc); err != nil {
 				return nil
 			}
 		} else {
@@ -255,7 +260,7 @@ func (r *ReconcileGitLabSource) reconcile(source *sourcesv1alpha1.GitLabSource) 
 	return nil
 }
 
-func (r *ReconcileGitLabSource) finalize(source *sourcesv1alpha1.GitLabSource) error {
+func (r *Reconciler) finalize(source *sourcesv1alpha1.GitLabSource) error {
 
 	hookOptions := projectHookOptions{}
 	projectName, err := getProjectName(source.Spec.ProjectUrl)
@@ -282,13 +287,13 @@ func (r *ReconcileGitLabSource) finalize(source *sourcesv1alpha1.GitLabSource) e
 	return nil
 }
 
-func (r *ReconcileGitLabSource) secretFrom(namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
+func (r *Reconciler) secretFrom(namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
 	secret := &corev1.Secret{}
-	err := r.Get(context.TODO(), client.ObjectKey{Namespace: namespace, Name: secretKeySelector.Name}, secret)
-
+	secret, err := r.KubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
+
 	secretVal, ok := secret.Data[secretKeySelector.Key]
 	if !ok {
 		return "", fmt.Errorf(`key "%s" not found in secret "%s"`, secretKeySelector.Key, secretKeySelector.Name)
@@ -296,19 +301,19 @@ func (r *ReconcileGitLabSource) secretFrom(namespace string, secretKeySelector *
 	return string(secretVal), nil
 }
 
-func (r *ReconcileGitLabSource) addFinalizer(source *sourcesv1alpha1.GitLabSource) {
+func (r *Reconciler) addFinalizer(source *sourcesv1alpha1.GitLabSource) {
 	finalizers := sets.NewString(source.Finalizers...)
 	finalizers.Insert(finalizerName)
 	source.Finalizers = finalizers.List()
 }
 
-func (r *ReconcileGitLabSource) removeFinalizer(source *sourcesv1alpha1.GitLabSource) {
+func (r *Reconciler) removeFinalizer(source *sourcesv1alpha1.GitLabSource) {
 	finalizers := sets.NewString(source.Finalizers...)
 	finalizers.Delete(finalizerName)
 	source.Finalizers = finalizers.List()
 }
 
-func (r *ReconcileGitLabSource) hasFinalizer(source *sourcesv1alpha1.GitLabSource) bool {
+func (r *Reconciler) hasFinalizer(source *sourcesv1alpha1.GitLabSource) bool {
 	for _, finalizerStr := range source.Finalizers {
 		if finalizerStr == finalizerName {
 			return true
@@ -317,7 +322,7 @@ func (r *ReconcileGitLabSource) hasFinalizer(source *sourcesv1alpha1.GitLabSourc
 	return false
 }
 
-func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1alpha1.GitLabSource, receiveAdapterImage string) *servingv1.Service {
+func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLabSource, receiveAdapterImage string) *servingv1.Service {
 	labels := map[string]string{
 		"receive-adapter": "gitlab",
 	}
@@ -336,6 +341,9 @@ func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1al
 			GenerateName: fmt.Sprintf("%s-", source.Name),
 			Namespace:    source.Namespace,
 			Labels:       labels,
+			OwnerReferences: []metav1.OwnerReference{
+				*kmeta.NewControllerRef(source),
+			},
 		},
 		Spec: servingv1.ServiceSpec{
 			ConfigurationSpec: servingv1.ConfigurationSpec{
@@ -358,19 +366,11 @@ func (r *ReconcileGitLabSource) generateKnativeServiceObject(source *sourcesv1al
 	}
 }
 
-func (r *ReconcileGitLabSource) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
-	ctx := context.TODO()
-	list := &servingv1.ServiceList{}
-	err := r.List(ctx, list, &client.ListOptions{
-		Namespace:     source.Namespace,
-		LabelSelector: labels.Everything(),
-		Raw: &metav1.ListOptions{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: servingv1.SchemeGroupVersion.String(),
-				Kind:       "Service",
-			},
-		},
+func (r *Reconciler) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
+	list, err := r.servingClientSet.ServingV1().Services(source.GetNamespace()).List(metav1.ListOptions{
+		LabelSelector: labels.Everything().String(),
 	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +383,21 @@ func (r *ReconcileGitLabSource) getOwnedKnativeService(source *sourcesv1alpha1.G
 	return nil, apierrors.NewNotFound(servingv1.Resource("services"), "")
 }
 
-func (r *ReconcileGitLabSource) waitForKnativeServiceReady(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
+func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
+	if cfg != nil {
+		delete(cfg.Data, "_example")
+	}
+
+	logcfg, err := logging.NewConfigFromConfigMap(cfg)
+	if err != nil {
+		logging.FromContext(r.loggingContext).Warn("failed to create logging config from configmap", zap.String("cfg.Name", cfg.Name))
+		return
+	}
+	r.loggingConfig = logcfg
+	logging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
+}
+
+func (r *Reconciler) waitForKnativeServiceReady(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
 	for attempts := 0; attempts < 4; attempts++ {
 		ksvc, err := r.getOwnedKnativeService(source)
 		if err != nil {
@@ -399,34 +413,28 @@ func (r *ReconcileGitLabSource) waitForKnativeServiceReady(source *sourcesv1alph
 	return nil, fmt.Errorf("Failed to get service to be in ready state")
 }
 
-func (r *ReconcileGitLabSource) getSinkURI(sink *corev1.ObjectReference, namespace string) (string, error) {
-
-	ctx := context.TODO()
-
-	if sink == nil {
-		return "", fmt.Errorf("sink ref is nil")
-	}
-
-	u := &unstructured.Unstructured{}
-	u.SetGroupVersionKind(sink.GroupVersionKind())
-	err := r.Get(ctx, client.ObjectKey{Namespace: namespace, Name: sink.Name}, u)
+func (r *Reconciler) updateStatus(ctx context.Context, source *sourcesv1alpha1.GitLabSource) (*sourcesv1alpha1.GitLabSource, error) {
+	gitlab, err := r.gitlabLister.GitLabSources(source.Namespace).Get(source.Name)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	t := duckv1alpha1.AddressableType{}
-	err = duck.FromUnstructured(u, &t)
-	if err != nil {
-		return "", fmt.Errorf("failed to deserialize sink: %v", err)
+	// If the status remains the same (nothing to update), return.
+	if reflect.DeepEqual(gitlab.Status, source.Status) {
+		return gitlab, nil
 	}
 
-	if t.Status.Address == nil {
-		return "", fmt.Errorf("sink does not contain address")
-	}
+	becomesReady := source.Status.IsReady() && !gitlab.Status.IsReady()
 
-	if t.Status.Address.Hostname == "" {
-		return "", fmt.Errorf("sink contains an empty hostname")
-	}
+	// We avoid modifying the informer's copy
+	existing := gitlab.DeepCopy()
+	existing.Status = source.Status
 
-	return fmt.Sprintf("http://%s/", t.Status.Address.Hostname), nil
+	result, err := r.gitlabClientSet.SourceV1alpha1().GitLabSources(source.Namespace).UpdateStatus(existing)
+	if err == nil && becomesReady {
+		duration := time.Since(result.ObjectMeta.CreationTimestamp.Time)
+		logging.FromContext(ctx).Info("GitLabSource became ready after", zap.Duration("duration", duration))
+		r.Recorder.Event(gitlab, corev1.EventTypeNormal, gitLabSourceReadinessChanged, fmt.Sprintf("GitLabSource %q became ready", gitlab.Name))
+	}
+	return result, err
 }
