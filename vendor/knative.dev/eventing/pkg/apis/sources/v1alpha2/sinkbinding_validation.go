@@ -14,29 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha2
 
 import (
 	"context"
 
-	"knative.dev/eventing/pkg/apis/config"
 	"knative.dev/pkg/apis"
 )
 
-func (b *Broker) SetDefaults(ctx context.Context) {
-	// TODO(vaikas): Set the default class annotation if not specified
-	withNS := apis.WithinParent(ctx, b.ObjectMeta)
-	b.Spec.SetDefaults(withNS)
+// Validate implements apis.Validatable
+func (fb *SinkBinding) Validate(ctx context.Context) *apis.FieldError {
+	err := fb.Spec.Validate(ctx).ViaField("spec")
+	if fb.Spec.Subject.Namespace != "" && fb.Namespace != fb.Spec.Subject.Namespace {
+		err = err.Also(apis.ErrInvalidValue(fb.Spec.Subject.Namespace, "spec.subject.namespace"))
+	}
+	return err
 }
 
-func (bs *BrokerSpec) SetDefaults(ctx context.Context) {
-	if bs.Config != nil {
-		return
-	}
-
-	cfg := config.FromContextOrDefaults(ctx)
-	c, err := cfg.Defaults.GetBrokerConfig(apis.ParentMeta(ctx).Namespace)
-	if err == nil {
-		bs.Config = c
-	}
+// Validate implements apis.Validatable
+func (fbs *SinkBindingSpec) Validate(ctx context.Context) *apis.FieldError {
+	return fbs.Subject.Validate(ctx).ViaField("subject").Also(
+		fbs.Sink.Validate(ctx).ViaField("sink"))
 }

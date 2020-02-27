@@ -1819,10 +1819,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6362342bc5afcb644079b3d1a2e1ad321ccc175dfeb7a4665fe457e793d50fa3"
+  digest = "1:fc776c8b3318551ea4d3cb60153bfe3149607c62b4cccb1b3ca4b55e40be9ae0"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
+    "pkg/apis/config",
     "pkg/apis/configs",
     "pkg/apis/configs/v1alpha1",
     "pkg/apis/duck",
@@ -1934,11 +1935,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "977d0db295dc211840a7cd53a6d22c2d4bbbd5f8"
+  revision = "598d52ae448e25c0174cd74cd2b4d3a7f0e983f8"
 
 [[projects]]
   branch = "release-0.13"
-  digest = "1:f8d227da9c1b062805ff9b98c500f19f02c9015d7bcd3134bfac26829df537fb"
+  digest = "1:77db7d7e7364e6acb7fe627ddb377f94e5199b020be96aa0e8654cd864db2d7a"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1968,6 +1969,7 @@
     "injection/sharedmain",
     "kmeta",
     "kmp",
+    "leaderelection",
     "logging",
     "logging/logkey",
     "logging/testing",
@@ -2010,7 +2012,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "1033748a7ec0f07204774c163436291841855779"
+  revision = "2006e107e39eb0e661e4437ba76b16465162689e"
 
 [[projects]]
   branch = "master"
@@ -2053,7 +2055,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "ca5f921b9429b8e79caad6a0b6f540dda95ff4d2"
+  revision = "19b0417d4f8d0dcc5dbb9be7a85f134f65cce9c2"
 
 [[projects]]
   branch = "master"
@@ -2064,7 +2066,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "01760e2303d6a17936658f155004da3019d0f43c"
+  revision = "b3fc723351c34f03515ee548a5c4ff021e7f544d"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
