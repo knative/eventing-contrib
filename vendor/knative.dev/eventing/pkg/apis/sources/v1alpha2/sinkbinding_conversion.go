@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,29 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha2
 
 import (
 	"context"
+	"fmt"
 
-	"knative.dev/eventing/pkg/apis/config"
 	"knative.dev/pkg/apis"
 )
 
-func (b *Broker) SetDefaults(ctx context.Context) {
-	// TODO(vaikas): Set the default class annotation if not specified
-	withNS := apis.WithinParent(ctx, b.ObjectMeta)
-	b.Spec.SetDefaults(withNS)
+// ConvertTo implements apis.Convertible
+func (source *SinkBinding) ConvertTo(ctx context.Context, sink apis.Convertible) error {
+	return fmt.Errorf("v1alpha2 is the highest known version, got: %T", sink)
 }
 
-func (bs *BrokerSpec) SetDefaults(ctx context.Context) {
-	if bs.Config != nil {
-		return
-	}
-
-	cfg := config.FromContextOrDefaults(ctx)
-	c, err := cfg.Defaults.GetBrokerConfig(apis.ParentMeta(ctx).Namespace)
-	if err == nil {
-		bs.Config = c
-	}
+// ConvertFrom implements apis.Convertible
+func (sink *SinkBinding) ConvertFrom(ctx context.Context, source apis.Convertible) error {
+	return fmt.Errorf("v1alpha2 is the highest known version, got: %T", source)
 }

@@ -14,29 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha2
 
 import (
 	"context"
 
-	"knative.dev/eventing/pkg/apis/config"
+	"github.com/robfig/cron"
 	"knative.dev/pkg/apis"
 )
 
-func (b *Broker) SetDefaults(ctx context.Context) {
-	// TODO(vaikas): Set the default class annotation if not specified
-	withNS := apis.WithinParent(ctx, b.ObjectMeta)
-	b.Spec.SetDefaults(withNS)
+func (c *PingSource) Validate(ctx context.Context) *apis.FieldError {
+	return c.Spec.Validate(ctx).ViaField("spec")
 }
 
-func (bs *BrokerSpec) SetDefaults(ctx context.Context) {
-	if bs.Config != nil {
-		return
+func (cs *PingSourceSpec) Validate(ctx context.Context) *apis.FieldError {
+	var errs *apis.FieldError
+
+	if _, err := cron.ParseStandard(cs.Schedule); err != nil {
+		fe := apis.ErrInvalidValue(cs.Schedule, "schedule")
+		errs = errs.Also(fe)
 	}
 
-	cfg := config.FromContextOrDefaults(ctx)
-	c, err := cfg.Defaults.GetBrokerConfig(apis.ParentMeta(ctx).Namespace)
-	if err == nil {
-		bs.Config = c
+	if fe := cs.Sink.Validate(ctx); fe != nil {
+		errs = errs.Also(fe.ViaField("sink"))
 	}
+	return errs
 }
