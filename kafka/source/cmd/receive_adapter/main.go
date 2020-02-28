@@ -22,5 +22,5 @@ import (
 )
 
 func main() {
-	adapter.Main("kafkasource", kadapter.NewEnvConfig, kadapter.NewAdapter)
+	adapter.MainBindings("kafkasource", kadapter.NewEnvConfig, kadapter.NewAdapter)
 }
