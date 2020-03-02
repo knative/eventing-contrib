@@ -19,6 +19,8 @@ package lib
 import (
 	"fmt"
 
+	sourcesv1alpha2 "knative.dev/eventing/pkg/apis/sources/v1alpha2"
+
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -172,8 +174,10 @@ func (client *Client) CreateBrokerConfigMapOrFail(name string, channel *metav1.T
 			Namespace: client.Namespace,
 		},
 		Data: map[string]string{
-			"channelTemplateSpec.kind":       channel.Kind,
-			"channelTemplateSpec.apiVersion": channel.APIVersion,
+			"channelTemplateSpec": fmt.Sprintf(`
+      apiVersion: %q
+      kind: %q
+`, channel.APIVersion, channel.Kind),
 		},
 	}
 	cm, err := client.Kube.Kube.CoreV1().ConfigMaps(client.Namespace).Create(cm)
@@ -287,10 +291,21 @@ func (client *Client) CreateLegacyContainerSourceOrFail(containerSource *legacys
 	client.Tracker.AddObj(containerSource)
 }
 
-// CreateSinkBindingOrFail will create a SinkBinding or fail the test if there is an error.
-func (client *Client) CreateSinkBindingOrFail(sb *sourcesv1alpha1.SinkBinding) {
+// CreateSinkBindingV1Alpha1OrFail will create a SinkBinding or fail the test if there is an error.
+func (client *Client) CreateSinkBindingV1Alpha1OrFail(sb *sourcesv1alpha1.SinkBinding) {
 	client.T.Logf("Creating sinkbinding %+v", sb)
 	sbInterface := client.Eventing.SourcesV1alpha1().SinkBindings(client.Namespace)
+	_, err := sbInterface.Create(sb)
+	if err != nil {
+		client.T.Fatalf("Failed to create sinkbinding %q: %v", sb.Name, err)
+	}
+	client.Tracker.AddObj(sb)
+}
+
+// CreateSinkBindingV1Alpha2OrFail will create a SinkBinding or fail the test if there is an error.
+func (client *Client) CreateSinkBindingV1Alpha2OrFail(sb *sourcesv1alpha2.SinkBinding) {
+	client.T.Logf("Creating sinkbinding %+v", sb)
+	sbInterface := client.Eventing.SourcesV1alpha2().SinkBindings(client.Namespace)
 	_, err := sbInterface.Create(sb)
 	if err != nil {
 		client.T.Fatalf("Failed to create sinkbinding %q: %v", sb.Name, err)
@@ -320,10 +335,21 @@ func (client *Client) CreateApiServerSourceOrFail(apiServerSource *sourcesv1alph
 	client.Tracker.AddObj(apiServerSource)
 }
 
-// CreatePingSourceOrFail will create an PingSource
-func (client *Client) CreatePingSourceOrFail(pingSource *sourcesv1alpha1.PingSource) {
+// CreatePingSourceV1Alpha1OrFail will create an PingSource
+func (client *Client) CreatePingSourceV1Alpha1OrFail(pingSource *sourcesv1alpha1.PingSource) {
 	client.T.Logf("Creating pingsource %+v", pingSource)
 	pingInterface := client.Eventing.SourcesV1alpha1().PingSources(client.Namespace)
+	_, err := pingInterface.Create(pingSource)
+	if err != nil {
+		client.T.Fatalf("Failed to create pingsource %q: %v", pingSource.Name, err)
+	}
+	client.Tracker.AddObj(pingSource)
+}
+
+// CreatePingSourceV1Alpha2OrFail will create an PingSource
+func (client *Client) CreatePingSourceV1Alpha2OrFail(pingSource *sourcesv1alpha2.PingSource) {
+	client.T.Logf("Creating pingsource %+v", pingSource)
+	pingInterface := client.Eventing.SourcesV1alpha2().PingSources(client.Namespace)
 	_, err := pingInterface.Create(pingSource)
 	if err != nil {
 		client.T.Fatalf("Failed to create pingsource %q: %v", pingSource.Name, err)
