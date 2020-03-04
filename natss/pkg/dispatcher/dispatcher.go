@@ -30,15 +30,41 @@ import (
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/tracing"
 
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
-	contribchannels "knative.dev/eventing-contrib/pkg/channel"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	. "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 const (
 	// maxElements defines a maximum number of outstanding re-connect requests
 	maxElements = 10
+
+	// cloudEventVersion defines the cloud events version
+	cloudEventVersion = cloudevents.VersionV1
+	// timeLayout defines the time format of cloud event payload
+	timeLayout = time.RFC3339
+	// eventType defines the type key in the cloud event payload
+	eventType = "type"
+	// eventSpecVersion defines the spec version key in the cloud event payload
+	eventSpecVersion = "specversion"
+	// eventSpecVersion defines the spec version key in the cloud event payload
+	eventTime = "time"
+	// eventDataContentType defines the content type key in the cloud event payload
+	eventDataContentType = "datacontenttype"
+	// eventId defines the event id key in the cloud event payload
+	eventId = "id"
+	// eventSource defines the event source key in the cloud event payload
+	eventSource = "source"
+	// eventDate defines the event data key in the cloud event payload
+	eventData = "data"
+
+	// tracingSpanIgnoringPath defines the tracing path to ignore
+	tracingSpanIgnoringPath = "/readyz"
 )
 
 var (
@@ -52,8 +78,9 @@ type SubscriptionChannelMapping map[eventingchannels.ChannelReference]map[subscr
 type SubscriptionsSupervisor struct {
 	logger *zap.Logger
 
-	receiver   *contribchannels.MessageReceiver
-	dispatcher *contribchannels.MessageDispatcher
+	receiver   *eventingchannels.EventReceiver
+	dispatcher *eventingchannels.EventDispatcher
+	ceClient   cloudevents.Client
 
 	subscriptionsMux sync.Mutex
 	subscriptions    SubscriptionChannelMapping
@@ -72,27 +99,47 @@ type SubscriptionsSupervisor struct {
 }
 
 type NatssDispatcher interface {
-	Start(stopCh <-chan struct{}) error
+	Start(ctx context.Context) error
 	UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error)
 	ProcessChannels(ctx context.Context, chanList []messagingv1alpha1.Channel) error
 }
 
+type Args struct {
+	NatssURL  string
+	ClusterID string
+	ClientID  string
+	Cargs     kncloudevents.ConnectionArgs
+	Logger    *zap.Logger
+}
+
 // NewDispatcher returns a new NatssDispatcher.
-func NewDispatcher(natssURL, clusterID, clientID string, logger *zap.Logger) (NatssDispatcher, error) {
+func NewDispatcher(args Args) (NatssDispatcher, error) {
+	if args.Logger == nil {
+		args.Logger = zap.NewNop()
+	}
+
 	d := &SubscriptionsSupervisor{
-		logger:        logger,
-		dispatcher:    contribchannels.NewMessageDispatcher(logger.Sugar()),
+		logger:        args.Logger,
+		dispatcher:    eventingchannels.NewEventDispatcher(args.Logger),
 		connect:       make(chan struct{}, maxElements),
-		natssURL:      natssURL,
-		clusterID:     clusterID,
-		clientID:      clientID,
+		natssURL:      args.NatssURL,
+		clusterID:     args.ClusterID,
+		clientID:      args.ClientID,
 		subscriptions: make(SubscriptionChannelMapping),
 	}
+	httpTransport, err := cloudevents.NewHTTPTransport(cloudevents.WithStructuredEncoding(), cloudevents.WithMiddleware(tracing.HTTPSpanIgnoringPaths(tracingSpanIgnoringPath)))
+	if err != nil {
+		args.Logger.Fatal("failed to create httpTransport", zap.Error(err))
+	}
+	ceClient, err := kncloudevents.NewDefaultClientGivenHttpTransport(httpTransport, &args.Cargs)
+	if err != nil {
+		const msg = "failed to create cloudevents client"
+		args.Logger.Fatal(msg, zap.Error(err))
+		return nil, fmt.Errorf(msg)
+	}
+	d.ceClient = ceClient
 	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
-	receiver, err := contribchannels.NewMessageReceiver(
-		createReceiverFunction(d, logger.Sugar()),
-		logger.Sugar(),
-		contribchannels.ResolveChannelFromHostHeader(contribchannels.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
+	receiver, err := eventingchannels.NewEventReceiver(createReceiverFunc(d, args.Logger.Sugar()), args.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +156,12 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 	}
 }
 
-func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) func(eventingchannels.ChannelReference, *contribchannels.Message) error {
-	return func(channel eventingchannels.ChannelReference, m *contribchannels.Message) error {
+func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) eventingchannels.ReceiverFunc {
+	return func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
 		logger.Infof("Received message from %q channel", channel.String())
 		// publish to Natss
 		ch := getSubject(channel)
-		message, err := json.Marshal(m)
+		message, err := serialize(&event)
 		if err != nil {
 			logger.Errorf("Error during marshaling of the message: %v", err)
 			return err
@@ -135,17 +182,32 @@ func createReceiverFunction(s *SubscriptionsSupervisor, logger *zap.SugaredLogge
 			}
 			return err
 		}
-		logger.Debugf("Published [%s] : '%s'", channel.String(), m.Headers)
+		logger.Debugf("Published [%s] : '%s'", channel.String(), event.String())
 		return nil
 	}
 }
 
-func (s *SubscriptionsSupervisor) Start(stopCh <-chan struct{}) error {
+func serialize(event *cloudevents.Event) ([]byte, error) {
+	payload := make(map[string]interface{})
+	payload[eventSpecVersion] = event.SpecVersion()
+	payload[eventId] = event.ID()
+	payload[eventType] = event.Type()
+	payload[eventSource] = event.Source()
+	payload[eventDataContentType] = event.DataContentType()
+	payload[eventTime] = event.Time().Format(timeLayout)
+	payload[eventData] = event.Data
+	for k, v := range event.Extensions() {
+		payload[k] = v
+	}
+	return json.Marshal(payload)
+}
+
+func (s *SubscriptionsSupervisor) Start(ctx context.Context) error {
 	// Starting Connect to establish connection with NATS
-	go s.Connect(stopCh)
+	go s.Connect(ctx.Done())
 	// Trigger Connect to establish connection with NATS
 	s.signalReconnect()
-	return s.receiver.Start(stopCh)
+	return s.ceClient.StartReceiver(ctx, s.receiver.ServeHTTP)
 }
 
 func (s *SubscriptionsSupervisor) connectWithRetry(stopCh <-chan struct{}) {
@@ -162,7 +224,7 @@ func (s *SubscriptionsSupervisor) connectWithRetry(stopCh <-chan struct{}) {
 			s.natssConnMux.Unlock()
 			return
 		}
-		s.logger.Sugar().Errorf("Connect() failed with error: %+v, retrying in %s", err, retryInterval.String())
+		s.logger.Sugar().Errorf("Connect() failed with errorExpected: %+v, retrying in %s", err, retryInterval.String())
 		select {
 		case <-ticker.C:
 			continue
@@ -194,7 +256,7 @@ func (s *SubscriptionsSupervisor) Connect(stopCh <-chan struct{}) {
 }
 
 // UpdateSubscriptions creates/deletes the natss subscriptions based on channel.Spec.Subscribable.Subscribers
-// Return type:map[eventingduck.SubscriberSpec]error --> Returns a map of subscriberSpec that failed with the value=error encountered.
+// Return type:map[eventingduck.SubscriberSpec]errorExpected --> Returns a map of subscriberSpec that failed with the value=error encountered.
 // Ignore the value in case error != nil
 func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error) {
 	s.subscriptionsMux.Lock()
@@ -262,13 +324,13 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	mcb := func(msg *stan.Msg) {
-		message := contribchannels.Message{}
-		if err := json.Unmarshal(msg.Data, &message); err != nil {
-			s.logger.Error("Failed to unmarshal message: ", zap.Error(err))
+		event, err := toEvent(msg)
+		if err != nil {
+			s.logger.Error(err.Error(), zap.Error(err))
 			return
 		}
-		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, headers: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, message.Headers)
-		if err := s.dispatcher.DispatchMessage(&message, subscription.SubscriberURI, subscription.ReplyURI, contribchannels.DispatchDefaults{Namespace: channel.Namespace}); err != nil {
+		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
+		if err := s.dispatcher.DispatchEvent(context.TODO(), *event, subscription.SubscriberURI, subscription.ReplyURI); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
@@ -298,6 +360,52 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 	}
 	s.logger.Sugar().Infof("NATSS Subscription created: %+v", natssSub)
 	return &natssSub, nil
+}
+
+func toEvent(msg *stan.Msg) (*cloudevents.Event, error) {
+	var payload map[string]interface{}
+	if err := json.Unmarshal(msg.Data, &payload); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal message: %+v", err)
+	}
+	event := cloudevents.NewEvent(cloudEventVersion)
+	event.SetSubject(msg.Subject)
+	for k, v := range payload {
+		switch k {
+		case eventType:
+			if v, ok := v.(string); ok {
+				event.SetType(v)
+			}
+		case eventSpecVersion:
+			if v, ok := v.(string); ok {
+				event.SetSpecVersion(v)
+			}
+		case eventTime:
+			if v, ok := v.(string); ok {
+				if t, err := time.Parse(timeLayout, v); err == nil {
+					event.SetTime(t)
+				}
+			}
+		case eventDataContentType:
+			if v, ok := v.(string); ok {
+				event.SetDataContentType(v)
+			}
+		case eventId:
+			if v, ok := v.(string); ok {
+				event.SetID(v)
+			}
+		case eventSource:
+			if v, ok := v.(string); ok {
+				event.SetSource(v)
+			}
+		case eventData:
+			event.SetData(v)
+		default:
+			if IsAlphaNumeric(k) {
+				event.SetExtension(k, v)
+			}
+		}
+	}
+	return &event, nil
 }
 
 // should be called only while holding subscriptionsMux

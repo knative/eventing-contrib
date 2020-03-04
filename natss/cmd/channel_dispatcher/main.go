@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"log"
 
 	"knative.dev/eventing/pkg/tracing"
@@ -58,14 +59,23 @@ func main() {
 	defer flush(logger)
 
 	// set up signals so we handle the first shutdown signal gracefully
-	stopCh := signals.SetupSignalHandler()
+	ctx := signals.NewContext()
 
 	cfg, err := clientcmd.BuildConfigFromFlags(*masterURL, *kubeconfig)
 	if err != nil {
 		logger.Fatalw("Error building kubeconfig", zap.Error(err))
 	}
-
-	natssDispatcher, err := dispatcher.NewDispatcher(util.GetDefaultNatssURL(), util.GetDefaultClusterID(), clientID, logger.Desugar())
+	dispatcherArgs := dispatcher.Args{
+		NatssURL:  util.GetDefaultNatssURL(),
+		ClusterID: util.GetDefaultClusterID(),
+		ClientID:  clientID,
+		Cargs: kncloudevents.ConnectionArgs{
+			MaxIdleConns:        1000, // TODO load from config map
+			MaxIdleConnsPerHost: 100,  // TODO load from config map
+		},
+		Logger: logger.Desugar(),
+	}
+	natssDispatcher, err := dispatcher.NewDispatcher(dispatcherArgs)
 	if err != nil {
 		logger.Fatalw("Unable to create natss dispatcher", zap.Error(err))
 	}
@@ -76,7 +86,7 @@ func main() {
 	const numControllers = 1
 	cfg.QPS = numControllers * rest.DefaultQPS
 	cfg.Burst = numControllers * rest.DefaultBurst
-	opt := reconciler.NewOptionsOrDie(cfg, logger, stopCh)
+	opt := reconciler.NewOptionsOrDie(cfg, logger, ctx.Done())
 	messagingClientSet := clientset.NewForConfigOrDie(cfg)
 	messagingInformerFactory := informers.NewSharedInformerFactory(messagingClientSet, opt.ResyncPeriod)
 
@@ -111,14 +121,14 @@ func main() {
 		logger.Fatalw("Error setting up Zipkin publishing", zap.Error(err))
 	}
 
-	if err := opt.ConfigMapWatcher.Start(stopCh); err != nil {
+	if err := opt.ConfigMapWatcher.Start(ctx.Done()); err != nil {
 		logger.Fatalw("failed to start configuration manager", zap.Error(err))
 	}
 
 	// Start all of the informers and wait for them to sync.
 	logger.Info("Starting informers.")
 	if err := kncontroller.StartInformers(
-		stopCh,
+		ctx.Done(),
 		// Messaging
 		natssChannelInformer.Informer(),
 	); err != nil {
@@ -126,10 +136,10 @@ func main() {
 	}
 
 	logger.Info("Starting dispatcher.")
-	go natssDispatcher.Start(stopCh)
+	go natssDispatcher.Start(ctx)
 
 	logger.Info("Starting controllers.")
-	kncontroller.StartAll(stopCh, controllers[:]...)
+	kncontroller.StartAll(ctx.Done(), controllers[:]...)
 }
 
 func setupLogger() (*zap.SugaredLogger, zap.AtomicLevel) {

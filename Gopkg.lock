@@ -2171,6 +2171,7 @@
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
     "github.com/nats-io/go-nats-streaming",
+    "github.com/nats-io/go-nats-streaming/pb",
     "github.com/nats-io/nats-streaming-server/server",
     "github.com/robfig/cron",
     "github.com/slinkydeveloper/loadastic/common",
