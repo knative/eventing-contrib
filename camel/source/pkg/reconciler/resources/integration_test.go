@@ -74,7 +74,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Kit:                "test-kit",
 			Sources: []camelv1.SourceSpec{
 				{
-					Loader: "knative-source-yaml",
+					Loader: "knative-source",
 					DataSpec: camelv1.DataSpec{
 						Name:    "flow.yaml",
 						Content: "- from:\n    uri: timer:tick\n",

@@ -140,7 +140,7 @@ func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSource
 				"mvn:org.apache.camel.k/camel-k-runtime-knative",
 				"mvn:org.apache.camel.k/camel-k-runtime-main",
 			},
-			Image: "docker.io/testcamelk/camel-k-kit-bosp6ks52uhp0rb7beeg:3590738",
+			Image: "docker.io/testcamelk/camel-k-kit-knative-timer:1.0.0-RC2",
 		},
 	}
 

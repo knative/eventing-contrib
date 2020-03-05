@@ -141,7 +141,7 @@ required = [
 
 [[constraint]]
   name = "github.com/apache/camel-k"
-  version = "1.0.0-RC1"
+  version = "1.0.0-RC2"
 
 # needed because pkg upgraded
 [[override]]

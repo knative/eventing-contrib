@@ -522,7 +522,7 @@ func getRunningCamelKFlowIntegration(t *testing.T) *camelv1.Integration {
 			Integration: &camelv1.IntegrationSpec{
 				Sources: []camelv1.SourceSpec{
 					{
-						Loader: "knative-source-yaml",
+						Loader: "knative-source",
 						DataSpec: camelv1.DataSpec{
 							Name:    "flow.yaml",
 							Content: "- from:\n    steps:\n    - set-body:\n        constant: Hello world\n    uri: timer:tick?period=3s\n",

@@ -57,7 +57,7 @@ func MakeIntegration(args *CamelArguments) (*camelv1.Integration, error) {
 			return nil, err
 		}
 		spec.Sources = append(spec.Sources, camelv1.SourceSpec{
-			Loader: "knative-source-yaml",
+			Loader: "knative-source",
 			DataSpec: camelv1.DataSpec{
 				Name:    "flow.yaml",
 				Content: flowData,
