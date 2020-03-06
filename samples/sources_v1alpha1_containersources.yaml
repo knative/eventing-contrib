@@ -5,7 +5,7 @@ metadata:
     controller-tools.k8s.io: "1.0"
   name: containersource-sample
 spec:
-  image: knative.dev/eventing-contrib/cmd/heartbeats/
+  image: ko://knative.dev/eventing-contrib/cmd/heartbeats/
   args:
    - '--label="<3"'
    - '--period=2'

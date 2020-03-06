@@ -39,7 +39,7 @@ kind: ContainerSource
 metadata:
   name: urbanobservatory-event-source
 spec:
-  image: knative.dev/eventing-contrib/cmd/websocketsource/
+  image: ko://knative.dev/eventing-contrib/cmd/websocketsource/
   args: 
     - '--source=wss://api.usb.urbanobservatory.ac.uk/stream'
 # Fill this out:
