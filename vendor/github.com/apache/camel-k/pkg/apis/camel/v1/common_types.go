@@ -22,17 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// RuntimeProvider --
-type RuntimeProvider struct {
-	Quarkus *QuarkusRuntimeProvider `json:"quarkus,omitempty"`
-}
-
-// QuarkusRuntimeProvider --
-type QuarkusRuntimeProvider struct {
-	CamelQuarkusVersion string `json:"camelQuarkusVersion,omitempty" yaml:"camelQuarkusVersion"`
-	QuarkusVersion      string `json:"quarkusVersion,omitempty" yaml:"quarkusVersion"`
-}
-
 // ConfigurationSpec --
 type ConfigurationSpec struct {
 	Type  string `json:"type"`
@@ -90,7 +79,33 @@ type ValueSource struct {
 	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
+// MavenArtifact --
+type MavenArtifact struct {
+	GroupID    string `json:"groupId" yaml:"groupId"`
+	ArtifactID string `json:"artifactId" yaml:"artifactId"`
+	Version    string `json:"version,omitempty" yaml:"version,omitempty"`
+}
+
+// RuntimeSpec --
+type RuntimeSpec struct {
+	Version          string            `json:"version" yaml:"version"`
+	Provider         RuntimeProvider   `json:"provider" yaml:"provider"`
+	ApplicationClass string            `json:"applicationClass" yaml:"applicationClass"`
+	Dependencies     []MavenArtifact   `json:"dependencies" yaml:"dependencies"`
+	Metadata         map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+}
+
 const (
 	// ServiceTypeUser --
 	ServiceTypeUser = "user"
 )
+
+// ResourceCondition is a common type for all conditions
+type ResourceCondition interface {
+	GetType() string
+	GetStatus() corev1.ConditionStatus
+	GetLastUpdateTime() metav1.Time
+	GetLastTransitionTime() metav1.Time
+	GetReason() string
+	GetMessage() string
+}
