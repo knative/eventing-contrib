@@ -29,7 +29,7 @@ import (
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
-	//Nanosecond unix timestamp
+	//Millisecond unix timestamp
 	timestamp := "1542107977907"
 	testCases := map[string]struct {
 		sink    func(http.ResponseWriter, *http.Request)
