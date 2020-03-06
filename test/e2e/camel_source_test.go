@@ -134,6 +134,9 @@ func createCamelPlatformOrFail(c *lib.Client, camelClient runtime.Client, camelS
 			Name:      "camel-k",
 			Namespace: c.Namespace,
 		},
+		Spec: camelv1.IntegrationPlatformSpec{
+			Profile: camelv1.TraitProfileKnative,
+		},
 	}
 
 	if err := camelClient.Create(context.TODO(), &platform); err != nil {
