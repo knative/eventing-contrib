@@ -181,7 +181,7 @@ func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 	event.SetID(*m.MessageId)
 	event.SetType(sourcesv1alpha1.AwsSqsSourceEventType)
 	event.SetSource(types.ParseURIRef(a.QueueURL).String())
-	event.SetTime(time.UnixNano(timestamp, 0))
+	event.SetTime(time.Unix(0, timestamp))
 
 	if err := event.SetData(m); err != nil {
 		return nil, err
