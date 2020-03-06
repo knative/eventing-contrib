@@ -27,4 +27,4 @@ spec:
       - env:
         - name: MESSAGE
           value: "...your message goes here..."
-        image: knative.dev/eventing-contrib/cmd/appender
+        image: ko://knative.dev/eventing-contrib/cmd/appender
