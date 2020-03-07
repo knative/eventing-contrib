@@ -89,9 +89,29 @@ func TestCamelSource(t *testing.T) {
 	t.Logf("Sleeping for 3s to let the timer tick at least once")
 	time.Sleep(3 * time.Second)
 
+	pods, err := client.Kube.Kube.CoreV1().Pods(client.Namespace).List(meta.ListOptions{
+		LabelSelector: "camel.apache.org/integration",
+	})
+	if err != nil {
+		t.Fatalf("cannot get integration pod: %v", err)
+	}
+	if len(pods.Items) == 0 {
+		t.Fatalf("no integration pod found")
+	}
+	printPodLogs(t, client, pods.Items[0].Name, "integration")
+
 	if err := client.CheckLog(loggerPodName, lib.CheckerContains(body)); err != nil {
+		printPodLogs(t, client, pods.Items[0].Name, "integration")
 		t.Fatalf("Strings %q not found in logs of logger pod %q: %v", body, loggerPodName, err)
 	}
+}
+
+func printPodLogs(t *testing.T, c *lib.Client, podName, containerName string) {
+	logs, err := c.Kube.PodLogs(podName, containerName, c.Namespace)
+	if err == nil {
+		t.Log(string(logs))
+	}
+	t.Logf("End of pod %s logs", podName)
 }
 
 func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
@@ -113,6 +133,9 @@ func createCamelPlatformOrFail(c *lib.Client, camelClient runtime.Client, camelS
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "camel-k",
 			Namespace: c.Namespace,
+		},
+		Spec: camelv1.IntegrationPlatformSpec{
+			Profile: camelv1.TraitProfileKnative,
 		},
 	}
 
@@ -140,7 +163,7 @@ func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSource
 				"mvn:org.apache.camel.k/camel-k-runtime-knative",
 				"mvn:org.apache.camel.k/camel-k-runtime-main",
 			},
-			Image: "docker.io/testcamelk/camel-k-kit-bosp6ks52uhp0rb7beeg:3590738",
+			Image: "docker.io/testcamelk/camel-k-kit-knative-timer:1.0.0-RC2",
 		},
 	}
 

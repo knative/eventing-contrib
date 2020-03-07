@@ -65,15 +65,15 @@
   version = "v1.24.0"
 
 [[projects]]
-  digest = "1:e2c0a049c5ce352f6a387f7327d86ce2ce4371ec4584e89df7541ff911b397d7"
+  digest = "1:604d60aab399c8e32c5c6e84aa0d227cdf2dad6893cadff00034bc827c367b08"
   name = "github.com/apache/camel-k"
   packages = [
     "pkg/apis/camel/v1",
     "pkg/apis/camel/v1/knative",
   ]
   pruneopts = "NUT"
-  revision = "f448eb9e21f8df79950e7b93ccafbaa922bdeea6"
-  version = "1.0.0-RC1"
+  revision = "24ddce5afb41c70a0bf30e06f74c6f380f5fd851"
+  version = "1.0.0-RC2"
 
 [[projects]]
   branch = "master"

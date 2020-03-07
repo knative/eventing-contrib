@@ -67,7 +67,7 @@ readonly KAFKA_CRD_CONFIG_DIR="$(mktemp -d)"
 readonly KAFKA_SOURCE_CRD_CONFIG_DIR="kafka/source/config"
 
 # CamelK installation
-readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.0.0-RC1.yaml"
+readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.0.0-RC2.yaml"
 # Camel source CRD config template directory
 readonly CAMEL_SOURCE_CRD_CONFIG_DIR="camel/source/config"
 
