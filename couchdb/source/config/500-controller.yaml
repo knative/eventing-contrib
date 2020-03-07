@@ -32,7 +32,7 @@ spec:
     spec:
       serviceAccountName: couchdb-controller-manager
       containers:
-      - image: knative.dev/eventing-contrib/couchdb/source/cmd/controller
+      - image: ko://knative.dev/eventing-contrib/couchdb/source/cmd/controller
         name: manager
         env:
         - name: SYSTEM_NAMESPACE
@@ -48,7 +48,7 @@ spec:
         - name: CONFIG_LEADERELECTION_NAME
           value: config-leader-election-couchdb
         - name: COUCHDB_RA_IMAGE
-          value: knative.dev/eventing-contrib/couchdb/source/cmd/receive_adapter
+          value: ko://knative.dev/eventing-contrib/couchdb/source/cmd/receive_adapter
         resources:
           requests:
             cpu: 100m

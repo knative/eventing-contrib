@@ -32,7 +32,7 @@ spec:
       serviceAccountName: kafka-ch-controller
       containers:
         - name: controller
-          image: knative.dev/eventing-contrib/kafka/channel/cmd/channel_controller
+          image: ko://knative.dev/eventing-contrib/kafka/channel/cmd/channel_controller
           env:
             - name: CONFIG_LOGGING_NAME
               value: config-logging
@@ -45,7 +45,7 @@ spec:
             - name: CONFIG_LEADERELECTION_NAME
               value: config-leader-election-kafka
             - name: DISPATCHER_IMAGE
-              value: knative.dev/eventing-contrib/kafka/channel/cmd/channel_dispatcher
+              value: ko://knative.dev/eventing-contrib/kafka/channel/cmd/channel_dispatcher
           ports:
             - containerPort: 9090
               name: metrics
