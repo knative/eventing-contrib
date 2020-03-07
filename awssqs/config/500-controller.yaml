@@ -35,7 +35,7 @@ spec:
       containers:
         - name: controller
           terminationMessagePolicy: FallbackToLogsOnError
-          image: knative.dev/eventing-contrib/awssqs/cmd/controller
+          image: ko://knative.dev/eventing-contrib/awssqs/cmd/controller
 
           resources:
             limits:
@@ -60,7 +60,7 @@ spec:
               value: knative.dev/sources
             # AwsSqsSource RA image:
             - name: AWSSQS_RA_IMAGE
-              value: knative.dev/eventing-contrib/awssqs/cmd/receive_adapter
+              value: ko://knative.dev/eventing-contrib/awssqs/cmd/receive_adapter
 
           securityContext:
             allowPrivilegeEscalation: false

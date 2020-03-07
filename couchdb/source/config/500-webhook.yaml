@@ -35,7 +35,7 @@ spec:
       containers:
       - name: couchdb-webhook
         terminationMessagePolicy: FallbackToLogsOnError
-        image: knative.dev/eventing-contrib/couchdb/source/cmd/webhook
+        image: ko://knative.dev/eventing-contrib/couchdb/source/cmd/webhook
         env:
           - name: SYSTEM_NAMESPACE
             valueFrom:

@@ -32,7 +32,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: sender-receiver
-          image: knative.dev/eventing-contrib/test/test_images/kafka_performance
+          image: ko://knative.dev/eventing-contrib/test/test_images/kafka_performance
           args:
             - "--roles=sender,receiver"
             - "--bootstrap-url=my-cluster-kafka-bootstrap.kafka.svc:9092"
@@ -73,7 +73,7 @@ spec:
   restartPolicy: Never
   containers:
     - name: aggregator
-      image: knative.dev/eventing-contrib/test/test_images/kafka_performance
+      image: ko://knative.dev/eventing-contrib/test/test_images/kafka_performance
       args:
         - "--roles=aggregator"
         # set to the number of sender-receiver
@@ -90,7 +90,7 @@ spec:
           mountPath: /etc/config-mako
       terminationMessagePolicy: FallbackToLogsOnError
     - name: mako-stub
-      image: knative.dev/pkg/test/mako/stub-sidecar
+      image: ko://knative.dev/pkg/test/mako/stub-sidecar
       ports:
         - name: quickstore
           containerPort: 9813
