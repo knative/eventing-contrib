@@ -25,13 +25,11 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -46,21 +44,11 @@ import (
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	"knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
-	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
-	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
-	"knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
-	"knative.dev/pkg/client/injection/kube/informers/rbac/v1/rolebinding"
-	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
 	kafkaScheme "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme"
-	kafkaclientsetinjection "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
 	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
@@ -139,94 +127,6 @@ type envConfig struct {
 
 // Check that our Reconciler implements controller.Reconciler.
 var _ controller.Reconciler = (*Reconciler)(nil)
-
-// NewController initializes the controller and is called by the generated code.
-// Registers event handlers to enqueue events.
-func NewController(
-	ctx context.Context,
-	cmw configmap.Watcher,
-) *controller.Impl {
-	logger := logging.FromContext(ctx)
-
-	kafkaChannelInformer := kafkachannel.Get(ctx)
-	deploymentInformer := deployment.Get(ctx)
-	endpointsInformer := endpoints.Get(ctx)
-	serviceAccountInformer := serviceaccount.Get(ctx)
-	roleBindingInformer := rolebinding.Get(ctx)
-	serviceInformer := service.Get(ctx)
-
-	kafkaChannelClientSet := kafkaclientsetinjection.Get(ctx)
-
-	r := &Reconciler{
-		Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
-		systemNamespace: system.Namespace(),
-
-		kafkachannelLister:   kafkaChannelInformer.Lister(),
-		kafkachannelInformer: kafkaChannelInformer.Informer(),
-		deploymentLister:     deploymentInformer.Lister(),
-		serviceLister:        serviceInformer.Lister(),
-		endpointsLister:      endpointsInformer.Lister(),
-		serviceAccountLister: serviceAccountInformer.Lister(),
-		roleBindingLister:    roleBindingInformer.Lister(),
-		kafkaClientSet:       kafkaChannelClientSet,
-	}
-
-	env := &envConfig{}
-	if err := envconfig.Process("", env); err != nil {
-		r.Logger.Panicf("unable to process Kafka channel's required environment variables: %v", err)
-	}
-
-	if env.Image == "" {
-		r.Logger.Panic("unable to process Kafka channel's required environment variables (missing DISPATCHER_IMAGE)")
-	}
-
-	r.dispatcherImage = env.Image
-
-	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
-
-	// Get and Watch the Kakfa config map and dynamically update Kafka configuration.
-	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get("config-kafka", metav1.GetOptions{}); err == nil {
-		cmw.Watch("config-kafka", r.updateKafkaConfig)
-	} else if !apierrors.IsNotFound(err) {
-		logger.With(zap.Error(err)).Fatal("Error reading ConfigMap 'config-kafka'")
-	}
-
-	r.Logger.Info("Setting up event handlers")
-	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
-
-	// Set up watches for dispatcher resources we care about, since any changes to these
-	// resources will affect our Channels. So, set up a watch here, that will cause
-	// a global Resync for all the channels to take stock of their health when these change.
-	filterFn := controller.FilterWithName(dispatcherName)
-
-	// Call GlobalResync on kafkachannels.
-	grCh := func(obj interface{}) {
-		r.impl.GlobalResync(r.kafkachannelInformer)
-	}
-
-	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterFn,
-		Handler:    controller.HandleAll(grCh),
-	})
-	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterFn,
-		Handler:    controller.HandleAll(grCh),
-	})
-	endpointsInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterFn,
-		Handler:    controller.HandleAll(grCh),
-	})
-	serviceAccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterFn,
-		Handler:    controller.HandleAll(grCh),
-	})
-	roleBindingInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterFn,
-		Handler:    controller.HandleAll(grCh),
-	})
-
-	return r.impl
-}
 
 // Reconcile compares the actual state with the desired, and attempts to
 // converge the two. It then updates the Status block of the KafkaChannel resource
