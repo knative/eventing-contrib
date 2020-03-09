@@ -31,7 +31,7 @@ spec:
         control-plane: camel-controller-manager
     spec:
       containers:
-      - image: knative.dev/eventing-contrib/camel/source/cmd/controller
+      - image: ko://knative.dev/eventing-contrib/camel/source/cmd/controller
         name: manager
         resources:
           requests:

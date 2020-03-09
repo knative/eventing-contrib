@@ -31,7 +31,7 @@ spec:
     spec:
       serviceAccountName: github-controller-manager
       containers:
-      - image: knative.dev/eventing-contrib/github/cmd/controller
+      - image: ko://knative.dev/eventing-contrib/github/cmd/controller
         name: manager
         env:
         - name: SYSTEM_NAMESPACE
@@ -47,7 +47,7 @@ spec:
         - name: METRICS_DOMAIN
           value: knative.dev/sources
         - name: GH_RA_IMAGE
-          value: knative.dev/eventing-contrib/github/cmd/receive_adapter
+          value: ko://knative.dev/eventing-contrib/github/cmd/receive_adapter
         resources:
           requests:
             cpu: 100m

@@ -1,0 +1,9 @@
+approvers:
+  - camel-approvers
+
+reviewers:
+  - camel-reviewers
+
+labels:
+  - area/Camel
+

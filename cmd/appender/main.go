@@ -41,7 +41,8 @@ https://knative.dev/docs/eventing/sequence/
 */
 
 type envConfig struct {
-	Msg string `envconfig:"MESSAGE" default:"boring default msg, change me with env[MESSAGE]"`
+	Msg  string `envconfig:"MESSAGE" default:"boring default msg, change me with env[MESSAGE]"`
+	Type string `envconfig:"TYPE"`
 }
 
 var (
@@ -71,6 +72,11 @@ func gotEvent(event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	r := cloudevents.Event{
 		Context: ctx,
 		Data:    data,
+	}
+
+	// Resolve type
+	if env.Type != "" {
+		r.Context.SetType(env.Type)
 	}
 
 	r.SetDataContentType(cloudevents.ApplicationJSON)

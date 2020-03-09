@@ -27,7 +27,7 @@ func NewIntegrationKit(namespace string, name string) IntegrationKit {
 	return IntegrationKit{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationKindKind,
+			Kind:       IntegrationKitKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -41,7 +41,7 @@ func NewIntegrationKitList() IntegrationKitList {
 	return IntegrationKitList{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationKindKind,
+			Kind:       IntegrationKitKind,
 		},
 	}
 }
@@ -154,4 +154,45 @@ func (in *IntegrationKitStatus) RemoveCondition(condType IntegrationKitCondition
 	}
 
 	in.Conditions = newConditions
+}
+
+var _ ResourceCondition = IntegrationKitCondition{}
+
+// GetConditions --
+func (in *IntegrationKitStatus) GetConditions() []ResourceCondition {
+	res := make([]ResourceCondition, 0, len(in.Conditions))
+	for _, c := range in.Conditions {
+		res = append(res, c)
+	}
+	return res
+}
+
+// GetType --
+func (c IntegrationKitCondition) GetType() string {
+	return string(c.Type)
+}
+
+// GetStatus --
+func (c IntegrationKitCondition) GetStatus() corev1.ConditionStatus {
+	return c.Status
+}
+
+// GetLastUpdateTime --
+func (c IntegrationKitCondition) GetLastUpdateTime() metav1.Time {
+	return c.LastUpdateTime
+}
+
+// GetLastTransitionTime --
+func (c IntegrationKitCondition) GetLastTransitionTime() metav1.Time {
+	return c.LastTransitionTime
+}
+
+// GetReason --
+func (c IntegrationKitCondition) GetReason() string {
+	return c.Reason
+}
+
+// GetMessage --
+func (c IntegrationKitCondition) GetMessage() string {
+	return c.Message
 }

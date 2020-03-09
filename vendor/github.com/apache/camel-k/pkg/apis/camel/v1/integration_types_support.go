@@ -18,6 +18,7 @@ limitations under the License.
 package v1
 
 import (
+	"fmt"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -50,11 +51,20 @@ func NewIntegrationList() IntegrationList {
 
 // Sources return a new slice containing all the sources associated to the integration
 func (in *Integration) Sources() []SourceSpec {
-	allSources := make([]SourceSpec, 0, len(in.Spec.Sources)+len(in.Status.GeneratedSources))
-	allSources = append(allSources, in.Spec.Sources...)
-	allSources = append(allSources, in.Status.GeneratedSources...)
+	sources := make([]SourceSpec, 0, len(in.Spec.Sources)+len(in.Status.GeneratedSources))
+	sources = append(sources, in.Spec.Sources...)
+	sources = append(sources, in.Status.GeneratedSources...)
 
-	return allSources
+	return sources
+}
+
+// Resources return a new slice containing all the resources associated to the integration
+func (in *Integration) Resources() []ResourceSpec {
+	resources := make([]ResourceSpec, 0, len(in.Spec.Resources)+len(in.Status.GeneratedResources))
+	resources = append(resources, in.Spec.Resources...)
+	resources = append(resources, in.Status.GeneratedResources...)
+
+	return resources
 }
 
 // AddSource --
@@ -97,6 +107,26 @@ func (in *IntegrationSpec) AddDependency(dependency string) {
 		}
 	}
 	in.Dependencies = append(in.Dependencies, newDep)
+}
+
+// AddOrReplaceGeneratedResources --
+func (in *IntegrationStatus) AddOrReplaceGeneratedResources(resources ...ResourceSpec) {
+	newResources := make([]ResourceSpec, 0)
+	for _, resource := range resources {
+		replaced := false
+		for i, r := range in.GeneratedResources {
+			if r.Name == resource.Name {
+				in.GeneratedResources[i] = resource
+				replaced = true
+				break
+			}
+		}
+		if !replaced {
+			newResources = append(newResources, resource)
+		}
+	}
+
+	in.GeneratedResources = append(in.GeneratedResources, newResources...)
 }
 
 // Configurations --
@@ -180,12 +210,17 @@ func (in *Integration) SetIntegrationPlatform(platform *IntegrationPlatform) {
 // SetIntegrationKit --
 func (in *Integration) SetIntegrationKit(kit *IntegrationKit) {
 	cs := corev1.ConditionTrue
-
+	message := kit.Name
 	if kit.Status.Phase != IntegrationKitPhaseReady {
 		cs = corev1.ConditionFalse
+		if kit.Status.Phase == IntegrationKitPhaseNone {
+			message = fmt.Sprintf("creating a new integration kit")
+		} else {
+			message = fmt.Sprintf("integration kit %s is in state %q", kit.Name, kit.Status.Phase)
+		}
 	}
 
-	in.Status.SetCondition(IntegrationConditionKitAvailable, cs, IntegrationConditionKitAvailableReason, kit.Name)
+	in.Status.SetCondition(IntegrationConditionKitAvailable, cs, IntegrationConditionKitAvailableReason, message)
 	in.Status.Kit = kit.Name
 	in.Status.Image = kit.Status.Image
 }
@@ -263,4 +298,45 @@ func (in *IntegrationStatus) RemoveCondition(condType IntegrationConditionType) 
 	}
 
 	in.Conditions = newConditions
+}
+
+var _ ResourceCondition = IntegrationCondition{}
+
+// GetConditions --
+func (in *IntegrationStatus) GetConditions() []ResourceCondition {
+	res := make([]ResourceCondition, 0, len(in.Conditions))
+	for _, c := range in.Conditions {
+		res = append(res, c)
+	}
+	return res
+}
+
+// GetType --
+func (c IntegrationCondition) GetType() string {
+	return string(c.Type)
+}
+
+// GetStatus --
+func (c IntegrationCondition) GetStatus() corev1.ConditionStatus {
+	return c.Status
+}
+
+// GetLastUpdateTime --
+func (c IntegrationCondition) GetLastUpdateTime() metav1.Time {
+	return c.LastUpdateTime
+}
+
+// GetLastTransitionTime --
+func (c IntegrationCondition) GetLastTransitionTime() metav1.Time {
+	return c.LastTransitionTime
+}
+
+// GetReason --
+func (c IntegrationCondition) GetReason() string {
+	return c.Reason
+}
+
+// GetMessage --
+func (c IntegrationCondition) GetMessage() string {
+	return c.Message
 }
