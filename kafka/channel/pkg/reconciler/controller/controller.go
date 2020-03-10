@@ -38,8 +38,10 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/system"
 
-	kafkaclientsetinjection "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
+	kafkaChannelClient "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
+	kafkaChannelReconciler "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1alpha1/kafkachannel"
+	eventingClient "knative.dev/eventing/pkg/client/injection/client"
 )
 
 // NewController initializes the controller and is called by the generated code.
@@ -48,7 +50,6 @@ func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-	logger := logging.FromContext(ctx)
 
 	kafkaChannelInformer := kafkachannel.Get(ctx)
 	deploymentInformer := deployment.Get(ctx)
@@ -57,12 +58,13 @@ func NewController(
 	roleBindingInformer := rolebinding.Get(ctx)
 	serviceInformer := service.Get(ctx)
 
-	kafkaChannelClientSet := kafkaclientsetinjection.Get(ctx)
-
 	r := &Reconciler{
 		Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
 		systemNamespace: system.Namespace(),
 
+		KubeClientSet:        kubeclient.Get(ctx),
+		kafkaClientSet:       kafkaChannelClient.Get(ctx),
+		EventingClientSet:    eventingClient.Get(ctx),
 		kafkachannelLister:   kafkaChannelInformer.Lister(),
 		kafkachannelInformer: kafkaChannelInformer.Informer(),
 		deploymentLister:     deploymentInformer.Lister(),
@@ -70,31 +72,30 @@ func NewController(
 		endpointsLister:      endpointsInformer.Lister(),
 		serviceAccountLister: serviceAccountInformer.Lister(),
 		roleBindingLister:    roleBindingInformer.Lister(),
-		kafkaClientSet:       kafkaChannelClientSet,
 	}
 
 	env := &envConfig{}
 	if err := envconfig.Process("", env); err != nil {
-		r.Logger.Panicf("unable to process Kafka channel's required environment variables: %v", err)
+		logging.FromContext(ctx).Sugar().Panicf("unable to process Kafka channel's required environment variables: %v", err)
 	}
 
 	if env.Image == "" {
-		r.Logger.Panic("unable to process Kafka channel's required environment variables (missing DISPATCHER_IMAGE)")
+		logging.FromContext(ctx).Panic("unable to process Kafka channel's required environment variables (missing DISPATCHER_IMAGE)")
 	}
 
 	r.dispatcherImage = env.Image
 
-	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
+	impl := kafkaChannelReconciler.NewImpl(ctx, r)
 
 	// Get and Watch the Kakfa config map and dynamically update Kafka configuration.
 	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get("config-kafka", metav1.GetOptions{}); err == nil {
 		cmw.Watch("config-kafka", r.updateKafkaConfig)
 	} else if !apierrors.IsNotFound(err) {
-		logger.With(zap.Error(err)).Fatal("Error reading ConfigMap 'config-kafka'")
+		logging.FromContext(ctx).With(zap.Error(err)).Fatal("Error reading ConfigMap 'config-kafka'")
 	}
 
-	r.Logger.Info("Setting up event handlers")
-	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
+	logging.FromContext(ctx).Info("Setting up event handlers")
+	kafkaChannelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	// Set up watches for dispatcher resources we care about, since any changes to these
 	// resources will affect our Channels. So, set up a watch here, that will cause
@@ -103,7 +104,7 @@ func NewController(
 
 	// Call GlobalResync on kafkachannels.
 	grCh := func(obj interface{}) {
-		r.impl.GlobalResync(r.kafkachannelInformer)
+		impl.GlobalResync(kafkaChannelInformer.Informer())
 	}
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
@@ -127,5 +128,5 @@ func NewController(
 		Handler:    controller.HandleAll(grCh),
 	})
 
-	return r.impl
+	return impl
 }

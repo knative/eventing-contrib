@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -32,8 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
@@ -44,14 +42,17 @@ import (
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/controller"
+	//"knative.dev/pkg/controller"
+	pkgreconciler "knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
 	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
 	kafkaScheme "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme"
+	kafkaChannelReconciler "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1alpha1/kafkachannel"
 	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 )
 
 const (
@@ -92,6 +93,10 @@ func init() {
 type Reconciler struct {
 	*reconciler.Base
 
+	KubeClientSet kubernetes.Interface
+
+	EventingClientSet eventingclientset.Interface
+
 	systemNamespace string
 	dispatcherImage string
 
@@ -110,7 +115,6 @@ type Reconciler struct {
 	endpointsLister      corev1listers.EndpointsLister
 	serviceAccountLister corev1listers.ServiceAccountLister
 	roleBindingLister    rbacv1listers.RoleBindingLister
-	impl                 *controller.Impl
 }
 
 var (
@@ -125,55 +129,10 @@ type envConfig struct {
 	Image string `envconfig:"DISPATCHER_IMAGE" required:"true"`
 }
 
-// Check that our Reconciler implements controller.Reconciler.
-var _ controller.Reconciler = (*Reconciler)(nil)
+// Check that our Reconciler implements kafka's injection Interface
+var _ kafkaChannelReconciler.Interface = (*Reconciler)(nil)
 
-// Reconcile compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the KafkaChannel resource
-// with the current status of the resource.
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	// Convert the namespace/name string into a distinct namespace and name.
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		logging.FromContext(ctx).Error("invalid resource key")
-		return nil
-	}
-
-	// Get the KafkaChannel resource with this namespace/name.
-	original, err := r.kafkachannelLister.KafkaChannels(namespace).Get(name)
-	if apierrs.IsNotFound(err) {
-		// The resource may no longer exist, in which case we stop processing.
-		logging.FromContext(ctx).Error("KafkaChannel key in work queue no longer exists")
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	// Don't modify the informers copy.
-	channel := original.DeepCopy()
-
-	// Reconcile this copy of the KafkaChannel and then write back any status updates regardless of
-	// whether the reconcile error out.
-	reconcileErr := r.reconcile(ctx, channel)
-	if reconcileErr != nil {
-		logging.FromContext(ctx).Error("Error reconciling KafkaChannel", zap.Error(reconcileErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: %v", reconcileErr)
-	} else {
-		logging.FromContext(ctx).Debug("KafkaChannel reconciled")
-		r.Recorder.Event(channel, corev1.EventTypeNormal, channelReconciled, "KafkaChannel reconciled")
-	}
-
-	if _, updateStatusErr := r.updateStatus(ctx, channel); updateStatusErr != nil {
-		logging.FromContext(ctx).Error("Failed to update KafkaChannel status", zap.Error(updateStatusErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update KafkaChannel's status: %v", updateStatusErr)
-		return updateStatusErr
-	}
-
-	// Requeue if the resource is not ready
-	return reconcileErr
-}
-
-func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) error {
+func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1alpha1.KafkaChannel) pkgreconciler.Event {
 	kc.Status.InitializeConditions()
 
 	logger := logging.FromContext(ctx)
@@ -181,26 +140,6 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 	kc.SetDefaults(ctx)
 	if err := kc.Validate(ctx); err != nil {
 		logger.Error("Invalid kafka channel", zap.String("channel", kc.Name), zap.Error(err))
-		return err
-	}
-
-	// See if the channel has been deleted.
-	if kc.DeletionTimestamp != nil {
-		// Do not attempt retrying creating the client because it might be a permanent error
-		// in which case the finalizer will never get removed.
-		if kafkaClusterAdmin, err := r.createClient(ctx, kc); err == nil && r.kafkaConfig != nil {
-			if err := r.deleteTopic(ctx, kc, kafkaClusterAdmin); err != nil {
-				return err
-			}
-		}
-		removeFinalizer(kc)
-		_, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(kc.Namespace).Update(kc)
-		return err
-	}
-
-	// If we are adding the finalizer for the first time, then ensure that finalizer is persisted
-	// before manipulating Kafka.
-	if err := r.ensureFinalizer(kc); err != nil {
 		return err
 	}
 
@@ -557,28 +496,6 @@ func (r *Reconciler) deleteTopic(ctx context.Context, channel *v1alpha1.KafkaCha
 	return err
 }
 
-func (r *Reconciler) ensureFinalizer(channel *v1alpha1.KafkaChannel) error {
-	finalizers := sets.NewString(channel.Finalizers...)
-	if finalizers.Has(finalizerName) {
-		return nil
-	}
-
-	mergePatch := map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"finalizers":      append(channel.Finalizers, finalizerName),
-			"resourceVersion": channel.ResourceVersion,
-		},
-	}
-
-	patch, err := json.Marshal(mergePatch)
-	if err != nil {
-		return err
-	}
-
-	_, err = r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
-	return err
-}
-
 func (r *Reconciler) updateKafkaConfig(configMap *corev1.ConfigMap) {
 	r.Logger.Info("Reloading Kafka configuration")
 	kafkaConfig, err := utils.GetKafkaConfig(configMap.Data)
@@ -590,13 +507,15 @@ func (r *Reconciler) updateKafkaConfig(configMap *corev1.ConfigMap) {
 	r.kafkaConfig = kafkaConfig
 	r.kafkaConfigError = err
 
-	// Trigger global resync
-	r.impl.GlobalResync(r.kafkachannelInformer)
-
 }
 
-func removeFinalizer(channel *v1alpha1.KafkaChannel) {
-	finalizers := sets.NewString(channel.Finalizers...)
-	finalizers.Delete(finalizerName)
-	channel.Finalizers = finalizers.List()
+func (r *Reconciler) FinalizeKind(ctx context.Context, kc *v1alpha1.KafkaChannel) pkgreconciler.Event {
+	// Do not attempt retrying creating the client because it might be a permanent error
+	// in which case the finalizer will never get removed.
+	if kafkaClusterAdmin, err := r.createClient(ctx, kc); err == nil && r.kafkaConfig != nil {
+		if err := r.deleteTopic(ctx, kc, kafkaClusterAdmin); err != nil {
+			return err
+		}
+	}
+	return nil //ok to remove finalizer
 }
