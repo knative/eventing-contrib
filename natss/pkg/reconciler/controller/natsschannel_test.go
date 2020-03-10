@@ -301,7 +301,7 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactoryWithOptions(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
 		return &Reconciler{
 			Base:                     reconciler.NewBase(opt, controllerAgentName),
 			dispatcherNamespace:      testNS,
@@ -314,8 +314,7 @@ func TestAllCases(t *testing.T) {
 			serviceLister:        listers.GetServiceLister(),
 			endpointsLister:      listers.GetEndpointsLister(),
 		}
-	},
-	))
+	}))
 }
 
 func makeDeployment() *appsv1.Deployment {

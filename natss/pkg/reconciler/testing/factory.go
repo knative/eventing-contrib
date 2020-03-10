@@ -18,20 +18,23 @@ package testing
 
 import (
 	"context"
+	"knative.dev/eventing-contrib/natss/pkg/reconciler"
+	logtesting "knative.dev/pkg/logging/testing"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
-	fakedynamicclientset "k8s.io/client-go/dynamic/fake"
-	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 
-	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/fake"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
-	"knative.dev/pkg/controller"
-	logtesting "knative.dev/pkg/logging/testing"
+	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	fakelegacyclient "knative.dev/eventing/pkg/legacyclient/injection/client/fake"
 
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	"knative.dev/pkg/controller"
+	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
+	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 )
 
@@ -42,35 +45,33 @@ const (
 )
 
 // Ctor functions create a k8s controller with given params.
-type Ctor func(*Listers, reconciler.Options) controller.Reconciler
+type Ctor func(context.Context, *Listers, reconciler.Options) controller.Reconciler
 
-// MakeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
-func MakeFactory(ctor Ctor) Factory {
+// makeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
+func makeFactory(ctor Ctor) Factory {
 	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList) {
 		ls := NewListers(r.Objects)
 
-		kubeClient := fakekubeclientset.NewSimpleClientset(ls.GetKubeObjects()...)
-		client := fakeclientset.NewSimpleClientset(ls.GetMessagingObjects()...)
+		ctx := logging.WithLogger(context.Background(), logtesting.TestLogger(t))
+		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
+		ctx, eventingClient := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
+		ctx, legacy := fakelegacyclient.With(ctx, ls.GetLegacyObjects()...)
+		ctx, client := fakeclientset.With(ctx, ls.GetMessagingObjects()...)
 
 		dynamicScheme := runtime.NewScheme()
 		for _, addTo := range clientSetSchemes {
 			addTo(dynamicScheme)
 		}
 
-		dynamicClient := fakedynamicclientset.NewSimpleDynamicClient(dynamicScheme, ls.GetAllObjects()...)
+		ctx, dynamicClient := fakedynamicclient.With(ctx, dynamicScheme, ls.GetAllObjects()...)
 		eventRecorder := record.NewFakeRecorder(maxEventBufferSize)
 
 		// Set up our Controller from the fakes.
-		c := ctor(&ls, reconciler.Options{
-			KubeClientSet:    kubeClient,
-			DynamicClientSet: dynamicClient,
-			NatssClientSet:   client,
-			Recorder:         eventRecorder,
-			Logger:           logtesting.TestLogger(t),
-		})
 
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
+			eventingClient.PrependReactor("*", "*", reactor)
+			legacy.PrependReactor("*", "*", reactor)
 			client.PrependReactor("*", "*", reactor)
 			dynamicClient.PrependReactor("*", "*", reactor)
 		}
@@ -86,6 +87,25 @@ func MakeFactory(ctor Ctor) Factory {
 		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
 
+		c := ctor(ctx, &ls, reconciler.Options{
+			KubeClientSet:    kubeClient,
+			DynamicClientSet: dynamicClient,
+			NatssClientSet:   client,
+			Recorder:         eventRecorder,
+			Logger:           logtesting.TestLogger(t),
+		})
 		return c, actionRecorderList, eventList
 	}
+}
+
+func MakeFactoryWithContext(ctor func(context.Context, *Listers) controller.Reconciler) Factory {
+	return makeFactory(func(ctx context.Context, listers *Listers, options reconciler.Options) controller.Reconciler {
+		return ctor(ctx, listers)
+	})
+}
+
+func MakeFactoryWithOptions(ctor func(*Listers, reconciler.Options) controller.Reconciler) Factory {
+	return makeFactory(func(ctx context.Context, listers *Listers, options reconciler.Options) controller.Reconciler {
+		return ctor(listers, options)
+	})
 }

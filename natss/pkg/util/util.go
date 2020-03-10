@@ -17,7 +17,23 @@ const (
 
 	defaultMaxIdleConnections        = 1000
 	defaultMaxIdleConnectionsPerHost = 100
+
+	clientID = "natss-ch-dispatcher"
 )
+
+type NatssConfig struct {
+	ClientID            string
+	MaxIdleConns        int
+	MaxIdleConnsPerHost int
+}
+
+func GetNatssConfig() NatssConfig {
+	return NatssConfig{
+		ClientID:            clientID,
+		MaxIdleConns:        getMaxIdleConnections(),
+		MaxIdleConnsPerHost: getMaxIdleConnectionsPerHost(),
+	}
+}
 
 // GetDefaultNatssURL returns the default natss url to connect to
 func GetDefaultNatssURL() string {
@@ -29,13 +45,13 @@ func GetDefaultClusterID() string {
 	return getEnv(defaultClusterIDVar, fallbackDefaultClusterID)
 }
 
-// GetMaxIdleConnections returns the max number of idle connections
-func GetMaxIdleConnections() int {
+// getMaxIdleConnections returns the max number of idle connections
+func getMaxIdleConnections() int {
 	return defaultMaxIdleConnections
 }
 
-// GetMaxIdleConnections returns the max number of idle connections per host
-func GetMaxIdleConnectionsPerHost() int {
+// getMaxIdleConnections returns the max number of idle connections per host
+func getMaxIdleConnectionsPerHost() int {
 	return defaultMaxIdleConnectionsPerHost
 }
 

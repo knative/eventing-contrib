@@ -17,21 +17,23 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
 	clientgotesting "k8s.io/client-go/testing"
+
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
-	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
-	informers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions"
+	"knative.dev/eventing/pkg/reconciler"
+
+	"knative.dev/eventing-contrib/natss/pkg/client/injection/client"
+	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	dispatchertesting "knative.dev/eventing-contrib/natss/pkg/dispatcher/testing"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
 )
 
@@ -100,19 +102,11 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewDispatcherDoNothing()
-
-		r := Reconciler{
-			Base:               reconciler.NewBase(opt, controllerAgentName),
-			natssDispatcher:    natssDispatcher,
-			natsschannelLister: listers.GetNatssChannelLister(),
-			impl:               nil,
-		}
-
-		return &r
-	},
-	))
+	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
+		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
+			return dispatchertesting.NewDispatcherDoNothing()
+		})
+	}))
 }
 func TestFailedNatssSubscription(t *testing.T) {
 	ncKey := testNS + "/" + ncName
@@ -147,45 +141,11 @@ func TestFailedNatssSubscription(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewDispatcherFailNatssSubscription()
-
-		r := Reconciler{
-			Base:               reconciler.NewBase(opt, controllerAgentName),
-			natssDispatcher:    natssDispatcher,
-			natsschannelLister: listers.GetNatssChannelLister(),
-			impl:               nil,
-		}
-
-		return &r
-	},
-	))
-}
-
-// Test that the dispatcher controller can be created
-func TestNewController(t *testing.T) {
-	messagingClientSet, err := clientset.NewForConfig(&rest.Config{})
-	if err != nil {
-		t.Fail()
-	}
-
-	messagingInformerFactory := informers.NewSharedInformerFactory(messagingClientSet, 0)
-	natssChannelInformer := messagingInformerFactory.Messaging().V1alpha1().NatssChannels()
-
-	c := NewController(reconciler.Options{
-		KubeClientSet:    fakekubeclientset.NewSimpleClientset(),
-		DynamicClientSet: nil,
-		NatssClientSet:   nil,
-		Recorder:         nil,
-		StatsReporter:    nil,
-		ConfigMapWatcher: nil,
-		Logger:           logtesting.TestLogger(t),
-		ResyncPeriod:     0,
-		StopChannel:      nil,
-	}, dispatchertesting.NewDispatcherDoNothing(), natssChannelInformer)
-	if c == nil {
-		t.Errorf("unable to create dispatcher controller")
-	}
+	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
+		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
+			return dispatchertesting.NewDispatcherFailNatssSubscription()
+		})
+	}))
 }
 
 func makeFinalizerPatch(namespace, name string) clientgotesting.PatchActionImpl {
@@ -195,4 +155,18 @@ func makeFinalizerPatch(namespace, name string) clientgotesting.PatchActionImpl 
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func createReconciler(
+	ctx context.Context,
+	listers *reconciletesting.Listers,
+	dispatcherFactory func() dispatcher.NatssDispatcher,
+) controller.Reconciler {
+
+	return &Reconciler{
+		Base:               reconciler.NewBase(ctx, controllerAgentName, configmap.NewStaticWatcher()),
+		natssDispatcher:    dispatcherFactory(),
+		natsschannelLister: listers.GetNatssChannelLister(),
+		natssClientSet:     client.Get(ctx),
+	}
 }
