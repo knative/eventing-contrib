@@ -42,6 +42,7 @@ import (
 	"knative.dev/eventing-contrib/github/pkg/reconciler/resources"
 
 	//knative.dev/eventing imports
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
@@ -63,6 +64,7 @@ type Reconciler struct {
 
 	servingClientSet servingclientset.Interface
 	servingLister    servinglisters.ServiceLister
+	eventTypeLister  eventinglisters.EventTypeLister
 
 	receiveAdapterImage string
 
@@ -353,17 +355,15 @@ func (r *Reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) ([]even
 }
 
 func (r *Reconciler) getEventTypes(ctx context.Context, src *sourcesv1alpha1.GitHubSource) ([]eventingv1alpha1.EventType, error) {
-	etl, err := r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).List(metav1.ListOptions{
-		LabelSelector: labels.Everything().String(),
-	})
+	etl, err := r.eventTypeLister.EventTypes(src.Namespace).List(labels.Everything())
 	if err != nil {
 		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
 		return nil, err
 	}
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	for _, et := range etl.Items {
-		if metav1.IsControlledBy(&et, src) {
-			eventTypes = append(eventTypes, et)
+	for _, et := range etl {
+		if metav1.IsControlledBy(et, src) {
+			eventTypes = append(eventTypes, *et)
 		}
 	}
 	return eventTypes, nil
