@@ -18,22 +18,25 @@ package v1alpha1
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// Resource takes an unqualified resource and returns a Group qualified GroupResource
-func TestResource(t *testing.T) {
-	want := schema.GroupResource{
-		Group:    "sources.knative.dev",
-		Resource: "foo",
+func TestRegisterHelpers(t *testing.T) {
+	if got, want := Kind("CouchDbSource"), "CouchDbSource.sources.knative.dev"; got.String() != want {
+		t.Errorf("Kind(CouchDbSource) = %v, want %v", got.String(), want)
 	}
 
-	got := Resource("foo")
+	if got, want := Resource("CouchDbSource"), "CouchDbSource.sources.knative.dev"; got.String() != want {
+		t.Errorf("Resource(CouchDbSource) = %v, want %v", got.String(), want)
+	}
 
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("unexpected resource (-want, +got) = %v", diff)
+	if got, want := SchemeGroupVersion.String(), "sources.knative.dev/v1alpha1"; got != want {
+		t.Errorf("SchemeGroupVersion() = %v, want %v", got, want)
+	}
+
+	scheme := runtime.NewScheme()
+	if err := addKnownTypes(scheme); err != nil {
+		t.Errorf("addKnownTypes() = %v", err)
 	}
 }
 

@@ -2237,6 +2237,7 @@
     "knative.dev/eventing/pkg/apis/eventing",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
+    "knative.dev/eventing/pkg/apis/sources",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",
     "knative.dev/eventing/pkg/channel",
     "knative.dev/eventing/pkg/channel/fanout",

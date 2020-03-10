@@ -261,7 +261,3 @@ type GitHubSourceList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []GitHubSource `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&GitHubSource{}, &GitHubSourceList{})
-}
