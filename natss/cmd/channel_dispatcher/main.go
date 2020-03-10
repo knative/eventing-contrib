@@ -18,6 +18,8 @@ package main
 
 import (
 	"flag"
+	"log"
+
 	"knative.dev/eventing/pkg/kncloudevents"
 	"log"
 
