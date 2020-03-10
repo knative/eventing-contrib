@@ -224,7 +224,7 @@ func (s *SubscriptionsSupervisor) connectWithRetry(stopCh <-chan struct{}) {
 			s.natssConnMux.Unlock()
 			return
 		}
-		s.logger.Sugar().Errorf("Connect() failed with errorExpected: %+v, retrying in %s", err, retryInterval.String())
+		s.logger.Sugar().Errorf("Connect() failed with error: %+v, retrying in %s", err, retryInterval.String())
 		select {
 		case <-ticker.C:
 			continue
@@ -256,7 +256,7 @@ func (s *SubscriptionsSupervisor) Connect(stopCh <-chan struct{}) {
 }
 
 // UpdateSubscriptions creates/deletes the natss subscriptions based on channel.Spec.Subscribable.Subscribers
-// Return type:map[eventingduck.SubscriberSpec]errorExpected --> Returns a map of subscriberSpec that failed with the value=error encountered.
+// Return type:map[eventingduck.SubscriberSpec]error --> Returns a map of subscriberSpec that failed with the value=error encountered.
 // Ignore the value in case error != nil
 func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error) {
 	s.subscriptionsMux.Lock()

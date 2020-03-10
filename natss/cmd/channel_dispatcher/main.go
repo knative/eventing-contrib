@@ -70,8 +70,8 @@ func main() {
 		ClusterID: util.GetDefaultClusterID(),
 		ClientID:  clientID,
 		Cargs: kncloudevents.ConnectionArgs{
-			MaxIdleConns:        1000, // TODO load from config map
-			MaxIdleConnsPerHost: 100,  // TODO load from config map
+			MaxIdleConns:        util.GetMaxIdleConnections(),
+			MaxIdleConnsPerHost: util.GetMaxIdleConnectionsPerHost(),
 		},
 		Logger: logger.Desugar(),
 	}
