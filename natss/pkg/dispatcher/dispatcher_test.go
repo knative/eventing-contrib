@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+
 	"github.com/google/go-cmp/cmp"
 
 	cloudevents "github.com/cloudevents/sdk-go"
