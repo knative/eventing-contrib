@@ -239,6 +239,7 @@ func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, mess
 //}
 
 // +genclient
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GitHubSource is the Schema for the githubsources API
