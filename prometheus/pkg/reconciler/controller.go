@@ -28,8 +28,8 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/resolver"
 
-	"knative.dev/eventing-contrib/prometheus/pkg/client/injection/client"
 	prometheusinformer "knative.dev/eventing-contrib/prometheus/pkg/client/injection/informers/sources/v1alpha1/prometheussource"
+	promreconciler "knative.dev/eventing-contrib/prometheus/pkg/client/injection/reconciler/sources/v1alpha1/prometheussource"
 )
 
 const (
@@ -52,12 +52,11 @@ func NewController(
 	eventTypeInformer := eventtypeinformer.Get(ctx)
 
 	r := &Reconciler{
-		Base:                   reconciler.NewBase(ctx, controllerAgentName, cmw),
-		prometheussourceLister: prometheusSourceInformer.Lister(),
-		deploymentLister:       deploymentInformer.Lister(),
-		prometheusClientSet:    client.Get(ctx),
+		Base:             reconciler.NewBase(ctx, controllerAgentName, cmw),
+		deploymentLister: deploymentInformer.Lister(),
+		eventTypeLister:  eventTypeInformer.Lister(),
 	}
-	impl := controller.NewImpl(r, r.Logger, ReconcilerName)
+	impl := promreconciler.NewImpl(ctx, r)
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	r.Logger.Info("Setting up event handlers")
