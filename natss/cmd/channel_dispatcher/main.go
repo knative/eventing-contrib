@@ -21,7 +21,6 @@ import (
 	"log"
 
 	"knative.dev/eventing/pkg/kncloudevents"
-	"log"
 
 	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/metrics"
