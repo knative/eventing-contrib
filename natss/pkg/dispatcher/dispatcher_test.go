@@ -68,7 +68,7 @@ func TestSerialize(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			b, err := serialize(tc.event)
 			if err != nil {
-				t.Errorf("unexpected errorExpected %+v", err)
+				t.Errorf("unexpected error %+v", err)
 			}
 			if diff := cmp.Diff(b, tc.want); diff != "" {
 				t.Errorf("expected json %s go %s\ndiff: %s", string(tc.want), b, diff)
@@ -135,7 +135,7 @@ func TestToEvent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			e, err := toEvent(tc.msg)
 			if tc.errorExpected != (err != nil) {
-				t.Errorf("expected errorExpected %+v", err)
+				t.Errorf("expected error %+v", err)
 			}
 			if diff := cmp.Diff(e, tc.want); diff != "" {
 				t.Errorf("expected event %+v got %+v\ndiff: %+v", tc.want, e, diff)
