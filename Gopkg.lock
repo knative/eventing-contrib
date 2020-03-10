@@ -2016,7 +2016,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:901e3fd1d494c2f396b0123331aab44b3ccac2fd500b6dd43728ee0891deecd3"
+  digest = "1:afa0819072d248f1b53dcb345ed28ebbac817a0ac6d303a52d31719c355e19a8"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2048,7 +2048,7 @@
     "pkg/client/informers/externalversions/serving/v1beta1",
     "pkg/client/injection/client",
     "pkg/client/injection/informers/factory",
-    "pkg/client/injection/informers/serving/v1alpha1/service",
+    "pkg/client/injection/informers/serving/v1/service",
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1",
@@ -2316,8 +2316,8 @@
     "knative.dev/serving/pkg/apis/serving/v1beta1",
     "knative.dev/serving/pkg/client/clientset/versioned",
     "knative.dev/serving/pkg/client/injection/client",
-    "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service",
-    "knative.dev/serving/pkg/client/listers/serving/v1alpha1",
+    "knative.dev/serving/pkg/client/injection/informers/serving/v1/service",
+    "knative.dev/serving/pkg/client/listers/serving/v1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
     "sigs.k8s.io/controller-runtime/pkg/client",
