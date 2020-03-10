@@ -20,7 +20,6 @@ import (
 	"context"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	logtesting "knative.dev/pkg/logging/testing"
-	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
