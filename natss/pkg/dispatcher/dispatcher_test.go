@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
 	"github.com/google/go-cmp/cmp"
 
