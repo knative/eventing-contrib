@@ -18,6 +18,7 @@ package reconciler
 
 import (
 	"context"
+	"os"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
@@ -27,11 +28,12 @@ import (
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/client"
 	couchdbinformer "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/informers/sources/v1alpha1/couchdbsource"
+	cdbreconciler "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/reconciler/sources/v1alpha1/couchdbsource"
 )
 
 const (
@@ -57,13 +59,19 @@ func NewController(
 	couchdbSourceInformer := couchdbinformer.Get(ctx)
 	eventTypeInformer := eventtypeinformer.Get(ctx)
 
+	raImage, defined := os.LookupEnv(raImageEnvVar)
+	if !defined {
+		logging.FromContext(ctx).Errorf("required environment variable %q not defined", raImageEnvVar)
+		return nil
+	}
+
 	r := &Reconciler{
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
-		couchdbsourceLister: couchdbSourceInformer.Lister(),
+		receiveAdapterImage: raImage,
 		deploymentLister:    deploymentInformer.Lister(),
-		couchdbClientSet:    client.Get(ctx),
+		eventTypeLister:     eventTypeInformer.Lister(),
 	}
-	impl := controller.NewImpl(r, r.Logger, ReconcilerName)
+	impl := cdbreconciler.NewImpl(ctx, r)
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	r.Logger.Info("Setting up event handlers")
