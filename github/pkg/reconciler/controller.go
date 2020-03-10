@@ -33,6 +33,7 @@ import (
 
 	//knative.dev/eventing imports
 	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
@@ -55,11 +56,13 @@ func NewController(
 
 	githubInformer := githubinformer.Get(ctx)
 	serviceInformer := kserviceinformer.Get(ctx)
+	eventTypeInformer := eventtypeinformer.Get(ctx)
 
 	r := &Reconciler{
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
 		servingLister:       serviceInformer.Lister(),
 		servingClientSet:    serviceclient.Get(ctx),
+		eventTypeLister:     eventTypeInformer.Lister(),
 		webhookClient:       gitHubWebhookClient{},
 		receiveAdapterImage: raImage,
 	}
@@ -74,6 +77,11 @@ func NewController(
 
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("GitHubSource")),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
+
+	eventTypeInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("CouchDbSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
