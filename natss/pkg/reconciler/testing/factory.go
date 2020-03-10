@@ -20,6 +20,8 @@ import (
 	"context"
 	"testing"
 
+	"testing"
+
 	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	logtesting "knative.dev/pkg/logging/testing"
 
