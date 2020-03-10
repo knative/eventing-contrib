@@ -18,7 +18,6 @@ package dispatcher
 
 import (
 	"encoding/json"
-	"testing"
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
