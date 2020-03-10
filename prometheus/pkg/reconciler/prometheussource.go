@@ -19,8 +19,6 @@ package reconciler
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/robfig/cron"
@@ -33,30 +31,25 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-contrib/prometheus/pkg/reconciler/resources"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
+	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/prometheus/pkg/apis/sources/v1alpha1"
-	versioned "knative.dev/eventing-contrib/prometheus/pkg/client/clientset/versioned"
-	listers "knative.dev/eventing-contrib/prometheus/pkg/client/listers/sources/v1alpha1"
+	promreconciler "knative.dev/eventing-contrib/prometheus/pkg/client/injection/reconciler/sources/v1alpha1/prometheussource"
 )
 
 const (
 	// Name of the corev1.Events emitted from the reconciliation process
-	prometheussourceReconciled         = "PrometheusSourceReconciled"
-	prometheussourceReadinessChanged   = "PrometheusSourceReadinessChanged"
-	prometheussourceUpdateStatusFailed = "PrometheusSourceUpdateStatusFailed"
-	prometheussourceDeploymentCreated  = "PrometheusSourceDeploymentCreated"
-	prometheussourceDeploymentUpdated  = "PrometheusSourceDeploymentUpdated"
+	prometheussourceDeploymentCreated = "PrometheusSourceDeploymentCreated"
+	prometheussourceDeploymentUpdated = "PrometheusSourceDeploymentUpdated"
 )
 
 var (
-	deploymentGVK        = appsv1.SchemeGroupVersion.WithKind("Deployment")
 	prometheusEventTypes = []string{
 		v1alpha1.PromQLPrometheusSourceEventType,
 	}
@@ -73,60 +66,15 @@ type Reconciler struct {
 	receiveAdapterImage string
 
 	// listers index properties about resources
-	prometheussourceLister listers.PrometheusSourceLister
-	deploymentLister       appsv1listers.DeploymentLister
-	eventTypeLister        eventinglisters.EventTypeLister
-
-	prometheusClientSet versioned.Interface
+	deploymentLister appsv1listers.DeploymentLister
+	eventTypeLister  eventinglisters.EventTypeLister
 
 	sinkResolver *resolver.URIResolver
 }
 
-// Reconcile compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the PrometheusSource
-// resource with the current status of the resource.
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	// Convert the namespace/name string into a distinct namespace and name
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		r.Logger.Errorf("invalid resource key: %s", key)
-		return nil
-	}
+var _ promreconciler.Interface = (*Reconciler)(nil)
 
-	// Get the PrometheusSource resource with this namespace/name
-	original, err := r.prometheussourceLister.PrometheusSources(namespace).Get(name)
-	if apierrors.IsNotFound(err) {
-		// The resource may no longer exist, in which case we stop processing.
-		logging.FromContext(ctx).Error("PrometheusSource key in work queue no longer exists", zap.Any("key", key))
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	// Don't modify the informers copy
-	prometheussource := original.DeepCopy()
-
-	// Reconcile this copy of the PrometheusSource and then write back any status
-	// updates regardless of whether the reconcile error out.
-	err = r.reconcile(ctx, prometheussource)
-	if err != nil {
-		logging.FromContext(ctx).Warn("Error reconciling PrometheusSource", zap.Error(err))
-	} else {
-		logging.FromContext(ctx).Debug("PrometheusSource reconciled")
-		r.Recorder.Eventf(prometheussource, corev1.EventTypeNormal, prometheussourceReconciled, `PrometheusDbSource reconciled: "%s/%s"`, prometheussource.Namespace, prometheussource.Name)
-	}
-
-	if _, updateStatusErr := r.updateStatus(ctx, prometheussource.DeepCopy()); updateStatusErr != nil {
-		logging.FromContext(ctx).Warn("Failed to update the PrometheusSource", zap.Error(err))
-		r.Recorder.Eventf(prometheussource, corev1.EventTypeWarning, prometheussourceUpdateStatusFailed, "Failed to update PrometheusSource's status: %v", err)
-		return updateStatusErr
-	}
-
-	// Requeue if the resource is not ready:
-	return err
-}
-
-func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.PrometheusSource) error {
+func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.PrometheusSource) pkgreconciler.Event {
 	source.Status.InitializeConditions()
 
 	if source.Spec.Sink == nil {
@@ -261,24 +209,22 @@ func (r *Reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.Prom
 }
 
 func (r *Reconciler) getEventTypes(ctx context.Context, src *v1alpha1.PrometheusSource) ([]eventingv1alpha1.EventType, error) {
-	etl, err := r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).List(metav1.ListOptions{
-		LabelSelector: r.getLabelSelector(src).String(),
-	})
+	etl, err := r.eventTypeLister.EventTypes(src.Namespace).List(r.getLabelSelector(src))
 	if err != nil {
 		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
 		return nil, err
 	}
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	for _, et := range etl.Items {
-		if metav1.IsControlledBy(&et, src) {
-			eventTypes = append(eventTypes, et)
+	for _, et := range etl {
+		if metav1.IsControlledBy(et, src) {
+			eventTypes = append(eventTypes, *et)
 		}
 	}
 	return eventTypes, nil
 }
 
 func (r *Reconciler) makeEventTypes(src *v1alpha1.PrometheusSource) ([]eventingv1alpha1.EventType, error) {
-	eventTypes := make([]eventingv1alpha1.EventType, 0)
+	eventTypes := make([]eventingv1alpha1.EventType, 0, len(prometheusEventTypes))
 
 	// Only create EventTypes for Broker sinks.
 	// We add this check here in case the PrometheusSource was changed from Broker to non-Broker sink.
@@ -355,16 +301,14 @@ func (r *Reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1
 }
 
 func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.PrometheusSource) (*appsv1.Deployment, error) {
-	dl, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).List(metav1.ListOptions{
-		LabelSelector: r.getLabelSelector(src).String(),
-	})
+	dl, err := r.deploymentLister.Deployments(src.Namespace).List(r.getLabelSelector(src))
 	if err != nil {
 		logging.FromContext(ctx).Error("Unable to list deployments: %v", zap.Error(err))
 		return nil, err
 	}
-	for _, dep := range dl.Items {
-		if metav1.IsControlledBy(&dep, src) {
-			return &dep, nil
+	for _, dep := range dl {
+		if metav1.IsControlledBy(dep, src) {
+			return dep, nil
 		}
 	}
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
@@ -372,36 +316,6 @@ func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.Promet
 
 func (r *Reconciler) getLabelSelector(src *v1alpha1.PrometheusSource) labels.Selector {
 	return labels.SelectorFromSet(resources.Labels(src.Name))
-}
-
-func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.PrometheusSource) (*v1alpha1.PrometheusSource, error) {
-	prometheussource, err := r.prometheussourceLister.PrometheusSources(desired.Namespace).Get(desired.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	// If there's nothing to update, just return.
-	if reflect.DeepEqual(prometheussource.Status, desired.Status) {
-		return prometheussource, nil
-	}
-
-	becomesReady := desired.Status.IsReady() && !prometheussource.Status.IsReady()
-
-	// Don't modify the informers copy.
-	existing := prometheussource.DeepCopy()
-	existing.Status = desired.Status
-
-	cj, err := r.prometheusClientSet.SourcesV1alpha1().PrometheusSources(desired.Namespace).UpdateStatus(existing)
-	if err == nil && becomesReady {
-		duration := time.Since(cj.ObjectMeta.CreationTimestamp.Time)
-		r.Logger.Infof("PrometheusSource %q became ready after %v", prometheussource.Name, duration)
-		r.Recorder.Event(prometheussource, corev1.EventTypeNormal, prometheussourceReadinessChanged, fmt.Sprintf("PrometheusSource %q became ready", prometheussource.Name))
-		if err := r.StatsReporter.ReportReady("PrometheusSource", prometheussource.Namespace, prometheussource.Name, duration); err != nil {
-			logging.FromContext(ctx).Sugar().Infof("failed to record ready for PrometheusSource, %v", err)
-		}
-	}
-
-	return cj, err
 }
 
 // makeEventSource computes the Cloud Event source attribute for the given source
