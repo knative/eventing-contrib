@@ -133,9 +133,7 @@ func NewDispatcher(args Args) (NatssDispatcher, error) {
 	}
 	ceClient, err := kncloudevents.NewDefaultClientGivenHttpTransport(httpTransport, &args.Cargs)
 	if err != nil {
-		const msg = "failed to create cloudevents client"
-		args.Logger.Fatal(msg, zap.Error(err))
-		return nil, fmt.Errorf(msg)
+		args.Logger.Fatal("failed to create cloudevents client", zap.Error(err))
 	}
 	d.ceClient = ceClient
 	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
