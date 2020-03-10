@@ -71,7 +71,7 @@ func TestSerialize(t *testing.T) {
 				t.Errorf("unexpected error %+v", err)
 			}
 			if diff := cmp.Diff(b, tc.want); diff != "" {
-				t.Errorf("expected json %s go %s\ndiff: %s", string(tc.want), b, diff)
+				t.Errorf("expected json %s got %s\ndiff: %s", string(tc.want), b, diff)
 			}
 		})
 	}
