@@ -46,6 +46,7 @@ import (
 	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -78,7 +79,7 @@ var _ ghreconciler.Finalizer = (*Reconciler)(nil)
 
 type webhookArgs struct {
 	source                *sourcesv1alpha1.GitHubSource
-	domain                string
+	url                   *apis.URL
 	accessToken           string
 	secretToken           string
 	alternateGitHubAPIURL string
@@ -149,10 +150,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	}
 
 	if ksvc.Status.IsReady() && ksvc.Status.URL != nil {
-		receiveAdapterDomain := ksvc.Status.URL.Host
 		args := &webhookArgs{
 			source:                source,
-			domain:                receiveAdapterDomain,
+			url:                   ksvc.Status.URL,
 			accessToken:           accessToken,
 			secretToken:           secretToken,
 			alternateGitHubAPIURL: source.Spec.GitHubAPIURL,
@@ -226,15 +226,28 @@ func (r *Reconciler) createWebhook(ctx context.Context, args *webhookArgs) (stri
 		return "", err
 	}
 
+	url := args.url
+	if args.url != nil && args.source.Spec.Secure != nil {
+		// Make a copy
+		u := *args.url
+		url = &u
+
+		if *args.source.Spec.Secure {
+			url.Scheme = "https"
+		} else {
+			url.Scheme = "https"
+		}
+	}
+
 	hookOptions := &webhookOptions{
 		accessToken: args.accessToken,
 		secretToken: args.secretToken,
-		domain:      args.domain,
+		url:         url,
 		owner:       owner,
 		repo:        repo,
 		events:      args.source.Spec.EventTypes,
-		secure:      args.source.Spec.Secure,
 	}
+
 	hookID, err := r.webhookClient.Create(ctx, hookOptions, args.alternateGitHubAPIURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to create webhook: %v", err)
@@ -252,14 +265,26 @@ func (r *Reconciler) reconcileWebhook(ctx context.Context, args *webhookArgs, ho
 		return err
 	}
 
+	url := args.url
+	if args.url != nil && args.source.Spec.Secure != nil {
+		// Make a copy
+		u := *args.url
+		url = &u
+
+		if *args.source.Spec.Secure {
+			url.Scheme = "https"
+		} else {
+			url.Scheme = "https"
+		}
+	}
+
 	hookOptions := &webhookOptions{
 		accessToken: args.accessToken,
 		secretToken: args.secretToken,
-		domain:      args.domain,
+		url:         url,
 		owner:       owner,
 		repo:        repo,
 		events:      args.source.Spec.EventTypes,
-		secure:      args.source.Spec.Secure,
 	}
 
 	if err := r.webhookClient.Reconcile(ctx, hookOptions, hookID, args.alternateGitHubAPIURL); err != nil {
@@ -283,7 +308,6 @@ func (r *Reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 		owner:       owner,
 		repo:        repo,
 		events:      args.source.Spec.EventTypes,
-		secure:      args.source.Spec.Secure,
 	}
 	err = r.webhookClient.Delete(ctx, hookOptions, args.hookID, args.alternateGitHubAPIURL)
 	if err != nil {

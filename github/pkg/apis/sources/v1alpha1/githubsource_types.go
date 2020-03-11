@@ -79,9 +79,12 @@ type GitHubSourceSpec struct {
 	// +optional
 	GitHubAPIURL string `json:"githubAPIURL,omitempty"`
 
-	// Secure can be set to true to configure the webhook to use https.
+	// Secure can be set to true to configure the webhook to use https,
+	// or false to use http.  Omitting it relies on the scheme of the
+	// Knative Service created (e.g. if auto-TLS is enabled it should
+	// do the right thing).
 	// +optional
-	Secure bool `json:"secure,omitempty"`
+	Secure *bool `json:"secure,omitempty"`
 }
 
 // SecretValueFromSource represents the source of a secret value

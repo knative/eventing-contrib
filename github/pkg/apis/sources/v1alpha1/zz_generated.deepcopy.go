@@ -102,6 +102,11 @@ func (in *GitHubSourceSpec) DeepCopyInto(out *GitHubSourceSpec) {
 		*out = new(v1beta1.Destination)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Secure != nil {
+		in, out := &in.Secure, &out.Secure
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 
