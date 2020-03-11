@@ -33,18 +33,17 @@ import (
 	"k8s.io/client-go/tools/cache"
 	configsv1alpha1 "knative.dev/eventing/pkg/apis/configs/v1alpha1"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	eventingv1beta1 "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	flowsv1alpha1 "knative.dev/eventing/pkg/apis/flows/v1alpha1"
-	legacysourcesv1alpha1 "knative.dev/eventing/pkg/apis/legacysources/v1alpha1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	sourcesv1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	configslisters "knative.dev/eventing/pkg/client/listers/configs/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+	eventingv1beta1listers "knative.dev/eventing/pkg/client/listers/eventing/v1beta1"
 	flowslisters "knative.dev/eventing/pkg/client/listers/flows/v1alpha1"
 	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1alpha1"
 	sourcelisters "knative.dev/eventing/pkg/client/listers/sources/v1alpha1"
-	fakelegacyclientset "knative.dev/eventing/pkg/legacyclient/clientset/versioned/fake"
-	legacysourcelisters "knative.dev/eventing/pkg/legacyclient/listers/legacysources/v1alpha1"
 	"knative.dev/pkg/reconciler/testing"
 )
 
@@ -56,7 +55,6 @@ var subscriberAddToScheme = func(scheme *runtime.Scheme) error {
 var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakeeventingclientset.AddToScheme,
-	fakelegacyclientset.AddToScheme,
 	fakeapiextensionsclientset.AddToScheme,
 	subscriberAddToScheme,
 }
@@ -102,10 +100,6 @@ func (l *Listers) GetEventingObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
 }
 
-func (l *Listers) GetLegacyObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakelegacyclientset.AddToScheme)
-}
-
 func (l *Listers) GetSubscriberObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(subscriberAddToScheme)
 }
@@ -113,7 +107,6 @@ func (l *Listers) GetSubscriberObjects() []runtime.Object {
 func (l *Listers) GetAllObjects() []runtime.Object {
 	all := l.GetSubscriberObjects()
 	all = append(all, l.GetEventingObjects()...)
-	all = append(all, l.GetLegacyObjects()...)
 	all = append(all, l.GetKubeObjects()...)
 	return all
 }
@@ -132,6 +125,10 @@ func (l *Listers) GetTriggerLister() eventinglisters.TriggerLister {
 
 func (l *Listers) GetBrokerLister() eventinglisters.BrokerLister {
 	return eventinglisters.NewBrokerLister(l.indexerFor(&eventingv1alpha1.Broker{}))
+}
+
+func (l *Listers) GetV1Beta1BrokerLister() eventingv1beta1listers.BrokerLister {
+	return eventingv1beta1listers.NewBrokerLister(l.indexerFor(&eventingv1beta1.Broker{}))
 }
 
 func (l *Listers) GetEventTypeLister() eventinglisters.EventTypeLister {
@@ -156,18 +153,6 @@ func (l *Listers) GetApiServerSourceLister() sourcelisters.ApiServerSourceLister
 
 func (l *Listers) GetPingSourceLister() sourcelisters.PingSourceLister {
 	return sourcelisters.NewPingSourceLister(l.indexerFor(&sourcesv1alpha1.PingSource{}))
-}
-
-func (l *Listers) GetLegacyCronJobSourceLister() legacysourcelisters.CronJobSourceLister {
-	return legacysourcelisters.NewCronJobSourceLister(l.indexerFor(&legacysourcesv1alpha1.CronJobSource{}))
-}
-
-func (l *Listers) GetLegacyApiServerSourceLister() legacysourcelisters.ApiServerSourceLister {
-	return legacysourcelisters.NewApiServerSourceLister(l.indexerFor(&legacysourcesv1alpha1.ApiServerSource{}))
-}
-
-func (l *Listers) GetLegacyContainerSourceLister() legacysourcelisters.ContainerSourceLister {
-	return legacysourcelisters.NewContainerSourceLister(l.indexerFor(&legacysourcesv1alpha1.ContainerSource{}))
 }
 
 func (l *Listers) GetDeploymentLister() appsv1listers.DeploymentLister {

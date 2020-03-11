@@ -25,7 +25,6 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	fakelegacyclient "knative.dev/eventing/pkg/legacyclient/injection/client/fake"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -55,7 +54,6 @@ func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 
 		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
 		ctx, eventingClient := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
-		ctx, legacy := fakelegacyclient.With(ctx, ls.GetLegacyObjects()...)
 		ctx, client := fakekafkaclient.With(ctx, ls.GetMessagingObjects()...)
 
 		dynamicScheme := runtime.NewScheme()
@@ -74,7 +72,6 @@ func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
 			client.PrependReactor("*", "*", reactor)
-			legacy.PrependReactor("*", "*", reactor)
 			dynamicClient.PrependReactor("*", "*", reactor)
 			eventingClient.PrependReactor("*", "*", reactor)
 		}
@@ -87,15 +84,7 @@ func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 			return ValidateUpdates(context.Background(), action)
 		})
 
-		// Validate all Create operations through the legacy client.
-		legacy.PrependReactor("create", "*", func(action clientgotesting.Action) (handled bool, ret runtime.Object, err error) {
-			return ValidateCreates(ctx, action)
-		})
-		legacy.PrependReactor("update", "*", func(action clientgotesting.Action) (handled bool, ret runtime.Object, err error) {
-			return ValidateUpdates(ctx, action)
-		})
-
-		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient, legacy}
+		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
 
 		return c, actionRecorderList, eventList
