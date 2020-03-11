@@ -49,15 +49,6 @@ func getRequiredEnv(envKey string) string {
 	return val
 }
 
-func getEnv(envKey string) string {
-	val, defined := os.LookupEnv(envKey)
-	if !defined {
-		return ""
-	}
-
-	return val
-}
-
 func main() {
 	flag.Parse()
 
@@ -72,7 +63,7 @@ func main() {
 	adapter := &awssqs.Adapter{
 		QueueURL:             getRequiredEnv(envQueueURL),
 		SinkURI:              getRequiredEnv(envSinkURI),
-		CredsFile:            getEnv(envCredsFile),
+		CredsFile:            os.Getenv(envCredsFile),
 		OnFailedPollWaitSecs: 2,
 	}
 
