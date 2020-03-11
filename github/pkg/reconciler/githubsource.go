@@ -86,7 +86,6 @@ type webhookArgs struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.GitHubSource) pkgreconciler.Event {
-	source.Status.ObservedGeneration = source.Generation
 	source.Status.InitializeConditions()
 
 	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
@@ -151,22 +150,28 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 
 	if ksvc.Status.IsReady() && ksvc.Status.URL != nil {
 		receiveAdapterDomain := ksvc.Status.URL.Host
+		args := &webhookArgs{
+			source:                source,
+			domain:                receiveAdapterDomain,
+			accessToken:           accessToken,
+			secretToken:           secretToken,
+			alternateGitHubAPIURL: source.Spec.GitHubAPIURL,
+		}
+
 		// source.Status.MarkServiceDeployed(ra)
 		// TODO: Mark Deployed for the ksvc
 		// TODO: Mark some condition for the webhook status?
 		if source.Status.WebhookIDKey == "" {
-			args := &webhookArgs{
-				source:                source,
-				domain:                receiveAdapterDomain,
-				accessToken:           accessToken,
-				secretToken:           secretToken,
-				alternateGitHubAPIURL: source.Spec.GitHubAPIURL,
-			}
 			hookID, err := r.createWebhook(ctx, args)
 			if err != nil {
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
+		} else {
+			err := r.reconcileWebhook(ctx, args, source.Status.WebhookIDKey)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -177,6 +182,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	}
 	source.Status.MarkEventTypes()
 
+	source.Status.ObservedGeneration = source.Generation
 	return nil
 }
 
@@ -234,6 +240,32 @@ func (r *Reconciler) createWebhook(ctx context.Context, args *webhookArgs) (stri
 		return "", fmt.Errorf("failed to create webhook: %v", err)
 	}
 	return hookID, nil
+}
+
+func (r *Reconciler) reconcileWebhook(ctx context.Context, args *webhookArgs, hookID string) error {
+	logger := logging.FromContext(ctx)
+
+	logger.Info("reconciling GitHub webhook")
+
+	owner, repo, err := parseOwnerRepoFrom(args.source.Spec.OwnerAndRepository)
+	if err != nil {
+		return err
+	}
+
+	hookOptions := &webhookOptions{
+		accessToken: args.accessToken,
+		secretToken: args.secretToken,
+		domain:      args.domain,
+		owner:       owner,
+		repo:        repo,
+		events:      args.source.Spec.EventTypes,
+		secure:      args.source.Spec.Secure,
+	}
+
+	if err := r.webhookClient.Reconcile(ctx, hookOptions, hookID, args.alternateGitHubAPIURL); err != nil {
+		return fmt.Errorf("failed to reconcile webhook: %v", err)
+	}
+	return nil
 }
 
 func (r *Reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error {
@@ -336,7 +368,7 @@ func (r *Reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1a
 }
 
 func (r *Reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) ([]eventingv1alpha1.EventType, error) {
-	eventTypes := make([]eventingv1alpha1.EventType, 0)
+	eventTypes := make([]eventingv1alpha1.EventType, 0, len(source.Spec.EventTypes))
 
 	if ref := source.Spec.Sink.GetRef(); ref == nil || ref.Kind != "Broker" {
 		return eventTypes, nil

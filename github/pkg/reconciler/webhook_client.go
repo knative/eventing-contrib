@@ -39,6 +39,7 @@ type webhookOptions struct {
 
 type webhookClient interface {
 	Create(ctx context.Context, options *webhookOptions, alternateGitHubAPIURL string) (string, error)
+	Reconcile(ctx context.Context, options *webhookOptions, hookID, alternateGitHubAPIURL string) error
 	Delete(ctx context.Context, options *webhookOptions, hookID, alternateGitHubAPIURL string) error
 }
 
@@ -74,6 +75,47 @@ func (client gitHubWebhookClient) Create(ctx context.Context, options *webhookOp
 	logger.Infof("created hook: %+v", h)
 
 	return strconv.FormatInt(*h.ID, 10), nil
+}
+
+func (client gitHubWebhookClient) Reconcile(ctx context.Context, options *webhookOptions, hookID, alternateGitHubAPIURL string) error {
+	var err error
+	logger := logging.FromContext(ctx)
+
+	ghClient := client.createGitHubClient(ctx, options)
+	if alternateGitHubAPIURL != "" {
+		//This is to support GitHub Enterprise, this might be something like https://github.company.com/api/v3/
+		ghClient.BaseURL, err = url.Parse(alternateGitHubAPIURL)
+		if err != nil {
+			logger.Infof("Failed to reconcile webhook because an error occurred parsing githubAPIURL %q, error was: %v", alternateGitHubAPIURL, err)
+			return fmt.Errorf("error occurred parsing githubAPIURL: %v", err)
+		}
+	}
+
+	hook := client.hookConfig(ctx, options)
+
+	hookIDInt, err := strconv.ParseInt(hookID, 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to convert webhook %q to int64: %v", hookID, err)
+	}
+
+	// In a perfect world we would GetHook and compare, but given the volume of
+	// system-generated (CreatedAt) or redacted (secret) properties, this seems
+	// like an exercise in futility.
+
+	var h *ghclient.Hook
+	var resp *ghclient.Response
+	if options.repo != "" {
+		h, resp, err = ghClient.Repositories.EditHook(ctx, options.owner, options.repo, hookIDInt, &hook)
+	} else {
+		h, resp, err = ghClient.Organizations.EditHook(ctx, options.owner, hookIDInt, &hook)
+	}
+	if err != nil {
+		logger.Infof("update webhook error response:\n%+v", resp)
+		return fmt.Errorf("failed to update the webhook: %v", err)
+	}
+	logger.Infof("updated hook: %+v", h)
+
+	return nil
 }
 
 func (client gitHubWebhookClient) Delete(ctx context.Context, options *webhookOptions, hookID, alternateGitHubAPIURL string) error {
