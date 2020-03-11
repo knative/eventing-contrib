@@ -87,7 +87,8 @@ Replace the place holders in `samples/awssqs-source.yaml` or
   sed -i "s|QUEUE_URL|$QUEUE_URL|" awssqs-source.yaml
   ```
 
-Now deploy `awssqs-source.yaml` or `awssqs-source-kube2iam.yaml` depending on credential type used.
+Now deploy `awssqs-source.yaml` or `awssqs-source-kube2iam.yaml` depending on
+credential type used.
 
 - Credentials File
 
