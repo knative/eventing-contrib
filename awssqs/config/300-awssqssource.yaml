@@ -45,6 +45,8 @@ spec:
           properties:
             awsCredsSecret:
               type: object
+            annotations:
+              type: object
             queueUrl:
               type: string
             serviceAccountName:
