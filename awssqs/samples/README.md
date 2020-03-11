@@ -64,7 +64,7 @@ NOTE: If not using Kube2IAM skip this step
 Replace the `AWS_IAM_ROLE` place holders in
 `samples/awssqs-source-kube2iam.yaml`.
 
-`AWS_IAM_ROLE` should be replaced with your AWS IAM role that looks something like `AWS_IAM_ROLE`
+`AWS_IAM_ROLE` should be replaced with your AWS IAM role
 
 ### Deployment
 
