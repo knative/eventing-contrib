@@ -94,11 +94,13 @@ credential type used.
 
   ```shell
   ko apply -f awssqs/samples/awssqs-source.yaml
+  ```
 
 - Kube2IAM credentials
 
   ```shell
   ko apply -f awssqs/samples/awssqs-source-kube2iam.yaml
+  ```
 
 You can use [kail](https://github.com/boz/kail/) to tail the logs of the
 subscriber.
