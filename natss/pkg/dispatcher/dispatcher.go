@@ -18,7 +18,6 @@ package dispatcher
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -37,29 +36,11 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	. "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 const (
 	// maxElements defines a maximum number of outstanding re-connect requests
 	maxElements = 10
-
-	// timeLayout defines the time format of cloud event payload
-	timeLayout = time.RFC3339
-	// eventType defines the type key in the cloud event payload
-	eventType = "type"
-	// eventSpecVersion defines the spec version key in the cloud event payload
-	eventSpecVersion = "specversion"
-	// eventSpecVersion defines the spec version key in the cloud event payload
-	eventTime = "time"
-	// eventDataContentType defines the content type key in the cloud event payload
-	eventDataContentType = "datacontenttype"
-	// eventId defines the event id key in the cloud event payload
-	eventId = "id"
-	// eventSource defines the event source key in the cloud event payload
-	eventSource = "source"
-	// eventDate defines the event data key in the cloud event payload
-	eventData = "data"
 
 	// tracingSpanIgnoringPath defines the tracing path to ignore
 	tracingSpanIgnoringPath = "/readyz"
@@ -157,7 +138,7 @@ func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) e
 		logger.Infof("Received message from %q channel", channel.String())
 		// publish to Natss
 		ch := getSubject(channel)
-		message, err := serialize(&event)
+		message, err := event.MarshalJSON()
 		if err != nil {
 			logger.Errorf("Error during marshaling of the message: %v", err)
 			return err
@@ -181,37 +162,6 @@ func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) e
 		logger.Debugf("Published [%s] : '%s'", channel.String(), event.String())
 		return nil
 	}
-}
-
-func serialize(event *cloudevents.Event) ([]byte, error) {
-	if err := event.Validate(); err != nil {
-		return nil, err
-	}
-	payload := make(map[string]interface{})
-
-	addIfPresent := func(key string, vp func() interface{}) {
-		v := vp()
-		if vStr, ok := v.(string); (!ok && v != nil) || (ok && vStr != "") {
-			payload[key] = v
-		}
-	}
-	adapter := func(f func() string) func() interface{} {
-		return func() interface{} {
-			return f()
-		}
-	}
-
-	addIfPresent(eventSpecVersion, adapter(event.SpecVersion))
-	addIfPresent(eventId, adapter(event.ID))
-	addIfPresent(eventType, adapter(event.Type))
-	addIfPresent(eventSource, adapter(event.Source))
-	addIfPresent(eventDataContentType, adapter(event.DataContentType))
-	addIfPresent(eventTime, func() interface{} { return event.Time().Format(timeLayout) })
-	addIfPresent(eventData, func() interface{} { return event.Data })
-	for k, v := range event.Extensions() {
-		payload[k] = v
-	}
-	return json.Marshal(payload)
 }
 
 func (s *SubscriptionsSupervisor) Start(ctx context.Context) error {
@@ -336,13 +286,14 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	mcb := func(msg *stan.Msg) {
-		event, err := toEvent(msg)
+		event := cloudevents.Event{}
+		err := event.UnmarshalJSON(msg.Data)
 		if err != nil {
 			s.logger.Error(err.Error(), zap.Error(err))
 			return
 		}
 		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
-		if err := s.dispatcher.DispatchEvent(context.TODO(), *event, subscription.SubscriberURI, subscription.ReplyURI); err != nil {
+		if err := s.dispatcher.DispatchEvent(context.TODO(), event, subscription.SubscriberURI, subscription.ReplyURI); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
@@ -372,57 +323,6 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 	}
 	s.logger.Sugar().Infof("NATSS Subscription created: %+v", natssSub)
 	return &natssSub, nil
-}
-
-func toEvent(msg *stan.Msg) (*cloudevents.Event, error) {
-	var payload map[string]interface{}
-	if err := json.Unmarshal(msg.Data, &payload); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal message: %+v", err)
-	}
-	event := cloudevents.NewEvent()
-	event.SetSubject(msg.Subject)
-	for k, v := range payload {
-		switch k {
-		case eventType:
-			if v, ok := v.(string); ok {
-				event.SetType(v)
-			}
-		case eventSpecVersion:
-			if v, ok := v.(string); ok {
-				event.SetSpecVersion(v)
-			}
-		case eventTime:
-			if v, ok := v.(string); ok {
-				if t, err := time.Parse(timeLayout, v); err == nil {
-					event.SetTime(t)
-				}
-			}
-		case eventDataContentType:
-			if v, ok := v.(string); ok {
-				event.SetDataContentType(v)
-			}
-		case eventId:
-			if v, ok := v.(string); ok {
-				event.SetID(v)
-			}
-		case eventSource:
-			if v, ok := v.(string); ok {
-				event.SetSource(v)
-			}
-		case eventData:
-			event.SetData(v)
-		default:
-			if IsAlphaNumeric(k) {
-				event.SetExtension(k, v)
-			}
-		}
-	}
-
-	if err := event.Validate(); err != nil {
-		return nil, err
-	}
-
-	return &event, nil
 }
 
 // should be called only while holding subscriptionsMux
