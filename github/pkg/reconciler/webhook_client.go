@@ -24,17 +24,17 @@ import (
 
 	ghclient "github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 )
 
 type webhookOptions struct {
 	accessToken string
 	secretToken string
-	domain      string
+	url         *apis.URL
 	owner       string
 	repo        string
 	events      []string
-	secure      bool
 }
 
 type webhookClient interface {
@@ -162,20 +162,21 @@ func (client gitHubWebhookClient) createGitHubClient(ctx context.Context, option
 }
 
 func (client gitHubWebhookClient) hookConfig(ctx context.Context, options *webhookOptions) ghclient.Hook {
-	domain := options.domain
 	active := true
 	config := make(map[string]interface{})
-	protocol := "http"
-	if options.secure {
-		protocol = "https"
+
+	var pus *string
+	if options.url != nil {
+		us := options.url.String()
+		config["url"] = us
+		pus = &us
 	}
-	config["url"] = fmt.Sprintf("%s://%s", protocol, domain)
 	config["content_type"] = "json"
 	config["secret"] = options.secretToken
 
 	// GitHub hook names are required to be named "web" or the name of a GitHub service
 	hook := ghclient.Hook{
-		URL:    &domain,
+		URL:    pus,
 		Events: options.events,
 		Active: &active,
 		Config: config,
