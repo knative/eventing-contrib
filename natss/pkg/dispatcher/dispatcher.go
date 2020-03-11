@@ -294,6 +294,7 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 		}
 		if err := event.Validate(); err != nil {
 			s.logger.Error(err.Error(), zap.Error(err))
+			return
 		}
 		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
 		if err := s.dispatcher.DispatchEvent(context.TODO(), event, subscription.SubscriberURI, subscription.ReplyURI); err != nil {
