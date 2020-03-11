@@ -44,8 +44,6 @@ const (
 	// maxElements defines a maximum number of outstanding re-connect requests
 	maxElements = 10
 
-	// cloudEventVersion defines the cloud events version
-	cloudEventVersion = cloudevents.VersionV1
 	// timeLayout defines the time format of cloud event payload
 	timeLayout = time.RFC3339
 	// eventType defines the type key in the cloud event payload
@@ -186,14 +184,30 @@ func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) e
 }
 
 func serialize(event *cloudevents.Event) ([]byte, error) {
+	if err := event.Validate(); err != nil {
+		return nil, err
+	}
 	payload := make(map[string]interface{})
-	payload[eventSpecVersion] = event.SpecVersion()
-	payload[eventId] = event.ID()
-	payload[eventType] = event.Type()
-	payload[eventSource] = event.Source()
-	payload[eventDataContentType] = event.DataContentType()
-	payload[eventTime] = event.Time().Format(timeLayout)
-	payload[eventData] = event.Data
+
+	addIfPresent := func(key string, vp func() interface{}) {
+		v := vp()
+		if vStr, ok := v.(string); (!ok && v != nil) || (ok && vStr != "") {
+			payload[key] = v
+		}
+	}
+	adapter := func(f func() string) func() interface{} {
+		return func() interface{} {
+			return f()
+		}
+	}
+
+	addIfPresent(eventSpecVersion, adapter(event.SpecVersion))
+	addIfPresent(eventId, adapter(event.ID))
+	addIfPresent(eventType, adapter(event.Type))
+	addIfPresent(eventSource, adapter(event.Source))
+	addIfPresent(eventDataContentType, adapter(event.DataContentType))
+	addIfPresent(eventTime, func() interface{} { return event.Time().Format(timeLayout) })
+	addIfPresent(eventData, func() interface{} { return event.Data })
 	for k, v := range event.Extensions() {
 		payload[k] = v
 	}
@@ -365,7 +379,7 @@ func toEvent(msg *stan.Msg) (*cloudevents.Event, error) {
 	if err := json.Unmarshal(msg.Data, &payload); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal message: %+v", err)
 	}
-	event := cloudevents.NewEvent(cloudEventVersion)
+	event := cloudevents.NewEvent()
 	event.SetSubject(msg.Subject)
 	for k, v := range payload {
 		switch k {
@@ -403,6 +417,11 @@ func toEvent(msg *stan.Msg) (*cloudevents.Event, error) {
 			}
 		}
 	}
+
+	if err := event.Validate(); err != nil {
+		return nil, err
+	}
+
 	return &event, nil
 }
 

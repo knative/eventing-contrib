@@ -34,9 +34,10 @@ import (
 func TestSerialize(t *testing.T) {
 
 	tt := []struct {
-		name  string
-		event *cloudevents.Event
-		want  []byte
+		name          string
+		event         *cloudevents.Event
+		want          []byte
+		errorExpected bool
 	}{
 		{
 			name: "event with extension",
@@ -63,12 +64,81 @@ func TestSerialize(t *testing.T) {
 				"data":            map[string]interface{}{"dk1": "dv1", "dk2": "dv2"},
 			}),
 		},
+		{
+			name: "only required attributes",
+			event: func() *cloudevents.Event {
+				e := cloudevents.NewEvent(cloudevents.VersionV1)
+				e.SetSource("https://github.com/knative")
+				e.SetType("com.example.someevent")
+				e.SetID("af0a8168-66c0-4d67-a28f-23a55ad8ade3")
+				return &e
+			}(),
+			want: toJson(map[string]interface{}{
+				"id":          "af0a8168-66c0-4d67-a28f-23a55ad8ade3",
+				"source":      "https://github.com/knative",
+				"specversion": "1.0",
+				"type":        "com.example.someevent",
+				"time":        "0001-01-01T00:00:00Z", // default cloud events go-sdk time
+			}),
+		},
+		{
+			name: "no id",
+			event: func() *cloudevents.Event {
+				e := cloudevents.NewEvent(cloudevents.VersionV1)
+				e.SetSource("https://github.com/knative")
+				e.SetType("com.example.someevent")
+				return &e
+			}(),
+			errorExpected: true,
+		},
+		{
+			name: "no spec version",
+			event: func() *cloudevents.Event {
+				e := cloudevents.NewEvent() // default spec version cloudevents.VersionV1
+				e.SetSource("https://github.com/knative")
+				e.SetType("com.example.someevent")
+				e.SetID("af0a8168-66c0-4d67-a28f-23a55ad8ade3")
+				return &e
+			}(),
+			want: toJson(map[string]interface{}{
+				"id":          "af0a8168-66c0-4d67-a28f-23a55ad8ade3",
+				"source":      "https://github.com/knative",
+				"specversion": "1.0",
+				"type":        "com.example.someevent",
+				"time":        "0001-01-01T00:00:00Z", // default cloud events go-sdk time
+			}),
+		},
+		{
+			name: "no type",
+			event: func() *cloudevents.Event {
+				e := cloudevents.NewEvent(cloudevents.VersionV1)
+				e.SetSource("https://github.com/knative")
+				e.SetID("af0a8168-66c0-4d67-a28f-23a55ad8ade3")
+				return &e
+			}(),
+			errorExpected: true,
+		},
+		{
+			name: "no source",
+			event: func() *cloudevents.Event {
+				e := cloudevents.NewEvent(cloudevents.VersionV1)
+				e.SetType("com.example.someevent")
+				e.SetID("af0a8168-66c0-4d67-a28f-23a55ad8ade3")
+				return &e
+			}(),
+			errorExpected: true,
+		},
+		{
+			name:          "without data",
+			event:         &cloudevents.Event{},
+			errorExpected: true,
+		},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			b, err := serialize(tc.event)
-			if err != nil {
+			if tc.errorExpected != (err != nil) {
 				t.Errorf("unexpected error %+v", err)
 			}
 			if diff := cmp.Diff(b, tc.want); diff != "" {
@@ -106,7 +176,7 @@ func TestToEvent(t *testing.T) {
 				},
 			},
 			want: func(t *testing.T) *cloudevents.Event {
-				e := cloudevents.NewEvent(cloudEventVersion)
+				e := cloudevents.NewEvent(cloudevents.VersionV1)
 				e.SetSubject("subject-1")
 				e.SetType("com.example.someevent")
 				e.SetID("af0a8168-66c0-4d67-a28f-23a55ad8ade3")
@@ -122,12 +192,89 @@ func TestToEvent(t *testing.T) {
 			}(t),
 		},
 		{
-			name: "invalid data",
+			name: "invalid json",
 			msg: &stan.Msg{
 				MsgProto: pb.MsgProto{
 					Data: []byte("data"),
 				},
 			},
+			errorExpected: true,
+		},
+		{
+			name: "no id",
+			msg: &stan.Msg{
+				MsgProto: pb.MsgProto{
+					Data: []byte(`{
+						"type": "com.example.someevent",
+						"specversion": "1.0",
+						"source": "https://github.com/knative"
+						}`),
+				},
+			},
+			errorExpected: true,
+		},
+		{
+			name: "no spec version",
+			msg: &stan.Msg{
+				MsgProto: pb.MsgProto{
+					Data: []byte(`{
+						"specversion": "1.0",
+						"type": "com.example.someevent",
+						"source": "https://github.com/knative"
+						}`),
+				},
+			},
+			errorExpected: true,
+		},
+		{
+			name: "no source",
+			msg: &stan.Msg{
+				MsgProto: pb.MsgProto{
+					Data: []byte(`{
+						"specversion": "1.0",
+						"type": "com.example.someevent",
+						"id": "af0a8168-66c0-4d67-a28f-23a55ad8ade3"
+						}`),
+				},
+			},
+			errorExpected: true,
+		},
+		{
+			name: "no type",
+			msg: &stan.Msg{
+				MsgProto: pb.MsgProto{
+					Data: []byte(`{
+						"specversion": "1.0",
+						"id": "af0a8168-66c0-4d67-a28f-23a55ad8ade3",
+						"source": "https://github.com/knative"
+						}`),
+				},
+			},
+			errorExpected: true,
+		},
+		{
+			name: "only required attributes",
+			msg: &stan.Msg{
+				MsgProto: pb.MsgProto{
+					Data: []byte(`{
+						"specversion": "1.0",
+						"type": "com.example.someevent",
+						"id": "af0a8168-66c0-4d67-a28f-23a55ad8ade3",
+						"source": "https://github.com/knative"
+						}`),
+				},
+			},
+			want: func() *cloudevents.Event {
+				e := cloudevents.NewEvent(cloudevents.VersionV1)
+				e.SetSource("https://github.com/knative")
+				e.SetID("af0a8168-66c0-4d67-a28f-23a55ad8ade3")
+				e.SetType("com.example.someevent")
+				return &e
+			}(),
+		},
+		{
+			name:          "without data",
+			msg:           &stan.Msg{},
 			errorExpected: true,
 		},
 	}
@@ -136,7 +283,7 @@ func TestToEvent(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			e, err := toEvent(tc.msg)
 			if tc.errorExpected != (err != nil) {
-				t.Errorf("expected error %+v", err)
+				t.Fatalf("expected error %+v", err)
 			}
 			if diff := cmp.Diff(e, tc.want); diff != "" {
 				t.Errorf("expected event %+v got %+v\ndiff: %+v", tc.want, e, diff)
