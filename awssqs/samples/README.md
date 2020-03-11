@@ -92,9 +92,8 @@ credential type used.
 
 - Credentials File
 
-   ```shell
-   ko apply -f awssqs/samples/awssqs-source.yaml
-   ```
+  ```shell
+  ko apply -f awssqs/samples/awssqs-source.yaml
 
 - Kube2IAM credentials
 
