@@ -14,7 +14,7 @@ commands from the root.
 1. Create an [AWS SQS queue](https://aws.amazon.com/sqs/).
 
 1. Setup
-   [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
+   [Knative Eventing](https://github.com/knative/docs/tree/master/docs/eventing).
 
 1. The
    [in-memory channel CRD](https://github.com/knative/eventing/blob/master/config/channels/in-memory-channel/README.md)
