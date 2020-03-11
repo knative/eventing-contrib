@@ -77,7 +77,8 @@ ko apply -f awssqs/config/
 Note that if the `Source` Service Account secret is in a non-default location,
 you will need to update the YAML first.
 
-Replace the place holders in `samples/awssqs-source.yaml` or `samples/awssqs-source-kube2iam.yaml` depending on credential type used.
+Replace the place holders in `samples/awssqs-source.yaml` or
+`samples/awssqs-source-kube2iam.yaml` depending on credential type used.
 
 - `QUEUE_URL` should be replaced with your AWS SQS queue URL.
 
