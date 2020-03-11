@@ -18,23 +18,35 @@ package controller
 
 import (
 	"context"
+	"k8s.io/client-go/rest"
+	"knative.dev/pkg/injection"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
 
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
+	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	fakelegacyclient "knative.dev/eventing/pkg/legacyclient/injection/client/fake"
 	"knative.dev/eventing/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/natss/pkg/client/injection/client"
+	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
+	_ "knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel/fake"
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	dispatchertesting "knative.dev/eventing-contrib/natss/pkg/dispatcher/testing"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
+
+	"go.uber.org/zap"
 )
 
 const (
@@ -108,6 +120,38 @@ func TestAllCases(t *testing.T) {
 		})
 	}))
 }
+
+type failOnFatalAndErrorLogger struct {
+	*zap.Logger
+	t *testing.T
+}
+
+func (l *failOnFatalAndErrorLogger) Error(msg string, fields ...zap.Field) {
+	l.t.Fatalf("Error() called - msg: %s - fields: %v", msg, fields)
+}
+
+func (l *failOnFatalAndErrorLogger) Fatal(msg string, fields ...zap.Field) {
+	l.t.Fatalf("Fatal() called - msg: %s - fields: %v", msg, fields)
+}
+
+func TestNewController(t *testing.T) {
+
+	logger := failOnFatalAndErrorLogger{
+		Logger: zap.NewNop(),
+		t:      t,
+	}
+	ctx := logging.WithLogger(context.Background(), logger.Sugar())
+	ctx, _ = fakekubeclient.With(ctx)
+	ctx, _ = fakeeventingclient.With(ctx)
+	ctx, _ = fakelegacyclient.With(ctx)
+	ctx, _ = fakedynamicclient.With(ctx, runtime.NewScheme())
+	ctx, _ = fakeclientset.With(ctx)
+	cfg := &rest.Config{}
+	ctx, _ = injection.Fake.SetupInformers(ctx, cfg)
+
+	NewController(ctx, configmap.NewStaticWatcher(), cfg)
+}
+
 func TestFailedNatssSubscription(t *testing.T) {
 	ncKey := testNS + "/" + ncName
 
