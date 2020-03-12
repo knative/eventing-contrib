@@ -179,7 +179,10 @@ func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 
 	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)
-	if err != nil {
+	if err == nil {
+		//Convert to nanoseconds as sqs SentTimestamp is millisecond
+		timestamp = timestamp * int64(1000000)
+	} else {
 		timestamp = time.Now().UnixNano()
 	}
 
@@ -187,7 +190,7 @@ func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 	event.SetID(*m.MessageId)
 	event.SetType(sourcesv1alpha1.AwsSqsSourceEventType)
 	event.SetSource(types.ParseURIRef(a.QueueURL).String())
-	event.SetTime(time.Unix(timestamp, 0))
+	event.SetTime(time.Unix(0, timestamp))
 
 	if err := event.SetData(m); err != nil {
 		return nil, err
