@@ -349,9 +349,23 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: source.Spec.SecretToken.SecretKeyRef,
 			},
+		}, {
+			Name:  "K_SINK",
+			Value: sinkURI,
+		}, {
+			Name:  "NAMESPACE",
+			Value: source.GetNamespace(),
+		}, {
+			Name:  "METRICS_DOMAIN",
+			Value: "knative.dev/eventing",
+		}, {
+			Name:  "K_METRICS_CONFIG",
+			Value: "",
+		}, {
+			Name:  "K_LOGGING_CONFIG",
+			Value: "",
 		},
 	}
-	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI)}
 	return &servingv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),
@@ -371,7 +385,6 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 								{
 									Image: receiveAdapterImage,
 									Env:   env,
-									Args:  containerArgs,
 								},
 							},
 						},

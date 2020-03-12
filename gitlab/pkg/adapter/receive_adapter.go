@@ -19,10 +19,12 @@ package adapter
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"go.uber.org/zap"
+	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/source"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/uuid"
@@ -35,66 +37,99 @@ const (
 	glHeaderEvent = "X-Gitlab-Event"
 )
 
-// GitLabReceiveAdapter converts incoming GitLab webhook events to
+type envConfig struct {
+	adapter.EnvConfig
+
+	// Environment variable containing Gitlab secret token
+	EnvSecret string `envconfig:"GITLAB_SECRET_TOKEN" required:"true"`
+	// Port to listen incoming connections
+	Port string `envconfig:"PORT" default:"8080"`
+}
+
+// gitLabReceiveAdapter converts incoming GitLab webhook events to
 // CloudEvents and then sends them to the specified Sink
-type GitLabReceiveAdapter struct {
+type gitLabReceiveAdapter struct {
+	logger      *zap.SugaredLogger
 	client      cloudevents.Client
 	secretToken string
+	port        string
 }
 
-// New creates an adapter to convert incoming GitLab webhook events to CloudEvents and
-// then sends them to the specified Sink
-func New(sinkURI, secretToken string) (*GitLabReceiveAdapter, error) {
-	client, err := kncloudevents.NewDefaultClient(sinkURI)
-	if err != nil {
-		return nil, err
+func NewEnvConfig() adapter.EnvConfigAccessor {
+	return &envConfig{}
+}
+
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
+	logger := logging.FromContext(ctx)
+	env := processed.(*envConfig)
+
+	a := &gitLabReceiveAdapter{
+		logger:      logger,
+		client:      ceClient,
+		port:        env.Port,
+		secretToken: env.EnvSecret,
 	}
-	return &GitLabReceiveAdapter{
-		client:      client,
-		secretToken: secretToken,
-	}, nil
+
+	return a
 }
 
-// HandleEvent is invoked whenever an event comes in from GitLab
-func (ra *GitLabReceiveAdapter) HandleEvent(payload interface{}, header webhooks.Header) {
+func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
+	hook := gitlab.New(&gitlab.Config{Secret: ra.secretToken})
+	hook.RegisterEvents(ra.handleEvent,
+		gitlab.PushEvents,
+		gitlab.TagEvents,
+		gitlab.IssuesEvents,
+		gitlab.ConfidentialIssuesEvents,
+		gitlab.CommentEvents,
+		gitlab.MergeRequestEvents,
+		gitlab.WikiPageEvents,
+		gitlab.PipelineEvents,
+		gitlab.BuildEvents)
+
+	addr := fmt.Sprintf(":%s", ra.port)
+	return webhooks.Run(hook, addr, "/")
+}
+
+func (ra *gitLabReceiveAdapter) handleEvent(payload interface{}, header webhooks.Header) {
 	hdr := http.Header(header)
-	err := ra.handleEvent(payload, hdr)
-	if err != nil {
-		log.Printf("unexpected error handling GitLab event: %s", err)
-	}
-}
-
-func (ra *GitLabReceiveAdapter) handleEvent(payload interface{}, hdr http.Header) error {
 	gitLabHookToken := hdr.Get(glHeaderToken)
 	if gitLabHookToken == "" {
-		return fmt.Errorf("%q header is not set", glHeaderToken)
+		ra.logger.Errorf("%q header is not set", glHeaderToken)
+		return
 	}
 	if gitLabHookToken != ra.secretToken {
-		return fmt.Errorf("event token doesn't match secret")
+		ra.logger.Errorf("event token doesn't match secret")
+		return
 	}
 	gitLabEventType := hdr.Get(glHeaderEvent)
 	if gitLabEventType == "" {
-		return fmt.Errorf("%q header is not set", glHeaderEvent)
+		ra.logger.Errorf("%q header is not set", glHeaderEvent)
+		return
 	}
 	extensions := map[string]interface{}{
 		glHeaderEvent: gitLabEventType,
 	}
 
-	log.Printf("Handling %s\n", gitLabEventType)
+	ra.logger.Infof("Handling %s\n", gitLabEventType)
 
 	uuid, err := uuid.NewRandom()
 	if err != nil {
-		return fmt.Errorf("can't generate event ID: %s", err)
+		ra.logger.Errorf("can't generate event ID: %s", err)
+		return
 	}
 	eventID := uuid.String()
 
 	cloudEventType := fmt.Sprintf("%s.%s", "dev.knative.sources.gitlabsource", gitLabEventType)
 	source := sourceFromGitLabEvent(gitlab.Event(gitLabEventType), payload)
 
-	return ra.postMessage(payload, source, cloudEventType, eventID, extensions)
+	err = ra.postMessage(payload, source, cloudEventType, eventID, extensions)
+	if err != nil {
+		ra.logger.Errorf("cloudevent post message error: %s", err)
+		return
+	}
 }
 
-func (ra *GitLabReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
+func (ra *gitLabReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
 	extensions map[string]interface{}) error {
 	event := cloudevents.NewEvent(cloudevents.VersionV03)
 	event.SetID(eventID)

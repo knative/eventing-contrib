@@ -17,66 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"flag"
-	"fmt"
-	"log"
-	"os"
+	"knative.dev/eventing/pkg/adapter"
 
-	webhooks "gopkg.in/go-playground/webhooks.v3"
-	"gopkg.in/go-playground/webhooks.v3/gitlab"
-
-	"knative.dev/eventing-contrib/gitlab/pkg/adapter"
-)
-
-const (
-	// Environment variable containing the HTTP port
-	envPort = "PORT"
-
-	// Environment variable containing Gitlab secret token
-	envSecret = "GITLAB_SECRET_TOKEN"
+	gitlabadapter "knative.dev/eventing-contrib/gitlab/pkg/adapter"
 )
 
 func main() {
-	sink := flag.String("sink", "", "uri to send events to")
-
-	flag.Parse()
-
-	if *sink == "" {
-		log.Fatalf("No sink given")
-	}
-
-	port := os.Getenv(envPort)
-	if port == "" {
-		port = "8080"
-	}
-
-	secretToken := os.Getenv(envSecret)
-	if secretToken == "" {
-		log.Fatalf("No secret token given")
-	}
-
-	log.Printf("Sink is: %q", *sink)
-
-	ra, err := adapter.New(*sink, secretToken)
-	if err != nil {
-		log.Fatalf("Failed to create gitlab adapter: %s", err)
-	}
-
-	hook := gitlab.New(&gitlab.Config{Secret: secretToken})
-	hook.RegisterEvents(ra.HandleEvent,
-		gitlab.PushEvents,
-		gitlab.TagEvents,
-		gitlab.IssuesEvents,
-		gitlab.ConfidentialIssuesEvents,
-		gitlab.CommentEvents,
-		gitlab.MergeRequestEvents,
-		gitlab.WikiPageEvents,
-		gitlab.PipelineEvents,
-		gitlab.BuildEvents)
-
-	addr := fmt.Sprintf(":%s", port)
-	err = webhooks.Run(hook, addr, "/")
-	if err != nil {
-		log.Fatalf("Failed to run the webhook")
-	}
+	adapter.Main("gitlabsource", gitlabadapter.NewEnvConfig, gitlabadapter.NewAdapter)
 }
