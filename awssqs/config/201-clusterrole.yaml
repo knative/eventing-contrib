@@ -92,6 +92,14 @@ rules:
   verbs:
   - get
   - list
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - eventtypes
+  verbs:
+  - get
+  - list
+  - watch
 
 
 ---
