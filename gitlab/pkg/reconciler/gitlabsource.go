@@ -18,6 +18,7 @@ package gitlab
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -32,6 +33,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"k8s.io/client-go/tools/cache"
@@ -65,6 +67,7 @@ const (
 
 	gitLabSourceUpdateStatusFailed = "GitLabSourceUpdateStatusFailed"
 	gitLabSourceReadinessChanged   = "GitLabSourceReadinessChanged"
+	gitLabSourceReconciled         = "GitLabSourceReconciled"
 )
 
 var receiveAdapterImage string
@@ -87,8 +90,6 @@ type Reconciler struct {
 
 	loggingContext context.Context
 	loggingConfig  *logging.Config
-
-	// webhookClient webhookClient
 }
 
 // Reconcile reads that state of the cluster for a GitLabSource object and makes changes based on the state read
@@ -119,18 +120,20 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	gitlab := source.DeepCopy()
 
 	var reconcileErr error
-	if gitlab.ObjectMeta.DeletionTimestamp == nil {
+	if gitlab.ObjectMeta.GetDeletionTimestamp() == nil {
 		reconcileErr = r.reconcile(gitlab)
 	} else {
 		if r.hasFinalizer(gitlab) {
 			reconcileErr = r.finalize(gitlab)
 		}
+		return reconcileErr
 	}
 	if _, updateStatusErr := r.updateStatus(ctx, gitlab.DeepCopy()); updateStatusErr != nil {
 		logging.FromContext(ctx).Warn("Failed to update the GitLabSource", zap.Error(updateStatusErr))
 		r.Recorder.Eventf(gitlab, corev1.EventTypeWarning, gitLabSourceUpdateStatusFailed, "Failed to update GitLabSource's status: %v", updateStatusErr)
 		return updateStatusErr
 	}
+
 	return reconcileErr
 }
 
@@ -140,8 +143,8 @@ func getGitlabBaseUrl(projectUrl string) (string, error) {
 		return "", err
 	}
 	projectName := u.Path[1:]
-	baseurl := strings.TrimSuffix(projectUrl, projectName)
-	return baseurl, nil
+	baseURL := strings.TrimSuffix(projectUrl, projectName)
+	return baseURL, nil
 }
 
 func getProjectName(projectUrl string) (string, error) {
@@ -154,14 +157,14 @@ func getProjectName(projectUrl string) (string, error) {
 }
 
 func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
-
 	source.Status.InitializeConditions()
 
-	hookOptions := projectHookOptions{}
 	projectName, err := getProjectName(source.Spec.ProjectUrl)
 	if err != nil {
 		return fmt.Errorf("Failed to process project url to get the project name: " + err.Error())
 	}
+
+	hookOptions := projectHookOptions{}
 	hookOptions.project = projectName
 	hookOptions.id = source.Status.Id
 
@@ -200,6 +203,7 @@ func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 	source.Status.MarkSecret()
 
 	sink := source.Spec.Sink.DeepCopy()
+
 	if sink.Ref != nil {
 		// To call URIFromDestination(), dest.Ref must have a Namespace. If there is
 		// no Namespace defined in dest.Ref, we will use the Namespace of the source
@@ -208,14 +212,9 @@ func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 			//TODO how does this work with deprecated fields
 			sink.Ref.Namespace = source.GetNamespace()
 		}
-	} else if sink.DeprecatedName != "" && sink.DeprecatedNamespace == "" {
-		// If Ref is nil and the deprecated ref is present, we need to check for
-		// DeprecatedNamespace. This can be removed when DeprecatedNamespace is
-		// removed.
-		sink.DeprecatedNamespace = source.GetNamespace()
 	}
 
-	uri, err := r.sinkResolver.URIFromDestination(*sink, source)
+	uri, err := r.sinkResolver.URIFromDestinationV1(*sink, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
@@ -246,45 +245,47 @@ func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 		hookOptions.EnableSSLVerification = true
 	}
 
-	baseUrl, err := getGitlabBaseUrl(source.Spec.ProjectUrl)
+	baseURL, err := getGitlabBaseUrl(source.Spec.ProjectUrl)
 	if err != nil {
 		return fmt.Errorf("Failed to process project url to get the base url: " + err.Error())
 	}
 	gitlabClient := gitlabHookClient{}
-	hookId, err := gitlabClient.Create(baseUrl, &hookOptions)
+	hookID, err := gitlabClient.Create(baseURL, &hookOptions)
 	if err != nil {
 		return fmt.Errorf("Failed to create project hook: " + err.Error())
 	}
-	source.Status.Id = hookId
+	source.Status.Id = hookID
 	r.addFinalizer(source)
 	return nil
 }
 
 func (r *Reconciler) finalize(source *sourcesv1alpha1.GitLabSource) error {
-
-	hookOptions := projectHookOptions{}
-	projectName, err := getProjectName(source.Spec.ProjectUrl)
-	if err != nil {
-		return fmt.Errorf("Failed to process project url to get the project name: " + err.Error())
-	}
-	hookOptions.project = projectName
-	hookOptions.id = source.Status.Id
-	hookOptions.accessToken, err = r.secretFrom(source.Namespace, source.Spec.AccessToken.SecretKeyRef)
-	if err != nil {
-		return err
-	}
-
-	baseUrl, err := getGitlabBaseUrl(source.Spec.ProjectUrl)
-	if err != nil {
-		return fmt.Errorf("Failed to process project url to get the base url: " + err.Error())
-	}
-	gitlabClient := gitlabHookClient{}
-	err = gitlabClient.Delete(baseUrl, &hookOptions)
-	if err != nil {
-		return fmt.Errorf("Failed to delete project hook: " + err.Error())
+	if source.Status.Id != "" {
+		hookOptions := projectHookOptions{}
+		projectName, err := getProjectName(source.Spec.ProjectUrl)
+		if err != nil {
+			return fmt.Errorf("failed to process project url to get the project name: %s", err.Error())
+		}
+		hookOptions.project = projectName
+		hookOptions.id = source.Status.Id
+		hookOptions.accessToken, err = r.secretFrom(source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+		if err != nil {
+			return err
+		}
+		baseURL, err := getGitlabBaseUrl(source.Spec.ProjectUrl)
+		if err != nil {
+			return fmt.Errorf("failed to process project url to get the base url: %s", err.Error())
+		}
+		gitlabClient := gitlabHookClient{}
+		err = gitlabClient.Delete(baseURL, &hookOptions)
+		if err != nil {
+			return fmt.Errorf("failed to delete project hook: %s", err.Error())
+		}
+		source.Status.Id = ""
 	}
 	r.removeFinalizer(source)
-	return nil
+	_, err := r.gitlabClientSet.SourcesV1alpha1().GitLabSources(source.Namespace).Update(source)
+	return err
 }
 
 func (r *Reconciler) secretFrom(namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
@@ -301,10 +302,25 @@ func (r *Reconciler) secretFrom(namespace string, secretKeySelector *corev1.Secr
 	return string(secretVal), nil
 }
 
-func (r *Reconciler) addFinalizer(source *sourcesv1alpha1.GitLabSource) {
-	finalizers := sets.NewString(source.Finalizers...)
-	finalizers.Insert(finalizerName)
-	source.Finalizers = finalizers.List()
+func (r *Reconciler) addFinalizer(src *sourcesv1alpha1.GitLabSource) error {
+	finalizers := sets.NewString(src.Finalizers...)
+	if finalizers.Has(finalizerName) {
+		return nil
+	}
+
+	mergePatch := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"finalizers":      append(src.Finalizers, finalizerName),
+			"resourceVersion": src.ResourceVersion,
+		},
+	}
+
+	patch, err := json.Marshal(mergePatch)
+	if err != nil {
+		return nil
+	}
+	_, err = r.gitlabClientSet.SourcesV1alpha1().GitLabSources(src.Namespace).Patch(src.Name, types.MergePatchType, patch)
+	return err
 }
 
 func (r *Reconciler) removeFinalizer(source *sourcesv1alpha1.GitLabSource) {
@@ -430,7 +446,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, source *sourcesv1alpha1.G
 	existing := gitlab.DeepCopy()
 	existing.Status = source.Status
 
-	result, err := r.gitlabClientSet.SourceV1alpha1().GitLabSources(source.Namespace).UpdateStatus(existing)
+	result, err := r.gitlabClientSet.SourcesV1alpha1().GitLabSources(source.Namespace).UpdateStatus(existing)
 	if err == nil && becomesReady {
 		duration := time.Since(result.ObjectMeta.CreationTimestamp.Time)
 		logging.FromContext(ctx).Info("GitLabSource became ready after", zap.Duration("duration", duration))

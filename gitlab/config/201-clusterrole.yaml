@@ -15,11 +15,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: gitlabsource-manager-role
 rules:
 - apiGroups:
-  - source.knative.dev
+  - sources.knative.dev
   resources:
   - gitlabsources
   verbs: &everything
@@ -30,45 +29,37 @@ rules:
   - update
   - patch
   - delete
+
 - apiGroups:
-  - source.knative.dev
+  - sources.knative.dev
   resources:
   - gitlabsources/status
   verbs:
   - get
   - update
   - patch
+
+- apiGroups:
+  - sources.knative.dev
+  resources:
+  - gitlabsources/finalizers
+  verbs: *everything
+
 - apiGroups:
   - serving.knative.dev
   resources:
   - services
   verbs: *everything
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - messaging.knative.dev
-  resources:
-  - inmemorychannels
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs: *everything
+
 - apiGroups:
   - ""
   resources:
   - services
-  verbs: *everything
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
 
 # Events admin
 - apiGroups:
@@ -96,7 +87,7 @@ metadata:
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
-      - "source.knative.dev"
+      - "sources.knative.dev"
     resources:
       - "gitlabsources"
     verbs:

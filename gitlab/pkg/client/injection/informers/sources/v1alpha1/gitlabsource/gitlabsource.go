@@ -37,7 +37,7 @@ type Key struct{}
 
 func withInformer(ctx context.Context) (context.Context, controller.Informer) {
 	f := factory.Get(ctx)
-	inf := f.Source().V1alpha1().GitLabSources()
+	inf := f.Sources().V1alpha1().GitLabSources()
 	return context.WithValue(ctx, Key{}, inf), inf.Informer()
 }
 

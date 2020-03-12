@@ -25,8 +25,8 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
 	clientset "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned"
-	sourcev1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/typed/sources/v1alpha1"
-	fakesourcev1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/typed/sources/v1alpha1"
+	fakesourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -76,7 +76,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 
 var _ clientset.Interface = &Clientset{}
 
-// SourceV1alpha1 retrieves the SourceV1alpha1Client
-func (c *Clientset) SourceV1alpha1() sourcev1alpha1.SourceV1alpha1Interface {
-	return &fakesourcev1alpha1.FakeSourceV1alpha1{Fake: &c.Fake}
+// SourcesV1alpha1 retrieves the SourcesV1alpha1Client
+func (c *Clientset) SourcesV1alpha1() sourcesv1alpha1.SourcesV1alpha1Interface {
+	return &fakesourcesv1alpha1.FakeSourcesV1alpha1{Fake: &c.Fake}
 }

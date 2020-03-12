@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@ limitations under the License.
 
 package apis
 
-import (
-	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
-)
+import servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back

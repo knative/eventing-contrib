@@ -24,17 +24,17 @@ import (
 	v1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/typed/sources/v1alpha1"
 )
 
-type FakeSourceV1alpha1 struct {
+type FakeSourcesV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeSourceV1alpha1) GitLabSources(namespace string) v1alpha1.GitLabSourceInterface {
+func (c *FakeSourcesV1alpha1) GitLabSources(namespace string) v1alpha1.GitLabSourceInterface {
 	return &FakeGitLabSources{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeSourceV1alpha1) RESTClient() rest.Interface {
+func (c *FakeSourcesV1alpha1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

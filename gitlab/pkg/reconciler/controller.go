@@ -49,9 +49,9 @@ func NewController(
 	cmw configmap.Watcher,
 ) *controller.Impl {
 
-	raImage, defined := os.LookupEnv(raImageEnvVar)
-	if !defined {
-		logging.FromContext(ctx).Errorf("required environment variable '%s' not defined", raImageEnvVar)
+	raImage := os.Getenv(raImageEnvVar)
+	if raImage == "" {
+		logging.FromContext(ctx).Errorf("required environment variable %q not set", raImageEnvVar)
 		return nil
 	}
 
@@ -61,13 +61,12 @@ func NewController(
 	serviceInformer := kserviceinformer.Get(ctx)
 
 	r := &Reconciler{
-		Base:             reconciler.NewBase(ctx, controllerAgentName, cmw),
-		servingLister:    serviceInformer.Lister(),
-		servingClientSet: serviceclient.Get(ctx),
-		gitlabClientSet:  gitlabclient.Get(ctx),
-		gitlabLister:     gitlabInformer.Lister(),
-		deploymentLister: deploymentInformer.Lister(),
-		// webhookClient:       gitHubWebhookClient{},
+		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
+		servingLister:       serviceInformer.Lister(),
+		servingClientSet:    serviceclient.Get(ctx),
+		gitlabClientSet:     gitlabclient.Get(ctx),
+		gitlabLister:        gitlabInformer.Lister(),
+		deploymentLister:    deploymentInformer.Lister(),
 		receiveAdapterImage: raImage,
 		eventTypeLister:     eventTypeInformer.Lister(),
 		loggingContext:      ctx,

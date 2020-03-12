@@ -35,6 +35,6 @@ func init() {
 
 func withInformer(ctx context.Context) (context.Context, controller.Informer) {
 	f := fake.Get(ctx)
-	inf := f.Source().V1alpha1().GitLabSources()
+	inf := f.Sources().V1alpha1().GitLabSources()
 	return context.WithValue(ctx, gitlabsource.Key{}, inf), inf.Informer()
 }

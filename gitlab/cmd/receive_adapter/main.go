@@ -23,7 +23,8 @@ import (
 	"os"
 
 	webhooks "gopkg.in/go-playground/webhooks.v3"
-	gitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
+	"gopkg.in/go-playground/webhooks.v3/gitlab"
+
 	"knative.dev/eventing-contrib/gitlab/pkg/adapter"
 )
 
@@ -40,7 +41,7 @@ func main() {
 
 	flag.Parse()
 
-	if sink == nil || *sink == "" {
+	if *sink == "" {
 		log.Fatalf("No sink given")
 	}
 
@@ -56,7 +57,7 @@ func main() {
 
 	log.Printf("Sink is: %q", *sink)
 
-	ra, err := adapter.New(*sink)
+	ra, err := adapter.New(*sink, secretToken)
 	if err != nil {
 		log.Fatalf("Failed to create gitlab adapter: %s", err)
 	}

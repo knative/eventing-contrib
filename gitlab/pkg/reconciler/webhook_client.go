@@ -18,6 +18,7 @@ package gitlab
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	gitlab "github.com/xanzy/go-gitlab"
@@ -48,24 +49,29 @@ type projectHookClient interface {
 
 type gitlabHookClient struct{}
 
-func (client gitlabHookClient) Create(baseUrl string, options *projectHookOptions) (string, error) {
-
+func (client gitlabHookClient) Create(baseURL string, options *projectHookOptions) (string, error) {
 	glClient := gitlab.NewClient(nil, options.accessToken)
-	glClient.SetBaseURL(baseUrl)
+	glClient.SetBaseURL(baseURL)
 
 	if options.id != "" {
-		hookId, err := strconv.Atoi(options.id)
+		hookID, err := strconv.Atoi(options.id)
 		if err != nil {
-			return "", fmt.Errorf("failed to convert hook id to int: " + err.Error())
+			return "", fmt.Errorf("failed to convert hook id to int: %s", err.Error())
 		}
-		projhooks, _, err := glClient.Projects.ListProjectHooks(options.project, nil, nil)
+		projhooks, resp, err := glClient.Projects.ListProjectHooks(options.project,
+			&gitlab.ListProjectHooksOptions{
+				// Max number of hook per project
+				PerPage: 100,
+			}, nil)
 		if err != nil {
-			return "", fmt.Errorf("Failed to list project hooks for project:" + options.project + " due to" + err.Error())
-		} else {
-			for _, hook := range projhooks {
-				if hook.ID == hookId {
-					return options.id, nil
-				}
+			return "", fmt.Errorf("failed to list project hooks for project %q due to an error: %s", options.project, err.Error())
+		}
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("project hooks list unexpected status: %s", resp.Status)
+		}
+		for _, hook := range projhooks {
+			if hook.ID == hookID {
+				return options.id, nil
 			}
 		}
 	}
@@ -87,28 +93,28 @@ func (client gitlabHookClient) Create(baseUrl string, options *projectHookOption
 
 	hook, _, err := glClient.Projects.AddProjectHook(options.project, &hookOptions, nil)
 	if err != nil {
-		return "", fmt.Errorf("Failed to add webhook to the project:" + options.project + " due to " + err.Error())
+		return "", fmt.Errorf("failed to add webhook to the project %q due to an error: %s ", options.project, err.Error())
 	}
 
 	return strconv.Itoa(hook.ID), nil
 }
 
-func (client gitlabHookClient) Delete(baseUrl string, options *projectHookOptions) error {
+func (client gitlabHookClient) Delete(baseURL string, options *projectHookOptions) error {
 	if options.id != "" {
-		hookId, err := strconv.Atoi(options.id)
+		hookID, err := strconv.Atoi(options.id)
 		if err != nil {
 			return fmt.Errorf("failed to convert hook id to int: " + err.Error())
 		}
 		glClient := gitlab.NewClient(nil, options.accessToken)
-		glClient.SetBaseURL(baseUrl)
+		glClient.SetBaseURL(baseURL)
 
 		projhooks, _, err := glClient.Projects.ListProjectHooks(options.project, nil, nil)
 		if err != nil {
 			return fmt.Errorf("Failed to list project hooks for project: " + options.project)
 		} else {
 			for _, hook := range projhooks {
-				if hook.ID == hookId {
-					_, err = glClient.Projects.DeleteProjectHook(options.project, hookId, nil)
+				if hook.ID == hookID {
+					_, err = glClient.Projects.DeleteProjectHook(options.project, hookID, nil)
 					if err != nil {
 						return fmt.Errorf("Failed to delete project hook: " + err.Error())
 					}

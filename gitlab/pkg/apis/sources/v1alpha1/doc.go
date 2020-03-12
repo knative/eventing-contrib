@@ -19,5 +19,5 @@ limitations under the License.
 // +k8s:deepcopy-gen=package,register
 // +k8s:conversion-gen=knative.dev/eventing-contrib/gitlab/pkg/apis/sources
 // +k8s:defaulter-gen=TypeMeta
-// +groupName=source.knative.dev
+// +groupName=sources.knative.dev
 package v1alpha1

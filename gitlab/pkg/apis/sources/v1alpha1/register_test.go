@@ -22,10 +22,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// Resource takes an unqualified resource and returns a Group qualified GroupResource
+// TestResource tests that Resource returns correct GroupResource
 func TestResource(t *testing.T) {
 	want := schema.GroupResource{
-		Group:    "source.knative.dev",
+		Group:    "sources.knative.dev",
 		Resource: "foo",
 	}
 

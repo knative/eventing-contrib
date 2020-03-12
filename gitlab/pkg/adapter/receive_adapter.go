@@ -22,38 +22,40 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 
-	// "knative.dev/pkg/cloudevents"
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/google/uuid"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
-	gitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
+	"gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
-// TODO: Add webhook request token verification
-
 const (
-	GLHeaderEvent = "Gitlab-Event"
+	glHeaderToken = "X-Gitlab-Token"
+	glHeaderEvent = "X-Gitlab-Event"
 )
 
 // GitLabReceiveAdapter converts incoming GitLab webhook events to
 // CloudEvents and then sends them to the specified Sink
 type GitLabReceiveAdapter struct {
-	// source string
-	client cloudevents.Client
+	client      cloudevents.Client
+	secretToken string
 }
 
-// New creates an adapter to convert incoming GitHub webhook events to CloudEvents and
+// New creates an adapter to convert incoming GitLab webhook events to CloudEvents and
 // then sends them to the specified Sink
-func New(sinkURI string) (*GitLabReceiveAdapter, error) {
-	a := new(GitLabReceiveAdapter)
-	var err error
-	a.client, err = kncloudevents.NewDefaultClient(sinkURI)
-	return a, err
+func New(sinkURI, secretToken string) (*GitLabReceiveAdapter, error) {
+	client, err := kncloudevents.NewDefaultClient(sinkURI)
+	if err != nil {
+		return nil, err
+	}
+	return &GitLabReceiveAdapter{
+		client:      client,
+		secretToken: secretToken,
+	}, nil
 }
 
-// HandleEvent is invoked whenever an event comes in from GitHub
+// HandleEvent is invoked whenever an event comes in from GitLab
 func (ra *GitLabReceiveAdapter) HandleEvent(payload interface{}, header webhooks.Header) {
 	hdr := http.Header(header)
 	err := ra.handleEvent(payload, hdr)
@@ -63,19 +65,30 @@ func (ra *GitLabReceiveAdapter) HandleEvent(payload interface{}, header webhooks
 }
 
 func (ra *GitLabReceiveAdapter) handleEvent(payload interface{}, hdr http.Header) error {
-	gitLabEventType := hdr.Get("X-" + GLHeaderEvent)
+	gitLabHookToken := hdr.Get(glHeaderToken)
+	if gitLabHookToken == "" {
+		return fmt.Errorf("%q header is not set", glHeaderToken)
+	}
+	if gitLabHookToken != ra.secretToken {
+		return fmt.Errorf("event token doesn't match secret")
+	}
+	gitLabEventType := hdr.Get(glHeaderEvent)
+	if gitLabEventType == "" {
+		return fmt.Errorf("%q header is not set", glHeaderEvent)
+	}
 	extensions := map[string]interface{}{
-		GLHeaderEvent: gitLabEventType,
+		glHeaderEvent: gitLabEventType,
 	}
 
-	log.Printf("Handling %s", gitLabEventType)
+	log.Printf("Handling %s\n", gitLabEventType)
 
-	var eventID string
-	if uuid, err := uuid.NewRandom(); err == nil {
-		eventID = uuid.String()
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return fmt.Errorf("can't generate event ID: %s", err)
 	}
+	eventID := uuid.String()
 
-	cloudEventType := fmt.Sprintf("%s.%s", "dev.triggermesh.source.gitlab", gitLabEventType)
+	cloudEventType := fmt.Sprintf("%s.%s", "dev.knative.sources.gitlabsource", gitLabEventType)
 	source := sourceFromGitLabEvent(gitlab.Event(gitLabEventType), payload)
 
 	return ra.postMessage(payload, source, cloudEventType, eventID, extensions)

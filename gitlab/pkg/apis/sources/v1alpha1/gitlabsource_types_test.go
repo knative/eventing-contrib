@@ -17,17 +17,24 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"log"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/apis/duck"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-var _ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
+var sinkURL *apis.URL
+
+func init() {
+	var err error
+	sinkURL, err = apis.ParseURL("http://example.com")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestGitLabSourceStatusIsReady(t *testing.T) {
 	tests := []struct {
@@ -51,7 +58,7 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			return s
 		}(),
 		want: false,
@@ -69,7 +76,7 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			s.MarkSecret()
 			s.MarkNoSink("Testing", "")
 			return s
@@ -80,7 +87,7 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			s.MarkSecret()
 			s.MarkNoSecret("Testing", "")
 			return s
@@ -91,7 +98,7 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(&apis.URL{})
 			s.MarkSecret()
 			return s
 		}(),
@@ -101,9 +108,9 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(&apis.URL{})
 			s.MarkSecret()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			return s
 		}(),
 		want: true,
@@ -147,7 +154,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			return s
 		}(),
 		condQuery: GitLabSourceConditionReady,
@@ -173,7 +180,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			s.MarkSecret()
 			return s
 		}(),
@@ -187,7 +194,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			s.MarkSecret()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
@@ -204,7 +211,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			s.MarkSecret()
 			s.MarkNoSecret("Testing", "hi%s", "")
 			return s
@@ -221,7 +228,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(&apis.URL{})
 			s.MarkSecret()
 			return s
 		}(),
@@ -237,9 +244,9 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(&apis.URL{})
 			s.MarkSecret()
-			s.MarkSink("uri://example")
+			s.MarkSink(sinkURL)
 			return s
 		}(),
 		condQuery: GitLabSourceConditionReady,

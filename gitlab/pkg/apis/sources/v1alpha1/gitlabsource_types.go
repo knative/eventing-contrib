@@ -23,13 +23,13 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // Check that GitLabSource implements the Conditions duck type.
 var _ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
 
 // GitLabSourceSpec defines the desired state of GitLabSource
+// +kubebuilder:categories=all,knative,eventing,sources
 type GitLabSourceSpec struct {
 	// ServiceAccountName holds the name of the Kubernetes service account
 	// as which the underlying K8s resources should be run. If unspecified
@@ -66,7 +66,7 @@ type GitLabSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a domain
 	// name to use as the sink.
 	// +optional
-	Sink *duckv1beta1.Destination `json:"sink,omitempty"`
+	Sink *duckv1.Destination `json:"sink,omitempty"`
 }
 
 // SecretValueFromSource represents the source of a secret value
@@ -78,16 +78,13 @@ type SecretValueFromSource struct {
 // GitLabSourceStatus defines the observed state of GitLabSource
 type GitLabSourceStatus struct {
 	// Conditions holds the state of a source at a point in time.
-	// +optional
-	// +patchMergeKey=type
-	// +patchStrategy=merge
 	duckv1.Status `json:",inline"`
 
 	// ID of the project hook registered with GitLab
 	Id string `json:"Id,omitempty"`
 
 	// SinkURI is the current active sink URI that has been configured
-	// for the GitHubSource.
+	// for the GitLabSource.
 	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
 }
@@ -130,12 +127,12 @@ func (s *GitLabSourceStatus) InitializeConditions() {
 }
 
 // MarkSink sets the condition that the source has a sink configured.
-func (s *GitLabSourceStatus) MarkSink(uri string) {
-	s.SinkURI = uri
-	if len(uri) > 0 {
-		gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionSinkProvided)
-	} else {
+func (s *GitLabSourceStatus) MarkSink(uri *apis.URL) {
+	s.SinkURI = uri.String()
+	if uri.IsEmpty() {
 		gitLabSourceCondSet.Manage(s).MarkUnknown(GitLabSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.")
+	} else {
+		gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionSinkProvided)
 	}
 }
 
@@ -159,6 +156,8 @@ func (s *GitLabSourceStatus) MarkSecret() {
 
 // GitLabSource is the Schema for the gitlabsources API
 // +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
+// +kubebuilder:categories=all,knative,eventing,sources
 type GitLabSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

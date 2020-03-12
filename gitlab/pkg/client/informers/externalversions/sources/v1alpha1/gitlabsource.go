@@ -61,13 +61,13 @@ func NewFilteredGitLabSourceInformer(client versioned.Interface, namespace strin
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourceV1alpha1().GitLabSources(namespace).List(options)
+				return client.SourcesV1alpha1().GitLabSources(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourceV1alpha1().GitLabSources(namespace).Watch(options)
+				return client.SourcesV1alpha1().GitLabSources(namespace).Watch(options)
 			},
 		},
 		&sourcesv1alpha1.GitLabSource{},

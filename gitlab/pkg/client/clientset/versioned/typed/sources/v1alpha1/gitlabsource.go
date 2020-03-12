@@ -56,7 +56,7 @@ type gitLabSources struct {
 }
 
 // newGitLabSources returns a GitLabSources
-func newGitLabSources(c *SourceV1alpha1Client, namespace string) *gitLabSources {
+func newGitLabSources(c *SourcesV1alpha1Client, namespace string) *gitLabSources {
 	return &gitLabSources{
 		client: c.RESTClient(),
 		ns:     namespace,

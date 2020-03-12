@@ -29,11 +29,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	gl "gopkg.in/go-playground/webhooks.v3/gitlab"
+	"gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
 const (
-	testSource = "https://foo/bar/baz"
+	testSource  = "https://foo/bar/baz"
+	secretToken = "gitlabsecret"
 )
 
 // testCase holds a single row of our GitLabSource table tests
@@ -55,34 +56,34 @@ type testCase struct {
 	payload interface{}
 
 	// eventType is the GitLab event type
-	eventType gl.Event
+	eventType gitlab.Event
 }
 
 var testCases = []testCase{
 	{
 		name: "valid comment",
 		payload: func() interface{} {
-			pl := gl.CommentEventPayload{}
+			pl := gitlab.CommentEventPayload{}
 			pl.ObjectAttributes.URL = testSource
 			return pl
 		}(),
-		eventType: gl.CommentEvents,
+		eventType: gitlab.CommentEvents,
 	}, {
 		name: "valid issues",
 		payload: func() interface{} {
-			pl := gl.IssueEventPayload{}
+			pl := gitlab.IssueEventPayload{}
 			pl.ObjectAttributes.URL = testSource
 			return pl
 		}(),
-		eventType: gl.IssuesEvents,
+		eventType: gitlab.IssuesEvents,
 	}, {
 		name: "valid push",
 		payload: func() interface{} {
-			pl := gl.PushEventPayload{}
+			pl := gitlab.PushEventPayload{}
 			pl.Project.HTTPURL = testSource
 			return pl
 		}(),
-		eventType: gl.PushEvents,
+		eventType: gitlab.PushEvents,
 	},
 }
 
@@ -104,7 +105,7 @@ func TestAllCases(t *testing.T) {
 		sinkServer := httptest.NewServer(h)
 		defer sinkServer.Close()
 
-		ra, err := New(sinkServer.URL)
+		ra, err := New(sinkServer.URL, secretToken)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -114,7 +115,7 @@ func TestAllCases(t *testing.T) {
 }
 
 // runner returns a testing func that can be passed to t.Run.
-func (tc *testCase) runner(t *testing.T, ra GitLabReceiveAdapter) func(t *testing.T) {
+func (tc *testCase) runner(t *testing.T, ra GitLabReceiveAdapter) func(*testing.T) {
 	return func(t *testing.T) {
 		if tc.eventType == "" {
 			t.Fatal("eventType is required for table tests")
@@ -122,6 +123,7 @@ func (tc *testCase) runner(t *testing.T, ra GitLabReceiveAdapter) func(t *testin
 
 		hdr := http.Header{}
 		hdr.Set("X-Gitlab-Event", string(tc.eventType))
+		hdr.Set("X-Gitlab-Token", string(secretToken))
 		evtErr := ra.handleEvent(tc.payload, hdr)
 
 		if err := tc.verifyErr(evtErr); err != nil {
@@ -210,7 +212,7 @@ func (tc *testCase) verifyRequest(writer http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if tc.eventType != "" && fmt.Sprintf("dev.triggermesh.source.gitlab.%s", tc.eventType) != event.Type() {
+	if tc.eventType != "" && fmt.Sprintf("dev.knative.sources.gitlabsource.%s", tc.eventType) != event.Type() {
 		http.Error(writer, "event type is not matching", http.StatusBadRequest)
 		return
 	}

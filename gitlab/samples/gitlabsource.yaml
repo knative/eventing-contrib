@@ -1,4 +1,4 @@
-apiVersion: source.knative.dev/v1alpha1
+apiVersion: sources.knative.dev/v1alpha1
 kind: GitLabSource
 metadata:
   name: gitlabsource-sample
@@ -16,7 +16,8 @@ spec:
       name: gitlabsecret
       key: secretToken
   sink:
-    apiVersion: serving.knative.dev/v1
-    kind: Service
-    name: gitlab-event-display
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: gitlab-event-display
 
