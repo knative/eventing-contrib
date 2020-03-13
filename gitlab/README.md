@@ -93,8 +93,8 @@ Verify the GitLab webhook was created by looking at the list of webhooks under
 **Settings >> Integrations** in your GitLab project. A hook should be listed
 that points to your Knative cluster.
 
-Create a push event and check the logs of the Pod backing the `event-display`.
-You will see the GitLab event:
+Create a push event and check the logs of the Pod backing the
+`gitlab-event-display` knative service. You will see the GitLab event:
 
 ```
 ☁️  cloudevents.Event

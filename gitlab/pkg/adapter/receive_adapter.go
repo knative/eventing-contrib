@@ -54,12 +54,13 @@ type gitLabReceiveAdapter struct {
 	port        string
 }
 
-// NewEnvConfig function reads and parses
+// NewEnvConfig function reads env variables defined in envConfig structure and
+// returns accessor interface
 func NewEnvConfig() adapter.EnvConfigAccessor {
 	return &envConfig{}
 }
 
-// NewAdapter rturns the instance of gitLabReceiveAdapter that implements Start() method
+// NewAdapter returns the instance of gitLabReceiveAdapter that implements adapter.Adapter interface
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
@@ -72,6 +73,7 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	}
 }
 
+// Start implements adapter.Adapter
 func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
 	done := make(chan bool, 1)
 	hook, err := gitlab.New(gitlab.Options.Secret(ra.secretToken))

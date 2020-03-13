@@ -17,19 +17,21 @@ limitations under the License.
 package adapter
 
 import (
-	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/go-cmp/cmp"
-
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"gopkg.in/go-playground/webhooks.v3/gitlab"
+	"go.uber.org/zap"
+	"gopkg.in/go-playground/webhooks.v5/gitlab"
+	"knative.dev/eventing/pkg/adapter"
+	kncetesting "knative.dev/eventing/pkg/kncloudevents/testing"
+	"knative.dev/pkg/logging"
+	pkgtesting "knative.dev/pkg/reconciler/testing"
+	"knative.dev/pkg/source"
 )
 
 const (
@@ -87,35 +89,30 @@ var testCases = []testCase{
 	},
 }
 
-// mockTransport is a simple fake HTTP transport
-type mockTransport func(req *http.Request) (*http.Response, error)
-
-// RoundTrip implements the required RoundTripper interface for
-// mockTransport
-func (mt mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return mt(req)
-}
-
 // TestAllCases runs all the table tests
 func TestAllCases(t *testing.T) {
 	for _, tc := range testCases {
-		h := &fakeHandler{
-			handler: tc.verifyRequest,
+		ce := newAdapterTestClient()
+		env := envConfig{
+			EnvConfig: adapter.EnvConfig{
+				Namespace: "default",
+			},
+			EnvSecret: secretToken,
+			Port:      "8080",
 		}
-		sinkServer := httptest.NewServer(h)
-		defer sinkServer.Close()
+		r := &mockReporter{}
+		ctx, _ := pkgtesting.SetupFakeContext(t)
+		logger := zap.NewExample().Sugar()
+		ctx = logging.WithLogger(ctx, logger)
 
-		ra, err := New(sinkServer.URL, secretToken)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		t.Run(tc.name, tc.runner(t, *ra))
+		ra := NewAdapter(ctx, &env, ce, r).(*gitLabReceiveAdapter)
+		t.Run(tc.name, tc.runner(t, ra))
+		validateSent(t, ce, tc.payload)
 	}
 }
 
 // runner returns a testing func that can be passed to t.Run.
-func (tc *testCase) runner(t *testing.T, ra GitLabReceiveAdapter) func(*testing.T) {
+func (tc *testCase) runner(t *testing.T, ra *gitLabReceiveAdapter) func(*testing.T) {
 	return func(t *testing.T) {
 		if tc.eventType == "" {
 			t.Fatal("eventType is required for table tests")
@@ -125,7 +122,6 @@ func (tc *testCase) runner(t *testing.T, ra GitLabReceiveAdapter) func(*testing.
 		hdr.Set("X-Gitlab-Event", string(tc.eventType))
 		hdr.Set("X-Gitlab-Token", string(secretToken))
 		evtErr := ra.handleEvent(tc.payload, hdr)
-
 		if err := tc.verifyErr(evtErr); err != nil {
 			t.Error(err)
 		}
@@ -151,76 +147,42 @@ func (tc *testCase) verifyErr(err error) error {
 	return nil
 }
 
-var (
-	// Headers that are added to the response, but we don't want to check in our assertions.
-	unimportantHeaders = map[string]struct{}{
-		"accept-encoding": {},
-		"content-length":  {},
-		"user-agent":      {},
-		"ce-time":         {},
+func newAdapterTestClient() *adapterTestClient {
+	return &adapterTestClient{
+		kncetesting.NewTestClient(),
+		make(chan struct{}, 1),
 	}
-)
-
-type requestValidation struct {
-	Host    string
-	Headers http.Header
-	Body    string
 }
 
-type fakeHandler struct {
-	body   []byte
-	header http.Header
-
-	handler func(http.ResponseWriter, *http.Request)
+type adapterTestClient struct {
+	*kncetesting.TestCloudEventsClient
+	stopCh chan struct{}
 }
 
-func (h *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "can not read body", http.StatusBadRequest)
-		return
-	}
-	h.body = body
-	h.header = make(map[string][]string)
+var _ cloudevents.Client = (*adapterTestClient)(nil)
 
-	for n, v := range r.Header {
-		ln := strings.ToLower(n)
-		if _, present := unimportantHeaders[ln]; !present {
-			h.header[ln] = v
-		}
-	}
-
-	defer r.Body.Close()
-	h.handler(w, r)
+type mockReporter struct {
+	eventCount int
 }
 
-func (tc *testCase) verifyRequest(writer http.ResponseWriter, req *http.Request) {
-	codec := cehttp.Codec{}
+func (r *mockReporter) ReportEventCount(args *source.ReportArgs, responseCode int) error {
+	r.eventCount += 1
+	return nil
+}
 
-	body, err := ioutil.ReadAll(req.Body)
+func validateSent(t *testing.T, ce *adapterTestClient, wantPayload interface{}) {
+	if got := len(ce.Sent()); got != 1 {
+		t.Errorf("Expected 1 event to be sent, got %d", got)
+	}
+
+	got := ce.Sent()[0].Data
+
+	data, err := json.Marshal(wantPayload)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-	}
-	msg := &cehttp.Message{
-		Header: req.Header,
-		Body:   body,
+		t.Errorf("Could not validate sent payload: %v", err)
 	}
 
-	event, err := codec.Decode(context.Background(), msg)
-	if err != nil {
-		http.Error(writer, "can't decode body", http.StatusBadRequest)
-		return
+	if string(got.([]byte)) != string(data) {
+		t.Errorf("Expected %+v event to be sent, got %q", data, string(got.([]byte)))
 	}
-
-	if tc.eventType != "" && fmt.Sprintf("dev.knative.sources.gitlabsource.%s", tc.eventType) != event.Type() {
-		http.Error(writer, "event type is not matching", http.StatusBadRequest)
-		return
-	}
-
-	if testSource != event.Source() {
-		http.Error(writer, "event source is not matching", http.StatusBadRequest)
-		return
-	}
-
-	writer.WriteHeader(http.StatusOK)
 }
