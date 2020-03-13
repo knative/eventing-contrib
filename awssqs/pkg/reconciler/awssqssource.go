@@ -18,7 +18,6 @@ package reconciler
 
 import (
 	"context"
-
 	"go.uber.org/zap"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -94,6 +93,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.AwsSqsSour
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	src.Status.CloudEventAttributes = &duckv1.CloudEventAttributes{
+		Source: src.Spec.QueueURL,
+	}
 
 	return newReconciledNormal(src.Namespace, src.Name)
 }

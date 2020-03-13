@@ -23,7 +23,8 @@ metadata:
   annotations:
     registry.knative.dev/eventTypes: |
       [
-        { "type": "dev.knative.couchdb.changes" }
+        { "type": "org.apache.couchdb.document.update" },
+        { "type": "org.apache.couchdb.document.delete" }
       ]
   name: couchdbsources.sources.knative.dev
 spec:
