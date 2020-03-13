@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The TriggerMesh Authors.
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,14 +22,13 @@ import (
 	"net/http"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"gopkg.in/go-playground/webhooks.v5/gitlab"
 	"knative.dev/eventing/pkg/adapter"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/source"
-
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/google/uuid"
-	"gopkg.in/go-playground/webhooks.v5/gitlab"
 )
 
 const (
@@ -55,10 +54,12 @@ type gitLabReceiveAdapter struct {
 	port        string
 }
 
+// NewEnvConfig function reads and parses
 func NewEnvConfig() adapter.EnvConfigAccessor {
 	return &envConfig{}
 }
 
+// NewAdapter rturns the instance of gitLabReceiveAdapter that implements Start() method
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)

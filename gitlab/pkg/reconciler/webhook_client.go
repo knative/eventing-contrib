@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The TriggerMesh Authors.
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -111,13 +111,12 @@ func (client gitlabHookClient) Delete(baseURL string, options *projectHookOption
 		projhooks, _, err := glClient.Projects.ListProjectHooks(options.project, nil, nil)
 		if err != nil {
 			return fmt.Errorf("Failed to list project hooks for project: " + options.project)
-		} else {
-			for _, hook := range projhooks {
-				if hook.ID == hookID {
-					_, err = glClient.Projects.DeleteProjectHook(options.project, hookID, nil)
-					if err != nil {
-						return fmt.Errorf("Failed to delete project hook: " + err.Error())
-					}
+		}
+		for _, hook := range projhooks {
+			if hook.ID == hookID {
+				_, err = glClient.Projects.DeleteProjectHook(options.project, hookID, nil)
+				if err != nil {
+					return fmt.Errorf("Failed to delete project hook: " + err.Error())
 				}
 			}
 		}

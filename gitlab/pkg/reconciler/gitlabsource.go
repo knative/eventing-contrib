@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The TriggerMesh Authors.
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return reconcileErr
 }
 
-func getGitlabBaseUrl(projectUrl string) (string, error) {
+func getGitlabBaseURL(projectUrl string) (string, error) {
 	u, err := url.Parse(projectUrl)
 	if err != nil {
 		return "", err
@@ -245,7 +245,7 @@ func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 		hookOptions.EnableSSLVerification = true
 	}
 
-	baseURL, err := getGitlabBaseUrl(source.Spec.ProjectUrl)
+	baseURL, err := getGitlabBaseURL(source.Spec.ProjectUrl)
 	if err != nil {
 		return fmt.Errorf("Failed to process project url to get the base url: " + err.Error())
 	}
@@ -272,7 +272,7 @@ func (r *Reconciler) finalize(source *sourcesv1alpha1.GitLabSource) error {
 		if err != nil {
 			return err
 		}
-		baseURL, err := getGitlabBaseUrl(source.Spec.ProjectUrl)
+		baseURL, err := getGitlabBaseURL(source.Spec.ProjectUrl)
 		if err != nil {
 			return fmt.Errorf("failed to process project url to get the base url: %s", err.Error())
 		}
@@ -411,6 +411,7 @@ func (r *Reconciler) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource
 	return nil, apierrors.NewNotFound(servingv1.Resource("services"), "")
 }
 
+// UpdateFromLoggingConfigMap loads logger configuration from configmap
 func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
 	if cfg != nil {
 		delete(cfg.Data, "_example")
