@@ -43,7 +43,7 @@ import (
 
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
-	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1alpha1"
+	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
 
 	//knative.dev/eventing-contrib imports
 	sourcesv1alpha1 "knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
