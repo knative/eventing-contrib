@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-contrib/prometheus/pkg/apis/sources/v1alpha1"
-	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	"knative.dev/eventing/pkg/reconciler"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
@@ -49,12 +48,10 @@ func NewController(
 ) *controller.Impl {
 	deploymentInformer := deploymentinformer.Get(ctx)
 	prometheusSourceInformer := prometheusinformer.Get(ctx)
-	eventTypeInformer := eventtypeinformer.Get(ctx)
 
 	r := &Reconciler{
 		Base:             reconciler.NewBase(ctx, controllerAgentName, cmw),
 		deploymentLister: deploymentInformer.Lister(),
-		eventTypeLister:  eventTypeInformer.Lister(),
 	}
 	impl := promreconciler.NewImpl(ctx, r)
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
@@ -63,11 +60,6 @@ func NewController(
 	prometheusSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("PrometheusSource")),
-		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
-	})
-
-	eventTypeInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("PrometheusSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
