@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	//Injection imports
+	"knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
 	sourcescheme "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/scheme"
 	gitlabclient "knative.dev/eventing-contrib/gitlab/pkg/client/injection/client"
 	gitlabinformer "knative.dev/eventing-contrib/gitlab/pkg/client/injection/informers/sources/v1alpha1/gitlabsource"
@@ -34,7 +35,6 @@ import (
 	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service"
 
 	//knative.dev/eventing imports
-	"knative.dev/eventing-contrib/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
