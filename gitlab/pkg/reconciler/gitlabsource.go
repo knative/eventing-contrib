@@ -342,7 +342,6 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 	labels := map[string]string{
 		"receive-adapter": "gitlab",
 	}
-	sinkURI := source.Status.SinkURI
 	env := []corev1.EnvVar{
 		{
 			Name: "GITLAB_SECRET_TOKEN",
@@ -351,7 +350,7 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 			},
 		}, {
 			Name:  "K_SINK",
-			Value: sinkURI,
+			Value: source.Status.SinkURI,
 		}, {
 			Name:  "NAMESPACE",
 			Value: source.GetNamespace(),

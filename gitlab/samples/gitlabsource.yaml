@@ -6,7 +6,7 @@ spec:
   eventTypes:
   - push_events
   - issues_events
-  projectUrl: https://gitlab.com/tzununbekov/lab2
+  projectUrl: <project url>
   accessToken:
     secretKeyRef:
       name: gitlabsecret

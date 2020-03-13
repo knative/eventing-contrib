@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/adapter"
@@ -28,8 +29,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/uuid"
-	webhooks "gopkg.in/go-playground/webhooks.v3"
-	"gopkg.in/go-playground/webhooks.v3/gitlab"
+	"gopkg.in/go-playground/webhooks.v5/gitlab"
 )
 
 const (
@@ -63,70 +63,112 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
 
-	a := &gitLabReceiveAdapter{
+	return &gitLabReceiveAdapter{
 		logger:      logger,
 		client:      ceClient,
 		port:        env.Port,
 		secretToken: env.EnvSecret,
 	}
-
-	return a
 }
 
 func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
-	hook := gitlab.New(&gitlab.Config{Secret: ra.secretToken})
-	hook.RegisterEvents(ra.handleEvent,
-		gitlab.PushEvents,
-		gitlab.TagEvents,
-		gitlab.IssuesEvents,
-		gitlab.ConfidentialIssuesEvents,
-		gitlab.CommentEvents,
-		gitlab.MergeRequestEvents,
-		gitlab.WikiPageEvents,
-		gitlab.PipelineEvents,
-		gitlab.BuildEvents)
+	done := make(chan bool, 1)
+	hook, err := gitlab.New(gitlab.Options.Secret(ra.secretToken))
+	if err != nil {
+		return fmt.Errorf("cannot create gitlab hook: %v", err)
+	}
 
-	addr := fmt.Sprintf(":%s", ra.port)
-	return webhooks.Run(hook, addr, "/")
+	server := ra.newWebserver(hook)
+	go gracefullShutdown(server, ra.logger, stopCh, done)
+
+	ra.logger.Infof("Server is ready to handle requests at %s", server.Addr)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("could not listen on %s: %v", server.Addr, err)
+	}
+
+	<-done
+	ra.logger.Infof("Server stopped")
+	return nil
 }
 
-func (ra *gitLabReceiveAdapter) handleEvent(payload interface{}, header webhooks.Header) {
-	hdr := http.Header(header)
-	gitLabHookToken := hdr.Get(glHeaderToken)
+func gracefullShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-chan struct{}, done chan<- bool) {
+	<-stopCh
+	logger.Info("Server is shutting down...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	server.SetKeepAlivesEnabled(false)
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Fatalf("Could not gracefully shutdown the server: %v", err)
+	}
+	close(done)
+}
+
+func (ra *gitLabReceiveAdapter) newWebserver(hook *gitlab.Webhook) *http.Server {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		payload, err := hook.Parse(r,
+			gitlab.PushEvents,
+			gitlab.TagEvents,
+			gitlab.IssuesEvents,
+			gitlab.ConfidentialIssuesEvents,
+			gitlab.CommentEvents,
+			gitlab.MergeRequestEvents,
+			gitlab.WikiPageEvents,
+			gitlab.PipelineEvents,
+			gitlab.BuildEvents,
+		)
+		if err != nil {
+			if err == gitlab.ErrEventNotFound {
+				w.WriteHeader(200)
+				w.Write([]byte("event not registered"))
+			}
+			ra.logger.Errorf("hook parser error: %v", err)
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+		}
+		err = ra.handleEvent(payload, r.Header)
+		if err != nil {
+			ra.logger.Errorf("event handler error: %v", err)
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+		}
+		ra.logger.Infof("event processed")
+		w.WriteHeader(200)
+		w.Write([]byte("event not registered"))
+	})
+
+	return &http.Server{
+		Addr: ":" + ra.port,
+	}
+}
+
+func (ra *gitLabReceiveAdapter) handleEvent(payload interface{}, header http.Header) error {
+	gitLabHookToken := header.Get(glHeaderToken)
 	if gitLabHookToken == "" {
-		ra.logger.Errorf("%q header is not set", glHeaderToken)
-		return
+		return fmt.Errorf("%q header is not set", glHeaderToken)
 	}
 	if gitLabHookToken != ra.secretToken {
-		ra.logger.Errorf("event token doesn't match secret")
-		return
+		return fmt.Errorf("event token doesn't match secret")
 	}
-	gitLabEventType := hdr.Get(glHeaderEvent)
+	gitLabEventType := header.Get(glHeaderEvent)
 	if gitLabEventType == "" {
-		ra.logger.Errorf("%q header is not set", glHeaderEvent)
-		return
+		return fmt.Errorf("%q header is not set", glHeaderEvent)
 	}
 	extensions := map[string]interface{}{
 		glHeaderEvent: gitLabEventType,
 	}
 
-	ra.logger.Infof("Handling %s\n", gitLabEventType)
-
 	uuid, err := uuid.NewRandom()
 	if err != nil {
-		ra.logger.Errorf("can't generate event ID: %s", err)
-		return
+		return fmt.Errorf("can't generate event ID: %v", err)
 	}
 	eventID := uuid.String()
 
 	cloudEventType := fmt.Sprintf("%s.%s", "dev.knative.sources.gitlabsource", gitLabEventType)
 	source := sourceFromGitLabEvent(gitlab.Event(gitLabEventType), payload)
 
-	err = ra.postMessage(payload, source, cloudEventType, eventID, extensions)
-	if err != nil {
-		ra.logger.Errorf("cloudevent post message error: %s", err)
-		return
-	}
+	return ra.postMessage(payload, source, cloudEventType, eventID, extensions)
 }
 
 func (ra *gitLabReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
