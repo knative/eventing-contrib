@@ -1821,14 +1821,16 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b5e857be2d4356cdb208892dd1976fe9d1b44a24e8b9f996fc7b41c25ca888df"
+  branch = "rt_registry"
+  digest = "1:1dd16478ed0f1b43065c30fd236ba0487ee30f7409d62bb81bff319788a29d46"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
     "pkg/apis/config",
     "pkg/apis/configs",
     "pkg/apis/configs/v1alpha1",
+    "pkg/apis/discovery",
+    "pkg/apis/discovery/v1alpha1",
     "pkg/apis/duck",
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/duck/v1beta1",
@@ -1854,6 +1856,8 @@
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/configs/v1alpha1",
     "pkg/client/clientset/versioned/typed/configs/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/discovery/v1alpha1",
+    "pkg/client/clientset/versioned/typed/discovery/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/eventing/v1beta1",
@@ -1873,6 +1877,8 @@
     "pkg/client/informers/externalversions",
     "pkg/client/informers/externalversions/configs",
     "pkg/client/informers/externalversions/configs/v1alpha1",
+    "pkg/client/informers/externalversions/discovery",
+    "pkg/client/informers/externalversions/discovery/v1alpha1",
     "pkg/client/informers/externalversions/eventing",
     "pkg/client/informers/externalversions/eventing/v1alpha1",
     "pkg/client/informers/externalversions/eventing/v1beta1",
@@ -1891,6 +1897,7 @@
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
     "pkg/client/listers/configs/v1alpha1",
+    "pkg/client/listers/discovery/v1alpha1",
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/eventing/v1beta1",
     "pkg/client/listers/flows/v1alpha1",
@@ -1928,11 +1935,12 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "a90af00e62cde337ded034015bf3e345e3c46829"
+  revision = "5524c42e2f0017abedcfe74f337b0b24d1db4e58"
+  source = "github.com/nachocano/eventing"
 
 [[projects]]
-  branch = "master"
-  digest = "1:6794f3dda78fe3254a3561ef0d747b30f5e81f0acd7a79d5ae8dcbeb218704d6"
+  branch = "rt_registry"
+  digest = "1:3eebd2d48d70759d517c16d829aec1263ef21fd842b12d0912545c94396ec1b3"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1949,7 +1957,6 @@
     "client/injection/kube/informers/admissionregistration/v1beta1/validatingwebhookconfiguration",
     "client/injection/kube/informers/apps/v1/deployment",
     "client/injection/kube/informers/core/v1/endpoints",
-    "client/injection/kube/informers/core/v1/secret",
     "client/injection/kube/informers/core/v1/service",
     "client/injection/kube/informers/core/v1/serviceaccount",
     "client/injection/kube/informers/factory",
@@ -1959,6 +1966,8 @@
     "injection",
     "injection/clients/dynamicclient",
     "injection/clients/dynamicclient/fake",
+    "injection/clients/namespacedkube/informers/core/v1/secret",
+    "injection/clients/namespacedkube/informers/factory",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -2005,11 +2014,12 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "a572b9922a9e2bdf860a9c9f3482782a912d9b25"
+  revision = "cb3ae72e902e19214a3e9c0f533bb68b400d0c16"
+  source = "github.com/nachocano/pkg"
 
 [[projects]]
   branch = "master"
-  digest = "1:82b5ca3fac4d0a39878f63dd8d1871de9f9bc27948839c7b6df916913bee8c6c"
+  digest = "1:074d363c7466476ecfa7c10523400a4e154d99dcf6e58d1ce891b4ebb74e6352"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2049,18 +2059,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "3dccdca9a3fa21785250ccb7a19c0654109b6f65"
+  revision = "158080a52431bcbf84713f9dae4810e84419c736"
 
 [[projects]]
   branch = "master"
-  digest = "1:3d0c703375017dde28d1ee030d7f82ea838ab023841890ead18e91c8c9aded80"
+  digest = "1:e5bd21467544cbd14cb25553c5c78eb2e0e93baf9288a3c2ebaf1cf1fdb0c95f"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "7a8eea898f66fc7cd5fec6bb7c0fa2a80eeb702e"
+  revision = "3f96c9e98f31595fe33eaa2d95f5e2170522acd7"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"

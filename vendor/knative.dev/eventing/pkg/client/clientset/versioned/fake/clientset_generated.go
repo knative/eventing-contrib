@@ -27,6 +27,8 @@ import (
 	clientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	configsv1alpha1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/configs/v1alpha1"
 	fakeconfigsv1alpha1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/configs/v1alpha1/fake"
+	discoveryv1alpha1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/discovery/v1alpha1"
+	fakediscoveryv1alpha1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/discovery/v1alpha1/fake"
 	eventingv1alpha1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	fakeeventingv1alpha1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake"
 	eventingv1beta1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta1"
@@ -95,6 +97,11 @@ var _ clientset.Interface = &Clientset{}
 // ConfigsV1alpha1 retrieves the ConfigsV1alpha1Client
 func (c *Clientset) ConfigsV1alpha1() configsv1alpha1.ConfigsV1alpha1Interface {
 	return &fakeconfigsv1alpha1.FakeConfigsV1alpha1{Fake: &c.Fake}
+}
+
+// DiscoveryV1alpha1 retrieves the DiscoveryV1alpha1Client
+func (c *Clientset) DiscoveryV1alpha1() discoveryv1alpha1.DiscoveryV1alpha1Interface {
+	return &fakediscoveryv1alpha1.FakeDiscoveryV1alpha1{Fake: &c.Fake}
 }
 
 // EventingV1alpha1 retrieves the EventingV1alpha1Client

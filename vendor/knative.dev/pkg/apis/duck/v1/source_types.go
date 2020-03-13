@@ -81,6 +81,14 @@ type SourceStatus struct {
 	// Source.
 	// +optional
 	SinkURI *apis.URL `json:"sinkUri,omitempty"`
+
+	// +optional
+	CloudEventAttributes *CloudEventAttributes `json:"attributes,omitempty"`
+}
+
+type CloudEventAttributes struct {
+	Types  []string `json:"type,omitempty"`
+	Source string   `json:source,omitempty`
 }
 
 // IsReady returns true if the resource is ready overall.
@@ -136,6 +144,10 @@ func (s *Source) Populate() {
 		Scheme:   "https",
 		Host:     "tableflip.dev",
 		RawQuery: "flip=mattmoor",
+	}
+	s.Status.CloudEventAttributes = &CloudEventAttributes{
+		Types:  []string{"dev.knative.foo"},
+		Source: "http://knative.dev/knative/eventing",
 	}
 }
 

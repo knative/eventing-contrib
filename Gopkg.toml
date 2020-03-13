@@ -110,7 +110,7 @@ required = [
 [[constraint]]
   name = "knative.dev/eventing"
   source = "github.com/nachocano/eventing"
-  branc = "rt_registry"
+  branch = "rt_registry"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"
