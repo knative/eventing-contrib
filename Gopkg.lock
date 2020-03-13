@@ -1315,20 +1315,12 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:c63d2fd3adc66af961b402d198452965c07126f0945be5fb721f6a9526652004"
-  name = "gopkg.in/go-playground/webhooks.v3"
+  digest = "1:f72a6a9fcfae9f34dc57cd7419e5138f073c14e6c214018485ee5f2621770bb0"
+  name = "gopkg.in/go-playground/webhooks.v5"
   packages = [
-    ".",
+    "github",
     "gitlab",
   ]
-  pruneopts = "NUT"
-  revision = "8ffb2ffc32b7af2c7e940944eccba4dcd66c692a"
-  version = "v3.13.0"
-
-[[projects]]
-  digest = "1:b5744640002f710f652b21873d0b70324531b67fc65a0dbab20bca45bac224ca"
-  name = "gopkg.in/go-playground/webhooks.v5"
-  packages = ["github"]
   pruneopts = "NUT"
   revision = "2845fba51e5a6a0afd9c29a8198aa4684f65afe7"
   version = "v5.13.0"
@@ -2225,9 +2217,8 @@
     "golang.org/x/net/context",
     "golang.org/x/net/http2",
     "golang.org/x/oauth2",
-    "gopkg.in/go-playground/webhooks.v3",
-    "gopkg.in/go-playground/webhooks.v3/gitlab",
     "gopkg.in/go-playground/webhooks.v5/github",
+    "gopkg.in/go-playground/webhooks.v5/gitlab",
     "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",

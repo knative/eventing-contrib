@@ -109,7 +109,7 @@ type PipelineEventPayload struct {
 	Project          Project          `json:"project"`
 	Commit           Commit           `json:"commit"`
 	ObjectAttributes ObjectAttributes `json:"object_attributes"`
-	Builds           []Build          `json:"builds"`
+	Jobs             []Job            `json:"jobs"`
 }
 
 // CommentEventPayload contains the information for GitLab's comment event
@@ -148,6 +148,34 @@ type BuildEventPayload struct {
 	Repository        Repository  `json:"repository"`
 }
 
+// JobEventPayload contains the information for GitLab's Job status change
+type JobEventPayload struct {
+	ObjectKind       string      `json:"object_kind"`
+	Ref              string      `json:"ref"`
+	Tag              bool        `json:"tag"`
+	BeforeSHA        string      `json:"before_sha"`
+	SHA              string      `json:"sha"`
+	JobID            int64       `json:"Job_id"`
+	JobName          string      `json:"Job_name"`
+	JobStage         string      `json:"Job_stage"`
+	JobStatus        string      `json:"Job_status"`
+	JobStartedAt     customTime  `json:"Job_started_at"`
+	JobFinishedAt    customTime  `json:"Job_finished_at"`
+	JobDuration      int64       `json:"Job_duration"`
+	Job              bool        `json:"Job"`
+	JobFailureReason string      `json:"job_failure_reason"`
+	ProjectID        int64       `json:"project_id"`
+	ProjectName      string      `json:"project_name"`
+	User             User        `json:"user"`
+	Commit           BuildCommit `json:"commit"`
+	Repository       Repository  `json:"repository"`
+}
+
+// SystemHookPayload contains the ObjectKind to match with real hook events
+type SystemHookPayload struct {
+	ObjectKind string `json:"object_kind"`
+}
+
 // Issue contains all of the GitLab issue information
 type Issue struct {
 	ID          int64      `json:"id"`
@@ -165,8 +193,8 @@ type Issue struct {
 	IID         int64      `json:"iid"`
 }
 
-// Build contains all of the GitLab build information
-type Build struct {
+// Job contains all of the GitLab job information
+type Job struct {
 	ID            int64         `json:"id"`
 	Stage         string        `json:"stage"`
 	Name          string        `json:"name"`
@@ -177,8 +205,16 @@ type Build struct {
 	When          string        `json:"when"`
 	Manual        bool          `json:"manual"`
 	User          User          `json:"user"`
-	Runner        string        `json:"runner"`
+	Runner        Runner        `json:"runner"`
 	ArtifactsFile ArtifactsFile `json:"artifactsfile"`
+}
+
+// Runner represents a runner agent
+type Runner struct {
+	ID          int64  `json:"id"`
+	Description string `json:"description"`
+	Active      bool   `json:"active"`
+	IsShared    bool   `json:"is_shared"`
 }
 
 // ArtifactsFile contains all of the GitLab artifact information
@@ -271,51 +307,74 @@ type Repository struct {
 
 // ObjectAttributes contains all of the GitLab object attributes information
 type ObjectAttributes struct {
-	ID              int64      `json:"id"`
-	Title           string     `json:"title"`
-	AssigneeID      int64      `json:"assignee_id"`
-	AuthorID        int64      `json:"author_id"`
-	ProjectID       int64      `json:"project_id"`
-	CreatedAt       customTime `json:"created_at"`
-	UpdatedAt       customTime `json:"updated_at"`
-	Position        int64      `json:"position"`
-	BranchName      string     `json:"branch_name"`
-	Description     string     `json:"description"`
-	MilestoneID     int64      `json:"milestone_id"`
-	State           string     `json:"state"`
-	IID             int64      `json:"iid"`
-	URL             string     `json:"url"`
-	Action          string     `json:"action"`
-	TargetBranch    string     `json:"target_branch"`
-	SourceBranch    string     `json:"source_branch"`
-	SourceProjectID int64      `json:"source_project_id"`
-	TargetProjectID int64      `json:"target_project_id"`
-	StCommits       string     `json:"st_commits"`
-	MergeStatus     string     `json:"merge_status"`
-	Content         string     `json:"content"`
-	Format          string     `json:"format"`
-	Message         string     `json:"message"`
-	Slug            string     `json:"slug"`
-	Ref             string     `json:"ref"`
-	Tag             bool       `json:"tag"`
-	SHA             string     `json:"sha"`
-	BeforeSHA       string     `json:"before_sha"`
-	Status          string     `json:"status"`
-	Stages          []string   `json:"stages"`
-	Duration        int64      `json:"duration"`
-	Note            string     `json:"note"`
-	NotebookType    string     `json:"noteable_type"`
-	At              customTime `json:"attachment"`
-	LineCode        string     `json:"line_code"`
-	CommitID        string     `json:"commit_id"`
-	NoteableID      int64      `json:"noteable_id"`
-	System          bool       `json:"system"`
-	WorkInProgress  bool       `json:"work_in_progress"`
-	StDiffs         []StDiff   `json:"st_diffs"`
-	Source          Source     `json:"source"`
-	Target          Target     `json:"target"`
-	LastCommit      LastCommit `json:"last_commit"`
-	Assignee        Assignee   `json:"assignee"`
+	ID               int64      `json:"id"`
+	Title            string     `json:"title"`
+	AssigneeID       int64      `json:"assignee_id"`
+	AuthorID         int64      `json:"author_id"`
+	ProjectID        int64      `json:"project_id"`
+	CreatedAt        customTime `json:"created_at"`
+	UpdatedAt        customTime `json:"updated_at"`
+	ChangePosition   Position   `json:"change_position"`
+	OriginalPosition Position   `json:"original_position"`
+	Position         Position   `json:"position"`
+	BranchName       string     `json:"branch_name"`
+	Description      string     `json:"description"`
+	MilestoneID      int64      `json:"milestone_id"`
+	State            string     `json:"state"`
+	IID              int64      `json:"iid"`
+	URL              string     `json:"url"`
+	Action           string     `json:"action"`
+	TargetBranch     string     `json:"target_branch"`
+	SourceBranch     string     `json:"source_branch"`
+	SourceProjectID  int64      `json:"source_project_id"`
+	TargetProjectID  int64      `json:"target_project_id"`
+	StCommits        string     `json:"st_commits"`
+	MergeStatus      string     `json:"merge_status"`
+	Content          string     `json:"content"`
+	Format           string     `json:"format"`
+	Message          string     `json:"message"`
+	Slug             string     `json:"slug"`
+	Ref              string     `json:"ref"`
+	Tag              bool       `json:"tag"`
+	SHA              string     `json:"sha"`
+	BeforeSHA        string     `json:"before_sha"`
+	Status           string     `json:"status"`
+	Stages           []string   `json:"stages"`
+	Duration         int64      `json:"duration"`
+	Note             string     `json:"note"`
+	NotebookType     string     `json:"noteable_type"`
+	At               customTime `json:"attachment"`
+	LineCode         string     `json:"line_code"`
+	CommitID         string     `json:"commit_id"`
+	NoteableID       int64      `json:"noteable_id"`
+	System           bool       `json:"system"`
+	WorkInProgress   bool       `json:"work_in_progress"`
+	StDiffs          []StDiff   `json:"st_diffs"`
+	Source           Source     `json:"source"`
+	Target           Target     `json:"target"`
+	LastCommit       LastCommit `json:"last_commit"`
+	Assignee         Assignee   `json:"assignee"`
+}
+
+// Position defines a specific location, identified by paths line numbers and
+// image coordinates, within a specific diff, identified by start, head and
+// base commit ids.
+//
+// Text position will have: new_line and old_line
+// Image position will have: width, height, x, y
+type Position struct {
+	BaseSHA      string `json:"base_sha"`
+	StartSHA     string `json:"start_sha"`
+	HeadSHA      string `json:"head_sha"`
+	OldPath      string `json:"old_path"`
+	NewPath      string `json:"new_path"`
+	PositionType string `json:"position_type"`
+	OldLine      int64  `json:"old_line"`
+	NewLine      int64  `json:"new_line"`
+	Width        int64  `json:"width"`
+	Height       int64  `json:"height"`
+	X            int64  `json:"x"`
+	Y            int64  `json:"y"`
 }
 
 // MergeRequest contains all of the GitLab merge request information
@@ -427,14 +486,14 @@ type LabelChanges struct {
 
 // Label contains all of the GitLab label information
 type Label struct {
-	Id          int64      `json:"id"`
+	ID          int64      `json:"id"`
 	Title       string     `json:"title"`
 	Color       string     `json:"color"`
-	ProjectId   int64      `json:"project_id"`
+	ProjectID   int64      `json:"project_id"`
 	CreatedAt   customTime `json:"created_at"`
 	UpdatedAt   customTime `json:"updated_at"`
 	Template    bool       `json:"template"`
 	Description string     `json:"description"`
 	Type        string     `json:"type"`
-	GroupId     int64      `json:"group_id"`
+	GroupID     int64      `json:"group_id"`
 }
