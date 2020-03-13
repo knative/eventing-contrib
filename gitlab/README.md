@@ -96,18 +96,18 @@ that points to your Knative cluster.
 Create a push event and check the logs of the Pod backing the `event-display`.
 You will see the GitLab event:
 
-   ```
-   ☁️  cloudevents.Event
-   Validation: valid
-   Context Attributes,
-     specversion: 0.3
-     type: dev.knative.sources.gitlabsource.Push Hook
-     source: https://gitlab.com/<user>/<project>
-     id: f83c080f-c2af-48ff-8d8b-fd5b21c5938e
-     time: 2020-03-12T11:08:41.414572482Z
-     datacontenttype: application/json
-   Data,
-     {
-      <Event payload>
-     }
-   ```
+```
+☁️  cloudevents.Event
+Validation: valid
+Context Attributes,
+  specversion: 0.3
+  type: dev.knative.sources.gitlabsource.Push Hook
+  source: https://gitlab.com/<user>/<project>
+  id: f83c080f-c2af-48ff-8d8b-fd5b21c5938e
+  time: 2020-03-12T11:08:41.414572482Z
+  datacontenttype: application/json
+Data,
+  {
+   <Event payload>
+  }
+```
