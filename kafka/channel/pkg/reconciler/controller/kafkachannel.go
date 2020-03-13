@@ -42,7 +42,6 @@ import (
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
-	//"knative.dev/pkg/controller"
 	pkgreconciler "knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"

@@ -26,8 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/utils"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	eventingClient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/kmeta"
 
@@ -49,6 +47,8 @@ import (
 	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
 	reconcilekafkatesting "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/testing"
 	reconcilertesting "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/testing"
+	eventingClient "knative.dev/eventing/pkg/client/injection/client"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 )
 
 const (
@@ -343,7 +343,7 @@ func TestAllCases(t *testing.T) {
 			kafkaClusterAdmin:    &mockClusterAdmin{},
 			kafkaClientSet:       fakekafkaclient.Get(ctx),
 			KubeClientSet:        kubeclient.Get(ctx),
-			EventingClientSet: eventingClient.Get(ctx),
+			EventingClientSet:    eventingClient.Get(ctx),
 		}
 		return kafkachannel.NewReconciler(ctx, r.Logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), r.Recorder, r)
 	}, zap.L()))
@@ -380,7 +380,6 @@ func TestTopicExists(t *testing.T) {
 		}},
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
-
 		},
 	}
 	defer logtesting.ClearAll()
@@ -409,10 +408,9 @@ func TestTopicExists(t *testing.T) {
 					}
 				},
 			},
-			kafkaClientSet: fakekafkaclient.Get(ctx),
-			KubeClientSet:        kubeclient.Get(ctx),
+			kafkaClientSet:    fakekafkaclient.Get(ctx),
+			KubeClientSet:     kubeclient.Get(ctx),
 			EventingClientSet: eventingClient.Get(ctx),
-
 		}
 		return kafkachannel.NewReconciler(ctx, r.Logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), r.Recorder, r)
 	}, zap.L()))
@@ -481,10 +479,9 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 					}
 				},
 			},
-			kafkaClientSet: fakekafkaclient.Get(ctx),
-			KubeClientSet:        kubeclient.Get(ctx),
+			kafkaClientSet:    fakekafkaclient.Get(ctx),
+			KubeClientSet:     kubeclient.Get(ctx),
 			EventingClientSet: eventingClient.Get(ctx),
-
 		}
 		return kafkachannel.NewReconciler(ctx, r.Logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), r.Recorder, r)
 	}, zap.L()))
