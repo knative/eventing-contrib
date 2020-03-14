@@ -1822,7 +1822,7 @@
 
 [[projects]]
   branch = "rt_registry"
-  digest = "1:ba19042fa5888b16401f544dd7cc62a152f2909926d9ad141f50533e9df39c9d"
+  digest = "1:44796d06caee344be971591cc01d4e071e5f2533c7a180b8c1cde1b96dbf613a"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1882,6 +1882,7 @@
     "pkg/client/listers/flows/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/sources/v1alpha1",
+    "pkg/client/listers/sources/v1alpha2",
     "pkg/configmap",
     "pkg/kncloudevents",
     "pkg/kncloudevents/testing",
@@ -1911,12 +1912,12 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "5524c42e2f0017abedcfe74f337b0b24d1db4e58"
+  revision = "db030203a4f00dcc5936cb943343ecbb7e5e3c45"
   source = "github.com/nachocano/eventing"
 
 [[projects]]
   branch = "rt_registry"
-  digest = "1:3eebd2d48d70759d517c16d829aec1263ef21fd842b12d0912545c94396ec1b3"
+  digest = "1:e4d49bfeadfc3f0e31b622382293dd85943f80164f3c64bbf0389aa462036fca"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1990,12 +1991,12 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "cb3ae72e902e19214a3e9c0f533bb68b400d0c16"
+  revision = "47e1cef5695266be3500a461db7f6de53501bdc3"
   source = "github.com/nachocano/pkg"
 
 [[projects]]
   branch = "master"
-  digest = "1:074d363c7466476ecfa7c10523400a4e154d99dcf6e58d1ce891b4ebb74e6352"
+  digest = "1:547423432dfa9137adb533429de09a5d0c6c610b11c4b1506a89caa89e77fdbc"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2035,7 +2036,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "158080a52431bcbf84713f9dae4810e84419c736"
+  revision = "771e19d7175513c98cc47a81be546da99e27011a"
 
 [[projects]]
   branch = "master"
@@ -2046,7 +2047,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "3f96c9e98f31595fe33eaa2d95f5e2170522acd7"
+  revision = "9dd089bb6b337300edc5f59a87fd700651aca466"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
