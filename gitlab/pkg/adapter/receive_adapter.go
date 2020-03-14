@@ -81,7 +81,11 @@ func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
 		return fmt.Errorf("cannot create gitlab hook: %v", err)
 	}
 
-	server := ra.newWebserver(hook)
+	server := &http.Server{
+		Addr:    ":" + ra.port,
+		Handler: ra.newRouter(hook),
+	}
+
 	go gracefullShutdown(server, ra.logger, stopCh, done)
 
 	ra.logger.Infof("Server is ready to handle requests at %s", server.Addr)
@@ -108,8 +112,9 @@ func gracefullShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-
 	close(done)
 }
 
-func (ra *gitLabReceiveAdapter) newWebserver(hook *gitlab.Webhook) *http.Server {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+func (ra *gitLabReceiveAdapter) newRouter(hook *gitlab.Webhook) *http.ServeMux {
+	router := http.NewServeMux()
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		payload, err := hook.Parse(r,
 			gitlab.PushEvents,
 			gitlab.TagEvents,
@@ -123,37 +128,29 @@ func (ra *gitLabReceiveAdapter) newWebserver(hook *gitlab.Webhook) *http.Server 
 		)
 		if err != nil {
 			if err == gitlab.ErrEventNotFound {
-				w.WriteHeader(200)
 				w.Write([]byte("event not registered"))
+				return
 			}
 			ra.logger.Errorf("hook parser error: %v", err)
-			w.WriteHeader(500)
+			w.WriteHeader(400)
 			w.Write([]byte(err.Error()))
+			return
 		}
 		err = ra.handleEvent(payload, r.Header)
 		if err != nil {
 			ra.logger.Errorf("event handler error: %v", err)
-			w.WriteHeader(500)
+			w.WriteHeader(400)
 			w.Write([]byte(err.Error()))
+			return
 		}
 		ra.logger.Infof("event processed")
-		w.WriteHeader(200)
-		w.Write([]byte("event not registered"))
+		w.WriteHeader(202)
+		w.Write([]byte("accepted"))
 	})
-
-	return &http.Server{
-		Addr: ":" + ra.port,
-	}
+	return router
 }
 
 func (ra *gitLabReceiveAdapter) handleEvent(payload interface{}, header http.Header) error {
-	gitLabHookToken := header.Get(glHeaderToken)
-	if gitLabHookToken == "" {
-		return fmt.Errorf("%q header is not set", glHeaderToken)
-	}
-	if gitLabHookToken != ra.secretToken {
-		return fmt.Errorf("event token doesn't match secret")
-	}
 	gitLabEventType := header.Get(glHeaderEvent)
 	if gitLabEventType == "" {
 		return fmt.Errorf("%q header is not set", glHeaderEvent)
