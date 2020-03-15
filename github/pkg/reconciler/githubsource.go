@@ -235,7 +235,7 @@ func (r *Reconciler) createWebhook(ctx context.Context, args *webhookArgs) (stri
 		if *args.source.Spec.Secure {
 			url.Scheme = "https"
 		} else {
-			url.Scheme = "https"
+			url.Scheme = "http"
 		}
 	}
 
