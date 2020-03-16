@@ -1928,11 +1928,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "d2b23626caef242492654bfdd3d8d1df2ae59af4"
+  revision = "eecdd36d74a6317de6d65af0196730bc8cf44907"
 
 [[projects]]
   branch = "master"
-  digest = "1:1f5f6634308701e44054d1671e3c6ddbae3d0f5279300755f8dae6387bc83405"
+  digest = "1:087752cbad644085941d5dbe2a04ef0c285fed9205006a5a3d3816256ac0fecd"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1949,7 +1949,6 @@
     "client/injection/kube/informers/admissionregistration/v1beta1/validatingwebhookconfiguration",
     "client/injection/kube/informers/apps/v1/deployment",
     "client/injection/kube/informers/core/v1/endpoints",
-    "client/injection/kube/informers/core/v1/secret",
     "client/injection/kube/informers/core/v1/service",
     "client/injection/kube/informers/core/v1/serviceaccount",
     "client/injection/kube/informers/factory",
@@ -1959,6 +1958,8 @@
     "injection",
     "injection/clients/dynamicclient",
     "injection/clients/dynamicclient/fake",
+    "injection/clients/namespacedkube/informers/core/v1/secret",
+    "injection/clients/namespacedkube/informers/factory",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -2005,7 +2006,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "00f0de3a183efe88ed578a8e7d4a2db8fb7b121b"
+  revision = "1893541a0fac5885032c8ec170fd81234de13f4a"
 
 [[projects]]
   branch = "master"
@@ -2049,18 +2050,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "2e9eff4685333df92bdcf5f22cc5bdf91c7e5394"
+  revision = "34717bfa04b014f07cf52e4338afc99c60a85dda"
 
 [[projects]]
   branch = "master"
-  digest = "1:3d0c703375017dde28d1ee030d7f82ea838ab023841890ead18e91c8c9aded80"
+  digest = "1:e5bd21467544cbd14cb25553c5c78eb2e0e93baf9288a3c2ebaf1cf1fdb0c95f"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "7a8eea898f66fc7cd5fec6bb7c0fa2a80eeb702e"
+  revision = "3f96c9e98f31595fe33eaa2d95f5e2170522acd7"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
