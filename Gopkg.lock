@@ -84,7 +84,7 @@
   revision = "ec5e00d3c878b2a97bbe0884ef45ffd1b4f669f5"
 
 [[projects]]
-  digest = "1:0c3d8b189bf3f193ea2724d45f95f9dd79280499604e997c227681e612425dae"
+  digest = "1:283fd34a116a5e926c20fcda1995875b4e8ef1a732496ca2a036c2def08fd143"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -105,12 +105,15 @@
     "aws/request",
     "aws/session",
     "aws/signer/v4",
+    "internal/context",
     "internal/ini",
     "internal/sdkio",
     "internal/sdkmath",
     "internal/sdkrand",
     "internal/sdkuri",
     "internal/shareddefaults",
+    "internal/strings",
+    "internal/sync/singleflight",
     "private/protocol",
     "private/protocol/json/jsonutil",
     "private/protocol/query",
@@ -122,8 +125,8 @@
     "service/sts/stsiface",
   ]
   pruneopts = "NUT"
-  revision = "c7898ed37bb1004a0a1c024bb3e0d206f07f9299"
-  version = "v1.25.21"
+  revision = "ecf76c57b69f7395de7777edf1f8c5928d850581"
+  version = "v1.29.21"
 
 [[projects]]
   digest = "1:707ebe952a8b3d00b343c01536c79c73771d100f63ec6babeaed5c79e2b8a8dd"
@@ -374,11 +377,11 @@
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
-  digest = "1:10aa62acd56f635de190110a836aa261b3774e697b2b6a7af27d8263cf856d47"
+  digest = "1:ecc8bd577aaaa8ce2c3ad060e61e1daeadbab1d14a0934f019ad2995c3a666b0"
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "b02d448a3705facf11018efff34f1d2830be5724"
+  revision = "ba53fa10e72c7373ef8068e21c9f102f0c20a940"
 
 [[projects]]
   digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
@@ -1819,7 +1822,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a304282c5f030005619af5cab1df1dd3700e2e3bfef3038d629c526cbdc58944"
+  digest = "1:b5e857be2d4356cdb208892dd1976fe9d1b44a24e8b9f996fc7b41c25ca888df"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1835,8 +1838,6 @@
     "pkg/apis/flows",
     "pkg/apis/flows/v1alpha1",
     "pkg/apis/flows/v1beta1",
-    "pkg/apis/legacysources",
-    "pkg/apis/legacysources/v1alpha1",
     "pkg/apis/messaging",
     "pkg/apis/messaging/config",
     "pkg/apis/messaging/v1alpha1",
@@ -1901,14 +1902,6 @@
     "pkg/configmap",
     "pkg/kncloudevents",
     "pkg/kncloudevents/testing",
-    "pkg/legacyclient/clientset/versioned",
-    "pkg/legacyclient/clientset/versioned/fake",
-    "pkg/legacyclient/clientset/versioned/scheme",
-    "pkg/legacyclient/clientset/versioned/typed/legacysources/v1alpha1",
-    "pkg/legacyclient/clientset/versioned/typed/legacysources/v1alpha1/fake",
-    "pkg/legacyclient/injection/client",
-    "pkg/legacyclient/injection/client/fake",
-    "pkg/legacyclient/listers/legacysources/v1alpha1",
     "pkg/logconfig",
     "pkg/logging",
     "pkg/reconciler",
@@ -1935,11 +1928,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "200ea1aebdbf9a71068f3fd59205f3bf07ba65e6"
+  revision = "eecdd36d74a6317de6d65af0196730bc8cf44907"
 
 [[projects]]
   branch = "master"
-  digest = "1:f3b8b438ace92d557a94c548299bbc0cdace20919e6a455d572e6e92115c35d0"
+  digest = "1:087752cbad644085941d5dbe2a04ef0c285fed9205006a5a3d3816256ac0fecd"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1956,7 +1949,6 @@
     "client/injection/kube/informers/admissionregistration/v1beta1/validatingwebhookconfiguration",
     "client/injection/kube/informers/apps/v1/deployment",
     "client/injection/kube/informers/core/v1/endpoints",
-    "client/injection/kube/informers/core/v1/secret",
     "client/injection/kube/informers/core/v1/service",
     "client/injection/kube/informers/core/v1/service/fake",
     "client/injection/kube/informers/core/v1/serviceaccount",
@@ -1968,6 +1960,8 @@
     "injection",
     "injection/clients/dynamicclient",
     "injection/clients/dynamicclient/fake",
+    "injection/clients/namespacedkube/informers/core/v1/secret",
+    "injection/clients/namespacedkube/informers/factory",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -2014,11 +2008,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "340837e6545b9d7895fe4ca0ffb3fbe09aab248e"
+  revision = "1893541a0fac5885032c8ec170fd81234de13f4a"
 
 [[projects]]
   branch = "master"
-  digest = "1:901e3fd1d494c2f396b0123331aab44b3ccac2fd500b6dd43728ee0891deecd3"
+  digest = "1:074d363c7466476ecfa7c10523400a4e154d99dcf6e58d1ce891b4ebb74e6352"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2050,7 +2044,7 @@
     "pkg/client/informers/externalversions/serving/v1beta1",
     "pkg/client/injection/client",
     "pkg/client/injection/informers/factory",
-    "pkg/client/injection/informers/serving/v1alpha1/service",
+    "pkg/client/injection/informers/serving/v1/service",
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1",
@@ -2058,18 +2052,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "a9c0bcbfd95357fb7dc297380a02af2f4567aa6a"
+  revision = "34717bfa04b014f07cf52e4338afc99c60a85dda"
 
 [[projects]]
   branch = "master"
-  digest = "1:e7ea104eff9c91ce48f1730ab8b4098faa1ea519162ccbbbca68c205428f0e21"
+  digest = "1:e5bd21467544cbd14cb25553c5c78eb2e0e93baf9288a3c2ebaf1cf1fdb0c95f"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "83fb33bf8fcfe5c0e021eb6c9bb8733a5b8423c0"
+  revision = "3f96c9e98f31595fe33eaa2d95f5e2170522acd7"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2239,6 +2233,7 @@
     "knative.dev/eventing/pkg/apis/eventing",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",
+    "knative.dev/eventing/pkg/apis/sources",
     "knative.dev/eventing/pkg/apis/sources/v1alpha1",
     "knative.dev/eventing/pkg/channel",
     "knative.dev/eventing/pkg/channel/fanout",
@@ -2252,8 +2247,6 @@
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/kncloudevents/testing",
-    "knative.dev/eventing/pkg/legacyclient/clientset/versioned/fake",
-    "knative.dev/eventing/pkg/legacyclient/injection/client/fake",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
     "knative.dev/eventing/pkg/reconciler",
@@ -2316,8 +2309,8 @@
     "knative.dev/serving/pkg/apis/serving/v1beta1",
     "knative.dev/serving/pkg/client/clientset/versioned",
     "knative.dev/serving/pkg/client/injection/client",
-    "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service",
-    "knative.dev/serving/pkg/client/listers/serving/v1alpha1",
+    "knative.dev/serving/pkg/client/injection/informers/serving/v1/service",
+    "knative.dev/serving/pkg/client/listers/serving/v1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
     "sigs.k8s.io/controller-runtime/pkg/client",

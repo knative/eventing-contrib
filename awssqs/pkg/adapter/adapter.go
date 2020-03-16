@@ -104,11 +104,19 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		return err
 	}
 
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigDisable,
-		Config:            aws.Config{Region: &region},
-		SharedConfigFiles: []string{a.CredsFile},
-	}))
+	var sess *session.Session
+
+	if a.CredsFile == "" {
+		sess = session.Must(session.NewSessionWithOptions(session.Options{
+			Config: aws.Config{Region: &region},
+		}))
+	} else {
+		sess = session.Must(session.NewSessionWithOptions(session.Options{
+			SharedConfigState: session.SharedConfigDisable,
+			Config:            aws.Config{Region: &region},
+			SharedConfigFiles: []string{a.CredsFile},
+		}))
+	}
 
 	q := sqs.New(sess)
 

@@ -73,12 +73,12 @@ func NewController(
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("KafkaSource")),
+		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("KafkaSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
 	eventTypeInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("KafkaSource")),
+		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("KafkaSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

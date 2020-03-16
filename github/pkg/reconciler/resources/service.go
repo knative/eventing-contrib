@@ -24,7 +24,6 @@ import (
 	"knative.dev/pkg/kmeta"
 
 	v1 "knative.dev/serving/pkg/apis/serving/v1"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 )
@@ -37,29 +36,25 @@ type ServiceArgs struct {
 // MakeService generates, but does not create, a Service for the given
 // GitHubSource.
 //func MakeService(source *sourcesv1alpha1.GitHubSource, receiveAdapterImage string) *servingv1alpha1.Service {
-func MakeService(args *ServiceArgs) *servingv1alpha1.Service {
+func MakeService(args *ServiceArgs) *v1.Service {
 	labels := map[string]string{
 		"receive-adapter": "github",
 	}
 	sinkURI := args.Source.Status.SinkURI
-	env := []corev1.EnvVar{
-		{
-			Name: "GITHUB_SECRET_TOKEN",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: args.Source.Spec.SecretToken.SecretKeyRef,
-			},
+	env := []corev1.EnvVar{{
+		Name: "GITHUB_SECRET_TOKEN",
+		ValueFrom: &corev1.EnvVarSource{
+			SecretKeyRef: args.Source.Spec.SecretToken.SecretKeyRef,
 		},
-		{
-			Name:  "SINK",
-			Value: sinkURI,
-		},
-		{
-			Name:  "GITHUB_OWNER_REPO",
-			Value: args.Source.Spec.OwnerAndRepository,
-		},
-	}
+	}, {
+		Name:  "SINK",
+		Value: sinkURI,
+	}, {
+		Name:  "GITHUB_OWNER_REPO",
+		Value: args.Source.Spec.OwnerAndRepository,
+	}}
 	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI)}
-	return &servingv1alpha1.Service{
+	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", args.Source.Name),
 			Namespace:    args.Source.Namespace,
@@ -68,18 +63,16 @@ func MakeService(args *ServiceArgs) *servingv1alpha1.Service {
 				*kmeta.NewControllerRef(args.Source),
 			},
 		},
-		Spec: servingv1alpha1.ServiceSpec{
-			ConfigurationSpec: servingv1alpha1.ConfigurationSpec{
-				Template: &servingv1alpha1.RevisionTemplateSpec{
-					Spec: servingv1alpha1.RevisionSpec{
-						RevisionSpec: v1.RevisionSpec{
-							PodSpec: corev1.PodSpec{
-								Containers: []corev1.Container{{
-									Image: args.ReceiveAdapterImage,
-									Env:   env,
-									Args:  containerArgs,
-								}},
-							},
+		Spec: v1.ServiceSpec{
+			ConfigurationSpec: v1.ConfigurationSpec{
+				Template: v1.RevisionTemplateSpec{
+					Spec: v1.RevisionSpec{
+						PodSpec: corev1.PodSpec{
+							Containers: []corev1.Container{{
+								Image: args.ReceiveAdapterImage,
+								Env:   env,
+								Args:  containerArgs,
+							}},
 						},
 					},
 				},

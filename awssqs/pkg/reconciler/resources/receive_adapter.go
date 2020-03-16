@@ -44,8 +44,52 @@ const (
 // MakeReceiveAdapter generates (but does not insert into K8s) the
 // Receive Adapter Deployment for AWS SQS Sources.
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
-	credsFile := fmt.Sprintf("%s/%s", credsMountPath, args.Source.Spec.AwsCredsSecret.Key)
+	credsFile := ""
+	if args.Source.Spec.AwsCredsSecret != nil {
+		credsFile = fmt.Sprintf("%s/%s", credsMountPath, args.Source.Spec.AwsCredsSecret.Key)
+	}
+
 	replicas := int32(1)
+	annotations := map[string]string{"sidecar.istio.io/inject": "true"}
+	for k, v := range args.Source.Spec.Annotations {
+		annotations[k] = v
+	}
+
+	envVars := []corev1.EnvVar{
+		{
+			Name:  "AWS_SQS_URL",
+			Value: args.Source.Spec.QueueURL,
+		},
+		{
+			Name:  "SINK_URI",
+			Value: args.SinkURI,
+		},
+	}
+
+	volMounts := []corev1.VolumeMount(nil)
+	vols := []corev1.Volume(nil)
+
+	if credsFile != "" {
+		envVars = append(envVars, corev1.EnvVar{Name: "AWS_APPLICATION_CREDENTIALS", Value: credsFile})
+		volMounts = []corev1.VolumeMount{
+			{
+				Name:      credsVolume,
+				MountPath: credsMountPath,
+			},
+		}
+
+		vols = []corev1.Volume{
+			{
+				Name: credsVolume,
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: args.Source.Spec.AwsCredsSecret.Name,
+					},
+				},
+			},
+		}
+	}
+
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    args.Source.Namespace,
@@ -62,49 +106,20 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 			Replicas: &replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"sidecar.istio.io/inject": "true",
-					},
-					Labels: args.Labels,
+					Annotations: annotations,
+					Labels:      args.Labels,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: args.Source.Spec.ServiceAccountName,
 					Containers: []corev1.Container{
 						{
-							Name:  "receive-adapter",
-							Image: args.Image,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "AWS_APPLICATION_CREDENTIALS",
-									Value: credsFile,
-								},
-								{
-									Name:  "AWS_SQS_URL",
-									Value: args.Source.Spec.QueueURL,
-								},
-								{
-									Name:  "SINK_URI",
-									Value: args.SinkURI,
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      credsVolume,
-									MountPath: credsMountPath,
-								},
-							},
+							Name:         "receive-adapter",
+							Image:        args.Image,
+							Env:          envVars,
+							VolumeMounts: volMounts,
 						},
 					},
-					Volumes: []corev1.Volume{
-						{
-							Name: credsVolume,
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: args.Source.Spec.AwsCredsSecret.Name,
-								},
-							},
-						},
-					},
+					Volumes: vols,
 				},
 			},
 		},

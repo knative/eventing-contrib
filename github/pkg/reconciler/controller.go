@@ -26,15 +26,14 @@ import (
 
 	//Injection imports
 	sourcescheme "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/scheme"
-	githubclient "knative.dev/eventing-contrib/github/pkg/client/injection/client"
 	githubinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource"
-	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
-	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
+	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
 	serviceclient "knative.dev/serving/pkg/client/injection/client"
-	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service"
+	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
 
 	//knative.dev/eventing imports
-	"knative.dev/eventing-contrib/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
@@ -56,24 +55,20 @@ func NewController(
 	}
 
 	githubInformer := githubinformer.Get(ctx)
-	eventTypeInformer := eventtypeinformer.Get(ctx)
-	deploymentInformer := deploymentinformer.Get(ctx)
 	serviceInformer := kserviceinformer.Get(ctx)
+	eventTypeInformer := eventtypeinformer.Get(ctx)
 
 	r := &Reconciler{
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
 		servingLister:       serviceInformer.Lister(),
 		servingClientSet:    serviceclient.Get(ctx),
-		githubClientSet:     githubclient.Get(ctx),
-		githubLister:        githubInformer.Lister(),
-		deploymentLister:    deploymentInformer.Lister(),
+		eventTypeLister:     eventTypeInformer.Lister(),
 		webhookClient:       gitHubWebhookClient{},
 		receiveAdapterImage: raImage,
-		eventTypeLister:     eventTypeInformer.Lister(),
-		loggingContext:      ctx,
 	}
 
-	impl := controller.NewImpl(r, r.Logger, "GitHubSource")
+	impl := ghreconciler.NewImpl(ctx, r)
+
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	r.Logger.Info("Setting up GitHub event handlers")
@@ -81,21 +76,15 @@ func NewController(
 	githubInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitHubSource")),
-		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
-	})
-
-	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitHubSource")),
+		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("GitHubSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
 	eventTypeInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitHubSource")),
+		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("CouchDbSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
-	cmw.Watch(logging.ConfigMapName(), r.UpdateFromLoggingConfigMap)
 	return impl
 
 }

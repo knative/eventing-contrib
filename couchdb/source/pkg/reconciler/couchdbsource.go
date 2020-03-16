@@ -20,10 +20,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
-	"reflect"
-	"sync"
-	"time"
 
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
@@ -34,26 +30,22 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	"k8s.io/client-go/tools/cache"
+	cdbreconciler "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/reconciler/sources/v1alpha1/couchdbsource"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/reconciler/resources"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
+	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
-	versioned "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned"
-	listers "knative.dev/eventing-contrib/couchdb/source/pkg/client/listers/sources/v1alpha1"
 )
 
 const (
 	// Name of the corev1.Events emitted from the reconciliation process
-	couchdbsourceReconciled         = "CouchDbSourceReconciled"
-	couchdbsourceReadinessChanged   = "CouchDbSourceReadinessChanged"
-	couchdbsourceUpdateStatusFailed = "CouchDbSourceUpdateStatusFailed"
-	couchdbsourceDeploymentCreated  = "CouchDbSourceDeploymentCreated"
-	couchdbsourceDeploymentUpdated  = "CouchDbSourceDeploymentUpdated"
+	couchdbsourceDeploymentCreated = "CouchDbSourceDeploymentCreated"
+	couchdbsourceDeploymentUpdated = "CouchDbSourceDeploymentUpdated"
 
 	// raImageEnvVar is the name of the environment variable that contains the receive adapter's
 	// image. It must be defined.
@@ -61,7 +53,6 @@ const (
 )
 
 var (
-	deploymentGVK     = appsv1.SchemeGroupVersion.WithKind("Deployment")
 	couchDbEventTypes = []string{
 		v1alpha1.CouchDbSourceUpdateEventType,
 		v1alpha1.CouchDbSourceDeleteEventType,
@@ -73,62 +64,17 @@ type Reconciler struct {
 	*reconciler.Base
 
 	receiveAdapterImage string
-	once                sync.Once
 
 	// listers index properties about resources
-	couchdbsourceLister listers.CouchDbSourceLister
-	deploymentLister    appsv1listers.DeploymentLister
-	eventTypeLister     eventinglisters.EventTypeLister
+	deploymentLister appsv1listers.DeploymentLister
+	eventTypeLister  eventinglisters.EventTypeLister
 
-	couchdbClientSet versioned.Interface
-	sinkResolver     *resolver.URIResolver
+	sinkResolver *resolver.URIResolver
 }
 
-// Reconcile compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the CouchDbSource
-// resource with the current status of the resource.
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	// Convert the namespace/name string into a distinct namespace and name
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		r.Logger.Errorf("invalid resource key: %s", key)
-		return nil
-	}
+var _ cdbreconciler.Interface = (*Reconciler)(nil)
 
-	// Get the CouchDbSource resource with this namespace/name
-	original, err := r.couchdbsourceLister.CouchDbSources(namespace).Get(name)
-	if apierrors.IsNotFound(err) {
-		// The resource may no longer exist, in which case we stop processing.
-		logging.FromContext(ctx).Error("CouchDbSource key in work queue no longer exists", zap.Any("key", key))
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	// Don't modify the informers copy
-	couchdbsource := original.DeepCopy()
-
-	// Reconcile this copy of the CouchDbSource and then write back any status
-	// updates regardless of whether the reconcile error out.
-	err = r.reconcile(ctx, couchdbsource)
-	if err != nil {
-		logging.FromContext(ctx).Warn("Error reconciling CouchDbSource", zap.Error(err))
-	} else {
-		logging.FromContext(ctx).Debug("CouchDbSource reconciled")
-		r.Recorder.Eventf(couchdbsource, corev1.EventTypeNormal, couchdbsourceReconciled, `CouchDbSource reconciled: "%s/%s"`, couchdbsource.Namespace, couchdbsource.Name)
-	}
-
-	if _, updateStatusErr := r.updateStatus(ctx, couchdbsource.DeepCopy()); updateStatusErr != nil {
-		logging.FromContext(ctx).Warn("Failed to update the CouchDbSource", zap.Error(err))
-		r.Recorder.Eventf(couchdbsource, corev1.EventTypeWarning, couchdbsourceUpdateStatusFailed, "Failed to update CouchDbSource's status: %v", err)
-		return updateStatusErr
-	}
-
-	// Requeue if the resource is not ready:
-	return err
-}
-
-func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.CouchDbSource) error {
+func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.CouchDbSource) pkgreconciler.Event {
 	source.Status.InitializeConditions()
 
 	if source.Spec.Sink == nil {
@@ -183,19 +129,6 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.CouchDbSour
 	return nil
 }
 
-func (r *Reconciler) getReceiveAdapterImage() string {
-	if r.receiveAdapterImage == "" {
-		r.once.Do(func() {
-			raImage, defined := os.LookupEnv(raImageEnvVar)
-			if !defined {
-				panic(fmt.Errorf("required environment variable %q not defined", raImageEnvVar))
-			}
-			r.receiveAdapterImage = raImage
-		})
-	}
-	return r.receiveAdapterImage
-}
-
 func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.CouchDbSource, sinkURI string) (*appsv1.Deployment, error) {
 	eventSource, err := r.makeEventSource(src)
 	if err != nil {
@@ -205,7 +138,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 
 	adapterArgs := resources.ReceiveAdapterArgs{
 		EventSource: eventSource,
-		Image:       r.getReceiveAdapterImage(),
+		Image:       r.receiveAdapterImage,
 		Source:      src,
 		Labels:      resources.Labels(src.Name),
 		SinkURI:     sinkURI,
@@ -266,17 +199,15 @@ func (r *Reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.Couc
 }
 
 func (r *Reconciler) getEventTypes(ctx context.Context, src *v1alpha1.CouchDbSource) ([]eventingv1alpha1.EventType, error) {
-	etl, err := r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).List(metav1.ListOptions{
-		LabelSelector: r.getLabelSelector(src).String(),
-	})
+	etl, err := r.eventTypeLister.EventTypes(src.Namespace).List(r.getLabelSelector(src))
 	if err != nil {
 		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
 		return nil, err
 	}
 	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	for _, et := range etl.Items {
-		if metav1.IsControlledBy(&et, src) {
-			eventTypes = append(eventTypes, et)
+	for _, et := range etl {
+		if metav1.IsControlledBy(et, src) {
+			eventTypes = append(eventTypes, *et)
 		}
 	}
 	return eventTypes, nil
@@ -365,16 +296,14 @@ func (r *Reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1
 }
 
 func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.CouchDbSource) (*appsv1.Deployment, error) {
-	dl, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).List(metav1.ListOptions{
-		LabelSelector: r.getLabelSelector(src).String(),
-	})
+	dl, err := r.deploymentLister.Deployments(src.Namespace).List(r.getLabelSelector(src))
 	if err != nil {
 		logging.FromContext(ctx).Error("Unable to list deployments: %v", zap.Error(err))
 		return nil, err
 	}
-	for _, dep := range dl.Items {
-		if metav1.IsControlledBy(&dep, src) {
-			return &dep, nil
+	for _, dep := range dl {
+		if metav1.IsControlledBy(dep, src) {
+			return dep, nil
 		}
 	}
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
@@ -382,36 +311,6 @@ func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.CouchD
 
 func (r *Reconciler) getLabelSelector(src *v1alpha1.CouchDbSource) labels.Selector {
 	return labels.SelectorFromSet(resources.Labels(src.Name))
-}
-
-func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.CouchDbSource) (*v1alpha1.CouchDbSource, error) {
-	couchdbsource, err := r.couchdbsourceLister.CouchDbSources(desired.Namespace).Get(desired.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	// If there's nothing to update, just return.
-	if reflect.DeepEqual(couchdbsource.Status, desired.Status) {
-		return couchdbsource, nil
-	}
-
-	becomesReady := desired.Status.IsReady() && !couchdbsource.Status.IsReady()
-
-	// Don't modify the informers copy.
-	existing := couchdbsource.DeepCopy()
-	existing.Status = desired.Status
-
-	cj, err := r.couchdbClientSet.SourcesV1alpha1().CouchDbSources(desired.Namespace).UpdateStatus(existing)
-	if err == nil && becomesReady {
-		duration := time.Since(cj.ObjectMeta.CreationTimestamp.Time)
-		r.Logger.Infof("CouchDbSource %q became ready after %v", couchdbsource.Name, duration)
-		r.Recorder.Event(couchdbsource, corev1.EventTypeNormal, couchdbsourceReadinessChanged, fmt.Sprintf("CouchDbSource %q became ready", couchdbsource.Name))
-		if err := r.StatsReporter.ReportReady("CouchDbSource", couchdbsource.Namespace, couchdbsource.Name, duration); err != nil {
-			logging.FromContext(ctx).Sugar().Infof("failed to record ready for CouchDbSource, %v", err)
-		}
-	}
-
-	return cj, err
 }
 
 // MakeEventSource computes the Cloud Event source attribute for the given source
