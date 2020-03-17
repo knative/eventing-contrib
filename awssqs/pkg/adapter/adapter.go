@@ -25,8 +25,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	cloudevents "github.com/cloudevents/sdk-go"
-	ce_client "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	ce_client "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/types"
+
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
@@ -37,6 +39,7 @@ import (
 // Adapter implements the AWS SQS adapter to deliver SQS messages from
 // an SQS queue to a Sink.
 type Adapter struct {
+
 	// QueueURL is the AWS SQS URL that we're polling messages from
 	QueueURL string
 
@@ -185,7 +188,7 @@ func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	event.SetID(*m.MessageId)
 	event.SetType(sourcesv1alpha1.AwsSqsSourceEventType)
-	event.SetSource(a.QueueURL)
+	event.SetSource(types.ParseURIRef(a.QueueURL).String())
 	event.SetTime(time.Unix(0, timestamp))
 
 	if err := event.SetData(m); err != nil {

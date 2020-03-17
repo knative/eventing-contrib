@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 
 	contribchannels "knative.dev/eventing-contrib/pkg/channel"
@@ -34,7 +34,7 @@ func mockTopicFunc(separator, namespace, name string) string {
 }
 
 func BenchmarkToKafkaMessage(b *testing.B) {
-	ref := eventingchannels.ChannelReference{"namespace-test", "name-test"}
+	ref := eventingchannels.ChannelReference{Namespace: "namespace-test", Name: "name-test"}
 	b.SetParallelism(1)
 	b.ReportAllocs()
 	b.Run("Baseline toKafkaMessage", func(b *testing.B) {
