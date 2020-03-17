@@ -28,20 +28,7 @@ func (b *Broker) SetDefaults(ctx context.Context) {
 	// Default Spec fields.
 	withNS := apis.WithinParent(ctx, b.ObjectMeta)
 	b.Spec.SetDefaults(withNS)
-
-	// Check the annotation and default if necessary
-	annotations := b.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string, 1)
-	}
-	if _, present := annotations[eventing.BrokerClassKey]; !present {
-		cfg := config.FromContextOrDefaults(withNS)
-		c, err := cfg.Defaults.GetBrokerClass(b.Namespace)
-		if err == nil {
-			annotations[eventing.BrokerClassKey] = c
-			b.SetAnnotations(annotations)
-		}
-	}
+	eventing.DefaultBrokerClassIfUnset(withNS, &b.ObjectMeta)
 }
 
 func (bs *BrokerSpec) SetDefaults(ctx context.Context) {

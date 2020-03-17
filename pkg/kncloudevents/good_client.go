@@ -1,8 +1,8 @@
 package kncloudevents
 
 import (
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/transport/http"
 )
 
 func NewDefaultClient(target ...string) (cloudevents.Client, error) {

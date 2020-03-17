@@ -38,8 +38,8 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
 )

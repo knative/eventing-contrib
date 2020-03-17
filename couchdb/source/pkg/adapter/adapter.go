@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
 	"github.com/go-kivik/couchdb"
 	"github.com/go-kivik/kivik"
 	"go.uber.org/zap"

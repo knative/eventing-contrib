@@ -23,7 +23,7 @@ import (
 
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents"
 )
 
 type Heartbeat struct {
