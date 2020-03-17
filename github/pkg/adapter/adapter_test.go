@@ -524,6 +524,8 @@ var (
 		"content-length":  {},
 		"user-agent":      {},
 		"ce-time":         {},
+		"ce-traceparent":  {},
+		"traceparent":     {},
 	}
 )
 
