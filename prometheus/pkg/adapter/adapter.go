@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
 	"github.com/robfig/cron"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/uuid"

@@ -83,8 +83,8 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 			}},
 			RestartPolicy: corev1.RestartPolicyNever,
 			Volumes: []corev1.Volume{{
-				"event-payload",
-				corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
+				Name: "event-payload",
+				VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: cgName,
 					},

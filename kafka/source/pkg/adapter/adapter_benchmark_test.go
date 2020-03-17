@@ -28,7 +28,7 @@ import (
 	"knative.dev/eventing/pkg/adapter"
 
 	"github.com/Shopify/sarama"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
 	"go.uber.org/zap"
 
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
