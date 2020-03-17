@@ -26,6 +26,7 @@ import (
 )
 
 // +genclient
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type EventType struct {
@@ -39,7 +40,7 @@ type EventType struct {
 	// Status represents the current state of the EventType.
 	// This data may be out of date.
 	// +optional
-	// TODO remove the status https://github.com/knative/eventing/issues/2750
+	// TODO might be removed https://github.com/knative/eventing/issues/2750
 	Status EventTypeStatus `json:"status,omitempty"`
 }
 

@@ -21,7 +21,6 @@ import (
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -36,7 +35,6 @@ import (
 	"knative.dev/pkg/logging/logkey"
 
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
-	apiextensionsclient "knative.dev/pkg/client/injection/apiextensions/client"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 )
@@ -48,9 +46,6 @@ type Base struct {
 
 	// EventingClientSet allows us to configure Eventing objects
 	EventingClientSet clientset.Interface
-
-	// ApiExtensionsClientSet allows us to configure k8s API extension objects.
-	ApiExtensionsClientSet apiextensionsclientset.Interface
 
 	// DynamicClientSet allows us to configure pluggable Build objects
 	DynamicClientSet dynamic.Interface
@@ -114,14 +109,13 @@ func NewBase(ctx context.Context, controllerAgentName string, cmw configmap.Watc
 	}
 
 	base := &Base{
-		KubeClientSet:          kubeClient,
-		EventingClientSet:      eventingclient.Get(ctx),
-		DynamicClientSet:       dynamicclient.Get(ctx),
-		ApiExtensionsClientSet: apiextensionsclient.Get(ctx),
-		ConfigMapWatcher:       cmw,
-		Recorder:               recorder,
-		StatsReporter:          statsReporter,
-		Logger:                 logger,
+		KubeClientSet:     kubeClient,
+		EventingClientSet: eventingclient.Get(ctx),
+		DynamicClientSet:  dynamicclient.Get(ctx),
+		ConfigMapWatcher:  cmw,
+		Recorder:          recorder,
+		StatsReporter:     statsReporter,
+		Logger:            logger,
 	}
 
 	return base
