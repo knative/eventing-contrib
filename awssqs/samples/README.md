@@ -14,7 +14,7 @@ commands from the root.
 1. Create an [AWS SQS queue](https://aws.amazon.com/sqs/).
 
 1. Setup
-   [Knative Eventing](https://github.com/knative/docs/tree/master/eventing).
+   [Knative Eventing](https://github.com/knative/docs/tree/master/docs/eventing).
 
 1. The
    [in-memory channel CRD](https://github.com/knative/eventing/blob/master/config/channels/in-memory-channel/README.md)
@@ -39,6 +39,8 @@ queue.
 
 ### Set up credentials
 
+NOTE: If using Kube2IAM skip this step
+
 Acquire
 [AWS Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html)
 for the same account. Your credentials file should look like this:
@@ -55,6 +57,15 @@ Then create a secret for the downloaded key:
 kubectl -n knative-sources create secret generic awssqs-source-credentials --from-file=credentials=PATH_TO_CREDENTIALS_FILE
 ```
 
+### Set up [Kube2IAM](https://github.com/jtblin/kube2iam) credentials
+
+NOTE: If not using Kube2IAM skip this step
+
+Replace the `AWS_IAM_ROLE` place holders in
+`samples/awssqs-source-kube2iam.yaml`.
+
+`AWS_IAM_ROLE` should be replaced with your AWS IAM role
+
 ### Deployment
 
 Deploy the `AwsSqsSource` controller as part of eventing-source's controller.
@@ -66,7 +77,8 @@ ko apply -f awssqs/config/
 Note that if the `Source` Service Account secret is in a non-default location,
 you will need to update the YAML first.
 
-Replace the place holders in `samples/awssqs-source.yaml`.
+Replace the place holders in `samples/awssqs-source.yaml` or
+`samples/awssqs-source-kube2iam.yaml` depending on credential type used.
 
 - `QUEUE_URL` should be replaced with your AWS SQS queue URL.
 
@@ -75,11 +87,20 @@ Replace the place holders in `samples/awssqs-source.yaml`.
   sed -i "s|QUEUE_URL|$QUEUE_URL|" awssqs-source.yaml
   ```
 
-Now deploy `awssqs-source.yaml`.
+Now deploy `awssqs-source.yaml` or `awssqs-source-kube2iam.yaml` depending on
+credential type used.
 
-```shell
-ko apply -f awssqs/samples/awssqs-source.yaml
-```
+- Credentials File
+
+  ```shell
+  ko apply -f awssqs/samples/awssqs-source.yaml
+  ```
+
+- Kube2IAM credentials
+
+  ```shell
+  ko apply -f awssqs/samples/awssqs-source-kube2iam.yaml
+  ```
 
 You can use [kail](https://github.com/boz/kail/) to tail the logs of the
 subscriber.

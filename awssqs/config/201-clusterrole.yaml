@@ -84,6 +84,14 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - eventtypes
+  verbs:
+  - get
+  - list
+  - watch
 # Secrets read
 - apiGroups:
   - ""
@@ -92,6 +100,15 @@ rules:
   verbs:
   - get
   - list
+# Services
+- apiGroups:
+    - ""
+  resources:
+    - services
+  verbs:
+    - get
+    - list
+    - watch
 
 
 ---

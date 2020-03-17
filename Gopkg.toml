@@ -129,7 +129,7 @@ required = [
 
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
-  version = "1.15.73"
+  version = "1.29.21"
 
 [[constraint]]
   name = "github.com/gorilla/websocket"

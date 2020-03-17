@@ -1,0 +1,16 @@
+# Replace the following before applying this file:
+#   QUEUE_URL: Replace with the AWS SQS queue.
+#   AWS_IAM_ROLE: Replace with AWS IAM role.
+
+apiVersion: sources.knative.dev/v1alpha1
+kind: AwsSqsSource
+metadata:
+  name: awssqs-sample-source
+spec:
+  annotations:
+    iam.amazonaws.com/role: AWS_IAM_ROLE
+  queueUrl: QUEUE_URL
+  sink:
+    apiVersion: messaging.knative.dev/v1alpha1
+    kind: Channel
+    name: awssqs-test
