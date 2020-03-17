@@ -160,9 +160,10 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:057b1bb73cf9a503259344a26be36e952431324e9b756476849331faff855253"
+  digest = "1:d1b082693c06eede24a00afca10311a8c975e38db95e332ae2e661ee03392312"
   name = "github.com/cloudevents/sdk-go"
   packages = [
+    ".",
     "legacy",
     "legacy/pkg/cloudevents",
     "legacy/pkg/cloudevents/client",
@@ -176,6 +177,23 @@
     "legacy/pkg/cloudevents/transport",
     "legacy/pkg/cloudevents/transport/http",
     "legacy/pkg/cloudevents/types",
+    "pkg/binding",
+    "pkg/binding/buffering",
+    "pkg/binding/format",
+    "pkg/binding/spec",
+    "pkg/binding/transformer",
+    "pkg/client",
+    "pkg/context",
+    "pkg/event",
+    "pkg/event/datacodec",
+    "pkg/event/datacodec/json",
+    "pkg/event/datacodec/text",
+    "pkg/event/datacodec/xml",
+    "pkg/extensions",
+    "pkg/observability",
+    "pkg/protocol",
+    "pkg/protocol/http",
+    "pkg/types",
   ]
   pruneopts = "NUT"
   revision = "f248e160418f3e881491fdc3a60ea83660e30b37"
@@ -915,6 +933,14 @@
   pruneopts = "NUT"
   revision = "9c95632b3e8562be6df690c639a3f5a6f40d3004"
   version = "v12.7.0"
+
+[[projects]]
+  digest = "1:af354641f23332b1a8d5d361d11b5a9171589e412a67d499633706c611acc064"
+  name = "github.com/valyala/bytebufferpool"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:3a4c90791db3bf894a26cf6ffc0f792a31d0f225664c38b0577f02a36bc0cda7"
@@ -1836,7 +1862,7 @@
 
 [[projects]]
   branch = "rt_registry"
-  digest = "1:e1d811b95a4300a3c1bf95d5ca938c9c4c24a2eb6ba7f35596aaeb797f7aa94b"
+  digest = "1:aa93eb0f44d9fada8906afd1d797cc13175d35360c90bc311e8792dadd3e4188"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1943,7 +1969,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "f6c745d7dd67c0faab0afba3945c783faa48d8f8"
+  revision = "ce789da8ca8c7ef1c77583ccd8e618d51fcc17af"
   source = "github.com/nachocano/eventing"
 
 [[projects]]
@@ -2022,7 +2048,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "978782a497633047c2dbbbedd7a5b91bae8a9677"
+  revision = "35afaa9e956027672468a6d69a687771ba4f2b33"
   source = "github.com/nachocano/pkg"
 
 [[projects]]
@@ -2078,7 +2104,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "dbfd00be717e1b9c7eceba00c4fe0292cd6f7901"
+  revision = "244b563932f959a3e18c1e03cffed8798f52d59d"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
