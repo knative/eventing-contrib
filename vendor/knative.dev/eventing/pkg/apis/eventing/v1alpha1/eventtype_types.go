@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -35,7 +36,11 @@ type EventType struct {
 	// Spec defines the desired state of the EventType.
 	Spec EventTypeSpec `json:"spec,omitempty"`
 
-	// No status, just as Secret or ConfigMap.
+	// Status represents the current state of the EventType.
+	// This data may be out of date.
+	// +optional
+	// TODO remove the status https://github.com/knative/eventing/issues/2750
+	Status EventTypeStatus `json:"status,omitempty"`
 }
 
 var (
@@ -56,17 +61,27 @@ type EventTypeSpec struct {
 	// Type represents the CloudEvents type. It is authoritative.
 	Type string `json:"type"`
 	// Source is a URI, it represents the CloudEvents source.
-	Source string `json:"source"`
+	// +optional
+	Source string `json:"source,omitempty"`
 	// Schema is a URI, it represents the CloudEvents schemaurl extension attribute.
 	// It may be a JSON schema, a protobuf schema, etc. It is optional.
 	// +optional
 	Schema string `json:"schema,omitempty"`
 	// TODO remove https://github.com/knative/eventing/issues/2750
 	// Broker refers to the Broker that can provide the EventType.
-	Broker string `json:"broker"`
+	// +optional
+	Broker string `json:"broker,omitempty"`
 	// Description is an optional field used to describe the EventType, in any meaningful way.
 	// +optional
 	Description string `json:"description,omitempty"`
+}
+
+// EventTypeStatus represents the current state of a EventType.
+type EventTypeStatus struct {
+	// inherits duck/v1 Status, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
+	// * Conditions - the latest available observations of a resource's current state.
+	duckv1.Status `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

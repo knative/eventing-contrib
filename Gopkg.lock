@@ -381,7 +381,7 @@
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "ba53fa10e72c7373ef8068e21c9f102f0c20a940"
+  revision = "955bf358a3d8d1ebfa6204338ef3fe364255cd85"
 
 [[projects]]
   digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
@@ -1822,15 +1822,13 @@
 
 [[projects]]
   branch = "rt_registry"
-  digest = "1:ba19042fa5888b16401f544dd7cc62a152f2909926d9ad141f50533e9df39c9d"
+  digest = "1:079e764e40d78128337c5dc47f5cdbfe3f8f959c9642cb0b4ea0fac4990bfc28"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
     "pkg/apis/config",
     "pkg/apis/configs",
     "pkg/apis/configs/v1alpha1",
-    "pkg/apis/discovery",
-    "pkg/apis/discovery/v1alpha1",
     "pkg/apis/duck",
     "pkg/apis/duck/v1alpha1",
     "pkg/apis/duck/v1beta1",
@@ -1856,8 +1854,6 @@
     "pkg/client/clientset/versioned/scheme",
     "pkg/client/clientset/versioned/typed/configs/v1alpha1",
     "pkg/client/clientset/versioned/typed/configs/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/discovery/v1alpha1",
-    "pkg/client/clientset/versioned/typed/discovery/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
     "pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/eventing/v1beta1",
@@ -1882,6 +1878,7 @@
     "pkg/client/listers/flows/v1alpha1",
     "pkg/client/listers/messaging/v1alpha1",
     "pkg/client/listers/sources/v1alpha1",
+    "pkg/client/listers/sources/v1alpha2",
     "pkg/configmap",
     "pkg/kncloudevents",
     "pkg/kncloudevents/testing",
@@ -1911,12 +1908,12 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "5524c42e2f0017abedcfe74f337b0b24d1db4e58"
+  revision = "02f8323684abf876c14bc9b9f0922379c3a6e69b"
   source = "github.com/nachocano/eventing"
 
 [[projects]]
   branch = "rt_registry"
-  digest = "1:3eebd2d48d70759d517c16d829aec1263ef21fd842b12d0912545c94396ec1b3"
+  digest = "1:0b3f8c5f58eea568cc69bfd877fe63d6a691300cc182d68fcfff60fa85dd290c"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1990,12 +1987,12 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "cb3ae72e902e19214a3e9c0f533bb68b400d0c16"
+  revision = "8865f07c7f8220b881aede0d75e1a14144fc5971"
   source = "github.com/nachocano/pkg"
 
 [[projects]]
   branch = "master"
-  digest = "1:074d363c7466476ecfa7c10523400a4e154d99dcf6e58d1ce891b4ebb74e6352"
+  digest = "1:73213c4432c04764cf0f770e61c9dc9191420d57f39b538df940df97ef2082ff"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2035,7 +2032,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "158080a52431bcbf84713f9dae4810e84419c736"
+  revision = "9e6b24410b032d3a43c7d47b78b392353b7a7497"
 
 [[projects]]
   branch = "master"
@@ -2046,7 +2043,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "3f96c9e98f31595fe33eaa2d95f5e2170522acd7"
+  revision = "5bd0584b00fb8bfd4e6fe3aa08a0b8121356a2d0"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"

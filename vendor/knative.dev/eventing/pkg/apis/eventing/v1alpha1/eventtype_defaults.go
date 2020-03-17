@@ -23,6 +23,7 @@ func (et *EventType) SetDefaults(ctx context.Context) {
 }
 
 func (ets *EventTypeSpec) SetDefaults(ctx context.Context) {
+	// TODO remove https://github.com/knative/eventing/issues/2750
 	if ets.Broker == "" {
 		ets.Broker = "default"
 	}
