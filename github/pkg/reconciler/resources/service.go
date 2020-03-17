@@ -53,7 +53,7 @@ func MakeService(args *ServiceArgs) *v1.Service {
 		Name:  "GITHUB_OWNER_REPO",
 		Value: args.Source.Spec.OwnerAndRepository,
 	}}
-	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI)}
+	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI.String())}
 	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", args.Source.Name),
