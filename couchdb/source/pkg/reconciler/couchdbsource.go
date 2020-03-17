@@ -124,7 +124,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 		Image:       r.receiveAdapterImage,
 		Source:      src,
 		Labels:      resources.Labels(src.Name),
-		SinkURI:     sinkURI.URL().String(),
+		SinkURI:     sinkURI.String(),
 	}
 	expected := resources.MakeReceiveAdapter(&adapterArgs)
 

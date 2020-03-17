@@ -20,9 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"knative.dev/pkg/apis"
 	"strings"
 
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/metrics"
 
@@ -202,7 +202,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 		Labels:        resources.GetLabels(src.Name),
 		LoggingConfig: loggingConfig,
 		MetricsConfig: metricsConfig,
-		SinkURI:       sinkURI.URL().String(),
+		SinkURI:       sinkURI.String(),
 	}
 	expected := resources.MakeReceiveAdapter(&raArgs)
 
