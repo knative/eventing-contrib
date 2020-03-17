@@ -1835,8 +1835,8 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4c7a494c3b5c8c78e11a444cbfd8a7e37eae42ebbf9ef149894f7708cd722b54"
+  branch = "rt_registry"
+  digest = "1:e1d811b95a4300a3c1bf95d5ca938c9c4c24a2eb6ba7f35596aaeb797f7aa94b"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1903,7 +1903,6 @@
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/broker",
-    "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
     "pkg/client/injection/reconciler/eventing/v1alpha1/broker",
     "pkg/client/listers/configs/v1alpha1",
@@ -1944,11 +1943,12 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "be3c74c3195a74dcaa3eecff014e7d9fa4668dac"
+  revision = "f6c745d7dd67c0faab0afba3945c783faa48d8f8"
+  source = "github.com/nachocano/eventing"
 
 [[projects]]
-  branch = "master"
-  digest = "1:73d6a1f3f7a178275499102ae27b5177a91aaccc57e3a0328e628cb3ced708f8"
+  branch = "rt_registry"
+  digest = "1:ef06d4c4c23224cc3896e2877ca65c4e0703cbe4d94a68c35b5b9f78a5fcb657"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2022,7 +2022,8 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "be54585f8f04fe39ce6b6d28d78809818b724734"
+  revision = "978782a497633047c2dbbbedd7a5b91bae8a9677"
+  source = "github.com/nachocano/pkg"
 
 [[projects]]
   branch = "master"
@@ -2066,7 +2067,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "54766747d729079cb0c08cd197947af8f76dc42c"
+  revision = "730c928eddb32652e142f98766e540b3dccaf809"
 
 [[projects]]
   branch = "master"
@@ -2077,7 +2078,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "01c075fbeae4b089793fcca6fc855d31e1628cad"
+  revision = "dbfd00be717e1b9c7eceba00c4fe0292cd6f7901"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2257,7 +2258,6 @@
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client",
     "knative.dev/eventing/pkg/client/injection/client/fake",
-    "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/kncloudevents/testing",

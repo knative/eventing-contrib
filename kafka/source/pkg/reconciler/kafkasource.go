@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/metrics"
 
 	"go.uber.org/zap"
@@ -36,16 +38,12 @@ import (
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/resources"
 
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-
 	// NewController stuff
 	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	versioned "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
+	"knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
 	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
 	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -88,12 +86,8 @@ type Reconciler struct {
 	// KubeClientSet allows us to talk to the k8s for core APIs
 	KubeClientSet kubernetes.Interface
 
-	// EventingClientSet allows us to configure Eventing objects
-	EventingClientSet eventingclientset.Interface
-
 	receiveAdapterImage string
 
-	eventTypeLister  eventinglisters.EventTypeLister
 	kafkaLister      listers.KafkaSourceLister
 	deploymentLister appsv1listers.DeploymentLister
 
@@ -122,27 +116,15 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 		// no Namespace defined in dest.Ref, we will use the Namespace of the source
 		// as the Namespace of dest.Ref.
 		if dest.Ref.Namespace == "" {
-			//TODO how does this work with deprecated fields
 			dest.Ref.Namespace = src.GetNamespace()
 		}
-	} else if dest.DeprecatedName != "" && dest.DeprecatedNamespace == "" {
-		// If Ref is nil and the deprecated ref is present, we need to check for
-		// DeprecatedNamespace. This can be removed when DeprecatedNamespace is
-		// removed.
-		dest.DeprecatedNamespace = src.GetNamespace()
 	}
-	sinkURI, err := r.sinkResolver.URIFromDestination(*dest, src)
+	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, src)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
 		return fmt.Errorf("getting sink URI: %v", err)
 	}
-	if src.Spec.Sink.DeprecatedAPIVersion != "" &&
-		src.Spec.Sink.DeprecatedKind != "" &&
-		src.Spec.Sink.DeprecatedName != "" {
-		src.Status.MarkSinkWarnRefDeprecated(sinkURI)
-	} else {
-		src.Status.MarkSink(sinkURI)
-	}
+	src.Status.MarkSink(sinkURI)
 
 	if val, ok := src.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
 		found := false
@@ -164,14 +146,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 		return err
 	}
 	src.Status.MarkDeployed(ra)
-
-	err = r.reconcileEventTypes(ctx, src)
-	if err != nil {
-		src.Status.MarkNoEventTypes("EventTypesreconcileFailed", "")
-		logging.FromContext(ctx).Error("Unable to reconcile the event types", zap.Error(err))
-		return err
-	}
-	src.Status.MarkEventTypes()
+	src.Status.CloudEventAttributes = r.createCloudEventAttributes(src)
 
 	return nil
 }
@@ -206,7 +181,7 @@ func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
 	return nil
 }
 
-func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource, sinkURI string) (*appsv1.Deployment, error) {
+func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
 
 	if err := checkResourcesStatus(src); err != nil {
 		return nil, err
@@ -227,7 +202,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 		Labels:        resources.GetLabels(src.Name),
 		LoggingConfig: loggingConfig,
 		MetricsConfig: metricsConfig,
-		SinkURI:       sinkURI,
+		SinkURI:       sinkURI.String(),
 	}
 	expected := resources.MakeReceiveAdapter(&raArgs)
 
@@ -287,116 +262,8 @@ func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaS
 	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
 }
 
-func (r *Reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.KafkaSource) error {
-	current, err := r.getEventTypes(ctx, src)
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to get existing event types", zap.Error(err))
-		return err
-	}
-
-	expected, err := r.makeEventTypes(src)
-	if err != nil {
-		return err
-	}
-
-	toCreate, toDelete := r.computeDiff(current, expected)
-
-	for _, eventType := range toDelete {
-		if err = r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).Delete(eventType.Name, &metav1.DeleteOptions{}); err != nil {
-			logging.FromContext(ctx).Error("Error deleting eventType", zap.Any("eventType", eventType))
-			return err
-		}
-	}
-
-	for _, eventType := range toCreate {
-		if _, err = r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).Create(&eventType); err != nil {
-			logging.FromContext(ctx).Error("Error creating eventType", zap.Any("eventType", eventType))
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *Reconciler) getEventTypes(ctx context.Context, src *v1alpha1.KafkaSource) ([]eventingv1alpha1.EventType, error) {
-	etl, err := r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).List(metav1.ListOptions{
-		LabelSelector: r.getLabelSelector(src).String(),
-	})
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
-		return nil, err
-	}
-	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	for _, et := range etl.Items {
-		if metav1.IsControlledBy(&et, src) {
-			eventTypes = append(eventTypes, et)
-		}
-	}
-	return eventTypes, nil
-}
-
 func (r *Reconciler) getLabelSelector(src *v1alpha1.KafkaSource) labels.Selector {
 	return labels.SelectorFromSet(resources.GetLabels(src.Name))
-}
-
-func (r *Reconciler) computeDiff(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) ([]eventingv1alpha1.EventType, []eventingv1alpha1.EventType) {
-	toCreate := make([]eventingv1alpha1.EventType, 0)
-	toDelete := make([]eventingv1alpha1.EventType, 0)
-	currentMap := asMap(current, keyFromEventType)
-	expectedMap := asMap(expected, keyFromEventType)
-
-	// Iterate over the slices instead of the maps for predictable UT expectations.
-	for _, e := range expected {
-		if c, ok := currentMap[keyFromEventType(&e)]; !ok {
-			toCreate = append(toCreate, e)
-		} else {
-			if !equality.Semantic.DeepEqual(e.Spec, c.Spec) {
-				toDelete = append(toDelete, c)
-				toCreate = append(toCreate, e)
-			}
-		}
-	}
-	// Need to check whether the current EventTypes are not in the expected map. If so, we have to delete them.
-	// This could happen if the KafkaSource CO changes its broker.
-	for _, c := range current {
-		if _, ok := expectedMap[keyFromEventType(&c)]; !ok {
-			toDelete = append(toDelete, c)
-		}
-	}
-	return toCreate, toDelete
-}
-
-func asMap(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv1alpha1.EventType) string) map[string]eventingv1alpha1.EventType {
-	eventTypesAsMap := make(map[string]eventingv1alpha1.EventType, 0)
-	for _, eventType := range eventTypes {
-		key := keyFunc(&eventType)
-		eventTypesAsMap[key] = eventType
-	}
-	return eventTypesAsMap
-}
-
-func keyFromEventType(eventType *eventingv1alpha1.EventType) string {
-	return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
-}
-
-func (r *Reconciler) makeEventTypes(src *v1alpha1.KafkaSource) ([]eventingv1alpha1.EventType, error) {
-	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	// Only create EventTypes for Broker sinks.
-	// We add this check here in case the KafkaSource was changed from Broker to non-Broker sink.
-	// If so, we need to delete the existing ones, thus we return empty expected.
-	if ref := src.Spec.Sink.GetRef(); ref == nil || ref.Kind != "Broker" {
-		return eventTypes, nil
-	}
-	topics := strings.Split(src.Spec.Topics, ",")
-	for _, topic := range topics {
-		args := &resources.EventTypeArgs{
-			Src:    src,
-			Type:   v1alpha1.KafkaEventType,
-			Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
-		}
-		eventType := resources.MakeEventType(args)
-		eventTypes = append(eventTypes, eventType)
-	}
-	return eventTypes, nil
 }
 
 func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
@@ -424,4 +291,16 @@ func (r *Reconciler) UpdateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
 		ConfigMap: cfg.Data,
 	}
 	logging.FromContext(r.loggingContext).Info("Update from metrics ConfigMap", zap.Any("ConfigMap", cfg))
+}
+
+func (r *Reconciler) createCloudEventAttributes(src *v1alpha1.KafkaSource) []duckv1.CloudEventAttributes {
+	topics := strings.Split(src.Spec.Topics, ",")
+	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(topics))
+	for _, topic := range topics {
+		ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
+			Type:   v1alpha1.KafkaEventType,
+			Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
+		})
+	}
+	return ceAttributes
 }

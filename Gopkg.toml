@@ -53,7 +53,8 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  source = "github.com/nachocano/pkg"
+  branch = "rt_registry"
 
 [[constraint]]
   name = "github.com/go-kivik/kivik"
@@ -108,7 +109,8 @@ required = [
 
 [[constraint]]
   name = "knative.dev/eventing"
-  branch = "master"
+  source = "github.com/nachocano/eventing"
+  branch = "rt_registry"
 
 [[constraint]]
   name="sigs.k8s.io/controller-runtime"

@@ -18,7 +18,6 @@ package reconciler
 
 import (
 	"context"
-
 	"go.uber.org/zap"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -31,11 +30,10 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
-	v1alpha1 "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
-	awssqssource "knative.dev/eventing-contrib/awssqs/pkg/client/injection/reconciler/sources/v1alpha1/awssqssource"
+	"knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/awssqs/pkg/client/injection/reconciler/sources/v1alpha1/awssqssource"
 	"knative.dev/eventing-contrib/awssqs/pkg/reconciler/resources"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgreconciler "knative.dev/pkg/reconciler"
 )
@@ -52,7 +50,6 @@ type Reconciler struct {
 
 	kubeClientSet     kubernetes.Interface
 	eventingClientSet eventingclientset.Interface
-	eventTypeLister   eventinglisters.EventTypeLister
 	sinkResolver      *resolver.URIResolver
 }
 
@@ -96,6 +93,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.AwsSqsSour
 		return err
 	}
 	src.Status.MarkDeployed()
+
+	src.Status.CloudEventAttributes = []duckv1.CloudEventAttributes{{
+		Type:   v1alpha1.AwsSqsSourceEventType,
+		Source: src.Spec.QueueURL,
+	}}
 
 	return newReconciledNormal(src.Namespace, src.Name)
 }

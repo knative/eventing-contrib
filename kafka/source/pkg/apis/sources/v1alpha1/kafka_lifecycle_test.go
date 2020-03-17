@@ -89,7 +89,7 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		condQuery: KafkaConditionReady,
@@ -98,26 +98,12 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark event types",
+		name: "mark sink and deployed",
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkEventTypes()
-			return s
-		}(),
-		condQuery: KafkaConditionReady,
-		want: &apis.Condition{
-			Type:   KafkaConditionReady,
-			Status: corev1.ConditionUnknown,
-		},
-	}, {
-		name: "mark sink and deployed and event types",
-		s: func() *KafkaSourceStatus {
-			s := &KafkaSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("uri://example"))
 			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: KafkaConditionReady,
@@ -126,13 +112,12 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark sink and deployed and event types then no sink",
+		name: "mark sink and deployed then no sink",
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
 		}(),
@@ -144,13 +129,12 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and deployed and event types then deploying",
+		name: "mark sink and deployed then deploying",
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
 			s.MarkDeploying("Testing", "hi%s", "")
 			return s
 		}(),
@@ -162,13 +146,12 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and deployed and event types then not deployed",
+		name: "mark sink and deployed then not deployed",
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
 			s.MarkNotDeployed("Testing", "hi%s", "")
 			return s
 		}(),
@@ -180,31 +163,14 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink and deployed and event types then no event types",
+		name: "mark sink and not deployed then deploying then deployed",
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
-			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
-			s.MarkNoEventTypes("Testing", "hi%s", "")
-			return s
-		}(),
-		condQuery: KafkaConditionReady,
-		want: &apis.Condition{
-			Type:   KafkaConditionReady,
-			Status: corev1.ConditionTrue,
-		},
-	}, {
-		name: "mark sink and not deployed then deploying then deployed then event types",
-		s: func() *KafkaSourceStatus {
-			s := &KafkaSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkNotDeployed("MarkNotDeployed", "%s", "")
 			s.MarkDeploying("MarkDeploying", "%s", "")
 			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: KafkaConditionReady,
@@ -213,13 +179,12 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark sink empty and deployed and event types",
+		name: "mark sink nil and deployed",
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(nil)
 			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: KafkaConditionReady,
@@ -230,14 +195,13 @@ func TestKafkaSourceStatusGetCondition(t *testing.T) {
 			Message: "Sink has resolved to empty.",
 		},
 	}, {
-		name: "mark sink empty and deployed and event types then sink",
+		name: "mark sink empty and deployed then sink",
 		s: func() *KafkaSourceStatus {
 			s := &KafkaSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(nil)
 			s.MarkDeployed(availableDeployment)
-			s.MarkEventTypes()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		condQuery: KafkaConditionReady,

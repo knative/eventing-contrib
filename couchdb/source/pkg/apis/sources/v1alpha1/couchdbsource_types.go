@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis/duck"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -47,10 +47,15 @@ var _ runtime.Object = (*CouchDbSource)(nil)
 var _ kmeta.OwnerRefable = (*CouchDbSource)(nil)
 
 // Check that CouchDbSource implements the Conditions duck type.
-var _ = duck.VerifyType(&CouchDbSource{}, &duckv1beta1.Conditions{})
+var _ = duck.VerifyType(&CouchDbSource{}, &duckv1.Conditions{})
 
 // FeedType is the type of Feed
 type FeedType string
+
+var CouchDbSourceEventTypes = []string{
+	CouchDbSourceUpdateEventType,
+	CouchDbSourceDeleteEventType,
+}
 
 const (
 	// CouchDbSourceUpdateEventType is the CouchDbSource CloudEvent type for update.
@@ -90,7 +95,7 @@ type CouchDbSourceSpec struct {
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
-	Sink *duckv1beta1.Destination `json:"sink,omitempty"`
+	Sink *duckv1.Destination `json:"sink,omitempty"`
 }
 
 // GetGroupVersionKind returns the GroupVersionKind.
@@ -100,15 +105,14 @@ func (s *CouchDbSource) GetGroupVersionKind() schema.GroupVersionKind {
 
 // CouchDbSourceStatus defines the observed state of CouchDbSource
 type CouchDbSourceStatus struct {
-	// inherits duck/v1alpha1 Status, which currently provides:
-	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
-	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
-
-	// SinkURI is the current active sink URI that has been configured
-	// for the CouchDbSource.
-	// +optional
-	SinkURI string `json:"sinkUri,omitempty"`
+	// inherits duck/v1 SourceStatus, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last
+	//   processed by the controller.
+	// * Conditions - the latest available observations of a resource's current
+	//   state.
+	// * SinkURI - the current active sink URI that has been configured for the
+	//   Source.
+	duckv1.SourceStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
