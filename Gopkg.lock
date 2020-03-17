@@ -381,7 +381,7 @@
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "ba53fa10e72c7373ef8068e21c9f102f0c20a940"
+  revision = "955bf358a3d8d1ebfa6204338ef3fe364255cd85"
 
 [[projects]]
   digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
@@ -1822,7 +1822,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b5e857be2d4356cdb208892dd1976fe9d1b44a24e8b9f996fc7b41c25ca888df"
+  digest = "1:4fe38fe7a56ff89cea94137e95172ba16e0fb1145be0c455170d441a21edb5e4"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1888,8 +1888,10 @@
     "pkg/client/informers/externalversions/sources/v1alpha2",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
+    "pkg/client/injection/informers/eventing/v1alpha1/broker",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
+    "pkg/client/injection/reconciler/eventing/v1alpha1/broker",
     "pkg/client/listers/configs/v1alpha1",
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/eventing/v1beta1",
@@ -1928,11 +1930,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "eecdd36d74a6317de6d65af0196730bc8cf44907"
+  revision = "d5d78fb0597064ab0976e3a0dd22ffa169d057a6"
 
 [[projects]]
   branch = "master"
-  digest = "1:087752cbad644085941d5dbe2a04ef0c285fed9205006a5a3d3816256ac0fecd"
+  digest = "1:73d6a1f3f7a178275499102ae27b5177a91aaccc57e3a0328e628cb3ced708f8"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2006,11 +2008,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "1893541a0fac5885032c8ec170fd81234de13f4a"
+  revision = "be54585f8f04fe39ce6b6d28d78809818b724734"
 
 [[projects]]
   branch = "master"
-  digest = "1:074d363c7466476ecfa7c10523400a4e154d99dcf6e58d1ce891b4ebb74e6352"
+  digest = "1:73213c4432c04764cf0f770e61c9dc9191420d57f39b538df940df97ef2082ff"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2050,18 +2052,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "34717bfa04b014f07cf52e4338afc99c60a85dda"
+  revision = "9e6b24410b032d3a43c7d47b78b392353b7a7497"
 
 [[projects]]
   branch = "master"
-  digest = "1:e5bd21467544cbd14cb25553c5c78eb2e0e93baf9288a3c2ebaf1cf1fdb0c95f"
+  digest = "1:115d2f6e72ee06327259bdba21d26f28c359c62464afd73538fbab66ae2b7698"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "3f96c9e98f31595fe33eaa2d95f5e2170522acd7"
+  revision = "01c075fbeae4b089793fcca6fc855d31e1628cad"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
