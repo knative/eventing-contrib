@@ -42,11 +42,6 @@ func NewEventType(name, namespace string, o ...EventTypeOption) *v1alpha1.EventT
 	return et
 }
 
-// WithInitEventTypeConditions initializes the EventType's conditions.
-func WithInitEventTypeConditions(et *v1alpha1.EventType) {
-	et.Status.InitializeConditions()
-}
-
 func WithEventTypeSource(source string) EventTypeOption {
 	return func(et *v1alpha1.EventType) {
 		et.Spec.Source = source
@@ -88,31 +83,4 @@ func WithEventTypeOwnerReference(ownerRef metav1.OwnerReference) EventTypeOption
 func WithEventTypeDeletionTimestamp(et *v1alpha1.EventType) {
 	t := metav1.NewTime(time.Unix(1e9, 0))
 	et.ObjectMeta.SetDeletionTimestamp(&t)
-}
-
-// WithEventTypeBrokerNotFound calls .Status.MarkFilterFailed on the EventType.
-func WithEventTypeBrokerDoesNotExist(et *v1alpha1.EventType) {
-	et.Status.MarkBrokerDoesNotExist()
-}
-
-// WithEventTypeBrokerExists calls .Status.MarkBrokerExists on the EventType.
-func WithEventTypeBrokerExists(et *v1alpha1.EventType) {
-	et.Status.MarkBrokerExists()
-}
-
-func WithEventTypeBrokerFailed(reason, message string) EventTypeOption {
-	return func(et *v1alpha1.EventType) {
-		et.Status.MarkBrokerFailed(reason, message)
-	}
-}
-
-func WithEventTypeBrokerUnknown(reason, message string) EventTypeOption {
-	return func(et *v1alpha1.EventType) {
-		et.Status.MarkBrokerUnknown(reason, message)
-	}
-}
-
-// WithEventTypeBrokerReady calls .Status.MarkBrokerReady on the EventType.
-func WithEventTypeBrokerReady(et *v1alpha1.EventType) {
-	et.Status.MarkBrokerReady()
 }

@@ -36,6 +36,7 @@ import (
 	"knative.dev/pkg/logging/logkey"
 
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
+	apiextensionsclient "knative.dev/pkg/client/injection/apiextensions/client"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 )
@@ -113,13 +114,14 @@ func NewBase(ctx context.Context, controllerAgentName string, cmw configmap.Watc
 	}
 
 	base := &Base{
-		KubeClientSet:     kubeClient,
-		EventingClientSet: eventingclient.Get(ctx),
-		DynamicClientSet:  dynamicclient.Get(ctx),
-		ConfigMapWatcher:  cmw,
-		Recorder:          recorder,
-		StatsReporter:     statsReporter,
-		Logger:            logger,
+		KubeClientSet:          kubeClient,
+		EventingClientSet:      eventingclient.Get(ctx),
+		DynamicClientSet:       dynamicclient.Get(ctx),
+		ApiExtensionsClientSet: apiextensionsclient.Get(ctx),
+		ConfigMapWatcher:       cmw,
+		Recorder:               recorder,
+		StatsReporter:          statsReporter,
+		Logger:                 logger,
 	}
 
 	return base

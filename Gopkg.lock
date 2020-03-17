@@ -1835,8 +1835,8 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4c7a494c3b5c8c78e11a444cbfd8a7e37eae42ebbf9ef149894f7708cd722b54"
+  branch = "rt_registry"
+  digest = "1:ccfcbfdbea5d9dde9f496de91bf8dfb4eba1a7f63a1d2157a195486806321a44"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1903,7 +1903,6 @@
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/broker",
-    "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
     "pkg/client/injection/reconciler/eventing/v1alpha1/broker",
     "pkg/client/listers/configs/v1alpha1",
@@ -1944,11 +1943,12 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "be3c74c3195a74dcaa3eecff014e7d9fa4668dac"
+  revision = "3b896af637c610aeefd55208f2972dc1fd1d7152"
+  source = "github.com/nachocano/eventing"
 
 [[projects]]
-  branch = "master"
-  digest = "1:73d6a1f3f7a178275499102ae27b5177a91aaccc57e3a0328e628cb3ced708f8"
+  branch = "rt_registry"
+  digest = "1:23d65bbfd1512fcf0f8c0358ea17b126cb4d292deb635139c31ede7f3a4c54a3"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1958,6 +1958,7 @@
     "apis/duck/v1beta1",
     "apis/testing/fuzzer",
     "changeset",
+    "client/injection/apiextensions/client",
     "client/injection/ducks/duck/v1/addressable",
     "client/injection/kube/client",
     "client/injection/kube/client/fake",
@@ -2022,7 +2023,8 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "be54585f8f04fe39ce6b6d28d78809818b724734"
+  revision = "4f688d65b9f697995c09a92fdd9f9041670da63a"
+  source = "github.com/nachocano/pkg"
 
 [[projects]]
   branch = "master"
@@ -2066,7 +2068,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "54766747d729079cb0c08cd197947af8f76dc42c"
+  revision = "0aff6164c7ecff80e9f9bcbd1334fbfba38c3404"
 
 [[projects]]
   branch = "master"
@@ -2077,7 +2079,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "01c075fbeae4b089793fcca6fc855d31e1628cad"
+  revision = "885ae9f1bcfcb8a876fe9a3e1dca822a1efbfe1a"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2257,7 +2259,6 @@
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client",
     "knative.dev/eventing/pkg/client/injection/client/fake",
-    "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/kncloudevents/testing",
