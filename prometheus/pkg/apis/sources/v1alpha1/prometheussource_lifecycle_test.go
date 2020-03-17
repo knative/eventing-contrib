@@ -95,7 +95,7 @@ func TestPrometheusGetCondition(t *testing.T) {
 		cs: func() *PrometheusSourceStatus {
 			s := &PrometheusSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.PropagateDeploymentAvailability(availableDeployment)
 			return s
 		}(),
@@ -201,7 +201,7 @@ func TestPrometheusInitializeConditions(t *testing.T) {
 		name: "marksink",
 		cs: func() *PrometheusSourceStatus {
 			status := PrometheusSourceStatus{}
-			status.MarkSink("http://sink")
+			status.MarkSink(apis.HTTP("sink"))
 			return &status
 		}(),
 		want: &PrometheusSourceStatus{
