@@ -85,14 +85,16 @@ type SourceStatus struct {
 	// CloudEventAttributes are the specific attributes that the Source uses
 	// as part of its CloudEvents.
 	// +optional
-	CloudEventAttributes []CloudEventAttribute `json:"ceAttributes,omitempty"`
+	CloudEventAttributes []CloudEventAttributes `json:"ceAttributes,omitempty"`
 }
 
 // CloudEventAttributes specifies the attributes that a Source
 // uses as part of its CloudEvents.
-type CloudEventAttribute struct {
+type CloudEventAttributes struct {
+
 	// Type refers to the CloudEvent type attribute.
 	Type string `json:"type,omitempty"`
+
 	// Source is the CloudEvents source attribute.
 	Source string `json:"source,omitempty"`
 }
@@ -151,7 +153,7 @@ func (s *Source) Populate() {
 		Host:     "tableflip.dev",
 		RawQuery: "flip=mattmoor",
 	}
-	s.Status.CloudEventAttributes = []CloudEventAttribute{{
+	s.Status.CloudEventAttributes = []CloudEventAttributes{{
 		Type:   "dev.knative.foo",
 		Source: "http://knative.dev/knative/eventing",
 	}}
