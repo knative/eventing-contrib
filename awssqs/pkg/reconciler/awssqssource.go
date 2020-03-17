@@ -94,9 +94,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.AwsSqsSour
 	}
 	src.Status.MarkDeployed()
 
-	src.Status.CloudEventAttributes = &duckv1.CloudEventAttributes{
+	src.Status.CloudEventAttributes = []duckv1.CloudEventAttributes{{
+		Type:   v1alpha1.AwsSqsSourceEventType,
 		Source: src.Spec.QueueURL,
-	}
+	}}
 
 	return newReconciledNormal(src.Namespace, src.Name)
 }

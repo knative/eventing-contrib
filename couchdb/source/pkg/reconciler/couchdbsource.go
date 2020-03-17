@@ -108,9 +108,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.CouchDb
 		return err
 	}
 
-	source.Status.CloudEventAttributes = &duckv1.CloudEventAttributes{
-		Source: ceSource,
-	}
+	source.Status.CloudEventAttributes = r.createCloudEventAttributes(ceSource)
 	return nil
 }
 
@@ -209,4 +207,15 @@ func (r *Reconciler) makeEventSource(src *v1alpha1.CouchDbSource) (string, error
 	}
 
 	return fmt.Sprintf("%s/%s", url.Hostname(), src.Spec.Database), nil
+}
+
+func (r *Reconciler) createCloudEventAttributes(ceSource string) []duckv1.CloudEventAttributes {
+	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(v1alpha1.CouchDbSourceEventTypes))
+	for _, couchDbSourceEventType := range v1alpha1.CouchDbSourceEventTypes {
+		ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
+			Type:   couchDbSourceEventType,
+			Source: ceSource,
+		})
+	}
+	return ceAttributes
 }

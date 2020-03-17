@@ -52,6 +52,11 @@ var _ = duck.VerifyType(&CouchDbSource{}, &duckv1.Conditions{})
 // FeedType is the type of Feed
 type FeedType string
 
+var CouchDbSourceEventTypes = []string{
+	CouchDbSourceUpdateEventType,
+	CouchDbSourceDeleteEventType,
+}
+
 const (
 	// CouchDbSourceUpdateEventType is the CouchDbSource CloudEvent type for update.
 	CouchDbSourceUpdateEventType = "org.apache.couchdb.document.update"
