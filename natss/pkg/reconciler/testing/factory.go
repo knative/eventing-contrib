@@ -20,7 +20,6 @@ import (
 	"context"
 	"testing"
 
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	logtesting "knative.dev/pkg/logging/testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,7 +44,7 @@ const (
 )
 
 // Ctor functions create a k8s controller with given params.
-type Ctor func(context.Context, *Listers, reconciler.Options) controller.Reconciler
+type Ctor func(context.Context, *Listers) controller.Reconciler
 
 // makeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
 func makeFactory(ctor Ctor) Factory {
@@ -85,25 +84,13 @@ func makeFactory(ctor Ctor) Factory {
 		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
 
-		c := ctor(ctx, &ls, reconciler.Options{
-			KubeClientSet:    kubeClient,
-			DynamicClientSet: dynamicClient,
-			NatssClientSet:   client,
-			Recorder:         eventRecorder,
-			Logger:           logtesting.TestLogger(t),
-		})
+		ctx = controller.WithEventRecorder(ctx, eventRecorder)
+
+		c := ctor(ctx, &ls)
 		return c, actionRecorderList, eventList
 	}
 }
 
 func MakeFactoryWithContext(ctor func(context.Context, *Listers) controller.Reconciler) Factory {
-	return makeFactory(func(ctx context.Context, listers *Listers, options reconciler.Options) controller.Reconciler {
-		return ctor(ctx, listers)
-	})
-}
-
-func MakeFactoryWithOptions(ctor func(*Listers, reconciler.Options) controller.Reconciler) Factory {
-	return makeFactory(func(ctx context.Context, listers *Listers, options reconciler.Options) controller.Reconciler {
-		return ctor(listers, options)
-	})
+	return makeFactory(ctor)
 }

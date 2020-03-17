@@ -147,8 +147,10 @@ func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) e
 		currentNatssConn := s.natssConn
 		s.natssConnMux.Unlock()
 		if currentNatssConn == nil {
+			logger.Errorf("No Connection to NATSS")
 			return fmt.Errorf("No Connection to NATSS")
 		}
+		logger.Infof("Publishing message to subject %s", ch)
 		if err := stanutil.Publish(currentNatssConn, ch, &message, logger); err != nil {
 			logger.Errorf("Error during publish: %v", err)
 			if err.Error() == stan.ErrConnectionClosed.Error() {
