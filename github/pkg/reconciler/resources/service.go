@@ -48,7 +48,7 @@ func MakeService(args *ServiceArgs) *v1.Service {
 		},
 	}, {
 		Name:  "SINK",
-		Value: sinkURI,
+		Value: sinkURI.String(),
 	}, {
 		Name:  "GITHUB_OWNER_REPO",
 		Value: args.Source.Spec.OwnerAndRepository,
