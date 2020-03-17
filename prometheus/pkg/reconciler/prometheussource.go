@@ -108,9 +108,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.Prometh
 	// Update source status// Update source status
 	source.Status.PropagateDeploymentAvailability(ra)
 
-	source.Status.CloudEventAttributes = &duckv1.CloudEventAttributes{
+	source.Status.CloudEventAttributes = []duckv1.CloudEventAttributes{{
+		Type:   v1alpha1.PromQLPrometheusSourceEventType,
 		Source: r.makeEventSource(source),
-	}
+	}}
 
 	return nil
 }
