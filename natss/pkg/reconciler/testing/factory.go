@@ -30,7 +30,6 @@ import (
 
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	fakelegacyclient "knative.dev/eventing/pkg/legacyclient/injection/client/fake"
 
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
@@ -56,7 +55,6 @@ func makeFactory(ctor Ctor) Factory {
 		ctx := logging.WithLogger(context.Background(), logtesting.TestLogger(t))
 		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
 		ctx, eventingClient := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
-		ctx, legacy := fakelegacyclient.With(ctx, ls.GetLegacyObjects()...)
 		ctx, client := fakeclientset.With(ctx, ls.GetMessagingObjects()...)
 
 		dynamicScheme := runtime.NewScheme()
@@ -72,7 +70,6 @@ func makeFactory(ctor Ctor) Factory {
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
 			eventingClient.PrependReactor("*", "*", reactor)
-			legacy.PrependReactor("*", "*", reactor)
 			client.PrependReactor("*", "*", reactor)
 			dynamicClient.PrependReactor("*", "*", reactor)
 		}

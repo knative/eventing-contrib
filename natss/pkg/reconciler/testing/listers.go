@@ -29,7 +29,6 @@ import (
 	messaginglisters "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	fakeeventsclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
-	fakelegacyclientset "knative.dev/eventing/pkg/legacyclient/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 )
 
@@ -37,7 +36,6 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakeeventsclientset.AddToScheme,
 	fakemessagingclientset.AddToScheme,
-	fakelegacyclientset.AddToScheme,
 	fakeeventingclientset.AddToScheme,
 }
 
@@ -71,10 +69,6 @@ func (l *Listers) GetKubeObjects() []runtime.Object {
 
 func (l *Listers) GetEventingObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
-}
-
-func (l *Listers) GetLegacyObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakelegacyclientset.AddToScheme)
 }
 
 func (l *Listers) GetEventsObjects() []runtime.Object {

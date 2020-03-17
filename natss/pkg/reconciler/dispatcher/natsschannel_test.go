@@ -36,7 +36,6 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	fakelegacyclient "knative.dev/eventing/pkg/legacyclient/injection/client/fake"
 	"knative.dev/eventing/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/natss/pkg/client/injection/client"
@@ -143,7 +142,6 @@ func TestNewController(t *testing.T) {
 	ctx := logging.WithLogger(context.Background(), logger.Sugar())
 	ctx, _ = fakekubeclient.With(ctx)
 	ctx, _ = fakeeventingclient.With(ctx)
-	ctx, _ = fakelegacyclient.With(ctx)
 	ctx, _ = fakedynamicclient.With(ctx, runtime.NewScheme())
 	ctx, _ = fakeclientset.With(ctx)
 	cfg := &rest.Config{}
