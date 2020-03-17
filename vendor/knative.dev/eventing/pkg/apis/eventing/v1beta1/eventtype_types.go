@@ -39,7 +39,7 @@ type EventType struct {
 	// Status represents the current state of the EventType.
 	// This data may be out of date.
 	// +optional
-	// TODO remove https://github.com/knative/eventing/issues/2750
+	// TODO might be removed https://github.com/knative/eventing/issues/2750
 	Status EventTypeStatus `json:"status,omitempty"`
 }
 
