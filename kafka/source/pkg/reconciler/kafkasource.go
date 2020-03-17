@@ -146,12 +146,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 		return err
 	}
 	src.Status.MarkDeployed(ra)
+	src.Status.CloudEventAttributes = r.createCloudEventAttributes(src)
 
-	topics := strings.Split(src.Spec.Topics, ",")
-	src.Status.CloudEventAttributes = &duckv1.CloudEventAttributes{
-		// TODO CloudEventAttributes API
-		Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topics[0]),
-	}
 	return nil
 }
 
@@ -295,4 +291,16 @@ func (r *Reconciler) UpdateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
 		ConfigMap: cfg.Data,
 	}
 	logging.FromContext(r.loggingContext).Info("Update from metrics ConfigMap", zap.Any("ConfigMap", cfg))
+}
+
+func (r *Reconciler) createCloudEventAttributes(src *v1alpha1.KafkaSource) []duckv1.CloudEventAttributes {
+	topics := strings.Split(src.Spec.Topics, ",")
+	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(topics))
+	for _, topic := range topics {
+		ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
+			Type:   v1alpha1.KafkaEventType,
+			Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
+		})
+	}
+	return ceAttributes
 }
