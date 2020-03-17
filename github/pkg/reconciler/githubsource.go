@@ -156,16 +156,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 			}
 		}
 	}
-
-	types := make([]string, 0, len(source.Spec.EventTypes))
-	for _, et := range source.Spec.EventTypes {
-		types = append(types, sourcesv1alpha1.GitHubEventType(et))
-	}
-	source.Status.CloudEventAttributes = &duckv1.CloudEventAttributes{
-		Types:  types,
-		Source: sourcesv1alpha1.GitHubEventSource(source.Spec.OwnerAndRepository),
-	}
-
+	source.Status.CloudEventAttributes = r.createCloudEventAttributes(source)
 	source.Status.ObservedGeneration = source.Generation
 	return nil
 }
@@ -342,4 +333,15 @@ func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 		}
 	}
 	return nil, apierrors.NewNotFound(v1.Resource("services"), "")
+}
+
+func (r *Reconciler) createCloudEventAttributes(src *sourcesv1alpha1.GitHubSource) []duckv1.CloudEventAttributes {
+	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(src.Spec.EventTypes))
+	for _, ghType := range src.Spec.EventTypes {
+		ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
+			Type:   sourcesv1alpha1.GitHubEventType(ghType),
+			Source: sourcesv1alpha1.GitHubEventSource(src.Spec.OwnerAndRepository),
+		})
+	}
+	return ceAttributes
 }
