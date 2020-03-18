@@ -82,7 +82,10 @@ type Adapter struct {
 	keyTypeMapper     func([]byte) interface{}
 }
 
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMessageSender *kncloudevents.HttpMessageSender, reporter source.StatsReporter) adapter.Adapter {
+var _ adapter.MessageAdapter = (*Adapter)(nil)
+var _ adapter.MessageAdapterConstructor = NewAdapter
+
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMessageSender *kncloudevents.HttpMessageSender, reporter source.StatsReporter) adapter.MessageAdapter {
 	logger := logging.FromContext(ctx).Desugar()
 	config := processed.(*adapterConfig)
 
