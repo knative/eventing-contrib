@@ -118,7 +118,10 @@ func NewDispatcher(args Args) (NatssDispatcher, error) {
 	}
 	d.ceClient = ceClient
 	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
-	receiver, err := eventingchannels.NewEventReceiver(createReceiverFunc(d, args.Logger.Sugar()), args.Logger)
+	receiver, err := eventingchannels.NewEventReceiver(
+		createReceiverFunc(d, args.Logger.Sugar()),
+		args.Logger,
+		eventingchannels.ResolveChannelFromHostHeader(d.getChannelReferenceFromHost))
 	if err != nil {
 		return nil, err
 	}
