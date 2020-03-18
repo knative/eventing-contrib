@@ -86,17 +86,11 @@ rules:
   - list
   - watch
 # Secrets read
+# Services read
 - apiGroups:
   - ""
   resources:
   - secrets
-  verbs:
-  - get
-  - list
-# Services
-- apiGroups:
-  - ""
-  resources:
   - services
   verbs:
   - get
