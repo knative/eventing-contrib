@@ -22,7 +22,7 @@ import (
 	"log"
 
 	cloudevents "github.com/cloudevents/sdk-go/legacy"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 /*
