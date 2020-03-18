@@ -23,10 +23,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"knative.dev/pkg/apis"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
@@ -434,10 +434,13 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}
 
-	receiver, err := eventingchannels.NewEventReceiver(func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
-		return nil
-	}, zap.NewNop(),
-		eventingchannels.ResolveChannelFromHostHeader(eventingchannels.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
+	receiver, err := eventingchannels.NewMessageReceiver(
+		context.TODO(),
+		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, _ http.Header) error {
+			return nil
+		},
+		zap.NewNop(),
+		eventingchannels.ResolveChannelFromHostHeaderBindings(d.getChannelReferenceFromHost))
 	if err != nil {
 		t.Fatalf("Error creating new message receiver. Error:%s", err)
 	}
@@ -449,14 +452,13 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 }
 
 func TestNewDispatcher(t *testing.T) {
-
 	args := &KafkaDispatcherArgs{
 		ClientID:  "kafka-ch-dispatcher",
 		Brokers:   []string{"127.0.0.1:9092"},
 		TopicFunc: utils.TopicName,
 		Logger:    nil,
 	}
-	_, err := NewDispatcher(args)
+	_, err := NewDispatcher(context.TODO(), args)
 	if err == nil {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}

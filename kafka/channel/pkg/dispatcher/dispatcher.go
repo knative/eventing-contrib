@@ -36,8 +36,6 @@ import (
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/channel/swappable"
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/tracing"
 )
 
 type KafkaDispatcher struct {
@@ -142,7 +140,7 @@ func (c consumerMessageHandler) Handle(ctx context.Context, message *sarama.Cons
 	if m.ReadEncoding() == binding.EncodingUnknown {
 		return false, errors.New("received a message with unknown encoding")
 	}
-	err := c.dispatcher.DispatchMessageWithDelivery(ctx, m, c.sub.SubscriberURI, c.sub.ReplyURI, &c.sub.Delivery)
+	err := c.dispatcher.DispatchMessageWithDelivery(ctx, m, nil, c.sub.SubscriberURI, c.sub.ReplyURI, &c.sub.Delivery)
 	// NOTE: only return `true` here if DispatchEventWithDelivery actually delivered the message.
 	return err == nil, err
 }
