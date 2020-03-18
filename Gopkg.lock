@@ -160,9 +160,10 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:057b1bb73cf9a503259344a26be36e952431324e9b756476849331faff855253"
+  digest = "1:d1b082693c06eede24a00afca10311a8c975e38db95e332ae2e661ee03392312"
   name = "github.com/cloudevents/sdk-go"
   packages = [
+    ".",
     "legacy",
     "legacy/pkg/cloudevents",
     "legacy/pkg/cloudevents/client",
@@ -176,6 +177,23 @@
     "legacy/pkg/cloudevents/transport",
     "legacy/pkg/cloudevents/transport/http",
     "legacy/pkg/cloudevents/types",
+    "pkg/binding",
+    "pkg/binding/buffering",
+    "pkg/binding/format",
+    "pkg/binding/spec",
+    "pkg/binding/transformer",
+    "pkg/client",
+    "pkg/context",
+    "pkg/event",
+    "pkg/event/datacodec",
+    "pkg/event/datacodec/json",
+    "pkg/event/datacodec/text",
+    "pkg/event/datacodec/xml",
+    "pkg/extensions",
+    "pkg/observability",
+    "pkg/protocol",
+    "pkg/protocol/http",
+    "pkg/types",
   ]
   pruneopts = "NUT"
   revision = "f248e160418f3e881491fdc3a60ea83660e30b37"
@@ -923,6 +941,14 @@
   pruneopts = "NUT"
   revision = "9c95632b3e8562be6df690c639a3f5a6f40d3004"
   version = "v12.7.0"
+
+[[projects]]
+  digest = "1:af354641f23332b1a8d5d361d11b5a9171589e412a67d499633706c611acc064"
+  name = "github.com/valyala/bytebufferpool"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:02e30e07738464b40c5c6fa23a84ee639a36203a09d87f23baa5dfe814b22840"
@@ -1855,7 +1881,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4c7a494c3b5c8c78e11a444cbfd8a7e37eae42ebbf9ef149894f7708cd722b54"
+  digest = "1:9d41573d9779c7b55b02d4af6d7274f1b19400e4b17e12976ad358b1a34b722e"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1963,11 +1989,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "be3c74c3195a74dcaa3eecff014e7d9fa4668dac"
+  revision = "230deb8e77bd0157dfd6b796064962c2a90d52c2"
 
 [[projects]]
   branch = "master"
-  digest = "1:73d6a1f3f7a178275499102ae27b5177a91aaccc57e3a0328e628cb3ced708f8"
+  digest = "1:7fce3b5a8d117763efbf4b6b9862940a5472d276022b0b324b39b70ef4fa77bd"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2041,11 +2067,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "be54585f8f04fe39ce6b6d28d78809818b724734"
+  revision = "42d1b005c814b8f9ea786ff89c90c91448c1417a"
 
 [[projects]]
   branch = "master"
-  digest = "1:73213c4432c04764cf0f770e61c9dc9191420d57f39b538df940df97ef2082ff"
+  digest = "1:8dc739cc25ba035aff7ddc063361c396f96a236f887d5fc70353502cb5447cc1"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2085,7 +2111,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "54766747d729079cb0c08cd197947af8f76dc42c"
+  revision = "0264fb04288d994cbfd847feea9491d86d739f6d"
 
 [[projects]]
   branch = "master"
@@ -2096,7 +2122,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "01c075fbeae4b089793fcca6fc855d31e1628cad"
+  revision = "244b563932f959a3e18c1e03cffed8798f52d59d"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
