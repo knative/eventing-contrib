@@ -29,7 +29,8 @@ import (
 )
 
 func TestPostMessage_ServeHTTP(t *testing.T) {
-	timestamp := "1542107977907705474"
+	//Millisecond unix timestamp
+	timestamp := "1542107977907"
 	testCases := map[string]struct {
 		sink    func(http.ResponseWriter, *http.Request)
 		reqBody string
@@ -37,11 +38,11 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 	}{
 		"happy": {
 			sink:    sinkAccepted,
-			reqBody: `{"Attributes":{"SentTimestamp":"1542107977907705474"},"Body":"The body","MD5OfBody":null,"MD5OfMessageAttributes":null,"MessageAttributes":null,"MessageId":"ABC01","ReceiptHandle":null}`,
+			reqBody: `{"Attributes":{"SentTimestamp":"1542107977907"},"Body":"The body","MD5OfBody":null,"MD5OfMessageAttributes":null,"MessageAttributes":null,"MessageId":"ABC01","ReceiptHandle":null}`,
 		},
 		"rejected": {
 			sink:    sinkRejected,
-			reqBody: `{"Attributes":{"SentTimestamp":"1542107977907705474"},"Body":"The body","MD5OfBody":null,"MD5OfMessageAttributes":null,"MessageAttributes":null,"MessageId":"ABC01","ReceiptHandle":null}`,
+			reqBody: `{"Attributes":{"SentTimestamp":"1542107977907"},"Body":"The body","MD5OfBody":null,"MD5OfMessageAttributes":null,"MessageAttributes":null,"MessageId":"ABC01","ReceiptHandle":null}`,
 			error:   true,
 		},
 	}
@@ -105,7 +106,8 @@ func TestReceiveMessage_ServeHTTP(t *testing.T) {
 
 	id := "ABC01"
 	body := "the body"
-	timestamp := "1542107977907705474"
+	//Millisecond unix timestamp
+	timestamp := "1542107977907"
 	m := &sqs.Message{
 		MessageId:  &id,
 		Body:       &body,

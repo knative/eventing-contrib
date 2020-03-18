@@ -48,7 +48,12 @@ type AwsSqsSourceSpec struct {
 	QueueURL string `json:"queueUrl"`
 
 	// AwsCredsSecret is the credential to use to poll the AWS SQS
-	AwsCredsSecret corev1.SecretKeySelector `json:"awsCredsSecret,omitempty"`
+	// +optional
+	AwsCredsSecret *corev1.SecretKeySelector `json:"awsCredsSecret,omitempty"`
+
+	// Annotations to add to the pod, mostly used for Kube2IAM role
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to
 	// use as the sink.  This is where events will be received.
