@@ -135,7 +135,7 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 
 func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) eventingchannels.ReceiverFunc {
 	return func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
-		logger.Infof("Received message from %q channel", channel.String())
+		logger.Infof("Received event from %q channel", channel.String())
 		// publish to Natss
 		ch := getSubject(channel)
 		message, err := event.MarshalJSON()
@@ -150,7 +150,7 @@ func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) e
 			logger.Errorf("No Connection to NATSS")
 			return fmt.Errorf("No Connection to NATSS")
 		}
-		logger.Infof("Publishing message to subject %s", ch)
+		logger.Infof("Publishing event to subject %s", ch)
 		if err := stanutil.Publish(currentNatssConn, ch, &message, logger); err != nil {
 			logger.Errorf("Error during publish: %v", err)
 			if err.Error() == stan.ErrConnectionClosed.Error() {
@@ -290,6 +290,7 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 	mcb := func(msg *stan.Msg) {
 		event := cloudevents.Event{}
 		err := event.UnmarshalJSON(msg.Data)
+		s.logger.Info("Received event", zap.String("channel", channel.String()))
 		if err != nil {
 			s.logger.Error(err.Error(), zap.Error(err))
 			return
@@ -298,7 +299,7 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 			s.logger.Error(err.Error(), zap.Error(err))
 			return
 		}
-		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
+		s.logger.Sugar().Infof("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
 		if err := s.dispatcher.DispatchEvent(context.TODO(), event, subscription.SubscriberURI, subscription.ReplyURI); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
