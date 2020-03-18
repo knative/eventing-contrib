@@ -29,14 +29,22 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/protocol/http"
 	"github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
+	"go.uber.org/zap"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
 var transformerFactories = binding.TransformerFactories{}
 
-func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.ConsumerMessage, req *nethttp.Request) error {
+func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
 	msg := kafka_sarama.NewMessageFromConsumerMessage(cm)
+
+	defer func() {
+		err := msg.Finish(nil)
+		if err != nil {
+			logger.Warn("Something went wrong while trying to finalizing the message", zap.Error(err))
+		}
+	}()
 
 	if msg.ReadEncoding() != binding.EncodingUnknown {
 		// Message is a CloudEvent -> Encode directly to HTTP

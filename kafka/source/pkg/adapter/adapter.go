@@ -167,7 +167,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		return false, err
 	}
 
-	err = a.ConsumerMessageToHttpRequest(ctx, msg, req)
+	err = a.ConsumerMessageToHttpRequest(ctx, msg, req, a.logger)
 	if err != nil {
 		return true, err
 	}
