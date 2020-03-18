@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"k8s.io/client-go/rest"
 	"reflect"
 	"time"
 
@@ -39,6 +38,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
 	"knative.dev/eventing/pkg/logging"
@@ -65,7 +65,7 @@ const (
 	channelReconcileFailed    = "ChannelReconcileFailed"
 	channelUpdateStatusFailed = "ChannelUpdateStatusFailed"
 
-	dispatcherName    = "natss-ch-dispatcher"
+	dispatcherName = "natss-ch-dispatcher"
 )
 
 // Reconciler reconciles NATSS Channels.

@@ -19,11 +19,9 @@ package controller
 import (
 	"context"
 	"fmt"
-	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 	"knative.dev/pkg/configmap"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/utils"
 
@@ -36,10 +34,12 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
 
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
+	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller/resources"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
 )

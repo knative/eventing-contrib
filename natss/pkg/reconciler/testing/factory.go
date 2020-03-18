@@ -20,20 +20,20 @@ import (
 	"context"
 	"testing"
 
-	logtesting "knative.dev/pkg/logging/testing"
-
 	"k8s.io/apimachinery/pkg/runtime"
 
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
+
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/logging"
+	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 )
 
