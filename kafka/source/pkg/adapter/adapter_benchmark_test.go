@@ -26,12 +26,10 @@ import (
 	"time"
 
 	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/kncloudevents"
 
 	"github.com/Shopify/sarama"
-	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
 	"go.uber.org/zap"
-
-	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 // Run with go test -v ./kafka/source/pkg/adapter/ -gcflags="-N -l" -test.benchtime 2s -benchmem -run=Handle -bench=.
@@ -52,6 +50,11 @@ func BenchmarkHandle(b *testing.B) {
 		b.Errorf("unexpected error, %v", err)
 	}
 
+	s, err := kncloudevents.NewHttpMessageSender(nil, sinkServer.URL)
+	if err != nil {
+		b.Fatal(err)
+	}
+
 	a := &Adapter{
 		config: &adapterConfig{
 			EnvConfig: adapter.EnvConfig{
@@ -64,12 +67,9 @@ func BenchmarkHandle(b *testing.B) {
 			Name:             "test",
 			Net:              AdapterNet{},
 		},
-		ceClient: func() client.Client {
-			c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
-			return c
-		}(),
-		logger:        zap.NewNop(),
-		keyTypeMapper: getKeyTypeMapper(""),
+		httpMessageSender: s,
+		logger:            zap.NewNop(),
+		keyTypeMapper:     getKeyTypeMapper(""),
 	}
 	b.SetParallelism(1)
 	b.Run("Baseline", func(b *testing.B) {

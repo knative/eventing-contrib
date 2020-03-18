@@ -19,6 +19,8 @@ package kafka
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -73,23 +75,23 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 }
 
 type Adapter struct {
-	config             *adapterConfig
-	httpBindingsSender *kncloudevents.HttpBindingSender
-	reporter           source.StatsReporter
-	logger             *zap.Logger
-	keyTypeMapper      func([]byte) interface{}
+	config            *adapterConfig
+	httpMessageSender *kncloudevents.HttpMessageSender
+	reporter          source.StatsReporter
+	logger            *zap.Logger
+	keyTypeMapper     func([]byte) interface{}
 }
 
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpBindingsSender *kncloudevents.HttpBindingSender, reporter source.StatsReporter) adapter.Adapter {
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMessageSender *kncloudevents.HttpMessageSender, reporter source.StatsReporter) adapter.Adapter {
 	logger := logging.FromContext(ctx).Desugar()
 	config := processed.(*adapterConfig)
 
 	return &Adapter{
-		config:             config,
-		httpBindingsSender: httpBindingsSender,
-		reporter:           reporter,
-		logger:             logger,
-		keyTypeMapper:      getKeyTypeMapper(config.KeyType),
+		config:            config,
+		httpMessageSender: httpMessageSender,
+		reporter:          reporter,
+		logger:            logger,
+		keyTypeMapper:     getKeyTypeMapper(config.KeyType),
 	}
 }
 
@@ -157,7 +159,7 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 // --------------------------------------------------------------------
 
 func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool, error) {
-	req, err := a.httpBindingsSender.NewCloudEventRequest()
+	req, err := a.httpMessageSender.NewCloudEventRequest(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -167,11 +169,16 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		return true, err
 	}
 
-	res, err := a.httpBindingsSender.Send(ctx, req)
+	res, err := a.httpMessageSender.Send(req)
 
 	if err != nil {
 		a.logger.Debug("Error while sending the message", zap.Error(err))
 		return false, err // Error while sending, don't commit offset
+	}
+
+	if res.StatusCode/100 != 2 {
+		a.logger.Debug("Unexpected status code", zap.Int("status code", res.StatusCode))
+		return false, fmt.Errorf("%d %s", res.StatusCode, http.StatusText(res.StatusCode))
 	}
 
 	reportArgs := &source.ReportArgs{

@@ -12,8 +12,8 @@ import (
 	"github.com/Shopify/sarama"
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/bindings/http"
-	"github.com/cloudevents/sdk-go/pkg/bindings/kafka_sarama"
+	"github.com/cloudevents/sdk-go/pkg/protocol/http"
+	"github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
@@ -21,20 +21,17 @@ import (
 var transformerFactories = binding.TransformerFactories{}
 
 func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.ConsumerMessage, req *nethttp.Request) error {
-	msg, err := kafka_sarama.NewMessage(cm)
-	if err != nil {
-		return err
-	}
+	msg := kafka_sarama.NewMessageFromConsumerMessage(cm)
 
-	if msg.Encoding() != binding.EncodingUnknown {
+	if msg.ReadEncoding() != binding.EncodingUnknown {
 		// Message is a CloudEvent -> Encode directly to HTTP
-		return http.EncodeHttpRequest(ctx, msg, req, transformerFactories)
+		return http.WriteRequest(ctx, msg, req, transformerFactories)
 	}
 
 	// Message is not a CloudEvent -> We need to translate it to a valid CloudEvent
-	kafkaMsg := msg.(*kafka_sarama.Message)
+	kafkaMsg := msg
 
-	var event cloudevents.Event
+	event := cloudevents.NewEvent()
 
 	event.SetID(makeEventId(cm.Partition, cm.Offset))
 	event.SetTime(cm.Timestamp)
@@ -44,16 +41,17 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.C
 
 	dumpKafkaMetaToEvent(&event, a.keyTypeMapper, kafkaMsg)
 
-	if kafkaMsg.ContentType != "" {
-		event.SetDataContentType(kafkaMsg.ContentType)
+	ct := kafkaMsg.ContentType
+	if ct == "" {
+		ct = cloudevents.ApplicationJSON
 	}
 
-	err = event.SetData(kafkaMsg.Value)
+	err := event.SetData(ct, kafkaMsg.Value)
 	if err != nil {
 		return err
 	}
 
-	return http.EncodeHttpRequest(ctx, binding.EventMessage(event), req, transformerFactories)
+	return http.WriteRequest(ctx, binding.ToMessage(&event), req, transformerFactories)
 }
 
 func makeEventId(partition int32, offset int64) string {
