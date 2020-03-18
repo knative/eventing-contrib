@@ -31,7 +31,7 @@ import (
 	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
 	"go.uber.org/zap"
 
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 // Run with go test -v ./kafka/source/pkg/adapter/ -gcflags="-N -l" -test.benchtime 2s -benchmem -run=Handle -bench=.

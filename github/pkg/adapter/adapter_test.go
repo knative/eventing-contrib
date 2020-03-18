@@ -526,6 +526,9 @@ var (
 		"ce-time":         {},
 		"ce-traceparent":  {},
 		"traceparent":     {},
+		"x-b3-sampled":    {},
+		"x-b3-spanid":     {},
+		"x-b3-traceid":    {},
 	}
 )
 

@@ -28,7 +28,7 @@ import (
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/kncloudevents"
 
 	cloudevents "github.com/cloudevents/sdk-go/legacy"
 	"github.com/kelseyhightower/envconfig"

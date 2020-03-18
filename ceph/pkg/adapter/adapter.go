@@ -26,7 +26,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/legacy"
 	ceph "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 var theClient cloudevents.Client
