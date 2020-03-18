@@ -160,45 +160,45 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:a67f2a10845f71cba502dfa3b0bf51b8bfab013baec82d9105248012bb502a6f"
+  digest = "1:1174f23d8f01df878217718904bad3702a0bcf0812223fbb00893d97dae9fb42"
   name = "github.com/cloudevents/sdk-go"
   packages = [
-    ".",
-    "legacy",
-    "legacy/pkg/cloudevents",
-    "legacy/pkg/cloudevents/client",
-    "legacy/pkg/cloudevents/context",
-    "legacy/pkg/cloudevents/datacodec",
-    "legacy/pkg/cloudevents/datacodec/json",
-    "legacy/pkg/cloudevents/datacodec/text",
-    "legacy/pkg/cloudevents/datacodec/xml",
-    "legacy/pkg/cloudevents/extensions",
-    "legacy/pkg/cloudevents/observability",
-    "legacy/pkg/cloudevents/transport",
-    "legacy/pkg/cloudevents/transport/http",
-    "legacy/pkg/cloudevents/types",
-    "pkg/binding",
-    "pkg/binding/buffering",
-    "pkg/binding/format",
-    "pkg/binding/spec",
-    "pkg/binding/transformer",
-    "pkg/client",
-    "pkg/context",
-    "pkg/event",
-    "pkg/event/datacodec",
-    "pkg/event/datacodec/json",
-    "pkg/event/datacodec/text",
-    "pkg/event/datacodec/xml",
-    "pkg/extensions",
-    "pkg/observability",
-    "pkg/protocol",
-    "pkg/protocol/http",
-    "pkg/protocol/kafka_sarama",
-    "pkg/types",
+    "v1",
+    "v1/cloudevents",
+    "v1/cloudevents/client",
+    "v1/cloudevents/context",
+    "v1/cloudevents/datacodec",
+    "v1/cloudevents/datacodec/json",
+    "v1/cloudevents/datacodec/text",
+    "v1/cloudevents/datacodec/xml",
+    "v1/cloudevents/extensions",
+    "v1/cloudevents/observability",
+    "v1/cloudevents/transport",
+    "v1/cloudevents/transport/http",
+    "v1/cloudevents/types",
+    "v2",
+    "v2/binding",
+    "v2/binding/buffering",
+    "v2/binding/format",
+    "v2/binding/spec",
+    "v2/binding/transformer",
+    "v2/client",
+    "v2/context",
+    "v2/event",
+    "v2/event/datacodec",
+    "v2/event/datacodec/json",
+    "v2/event/datacodec/text",
+    "v2/event/datacodec/xml",
+    "v2/extensions",
+    "v2/observability",
+    "v2/protocol",
+    "v2/protocol/http",
+    "v2/protocol/kafka_sarama",
+    "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "f248e160418f3e881491fdc3a60ea83660e30b37"
-  version = "v2.0.0-preview3"
+  revision = "0a5202bf31a5927f261fb8ee0bba88cef0963d8c"
+  version = "v2.0.0-preview4"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1882,7 +1882,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4afcd9bc3e6363846ca1caaa615af7d2394df5c2ca0cfa6db1853c82f3f30b19"
+  digest = "1:011578a545b17b8ee4ed1986b278d08a5a0cc2952ed3ec75d7de3cab6946768e"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1990,7 +1990,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "8ce1b8084c9055ae24c7b0d8ca22f99d6907558d"
+  revision = "9bc5e25af04c4dc657f5d6b294f97d53365185f0"
 
 [[projects]]
   branch = "master"
@@ -2118,14 +2118,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:115d2f6e72ee06327259bdba21d26f28c359c62464afd73538fbab66ae2b7698"
+  digest = "1:3f2366ce9a05503ac8da902b58e898c285cc9a972e0e89fda0b2a2fedcd4fb46"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "244b563932f959a3e18c1e03cffed8798f52d59d"
+  revision = "268eba844c99c433d4b0736fb2db04c775998671"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2211,16 +2211,16 @@
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",
-    "github.com/cloudevents/sdk-go",
-    "github.com/cloudevents/sdk-go/legacy",
-    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents",
-    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client",
-    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/transport/http",
-    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/types",
-    "github.com/cloudevents/sdk-go/pkg/binding",
-    "github.com/cloudevents/sdk-go/pkg/protocol/http",
-    "github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama",
-    "github.com/cloudevents/sdk-go/pkg/types",
+    "github.com/cloudevents/sdk-go/v1",
+    "github.com/cloudevents/sdk-go/v1/cloudevents",
+    "github.com/cloudevents/sdk-go/v1/cloudevents/client",
+    "github.com/cloudevents/sdk-go/v1/cloudevents/transport/http",
+    "github.com/cloudevents/sdk-go/v1/cloudevents/types",
+    "github.com/cloudevents/sdk-go/v2",
+    "github.com/cloudevents/sdk-go/v2/binding",
+    "github.com/cloudevents/sdk-go/v2/protocol/http",
+    "github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama",
+    "github.com/cloudevents/sdk-go/v2/types",
     "github.com/emicklei/go-restful",
     "github.com/go-kivik/couchdb",
     "github.com/go-kivik/kivik",

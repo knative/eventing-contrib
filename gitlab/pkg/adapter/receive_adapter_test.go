@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
 	"go.uber.org/zap"
 	"gopkg.in/go-playground/webhooks.v5/gitlab"
 	"knative.dev/eventing/pkg/adapter"

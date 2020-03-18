@@ -25,10 +25,10 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/protocol/http"
-	"github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol/http"
+	"github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
 	"go.uber.org/zap"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"

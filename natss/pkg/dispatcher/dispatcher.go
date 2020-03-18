@@ -35,9 +35,9 @@ import (
 
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
 
-	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents"
-	cloudeventsclient "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
-	cloudeventstransport "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/v1/cloudevents"
+	cloudeventsclient "github.com/cloudevents/sdk-go/v1/cloudevents/client"
+	cloudeventstransport "github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
 )
 
 const (
