@@ -14,7 +14,26 @@ const (
 
 	fallbackDefaultNatssURLTmpl = "nats://nats-streaming.natss.svc.%s:4222"
 	fallbackDefaultClusterID    = "knative-nats-streaming"
+
+	defaultMaxIdleConnections        = 1000
+	defaultMaxIdleConnectionsPerHost = 100
+
+	clientID = "natss-ch-dispatcher"
 )
+
+type NatssConfig struct {
+	ClientID            string
+	MaxIdleConns        int
+	MaxIdleConnsPerHost int
+}
+
+func GetNatssConfig() NatssConfig {
+	return NatssConfig{
+		ClientID:            clientID,
+		MaxIdleConns:        getMaxIdleConnections(),
+		MaxIdleConnsPerHost: getMaxIdleConnectionsPerHost(),
+	}
+}
 
 // GetDefaultNatssURL returns the default natss url to connect to
 func GetDefaultNatssURL() string {
@@ -24,6 +43,16 @@ func GetDefaultNatssURL() string {
 // GetDefaultClusterID returns the default cluster id to connect with
 func GetDefaultClusterID() string {
 	return getEnv(defaultClusterIDVar, fallbackDefaultClusterID)
+}
+
+// getMaxIdleConnections returns the max number of idle connections
+func getMaxIdleConnections() int {
+	return defaultMaxIdleConnections
+}
+
+// getMaxIdleConnections returns the max number of idle connections per host
+func getMaxIdleConnectionsPerHost() int {
+	return defaultMaxIdleConnectionsPerHost
 }
 
 func getEnv(envKey string, fallback string) string {

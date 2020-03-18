@@ -35,7 +35,7 @@ func NewDispatcherDoNothing() dispatcher.NatssDispatcher {
 	return &DispatcherDoNothing{}
 }
 
-func (s *DispatcherDoNothing) Start(_ <-chan struct{}) error {
+func (s *DispatcherDoNothing) Start(_ context.Context) error {
 	return nil
 }
 
@@ -57,7 +57,7 @@ func NewDispatcherFailNatssSubscription() *DispatcherFailNatssSubscription {
 	return &DispatcherFailNatssSubscription{}
 }
 
-func (s *DispatcherFailNatssSubscription) Start(_ <-chan struct{}) error {
+func (s *DispatcherFailNatssSubscription) Start(_ context.Context) error {
 	return nil
 }
 
