@@ -1,0 +1,211 @@
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gitlabsources.sources.knative.dev
+spec:
+  group: sources.knative.dev
+  names:
+    kind: GitLabSource
+    listKind: GitLabSourceList
+    plural: gitlabsources
+    singular: gitlabsource
+  scope: ""
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: GitLabSource is the Schema for the gitlabsources API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: GitLabSourceSpec defines the desired state of GitLabSource
+          properties:
+            accessToken:
+              description: AccessToken is the Kubernetes secret containing the GitLab
+                access token
+              properties:
+                secretKeyRef:
+                  description: The Secret key to select from.
+                  properties:
+                    key:
+                      description: The key of the secret to select from.  Must be
+                        a valid secret key.
+                      type: string
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                    optional:
+                      description: Specify whether the Secret or its key must be defined
+                      type: boolean
+                  required:
+                  - key
+                  type: object
+              type: object
+            eventTypes:
+              description: EventType is the type of event to receive from Gitlab.
+                These correspond to supported events to the add project hook https://docs.gitlab.com/ee/api/projects.html#add-project-hook
+              items:
+                enum:
+                - push_events
+                - push_events_branch_filter
+                - issues_events
+                - confidential_issues_events
+                - merge_requests_events
+                - tag_push_events
+                - note_events
+                - job_events
+                - pipeline_events
+                - wiki_page_events
+                type: string
+              minItems: 1
+              type: array
+            projectUrl:
+              description: 'ProjectUrl is the url of the GitLab project for which
+                we are interested to receive events from. Examples:   https://knative.dev/eventing-contrib/gitlab'
+              minLength: 1
+              type: string
+            secretToken:
+              description: SecretToken is the Kubernetes secret containing the GitLab
+                secret token
+              properties:
+                secretKeyRef:
+                  description: The Secret key to select from.
+                  properties:
+                    key:
+                      description: The key of the secret to select from.  Must be
+                        a valid secret key.
+                      type: string
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                    optional:
+                      description: Specify whether the Secret or its key must be defined
+                      type: boolean
+                  required:
+                  - key
+                  type: object
+              type: object
+            serviceAccountName:
+              description: ServiceAccountName holds the name of the Kubernetes service
+                account as which the underlying K8s resources should be run. If unspecified
+                this will default to the "default" service account for the namespace
+                in which the GitLabSource exists.
+              type: string
+            sink:
+              description: Sink is a reference to an object that will resolve to a
+                domain name to use as the sink.
+              properties:
+                ref:
+                  description: Ref points to an Addressable.
+                  properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    kind:
+                      description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                      type: string
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                      type: string
+                    namespace:
+                      description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                        This is optional field, it gets defaulted to the object holding
+                        it if left out.'
+                      type: string
+                  required:
+                  - apiVersion
+                  - kind
+                  - name
+                  type: object
+                uri:
+                  type: string
+                  description: URI can be an absolute URL(non-empty scheme and non-empty
+                    host) pointing to the target or a relative URI. Relative URIs
+                    will be resolved using the base URI retrieved from Ref.
+              type: object
+            sslverify:
+              description: SslVerify if true configure webhook so the ssl verification
+                is done when triggering the hook
+              type: boolean
+          required:
+          - accessToken
+          - eventTypes
+          - projectUrl
+          - secretToken
+          type: object
+        status:
+          description: GitLabSourceStatus defines the observed state of GitLabSource
+          properties:
+            Id:
+              description: ID of the project hook registered with GitLab
+              type: string
+            conditions:
+              items:
+                properties:
+                  lastTransitionTime:
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  severity:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - type
+                - status
+                type: object
+              type: array
+            observedGeneration:
+              description: ObservedGeneration is the 'Generation' of the Service that
+                was last processed by the controller.
+              format: int64
+              type: integer
+            sinkUri:
+              description: SinkURI is the current active sink URI that has been configured
+                for the GitLabSource.
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
