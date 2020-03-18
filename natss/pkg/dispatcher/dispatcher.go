@@ -230,6 +230,7 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 
 	failedToSubscribe := make(map[eventingduck.SubscriberSpec]error)
 	cRef := eventingchannels.ChannelReference{Namespace: channel.Namespace, Name: channel.Name}
+	s.logger.Info("Update subscriptions", zap.String("cRef", cRef.String()), zap.String("subscribable", fmt.Sprintf("%v", channel)), zap.Bool("isFinalizer", isFinalizer))
 	if channel.Spec.Subscribable == nil || isFinalizer {
 		s.logger.Sugar().Infof("Empty subscriptions for channel Ref: %v; unsubscribe all active subscriptions, if any", cRef)
 		chMap, ok := s.subscriptions[cRef]
@@ -301,8 +302,8 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 			s.logger.Error(err.Error(), zap.Error(err))
 			return
 		}
-		s.logger.Sugar().Infof("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
-		if err := s.dispatcher.DispatchEvent(context.TODO(), event, subscription.SubscriberURI, subscription.ReplyURI); err != nil {
+		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
+		if err := s.dispatcher.DispatchEventWithDelivery(context.TODO(), event, subscription.SubscriberURI, subscription.ReplyURI, &subscription.Delivery); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
