@@ -35,7 +35,9 @@ import (
 
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents"
+	cloudeventsclient "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
+	cloudeventstransport "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/transport/http"
 )
 
 const (
@@ -59,7 +61,7 @@ type SubscriptionsSupervisor struct {
 
 	receiver   *eventingchannels.EventReceiver
 	dispatcher *eventingchannels.EventDispatcher
-	ceClient   cloudevents.Client
+	ceClient   cloudeventsclient.Client
 
 	subscriptionsMux sync.Mutex
 	subscriptions    SubscriptionChannelMapping
@@ -106,7 +108,7 @@ func NewDispatcher(args Args) (NatssDispatcher, error) {
 		clientID:      args.ClientID,
 		subscriptions: make(SubscriptionChannelMapping),
 	}
-	httpTransport, err := cloudevents.NewHTTPTransport(cloudevents.WithStructuredEncoding(), cloudevents.WithMiddleware(tracing.HTTPSpanIgnoringPaths(tracingSpanIgnoringPath)))
+	httpTransport, err := cloudeventstransport.New(cloudeventstransport.WithStructuredEncoding(), cloudeventstransport.WithMiddleware(tracing.HTTPSpanIgnoringPaths(tracingSpanIgnoringPath)))
 	if err != nil {
 		args.Logger.Fatal("failed to create httpTransport", zap.Error(err))
 	}
