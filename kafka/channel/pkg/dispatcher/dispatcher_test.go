@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/binding"
 	"knative.dev/pkg/apis"
 
 	"github.com/Shopify/sarama"
@@ -435,12 +435,11 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 	}
 
 	receiver, err := eventingchannels.NewMessageReceiver(
-		context.TODO(),
-		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, _ http.Header) error {
+		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, _ []binding.TransformerFactory, _ http.Header) error {
 			return nil
 		},
 		zap.NewNop(),
-		eventingchannels.ResolveChannelFromHostHeaderBindings(d.getChannelReferenceFromHost))
+		eventingchannels.ResolveMessageChannelFromHostHeader(d.getChannelReferenceFromHost))
 	if err != nil {
 		t.Fatalf("Error creating new message receiver. Error:%s", err)
 	}

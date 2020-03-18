@@ -24,18 +24,19 @@ import (
 	"sync/atomic"
 
 	"github.com/Shopify/sarama"
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	protocolkafka "github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
+	"github.com/cloudevents/sdk-go/v2/binding"
+	protocolkafka "github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
-	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/channel/swappable"
 	"knative.dev/eventing/pkg/kncloudevents"
+
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 )
 
 type KafkaDispatcher struct {
@@ -92,13 +93,12 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 		topicFunc:            args.TopicFunc,
 	}
 	receiverFunc, err := eventingchannels.NewMessageReceiver(
-		ctx,
-		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, _ nethttp.Header) error {
+		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.TransformerFactory, _ nethttp.Header) error {
 			kafkaProducerMessage := sarama.ProducerMessage{
 				Topic: args.TopicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
 			}
 
-			err := protocolkafka.WriteProducerMessage(ctx, message, &kafkaProducerMessage)
+			err := protocolkafka.WriteProducerMessage(ctx, message, &kafkaProducerMessage, transformers...)
 			if err != nil {
 				return err
 			}
@@ -107,7 +107,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 			return nil
 		},
 		args.Logger,
-		eventingchannels.ResolveChannelFromHostHeaderBindings(dispatcher.getChannelReferenceFromHost))
+		eventingchannels.ResolveMessageChannelFromHostHeader(dispatcher.getChannelReferenceFromHost))
 	if err != nil {
 		return nil, err
 	}
