@@ -25,9 +25,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	cloudevents "github.com/cloudevents/sdk-go"
-	ce_client "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	ce_client "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/types"
 
 	"go.uber.org/zap"
 	"golang.org/x/net/context"

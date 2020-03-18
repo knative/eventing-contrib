@@ -52,7 +52,7 @@ rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
 
 update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./github/cmd/*" "./camel/source/cmd/*" \
-		"./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" \
+		"./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" "./gitlab/cmd/*" \
 		"./natss/cmd/*" "./couchdb/source/cmd/*" "./ceph/cmd/*"
 
 # HACK HACK HACK

@@ -15,6 +15,13 @@ aliases:
     - lberk
     - rootfs
 
+  gitlab-approvers:
+    - sebgoa
+    - tzununbekov
+  gitlab-reviewers:
+    - sebgoa
+    - tzununbekov
+
   kafka-approvers:
     - lberk
     - matzew

@@ -160,24 +160,26 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:feb3e7a6adfc42c33118c9389aeb1db6a240b5d0986ae24cb4aec43cc7b57f72"
+  digest = "1:057b1bb73cf9a503259344a26be36e952431324e9b756476849331faff855253"
   name = "github.com/cloudevents/sdk-go"
   packages = [
-    ".",
-    "pkg/cloudevents",
-    "pkg/cloudevents/client",
-    "pkg/cloudevents/context",
-    "pkg/cloudevents/datacodec",
-    "pkg/cloudevents/datacodec/json",
-    "pkg/cloudevents/datacodec/text",
-    "pkg/cloudevents/datacodec/xml",
-    "pkg/cloudevents/observability",
-    "pkg/cloudevents/transport",
-    "pkg/cloudevents/transport/http",
-    "pkg/cloudevents/types",
+    "legacy",
+    "legacy/pkg/cloudevents",
+    "legacy/pkg/cloudevents/client",
+    "legacy/pkg/cloudevents/context",
+    "legacy/pkg/cloudevents/datacodec",
+    "legacy/pkg/cloudevents/datacodec/json",
+    "legacy/pkg/cloudevents/datacodec/text",
+    "legacy/pkg/cloudevents/datacodec/xml",
+    "legacy/pkg/cloudevents/extensions",
+    "legacy/pkg/cloudevents/observability",
+    "legacy/pkg/cloudevents/transport",
+    "legacy/pkg/cloudevents/transport/http",
+    "legacy/pkg/cloudevents/types",
   ]
   pruneopts = "NUT"
-  revision = "427e8cf75237fdc7d4bb6c496398d7288efb8921"
+  revision = "f248e160418f3e881491fdc3a60ea83660e30b37"
+  version = "v2.0.0-preview3"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -381,7 +383,7 @@
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "ba53fa10e72c7373ef8068e21c9f102f0c20a940"
+  revision = "955bf358a3d8d1ebfa6204338ef3fe364255cd85"
 
 [[projects]]
   digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
@@ -599,6 +601,14 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
+  branch = "master"
+  digest = "1:109171fef99d467911ae11b7f9f8b19ec78e7367f45110cb7045811288dd0301"
+  name = "github.com/juju/errors"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d42613fe1ab9e303fc850e7a19fda2e8eeb6516e"
+
+[[projects]]
   digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
@@ -619,6 +629,17 @@
   pruneopts = "NUT"
   revision = "16a4d3d7137cdefd94d420f22b5c20260674b95c"
   version = "v1.9.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:a12508addb76a16593d8a3cee41d782fdf738f727d421f0bcc2dd2ee76821c01"
+  name = "github.com/lightstep/tracecontext.go"
+  packages = [
+    "traceparent",
+    "tracestate",
+  ]
+  pruneopts = "NUT"
+  revision = "1757c391b1acf4147823503f13e003115ea4e5df"
 
 [[projects]]
   branch = "master"
@@ -904,6 +925,14 @@
   version = "v12.7.0"
 
 [[projects]]
+  digest = "1:02e30e07738464b40c5c6fa23a84ee639a36203a09d87f23baa5dfe814b22840"
+  name = "github.com/xanzy/go-gitlab"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3f1f63decbcbf8e2ec9bbe1417863a8d51718cd5"
+  version = "v0.28.0"
+
+[[projects]]
   digest = "1:3a4c90791db3bf894a26cf6ffc0f792a31d0f225664c38b0577f02a36bc0cda7"
   name = "go.etcd.io/bbolt"
   packages = ["."]
@@ -912,7 +941,7 @@
   version = "v1.3.3"
 
 [[projects]]
-  digest = "1:b7d98c64e9467a8e5e67509031cd6baee81fba090ba2c3d30df1ff3d02d1d035"
+  digest = "1:7c3ff97df88fd061f688c42cc4b99c6636bc256aa6f5c919042bd8cffbdbd71f"
   name = "go.opencensus.io"
   packages = [
     ".",
@@ -924,6 +953,7 @@
     "plugin/ocgrpc",
     "plugin/ochttp",
     "plugin/ochttp/propagation/b3",
+    "plugin/ochttp/propagation/tracecontext",
     "resource",
     "resource/resourcekeys",
     "stats",
@@ -1285,9 +1315,12 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:b5744640002f710f652b21873d0b70324531b67fc65a0dbab20bca45bac224ca"
+  digest = "1:f72a6a9fcfae9f34dc57cd7419e5138f073c14e6c214018485ee5f2621770bb0"
   name = "gopkg.in/go-playground/webhooks.v5"
-  packages = ["github"]
+  packages = [
+    "github",
+    "gitlab",
+  ]
   pruneopts = "NUT"
   revision = "2845fba51e5a6a0afd9c29a8198aa4684f65afe7"
   version = "v5.13.0"
@@ -1822,7 +1855,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b5e857be2d4356cdb208892dd1976fe9d1b44a24e8b9f996fc7b41c25ca888df"
+  digest = "1:4c7a494c3b5c8c78e11a444cbfd8a7e37eae42ebbf9ef149894f7708cd722b54"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1888,8 +1921,10 @@
     "pkg/client/informers/externalversions/sources/v1alpha2",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
+    "pkg/client/injection/informers/eventing/v1alpha1/broker",
     "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
+    "pkg/client/injection/reconciler/eventing/v1alpha1/broker",
     "pkg/client/listers/configs/v1alpha1",
     "pkg/client/listers/eventing/v1alpha1",
     "pkg/client/listers/eventing/v1beta1",
@@ -1928,11 +1963,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "eecdd36d74a6317de6d65af0196730bc8cf44907"
+  revision = "be3c74c3195a74dcaa3eecff014e7d9fa4668dac"
 
 [[projects]]
   branch = "master"
-  digest = "1:087752cbad644085941d5dbe2a04ef0c285fed9205006a5a3d3816256ac0fecd"
+  digest = "1:73d6a1f3f7a178275499102ae27b5177a91aaccc57e3a0328e628cb3ced708f8"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2008,11 +2043,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "1893541a0fac5885032c8ec170fd81234de13f4a"
+  revision = "be54585f8f04fe39ce6b6d28d78809818b724734"
 
 [[projects]]
   branch = "master"
-  digest = "1:074d363c7466476ecfa7c10523400a4e154d99dcf6e58d1ce891b4ebb74e6352"
+  digest = "1:73213c4432c04764cf0f770e61c9dc9191420d57f39b538df940df97ef2082ff"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2052,18 +2087,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "34717bfa04b014f07cf52e4338afc99c60a85dda"
+  revision = "54766747d729079cb0c08cd197947af8f76dc42c"
 
 [[projects]]
   branch = "master"
-  digest = "1:e5bd21467544cbd14cb25553c5c78eb2e0e93baf9288a3c2ebaf1cf1fdb0c95f"
+  digest = "1:115d2f6e72ee06327259bdba21d26f28c359c62464afd73538fbab66ae2b7698"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "3f96c9e98f31595fe33eaa2d95f5e2170522acd7"
+  revision = "01c075fbeae4b089793fcca6fc855d31e1628cad"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2149,11 +2184,11 @@
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",
-    "github.com/cloudevents/sdk-go",
-    "github.com/cloudevents/sdk-go/pkg/cloudevents",
-    "github.com/cloudevents/sdk-go/pkg/cloudevents/client",
-    "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
-    "github.com/cloudevents/sdk-go/pkg/cloudevents/types",
+    "github.com/cloudevents/sdk-go/legacy",
+    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents",
+    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client",
+    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/transport/http",
+    "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/types",
     "github.com/emicklei/go-restful",
     "github.com/go-kivik/couchdb",
     "github.com/go-kivik/kivik",
@@ -2165,12 +2200,14 @@
     "github.com/google/go-github/github",
     "github.com/google/uuid",
     "github.com/gorilla/websocket",
+    "github.com/juju/errors",
     "github.com/kelseyhightower/envconfig",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
     "github.com/robfig/cron",
     "github.com/slinkydeveloper/loadastic/common",
     "github.com/slinkydeveloper/loadastic/kafka",
+    "github.com/xanzy/go-gitlab",
     "go.opencensus.io/plugin/ochttp",
     "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.opencensus.io/stats",
@@ -2183,6 +2220,7 @@
     "golang.org/x/net/http2",
     "golang.org/x/oauth2",
     "gopkg.in/go-playground/webhooks.v5/github",
+    "gopkg.in/go-playground/webhooks.v5/gitlab",
     "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",

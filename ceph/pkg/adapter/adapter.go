@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/legacy"
 	ceph "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1"
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
