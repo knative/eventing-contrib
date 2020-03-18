@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
-	. "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
+	. "github.com/cloudevents/sdk-go/v1/cloudevents"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 

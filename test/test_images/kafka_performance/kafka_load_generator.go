@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
 	"github.com/golang/protobuf/ptypes"
 	loadastic_common "github.com/slinkydeveloper/loadastic/common"
 	"github.com/slinkydeveloper/loadastic/kafka"

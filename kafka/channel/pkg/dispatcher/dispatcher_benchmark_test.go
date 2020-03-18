@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 
 	contribchannels "knative.dev/eventing-contrib/pkg/channel"
