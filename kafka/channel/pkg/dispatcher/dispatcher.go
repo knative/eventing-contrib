@@ -92,10 +92,6 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 		handler:              args.Handler,
 		topicFunc:            args.TopicFunc,
 	}
-	dispatcher.setConfig(&multichannelfanout.Config{})
-	dispatcher.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
-	dispatcher.topicFunc = args.TopicFunc
-
 	receiverFunc, err := eventingchannels.NewMessageReceiver(
 		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.TransformerFactory, _ nethttp.Header) error {
 			kafkaProducerMessage := sarama.ProducerMessage{
@@ -117,6 +113,8 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 	}
 
 	dispatcher.receiver = receiverFunc
+	dispatcher.setConfig(&multichannelfanout.Config{})
+	dispatcher.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 	return dispatcher, nil
 }
 
