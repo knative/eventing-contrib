@@ -25,8 +25,6 @@ import (
 	"github.com/Shopify/sarama"
 	cloudevents "github.com/cloudevents/sdk-go/v1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
-
-	contribchannels "knative.dev/eventing-contrib/pkg/channel"
 )
 
 func mockTopicFunc(separator, namespace, name string) string {
@@ -53,7 +51,6 @@ func BenchmarkToKafkaMessage(b *testing.B) {
 }
 
 // Avoid DCE
-var message contribchannels.Message
 var event cloudevents.Event
 var saramaProducerMessage *sarama.ProducerMessage
 var saramaConsumerMessage *sarama.ConsumerMessage
@@ -72,20 +69,6 @@ func randBytes(length uint) []byte {
 		b[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return b
-}
-
-func genChannelMessage(payloadSize uint, headersNumber uint, headersSize uint) contribchannels.Message {
-	payload := randBytes(payloadSize)
-
-	headers := make(map[string]string, headersNumber)
-	for i := uint(0); i < headersNumber; i++ {
-		headers[randString(10)] = randString(headersSize)
-	}
-
-	return contribchannels.Message{
-		Payload: payload,
-		Headers: headers,
-	}
 }
 
 func genChannelEvent(payloadSize uint, headersNumber uint, headersSize uint) cloudevents.Event {
