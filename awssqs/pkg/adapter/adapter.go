@@ -25,14 +25,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
-	ce_client "github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/legacy/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
+	ce_client "github.com/cloudevents/sdk-go/v1/cloudevents/client"
+	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
 
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
 )
 

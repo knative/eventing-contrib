@@ -17,30 +17,31 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/utils"
+
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
+	logtesting "knative.dev/pkg/logging/testing"
+	. "knative.dev/pkg/reconciler/testing"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kubeinformers "k8s.io/client-go/informers"
-	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
+
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
-	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/fake"
-	informers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
+	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller/resources"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	"knative.dev/pkg/controller"
-	logtesting "knative.dev/pkg/logging/testing"
-	. "knative.dev/pkg/reconciler/testing"
 )
 
 const (
@@ -63,42 +64,6 @@ func init() {
 	// Add types to scheme
 	_ = v1alpha1.AddToScheme(scheme.Scheme)
 	_ = duckv1alpha1.AddToScheme(scheme.Scheme)
-}
-
-func TestNewController(t *testing.T) {
-	kubeClient := fakekubeclientset.NewSimpleClientset()
-	messagingClient := fakeclientset.NewSimpleClientset()
-
-	// Create informer factories with fake clients. The second parameter sets the
-	// resync period to zero, disabling it.
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, 0)
-	messagingInformerFactory := informers.NewSharedInformerFactory(messagingClient, 0)
-
-	// Eventing
-	ncInformer := messagingInformerFactory.Messaging().V1alpha1().NatssChannels()
-
-	// Kube
-	serviceInformer := kubeInformerFactory.Core().V1().Services()
-	endpointsInformer := kubeInformerFactory.Core().V1().Endpoints()
-	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
-
-	c := NewController(
-		reconciler.Options{
-			KubeClientSet:  kubeClient,
-			NatssClientSet: messagingClient,
-			Logger:         logtesting.TestLogger(t),
-		},
-		systemNS,
-		dispatcherDeploymentName,
-		dispatcherServiceName,
-		ncInformer,
-		deploymentInformer,
-		serviceInformer,
-		endpointsInformer)
-
-	if c == nil {
-		t.Fatalf("Failed to create with NewController")
-	}
 }
 
 func TestAllCases(t *testing.T) {
@@ -301,21 +266,21 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		return &Reconciler{
-			Base:                     reconciler.NewBase(opt, controllerAgentName),
+			Base:                     reconciler.NewBase(ctx, controllerAgentName, configmap.NewStaticWatcher()),
 			dispatcherNamespace:      testNS,
 			dispatcherDeploymentName: dispatcherDeploymentName,
 			dispatcherServiceName:    dispatcherServiceName,
 			natsschannelLister:       listers.GetNatssChannelLister(),
+			NatssClientSet:           fakeclientset.Get(ctx),
 			// TODO fix
 			natsschannelInformer: nil,
 			deploymentLister:     listers.GetDeploymentLister(),
 			serviceLister:        listers.GetServiceLister(),
 			endpointsLister:      listers.GetEndpointsLister(),
 		}
-	},
-	))
+	}))
 }
 
 func makeDeployment() *appsv1.Deployment {

@@ -23,10 +23,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/cloudevents/sdk-go/v2/binding"
 	"knative.dev/pkg/apis"
 
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
@@ -365,109 +365,6 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 	}
 }
 
-func TestFromKafkaMessage(t *testing.T) {
-	data := []byte("data")
-	ctx := context.Background()
-	kafkaMessage := &sarama.ConsumerMessage{
-		Headers: []*sarama.RecordHeader{
-			{
-				Key:   []byte("ce_k1"),
-				Value: []byte("v1"),
-			},
-			{
-				Key:   []byte("ce_id"),
-				Value: []byte("im-a-snowflake"),
-			},
-			{
-				Key:   []byte("ce_source"),
-				Value: []byte("testsource"),
-			},
-			{
-				Key:   []byte("ce_type"),
-				Value: []byte("testtype"),
-			},
-			{
-				Key:   []byte("ce_extensionfield"),
-				Value: []byte("testextension"),
-			},
-			{
-				Key:   []byte("anotherkafkaheader"),
-				Value: []byte("notpassedthrough"),
-			},
-		},
-		Value: data,
-	}
-	want := cloudevents.NewEvent(cloudevents.VersionV1)
-	want.SetExtension("k1", "v1")
-	want.SetSource("testsource")
-	want.SetType("testtype")
-	want.SetID("im-a-snowflake")
-	want.SetExtension("extensionfield", "testextension")
-	want.SetData(data)
-
-	var got *cloudevents.Event
-	got = fromKafkaMessage(ctx, kafkaMessage)
-	if diff := cmp.Diff(&want, got); diff != "" {
-		t.Errorf("unexpected message (-want, +got) = %s", diff)
-	}
-}
-
-func TestToKafkaMessage(t *testing.T) {
-	data := []byte("data")
-
-	channelRef := eventingchannels.ChannelReference{
-		Name:      "test-channel",
-		Namespace: "test-ns",
-	}
-
-	event := cloudevents.NewEvent(cloudevents.VersionV1)
-	event.SetExtension("k1", "v1")
-	event.SetID("im-a-snowflake")
-	event.SetSource("testsource")
-	event.SetType("testtype")
-	event.SetData(data)
-
-	want := &sarama.ProducerMessage{
-		Topic: "knative-messaging-kafka.test-ns.test-channel",
-		Headers: []sarama.RecordHeader{
-			{
-				Key:   []byte("ce_specversion"),
-				Value: []byte("1.0"),
-			},
-			{
-				Key:   []byte("ce_type"),
-				Value: []byte("testtype"),
-			},
-			{
-				Key:   []byte("ce_source"),
-				Value: []byte("testsource"),
-			},
-			{
-				Key:   []byte("ce_id"),
-				Value: []byte("im-a-snowflake"),
-			},
-			{
-				Key:   []byte("ce_time"),
-				Value: []byte("ignoreme"),
-			},
-			{
-				Key:   []byte("ce_k1"),
-				Value: []byte("v1"),
-			},
-		},
-		Value: sarama.ByteEncoder(data),
-	}
-
-	got := toKafkaMessage(context.TODO(), channelRef, event, utils.TopicName)
-	got.Headers[4] = sarama.RecordHeader{
-		Key:   []byte("ce_time"),
-		Value: []byte("ignoreme"),
-	}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(sarama.ProducerMessage{})); diff != "" {
-		t.Errorf("unexpected message (-want, +got) = %s", diff)
-	}
-}
-
 type dispatchTestHandler struct {
 	t       *testing.T
 	payload []byte
@@ -537,10 +434,12 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}
 
-	receiver, err := eventingchannels.NewEventReceiver(func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
-		return nil
-	}, zap.NewNop(),
-		eventingchannels.ResolveChannelFromHostHeader(eventingchannels.ResolveChannelFromHostFunc(d.getChannelReferenceFromHost)))
+	receiver, err := eventingchannels.NewMessageReceiver(
+		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, _ []binding.TransformerFactory, _ http.Header) error {
+			return nil
+		},
+		zap.NewNop(),
+		eventingchannels.ResolveMessageChannelFromHostHeader(d.getChannelReferenceFromHost))
 	if err != nil {
 		t.Fatalf("Error creating new message receiver. Error:%s", err)
 	}
@@ -552,14 +451,13 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 }
 
 func TestNewDispatcher(t *testing.T) {
-
 	args := &KafkaDispatcherArgs{
 		ClientID:  "kafka-ch-dispatcher",
 		Brokers:   []string{"127.0.0.1:9092"},
 		TopicFunc: utils.TopicName,
 		Logger:    nil,
 	}
-	_, err := NewDispatcher(args)
+	_, err := NewDispatcher(context.TODO(), args)
 	if err == nil {
 		t.Errorf("Expected error want %s, got %s", "message receiver is not set", err)
 	}

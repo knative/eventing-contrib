@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"log"
 
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
+	"knative.dev/eventing/pkg/kncloudevents"
 )
 
 /*

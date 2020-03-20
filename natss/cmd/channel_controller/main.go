@@ -17,175 +17,31 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
-	"log"
+	"os"
 
-	"knative.dev/eventing-contrib/natss/pkg/stanutil"
-	"knative.dev/eventing-contrib/natss/pkg/util"
-	"knative.dev/pkg/metrics"
-
-	"go.uber.org/zap"
-	kubeinformers "k8s.io/client-go/informers"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	informers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
-	natsschannel "knative.dev/eventing-contrib/natss/pkg/reconciler/controller"
-	"knative.dev/eventing/pkg/logconfig"
 	"knative.dev/pkg/configmap"
 	kncontroller "knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
+	"knative.dev/pkg/injection"
+	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
-	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller"
 )
 
-const (
-	dispatcherDeploymentName = "natss-ch-dispatcher"
-	dispatcherServiceName    = "natss-ch-dispatcher"
-	clientID                 = "natss-ch-controller"
-	component                = "natsschannel_controller"
-)
-
-var (
-	hardcodedLoggingConfig = flag.Bool("hardCodedLoggingConfig", false, "If true, use the hard coded logging config. It is intended to be used only when debugging outside a Kubernetes cluster.")
-	masterURL              = flag.String("master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
-	kubeconfig             = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-)
+const component = "natsschannel_controller"
 
 func main() {
 	flag.Parse()
-	logger, atomicLevel := setupLogger()
-	defer flush(logger)
-
-	// set up signals so we handle the first shutdown signal gracefully
-	stopCh := signals.SetupSignalHandler()
-
-	cfg, err := clientcmd.BuildConfigFromFlags(*masterURL, *kubeconfig)
-	if err != nil {
-		logger.Fatalw("Error building kubeconfig", zap.Error(err))
+	ctx := signals.NewContext()
+	ns := os.Getenv("NAMESPACE")
+	if ns != "" {
+		ctx = injection.WithNamespaceScope(ctx, ns)
 	}
 
-	// check the connection to NATSS
-	if _, err := stanutil.Connect(util.GetDefaultClusterID(), clientID, util.GetDefaultNatssURL(), logger); err != nil {
-		logger.Fatalw("Error connecting to NATSS cluster", zap.Error(err))
-	}
-
-	logger = logger.With(zap.String("controller/impl", "pkg"))
-	logger.Info("Starting the Natss controller")
-
-	systemNS := system.Namespace()
-
-	const numControllers = 1
-	cfg.QPS = numControllers * rest.DefaultQPS
-	cfg.Burst = numControllers * rest.DefaultBurst
-	opt := reconciler.NewOptionsOrDie(cfg, logger, stopCh)
-
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(opt.KubeClientSet, opt.ResyncPeriod)
-	messagingInformerFactory := informers.NewSharedInformerFactory(opt.NatssClientSet, opt.ResyncPeriod)
-
-	// Messaging
-	natssChannelInformer := messagingInformerFactory.Messaging().V1alpha1().NatssChannels()
-
-	// Kube
-	serviceInformer := kubeInformerFactory.Core().V1().Services()
-	endpointsInformer := kubeInformerFactory.Core().V1().Endpoints()
-	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
-
-	// Build all of our controllers, with the clients constructed above.
-	// Add new controllers to this array.
-	// You also need to modify numControllers above to match this.
-	controllers := [...]*kncontroller.Impl{
-		natsschannel.NewController(
-			opt,
-			systemNS,
-			dispatcherDeploymentName,
-			dispatcherServiceName,
-			natssChannelInformer,
-			deploymentInformer,
-			serviceInformer,
-			endpointsInformer,
-		),
-	}
-	// This line asserts at compile time that the length of controllers is equal to numControllers.
-	// It is based on https://go101.org/article/tips.html#assert-at-compile-time, which notes that
-	// var _ [N-M]int
-	// asserts at compile time that N >= M, which we can use to establish equality of N and M:
-	// (N >= M) && (M >= N) => (N == M)
-	var _ [numControllers - len(controllers)][len(controllers) - numControllers]int
-
-	// Watch the logging config map and dynamically update logging levels.
-	opt.ConfigMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, logconfig.Controller))
-
-	// Watch the observability config map
-	opt.ConfigMapWatcher.Watch(metrics.ConfigMapName(), metrics.UpdateExporterFromConfigMap(component, logger))
-
-	if err := opt.ConfigMapWatcher.Start(stopCh); err != nil {
-		logger.Fatalw("failed to start configuration manager", zap.Error(err))
-	}
-
-	// Start all of the informers and wait for them to sync.
-	logger.Info("Starting informers.")
-	if err := kncontroller.StartInformers(
-		stopCh,
-		// Messaging
-		natssChannelInformer.Informer(),
-
-		// Kube
-		serviceInformer.Informer(),
-		deploymentInformer.Informer(),
-		endpointsInformer.Informer(),
-	); err != nil {
-		logger.Fatalf("Failed to start informers: %v", err)
-	}
-
-	logger.Info("Starting controllers.")
-	kncontroller.StartAll(stopCh, controllers[:]...)
-}
-
-func setupLogger() (*zap.SugaredLogger, zap.AtomicLevel) {
-	// Set up our logger.
-	loggingConfigMap := getLoggingConfigOrDie()
-	loggingConfig, err := logging.NewConfigFromMap(loggingConfigMap)
-	if err != nil {
-		log.Fatalf("Error parsing logging configuration: %v", err)
-	}
-	return logging.NewLoggerFromConfig(loggingConfig, logconfig.Controller)
-}
-
-func getLoggingConfigOrDie() map[string]string {
-	if hardcodedLoggingConfig != nil && *hardcodedLoggingConfig {
-		return map[string]string{
-			"loglevel.controller": "info",
-			"zap-logger-config": `
-				{
-					"level": "info",
-					"development": false,
-					"outputPaths": ["stdout"],
-					"errorOutputPaths": ["stderr"],
-					"encoding": "json",
-					"encoderConfig": {
-					"timeKey": "ts",
-					"levelKey": "level",
-					"nameKey": "logger",
-					"callerKey": "caller",
-					"messageKey": "msg",
-					"stacktraceKey": "stacktrace",
-					"lineEnding": "",
-					"levelEncoder": "",
-					"timeEncoder": "iso8601",
-					"durationEncoder": "",
-					"callerEncoder": ""
-				}`,
-		}
-	}
-	cm, err := configmap.Load("/etc/config-logging")
-	if err != nil {
-		log.Fatalf("Error loading logging configuration: %v", err)
-	}
-	return cm
-}
-
-func flush(logger *zap.SugaredLogger) {
-	_ = logger.Sync()
-	metrics.FlushExporter()
+	cfg := sharedmain.ParseAndGetConfigOrDie()
+	sharedmain.MainWithConfig(ctx, component, cfg, func(ctx context.Context, watcher configmap.Watcher) *kncontroller.Impl {
+		return controller.NewController(ctx, watcher, cfg)
+	})
 }

@@ -17,22 +17,35 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 	clientgotesting "k8s.io/client-go/testing"
+
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection"
+	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
+	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
-	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
-	informers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions"
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	"knative.dev/eventing/pkg/reconciler"
+
+	"knative.dev/eventing-contrib/natss/pkg/client/injection/client"
+	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
+	_ "knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel/fake"
+	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	dispatchertesting "knative.dev/eventing-contrib/natss/pkg/dispatcher/testing"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
+
+	"go.uber.org/zap"
 )
 
 const (
@@ -100,20 +113,43 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewDispatcherDoNothing()
-
-		r := Reconciler{
-			Base:               reconciler.NewBase(opt, controllerAgentName),
-			natssDispatcher:    natssDispatcher,
-			natsschannelLister: listers.GetNatssChannelLister(),
-			impl:               nil,
-		}
-
-		return &r
-	},
-	))
+	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
+		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
+			return dispatchertesting.NewDispatcherDoNothing()
+		})
+	}))
 }
+
+type failOnFatalAndErrorLogger struct {
+	*zap.Logger
+	t *testing.T
+}
+
+func (l *failOnFatalAndErrorLogger) Error(msg string, fields ...zap.Field) {
+	l.t.Fatalf("Error() called - msg: %s - fields: %v", msg, fields)
+}
+
+func (l *failOnFatalAndErrorLogger) Fatal(msg string, fields ...zap.Field) {
+	l.t.Fatalf("Fatal() called - msg: %s - fields: %v", msg, fields)
+}
+
+func TestNewController(t *testing.T) {
+
+	logger := failOnFatalAndErrorLogger{
+		Logger: zap.NewNop(),
+		t:      t,
+	}
+	ctx := logging.WithLogger(context.Background(), logger.Sugar())
+	ctx, _ = fakekubeclient.With(ctx)
+	ctx, _ = fakeeventingclient.With(ctx)
+	ctx, _ = fakedynamicclient.With(ctx, runtime.NewScheme())
+	ctx, _ = fakeclientset.With(ctx)
+	cfg := &rest.Config{}
+	ctx, _ = injection.Fake.SetupInformers(ctx, cfg)
+
+	NewController(ctx, configmap.NewStaticWatcher(), cfg)
+}
+
 func TestFailedNatssSubscription(t *testing.T) {
 	ncKey := testNS + "/" + ncName
 
@@ -147,45 +183,11 @@ func TestFailedNatssSubscription(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(listers *reconciletesting.Listers, opt reconciler.Options) controller.Reconciler {
-		natssDispatcher := dispatchertesting.NewDispatcherFailNatssSubscription()
-
-		r := Reconciler{
-			Base:               reconciler.NewBase(opt, controllerAgentName),
-			natssDispatcher:    natssDispatcher,
-			natsschannelLister: listers.GetNatssChannelLister(),
-			impl:               nil,
-		}
-
-		return &r
-	},
-	))
-}
-
-// Test that the dispatcher controller can be created
-func TestNewController(t *testing.T) {
-	messagingClientSet, err := clientset.NewForConfig(&rest.Config{})
-	if err != nil {
-		t.Fail()
-	}
-
-	messagingInformerFactory := informers.NewSharedInformerFactory(messagingClientSet, 0)
-	natssChannelInformer := messagingInformerFactory.Messaging().V1alpha1().NatssChannels()
-
-	c := NewController(reconciler.Options{
-		KubeClientSet:    fakekubeclientset.NewSimpleClientset(),
-		DynamicClientSet: nil,
-		NatssClientSet:   nil,
-		Recorder:         nil,
-		StatsReporter:    nil,
-		ConfigMapWatcher: nil,
-		Logger:           logtesting.TestLogger(t),
-		ResyncPeriod:     0,
-		StopChannel:      nil,
-	}, dispatchertesting.NewDispatcherDoNothing(), natssChannelInformer)
-	if c == nil {
-		t.Errorf("unable to create dispatcher controller")
-	}
+	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
+		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
+			return dispatchertesting.NewDispatcherFailNatssSubscription()
+		})
+	}))
 }
 
 func makeFinalizerPatch(namespace, name string) clientgotesting.PatchActionImpl {
@@ -195,4 +197,18 @@ func makeFinalizerPatch(namespace, name string) clientgotesting.PatchActionImpl 
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func createReconciler(
+	ctx context.Context,
+	listers *reconciletesting.Listers,
+	dispatcherFactory func() dispatcher.NatssDispatcher,
+) controller.Reconciler {
+
+	return &Reconciler{
+		Base:               reconciler.NewBase(ctx, controllerAgentName, configmap.NewStaticWatcher()),
+		natssDispatcher:    dispatcherFactory(),
+		natsschannelLister: listers.GetNatssChannelLister(),
+		natssClientSet:     client.Get(ctx),
+	}
 }

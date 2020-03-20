@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	cloudevents "github.com/cloudevents/sdk-go/legacy"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/adapter"
