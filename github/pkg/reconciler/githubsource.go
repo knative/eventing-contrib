@@ -26,8 +26,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+
 	//knative.dev/serving imports
-	"knative.dev/serving/pkg/apis/serving/v1"
+	v1 "knative.dev/serving/pkg/apis/serving/v1"
 	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
 	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
 

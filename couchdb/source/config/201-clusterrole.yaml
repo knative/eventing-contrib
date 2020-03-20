@@ -78,7 +78,6 @@ rules:
   - list
   - watch
 
-# EventTypes admin
 - apiGroups:
   - coordination.k8s.io
   resources:

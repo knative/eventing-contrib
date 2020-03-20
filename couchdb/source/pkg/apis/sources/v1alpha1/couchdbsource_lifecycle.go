@@ -51,7 +51,7 @@ func (s *CouchDbSourceStatus) InitializeConditions() {
 // MarkSink sets the condition that the source has a sink configured.
 func (s *CouchDbSourceStatus) MarkSink(uri *apis.URL) {
 	s.SinkURI = uri
-	if uri != nil {
+	if !uri.IsEmpty() {
 		CouchDbCondSet.Manage(s).MarkTrue(CouchDbConditionSinkProvided)
 	} else {
 		CouchDbCondSet.Manage(s).MarkUnknown(CouchDbConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")

@@ -58,7 +58,7 @@ func (s *KafkaSourceStatus) InitializeConditions() {
 // MarkSink sets the condition that the source has a sink configured.
 func (s *KafkaSourceStatus) MarkSink(uri *apis.URL) {
 	s.SinkURI = uri
-	if uri != nil {
+	if !uri.IsEmpty() {
 		KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionSinkProvided)
 	} else {
 		KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")

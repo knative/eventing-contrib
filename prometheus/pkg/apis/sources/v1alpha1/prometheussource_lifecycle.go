@@ -64,7 +64,7 @@ func (s *PrometheusSourceStatus) MarkInvalidSchedule(reason, messageFormat strin
 // MarkSink sets the condition that the source has a sink configured.
 func (s *PrometheusSourceStatus) MarkSink(uri *apis.URL) {
 	s.SinkURI = uri
-	if uri != nil {
+	if !uri.IsEmpty() {
 		PrometheusCondSet.Manage(s).MarkTrue(PrometheusConditionSinkProvided)
 	} else {
 		PrometheusCondSet.Manage(s).MarkUnknown(PrometheusConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
