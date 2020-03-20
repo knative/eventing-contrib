@@ -17,6 +17,26 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: gitlabsources.sources.knative.dev
+  labels:
+    contrib.eventing.knative.dev/release: devel
+    eventing.knative.dev/source: "true"
+    duck.knative.dev/source: "true"
+    knative.dev/crd-install: "true"
+  annotations:
+    # TODO add schemas and descriptions
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "dev.knative.sources.gitlabsource.push_events" },
+        { "type": "dev.knative.sources.gitlabsource.push_events_branch_filter" },
+        { "type": "dev.knative.sources.gitlabsource.issues_events" },
+        { "type": "dev.knative.sources.gitlabsource.confidential_issues_events" },
+        { "type": "dev.knative.sources.gitlabsource.merge_requests_events" },
+        { "type": "dev.knative.sources.gitlabsource.tag_push_events" },
+        { "type": "dev.knative.sources.gitlabsource.note_events" },
+        { "type": "dev.knative.sources.gitlabsource.job_events" },
+        { "type": "dev.knative.sources.gitlabsource.pipeline_events" },
+        { "type": "dev.knative.sources.gitlabsource.wiki_page_events" }
+      ]
 spec:
   group: sources.knative.dev
   names:
@@ -24,7 +44,12 @@ spec:
     listKind: GitLabSourceList
     plural: gitlabsources
     singular: gitlabsource
-  scope: ""
+    categories:
+      - all
+      - knative
+      - eventing
+      - sources
+  scope: Namespaced
   subresources:
     status: {}
   validation:

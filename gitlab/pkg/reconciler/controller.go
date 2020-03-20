@@ -29,7 +29,6 @@ import (
 	sourcescheme "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/scheme"
 	gitlabclient "knative.dev/eventing-contrib/gitlab/pkg/client/injection/client"
 	gitlabinformer "knative.dev/eventing-contrib/gitlab/pkg/client/injection/informers/sources/v1alpha1/gitlabsource"
-	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	serviceclient "knative.dev/serving/pkg/client/injection/client"
 	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
 
@@ -56,7 +55,6 @@ func NewController(
 	}
 
 	gitlabInformer := gitlabinformer.Get(ctx)
-	eventTypeInformer := eventtypeinformer.Get(ctx)
 	serviceInformer := kserviceinformer.Get(ctx)
 
 	r := &Reconciler{
@@ -66,7 +64,6 @@ func NewController(
 		gitlabClientSet:     gitlabclient.Get(ctx),
 		gitlabLister:        gitlabInformer.Lister(),
 		receiveAdapterImage: raImage,
-		eventTypeLister:     eventTypeInformer.Lister(),
 		loggingContext:      ctx,
 	}
 
@@ -78,11 +75,6 @@ func NewController(
 	gitlabInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitLabSource")),
-		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
-	})
-
-	eventTypeInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitLabSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})

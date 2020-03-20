@@ -50,8 +50,6 @@ import (
 	clientset "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned"
 	listers "knative.dev/eventing-contrib/gitlab/pkg/client/listers/sources/v1alpha1"
 
-	//knative.dev/eventing imports
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
@@ -83,7 +81,6 @@ type Reconciler struct {
 	servingLister    servinglisters.ServiceLister
 
 	receiveAdapterImage string
-	eventTypeLister     eventinglisters.EventTypeLister
 
 	deploymentLister appsv1listers.DeploymentLister
 	sinkResolver     *resolver.URIResolver

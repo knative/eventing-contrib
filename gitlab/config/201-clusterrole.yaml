@@ -16,6 +16,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: gitlabsource-manager-role
+  labels:
+    contrib.eventing.knative.dev/release: devel
 rules:
 - apiGroups:
   - sources.knative.dev
@@ -69,13 +71,6 @@ rules:
   - configmaps
   verbs: *everything
 
-# EventTypes admin
-- apiGroups:
-  - eventing.knative.dev
-  resources:
-  - eventtypes
-  verbs: *everything
-
 ---
 # The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
 # See https://knative.dev/eventing/blob/master/config/200-source-observer-clusterrole.yaml.
@@ -84,6 +79,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: eventing-contrib-gitlab-source-observer
   labels:
+    contrib.eventing.knative.dev/release: devel
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
