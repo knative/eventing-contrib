@@ -77,16 +77,17 @@ type SecretValueFromSource struct {
 
 // GitLabSourceStatus defines the observed state of GitLabSource
 type GitLabSourceStatus struct {
-	// Conditions holds the state of a source at a point in time.
-	duckv1.Status `json:",inline"`
+	// inherits duck/v1 SourceStatus, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last
+	//   processed by the controller.
+	// * Conditions - the latest available observations of a resource's current
+	//   state.
+	// * SinkURI - the current active sink URI that has been configured for the
+	//   Source.
+	duckv1.SourceStatus `json:",inline"`
 
 	// ID of the project hook registered with GitLab
 	Id string `json:"Id,omitempty"`
-
-	// SinkURI is the current active sink URI that has been configured
-	// for the GitLabSource.
-	// +optional
-	SinkURI string `json:"sinkUri,omitempty"`
 }
 
 const (
@@ -128,7 +129,7 @@ func (s *GitLabSourceStatus) InitializeConditions() {
 
 // MarkSink sets the condition that the source has a sink configured.
 func (s *GitLabSourceStatus) MarkSink(uri *apis.URL) {
-	s.SinkURI = uri.String()
+	s.SinkURI = uri
 	if uri.IsEmpty() {
 		gitLabSourceCondSet.Manage(s).MarkUnknown(GitLabSourceConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.")
 	} else {

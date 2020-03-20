@@ -347,7 +347,7 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 			},
 		}, {
 			Name:  "K_SINK",
-			Value: source.Status.SinkURI,
+			Value: source.Status.SinkURI.String(),
 		}, {
 			Name:  "NAMESPACE",
 			Value: source.GetNamespace(),
