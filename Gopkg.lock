@@ -1882,7 +1882,7 @@
 
 [[projects]]
   branch = "rt_registry"
-  digest = "1:023175036e669df5af30e3f840232ab677f2da33711947cbddcdda2b7219219f"
+  digest = "1:e6b903ef6580a5e355de535aaff4f0fe8a5a4a4596d71af36c0fe423b3c2c7e5"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1989,7 +1989,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "275d7e5fbeaef256a16ee8d39a3c49e7a17a8385"
+  revision = "7df316f9dd63e74d14f64bb044e2b1dae6b026b9"
   source = "github.com/nachocano/eventing"
 
 [[projects]]
@@ -2114,7 +2114,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "55d304f44a9590e9e7653e828b2f0acae6df92f9"
+  revision = "815b04fd9fd0a5ab38dd94290d81aed23b0cf08c"
 
 [[projects]]
   branch = "master"
