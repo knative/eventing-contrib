@@ -53,8 +53,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  source = "github.com/nachocano/pkg"
-  branch = "rt_registry"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/go-kivik/kivik"
