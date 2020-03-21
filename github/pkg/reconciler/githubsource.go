@@ -221,7 +221,6 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 		receiveAdapterDomain := ksvc.Status.URL.Host
 		// source.Status.MarkServiceDeployed(ra)
 		// TODO: Mark Deployed for the ksvc
-		// TODO: Mark some condition for the webhook status?
 		err := r.addFinalizer(source)
 		if err != nil {
 			return err
@@ -236,9 +235,11 @@ func (r *Reconciler) reconcile(ctx context.Context, source *sourcesv1alpha1.GitH
 			}
 			hookID, err := r.createWebhook(ctx, args)
 			if err != nil {
+				source.Status.MarkNoWebhook("WebhookCreationFailed", "%s", err)
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
+			source.Status.MarkWebhook()
 		}
 	} else {
 		return nil
