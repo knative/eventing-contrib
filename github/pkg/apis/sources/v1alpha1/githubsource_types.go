@@ -127,6 +127,10 @@ const (
 	// GitHubSource has been configured with event types.
 	GitHubSourceConditionEventTypesProvided apis.ConditionType = "EventTypeProvided"
 
+	//GitHubSourceConditionWebhookProvided has a status True when the
+	//GitHubSource has been configured with a webhook.
+	GitHubSourceConditionWebhookProvided apis.ConditionType = "WebhookProvided"
+
 	// GitHubServiceconditiondeployed has status True when then
 	// GitHubSource Service has been deployed
 	//	GitHubServiceConditionDeployed apis.ConditionType = "Deployed"
@@ -138,7 +142,8 @@ const (
 
 var gitHubSourceCondSet = apis.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
-	GitHubSourceConditionSinkProvided)
+	GitHubSourceConditionSinkProvided,
+	GitHubSourceConditionWebhookProvided)
 
 //	GitHubServiceConditionDeployed)
 
@@ -227,6 +232,16 @@ func (s *GitHubSourceStatus) MarkEventTypes() {
 // MarkNoEventTypes sets the condition that the source does not its event types configured.
 func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
+}
+
+// MarkWebhook sets the condition that the source has set its webhook configured.
+func (s *GitHubSourceStatus) MarkWebhook() {
+	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionWebhookProvided)
+}
+
+// MarkNoWebhook sets the condition that the source does not have its webhook configured.
+func (s *GitHubSourceStatus) MarkNoWebhook(reason, messageFormat string, messageA ...interface{}) {
+	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionWebhookProvided, reason, messageFormat, messageA...)
 }
 
 // MarkDeployed sets the condition that the source has been deployed.
