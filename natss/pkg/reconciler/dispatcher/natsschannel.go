@@ -23,6 +23,11 @@ import (
 	"reflect"
 	"strings"
 
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/reconciler"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -30,17 +35,18 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
-	messaginginformers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1"
+	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
+	"knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel"
 	listers "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
+	"knative.dev/eventing-contrib/natss/pkg/util"
 )
 
 const (
@@ -60,6 +66,8 @@ type Reconciler struct {
 
 	natssDispatcher dispatcher.NatssDispatcher
 
+	natssClientSet clientset.Interface
+
 	natsschannelLister listers.NatssChannelLister
 	impl               *controller.Impl
 }
@@ -69,24 +77,50 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(
-	opt reconciler.Options,
-	natssDispatcher dispatcher.NatssDispatcher,
-	natsschannelInformer messaginginformers.NatssChannelInformer,
-) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, config *rest.Config) *controller.Impl {
+
+	logger := logging.FromContext(ctx)
+	base := reconciler.NewBase(ctx, controllerAgentName, watcher)
+
+	natssConfig := util.GetNatssConfig()
+	dispatcherArgs := dispatcher.Args{
+		NatssURL:  util.GetDefaultNatssURL(),
+		ClusterID: util.GetDefaultClusterID(),
+		ClientID:  natssConfig.ClientID,
+		Cargs: kncloudevents.ConnectionArgs{
+			MaxIdleConns:        natssConfig.MaxIdleConns,
+			MaxIdleConnsPerHost: natssConfig.MaxIdleConnsPerHost,
+		},
+		Logger: logger,
+	}
+	natssDispatcher, err := dispatcher.NewDispatcher(dispatcherArgs)
+	if err != nil {
+		logger.Fatal("Unable to create natss dispatcher", zap.Error(err))
+	}
+
+	logger = logger.With(zap.String("controller/impl", "pkg"))
+	logger.Info("Starting the NATSS dispatcher")
+
+	channelInformer := natsschannel.Get(ctx)
 
 	r := &Reconciler{
-		Base:               reconciler.NewBase(opt, controllerAgentName),
+		Base:               base,
 		natssDispatcher:    natssDispatcher,
-		natsschannelLister: natsschannelInformer.Lister(),
+		natsschannelLister: channelInformer.Lister(),
+		natssClientSet:     clientset.NewForConfigOrDie(config),
 	}
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
-	r.Logger.Info("Setting up event handlers")
+	logger.Info("Setting up event handlers")
 
-	// Watch for NATSS channels.
-	natsschannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
+	channelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
 
+	logger.Info("Starting dispatcher.")
+	go func() {
+		if err := natssDispatcher.Start(ctx); err != nil {
+			logger.Error("Cannot start dispatcher", zap.Error(err))
+		}
+	}()
 	return r.impl
 }
 
@@ -124,7 +158,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 			return err
 		}
 		removeFinalizer(natssChannel)
-		_, err := r.NatssClientSet.MessagingV1alpha1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
+		_, err := r.natssClientSet.MessagingV1alpha1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
 		return err
 	}
 
@@ -243,7 +277,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	existing := nc.DeepCopy()
 	existing.Status = desired.Status
 
-	return r.NatssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
+	return r.natssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
 }
 
 func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
@@ -264,7 +298,7 @@ func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
 		return err
 	}
 
-	_, err = r.NatssClientSet.MessagingV1alpha1().NatssChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
+	_, err = r.natssClientSet.MessagingV1alpha1().NatssChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
 	return err
 }
 

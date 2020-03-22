@@ -17,29 +17,22 @@ limitations under the License.
 package kafka
 
 import (
-	"bytes"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/binary"
-	"encoding/json"
 	"fmt"
-	"math"
-	"regexp"
-	"strconv"
+	"net/http"
 	"strings"
 	"time"
 
 	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/source"
-
-	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
-	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 
 	"context"
 
+	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
+
 	"github.com/Shopify/sarama"
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
 )
@@ -82,23 +75,26 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 }
 
 type Adapter struct {
-	config        *adapterConfig
-	ceClient      client.Client
-	reporter      source.StatsReporter
-	logger        *zap.Logger
-	keyTypeMapper func([]byte) interface{}
+	config            *adapterConfig
+	httpMessageSender *kncloudevents.HttpMessageSender
+	reporter          source.StatsReporter
+	logger            *zap.Logger
+	keyTypeMapper     func([]byte) interface{}
 }
 
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient client.Client, reporter source.StatsReporter) adapter.Adapter {
+var _ adapter.MessageAdapter = (*Adapter)(nil)
+var _ adapter.MessageAdapterConstructor = NewAdapter
+
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMessageSender *kncloudevents.HttpMessageSender, reporter source.StatsReporter) adapter.MessageAdapter {
 	logger := logging.FromContext(ctx).Desugar()
 	config := processed.(*adapterConfig)
 
 	return &Adapter{
-		config:        config,
-		ceClient:      ceClient,
-		reporter:      reporter,
-		logger:        logger,
-		keyTypeMapper: getKeyTypeMapper(config.KeyType),
+		config:            config,
+		httpMessageSender: httpMessageSender,
+		reporter:          reporter,
+		logger:            logger,
+		keyTypeMapper:     getKeyTypeMapper(config.KeyType),
 	}
 }
 
@@ -166,54 +162,35 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 // --------------------------------------------------------------------
 
 func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool, error) {
-	var err error
-	event := cloudevents.NewEvent(cloudevents.VersionV1)
-
-	if strings.Contains(getContentType(msg), "application/cloudevents+json") {
-		err = json.Unmarshal(msg.Value, &event)
-	} else {
-		// Check if payload is a valid json
-		if !json.Valid(msg.Value) {
-			return true, nil // Message is malformed, commit the offset so it won't be reprocessed
-		}
-
-		event.SetID(makeEventId(msg.Partition, msg.Offset))
-		event.SetTime(msg.Timestamp)
-		event.SetType(sourcesv1alpha1.KafkaEventType)
-		event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, msg.Topic))
-		event.SetSubject(makeEventSubject(msg.Partition, msg.Offset))
-		event.SetDataContentType(cloudevents.ApplicationJSON)
-
-		dumpKafkaMetaToEvent(&event, a.keyTypeMapper, msg)
-
-		err = event.SetData(msg.Value)
-	}
-
+	req, err := a.httpMessageSender.NewCloudEventRequest(ctx)
 	if err != nil {
-		return true, err // Message is malformed, commit the offset so it won't be reprocessed
+		return false, err
 	}
 
-	// Check before writing log since event.String() allocates and uses a lot of time
-	if ce := a.logger.Check(zap.DebugLevel, "debugging"); ce != nil {
-		a.logger.Debug("Sending cloud event", zap.String("event", event.String()))
+	err = a.ConsumerMessageToHttpRequest(ctx, msg, req, a.logger)
+	if err != nil {
+		return true, err
 	}
 
-	rctx, _, err := a.ceClient.Send(ctx, event)
+	res, err := a.httpMessageSender.Send(req)
 
 	if err != nil {
 		a.logger.Debug("Error while sending the message", zap.Error(err))
 		return false, err // Error while sending, don't commit offset
 	}
 
+	if res.StatusCode/100 != 2 {
+		a.logger.Debug("Unexpected status code", zap.Int("status code", res.StatusCode))
+		return false, fmt.Errorf("%d %s", res.StatusCode, http.StatusText(res.StatusCode))
+	}
+
 	reportArgs := &source.ReportArgs{
 		Namespace:     a.config.Namespace,
-		EventSource:   event.Source(),
-		EventType:     event.Type(),
 		Name:          a.config.Name,
 		ResourceGroup: resourceGroup,
 	}
 
-	_ = a.reporter.ReportEventCount(reportArgs, cloudevents.HTTPTransportContextFrom(rctx).StatusCode)
+	_ = a.reporter.ReportEventCount(reportArgs, res.StatusCode)
 	return true, nil
 }
 
@@ -250,89 +227,6 @@ func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
 	}
 
 	return config, nil
-}
-
-func makeEventId(partition int32, offset int64) string {
-	return fmt.Sprintf("partition:%s/offset:%s", strconv.Itoa(int(partition)), strconv.FormatInt(offset, 10))
-}
-
-// KafkaEventSubject returns the Kafka CloudEvent subject of the message.
-func makeEventSubject(partition int32, offset int64) string {
-	return fmt.Sprintf("partition:%d#%d", partition, offset)
-}
-
-func getContentType(msg *sarama.ConsumerMessage) string {
-	for _, h := range msg.Headers {
-		if bytes.Equal(h.Key, []byte("content-type")) {
-			return string(h.Value)
-		}
-	}
-	return ""
-}
-
-var replaceBadCharacters = regexp.MustCompile(`[^a-zA-Z0-9]`).ReplaceAllString
-
-func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, msg *sarama.ConsumerMessage) {
-	if msg.Key != nil {
-		event.SetExtension("key", keyTypeMapper(msg.Key))
-	}
-	for _, h := range msg.Headers {
-		event.SetExtension("kafkaheader"+replaceBadCharacters(string(h.Key), ""), string(h.Value))
-	}
-}
-
-func getKeyTypeMapper(keyType string) func([]byte) interface{} {
-	var keyTypeMapper func([]byte) interface{}
-	switch keyType {
-	case "int":
-		keyTypeMapper = func(by []byte) interface{} {
-			// Took from https://github.com/axbaretto/kafka/blob/master/clients/src/main/java/org/apache/kafka/common/serialization/LongDeserializer.java
-			if len(by) == 4 {
-				var res int32
-				for _, b := range by {
-					res <<= 8
-					res |= int32(b & 0xFF)
-				}
-				return res
-			} else if len(by) == 8 {
-				var res int64
-				for _, b := range by {
-					res <<= 8
-					res |= int64(b & 0xFF)
-				}
-				return res
-			} else {
-				// Fallback to byte array
-				return by
-			}
-		}
-	case "float":
-		keyTypeMapper = func(by []byte) interface{} {
-			// BigEndian is specified in https://kafka.apache.org/protocol#protocol_types
-			// Number is converted to string because
-			if len(by) == 4 {
-				intermediate := binary.BigEndian.Uint32(by)
-				fl := math.Float32frombits(intermediate)
-				return strconv.FormatFloat(float64(fl), 'f', -1, 64)
-			} else if len(by) == 8 {
-				intermediate := binary.BigEndian.Uint64(by)
-				fl := math.Float64frombits(intermediate)
-				return strconv.FormatFloat(fl, 'f', -1, 64)
-			} else {
-				// Fallback to byte array
-				return by
-			}
-		}
-	case "byte-array":
-		keyTypeMapper = func(bytes []byte) interface{} {
-			return bytes
-		}
-	default:
-		keyTypeMapper = func(bytes []byte) interface{} {
-			return string(bytes)
-		}
-	}
-	return keyTypeMapper
 }
 
 // verifyCertSkipHostname verifies certificates in the same way that the

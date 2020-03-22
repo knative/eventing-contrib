@@ -1,0 +1,23 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: GitLabSource
+metadata:
+  name: gitlabsource-sample
+spec:
+  eventTypes:
+  - push_events
+  - issues_events
+  projectUrl: <project url>
+  accessToken:
+    secretKeyRef:
+      name: gitlabsecret
+      key: accessToken
+  secretToken:
+    secretKeyRef:
+      name: gitlabsecret
+      key: secretToken
+  sink:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: gitlab-event-display
+

@@ -49,6 +49,7 @@ function build_release() {
   for yaml in "${!COMPONENTS[@]}"; do
     local config="${COMPONENTS[${yaml}]}"
     echo "Building Knative Eventing Contrib - ${config}"
+    # TODO(chizhg): reenable --strict mode after https://github.com/knative/test-infra/issues/1262 is fixed.
     ko resolve ${KO_FLAGS} -f ${config}/ | "${LABEL_YAML_CMD[@]}" > ${yaml}
     all_yamls+=(${yaml})
   done

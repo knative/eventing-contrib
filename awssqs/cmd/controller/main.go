@@ -22,7 +22,7 @@ import (
 
 	"knative.dev/pkg/injection/sharedmain"
 
-	awssqssource "knative.dev/eventing-contrib/awssqs/pkg/client/injection/reconciler/sources/v1alpha1/awssqssource/stub"
+	awssqssource "knative.dev/eventing-contrib/awssqs/pkg/reconciler"
 )
 
 func main() {

@@ -80,18 +80,21 @@ rules:
   - eventing.knative.dev
   resources:
   - channels
+  - eventtypes
   verbs:
   - get
   - list
   - watch
-# Secrets read
+# Secrets & Services read
 - apiGroups:
   - ""
   resources:
   - secrets
+  - services
   verbs:
   - get
   - list
+  - watch
 
 
 ---

@@ -20,12 +20,12 @@ set -o pipefail
 
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
-CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator)}
+CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator)}
 
-KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 ./vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
+KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
 # Sources
-API_DIRS_SOURCES=(github/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
+API_DIRS_SOURCES=(github/pkg gitlab/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
 
 for DIR in "${API_DIRS_SOURCES[@]}"; do
   # generate the code with:
@@ -72,7 +72,8 @@ ${GOPATH}/bin/deepcopy-gen \
   -i knative.dev/eventing-contrib/awssqs/pkg/apis \
   -i knative.dev/eventing-contrib/couchdb/source/pkg/apis \
   -i knative.dev/eventing-contrib/camel/source/pkg/apis \
-  -i knative.dev/eventing-contrib/github/pkg/apis
+  -i knative.dev/eventing-contrib/github/pkg/apis \
+  -i knative.dev/eventing-contrib/gitlab/pkg/apis
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh

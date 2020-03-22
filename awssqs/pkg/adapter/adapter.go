@@ -25,14 +25,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	cloudevents "github.com/cloudevents/sdk-go"
-	ce_client "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
+	ce_client "github.com/cloudevents/sdk-go/v1/cloudevents/client"
+	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
 
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
 )
 
@@ -104,11 +104,19 @@ func (a *Adapter) Start(ctx context.Context, stopCh <-chan struct{}) error {
 		return err
 	}
 
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigDisable,
-		Config:            aws.Config{Region: &region},
-		SharedConfigFiles: []string{a.CredsFile},
-	}))
+	var sess *session.Session
+
+	if a.CredsFile == "" {
+		sess = session.Must(session.NewSessionWithOptions(session.Options{
+			Config: aws.Config{Region: &region},
+		}))
+	} else {
+		sess = session.Must(session.NewSessionWithOptions(session.Options{
+			SharedConfigState: session.SharedConfigDisable,
+			Config:            aws.Config{Region: &region},
+			SharedConfigFiles: []string{a.CredsFile},
+		}))
+	}
 
 	q := sqs.New(sess)
 
@@ -169,10 +177,11 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 }
 
 func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
-
-	// TODO verify the timestamp conversion
 	timestamp, err := strconv.ParseInt(*m.Attributes["SentTimestamp"], 10, 64)
-	if err != nil {
+	if err == nil {
+		//Convert to nanoseconds as sqs SentTimestamp is millisecond
+		timestamp = timestamp * int64(1000000)
+	} else {
 		timestamp = time.Now().UnixNano()
 	}
 
@@ -180,7 +189,7 @@ func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 	event.SetID(*m.MessageId)
 	event.SetType(sourcesv1alpha1.AwsSqsSourceEventType)
 	event.SetSource(types.ParseURIRef(a.QueueURL).String())
-	event.SetTime(time.Unix(timestamp, 0))
+	event.SetTime(time.Unix(0, timestamp))
 
 	if err := event.SetData(m); err != nil {
 		return nil, err

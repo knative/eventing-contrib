@@ -17,45 +17,65 @@ limitations under the License.
 package kafka
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
 
 	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/kncloudevents"
+	"knative.dev/pkg/source"
 
 	"github.com/Shopify/sarama"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"go.uber.org/zap"
-
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
 )
 
 // Run with go test -v ./kafka/source/pkg/adapter/ -gcflags="-N -l" -test.benchtime 2s -benchmem -run=Handle -bench=.
 
-type benchHandler struct{}
+type RoundTripFunc func(req *http.Request) *http.Response
 
-func (b benchHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
-	writer.WriteHeader(http.StatusOK)
+func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func NewTestClient(fn RoundTripFunc) *http.Client {
+	return &http.Client{
+		Transport: RoundTripFunc(fn),
+	}
 }
 
 func BenchmarkHandle(b *testing.B) {
-	// Start receiving server
-	sinkServer := httptest.NewServer(benchHandler{})
-	defer sinkServer.Close()
+	sinkUrl := "http://localhost:8080" // This address doesn't matter, it's not used b/c we mock the client transport
 
 	data, err := json.Marshal(map[string]string{"key": "value"})
 	if err != nil {
 		b.Errorf("unexpected error, %v", err)
 	}
 
+	s := kncloudevents.HttpMessageSender{
+		Client: NewTestClient(func(req *http.Request) *http.Response {
+			return &http.Response{
+				StatusCode: 202,
+				Header:     make(http.Header),
+				Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
+			}
+		}),
+		Target: sinkUrl,
+	}
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	statsReporter, _ := source.NewStatsReporter()
+
 	a := &Adapter{
 		config: &adapterConfig{
 			EnvConfig: adapter.EnvConfig{
-				SinkURI:   sinkServer.URL,
+				SinkURI:   sinkUrl,
 				Namespace: "test",
 			},
 			Topics:           "topic1,topic2",
@@ -64,12 +84,10 @@ func BenchmarkHandle(b *testing.B) {
 			Name:             "test",
 			Net:              AdapterNet{},
 		},
-		ceClient: func() client.Client {
-			c, _ := kncloudevents.NewDefaultClient(sinkServer.URL)
-			return c
-		}(),
-		logger:        zap.NewNop(),
-		keyTypeMapper: getKeyTypeMapper(""),
+		httpMessageSender: &s,
+		logger:            zap.NewNop(),
+		keyTypeMapper:     getKeyTypeMapper(""),
+		reporter:          statsReporter,
 	}
 	b.SetParallelism(1)
 	b.Run("Baseline", func(b *testing.B) {

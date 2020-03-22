@@ -22,26 +22,34 @@ import (
 	"reflect"
 	"time"
 
-	"knative.dev/eventing/pkg/reconciler/names"
 	"knative.dev/pkg/apis"
+	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
+	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
+	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/system"
 
 	"go.uber.org/zap"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	appsv1informers "k8s.io/client-go/informers/apps/v1"
-	corev1informers "k8s.io/client-go/informers/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
-	messaginginformers "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1"
-	listers "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler"
-	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller/resources"
+
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/pkg/controller"
+	"knative.dev/eventing/pkg/reconciler"
+	"knative.dev/eventing/pkg/reconciler/names"
+
+	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
+	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
+	"knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel"
+	listers "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller/resources"
 )
 
 const (
@@ -56,11 +64,15 @@ const (
 	channelReconciled         = "ChannelReconciled"
 	channelReconcileFailed    = "ChannelReconcileFailed"
 	channelUpdateStatusFailed = "ChannelUpdateStatusFailed"
+
+	dispatcherName = "natss-ch-dispatcher"
 )
 
 // Reconciler reconciles NATSS Channels.
 type Reconciler struct {
 	*reconciler.Base
+
+	NatssClientSet clientset.Interface
 
 	dispatcherNamespace      string
 	dispatcherDeploymentName string
@@ -88,23 +100,24 @@ var _ cache.ResourceEventHandler = (*Reconciler)(nil)
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
 func NewController(
-	opt reconciler.Options,
-	dispatcherNamespace string,
-	dispatcherDeploymentName string,
-	dispatcherServiceName string,
-	natsschannelInformer messaginginformers.NatssChannelInformer,
-	deploymentInformer appsv1informers.DeploymentInformer,
-	serviceInformer corev1informers.ServiceInformer,
-	endpointsInformer corev1informers.EndpointsInformer,
+	ctx context.Context,
+	cmw configmap.Watcher,
+	config *rest.Config,
 ) *controller.Impl {
 
+	channelInformer := natsschannel.Get(ctx)
+	deploymentInformer := deploymentinformer.Get(ctx)
+	serviceInformer := service.Get(ctx)
+	endpointsInformer := endpoints.Get(ctx)
+
 	r := &Reconciler{
-		Base:                     reconciler.NewBase(opt, controllerAgentName),
-		dispatcherNamespace:      dispatcherNamespace,
-		dispatcherDeploymentName: dispatcherDeploymentName,
-		dispatcherServiceName:    dispatcherServiceName,
-		natsschannelLister:       natsschannelInformer.Lister(),
-		natsschannelInformer:     natsschannelInformer.Informer(),
+		Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
+		NatssClientSet:           clientset.NewForConfigOrDie(config),
+		dispatcherNamespace:      system.Namespace(),
+		dispatcherDeploymentName: dispatcherName,
+		dispatcherServiceName:    dispatcherName,
+		natsschannelLister:       channelInformer.Lister(),
+		natsschannelInformer:     channelInformer.Informer(),
 		deploymentLister:         deploymentInformer.Lister(),
 		serviceLister:            serviceInformer.Lister(),
 		endpointsLister:          endpointsInformer.Lister(),
@@ -112,21 +125,21 @@ func NewController(
 	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
 
 	r.Logger.Info("Setting up event handlers")
-	natsschannelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
+	channelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
 
 	// Set up watches for dispatcher resources we care about, since any changes to these
 	// resources will affect our Channels. So, set up a watch here, that will cause
 	// a global Resync for all the channels to take stock of their health when these change.
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(dispatcherNamespace, dispatcherDeploymentName),
+		FilterFunc: controller.FilterWithNameAndNamespace(r.dispatcherNamespace, r.dispatcherDeploymentName),
 		Handler:    r,
 	})
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(dispatcherNamespace, dispatcherServiceName),
+		FilterFunc: controller.FilterWithNameAndNamespace(r.dispatcherNamespace, r.dispatcherServiceName),
 		Handler:    r,
 	})
 	endpointsInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(dispatcherNamespace, dispatcherServiceName),
+		FilterFunc: controller.FilterWithNameAndNamespace(r.dispatcherNamespace, r.dispatcherServiceName),
 		Handler:    r,
 	})
 	return r.impl
@@ -154,7 +167,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	// Convert the namespace/name string into a distinct namespace and name.
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		logging.FromContext(ctx).Error("invalid resource key")
+		logging.FromContext(ctx).Error("invalid resource key", zap.Error(err))
 		return nil
 	}
 

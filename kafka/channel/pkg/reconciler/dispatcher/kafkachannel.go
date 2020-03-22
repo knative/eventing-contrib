@@ -124,7 +124,7 @@ func NewController(
 		TopicFunc:          utils.TopicName,
 		Logger:             logger,
 	}
-	kafkaDispatcher, err := dispatcher.NewDispatcher(args)
+	kafkaDispatcher, err := dispatcher.NewDispatcher(ctx, args)
 	if err != nil {
 		logger.Fatal("Unable to create kafka dispatcher", zap.Error(err))
 	}

@@ -21,7 +21,7 @@ import (
 	"log"
 	"os"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v1"
 	"github.com/kelseyhightower/envconfig"
 )
 

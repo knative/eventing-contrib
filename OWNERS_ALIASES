@@ -2,20 +2,30 @@ aliases:
   # These aliases are for OWNERS of the various Source implementations. These
   # Are in addition to the repo level OWNERS.
 
+  camel-approvers:
+    - nicolaferraro
+    - matzew
+  camel-reviewers:
+    - nicolaferraro
+    - matzew
+
   github-approvers:
-    - bbrowning
     - lberk
   github-reviewers:
-    - bbrowning
     - lberk
     - rootfs
 
+  gitlab-approvers:
+    - sebgoa
+    - tzununbekov
+  gitlab-reviewers:
+    - sebgoa
+    - tzununbekov
+
   kafka-approvers:
-    - bbrowning
     - lberk
     - matzew
   kafka-reviewers:
-    - bbrowning
     - lberk
     - matzew
 

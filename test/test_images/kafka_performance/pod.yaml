@@ -8,5 +8,5 @@ metadata:
 spec:
   containers:
     - name: kafka-performance
-      image: knative.dev/eventing-contrib/test/test_images/kafka_performance
+      image: ko://knative.dev/eventing-contrib/test/test_images/kafka_performance
 

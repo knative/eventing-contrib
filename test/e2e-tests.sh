@@ -67,7 +67,7 @@ readonly KAFKA_CRD_CONFIG_DIR="$(mktemp -d)"
 readonly KAFKA_SOURCE_CRD_CONFIG_DIR="kafka/source/config"
 
 # CamelK installation
-readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.0.0-RC1.yaml"
+readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.0.0-RC2.yaml"
 # Camel source CRD config template directory
 readonly CAMEL_SOURCE_CRD_CONFIG_DIR="camel/source/config"
 
@@ -115,6 +115,9 @@ function test_setup() {
 
   # Publish test images.
   echo ">> Publishing test images from vendor"
+  # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
+  # path has to be a GOPATH.
+  sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"/*/*.yaml
   $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 }

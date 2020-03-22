@@ -53,7 +53,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "release-0.13"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/go-kivik/kivik"
@@ -129,7 +129,7 @@ required = [
 
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
-  version = "1.15.73"
+  version = "1.29.21"
 
 [[constraint]]
   name = "github.com/gorilla/websocket"
@@ -137,11 +137,11 @@ required = [
 
 [[constraint]]
   name = "github.com/cloudevents/sdk-go"
-  revision = "427e8cf75237fdc7d4bb6c496398d7288efb8921"
+  version = "v2.0.0-preview4"
 
 [[constraint]]
   name = "github.com/apache/camel-k"
-  version = "1.0.0-RC1"
+  version = "1.0.0-RC2"
 
 # needed because pkg upgraded
 [[override]]

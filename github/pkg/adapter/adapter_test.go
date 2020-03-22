@@ -32,7 +32,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cehttp "github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
 )
 
@@ -524,6 +524,11 @@ var (
 		"content-length":  {},
 		"user-agent":      {},
 		"ce-time":         {},
+		"ce-traceparent":  {},
+		"traceparent":     {},
+		"x-b3-sampled":    {},
+		"x-b3-spanid":     {},
+		"x-b3-traceid":    {},
 	}
 )
 
