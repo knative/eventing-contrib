@@ -160,7 +160,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 
 		// source.Status.MarkServiceDeployed(ra)
 		// TODO: Mark Deployed for the ksvc
-		// TODO: Mark some condition for the webhook status?
 		if source.Status.WebhookIDKey == "" {
 			hookID, err := r.createWebhook(ctx, args)
 			if err != nil {
@@ -171,9 +170,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		} else {
 			err := r.reconcileWebhook(ctx, args, source.Status.WebhookIDKey)
 			if err != nil {
+				source.Status.MarkNoWebhook("WebhookCreationFailed", "%s", err)
 				return err
 			}
 		}
+		source.Status.MarkWebhook()
 	}
 
 	err = r.reconcileEventTypes(ctx, source)
