@@ -160,14 +160,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 
 		// source.Status.MarkServiceDeployed(ra)
 		// TODO: Mark Deployed for the ksvc
-<<<<<<< HEAD
-		err := r.addFinalizer(source)
-		if err != nil {
-			return err
-		}
-=======
 		// TODO: Mark some condition for the webhook status?
->>>>>>> 6809717129cb7c917fe163397fb4f1a86aaff14e
 		if source.Status.WebhookIDKey == "" {
 			hookID, err := r.createWebhook(ctx, args)
 			if err != nil {
@@ -175,24 +168,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
-<<<<<<< HEAD
-			source.Status.MarkWebhook()
-		}
-	} else {
-		return nil
-	}
-	accessor, err := meta.Accessor(source)
-	if accessor.GetDeletionTimestamp() != nil {
-		err = r.finalize(ctx, source)
-		if err != nil {
-			return err
-=======
 		} else {
 			err := r.reconcileWebhook(ctx, args, source.Status.WebhookIDKey)
 			if err != nil {
 				return err
 			}
->>>>>>> 6809717129cb7c917fe163397fb4f1a86aaff14e
 		}
 	}
 
