@@ -341,8 +341,8 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 		}(),
 		condQuery: GitHubSourceConditionReady,
 		want: &apis.Condition{
-			Type:   GitHubSourceConditionReady,
-			Status: corev1.ConditionFalse,
+			Type:    GitHubSourceConditionReady,
+			Status:  corev1.ConditionFalse,
 			Reason:  "Testing",
 			Message: "hi",
 		},
