@@ -21,15 +21,11 @@ import (
 	"fmt"
 	"strings"
 
-	"go.uber.org/zap"
-
 	//k8s.io imports
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 
 	//knative.dev/serving imports
 	v1 "knative.dev/serving/pkg/apis/serving/v1"
@@ -41,9 +37,8 @@ import (
 	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
 	"knative.dev/eventing-contrib/github/pkg/reconciler/resources"
 
-	//knative.dev/eventing imports
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/reconciler"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	//knative.dev/pkg imports
 	"knative.dev/pkg/apis"
@@ -65,7 +60,6 @@ type Reconciler struct {
 
 	servingClientSet servingclientset.Interface
 	servingLister    servinglisters.ServiceLister
-	eventTypeLister  eventinglisters.EventTypeLister
 
 	receiveAdapterImage string
 
@@ -107,27 +101,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		// no Namespace defined in dest.Ref, we will use the Namespace of the source
 		// as the Namespace of dest.Ref.
 		if dest.Ref.Namespace == "" {
-			//TODO how does this work with deprecated fields
 			dest.Ref.Namespace = source.GetNamespace()
 		}
-	} else if dest.DeprecatedName != "" && dest.DeprecatedNamespace == "" {
-		// If Ref is nil and the deprecated ref is present, we need to check for
-		// DeprecatedNamespace. This can be removed when DeprecatedNamespace is
-		// removed.
-		dest.DeprecatedNamespace = source.GetNamespace()
 	}
-	uri, err := r.sinkResolver.URIFromDestination(*dest, source)
+
+	uri, err := r.sinkResolver.URIFromDestinationV1(*dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
 	}
-	if source.Spec.Sink.DeprecatedAPIVersion != "" &&
-		source.Spec.Sink.DeprecatedKind != "" &&
-		source.Spec.Sink.DeprecatedName != "" {
-		source.Status.MarkSinkWarnRefDeprecated(uri)
-	} else {
-		source.Status.MarkSink(uri)
-	}
+	source.Status.MarkSink(uri)
 
 	ksvc, err := r.getOwnedService(ctx, source)
 	if apierrors.IsNotFound(err) {
@@ -174,14 +157,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 			}
 		}
 	}
-
-	err = r.reconcileEventTypes(ctx, source)
-	if err != nil {
-		// should we mark no event types here in stat
-		return err
-	}
-	source.Status.MarkEventTypes()
-
+	source.Status.CloudEventAttributes = r.createCloudEventAttributes(source)
 	source.Status.ObservedGeneration = source.Generation
 	return nil
 }
@@ -360,107 +336,13 @@ func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha
 	return nil, apierrors.NewNotFound(v1.Resource("services"), "")
 }
 
-func (r *Reconciler) reconcileEventTypes(ctx context.Context, source *sourcesv1alpha1.GitHubSource) error {
-	current, err := r.getEventTypes(ctx, source)
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to get existing event types", zap.Error(err))
-		return err
+func (r *Reconciler) createCloudEventAttributes(src *sourcesv1alpha1.GitHubSource) []duckv1.CloudEventAttributes {
+	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(src.Spec.EventTypes))
+	for _, ghType := range src.Spec.EventTypes {
+		ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
+			Type:   sourcesv1alpha1.GitHubEventType(ghType),
+			Source: sourcesv1alpha1.GitHubEventSource(src.Spec.OwnerAndRepository),
+		})
 	}
-
-	expected, err := r.newEventTypes(source)
-	if err != nil {
-		return err
-	}
-
-	toCreate, toDelete := r.computeDiff(current, expected) // will need to add this
-
-	for _, eventType := range toDelete {
-		if err = r.EventingClientSet.EventingV1alpha1().EventTypes(source.Namespace).Delete(eventType.Name, &metav1.DeleteOptions{}); err != nil {
-			logging.FromContext(ctx).Error("Error deleting eventType", zap.Any("eventType", eventType))
-			return err
-		}
-	}
-
-	for _, eventType := range toCreate {
-		if _, err = r.EventingClientSet.EventingV1alpha1().EventTypes(source.Namespace).Create(&eventType); err != nil {
-			logging.FromContext(ctx).Error("Error creating eventType", zap.Any("eventType", eventType))
-			return err
-		}
-	}
-
-	return err
-}
-
-func (r *Reconciler) newEventTypes(source *sourcesv1alpha1.GitHubSource) ([]eventingv1alpha1.EventType, error) {
-	eventTypes := make([]eventingv1alpha1.EventType, 0, len(source.Spec.EventTypes))
-
-	if ref := source.Spec.Sink.GetRef(); ref == nil || ref.Kind != "Broker" {
-		return eventTypes, nil
-	}
-
-	for _, et := range source.Spec.EventTypes {
-		args := &resources.EventTypeArgs{
-			Type:   sourcesv1alpha1.GitHubEventType(et),
-			Source: sourcesv1alpha1.GitHubEventSource(source.Spec.OwnerAndRepository),
-			Src:    source,
-		}
-		eventType := resources.MakeEventType(args)
-		eventTypes = append(eventTypes, eventType)
-	}
-	return eventTypes, nil
-}
-
-func (r *Reconciler) getEventTypes(ctx context.Context, src *sourcesv1alpha1.GitHubSource) ([]eventingv1alpha1.EventType, error) {
-	etl, err := r.eventTypeLister.EventTypes(src.Namespace).List(labels.Everything())
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
-		return nil, err
-	}
-	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	for _, et := range etl {
-		if metav1.IsControlledBy(et, src) {
-			eventTypes = append(eventTypes, *et)
-		}
-	}
-	return eventTypes, nil
-}
-
-func (r *Reconciler) computeDiff(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) ([]eventingv1alpha1.EventType, []eventingv1alpha1.EventType) {
-	toCreate := make([]eventingv1alpha1.EventType, 0)
-	toDelete := make([]eventingv1alpha1.EventType, 0)
-	currentMap := asMap(current, keyFromEventType)
-	expectedMap := asMap(expected, keyFromEventType)
-
-	// Iterate over the slices instead of the maps for predictable UT expectations.
-	for _, e := range expected {
-		if c, ok := currentMap[keyFromEventType(&e)]; !ok {
-			toCreate = append(toCreate, e)
-		} else {
-			if !equality.Semantic.DeepEqual(e.Spec, c.Spec) {
-				toDelete = append(toDelete, c)
-				toCreate = append(toCreate, e)
-			}
-		}
-	}
-	// Need to check whether the current EventTypes are not in the expected map. If so, we have to delete them.
-	// This could happen if the GitHubSource CO changes its broker.
-	for _, c := range current {
-		if _, ok := expectedMap[keyFromEventType(&c)]; !ok {
-			toDelete = append(toDelete, c)
-		}
-	}
-	return toCreate, toDelete
-}
-
-func asMap(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv1alpha1.EventType) string) map[string]eventingv1alpha1.EventType {
-	eventTypesAsMap := make(map[string]eventingv1alpha1.EventType, 0)
-	for _, eventType := range eventTypes {
-		key := keyFunc(&eventType)
-		eventTypesAsMap[key] = eventType
-	}
-	return eventTypesAsMap
-}
-
-func keyFromEventType(eventType *eventingv1alpha1.EventType) string {
-	return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
+	return ceAttributes
 }

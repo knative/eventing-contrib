@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing/pkg/apis/duck"
 	"knative.dev/pkg/apis"
 )
@@ -35,15 +34,11 @@ const (
 
 	// PrometheusConditionDeployed has status True when the PrometheusSource has had it's deployment created.
 	PrometheusConditionDeployed apis.ConditionType = "Deployed"
-
-	// PrometheusConditionEventTypeProvided has status True when the PrometheusSource has been configured with its event types.
-	PrometheusConditionEventTypeProvided apis.ConditionType = "EventTypesProvided"
 )
 
 var PrometheusCondSet = apis.NewLivingConditionSet(
 	PrometheusConditionSinkProvided,
 	PrometheusConditionDeployed,
-	PrometheusConditionEventTypeProvided,
 )
 
 // GetCondition returns the condition currently associated with the given type, or nil.
@@ -66,26 +61,10 @@ func (s *PrometheusSourceStatus) MarkInvalidSchedule(reason, messageFormat strin
 	PrometheusCondSet.Manage(s).MarkFalse(PrometheusConditionValidSchedule, reason, messageFormat, messageA...)
 }
 
-// MarkSinkWarnDeprecated sets the condition that the source has a sink configured and warns ref is deprecated.
-func (s *PrometheusSourceStatus) MarkSinkWarnRefDeprecated(uri string) {
-	s.SinkURI = uri
-	if len(uri) > 0 {
-		c := apis.Condition{
-			Type:     PrometheusConditionSinkProvided,
-			Status:   corev1.ConditionTrue,
-			Severity: apis.ConditionSeverityError,
-			Message:  "Using deprecated object ref fields when specifying spec.sink. These will be removed in a future release. Update to spec.sink.ref.",
-		}
-		PrometheusCondSet.Manage(s).SetCondition(c)
-	} else {
-		PrometheusCondSet.Manage(s).MarkUnknown(PrometheusConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
-	}
-}
-
 // MarkSink sets the condition that the source has a sink configured.
-func (s *PrometheusSourceStatus) MarkSink(uri string) {
+func (s *PrometheusSourceStatus) MarkSink(uri *apis.URL) {
 	s.SinkURI = uri
-	if len(uri) > 0 {
+	if !uri.IsEmpty() {
 		PrometheusCondSet.Manage(s).MarkTrue(PrometheusConditionSinkProvided)
 	} else {
 		PrometheusCondSet.Manage(s).MarkUnknown(PrometheusConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
@@ -107,16 +86,6 @@ func (s *PrometheusSourceStatus) PropagateDeploymentAvailability(d *appsv1.Deplo
 		// for now.
 		PrometheusCondSet.Manage(s).MarkFalse(PrometheusConditionDeployed, "DeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
 	}
-}
-
-// MarkEventTypes sets the condition that the source has set its event type.
-func (s *PrometheusSourceStatus) MarkEventTypes() {
-	PrometheusCondSet.Manage(s).MarkTrue(PrometheusConditionEventTypeProvided)
-}
-
-// MarkNoEventTypes sets the condition that the source does not its event type configured.
-func (s *PrometheusSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
-	PrometheusCondSet.Manage(s).MarkFalse(PrometheusConditionEventTypeProvided, reason, messageFormat, messageA...)
 }
 
 // IsReady returns true if the resource is ready overall.

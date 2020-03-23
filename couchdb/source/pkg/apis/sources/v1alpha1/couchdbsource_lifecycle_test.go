@@ -24,7 +24,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 var (
@@ -54,9 +54,11 @@ func TestCouchDbGetCondition(t *testing.T) {
 	}{{
 		name: "single condition",
 		cs: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{
-					condReady,
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{
+						condReady,
+					},
 				},
 			},
 		},
@@ -65,9 +67,11 @@ func TestCouchDbGetCondition(t *testing.T) {
 	}, {
 		name: "unknown condition",
 		cs: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{
-					condReady,
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{
+						condReady,
+					},
 				},
 			},
 		},
@@ -87,13 +91,12 @@ func TestCouchDbGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink and deployed and event types",
+		name: "mark sink and deployed",
 		cs: func() *CouchDbSourceStatus {
 			s := &CouchDbSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.PropagateDeploymentAvailability(availableDeployment)
-			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: CouchDbConditionReady,
@@ -123,100 +126,100 @@ func TestCouchDbInitializeConditions(t *testing.T) {
 		name: "empty",
 		cs:   &CouchDbSourceStatus{},
 		want: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{{
-					Type:   CouchDbConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionSinkProvided,
-					Status: corev1.ConditionUnknown,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   CouchDbConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionSinkProvided,
+						Status: corev1.ConditionUnknown,
+					}},
+				},
 			},
 		},
 	}, {
 		name: "one false",
 		cs: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{{
-					Type:   CouchDbConditionSinkProvided,
-					Status: corev1.ConditionFalse,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   CouchDbConditionSinkProvided,
+						Status: corev1.ConditionFalse,
+					}},
+				},
 			},
 		},
 		want: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{{
-					Type:   CouchDbConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionSinkProvided,
-					Status: corev1.ConditionFalse,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   CouchDbConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionSinkProvided,
+						Status: corev1.ConditionFalse,
+					}},
+				},
 			},
 		},
 	}, {
 		name: "one true",
 		cs: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{{
-					Type:   CouchDbConditionSinkProvided,
-					Status: corev1.ConditionTrue,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   CouchDbConditionSinkProvided,
+						Status: corev1.ConditionTrue,
+					}},
+				},
 			},
 		},
 		want: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{{
-					Type:   CouchDbConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionSinkProvided,
-					Status: corev1.ConditionTrue,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   CouchDbConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionSinkProvided,
+						Status: corev1.ConditionTrue,
+					}},
+				},
 			},
 		},
 	}, {
 		name: "marksink",
 		cs: func() *CouchDbSourceStatus {
 			status := CouchDbSourceStatus{}
-			status.MarkSink("http://sink")
+			status.MarkSink(apis.HTTP("sink"))
 			return &status
 		}(),
 		want: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{{
-					Type:   CouchDbConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionSinkProvided,
-					Status: corev1.ConditionTrue,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   CouchDbConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionSinkProvided,
+						Status: corev1.ConditionTrue,
+					}},
+				},
+				SinkURI: apis.HTTP("sink"),
 			},
-			SinkURI: "http://sink",
 		},
 	}, {
 		name: "marknosink",
@@ -226,20 +229,19 @@ func TestCouchDbInitializeConditions(t *testing.T) {
 			return &status
 		}(),
 		want: &CouchDbSourceStatus{
-			Status: duckv1beta1.Status{
-				Conditions: []apis.Condition{{
-					Type:   CouchDbConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   CouchDbConditionReady,
-					Status: corev1.ConditionFalse,
-				}, {
-					Type:   CouchDbConditionSinkProvided,
-					Status: corev1.ConditionFalse,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   CouchDbConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   CouchDbConditionReady,
+						Status: corev1.ConditionFalse,
+					}, {
+						Type:   CouchDbConditionSinkProvided,
+						Status: corev1.ConditionFalse,
+					}},
+				},
 			},
 		},
 	}}

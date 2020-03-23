@@ -54,9 +54,11 @@ func TestPrometheusGetCondition(t *testing.T) {
 	}{{
 		name: "single condition",
 		cs: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{
-					condReady,
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{
+						condReady,
+					},
 				},
 			},
 		},
@@ -65,9 +67,11 @@ func TestPrometheusGetCondition(t *testing.T) {
 	}, {
 		name: "unknown condition",
 		cs: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{
-					condReady,
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{
+						condReady,
+					},
 				},
 			},
 		},
@@ -87,13 +91,12 @@ func TestPrometheusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink and deployed and event types",
+		name: "mark sink and deployed",
 		cs: func() *PrometheusSourceStatus {
 			s := &PrometheusSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.PropagateDeploymentAvailability(availableDeployment)
-			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: PrometheusConditionReady,
@@ -123,100 +126,100 @@ func TestPrometheusInitializeConditions(t *testing.T) {
 		name: "empty",
 		cs:   &PrometheusSourceStatus{},
 		want: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{{
-					Type:   PrometheusConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionSinkProvided,
-					Status: corev1.ConditionUnknown,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   PrometheusConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionSinkProvided,
+						Status: corev1.ConditionUnknown,
+					}},
+				},
 			},
 		},
 	}, {
 		name: "one false",
 		cs: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{{
-					Type:   PrometheusConditionSinkProvided,
-					Status: corev1.ConditionFalse,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   PrometheusConditionSinkProvided,
+						Status: corev1.ConditionFalse,
+					}},
+				},
 			},
 		},
 		want: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{{
-					Type:   PrometheusConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionSinkProvided,
-					Status: corev1.ConditionFalse,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   PrometheusConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionSinkProvided,
+						Status: corev1.ConditionFalse,
+					}},
+				},
 			},
 		},
 	}, {
 		name: "one true",
 		cs: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{{
-					Type:   PrometheusConditionSinkProvided,
-					Status: corev1.ConditionTrue,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   PrometheusConditionSinkProvided,
+						Status: corev1.ConditionTrue,
+					}},
+				},
 			},
 		},
 		want: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{{
-					Type:   PrometheusConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionSinkProvided,
-					Status: corev1.ConditionTrue,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   PrometheusConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionSinkProvided,
+						Status: corev1.ConditionTrue,
+					}},
+				},
 			},
 		},
 	}, {
 		name: "marksink",
 		cs: func() *PrometheusSourceStatus {
 			status := PrometheusSourceStatus{}
-			status.MarkSink("http://sink")
+			status.MarkSink(apis.HTTP("sink"))
 			return &status
 		}(),
 		want: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{{
-					Type:   PrometheusConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionReady,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionSinkProvided,
-					Status: corev1.ConditionTrue,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   PrometheusConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionReady,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionSinkProvided,
+						Status: corev1.ConditionTrue,
+					}},
+				},
+				SinkURI: apis.HTTP("sink"),
 			},
-			SinkURI: "http://sink",
 		},
 	}, {
 		name: "marknosink",
@@ -226,20 +229,19 @@ func TestPrometheusInitializeConditions(t *testing.T) {
 			return &status
 		}(),
 		want: &PrometheusSourceStatus{
-			Status: duckv1.Status{
-				Conditions: []apis.Condition{{
-					Type:   PrometheusConditionDeployed,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionEventTypeProvided,
-					Status: corev1.ConditionUnknown,
-				}, {
-					Type:   PrometheusConditionReady,
-					Status: corev1.ConditionFalse,
-				}, {
-					Type:   PrometheusConditionSinkProvided,
-					Status: corev1.ConditionFalse,
-				}},
+			SourceStatus: duckv1.SourceStatus{
+				Status: duckv1.Status{
+					Conditions: []apis.Condition{{
+						Type:   PrometheusConditionDeployed,
+						Status: corev1.ConditionUnknown,
+					}, {
+						Type:   PrometheusConditionReady,
+						Status: corev1.ConditionFalse,
+					}, {
+						Type:   PrometheusConditionSinkProvided,
+						Status: corev1.ConditionFalse,
+					}},
+				},
 			},
 		},
 	}}
