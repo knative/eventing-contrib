@@ -160,7 +160,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:1174f23d8f01df878217718904bad3702a0bcf0812223fbb00893d97dae9fb42"
+  digest = "1:529bd84e1970910b86ad0220aabbe8587a2f0657fb254e0ecba4afd62bfd9341"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -197,8 +197,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "0a5202bf31a5927f261fb8ee0bba88cef0963d8c"
-  version = "v2.0.0-preview4"
+  revision = "0331394117d40bbbe9448cb7008cf2566fa29a86"
+  version = "v2.0.0-preview6"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -384,7 +384,7 @@
   version = "v0.0.1"
 
 [[projects]]
-  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
+  digest = "1:f0ae868d945753df81e797524bb7f3c577bcf751ce515c18162d259ca3ff8de7"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
@@ -395,7 +395,8 @@
     "cmp/internal/value",
   ]
   pruneopts = "NUT"
-  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
+  revision = "5a6f75716e1203a923a78c9efb94089d857df0f6"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:ecc8bd577aaaa8ce2c3ad060e61e1daeadbab1d14a0934f019ad2995c3a666b0"
@@ -1882,7 +1883,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c5b197cb347ad2b7efcb51b3c22fca59b62c3c2dceeefc104e7a9cc64a52217e"
+  digest = "1:8bbd4608827810e20daec1b63f80e0d902c419064a5e5f4184b573f8b9b95806"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1990,11 +1991,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "12f2bebda46a10f07b5759f76d683772199b7a14"
+  revision = "7127ab3c3b39adc1a8099a7ad9611c9cbafc65a6"
 
 [[projects]]
   branch = "master"
-  digest = "1:94d7cfde4eee652c089b47f0200b86bc28e618de18a2e5368b0bbc8e2b601026"
+  digest = "1:b866a374c5f954ec0830aa3c31962f4f8777624a77eba2b99fb19c732d5c2452"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2070,7 +2071,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "c13e86e2d4f484f1dd3b8ca6474994c16da74f20"
+  revision = "aa5b1f2211ac4a538128a4a4e03797e9232b0431"
 
 [[projects]]
   branch = "master"
@@ -2114,7 +2115,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "3107e1c0f13d33e01b67f1d58e24541b862bb16b"
+  revision = "5589bc5a7688b359b6303c2f82b724287c39061b"
 
 [[projects]]
   branch = "master"
@@ -2125,7 +2126,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "64929018c86389e47a88782619565b6d099c0a5a"
+  revision = "0bc1e8bb1582a8738da1b5c485084a84bf76f17c"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
