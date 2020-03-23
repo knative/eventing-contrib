@@ -384,7 +384,7 @@
   version = "v0.0.1"
 
 [[projects]]
-  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
+  digest = "1:f0ae868d945753df81e797524bb7f3c577bcf751ce515c18162d259ca3ff8de7"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
@@ -395,7 +395,8 @@
     "cmp/internal/value",
   ]
   pruneopts = "NUT"
-  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
+  revision = "5a6f75716e1203a923a78c9efb94089d857df0f6"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:ecc8bd577aaaa8ce2c3ad060e61e1daeadbab1d14a0934f019ad2995c3a666b0"
@@ -1881,8 +1882,8 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
-  branch = "rt_registry"
-  digest = "1:e6b903ef6580a5e355de535aaff4f0fe8a5a4a4596d71af36c0fe423b3c2c7e5"
+  branch = "master"
+  digest = "1:8bbd4608827810e20daec1b63f80e0d902c419064a5e5f4184b573f8b9b95806"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1949,6 +1950,7 @@
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/broker",
+    "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
     "pkg/client/injection/reconciler/eventing/v1alpha1/broker",
     "pkg/client/listers/configs/v1alpha1",
@@ -1989,12 +1991,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "7df316f9dd63e74d14f64bb044e2b1dae6b026b9"
-  source = "github.com/nachocano/eventing"
+  revision = "7127ab3c3b39adc1a8099a7ad9611c9cbafc65a6"
 
 [[projects]]
   branch = "master"
-  digest = "1:e41775799602da16406d666dcc9dbe8926f1f0655c3a3aab518825ba2fd6e109"
+  digest = "1:b866a374c5f954ec0830aa3c31962f4f8777624a77eba2b99fb19c732d5c2452"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2070,7 +2071,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "381424b19753db69863563bd6b280d582e5b14db"
+  revision = "aa5b1f2211ac4a538128a4a4e03797e9232b0431"
 
 [[projects]]
   branch = "master"
@@ -2114,7 +2115,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "815b04fd9fd0a5ab38dd94290d81aed23b0cf08c"
+  revision = "5589bc5a7688b359b6303c2f82b724287c39061b"
 
 [[projects]]
   branch = "master"
@@ -2306,6 +2307,7 @@
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client",
     "knative.dev/eventing/pkg/client/injection/client/fake",
+    "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/kncloudevents/testing",
