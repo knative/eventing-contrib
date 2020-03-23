@@ -62,7 +62,7 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.C
 	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, cm.Topic))
 	event.SetSubject(makeEventSubject(cm.Partition, cm.Offset))
 
-	dumpKafkaMetaToEvent(&event, a.keyTypeMapper, kafkaMsg)
+	dumpKafkaMetaToEvent(&event, a.keyTypeMapper, cm.Key, kafkaMsg)
 
 	ct := kafkaMsg.ContentType
 	if ct == "" {
@@ -98,9 +98,9 @@ func makeEventSubject(partition int32, offset int64) string {
 
 var replaceBadCharacters = regexp.MustCompile(`[^a-zA-Z0-9]`).ReplaceAllString
 
-func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, msg *kafka_sarama.Message) {
-	if msg.Key != nil {
-		event.SetExtension("key", keyTypeMapper(msg.Key))
+func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, key []byte, msg *kafka_sarama.Message) {
+	if key != nil {
+		event.SetExtension("key", keyTypeMapper(key))
 	}
 	for k, v := range msg.Headers {
 		event.SetExtension("kafkaheader"+replaceBadCharacters(k, ""), string(v))
