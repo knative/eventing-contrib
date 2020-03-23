@@ -31,5 +31,5 @@ func TestBrokerDeadLetterSink(t *testing.T) {
 		{APIVersion: "messaging.knative.dev/v1alpha1", Kind: "KafkaChannel"},
 	}
 
-	helpers.TestBrokerWithConfig(t, channelTestRunner)
+	helpers.TestBrokerWithConfig(t, "ChannelBasedBroker" /*brokerClass*/, channelTestRunner)
 }
