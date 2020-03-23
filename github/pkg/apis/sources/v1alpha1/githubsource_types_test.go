@@ -78,7 +78,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			return s
 		}(),
 		want: false,
@@ -90,7 +90,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			return s
 		}(),
 		want: true,
@@ -102,7 +102,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkNoSink("Testing", "")
 			return s
 		}(),
@@ -115,7 +115,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkNoSecrets("Testing", "")
 			return s
 		}(),
@@ -128,7 +128,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkNoEventTypes("Testing", "")
 			return s
 		}(),
@@ -141,7 +141,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkNoWebhook("Testing", "")
+			s.MarkWebhookNotConfigured("Testing", "")
 			return s
 		}(),
 		want: false,
@@ -152,7 +152,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkSecrets()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkEventTypes()
 			return s
 		}(),
@@ -164,7 +164,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 			s.MarkSink("")
 			s.MarkSecrets()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkEventTypes()
 			s.MarkSink("uri://example")
 			return s
@@ -249,7 +249,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -265,7 +265,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -281,7 +281,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
 		}(),
@@ -300,7 +300,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkNoSecrets("Testing", "hi%s", "")
 			return s
 		}(),
@@ -318,7 +318,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkEventTypes()
 			s.MarkNoEventTypes("Testing", "hi%s", "")
 			return s
@@ -336,7 +336,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			s.MarkSink("uri://example")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkNoWebhook("Testing", "hi%s", "")
+			s.MarkWebhookNotConfigured("Testing", "hi%s", "")
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -354,7 +354,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			s.MarkSink("")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -372,7 +372,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			s.MarkSink("")
 			s.MarkSecrets()
 			s.MarkEventTypes()
-			s.MarkWebhook()
+			s.MarkWebhookConfigured()
 			s.MarkSink("uri://example")
 			return s
 		}(),

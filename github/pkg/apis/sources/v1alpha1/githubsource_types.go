@@ -130,9 +130,9 @@ const (
 	// GitHubSource has been configured with event types.
 	GitHubSourceConditionEventTypesProvided apis.ConditionType = "EventTypeProvided"
 
-	//GitHubSourceConditionWebhookProvided has a status True when the
-	//GitHubSource has been configured with a webhook.
-	GitHubSourceConditionWebhookProvided apis.ConditionType = "WebhookProvided"
+	// GitHubSourceConditionWebhookConfigured has a status True when the
+	// GitHubSource has been configured with a webhook.
+	GitHubSourceConditionWebhookConfigured apis.ConditionType = "WebhookConfigured"
 
 	// GitHubServiceconditiondeployed has status True when then
 	// GitHubSource Service has been deployed
@@ -146,7 +146,7 @@ const (
 var gitHubSourceCondSet = apis.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
 	GitHubSourceConditionSinkProvided,
-	GitHubSourceConditionWebhookProvided)
+	GitHubSourceConditionWebhookConfigured)
 
 //	GitHubServiceConditionDeployed)
 
@@ -237,14 +237,14 @@ func (s *GitHubSourceStatus) MarkNoEventTypes(reason, messageFormat string, mess
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
-// MarkWebhook sets the condition that the source has set its webhook configured.
-func (s *GitHubSourceStatus) MarkWebhook() {
-	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionWebhookProvided)
+// MarkWebhookConfigured sets the condition that the source has set its webhook configured.
+func (s *GitHubSourceStatus) MarkWebhookConfigured() {
+	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionWebhookConfigured)
 }
 
-// MarkNoWebhook sets the condition that the source does not have its webhook configured.
-func (s *GitHubSourceStatus) MarkNoWebhook(reason, messageFormat string, messageA ...interface{}) {
-	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionWebhookProvided, reason, messageFormat, messageA...)
+// MarkWebhookNotConfigured sets the condition that the source does not have its webhook configured.
+func (s *GitHubSourceStatus) MarkWebhookNotConfigured(reason, messageFormat string, messageA ...interface{}) {
+	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionWebhookConfigured, reason, messageFormat, messageA...)
 }
 
 // MarkDeployed sets the condition that the source has been deployed.

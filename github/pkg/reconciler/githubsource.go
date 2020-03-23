@@ -163,18 +163,18 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		if source.Status.WebhookIDKey == "" {
 			hookID, err := r.createWebhook(ctx, args)
 			if err != nil {
-				source.Status.MarkNoWebhook("WebhookCreationFailed", "%s", err)
+				source.Status.MarkWebhookNotConfigured("CreationFailed", err.Error())
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
 		} else {
 			err := r.reconcileWebhook(ctx, args, source.Status.WebhookIDKey)
 			if err != nil {
-				source.Status.MarkNoWebhook("WebhookCreationFailed", "%s", err)
+				source.Status.MarkWebhookNotConfigured("ReconciliationFailed", err.Error())
 				return err
 			}
 		}
-		source.Status.MarkWebhook()
+		source.Status.MarkWebhookConfigured()
 	}
 
 	err = r.reconcileEventTypes(ctx, source)
