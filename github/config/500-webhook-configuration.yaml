@@ -24,7 +24,7 @@ webhooks:
   clientConfig:
     service:
       name: github-webhook
-      namespace: knative-eventing
+      namespace: knative-sources
   failurePolicy: Fail
   name: defaulting.webhook.github.sources.knative.dev
 ---
