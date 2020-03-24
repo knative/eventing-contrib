@@ -6,10 +6,6 @@ required = [
     "knative.dev/eventing/test/test_images/sendevents",
     "knative.dev/eventing/test/test_images/transformevents",
     "knative.dev/eventing/test/test_images/performance",
-
-    # Camel
-    "github.com/apache/camel-k/pkg/client",
-
     "github.com/emicklei/go-restful",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp", # for development against gcp
     "k8s.io/code-generator/cmd/deepcopy-gen", # for go generate
