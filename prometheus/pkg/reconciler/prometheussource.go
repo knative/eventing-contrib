@@ -19,9 +19,8 @@ package reconciler
 import (
 	"context"
 	"fmt"
-
-	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"k8s.io/client-go/kubernetes"
+	"knative.dev/pkg/controller"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/robfig/cron"
@@ -35,8 +34,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"knative.dev/eventing-contrib/prometheus/pkg/reconciler/resources"
-	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/reconciler"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -56,7 +56,7 @@ type envConfig struct {
 
 // Reconciler reconciles a PrometheusSource object
 type Reconciler struct {
-	*reconciler.Base
+	kubeClientSet kubernetes.Interface
 
 	receiveAdapterImage string
 
@@ -102,7 +102,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.Prometh
 
 	ra, err := r.createReceiveAdapter(ctx, source, sinkURI)
 	if err != nil {
-		r.Logger.Error("Unable to create the receive adapter", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
 	// Update source status// Update source status
@@ -122,7 +122,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Pro
 
 	env := &envConfig{}
 	if err := envconfig.Process("", env); err != nil {
-		r.Logger.Panicf("required environment variable is not defined: %v", err)
+		logging.FromContext(ctx).Panicf("required environment variable is not defined: %v", err)
 	}
 
 	adapterArgs := resources.ReceiveAdapterArgs{
@@ -134,10 +134,10 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Pro
 	}
 	expected := resources.MakeReceiveAdapter(&adapterArgs)
 
-	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
+	ra, err := r.kubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentCreated, "Deployment created, error: %v", err)
+		ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
+		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentCreated, "Deployment created, error: %v", err)
 		return ra, err
 	} else if err != nil {
 		return nil, fmt.Errorf("error getting receive adapter: %v", err)
@@ -145,10 +145,10 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Pro
 		return nil, fmt.Errorf("deployment %q is not owned by PrometheusSource %q", ra.Name, src.Name)
 	} else if r.podSpecChanged(ra.Spec.Template.Spec, expected.Spec.Template.Spec) {
 		ra.Spec.Template.Spec = expected.Spec.Template.Spec
-		if ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
+		if ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
 			return ra, err
 		}
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentUpdated, "Deployment updated")
+		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentUpdated, "Deployment updated")
 		return ra, nil
 	} else {
 		logging.FromContext(ctx).Debug("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
