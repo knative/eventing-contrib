@@ -65,7 +65,7 @@ func NewController(
 
 	env := &envConfig{}
 	if err := envconfig.Process("", env); err != nil {
-		logging.FromContext(ctx).Panicf("unable to process PingSourceSource's required environment variables: %v", err)
+		logging.FromContext(ctx).Panicf("unable to process GitLabSource's required environment variables: %v", err)
 	}
 	r.receiveAdapterImage = env.Image
 
