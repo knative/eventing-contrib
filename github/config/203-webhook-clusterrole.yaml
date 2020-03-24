@@ -89,3 +89,11 @@ rules:
   resources:
   - eventtypes
   verbs: *everything
+
+# For actually registering our webhook.
+- apiGroups:
+  - "admissionregistration.k8s.io"
+  resources:
+  - "mutatingwebhookconfigurations"
+  - "validatingwebhookconfigurations"
+  verbs: *everything
