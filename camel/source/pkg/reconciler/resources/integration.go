@@ -19,8 +19,9 @@ package resources
 import (
 	"errors"
 	"fmt"
-	"knative.dev/pkg/kmeta"
 	"net/url"
+
+	"knative.dev/pkg/kmeta"
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	camelknativev1 "github.com/apache/camel-k/pkg/apis/camel/v1/knative"

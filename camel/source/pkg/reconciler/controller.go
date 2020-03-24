@@ -18,6 +18,8 @@ package reconciler
 
 import (
 	context "context"
+	"knative.dev/pkg/injection/clients/dynamicclient"
+
 	camelsource "knative.dev/eventing-contrib/camel/source/pkg/client/injection/informers/sources/v1alpha1/camelsource"
 	v1alpha1camelsource "knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
 	configmap "knative.dev/pkg/configmap"
@@ -37,7 +39,9 @@ func NewController(
 
 	// TODO: setup additional informers here.
 
-	r := &Reconciler{}
+	r := &Reconciler{
+		dynamicClientSet: dynamicclient.Get(ctx),
+	}
 	impl := v1alpha1camelsource.NewImpl(ctx, r)
 
 	// Set sink resolver.
@@ -50,15 +54,4 @@ func NewController(
 	// TODO: add additional informer event handlers here.
 
 	return impl
-	//p := &sdk.Provider{
-	//	AgentName: controllerAgentName,
-	//	Parent:    &v1alpha1.CamelSource{},
-	//	Owns:      []runtime.Object{&camelv1.Integration{}},
-	//	Reconciler: &reconcilerxx{
-	//		recorder:     mgr.GetEventRecorderFor(controllerAgentName),
-	//		scheme:       mgr.GetScheme(),
-	//		sinkResolver: resolver.NewURIResolver(ctx, func(types.NamespacedName) {}),
-	//	},
-	//}
-
 }

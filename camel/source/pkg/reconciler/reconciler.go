@@ -18,24 +18,25 @@ package reconciler
 
 import (
 	context "context"
+	"encoding/json"
 	"fmt"
+	"strings"
+
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
-	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/resolver"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
-
-	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/dynamic"
 	v1alpha1 "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelsource "knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
+	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
+	"knative.dev/pkg/apis/duck"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 )
 
 // newReconciledNormal makes a new reconciler event with event type Normal, and
@@ -46,7 +47,8 @@ func newReconciledNormal(namespace, name string) reconciler.Event {
 
 // Reconciler implements controller.Reconciler for CamelSource resources.
 type Reconciler struct {
-	sinkResolver *resolver.URIResolver
+	sinkResolver     *resolver.URIResolver
+	dynamicClientSet dynamic.Interface
 }
 
 // Check that our Reconciler implements Interface
@@ -139,7 +141,8 @@ func (r *Reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 	if !equality.Semantic.DeepDerivative(expected.Spec, integration.Spec) {
 		logger.Infof("Integration %q in namespace %q has changed and needs to be updated", integration.Name, integration.Namespace)
 		integration.Spec = expected.Spec
-		err := r.client.Update(ctx, integration)
+
+		_, err := r.updateIntegration(ctx, integration)
 		// if no error, update the status.
 		if err == nil {
 			source.Status.MarkDeploying("IntegrationUpdated", "Updated integration %s", integration.Name)
@@ -152,30 +155,26 @@ func (r *Reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 	return integration, nil
 }
 
-func (r *Reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelSource) (*camelv1.Integration, error) {
-	logger := logging.FromContext(ctx)
-
-	list := &camelv1.IntegrationList{}
-	lo := &client.ListOptions{
-		Namespace:     source.Namespace,
-		LabelSelector: labels.Everything(),
-		// TODO this is here because the fake client needs it.
-		// Remove this when it's no longer needed.
-		Raw: &metav1.ListOptions{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: camelv1.SchemeGroupVersion.String(),
-				Kind:       "Integration",
-			},
-		},
+var (
+	integrationsGVR = schema.GroupVersionResource{
+		Group:    camelv1.SchemeGroupVersion.Group,
+		Version:  camelv1.SchemeGroupVersion.Version,
+		Resource: "integrations",
 	}
-	err := r.client.List(ctx, list, lo)
+)
+
+func (r *Reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelSource) (*camelv1.Integration, error) {
+	usl, err := r.dynamicClientSet.Resource(integrationsGVR).Namespace(source.Namespace).List(metav1.ListOptions{})
 	if err != nil {
-		logger.Errorw("Unable to list integrations", zap.Error(err))
 		return nil, err
 	}
-	for _, c := range list.Items {
-		if metav1.IsControlledBy(&c, source) {
-			return &c, nil
+	for _, u := range usl.Items {
+		if metav1.IsControlledBy(&u, source) {
+			i := camelv1.Integration{}
+			if err := duck.FromUnstructured(&u, &i); err != nil {
+				return nil, err
+			}
+			return &i, nil
 		}
 	}
 	return nil, k8serrors.NewNotFound(schema.GroupResource{}, "")
@@ -187,8 +186,45 @@ func (r *Reconciler) createIntegration(ctx context.Context, source *v1alpha1.Cam
 		return nil, err
 	}
 
-	if err := r.client.Create(ctx, integration); err != nil {
+	// Convert desired to unstructured.Unstructured
+	b, err := json.Marshal(integration)
+	if err != nil {
 		return nil, err
 	}
-	return integration, nil
+	ud := &unstructured.Unstructured{}
+	if err := json.Unmarshal(b, ud); err != nil {
+		return nil, err
+	}
+
+	u, err := r.dynamicClientSet.Resource(integrationsGVR).Namespace(source.Namespace).Create(ud, metav1.CreateOptions{})
+	if err != nil {
+		return nil, err
+	}
+	i := camelv1.Integration{}
+	if err := duck.FromUnstructured(u, &i); err != nil {
+		return nil, err
+	}
+	return &i, nil
+}
+
+func (r *Reconciler) updateIntegration(ctx context.Context, integration *camelv1.Integration) (*camelv1.Integration, error) {
+	// Convert desired to unstructured.Unstructured
+	b, err := json.Marshal(integration)
+	if err != nil {
+		return nil, err
+	}
+	ud := &unstructured.Unstructured{}
+	if err := json.Unmarshal(b, ud); err != nil {
+		return nil, err
+	}
+
+	u, err := r.dynamicClientSet.Resource(integrationsGVR).Namespace(integration.Namespace).Update(ud, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, err
+	}
+	i := camelv1.Integration{}
+	if err := duck.FromUnstructured(u, &i); err != nil {
+		return nil, err
+	}
+	return &i, nil
 }
