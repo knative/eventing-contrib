@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	"knative.dev/eventing/pkg/defaultchannel"
+	"knative.dev/eventing/pkg/apis/messaging/config"
 	eventingtesting "knative.dev/eventing/pkg/reconciler/testing"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/cloudevents"
@@ -37,11 +37,11 @@ import (
 const (
 	// configMapName is the name of the ConfigMap that contains the configuration for the default
 	// channel CRD.
-	configMapName = defaultchannel.ConfigMapName
+	configMapName = config.ChannelDefaultsConfigName
 
 	// channelDefaulterKey is the key in the ConfigMap to get the name of the default
 	// Channel CRD.
-	channelDefaulterKey = defaultchannel.ChannelDefaulterKey
+	channelDefaulterKey = config.ChannelDefaulterKey
 )
 
 // ChannelClusterDefaulterTestHelper is the helper function for channel_defaulter_test
@@ -53,7 +53,7 @@ func ChannelClusterDefaulterTestHelper(t *testing.T,
 		client := lib.Setup(st, false, options...)
 		defer lib.TearDown(client)
 
-		if err := updateDefaultChannelCM(client, func(conf *defaultchannel.Config) {
+		if err := updateDefaultChannelCM(client, func(conf *config.ChannelDefaults) {
 			setClusterDefaultChannel(conf, channel)
 		}); err != nil {
 			st.Fatalf("Failed to update the defaultchannel configmap: %v", err)
@@ -73,7 +73,7 @@ func ChannelNamespaceDefaulterTestHelper(t *testing.T,
 		client := lib.Setup(st, false, options...)
 		defer lib.TearDown(client)
 
-		if err := updateDefaultChannelCM(client, func(conf *defaultchannel.Config) {
+		if err := updateDefaultChannelCM(client, func(conf *config.ChannelDefaults) {
 			setNamespaceDefaultChannel(conf, client.Namespace, channel)
 		}); err != nil {
 			st.Fatalf("Failed to update the defaultchannel configmap: %v", err)
@@ -132,7 +132,7 @@ func defaultChannelTestHelper(t *testing.T, client *lib.Client, expectedChannel 
 }
 
 // updateDefaultChannelCM will update the default channel configmap
-func updateDefaultChannelCM(client *lib.Client, updateConfig func(config *defaultchannel.Config)) error {
+func updateDefaultChannelCM(client *lib.Client, updateConfig func(config *config.ChannelDefaults)) error {
 	systemNamespace := resources.SystemNamespace
 	cmInterface := client.Kube.Kube.CoreV1().ConfigMaps(systemNamespace)
 	// get the defaultchannel configmap
@@ -142,7 +142,7 @@ func updateDefaultChannelCM(client *lib.Client, updateConfig func(config *defaul
 	}
 	// get the defaultchannel config value
 	defaultChannelConfig, hasDefault := configMap.Data[channelDefaulterKey]
-	config := &defaultchannel.Config{}
+	config := &config.ChannelDefaults{}
 	if hasDefault {
 		if err := yaml.Unmarshal([]byte(defaultChannelConfig), config); err != nil {
 			return err
@@ -164,38 +164,39 @@ func updateDefaultChannelCM(client *lib.Client, updateConfig func(config *defaul
 	// Wait for 1 minute to let the ConfigMap be synced up.
 	// TODO(chizhg): 1 minute is an empirical duration, and does not solve the problem from the root.
 	// To make it work reliably, we may need to manually restart the controller.
+	// https://github.com/knative/eventing/issues/2807
 	time.Sleep(1 * time.Minute)
 	return nil
 }
 
 // setClusterDefaultChannel will set the default channel for cluster-wide
-func setClusterDefaultChannel(config *defaultchannel.Config, channel metav1.TypeMeta) {
-	if config.ClusterDefault == nil {
-		config.ClusterDefault = &eventingduck.ChannelTemplateSpec{}
+func setClusterDefaultChannel(cfg *config.ChannelDefaults, channel metav1.TypeMeta) {
+	if cfg.ClusterDefault == nil {
+		cfg.ClusterDefault = &config.ChannelTemplateSpec{}
 	}
 	// If we're testing with Channel, we can't default to ourselves, or badness will
 	// happen. We're going to try to create Channels that are ourselves.
 	if channel.Kind == "Channel" {
 		channel.Kind = "InMemoryChannel"
 	}
-	config.ClusterDefault.TypeMeta = channel
+	cfg.ClusterDefault.TypeMeta = channel
 }
 
 // setNamespaceDefaultChannel will set the default channel for namespace-wide
-func setNamespaceDefaultChannel(config *defaultchannel.Config, namespace string, channel metav1.TypeMeta) {
+func setNamespaceDefaultChannel(cfg *config.ChannelDefaults, namespace string, channel metav1.TypeMeta) {
 	// If we're testing with Channel, we can't default to ourselves, or badness will
 	// happen. We're going to try to create Channels that are ourselves.
 	if channel.Kind == "Channel" {
 		channel.Kind = "InMemoryChannel"
 	}
-	if config.NamespaceDefaults == nil {
-		config.NamespaceDefaults = make(map[string]*eventingduck.ChannelTemplateSpec, 1)
+	if cfg.NamespaceDefaults == nil {
+		cfg.NamespaceDefaults = make(map[string]*config.ChannelTemplateSpec, 1)
 	}
-	namespaceDefaults := config.NamespaceDefaults
+	namespaceDefaults := cfg.NamespaceDefaults
 	if spec, exists := namespaceDefaults[namespace]; exists {
 		spec.TypeMeta = channel
 	} else {
-		spec = &eventingduck.ChannelTemplateSpec{
+		spec = &config.ChannelTemplateSpec{
 			TypeMeta: channel,
 		}
 		namespaceDefaults[namespace] = spec

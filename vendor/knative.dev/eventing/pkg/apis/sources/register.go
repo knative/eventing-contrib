@@ -16,6 +16,38 @@ limitations under the License.
 
 package sources
 
+import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis/duck"
+)
+
 const (
 	GroupName = "sources.knative.dev"
+
+	// SourceDuckAnnotationKey is the annotation key to indicate
+	// whether the CRD is a Source duck type.
+	// Valid values: "true" or "false"
+	SourceDuckAnnotationKey = duck.GroupName + "/source"
+
+	// SourceDuckAnnotationValue is the annotation value to indicate
+	// the CRD is a Source duck type.
+	SourceDuckAnnotationValue = "true"
+)
+
+var (
+	// ApiServerSourceResource respresents a Knative Eventing Sources ApiServerSource
+	ApiServerSourceResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "apiserversources",
+	}
+	// PingSourceResource respresents a Knative Eventing Sources PingSource
+	PingSourceResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "pingsources",
+	}
+	// SinkBindingResource respresents a Knative Eventing Sources SinkBinding
+	SinkBindingResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "sinkbindings",
+	}
 )

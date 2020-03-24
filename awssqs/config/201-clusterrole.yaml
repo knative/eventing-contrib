@@ -23,7 +23,7 @@ rules:
   - apps
   resources:
   - deployments
-  verbs:
+  verbs: &everything
   - get
   - list
   - watch
@@ -36,17 +36,17 @@ rules:
   - ""
   resources:
   - events
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  - configmaps
+  verbs: *everything
 
 - apiGroups:
-  - sources.eventing.knative.dev
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs: *everything
+
+- apiGroups:
+  - sources.knative.dev
   resources:
   - awssqssources
   verbs:
@@ -56,7 +56,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - sources.eventing.knative.dev
+  - sources.knative.dev
   resources:
   - awssqssources/status
   - awssqssources/finalizers
@@ -84,14 +84,16 @@ rules:
   - get
   - list
   - watch
-# Secrets read
+# Secrets & Services read
 - apiGroups:
   - ""
   resources:
   - secrets
+  - services
   verbs:
   - get
   - list
+  - watch
 
 
 ---
@@ -106,7 +108,7 @@ metadata:
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
-      - "sources.eventing.knative.dev"
+      - "sources.knative.dev"
     resources:
       - "awssqssources"
     verbs:

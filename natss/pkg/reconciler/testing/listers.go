@@ -27,6 +27,7 @@ import (
 	messagingv1alpha1 "knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 	fakemessagingclientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned/fake"
 	messaginglisters "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
+	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	fakeeventsclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 )
@@ -35,6 +36,7 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakeeventsclientset.AddToScheme,
 	fakemessagingclientset.AddToScheme,
+	fakeeventingclientset.AddToScheme,
 }
 
 type Listers struct {
@@ -63,6 +65,10 @@ func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
 
 func (l *Listers) GetKubeObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakekubeclientset.AddToScheme)
+}
+
+func (l *Listers) GetEventingObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
 }
 
 func (l *Listers) GetEventsObjects() []runtime.Object {

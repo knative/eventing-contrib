@@ -22,8 +22,9 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1alpha1/broker"
 	"knative.dev/pkg/apis"
 )
 
@@ -82,7 +83,7 @@ func WithBrokerDeletionTimestamp(b *v1alpha1.Broker) {
 // WithBrokerChannel sets the Broker's ChannelTemplateSpec to the specified CRD.
 func WithBrokerChannel(crdType metav1.TypeMeta) BrokerOption {
 	return func(b *v1alpha1.Broker) {
-		b.Spec.ChannelTemplate = &eventingduckv1alpha1.ChannelTemplateSpec{
+		b.Spec.ChannelTemplate = &messagingv1beta1.ChannelTemplateSpec{
 			TypeMeta: crdType,
 		}
 	}
@@ -95,6 +96,13 @@ func WithBrokerAddress(address string) BrokerOption {
 			Scheme: "http",
 			Host:   address,
 		})
+	}
+}
+
+// WithBrokerAddressURI sets the Broker's address as URI.
+func WithBrokerAddressURI(uri *apis.URL) BrokerOption {
+	return func(b *v1alpha1.Broker) {
+		b.Status.SetAddress(uri)
 	}
 }
 
@@ -131,20 +139,31 @@ func WithTriggerChannelReady() BrokerOption {
 	}
 }
 
-func WithFilterDeploymentAvailable() BrokerOption {
+func WithFilterAvailable() BrokerOption {
 	return func(b *v1alpha1.Broker) {
-		b.Status.PropagateFilterDeploymentAvailability(v1alpha1.TestHelper.AvailableDeployment())
+		b.Status.PropagateFilterAvailability(v1alpha1.TestHelper.AvailableEndpoints())
 	}
 }
 
-func WithIngressDeploymentAvailable() BrokerOption {
+func WithIngressAvailable() BrokerOption {
 	return func(b *v1alpha1.Broker) {
-		b.Status.PropagateIngressDeploymentAvailability(v1alpha1.TestHelper.AvailableDeployment())
+		b.Status.PropagateIngressAvailability(v1alpha1.TestHelper.AvailableEndpoints())
 	}
 }
 
 func WithBrokerTriggerChannel(c *corev1.ObjectReference) BrokerOption {
 	return func(b *v1alpha1.Broker) {
 		b.Status.TriggerChannel = c
+	}
+}
+
+func WithBrokerClass(bc string) BrokerOption {
+	return func(b *v1alpha1.Broker) {
+		annotations := b.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string, 1)
+		}
+		annotations[broker.ClassAnnotationKey] = bc
+		b.SetAnnotations(annotations)
 	}
 }

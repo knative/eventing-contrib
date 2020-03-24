@@ -83,11 +83,10 @@ rules:
   - configmaps
   verbs: *everything
 
-# EventTypes admin
 - apiGroups:
-  - eventing.knative.dev
+  - coordination.k8s.io
   resources:
-  - eventtypes
+  - leases
   verbs: *everything
 
 ---

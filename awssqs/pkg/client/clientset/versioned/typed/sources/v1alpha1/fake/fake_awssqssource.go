@@ -34,9 +34,9 @@ type FakeAwsSqsSources struct {
 	ns   string
 }
 
-var awssqssourcesResource = schema.GroupVersionResource{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Resource: "awssqssources"}
+var awssqssourcesResource = schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1alpha1", Resource: "awssqssources"}
 
-var awssqssourcesKind = schema.GroupVersionKind{Group: "sources.eventing.knative.dev", Version: "v1alpha1", Kind: "AwsSqsSource"}
+var awssqssourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "AwsSqsSource"}
 
 // Get takes name of the awsSqsSource, and returns the corresponding awsSqsSource object, and an error if there is any.
 func (c *FakeAwsSqsSources) Get(name string, options v1.GetOptions) (result *v1alpha1.AwsSqsSource, err error) {

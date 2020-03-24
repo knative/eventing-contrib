@@ -99,13 +99,14 @@ rules:
       - "" # Core API group.
     resources:
       - serviceaccounts
-    verbs:
-      - list
-      - watch
+    verbs: *everything
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
       - rolebindings
-    verbs:
-      - list
-      - watch
+    verbs: *everything
+  - apiGroups:
+      - "coordination.k8s.io"
+    resources:
+      - leases
+    verbs: *everything

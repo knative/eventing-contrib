@@ -26,7 +26,7 @@ import (
 	controller "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/dispatcher"
 )
 
-const component = "kafkachannel_dispatcher"
+const component = "kafkachannel-dispatcher"
 
 func main() {
 	ctx := signals.NewContext()

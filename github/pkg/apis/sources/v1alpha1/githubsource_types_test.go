@@ -51,7 +51,7 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		want: false,
@@ -65,81 +65,55 @@ func TestGitHubSourceStatusIsReady(t *testing.T) {
 		}(),
 		want: false,
 	}, {
-		name: "mark event types",
+		name: "mark sink, secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkEventTypes()
-			return s
-		}(),
-		want: false,
-	}, {
-		name: "mark sink, secrets, and event types",
-		s: func() *GitHubSourceStatus {
-			s := &GitHubSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkSecrets()
-			s.MarkEventTypes()
 			return s
 		}(),
 		want: true,
 	}, {
-		name: "mark sink, secrets, and event types, then no sink",
+		name: "mark sink, secrets, then no sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkSecrets()
-			s.MarkEventTypes()
 			s.MarkNoSink("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink, secrets, event types, then no secrets",
+		name: "mark sink, secrets, then no secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkSecrets()
-			s.MarkEventTypes()
 			s.MarkNoSecrets("Testing", "")
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink, secrets, event types, then no event types",
+		name: "mark sink nil, secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(nil)
 			s.MarkSecrets()
-			s.MarkEventTypes()
-			s.MarkNoEventTypes("Testing", "")
-			return s
-		}(),
-		want: true,
-	}, {
-		name: "mark sink empty, secrets, and event types",
-		s: func() *GitHubSourceStatus {
-			s := &GitHubSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("")
-			s.MarkSecrets()
-			s.MarkEventTypes()
 			return s
 		}(),
 		want: false,
 	}, {
-		name: "mark sink empty, secrets, and event types, then sink",
+		name: "mark sink nil, secrets, then sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(nil)
 			s.MarkSecrets()
-			s.MarkEventTypes()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		want: true,
@@ -183,7 +157,7 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -205,26 +179,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark event types",
+		name: "mark sink, secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkEventTypes()
-			return s
-		}(),
-		condQuery: GitHubSourceConditionReady,
-		want: &apis.Condition{
-			Type:   GitHubSourceConditionReady,
-			Status: corev1.ConditionUnknown,
-		},
-	}, {
-		name: "mark sink, secrets, and event types",
-		s: func() *GitHubSourceStatus {
-			s := &GitHubSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkSecrets()
-			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -233,13 +193,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionTrue,
 		},
 	}, {
-		name: "mark sink, secrets, and event types, then no sink",
+		name: "mark sink, secrets, then no sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkSecrets()
-			s.MarkEventTypes()
 			s.MarkNoSink("Testing", "hi%s", "")
 			return s
 		}(),
@@ -251,13 +210,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink, secrets, and event types, then no secrets",
+		name: "mark sink, secrets, then no secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			s.MarkSecrets()
-			s.MarkEventTypes()
 			s.MarkNoSecrets("Testing", "hi%s", "")
 			return s
 		}(),
@@ -269,29 +227,12 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "hi",
 		},
 	}, {
-		name: "mark sink, secrets, and event types, then no event types",
+		name: "mark sink nil, secrets",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(nil)
 			s.MarkSecrets()
-			s.MarkEventTypes()
-			s.MarkNoEventTypes("Testing", "hi%s", "")
-			return s
-		}(),
-		condQuery: GitHubSourceConditionReady,
-		want: &apis.Condition{
-			Type:   GitHubSourceConditionReady,
-			Status: corev1.ConditionTrue,
-		},
-	}, {
-		name: "mark sink empty, secrets, and event types",
-		s: func() *GitHubSourceStatus {
-			s := &GitHubSourceStatus{}
-			s.InitializeConditions()
-			s.MarkSink("")
-			s.MarkSecrets()
-			s.MarkEventTypes()
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,
@@ -302,14 +243,13 @@ func TestGitHubSourceStatusGetCondition(t *testing.T) {
 			Message: "Sink has resolved to empty.",
 		},
 	}, {
-		name: "mark sink empty, secrets, and event types, then sink",
+		name: "mark sink nil, secrets, then sink",
 		s: func() *GitHubSourceStatus {
 			s := &GitHubSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("")
+			s.MarkSink(nil)
 			s.MarkSecrets()
-			s.MarkEventTypes()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		condQuery: GitHubSourceConditionReady,

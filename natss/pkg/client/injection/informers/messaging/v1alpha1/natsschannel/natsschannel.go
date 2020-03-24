@@ -19,7 +19,7 @@ limitations under the License.
 package natsschannel
 
 import (
-	"context"
+	context "context"
 
 	v1alpha1 "knative.dev/eventing-contrib/natss/pkg/client/informers/externalversions/messaging/v1alpha1"
 	factory "knative.dev/eventing-contrib/natss/pkg/client/injection/informers/factory"

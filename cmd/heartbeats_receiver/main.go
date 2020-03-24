@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"log"
 
-	"knative.dev/eventing-contrib/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/kncloudevents"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/v1/cloudevents"
 )
 
 type Heartbeat struct {

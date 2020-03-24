@@ -20,17 +20,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 // +genclient
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AwsSqsSource is the Schema for the AWS SQS API
 // +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:categories=all,knative,eventing,sources
 type AwsSqsSource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -48,12 +48,17 @@ type AwsSqsSourceSpec struct {
 	QueueURL string `json:"queueUrl"`
 
 	// AwsCredsSecret is the credential to use to poll the AWS SQS
-	AwsCredsSecret corev1.SecretKeySelector `json:"awsCredsSecret,omitempty"`
+	// +optional
+	AwsCredsSecret *corev1.SecretKeySelector `json:"awsCredsSecret,omitempty"`
+
+	// Annotations to add to the pod, mostly used for Kube2IAM role
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to
 	// use as the sink.  This is where events will be received.
 	// +optional
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+	Sink *corev1.ObjectReference `json:"sink,omitempty"` // TODO this is not the source duck anymore
 
 	// ServiceAccoutName is the name of the ServiceAccount that will be used to
 	// run the Receive Adapter Deployment.
@@ -77,10 +82,6 @@ const (
 	// AwsSqsSourceConditionDeployed has status True when the
 	// AwsSqsSource has had it's receive adapter deployment created.
 	AwsSqsSourceConditionDeployed apis.ConditionType = "Deployed"
-
-	// AwsSqsSourceConditionEventTypesProvided has status True when the
-	// AwsSqsSource has been configured with event types
-	AwsSqsSourceConditionEventTypesProvided apis.ConditionType = "EventTypesProvided"
 )
 
 var condSet = apis.NewLivingConditionSet(
@@ -112,6 +113,11 @@ func (s *AwsSqsSourceStatus) IsReady() bool {
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (s *AwsSqsSourceStatus) InitializeConditions() {
 	condSet.Manage(s).InitializeConditions()
+}
+
+// GetGroupVersionKind returns GroupVersionKind for AwsSqsSource
+func (s *AwsSqsSource) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("AwsSqsSource")
 }
 
 // MarkSink sets the condition that the source has a sink configured.
@@ -150,16 +156,6 @@ func (s *AwsSqsSourceStatus) MarkDeploying(reason, messageFormat string, message
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *AwsSqsSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
 	condSet.Manage(s).MarkFalse(AwsSqsSourceConditionDeployed, reason, messageFormat, messageA...)
-}
-
-// MarkEventTypes sets the condition that the source has set its event types.
-func (s *AwsSqsSourceStatus) MarkEventTypes() {
-	condSet.Manage(s).MarkTrue(AwsSqsSourceConditionEventTypesProvided)
-}
-
-// MarkNoEventTypes sets the condition that the source does not its event types configured.
-func (s *AwsSqsSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
-	condSet.Manage(s).MarkFalse(AwsSqsSourceConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

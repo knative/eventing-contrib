@@ -18,12 +18,15 @@ kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
   labels:
+    contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
+    duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
   annotations:
     registry.knative.dev/eventTypes: |
       [
-        { "type": "dev.knative.couchdb.changes" }
+        { "type": "org.apache.couchdb.document.update" },
+        { "type": "org.apache.couchdb.document.delete" }
       ]
   name: couchdbsources.sources.knative.dev
 spec:

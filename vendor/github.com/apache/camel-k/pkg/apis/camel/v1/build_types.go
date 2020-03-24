@@ -35,7 +35,7 @@ type BuildSpec struct {
 // Task --
 type Task struct {
 	Builder *BuilderTask `json:"builder,omitempty"`
-	Kaniko  *KanikoTask  `json:"kaniko,omitempty"`
+	Image   *ImageTask   `json:"image,omitempty"`
 }
 
 // BaseTask --
@@ -46,43 +46,44 @@ type BaseTask struct {
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
-// ImageTask --
-type ImageTask struct {
-	BaseTask `json:",inline"`
-	Image    string          `json:"image,omitempty"`
-	Args     []string        `json:"args,omitempty"`
-	Env      []corev1.EnvVar `json:"env,omitempty"`
+// ContainerTask --
+type ContainerTask struct {
+	BaseTask   `json:",inline"`
+	Image      string          `json:"image,omitempty"`
+	Command    []string        `json:"command,omitempty"`
+	Args       []string        `json:"args,omitempty"`
+	Env        []corev1.EnvVar `json:"env,omitempty"`
+	WorkingDir string          `json:"workingDir,omitempty"`
 }
 
-// KanikoTask --
-type KanikoTask struct {
-	ImageTask  `json:",inline"`
-	BuiltImage string `json:"builtImage,omitempty"`
+// ImageTask --
+type ImageTask struct {
+	ContainerTask `json:",inline"`
+	BuiltImage    string `json:"builtImage,omitempty"`
 }
 
 // BuilderTask --
 type BuilderTask struct {
-	BaseTask        `json:",inline"`
-	Meta            metav1.ObjectMeta `json:"meta,omitempty"`
-	Image           string            `json:"image,omitempty"`
-	BaseImage       string            `json:"baseImage,omitempty"`
-	CamelVersion    string            `json:"camelVersion,omitempty"`
-	RuntimeVersion  string            `json:"runtimeVersion,omitempty"`
-	RuntimeProvider *RuntimeProvider  `json:"runtimeProvider,omitempty"`
-	Sources         []SourceSpec      `json:"sources,omitempty"`
-	Resources       []ResourceSpec    `json:"resources,omitempty"`
-	Dependencies    []string          `json:"dependencies,omitempty"`
-	Steps           []string          `json:"steps,omitempty"`
-	Maven           MavenSpec         `json:"maven,omitempty"`
-	BuildDir        string            `json:"buildDir,omitempty"`
-	Properties      map[string]string `json:"properties,omitempty"`
-	Timeout         metav1.Duration   `json:"timeout,omitempty"`
+	BaseTask     `json:",inline"`
+	Meta         metav1.ObjectMeta `json:"meta,omitempty"`
+	Image        string            `json:"image,omitempty"`
+	BaseImage    string            `json:"baseImage,omitempty"`
+	Runtime      RuntimeSpec       `json:"runtime,omitempty"`
+	Sources      []SourceSpec      `json:"sources,omitempty"`
+	Resources    []ResourceSpec    `json:"resources,omitempty"`
+	Dependencies []string          `json:"dependencies,omitempty"`
+	Steps        []string          `json:"steps,omitempty"`
+	Maven        MavenSpec         `json:"maven,omitempty"`
+	BuildDir     string            `json:"buildDir,omitempty"`
+	Properties   map[string]string `json:"properties,omitempty"`
+	Timeout      metav1.Duration   `json:"timeout,omitempty"`
 }
 
 // BuildStatus defines the observed state of Build
 type BuildStatus struct {
 	Phase      BuildPhase       `json:"phase,omitempty"`
 	Image      string           `json:"image,omitempty"`
+	Digest     string           `json:"digest,omitempty"`
 	BaseImage  string           `json:"baseImage,omitempty"`
 	Artifacts  []Artifact       `json:"artifacts,omitempty"`
 	Error      string           `json:"error,omitempty"`

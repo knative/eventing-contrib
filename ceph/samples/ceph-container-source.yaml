@@ -5,7 +5,7 @@ metadata:
   labels:
       app: ceph-source
 spec:
-  image: knative.dev/eventing-contrib/ceph/cmd/receive_adapter
+  image: ko://knative.dev/eventing-contrib/ceph/cmd/receive_adapter
   args:
     - '--port=19090'
   sink:

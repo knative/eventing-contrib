@@ -19,7 +19,7 @@ limitations under the License.
 package kafkachannel
 
 import (
-	"context"
+	context "context"
 
 	v1alpha1 "knative.dev/eventing-contrib/kafka/channel/pkg/client/informers/externalversions/messaging/v1alpha1"
 	factory "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/factory"

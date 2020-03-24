@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing/pkg/apis/duck"
 	"knative.dev/pkg/apis"
 )
@@ -32,15 +31,11 @@ const (
 
 	// CouchDbConditionDeployed has status True when the CouchDbSource has had it's deployment created.
 	CouchDbConditionDeployed apis.ConditionType = "Deployed"
-
-	// CouchDbConditionEventTypeProvided has status True when the CouchDbSource has been configured with its event types.
-	CouchDbConditionEventTypeProvided apis.ConditionType = "EventTypesProvided"
 )
 
 var CouchDbCondSet = apis.NewLivingConditionSet(
 	CouchDbConditionSinkProvided,
 	CouchDbConditionDeployed,
-	CouchDbConditionEventTypeProvided,
 )
 
 // GetCondition returns the condition currently associated with the given type, or nil.
@@ -54,26 +49,10 @@ func (s *CouchDbSourceStatus) InitializeConditions() {
 }
 
 // MarkSink sets the condition that the source has a sink configured.
-func (s *CouchDbSourceStatus) MarkSink(uri string) {
+func (s *CouchDbSourceStatus) MarkSink(uri *apis.URL) {
 	s.SinkURI = uri
-	if len(uri) > 0 {
+	if !uri.IsEmpty() {
 		CouchDbCondSet.Manage(s).MarkTrue(CouchDbConditionSinkProvided)
-	} else {
-		CouchDbCondSet.Manage(s).MarkUnknown(CouchDbConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
-	}
-}
-
-// MarkSinkWarnDeprecated sets the condition that the source has a sink configured and warns ref is deprecated.
-func (s *CouchDbSourceStatus) MarkSinkWarnRefDeprecated(uri string) {
-	s.SinkURI = uri
-	if len(uri) > 0 {
-		c := apis.Condition{
-			Type:     CouchDbConditionSinkProvided,
-			Status:   corev1.ConditionTrue,
-			Severity: apis.ConditionSeverityError,
-			Message:  "Using deprecated object ref fields when specifying spec.sink. Update to spec.sink.ref. These will be removed in a future release.",
-		}
-		CouchDbCondSet.Manage(s).SetCondition(c)
 	} else {
 		CouchDbCondSet.Manage(s).MarkUnknown(CouchDbConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
 	}
@@ -94,16 +73,6 @@ func (s *CouchDbSourceStatus) PropagateDeploymentAvailability(d *appsv1.Deployme
 		// for now.
 		CouchDbCondSet.Manage(s).MarkFalse(CouchDbConditionDeployed, "DeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
 	}
-}
-
-// MarkEventTypes sets the condition that the source has set its event type.
-func (s *CouchDbSourceStatus) MarkEventTypes() {
-	CouchDbCondSet.Manage(s).MarkTrue(CouchDbConditionEventTypeProvided)
-}
-
-// MarkNoEventTypes sets the condition that the source does not its event type configured.
-func (s *CouchDbSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
-	CouchDbCondSet.Manage(s).MarkFalse(CouchDbConditionEventTypeProvided, reason, messageFormat, messageA...)
 }
 
 // IsReady returns true if the resource is ready overall.

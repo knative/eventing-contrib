@@ -19,7 +19,7 @@ limitations under the License.
 package client
 
 import (
-	"context"
+	context "context"
 
 	rest "k8s.io/client-go/rest"
 	versioned "knative.dev/eventing-contrib/couchdb/source/pkg/client/clientset/versioned"

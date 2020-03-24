@@ -21,9 +21,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/webhook/resourcesemantics"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/pkg/apis"
 )
 
@@ -122,6 +124,24 @@ func TestKafkaChannelValidation(t *testing.T) {
 				fe.Details = "expected at least one of, got none"
 				errs = errs.Also(fe)
 				return errs
+			}(),
+		},
+		"invalid scope annotation": {
+			cr: &KafkaChannel{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						eventing.ScopeAnnotationKey: "notvalid",
+					},
+				},
+				Spec: KafkaChannelSpec{
+					NumPartitions:     1,
+					ReplicationFactor: 1,
+				},
+			},
+			want: func() *apis.FieldError {
+				fe := apis.ErrInvalidValue("notvalid", "metadata.annotations.[eventing.knative.dev/scope]")
+				fe.Details = "expected either 'cluster' or 'namespace'"
+				return fe
 			}(),
 		},
 	}

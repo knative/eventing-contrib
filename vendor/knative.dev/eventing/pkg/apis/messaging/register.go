@@ -20,17 +20,25 @@ import "k8s.io/apimachinery/pkg/runtime/schema"
 
 const (
 	GroupName = "messaging.knative.dev"
+	// SubscribableDuckVersionAnnotation is the annotation we use to declare
+	// which Subscribable duck version type we conform to.
+	SubscribableDuckVersionAnnotation = "messaging.knative.dev/subscribable"
 )
 
 var (
-	// SubscriptionssResource respresents a Knative Subscription
+	// SubscriptionssResource represents a Knative Subscription
 	SubscriptionsResource = schema.GroupResource{
 		Group:    GroupName,
 		Resource: "subscriptions",
 	}
-	// ChannelsResource respresents a Knative Channel
+	// ChannelsResource represents a Knative Channel
 	ChannelsResource = schema.GroupResource{
 		Group:    GroupName,
 		Resource: "channels",
+	}
+	// InMemoryChannelsResource represents a Knative Channel
+	InMemoryChannelsResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "inmemorychannels",
 	}
 )

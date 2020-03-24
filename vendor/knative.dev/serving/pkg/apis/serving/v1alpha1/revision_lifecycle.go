@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 	av1alpha1 "knative.dev/serving/pkg/apis/autoscaling/v1alpha1"
 	"knative.dev/serving/pkg/apis/config"
 	net "knative.dev/serving/pkg/apis/networking"
@@ -80,7 +79,7 @@ func (rs *RevisionSpec) GetContainer() *corev1.Container {
 	if len(rs.Containers) > 0 {
 		return &rs.Containers[0]
 	}
-	// Should be unreachable post-validation, but here to ease testing.
+	// Should be unreachable post-validation, but is here to ease testing.
 	return &corev1.Container{}
 }
 
@@ -332,10 +331,6 @@ func (r *Revision) GetLastPinned() (time.Time, error) {
 // IsReachable returns whether or not the revision can be reached by a route.
 func (r *Revision) IsReachable() bool {
 	return r.ObjectMeta.Labels[serving.RouteLabelKey] != ""
-}
-
-func (rs *RevisionStatus) duck() *duckv1.Status {
-	return &rs.Status
 }
 
 // PropagateDeploymentStatus takes the Deployment status and applies its values

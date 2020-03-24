@@ -19,18 +19,22 @@ package v1alpha1
 import (
 	"context"
 
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/apis/messaging/config"
+	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/pkg/apis"
 )
 
 func (s *Sequence) SetDefaults(ctx context.Context) {
 	withNS := apis.WithinParent(ctx, s.ObjectMeta)
 	if s != nil && s.Spec.ChannelTemplate == nil {
-		// The singleton may not have been set, if so ignore it and validation will reject the
-		// Channel.
-		if cd := eventingduckv1alpha1.ChannelDefaulterSingleton; cd != nil {
-			channelTemplate := cd.GetDefault(s.Namespace)
-			s.Spec.ChannelTemplate = channelTemplate
+		cfg := config.FromContextOrDefaults(ctx)
+		c, err := cfg.ChannelDefaults.GetChannelConfig(apis.ParentMeta(ctx).Namespace)
+
+		if err == nil {
+			s.Spec.ChannelTemplate = &messagingv1beta1.ChannelTemplateSpec{
+				TypeMeta: c.TypeMeta,
+				Spec:     c.Spec,
+			}
 		}
 	}
 	s.Spec.SetDefaults(withNS)
@@ -48,7 +52,7 @@ func (ss *SequenceSpec) SetDefaults(ctx context.Context) {
 }
 
 func (ss *SequenceStep) SetDefaults(ctx context.Context) {
-	ss.Subscriber.SetDefaults(ctx)
+	ss.Destination.SetDefaults(ctx)
 
 	// No delivery defaults.
 }

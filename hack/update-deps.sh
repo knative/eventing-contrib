@@ -22,8 +22,29 @@ source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
 cd ${REPO_ROOT_DIR}
 
+# The list of dependencies that we track at HEAD and periodically
+# float forward in this repository.
+FLOATING_DEPS=(
+  "knative.dev/pkg"
+  "knative.dev/eventing"
+  "knative.dev/serving"
+  "knative.dev/test-infra"
+)
+
+# Parse flags to determine any we should pass to dep.
+DEP_FLAGS=()
+while [[ $# -ne 0 ]]; do
+  parameter=$1
+  case ${parameter} in
+    --upgrade) DEP_FLAGS=( -update ${FLOATING_DEPS[@]} ) ;;
+    *) abort "unknown option ${parameter}" ;;
+  esac
+  shift
+done
+readonly DEP_FLAGS
+
 # Ensure we have everything we need under vendor/
-dep ensure
+dep ensure ${DEP_FLAGS[@]}
 
 rm -rf $(find vendor/ -name 'OWNERS')
 rm -rf $(find vendor/ -name 'OWNERS_ALIASES')
@@ -31,7 +52,7 @@ rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
 
 update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./github/cmd/*" "./camel/source/cmd/*" \
-		"./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" \
+		"./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" "./gitlab/cmd/*" \
 		"./natss/cmd/*" "./couchdb/source/cmd/*" "./ceph/cmd/*"
 
 # HACK HACK HACK
@@ -44,10 +65,6 @@ git apply ${REPO_ROOT_DIR}/hack/set-span-id.patch
 # Patch Kivik
 # see https://github.com/go-kivik/kivik/issues/420
 git apply ${REPO_ROOT_DIR}/hack/kivik-set-zero.patch
-
-# We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
-# path has to be a GOPATH.
-git apply ${REPO_ROOT_DIR}/hack/update-image-paths.patch
 
 ## Hack to vendor performance image from eventing
 rm -rf ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/*

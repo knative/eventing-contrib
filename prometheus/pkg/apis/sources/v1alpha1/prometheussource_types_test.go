@@ -49,7 +49,7 @@ func TestPrometheusSourceStatusIsReady(t *testing.T) {
 		s: func() *PrometheusSourceStatus {
 			s := &PrometheusSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		want: false,
@@ -93,7 +93,7 @@ func TestPrometheusSourceStatusGetCondition(t *testing.T) {
 		s: func() *PrometheusSourceStatus {
 			s := &PrometheusSourceStatus{}
 			s.InitializeConditions()
-			s.MarkSink("uri://example")
+			s.MarkSink(apis.HTTP("example"))
 			return s
 		}(),
 		condQuery: PrometheusConditionReady,

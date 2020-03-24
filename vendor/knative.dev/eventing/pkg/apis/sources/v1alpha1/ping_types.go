@@ -79,24 +79,31 @@ type PingSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a uri to use as the sink.
 	Sink *duckv1.Destination `json:"sink,omitempty"`
 
+	// CloudEventOverrides defines overrides to control the output format and
+	// modifications of the event sent to the sink.
+	// +optional
+	CloudEventOverrides *duckv1.CloudEventOverrides `json:"ceOverrides,omitempty"`
+
 	// ServiceAccoutName is the name of the ServiceAccount that will be used to run the Receive
 	// Adapter Deployment.
+	// Deprecated: v1beta1 drops this field.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Resource limits and Request specifications of the Receive Adapter Deployment
+	// Deprecated: v1beta1 drops this field.
 	Resources PingResourceSpec `json:"resources,omitempty"`
 }
 
 // PingSourceStatus defines the observed state of PingSource.
 type PingSourceStatus struct {
-	// inherits duck/v1 Status, which currently provides:
-	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
-	// * Conditions - the latest available observations of a resource's current state.
-	duckv1.Status `json:",inline"`
-
-	// SinkURI is the current active sink URI that has been configured for the PingSource.
-	// +optional
-	SinkURI *apis.URL `json:"sinkUri,omitempty"`
+	// inherits duck/v1 SourceStatus, which currently provides:
+	// * ObservedGeneration - the 'Generation' of the Service that was last
+	//   processed by the controller.
+	// * Conditions - the latest available observations of a resource's current
+	//   state.
+	// * SinkURI - the current active sink URI that has been configured for the
+	//   Source.
+	duckv1.SourceStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

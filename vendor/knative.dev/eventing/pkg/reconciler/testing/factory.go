@@ -35,7 +35,6 @@ import (
 	"knative.dev/pkg/controller"
 
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	fakelegacyclient "knative.dev/eventing/pkg/legacyclient/injection/client/fake"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 
@@ -53,7 +52,7 @@ type Ctor func(context.Context, *Listers, configmap.Watcher) controller.Reconcil
 
 // MakeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
 func MakeFactory(ctor Ctor, unstructured bool, logger *zap.SugaredLogger) Factory {
-	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList, *FakeStatsReporter) {
+	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList) {
 		ls := NewListers(r.Objects)
 
 		ctx := context.Background()
@@ -61,7 +60,6 @@ func MakeFactory(ctor Ctor, unstructured bool, logger *zap.SugaredLogger) Factor
 
 		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
 		ctx, client := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
-		ctx, legacy := fakelegacyclient.With(ctx, ls.GetLegacyObjects()...)
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
 			NewScheme(), ToUnstructured(t, r.Objects)...)
 
@@ -80,8 +78,6 @@ func MakeFactory(ctor Ctor, unstructured bool, logger *zap.SugaredLogger) Factor
 
 		eventRecorder := record.NewFakeRecorder(maxEventBufferSize)
 		ctx = controller.WithEventRecorder(ctx, eventRecorder)
-		statsReporter := &FakeStatsReporter{}
-		//ctx = reconciler.WithStatsReporter(ctx, statsReporter) // TODO: upstream stats interface from eventing to PKG
 
 		// Set up our Controller from the fakes.
 		c := ctor(ctx, &ls, configmap.NewStaticWatcher())
@@ -89,7 +85,6 @@ func MakeFactory(ctor Ctor, unstructured bool, logger *zap.SugaredLogger) Factor
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
 			client.PrependReactor("*", "*", reactor)
-			legacy.PrependReactor("*", "*", reactor)
 			dynamicClient.PrependReactor("*", "*", reactor)
 		}
 
@@ -101,18 +96,10 @@ func MakeFactory(ctor Ctor, unstructured bool, logger *zap.SugaredLogger) Factor
 			return ValidateUpdates(ctx, action)
 		})
 
-		// Validate all Create operations through the legacy client.
-		legacy.PrependReactor("create", "*", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-			return ValidateCreates(ctx, action)
-		})
-		legacy.PrependReactor("update", "*", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
-			return ValidateUpdates(ctx, action)
-		})
-
-		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient, legacy}
+		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
 
-		return c, actionRecorderList, eventList, statsReporter
+		return c, actionRecorderList, eventList
 	}
 }
 

@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing/pkg/apis/duck"
 	"knative.dev/pkg/apis"
 )
@@ -32,9 +31,6 @@ const (
 
 	// KafkaConditionDeployed has status True when the KafkaSource has had it's receive adapter deployment created.
 	KafkaConditionDeployed apis.ConditionType = "Deployed"
-
-	// KafkaConditionEventTypesProvided has status True when the KafkaSource has been configured with event types.
-	KafkaConditionEventTypesProvided apis.ConditionType = "EventTypesProvided"
 
 	// KafkaConditionResources is True when the resources listed for the KafkaSource have been properly
 	// parsed and match specified syntax for resource quantities
@@ -60,26 +56,10 @@ func (s *KafkaSourceStatus) InitializeConditions() {
 }
 
 // MarkSink sets the condition that the source has a sink configured.
-func (s *KafkaSourceStatus) MarkSink(uri string) {
+func (s *KafkaSourceStatus) MarkSink(uri *apis.URL) {
 	s.SinkURI = uri
-	if len(uri) > 0 {
+	if !uri.IsEmpty() {
 		KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionSinkProvided)
-	} else {
-		KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
-	}
-}
-
-// MarkSinkWarnDeprecated sets the condition that the source has a sink configured and warns ref is deprecated.
-func (s *KafkaSourceStatus) MarkSinkWarnRefDeprecated(uri string) {
-	s.SinkURI = uri
-	if len(uri) > 0 {
-		c := apis.Condition{
-			Type:     KafkaConditionSinkProvided,
-			Status:   corev1.ConditionTrue,
-			Severity: apis.ConditionSeverityError,
-			Message:  "Using deprecated object ref fields when specifying spec.sink. Update to spec.sink.ref. These will be removed in a future release.",
-		}
-		KafkaSourceCondSet.Manage(s).SetCondition(c)
 	} else {
 		KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
 	}
@@ -119,16 +99,6 @@ func (s *KafkaSourceStatus) MarkDeploying(reason, messageFormat string, messageA
 // MarkNotDeployed sets the condition that the source has not been deployed.
 func (s *KafkaSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
 	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionDeployed, reason, messageFormat, messageA...)
-}
-
-// MarkEventTypes sets the condition that the source has created its event types.
-func (s *KafkaSourceStatus) MarkEventTypes() {
-	KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionEventTypesProvided)
-}
-
-// MarkNoEventTypes sets the condition that the source does not its event types configured.
-func (s *KafkaSourceStatus) MarkNoEventTypes(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionEventTypesProvided, reason, messageFormat, messageA...)
 }
 
 func (s *KafkaSourceStatus) MarkResourcesCorrect() {

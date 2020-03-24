@@ -29,7 +29,7 @@ import (
 	pkgTest "knative.dev/pkg/test"
 
 	configsv1alpha1 "knative.dev/eventing/pkg/apis/configs/v1alpha1"
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	eventingv1beta1 "knative.dev/eventing/pkg/apis/eventing/v1beta1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
@@ -56,7 +56,7 @@ type SubscriptionOption func(*messagingv1alpha1.Subscription)
 type SubscriptionOptionV1Beta1 func(*messagingv1beta1.Subscription)
 
 // DeliveryOption enables further configuration of DeliverySpec.
-type DeliveryOption func(*eventingduckv1alpha1.DeliverySpec)
+type DeliveryOption func(*eventingduckv1beta1.DeliverySpec)
 
 // channelRef returns an ObjectReference for a given Channel name.
 func channelRef(name string, typemeta *metav1.TypeMeta) *corev1.ObjectReference {
@@ -67,6 +67,15 @@ func KnativeRefForService(name, namespace string) *duckv1.KReference {
 	return &duckv1.KReference{
 		Kind:       "Service",
 		APIVersion: "v1",
+		Name:       name,
+		Namespace:  namespace,
+	}
+}
+
+func KnativeRefForBroker(name, namespace string) *duckv1.KReference {
+	return &duckv1.KReference{
+		Kind:       "Broker",
+		APIVersion: "eventing.knative.dev/v1alpha1",
 		Name:       name,
 		Namespace:  namespace,
 	}
@@ -116,7 +125,7 @@ func WithDeadLetterSinkForSubscription(name string) SubscriptionOption {
 		if name != "" {
 			delivery := s.Spec.Delivery
 			if delivery == nil {
-				delivery = &eventingduckv1alpha1.DeliverySpec{}
+				delivery = &eventingduckv1beta1.DeliverySpec{}
 				s.Spec.Delivery = delivery
 			}
 
@@ -171,10 +180,23 @@ func SubscriptionV1Beta1(
 // WithChannelTemplateForBroker returns a function that adds a ChannelTemplate for the given Broker.
 func WithChannelTemplateForBroker(channelTypeMeta *metav1.TypeMeta) BrokerOption {
 	return func(b *eventingv1alpha1.Broker) {
-		channelTemplate := &eventingduckv1alpha1.ChannelTemplateSpec{
+		channelTemplate := &messagingv1beta1.ChannelTemplateSpec{
 			TypeMeta: *channelTypeMeta,
 		}
 		b.Spec.ChannelTemplate = channelTemplate
+	}
+}
+
+// WithBrokerClassForBrokerV1Beta1 returns a function that adds a brokerClass
+// annotation to the given Broker.
+func WithBrokerClassForBrokerV1Beta1(brokerClass string) BrokerV1Beta1Option {
+	return func(b *eventingv1beta1.Broker) {
+		annotations := b.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string, 1)
+		}
+		annotations["eventing.knative.dev/broker.class"] = brokerClass
+		b.SetAnnotations(annotations)
 	}
 }
 
@@ -186,9 +208,22 @@ func WithChannelTemplateForBrokerV1Beta1(config *duckv1.KReference) BrokerV1Beta
 }
 
 // WithDeliveryForBroker returns a function that adds a Delivery for the given Broker.
-func WithDeliveryForBroker(delivery *eventingduckv1alpha1.DeliverySpec) BrokerOption {
+func WithDeliveryForBroker(delivery *eventingduckv1beta1.DeliverySpec) BrokerOption {
 	return func(b *eventingv1alpha1.Broker) {
 		b.Spec.Delivery = delivery
+	}
+}
+
+// WithBrokerClassForBroker returns a function that adds a brokerClass
+// annotation to the given Broker.
+func WithBrokerClassForBroker(brokerClass string) BrokerOption {
+	return func(b *eventingv1alpha1.Broker) {
+		annotations := b.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string, 1)
+		}
+		annotations["eventing.knative.dev/broker.class"] = brokerClass
+		b.SetAnnotations(annotations)
 	}
 }
 
@@ -294,13 +329,13 @@ func WithAttributesTriggerFilterV1Beta1(eventSource, eventType string, extension
 	}
 }
 
-// WithDependencyAnnotaionTrigger returns an option that adds a dependency annotation to the given Trigger.
-func WithDependencyAnnotaionTrigger(dependencyAnnotation string) TriggerOption {
-	return func(t *eventingv1alpha1.Trigger) {
+// WithDependencyAnnotationTrigger returns an option that adds a dependency annotation to the given Trigger.
+func WithDependencyAnnotationTriggerV1Beta1(dependencyAnnotation string) TriggerOptionV1Beta1 {
+	return func(t *eventingv1beta1.Trigger) {
 		if t.Annotations == nil {
 			t.Annotations = make(map[string]string)
 		}
-		t.Annotations[eventingv1alpha1.DependencyAnnotation] = dependencyAnnotation
+		t.Annotations[eventingv1beta1.DependencyAnnotation] = dependencyAnnotation
 	}
 }
 
@@ -308,17 +343,6 @@ func WithDependencyAnnotaionTrigger(dependencyAnnotation string) TriggerOption {
 func WithBroker(brokerName string) TriggerOption {
 	return func(t *eventingv1alpha1.Trigger) {
 		t.Spec.Broker = brokerName
-	}
-}
-
-// WithSubscriberKServiceRefForTrigger returns an option that adds a Subscriber Knative Service Ref for the given Trigger.
-func WithSubscriberKServiceRefForTrigger(name string) TriggerOption {
-	return func(t *eventingv1alpha1.Trigger) {
-		if name != "" {
-			t.Spec.Subscriber = duckv1.Destination{
-				Ref: KnativeRefForService(name, t.Namespace),
-			}
-		}
 	}
 }
 
@@ -382,7 +406,7 @@ func TriggerV1Beta1(name string, options ...TriggerOptionV1Beta1) *eventingv1bet
 
 // WithDeadLetterSinkForDelivery returns an options that adds a DeadLetterSink for the given DeliverySpec.
 func WithDeadLetterSinkForDelivery(name string) DeliveryOption {
-	return func(delivery *eventingduckv1alpha1.DeliverySpec) {
+	return func(delivery *eventingduckv1beta1.DeliverySpec) {
 		if name != "" {
 			delivery.DeadLetterSink = &duckv1.Destination{
 				Ref: KnativeRefForService(name, ""),
@@ -392,8 +416,8 @@ func WithDeadLetterSinkForDelivery(name string) DeliveryOption {
 }
 
 // Delivery returns a DeliverySpec.
-func Delivery(options ...DeliveryOption) *eventingduckv1alpha1.DeliverySpec {
-	delivery := &eventingduckv1alpha1.DeliverySpec{}
+func Delivery(options ...DeliveryOption) *eventingduckv1beta1.DeliverySpec {
+	delivery := &eventingduckv1beta1.DeliverySpec{}
 	for _, option := range options {
 		option(delivery)
 	}

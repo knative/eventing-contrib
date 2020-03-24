@@ -22,4 +22,4 @@ spec:
       revisionTemplate:
         spec:
           container:
-            image: knative.dev/eventing-contrib/cmd/heartbeats_receiver
+            image: ko://knative.dev/eventing-contrib/cmd/heartbeats_receiver

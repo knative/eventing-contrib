@@ -1,4 +1,4 @@
-# Copyright 2019 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,35 +13,59 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  labels:
-    contrib.eventing.knative.dev/release: devel
-    control-plane: awssqs-controller-manager
-  name: awssqs-controller-manager
+  name: awssqs-controller
   namespace: knative-sources
+  labels:
+    eventing.knative.dev/release: devel
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      control-plane: awssqs-controller-manager
-  serviceName: awssqs-controller-manager
+      app: eventing-controller
   template:
     metadata:
       labels:
-        control-plane: awssqs-controller-manager
+        app: eventing-controller
+        eventing.knative.dev/release: devel
     spec:
+      serviceAccountName: awssqs-controller-manager
+
       containers:
-      - image: knative.dev/eventing-contrib/awssqs/cmd/controller
-        env:
-        - name: AWSSQS_RA_IMAGE
-          value: knative.dev/eventing-contrib/awssqs/cmd/receive_adapter
-        name: manager
-        resources:
-          limits:
-            cpu: 100m
-            memory: 30Mi
-          requests:
-            cpu: 20m
-            memory: 20Mi
-      serviceAccount: awssqs-controller-manager
-      terminationGracePeriodSeconds: 10
+        - name: controller
+          terminationMessagePolicy: FallbackToLogsOnError
+          image: ko://knative.dev/eventing-contrib/awssqs/cmd/controller
+
+          resources:
+            limits:
+              cpu: 100m
+              memory: 30Mi
+            requests:
+              cpu: 20m
+              memory: 20Mi
+
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-leader-election-awssqs
+            - name: METRICS_DOMAIN
+              value: knative.dev/sources
+            # AwsSqsSource RA image:
+            - name: AWSSQS_RA_IMAGE
+              value: ko://knative.dev/eventing-contrib/awssqs/cmd/receive_adapter
+
+          securityContext:
+            allowPrivilegeEscalation: false
+
+          ports:
+            - name: metrics
+              containerPort: 9090
+
