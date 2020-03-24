@@ -665,6 +665,16 @@ func TestSplitOnCommas(t *testing.T) {
 				"url-three.kafka:9092",
 			},
 		},
+		{
+			"middle commas check",
+			",,url-one.kafka:9092,url-two.kafka:9092,,url-three.kafka:9092,url-four.kafka:9092,,"
+			[]string{
+				"url-one.kafka:9092",
+				"url-two.kafka:9092",
+				"url-three.kafka:9092",
+				"url-four.kafka:9092",
+			},
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			got := SplitOnCommas(tt.bootstrapServers)
