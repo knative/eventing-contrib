@@ -667,7 +667,7 @@ func TestSplitOnCommas(t *testing.T) {
 		},
 		{
 			"middle commas check",
-			",,url-one.kafka:9092,url-two.kafka:9092,,url-three.kafka:9092,url-four.kafka:9092,,"
+			",,url-one.kafka:9092,url-two.kafka:9092,,url-three.kafka:9092,url-four.kafka:9092,,",
 			[]string{
 				"url-one.kafka:9092",
 				"url-two.kafka:9092",
