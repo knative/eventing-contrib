@@ -18,7 +18,9 @@ package gitlab
 
 import (
 	"context"
-	"os"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+
+	"github.com/kelseyhightower/envconfig"
 
 	//k8s.io imports
 	"k8s.io/client-go/kubernetes/scheme"
@@ -29,11 +31,9 @@ import (
 	sourcescheme "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/scheme"
 	gitlabclient "knative.dev/eventing-contrib/gitlab/pkg/client/injection/client"
 	gitlabinformer "knative.dev/eventing-contrib/gitlab/pkg/client/injection/informers/sources/v1alpha1/gitlabsource"
+	v1alpha1gitlabsource "knative.dev/eventing-contrib/gitlab/pkg/client/injection/reconciler/sources/v1alpha1/gitlabsource"
 	serviceclient "knative.dev/serving/pkg/client/injection/client"
 	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
-
-	//knative.dev/eventing imports
-	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
 	"knative.dev/pkg/configmap"
@@ -42,35 +42,37 @@ import (
 	"knative.dev/pkg/resolver"
 )
 
+type envConfig struct {
+	Image string `envconfig:"GL_RA_IMAGE" required:"true"`
+}
+
 // NewController returns the controller implementation with reconciler structure and logger
 func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-
-	raImage := os.Getenv(raImageEnvVar)
-	if raImage == "" {
-		logging.FromContext(ctx).Errorf("required environment variable %q not set", raImageEnvVar)
-		return nil
-	}
-
 	gitlabInformer := gitlabinformer.Get(ctx)
 	serviceInformer := kserviceinformer.Get(ctx)
 
 	r := &Reconciler{
-		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
-		servingLister:       serviceInformer.Lister(),
-		servingClientSet:    serviceclient.Get(ctx),
-		gitlabClientSet:     gitlabclient.Get(ctx),
-		gitlabLister:        gitlabInformer.Lister(),
-		receiveAdapterImage: raImage,
-		loggingContext:      ctx,
+		kubeClientSet:    kubeclient.Get(ctx),
+		servingLister:    serviceInformer.Lister(),
+		servingClientSet: serviceclient.Get(ctx),
+		gitlabClientSet:  gitlabclient.Get(ctx),
+		gitlabLister:     gitlabInformer.Lister(),
+		loggingContext:   ctx,
 	}
 
-	impl := controller.NewImpl(r, r.Logger, "GitLabSource")
+	env := &envConfig{}
+	if err := envconfig.Process("", env); err != nil {
+		logging.FromContext(ctx).Panicf("unable to process PingSourceSource's required environment variables: %v", err)
+	}
+	r.receiveAdapterImage = env.Image
+
+	impl := v1alpha1gitlabsource.NewImpl(ctx, r)
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
-	r.Logger.Info("Setting up GitLab event handlers")
+	logging.FromContext(ctx).Info("Setting up GitLab event handlers")
 
 	gitlabInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
