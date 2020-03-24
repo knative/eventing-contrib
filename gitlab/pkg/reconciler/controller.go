@@ -18,7 +18,6 @@ package gitlab
 
 import (
 	"context"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
 
 	"github.com/kelseyhightower/envconfig"
 
@@ -32,6 +31,7 @@ import (
 	gitlabclient "knative.dev/eventing-contrib/gitlab/pkg/client/injection/client"
 	gitlabinformer "knative.dev/eventing-contrib/gitlab/pkg/client/injection/informers/sources/v1alpha1/gitlabsource"
 	v1alpha1gitlabsource "knative.dev/eventing-contrib/gitlab/pkg/client/injection/reconciler/sources/v1alpha1/gitlabsource"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	serviceclient "knative.dev/serving/pkg/client/injection/client"
 	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
 
