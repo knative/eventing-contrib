@@ -153,7 +153,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	if natssChannel.DeletionTimestamp != nil {
 		c := toChannel(natssChannel)
 
-		if _, err := r.natssDispatcher.UpdateSubscriptions(c, true); err != nil {
+		if _, err := r.natssDispatcher.UpdateSubscriptions(ctx, c, true); err != nil {
 			logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
 			return err
 		}
@@ -199,7 +199,7 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 	}
 
 	// Try to subscribe.
-	failedSubscriptions, err := r.natssDispatcher.UpdateSubscriptions(c, false)
+	failedSubscriptions, err := r.natssDispatcher.UpdateSubscriptions(ctx, c, false)
 	if err != nil {
 		logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
 		return err

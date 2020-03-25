@@ -143,19 +143,21 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 
 		// source.Status.MarkServiceDeployed(ra)
 		// TODO: Mark Deployed for the ksvc
-		// TODO: Mark some condition for the webhook status?
 		if source.Status.WebhookIDKey == "" {
 			hookID, err := r.createWebhook(ctx, args)
 			if err != nil {
+				source.Status.MarkWebhookNotConfigured("CreationFailed", err.Error())
 				return err
 			}
 			source.Status.WebhookIDKey = hookID
 		} else {
 			err := r.reconcileWebhook(ctx, args, source.Status.WebhookIDKey)
 			if err != nil {
+				source.Status.MarkWebhookNotConfigured("ReconciliationFailed", err.Error())
 				return err
 			}
 		}
+		source.Status.MarkWebhookConfigured()
 	}
 	source.Status.CloudEventAttributes = r.createCloudEventAttributes(source)
 	source.Status.ObservedGeneration = source.Generation

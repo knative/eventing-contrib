@@ -125,6 +125,10 @@ const (
 	// GitHubSource has been configured with a sink target.
 	GitHubSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
 
+	// GitHubSourceConditionWebhookConfigured has a status True when the
+	// GitHubSource has been configured with a webhook.
+	GitHubSourceConditionWebhookConfigured apis.ConditionType = "WebhookConfigured"
+
 	// GitHubServiceconditiondeployed has status True when then
 	// GitHubSource Service has been deployed
 	//	GitHubServiceConditionDeployed apis.ConditionType = "Deployed"
@@ -136,7 +140,8 @@ const (
 
 var gitHubSourceCondSet = apis.NewLivingConditionSet(
 	GitHubSourceConditionSecretsProvided,
-	GitHubSourceConditionSinkProvided)
+	GitHubSourceConditionSinkProvided,
+	GitHubSourceConditionWebhookConfigured)
 
 //	GitHubServiceConditionDeployed)
 
@@ -198,6 +203,16 @@ func (s *GitHubSourceStatus) MarkSink(uri *apis.URL) {
 // MarkNoSink sets the condition that the source does not have a sink configured.
 func (s *GitHubSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
+// MarkWebhookConfigured sets the condition that the source has set its webhook configured.
+func (s *GitHubSourceStatus) MarkWebhookConfigured() {
+	gitHubSourceCondSet.Manage(s).MarkTrue(GitHubSourceConditionWebhookConfigured)
+}
+
+// MarkWebhookNotConfigured sets the condition that the source does not have its webhook configured.
+func (s *GitHubSourceStatus) MarkWebhookNotConfigured(reason, messageFormat string, messageA ...interface{}) {
+	gitHubSourceCondSet.Manage(s).MarkFalse(GitHubSourceConditionWebhookConfigured, reason, messageFormat, messageA...)
 }
 
 // MarkDeployed sets the condition that the source has been deployed.
