@@ -51,6 +51,12 @@ diff -Naupr --no-dereference \
 diff -Naupr --no-dereference \
   "${REPO_ROOT_DIR}/pkg" "${TMP_DIFFROOT}/pkg" || ret=1
 
+echo "###############"
+cat "${REPO_ROOT_DIR}/third_party/VENDOR-LICENSE"
+echo "@@@@@@@@@@@@@@@"
+cat "${TMP_DIFFROOT}/third_party/VENDOR-LICENSE"
+echo "###############"
+
 diff -Naupr --no-dereference \
   "${REPO_ROOT_DIR}/third_party" "${TMP_DIFFROOT}/third_party" || ret=1
 
