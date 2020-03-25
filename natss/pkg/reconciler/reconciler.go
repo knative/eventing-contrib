@@ -71,7 +71,7 @@ func NewOptionsOrDie(cfg *rest.Config, logger *zap.SugaredLogger, stopCh <-chan 
 		ConfigMapWatcher: configMapWatcher,
 		NatssClientSet:   natssClient,
 		Logger:           logger,
-		ResyncPeriod:     10 * time.Hour, // Based on controller-runtime default.
+		ResyncPeriod:     10 * time.Hour,
 		StopChannel:      stopCh,
 	}
 }

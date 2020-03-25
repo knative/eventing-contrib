@@ -65,11 +65,26 @@
   version = "v1.24.0"
 
 [[projects]]
-  digest = "1:604d60aab399c8e32c5c6e84aa0d227cdf2dad6893cadff00034bc827c367b08"
+  digest = "1:a2c5f43714affb1de4339dd1589a8b39a09a5ab903ecd40e36d18815c638b4df"
   name = "github.com/apache/camel-k"
   packages = [
+    "pkg/apis",
     "pkg/apis/camel/v1",
     "pkg/apis/camel/v1/knative",
+    "pkg/client",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/fake",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/camel/v1",
+    "pkg/client/clientset/versioned/typed/camel/v1/fake",
+    "pkg/client/informers/externalversions",
+    "pkg/client/informers/externalversions/camel",
+    "pkg/client/informers/externalversions/camel/v1",
+    "pkg/client/informers/externalversions/internalinterfaces",
+    "pkg/client/listers/camel/v1",
+    "pkg/util/log",
+    "pkg/util/monitoring",
+    "pkg/util/openshift",
   ]
   pruneopts = "NUT"
   revision = "24ddce5afb41c70a0bf30e06f74c6f380f5fd851"
@@ -201,6 +216,17 @@
   version = "v2.0.0-preview6"
 
 [[projects]]
+  digest = "1:710d9cf0be3d3536ea39773347e124ec5e6c8f30b0d46b79de61ded7f4fe94d2"
+  name = "github.com/coreos/prometheus-operator"
+  packages = [
+    "pkg/apis/monitoring",
+    "pkg/apis/monitoring/v1",
+  ]
+  pruneopts = "NUT"
+  revision = "378d36df448366414de53a66a64020cd053002b7"
+  version = "v0.38.0"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -250,14 +276,6 @@
   pruneopts = "NUT"
   revision = "026c730a0dcc5d11f93f1cf1cc65b01247ea7b6f"
   version = "v4.5.0"
-
-[[projects]]
-  digest = "1:ade392a843b2035effb4b4a2efa2c3bab3eb29b992e98bacf9c898b0ecb54e45"
-  name = "github.com/fatih/color"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
-  version = "v1.7.0"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -312,14 +330,6 @@
   pruneopts = "NUT"
   revision = "909ea676d4c90832fefbf55a5a4fb04d8bef8931"
   version = "v1.7.1"
-
-[[projects]]
-  digest = "1:863a8a52b28cb6a2e6c7cb479b21a98410a5c433e41ccc9f5130babf23f7ae93"
-  name = "github.com/gobuffalo/flect"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "86360480338dcc8c7b61de28a928595f77079989"
-  version = "v0.1.6"
 
 [[projects]]
   digest = "1:12d0e1c90b8ac588d97e90b642d065af77b749436ad9bd3b80c05566ae17d272"
@@ -572,14 +582,6 @@
   version = "v0.3.8"
 
 [[projects]]
-  digest = "1:406338ad39ab2e37b7f4452906442a3dbf0eb3379dd1f06aafb5c07e769a5fbb"
-  name = "github.com/inconshreveable/mousetrap"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
-  version = "v1.0"
-
-[[projects]]
   branch = "master"
   digest = "1:333e1f196b9ac47c4a9df13127abb44a49bb82b960a5074fa1c6d03dc5991ec5"
   name = "github.com/influxdata/tdigest"
@@ -651,6 +653,14 @@
   version = "v1.9.1"
 
 [[projects]]
+  digest = "1:58999a98719fddbac6303cb17e8d85b945f60b72f48e3a2df6b950b97fa926f1"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
+
+[[projects]]
   branch = "master"
   digest = "1:a12508addb76a16593d8a3cee41d782fdf738f727d421f0bcc2dd2ee76821c01"
   name = "github.com/lightstep/tracecontext.go"
@@ -682,28 +692,20 @@
   version = "v1.0.4"
 
 [[projects]]
-  digest = "1:08c231ec84231a7e23d67e4b58f975e1423695a32467a362ee55a803f9de8061"
-  name = "github.com/mattn/go-colorable"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
-  version = "v0.0.9"
-
-[[projects]]
-  digest = "1:f70baa68d82763379f5d039daca4a568d2246beec2dde096f756aa4768cfb786"
-  name = "github.com/mattn/go-isatty"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "88ba11cfdc67c7588b30042edf244b2875f892b6"
-  version = "v0.0.10"
-
-[[projects]]
   digest = "1:5985ef4caf91ece5d54817c11ea25f182697534f8ae6521eadcd628c142ac4b6"
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
   pruneopts = "NUT"
   revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
   version = "v1.0.1"
+
+[[projects]]
+  digest = "1:f9f72e583aaacf1d1ac5d6121abd4afd3c690baa9e14e1d009df26bf831ba347"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:2f42fa12d6911c7b7659738758631bec870b7e9b4c6be5444f963cdcfccc191f"
@@ -788,6 +790,26 @@
   version = "v1.0.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:f6bea0d2a5f3a93f30f9aae4b8dd05896330bd09ff03efd7eec6810426258e51"
+  name = "github.com/openshift/api"
+  packages = [
+    "apps/v1",
+    "authorization/v1",
+    "build/v1",
+    "console/v1",
+    "image/docker10",
+    "image/dockerpre012",
+    "image/v1",
+    "pkg/serialization",
+    "project/v1",
+    "route/v1",
+    "template/v1",
+  ]
+  pruneopts = "NUT"
+  revision = "9b3bdf846ea1e625d9a46344df109fdc64d11078"
+
+[[projects]]
   digest = "1:1a0de55901552615e2b2f24bdb51431634165e74745b042a3ec11c3e97ce5843"
   name = "github.com/openzipkin/zipkin-go"
   packages = [
@@ -801,6 +823,27 @@
   pruneopts = "NUT"
   revision = "c29478e51bfb2e9c93e0e9f5e015e5993a490399"
   version = "v0.2.2"
+
+[[projects]]
+  digest = "1:8b450a546c498f1db1ef2ea7be63dac295664d1502420dda1867c0514072c85f"
+  name = "github.com/operator-framework/operator-lifecycle-manager"
+  packages = [
+    "pkg/api/apis/operators",
+    "pkg/api/apis/operators/v1",
+    "pkg/api/apis/operators/v1alpha1",
+    "pkg/lib/version",
+  ]
+  pruneopts = "NUT"
+  revision = "99643127d862c3331c6965e6ff0019bb564d2d4c"
+  version = "0.14.2"
+
+[[projects]]
+  digest = "1:2d116d78dc96586d7828fd65a928f8e85fb1acb5c7f981ae09e3797fd927bd34"
+  name = "github.com/operator-framework/operator-sdk"
+  packages = ["pkg/k8sutil"]
+  pruneopts = "NUT"
+  revision = "55f1446c5f472e7d8e308dcdf36d0d7fc44fc4fd"
+  version = "v0.16.0"
 
 [[projects]]
   digest = "1:ea86ccc0e0aee36342acb8960743166c68667d499a0db97ca416f3fd0113c58a"
@@ -910,6 +953,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:a47439b62873ffe354ad8b507e984c8baf3c4aeb20c1ec7c5eaba9a486475faa"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "d417be0fe654de640a82370515129985b407c7e3"
+  version = "v1.5.0"
+
+[[projects]]
   branch = "master"
   digest = "1:f50593e5d8b313ef6ae9c80233e056c596207b4e484795bd9b0a88b31e3a329b"
   name = "github.com/slinkydeveloper/loadastic"
@@ -919,14 +970,6 @@
   ]
   pruneopts = "NUT"
   revision = "9afe5a010a57f0589f8a2f2a119d1d4d6b07acae"
-
-[[projects]]
-  digest = "1:d3533ee568fc00a971617ec09dc0f0b3eddfb4adbc1275f8f6332553d67506b4"
-  name = "github.com/spf13/cobra"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
-  version = "v0.0.5"
 
 [[projects]]
   digest = "1:d115708a27806831d1babbc6f28a7478ddf8e32a7095507c816e2515fb03a810"
@@ -1434,14 +1477,6 @@
   pruneopts = "NUT"
   revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
   version = "v2.2.4"
-
-[[projects]]
-  branch = "v3"
-  digest = "1:f7636e6b143745e72eac188d805c05e1891ba88f297758a1624c6abdcd80b703"
-  name = "gopkg.in/yaml.v3"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "0b21df46bc1d83409da069ba73978e31b1f1c323"
 
 [[projects]]
   digest = "1:41dcca9245f5ee3e71365b39b1eed7f4c8d8d50a4c5397cd3ac21a3c7a8866ef"
@@ -2128,7 +2163,7 @@
   revision = "d81c66eea4e627ad7ad7ae578c03f317307b1246"
 
 [[projects]]
-  digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
+  digest = "1:3df197dea53a10c8f2eadf8b3d47c40c4beb15896dfe38311fa1d7d2053fa290"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/cache",
@@ -2136,31 +2171,16 @@
     "pkg/client",
     "pkg/client/apiutil",
     "pkg/client/config",
-    "pkg/client/fake",
-    "pkg/controller",
-    "pkg/controller/controllerutil",
-    "pkg/event",
-    "pkg/handler",
     "pkg/healthz",
-    "pkg/internal/controller",
-    "pkg/internal/controller/metrics",
     "pkg/internal/log",
-    "pkg/internal/objectutil",
     "pkg/internal/recorder",
     "pkg/leaderelection",
     "pkg/log",
     "pkg/manager",
-    "pkg/manager/signals",
     "pkg/metrics",
-    "pkg/predicate",
-    "pkg/reconcile",
     "pkg/recorder",
     "pkg/runtime/inject",
-    "pkg/runtime/scheme",
-    "pkg/runtime/signals",
     "pkg/scheme",
-    "pkg/source",
-    "pkg/source/internal",
     "pkg/webhook",
     "pkg/webhook/admission",
     "pkg/webhook/internal/certwatcher",
@@ -2169,29 +2189,6 @@
   pruneopts = "NUT"
   revision = "198197fe0fd7553cadd8afcd3338f8ee4b8a7e3f"
   version = "v0.4.0"
-
-[[projects]]
-  digest = "1:6b9286b2e581121d06fa50a855198a3fcfa06ef9448570b2ef13e0cc7e26ce85"
-  name = "sigs.k8s.io/controller-tools"
-  packages = [
-    "cmd/controller-gen",
-    "pkg/crd",
-    "pkg/crd/markers",
-    "pkg/deepcopy",
-    "pkg/genall",
-    "pkg/genall/help",
-    "pkg/genall/help/pretty",
-    "pkg/loader",
-    "pkg/markers",
-    "pkg/rbac",
-    "pkg/schemapatcher",
-    "pkg/schemapatcher/internal/yaml",
-    "pkg/version",
-    "pkg/webhook",
-  ]
-  pruneopts = "NUT"
-  revision = "d556e7d0fb947b07a02d5c202e2e3b898b9e28e7"
-  version = "v0.2.2"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
@@ -2208,6 +2205,15 @@
     "github.com/Shopify/sarama",
     "github.com/apache/camel-k/pkg/apis/camel/v1",
     "github.com/apache/camel-k/pkg/apis/camel/v1/knative",
+    "github.com/apache/camel-k/pkg/client",
+    "github.com/apache/camel-k/pkg/client/clientset/versioned",
+    "github.com/apache/camel-k/pkg/client/clientset/versioned/fake",
+    "github.com/apache/camel-k/pkg/client/clientset/versioned/scheme",
+    "github.com/apache/camel-k/pkg/client/clientset/versioned/typed/camel/v1",
+    "github.com/apache/camel-k/pkg/client/clientset/versioned/typed/camel/v1/fake",
+    "github.com/apache/camel-k/pkg/client/informers/externalversions",
+    "github.com/apache/camel-k/pkg/client/informers/externalversions/camel/v1",
+    "github.com/apache/camel-k/pkg/client/listers/camel/v1",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",
@@ -2257,7 +2263,6 @@
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
-    "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
@@ -2275,7 +2280,6 @@
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",
     "k8s.io/client-go/dynamic",
-    "k8s.io/client-go/dynamic/fake",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/fake",
     "k8s.io/client-go/kubernetes/scheme",
@@ -2342,7 +2346,6 @@
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
-    "knative.dev/pkg/injection/clients/dynamicclient",
     "knative.dev/pkg/injection/clients/dynamicclient/fake",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
@@ -2375,19 +2378,6 @@
     "knative.dev/serving/pkg/client/listers/serving/v1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
-    "sigs.k8s.io/controller-runtime/pkg/client",
-    "sigs.k8s.io/controller-runtime/pkg/client/config",
-    "sigs.k8s.io/controller-runtime/pkg/client/fake",
-    "sigs.k8s.io/controller-runtime/pkg/controller",
-    "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
-    "sigs.k8s.io/controller-runtime/pkg/handler",
-    "sigs.k8s.io/controller-runtime/pkg/manager",
-    "sigs.k8s.io/controller-runtime/pkg/reconcile",
-    "sigs.k8s.io/controller-runtime/pkg/runtime/inject",
-    "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
-    "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
-    "sigs.k8s.io/controller-runtime/pkg/source",
-    "sigs.k8s.io/controller-tools/cmd/controller-gen",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

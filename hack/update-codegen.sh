@@ -26,16 +26,14 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dir
 
 (
   # External Camel API
-  OUTPUT_PKG="knative.dev/knative/eventing-contrib/camel/pkg/client/source/camel/injection/camel" \
-  VERSIONED_CLIENTSET_PKG="github.com/apache/camel-k/pkg/client/versioned" \
-  EXTERNAL_INFORMER_PKG="github.com/apache/camel-k/pkg/client/informers" \
+  OUTPUT_PKG="knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection" \
+  VERSIONED_CLIENTSET_PKG="github.com/apache/camel-k/pkg/client/clientset/versioned" \
+  EXTERNAL_INFORMER_PKG="github.com/apache/camel-k/pkg/client/informers/externalversions" \
     ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-      "knative.dev/knative/eventing-contrib/camel/source/pkg/client/camel" "github.com/apache/camel-k/pkg/apis" \
+      "knative.dev/eventing-contrib/camel/source/pkg/client/camel" "github.com/apache/camel-k/pkg/apis" \
       "camel:v1" \
       --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 )
-
-exit # TODO: DO NOT SUBMIT
 
 # Sources
 API_DIRS_SOURCES=(github/pkg gitlab/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)

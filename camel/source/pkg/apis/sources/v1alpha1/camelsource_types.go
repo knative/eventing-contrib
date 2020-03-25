@@ -186,7 +186,3 @@ type CamelSourceList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []CamelSource `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&CamelSource{}, &CamelSourceList{})
-}

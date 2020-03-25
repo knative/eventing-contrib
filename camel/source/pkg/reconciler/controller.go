@@ -18,8 +18,10 @@ package reconciler
 
 import (
 	context "context"
-	"knative.dev/pkg/injection/clients/dynamicclient"
-
+	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
+	camelclientset "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/client"
+	"knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/informers/camel/v1/integration"
 	camelsource "knative.dev/eventing-contrib/camel/source/pkg/client/injection/informers/sources/v1alpha1/camelsource"
 	v1alpha1camelsource "knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
 	configmap "knative.dev/pkg/configmap"
@@ -36,11 +38,12 @@ func NewController(
 	logger := logging.FromContext(ctx)
 
 	camelsourceInformer := camelsource.Get(ctx)
+	camelIntegrationInformer := integration.Get(ctx)
 
 	// TODO: setup additional informers here.
 
 	r := &Reconciler{
-		dynamicClientSet: dynamicclient.Get(ctx),
+		camelClientSet: camelclientset.Get(ctx),
 	}
 	impl := v1alpha1camelsource.NewImpl(ctx, r)
 
@@ -51,7 +54,11 @@ func NewController(
 
 	camelsourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	// TODO: add additional informer event handlers here.
+	_ = camelIntegrationInformer
+	camelIntegrationInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("CamelSource")),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
 
 	return impl
 }

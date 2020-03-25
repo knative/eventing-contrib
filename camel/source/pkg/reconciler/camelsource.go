@@ -18,25 +18,23 @@ package reconciler
 
 import (
 	context "context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
+	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
 	v1alpha1 "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
-	camelsource "knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
-	"knative.dev/pkg/apis/duck"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+
+	camelsource "knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
 )
 
 // newReconciledNormal makes a new reconciler event with event type Normal, and
@@ -47,8 +45,8 @@ func newReconciledNormal(namespace, name string) reconciler.Event {
 
 // Reconciler implements controller.Reconciler for CamelSource resources.
 type Reconciler struct {
-	sinkResolver     *resolver.URIResolver
-	dynamicClientSet dynamic.Interface
+	sinkResolver   *resolver.URIResolver
+	camelClientSet camelclientset.Interface
 }
 
 // Check that our Reconciler implements Interface
@@ -121,11 +119,16 @@ func (r *Reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 			if err != nil {
 				return nil, reconciler.NewEvent(corev1.EventTypeWarning, "IntegrationBlocked", "waiting for %v", err)
 			}
-			source.Status.MarkDeploying("Deploying", "Created integration %s", integration.Name)
+
 			// Since the Deployment has just been created, there's nothing more
 			// to do until it gets a status. This CamelSource will be reconciled
 			// again when the Integration is updated.
-			return integration, reconciler.NewEvent(corev1.EventTypeNormal, "Deployed", "Created integration %q", integration.Name)
+			name := integration.Name
+			if name == "" {
+				name = fmt.Sprintf("%s*", integration.GenerateName)
+			}
+			source.Status.MarkDeploying("Deploying", "Created integration %s", name)
+			return integration, reconciler.NewEvent(corev1.EventTypeNormal, "Deployed", "Created integration %q", name)
 		}
 		return nil, err
 	}
@@ -144,37 +147,29 @@ func (r *Reconciler) reconcileIntegration(ctx context.Context, source *v1alpha1.
 
 		_, err := r.updateIntegration(ctx, integration)
 		// if no error, update the status.
+		name := integration.Name
+		if name == "" {
+			name = fmt.Sprintf("%s*", integration.GenerateName)
+		}
 		if err == nil {
-			source.Status.MarkDeploying("IntegrationUpdated", "Updated integration %s", integration.Name)
-			return nil, reconciler.NewEvent(corev1.EventTypeNormal, "Deployed", "Updated integration %q", integration.Name)
+			source.Status.MarkDeploying("IntegrationUpdated", "Updated integration %s", name)
+			return nil, reconciler.NewEvent(corev1.EventTypeNormal, "IntegrationUpdated", "Updated integration %q", name)
 		} else {
-			source.Status.MarkDeploying("IntegrationNeedsUpdate", "Attempting to update integration %s", integration.Name)
-			return nil, reconciler.NewEvent(corev1.EventTypeWarning, "IntegrationNeedsUpdate", "Failed to update integration %q", integration.Name)
+			source.Status.MarkDeploying("IntegrationNeedsUpdate", "Attempting to update integration %s", name)
+			return nil, reconciler.NewEvent(corev1.EventTypeWarning, "IntegrationNeedsUpdate", "Failed to update integration %q", name)
 		}
 	}
 	return integration, nil
 }
 
-var (
-	integrationsGVR = schema.GroupVersionResource{
-		Group:    camelv1.SchemeGroupVersion.Group,
-		Version:  camelv1.SchemeGroupVersion.Version,
-		Resource: "integrations",
-	}
-)
-
 func (r *Reconciler) getIntegration(ctx context.Context, source *v1alpha1.CamelSource) (*camelv1.Integration, error) {
-	usl, err := r.dynamicClientSet.Resource(integrationsGVR).Namespace(source.Namespace).List(metav1.ListOptions{})
+	all, err := r.camelClientSet.CamelV1().Integrations(source.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
-	for _, u := range usl.Items {
-		if metav1.IsControlledBy(&u, source) {
-			i := camelv1.Integration{}
-			if err := duck.FromUnstructured(&u, &i); err != nil {
-				return nil, err
-			}
-			return &i, nil
+	for _, a := range all.Items {
+		if metav1.IsControlledBy(&a, source) {
+			return &a, nil
 		}
 	}
 	return nil, k8serrors.NewNotFound(schema.GroupResource{}, "")
@@ -186,45 +181,9 @@ func (r *Reconciler) createIntegration(ctx context.Context, source *v1alpha1.Cam
 		return nil, err
 	}
 
-	// Convert desired to unstructured.Unstructured
-	b, err := json.Marshal(integration)
-	if err != nil {
-		return nil, err
-	}
-	ud := &unstructured.Unstructured{}
-	if err := json.Unmarshal(b, ud); err != nil {
-		return nil, err
-	}
-
-	u, err := r.dynamicClientSet.Resource(integrationsGVR).Namespace(source.Namespace).Create(ud, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-	i := camelv1.Integration{}
-	if err := duck.FromUnstructured(u, &i); err != nil {
-		return nil, err
-	}
-	return &i, nil
+	return r.camelClientSet.CamelV1().Integrations(source.Namespace).Create(integration)
 }
 
 func (r *Reconciler) updateIntegration(ctx context.Context, integration *camelv1.Integration) (*camelv1.Integration, error) {
-	// Convert desired to unstructured.Unstructured
-	b, err := json.Marshal(integration)
-	if err != nil {
-		return nil, err
-	}
-	ud := &unstructured.Unstructured{}
-	if err := json.Unmarshal(b, ud); err != nil {
-		return nil, err
-	}
-
-	u, err := r.dynamicClientSet.Resource(integrationsGVR).Namespace(integration.Namespace).Update(ud, metav1.UpdateOptions{})
-	if err != nil {
-		return nil, err
-	}
-	i := camelv1.Integration{}
-	if err := duck.FromUnstructured(u, &i); err != nil {
-		return nil, err
-	}
-	return &i, nil
+	return r.camelClientSet.CamelV1().Integrations(integration.Namespace).Update(integration)
 }
