@@ -279,18 +279,18 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
-	mcb := func(msg *stan.Msg) {
-		event, err := natsscloudevents.NewMessage(msg, natsscloudevents.WithManualAcks())
+	mcb := func(stanMsg *stan.Msg) {
+		message, err := natsscloudevents.NewMessage(stanMsg, natsscloudevents.WithManualAcks())
 		if err != nil {
 			s.logger.Error("could not create a message", zap.Error(err))
 			return
 		}
-		s.logger.Debug("NATSS message received", zap.String("subject", msg.Subject), zap.Uint64("sequence", msg.Sequence), zap.Time("timestamp", time.Unix(msg.Timestamp, 0)))
-		if err := s.dispatcher.DispatchMessageWithDelivery(ctx, event, nil, subscription.SubscriberURI, subscription.ReplyURI, &subscription.Delivery); err != nil {
+		s.logger.Debug("NATSS message received", zap.String("subject", stanMsg.Subject), zap.Uint64("sequence", stanMsg.Sequence), zap.Time("timestamp", time.Unix(stanMsg.Timestamp, 0)))
+		if err := s.dispatcher.DispatchMessageWithDelivery(ctx, message, nil, subscription.SubscriberURI, subscription.ReplyURI, &subscription.Delivery); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
-		if err := msg.Ack(); err != nil {
+		if err := stanMsg.Ack(); err != nil {
 			s.logger.Error("failed to acknowledge message", zap.Error(err))
 		}
 	}
