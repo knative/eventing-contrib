@@ -18,6 +18,7 @@ package reconciler
 
 import (
 	context "context"
+
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelclientset "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/client"

@@ -19,9 +19,10 @@ limitations under the License.
 package e2e
 
 import (
-	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
 	"testing"
 	"time"
+
+	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"

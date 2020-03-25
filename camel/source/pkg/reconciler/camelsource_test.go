@@ -19,6 +19,8 @@ package reconciler
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	clientgotesting "k8s.io/client-go/testing"
 	fakesourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/injection/client/fake"
 	"knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
@@ -28,7 +30,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
-	"testing"
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	"go.uber.org/zap"
