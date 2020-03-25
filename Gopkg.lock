@@ -207,8 +207,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "0331394117d40bbbe9448cb7008cf2566fa29a86"
-  version = "v2.0.0-preview6"
+  revision = "123def5bff3a506e15cc0bc581a72efd9bda4783"
+  version = "v2.0.0-preview7"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1819,7 +1819,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c5f8526383eb0265da414b942bda966f471bee73e148e5c9477fa4daa55ad368"
+  digest = "1:4cf2b24d3e4ad2be508e95c90cbf917a1b924ce015e3446b0dbe138e360fb73b"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1926,11 +1926,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "a0e635064ad2cb9f9c3e28b3a556c2e64a52501b"
+  revision = "73e179b468bf39ee7a964c234fa5a3c65d8ebf63"
 
 [[projects]]
   branch = "master"
-  digest = "1:7912249df5f43ca10fa1c3f8a3febdc3c0f7b320698787fa73c9fb1920a832d6"
+  digest = "1:664207d75dbcaeab206d93b3dcd8098c59e3b6b21378af02d686579e491fc859"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2006,7 +2006,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "0840da9555a3a75f801abc1d654fb00dfe9a687a"
+  revision = "8a6d25b30970038d1e24ddf5f6e0cec129c9564c"
 
 [[projects]]
   branch = "master"
@@ -2050,18 +2050,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "ce10070bb7ef12eefc20abcb01b14d8910692336"
+  revision = "06230dc73f2a476d6b4897552ce434e48428c40f"
 
 [[projects]]
   branch = "master"
-  digest = "1:b86423d5da68ffa9c7b91e809f2b62972c61af0adfc74971b6eeeb9285ad142a"
+  digest = "1:2987a1db00b983af9e5d5281639a754fb6449eef01e6a375894829eaec17cb2a"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "d81c66eea4e627ad7ad7ae578c03f317307b1246"
+  revision = "d19eedb9432c5515a7ccc19a09cb4d2440df7e18"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
