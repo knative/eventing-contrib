@@ -17,8 +17,9 @@ limitations under the License.
 package resources
 
 import (
-	"knative.dev/pkg/ptr"
 	"testing"
+
+	"knative.dev/pkg/ptr"
 
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 
