@@ -19,11 +19,14 @@ package dispatcher
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	stan "github.com/nats-io/go-nats-streaming"
+	"github.com/nats-io/stan.go"
+	"github.com/pkg/errors"
+
 	"go.uber.org/zap"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
@@ -31,21 +34,16 @@ import (
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/pkg/tracing"
 
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	cloudeventsclient "github.com/cloudevents/sdk-go/v1/cloudevents/client"
-	cloudeventstransport "github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/v2/binding"
+	natsscloudevents "github.com/cloudevents/sdk-go/v2/protocol/stan"
 )
 
 const (
 	// maxElements defines a maximum number of outstanding re-connect requests
 	maxElements = 10
-
-	// tracingSpanIgnoringPath defines the tracing path to ignore
-	tracingSpanIgnoringPath = "/readyz"
 )
 
 var (
@@ -59,9 +57,8 @@ type SubscriptionChannelMapping map[eventingchannels.ChannelReference]map[subscr
 type SubscriptionsSupervisor struct {
 	logger *zap.Logger
 
-	receiver   *eventingchannels.EventReceiver
-	dispatcher *eventingchannels.EventDispatcher
-	ceClient   cloudeventsclient.Client
+	receiver   *eventingchannels.MessageReceiver
+	dispatcher *eventingchannels.MessageDispatcherImpl
 
 	subscriptionsMux sync.Mutex
 	subscriptions    SubscriptionChannelMapping
@@ -101,31 +98,23 @@ func NewDispatcher(args Args) (NatssDispatcher, error) {
 
 	d := &SubscriptionsSupervisor{
 		logger:        args.Logger,
-		dispatcher:    eventingchannels.NewEventDispatcher(args.Logger),
+		dispatcher:    eventingchannels.NewMessageDispatcher(args.Logger),
+		subscriptions: make(SubscriptionChannelMapping),
 		connect:       make(chan struct{}, maxElements),
 		natssURL:      args.NatssURL,
 		clusterID:     args.ClusterID,
 		clientID:      args.ClientID,
-		subscriptions: make(SubscriptionChannelMapping),
 	}
-	httpTransport, err := cloudeventstransport.New(cloudeventstransport.WithStructuredEncoding(), cloudeventstransport.WithMiddleware(tracing.HTTPSpanIgnoringPaths(tracingSpanIgnoringPath)))
-	if err != nil {
-		args.Logger.Fatal("failed to create httpTransport", zap.Error(err))
-	}
-	ceClient, err := kncloudevents.NewDefaultClientGivenHttpTransport(httpTransport, &args.Cargs)
-	if err != nil {
-		args.Logger.Fatal("failed to create cloudevents client", zap.Error(err))
-	}
-	d.ceClient = ceClient
-	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
-	receiver, err := eventingchannels.NewEventReceiver(
-		createReceiverFunc(d, args.Logger.Sugar()),
-		args.Logger,
-		eventingchannels.ResolveChannelFromHostHeader(d.getChannelReferenceFromHost))
+
+	receiver, err := eventingchannels.NewMessageReceiver(
+		messageReceiverFunc(d),
+		d.logger,
+		eventingchannels.ResolveMessageChannelFromHostHeader(d.getChannelReferenceFromHost))
 	if err != nil {
 		return nil, err
 	}
 	d.receiver = receiver
+	d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 	return d, nil
 }
 
@@ -138,35 +127,32 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 	}
 }
 
-func createReceiverFunc(s *SubscriptionsSupervisor, logger *zap.SugaredLogger) eventingchannels.ReceiverFunc {
-	return func(ctx context.Context, channel eventingchannels.ChannelReference, event cloudevents.Event) error {
-		logger.Infof("Received event from %q channel", channel.String())
-		// publish to Natss
-		ch := getSubject(channel)
-		message, err := event.MarshalJSON()
-		if err != nil {
-			logger.Errorf("Error during marshaling of the message: %v", err)
-			return err
-		}
+func messageReceiverFunc(s *SubscriptionsSupervisor) eventingchannels.UnbufferedMessageReceiverFunc {
+	return func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.TransformerFactory, header http.Header) error {
+		s.logger.Info("Received event", zap.String("channel", channel.String()))
+
 		s.natssConnMux.Lock()
 		currentNatssConn := s.natssConn
 		s.natssConnMux.Unlock()
 		if currentNatssConn == nil {
-			logger.Errorf("No Connection to NATSS")
-			return fmt.Errorf("No Connection to NATSS")
+			s.logger.Error("no Connection to NATSS")
+			return errors.New("no Connection to NATSS")
 		}
-		logger.Infof("Publishing event to subject %s", ch)
-		if err := stanutil.Publish(currentNatssConn, ch, &message, logger); err != nil {
-			logger.Errorf("Error during publish: %v", err)
+		sender, err := natsscloudevents.NewSenderFromConn(*currentNatssConn, getSubject(channel))
+		if err != nil {
+			s.logger.Error("could not create natss sender", zap.Error(err))
+			return errors.Wrap(err, "could not create natss sender")
+		}
+		if err := sender.Send(ctx, message); err != nil {
+			errMsg := "error during send"
 			if err.Error() == stan.ErrConnectionClosed.Error() {
-				logger.Error("Connection to NATSS has been lost, attempting to reconnect.")
-				// Informing SubscriptionsSupervisor to re-establish connection to NATSS.
+				errMsg += " - connection to NATSS has been lost, attempting to reconnect"
 				s.signalReconnect()
-				return err
 			}
-			return err
+			s.logger.Error(errMsg, zap.Error(err))
+			return errors.Wrap(err, errMsg)
 		}
-		logger.Debugf("Published [%s] : '%s'", channel.String(), event.String())
+		s.logger.Debug("published", zap.String("channel", channel.String()))
 		return nil
 	}
 }
@@ -176,7 +162,7 @@ func (s *SubscriptionsSupervisor) Start(ctx context.Context) error {
 	go s.Connect(ctx.Done())
 	// Trigger Connect to establish connection with NATS
 	s.signalReconnect()
-	return s.ceClient.StartReceiver(ctx, s.receiver.ServeHTTP)
+	return s.receiver.Start(ctx)
 }
 
 func (s *SubscriptionsSupervisor) connectWithRetry(stopCh <-chan struct{}) {
@@ -267,7 +253,7 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 			continue
 		}
 		// subscribe and update failedSubscription if subscribe fails
-		natssSub, err := s.subscribe(cRef, subRef)
+		natssSub, err := s.subscribe(context.TODO(), cRef, subRef)
 		if err != nil {
 			errStrings = append(errStrings, err.Error())
 			s.logger.Sugar().Errorf("failed to subscribe (subscription:%q) to channel: %v. Error:%s", sub, cRef, err.Error())
@@ -290,40 +276,38 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 	return failedToSubscribe, nil
 }
 
-func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
+func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventingchannels.ChannelReference, subscription subscriptionReference) (*stan.Subscription, error) {
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	mcb := func(msg *stan.Msg) {
-		event := cloudevents.Event{}
-		err := event.UnmarshalJSON(msg.Data)
-		s.logger.Info("Received event", zap.String("channel", channel.String()))
+		event, err := natsscloudevents.NewMessage(msg, natsscloudevents.WithManualAcks())
 		if err != nil {
-			s.logger.Error(err.Error(), zap.Error(err))
+			s.logger.Error("could not create a message", zap.Error(err))
 			return
 		}
-		if err := event.Validate(); err != nil {
-			s.logger.Error(err.Error(), zap.Error(err))
-			return
-		}
-		s.logger.Sugar().Debugf("NATSS message received from subject: %v; sequence: %v; timestamp: %v, event: '%s'", msg.Subject, msg.Sequence, msg.Timestamp, event.String())
-		if err := s.dispatcher.DispatchEventWithDelivery(context.TODO(), event, subscription.SubscriberURI, subscription.ReplyURI, &subscription.Delivery); err != nil {
+		s.logger.Debug("NATSS message received", zap.String("subject", msg.Subject), zap.Uint64("sequence", msg.Sequence), zap.Time("timestamp", time.Unix(msg.Timestamp, 0)))
+		if err := s.dispatcher.DispatchMessageWithDelivery(ctx, event, nil, subscription.SubscriberURI, subscription.ReplyURI, &subscription.Delivery); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
 		if err := msg.Ack(); err != nil {
-			s.logger.Error("Failed to acknowledge message: ", zap.Error(err))
+			s.logger.Error("failed to acknowledge message", zap.Error(err))
 		}
 	}
-	// subscribe to a NATSS subject
+
 	ch := getSubject(channel)
 	sub := subscription.String()
+
 	s.natssConnMux.Lock()
 	currentNatssConn := s.natssConn
 	s.natssConnMux.Unlock()
+
 	if currentNatssConn == nil {
-		return nil, fmt.Errorf("No Connection to NATSS")
+		return nil, errors.New("no Connection to NATSS")
 	}
-	natssSub, err := (*currentNatssConn).Subscribe(ch, mcb, stan.DurableName(sub), stan.SetManualAckMode(), stan.AckWait(1*time.Minute))
+
+	subscriber := &natsscloudevents.RegularSubscriber{}
+	natssSub, err := subscriber.Subscribe(*currentNatssConn, ch, mcb, stan.DurableName(sub), stan.SetManualAckMode(), stan.AckWait(1*time.Minute))
 	if err != nil {
 		s.logger.Error(" Create new NATSS Subscription failed: ", zap.Error(err))
 		if err.Error() == stan.ErrConnectionClosed.Error() {
@@ -334,6 +318,7 @@ func (s *SubscriptionsSupervisor) subscribe(channel eventingchannels.ChannelRefe
 		}
 		return nil, err
 	}
+
 	s.logger.Sugar().Infof("NATSS Subscription created: %+v", natssSub)
 	return &natssSub, nil
 }

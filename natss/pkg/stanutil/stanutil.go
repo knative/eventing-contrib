@@ -17,10 +17,8 @@
 package stanutil
 
 import (
-	"errors"
-	"fmt"
+	"github.com/nats-io/stan.go"
 
-	stan "github.com/nats-io/go-nats-streaming"
 	"go.uber.org/zap"
 )
 
@@ -34,44 +32,4 @@ func Connect(clusterId string, clientId string, natsUrl string, logger *zap.Suga
 	}
 	logger.Infof("Connect(): connection to NATSS established, natsConn=%+v", &sc)
 	return &sc, nil
-}
-
-// Close must be the last call to close the connection
-func Close(sc *stan.Conn, logger *zap.SugaredLogger) (err error) {
-	defer func() { // the NATSS client could panic if the underlying connectivity is damaged
-		if r := recover(); r != nil {
-			err = fmt.Errorf("recovered from: %v", r)
-			logger.Errorf("Close(): %v", err.Error())
-		}
-	}()
-
-	if sc == nil {
-		err = errors.New("can't close empty stan connection")
-		return
-	}
-	err = (*sc).Close()
-	if err != nil {
-		logger.Errorf("Can't close connection: %+v", err)
-	}
-	return
-}
-
-// Publish a message to a subject
-func Publish(sc *stan.Conn, subj string, msg *[]byte, logger *zap.SugaredLogger) (err error) {
-	defer func() { // the NATSS client could panic if the underlying connectivity is damaged
-		if r := recover(); r != nil {
-			err = fmt.Errorf("recovered from: %v", r)
-			logger.Errorf("Publish(): %v", err.Error())
-		}
-	}()
-
-	if sc == nil {
-		err = errors.New("cant'publish on empty stan connection")
-		return
-	}
-	err = (*sc).Publish(subj, *msg)
-	if err != nil {
-		logger.Errorf("Error during publish: %v\n", err)
-	}
-	return
 }
