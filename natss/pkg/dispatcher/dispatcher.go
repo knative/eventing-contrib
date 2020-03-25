@@ -78,7 +78,7 @@ type SubscriptionsSupervisor struct {
 
 type NatssDispatcher interface {
 	Start(ctx context.Context) error
-	UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error)
+	UpdateSubscriptions(ctx context.Context, channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error)
 	ProcessChannels(ctx context.Context, chanList []messagingv1alpha1.Channel) error
 }
 
@@ -159,13 +159,13 @@ func messageReceiverFunc(s *SubscriptionsSupervisor) eventingchannels.Unbuffered
 
 func (s *SubscriptionsSupervisor) Start(ctx context.Context) error {
 	// Starting Connect to establish connection with NATS
-	go s.Connect(ctx.Done())
+	go s.Connect(ctx)
 	// Trigger Connect to establish connection with NATS
 	s.signalReconnect()
 	return s.receiver.Start(ctx)
 }
 
-func (s *SubscriptionsSupervisor) connectWithRetry(stopCh <-chan struct{}) {
+func (s *SubscriptionsSupervisor) connectWithRetry(ctx context.Context) {
 	// re-attempting evey 1 second until the connection is established.
 	ticker := time.NewTicker(retryInterval)
 	defer ticker.Stop()
@@ -183,14 +183,14 @@ func (s *SubscriptionsSupervisor) connectWithRetry(stopCh <-chan struct{}) {
 		select {
 		case <-ticker.C:
 			continue
-		case <-stopCh:
+		case <-ctx.Done():
 			return
 		}
 	}
 }
 
 // Connect is called for initial connection as well as after every disconnect
-func (s *SubscriptionsSupervisor) Connect(stopCh <-chan struct{}) {
+func (s *SubscriptionsSupervisor) Connect(ctx context.Context) {
 	for {
 		select {
 		case <-s.connect:
@@ -202,9 +202,9 @@ func (s *SubscriptionsSupervisor) Connect(stopCh <-chan struct{}) {
 				s.natssConnMux.Lock()
 				s.natssConnInProgress = true
 				s.natssConnMux.Unlock()
-				go s.connectWithRetry(stopCh)
+				go s.connectWithRetry(ctx)
 			}
-		case <-stopCh:
+		case <-ctx.Done():
 			return
 		}
 	}
@@ -213,7 +213,7 @@ func (s *SubscriptionsSupervisor) Connect(stopCh <-chan struct{}) {
 // UpdateSubscriptions creates/deletes the natss subscriptions based on channel.Spec.Subscribable.Subscribers
 // Return type:map[eventingduck.SubscriberSpec]error --> Returns a map of subscriberSpec that failed with the value=error encountered.
 // Ignore the value in case error != nil
-func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error) {
+func (s *SubscriptionsSupervisor) UpdateSubscriptions(ctx context.Context, channel *messagingv1alpha1.Channel, isFinalizer bool) (map[eventingduck.SubscriberSpec]error, error) {
 	s.subscriptionsMux.Lock()
 	defer s.subscriptionsMux.Unlock()
 
@@ -253,7 +253,7 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(channel *messagingv1alpha1
 			continue
 		}
 		// subscribe and update failedSubscription if subscribe fails
-		natssSub, err := s.subscribe(context.TODO(), cRef, subRef)
+		natssSub, err := s.subscribe(ctx, cRef, subRef)
 		if err != nil {
 			errStrings = append(errStrings, err.Error())
 			s.logger.Sugar().Errorf("failed to subscribe (subscription:%q) to channel: %v. Error:%s", sub, cRef, err.Error())
