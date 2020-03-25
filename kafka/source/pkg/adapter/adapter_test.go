@@ -34,7 +34,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/google/go-cmp/cmp"
 	"knative.dev/eventing/pkg/adapter"
 	"knative.dev/pkg/source"
 
@@ -628,59 +627,4 @@ func TestAdapterStartFailure(t *testing.T) {
 	}
 
 	_ = adapter.Start(make(chan struct{}))
-}
-
-func TestSplitOnCommas(t *testing.T) {
-	for _, tt := range []struct {
-		name             string
-		bootstrapServers string
-		want             []string
-	}{
-		{
-			"two commas, one url",
-			",my-cluster-kafka-bootstrap.kafka:9092,",
-			[]string{
-				"my-cluster-kafka-bootstrap.kafka:9092",
-			},
-		},
-		{
-			"two commas, two urls",
-			",url-one.kafka:9092,url-two.kafka:9092",
-			[]string{
-				"url-one.kafka:9092",
-				"url-two.kafka:9092",
-			},
-		},
-		{
-			"two commas, no url",
-			",,",
-			[]string{},
-		},
-		{
-			"two commas, three urls",
-			"url-one.kafka:9092,url-two.kafka:9092,url-three.kafka:9092",
-			[]string{
-				"url-one.kafka:9092",
-				"url-two.kafka:9092",
-				"url-three.kafka:9092",
-			},
-		},
-		{
-			"middle commas check",
-			",,url-one.kafka:9092,url-two.kafka:9092,,url-three.kafka:9092,url-four.kafka:9092,,",
-			[]string{
-				"url-one.kafka:9092",
-				"url-two.kafka:9092",
-				"url-three.kafka:9092",
-				"url-four.kafka:9092",
-			},
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			got := SplitOnCommas(tt.bootstrapServers)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("unexpected server list (-want, +got) = %v", diff)
-			}
-		})
-	}
 }
