@@ -65,13 +65,11 @@
   version = "v1.24.0"
 
 [[projects]]
-  digest = "1:a2c5f43714affb1de4339dd1589a8b39a09a5ab903ecd40e36d18815c638b4df"
+  digest = "1:7c203326d9cf333eb432d6dcce810bb13a494d7499db033ea86b5ed09a88e8a2"
   name = "github.com/apache/camel-k"
   packages = [
-    "pkg/apis",
     "pkg/apis/camel/v1",
     "pkg/apis/camel/v1/knative",
-    "pkg/client",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -82,9 +80,6 @@
     "pkg/client/informers/externalversions/camel/v1",
     "pkg/client/informers/externalversions/internalinterfaces",
     "pkg/client/listers/camel/v1",
-    "pkg/util/log",
-    "pkg/util/monitoring",
-    "pkg/util/openshift",
   ]
   pruneopts = "NUT"
   revision = "24ddce5afb41c70a0bf30e06f74c6f380f5fd851"
@@ -214,17 +209,6 @@
   pruneopts = "NUT"
   revision = "0331394117d40bbbe9448cb7008cf2566fa29a86"
   version = "v2.0.0-preview6"
-
-[[projects]]
-  digest = "1:710d9cf0be3d3536ea39773347e124ec5e6c8f30b0d46b79de61ded7f4fe94d2"
-  name = "github.com/coreos/prometheus-operator"
-  packages = [
-    "pkg/apis/monitoring",
-    "pkg/apis/monitoring/v1",
-  ]
-  pruneopts = "NUT"
-  revision = "378d36df448366414de53a66a64020cd053002b7"
-  version = "v0.38.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -653,14 +637,6 @@
   version = "v1.9.1"
 
 [[projects]]
-  digest = "1:58999a98719fddbac6303cb17e8d85b945f60b72f48e3a2df6b950b97fa926f1"
-  name = "github.com/konsorten/go-windows-terminal-sequences"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
-  version = "v1.0.2"
-
-[[projects]]
   branch = "master"
   digest = "1:a12508addb76a16593d8a3cee41d782fdf738f727d421f0bcc2dd2ee76821c01"
   name = "github.com/lightstep/tracecontext.go"
@@ -698,14 +674,6 @@
   pruneopts = "NUT"
   revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
   version = "v1.0.1"
-
-[[projects]]
-  digest = "1:f9f72e583aaacf1d1ac5d6121abd4afd3c690baa9e14e1d009df26bf831ba347"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
-  version = "v1.1.0"
 
 [[projects]]
   digest = "1:2f42fa12d6911c7b7659738758631bec870b7e9b4c6be5444f963cdcfccc191f"
@@ -790,26 +758,6 @@
   version = "v1.0.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:f6bea0d2a5f3a93f30f9aae4b8dd05896330bd09ff03efd7eec6810426258e51"
-  name = "github.com/openshift/api"
-  packages = [
-    "apps/v1",
-    "authorization/v1",
-    "build/v1",
-    "console/v1",
-    "image/docker10",
-    "image/dockerpre012",
-    "image/v1",
-    "pkg/serialization",
-    "project/v1",
-    "route/v1",
-    "template/v1",
-  ]
-  pruneopts = "NUT"
-  revision = "9b3bdf846ea1e625d9a46344df109fdc64d11078"
-
-[[projects]]
   digest = "1:1a0de55901552615e2b2f24bdb51431634165e74745b042a3ec11c3e97ce5843"
   name = "github.com/openzipkin/zipkin-go"
   packages = [
@@ -823,27 +771,6 @@
   pruneopts = "NUT"
   revision = "c29478e51bfb2e9c93e0e9f5e015e5993a490399"
   version = "v0.2.2"
-
-[[projects]]
-  digest = "1:8b450a546c498f1db1ef2ea7be63dac295664d1502420dda1867c0514072c85f"
-  name = "github.com/operator-framework/operator-lifecycle-manager"
-  packages = [
-    "pkg/api/apis/operators",
-    "pkg/api/apis/operators/v1",
-    "pkg/api/apis/operators/v1alpha1",
-    "pkg/lib/version",
-  ]
-  pruneopts = "NUT"
-  revision = "99643127d862c3331c6965e6ff0019bb564d2d4c"
-  version = "0.14.2"
-
-[[projects]]
-  digest = "1:2d116d78dc96586d7828fd65a928f8e85fb1acb5c7f981ae09e3797fd927bd34"
-  name = "github.com/operator-framework/operator-sdk"
-  packages = ["pkg/k8sutil"]
-  pruneopts = "NUT"
-  revision = "55f1446c5f472e7d8e308dcdf36d0d7fc44fc4fd"
-  version = "v0.16.0"
 
 [[projects]]
   digest = "1:ea86ccc0e0aee36342acb8960743166c68667d499a0db97ca416f3fd0113c58a"
@@ -951,14 +878,6 @@
   pruneopts = "NUT"
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
   version = "v1.0.0"
-
-[[projects]]
-  digest = "1:a47439b62873ffe354ad8b507e984c8baf3c4aeb20c1ec7c5eaba9a486475faa"
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "d417be0fe654de640a82370515129985b407c7e3"
-  version = "v1.5.0"
 
 [[projects]]
   branch = "master"
@@ -1377,15 +1296,6 @@
   version = "v1.24.0"
 
 [[projects]]
-  digest = "1:1b91ae0dc69a41d4c2ed23ea5cffb721ea63f5037ca4b81e6d6771fbb8f45129"
-  name = "gopkg.in/fsnotify.v1"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
-  source = "https://github.com/fsnotify/fsnotify.git"
-  version = "v1.4.7"
-
-[[projects]]
   digest = "1:f72a6a9fcfae9f34dc57cd7419e5138f073c14e6c214018485ee5f2621770bb0"
   name = "gopkg.in/go-playground/webhooks.v5"
   packages = [
@@ -1646,7 +1556,7 @@
   revision = "d1b1b64dd9245cc8aa4391714eaad8eef96fe5a9"
 
 [[projects]]
-  digest = "1:be9e8431fa5908b34b0d74a7d582371f77e683d58bd0f6cdd0090a239d65cccd"
+  digest = "1:1fb85b8e92f6f47ca0543bfa10df14c2a7a47e2aa4f1d155f1fad0fac3523f09"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -1829,7 +1739,6 @@
     "plugin/pkg/client/auth/oidc",
     "rest",
     "rest/watch",
-    "restmapper",
     "testing",
     "third_party/forked/golang/template",
     "tools/auth",
@@ -2163,29 +2072,9 @@
   revision = "d81c66eea4e627ad7ad7ae578c03f317307b1246"
 
 [[projects]]
-  digest = "1:3df197dea53a10c8f2eadf8b3d47c40c4beb15896dfe38311fa1d7d2053fa290"
+  digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
   name = "sigs.k8s.io/controller-runtime"
-  packages = [
-    "pkg/cache",
-    "pkg/cache/internal",
-    "pkg/client",
-    "pkg/client/apiutil",
-    "pkg/client/config",
-    "pkg/healthz",
-    "pkg/internal/log",
-    "pkg/internal/recorder",
-    "pkg/leaderelection",
-    "pkg/log",
-    "pkg/manager",
-    "pkg/metrics",
-    "pkg/recorder",
-    "pkg/runtime/inject",
-    "pkg/scheme",
-    "pkg/webhook",
-    "pkg/webhook/admission",
-    "pkg/webhook/internal/certwatcher",
-    "pkg/webhook/internal/metrics",
-  ]
+  packages = ["pkg/scheme"]
   pruneopts = "NUT"
   revision = "198197fe0fd7553cadd8afcd3338f8ee4b8a7e3f"
   version = "v0.4.0"
@@ -2205,7 +2094,6 @@
     "github.com/Shopify/sarama",
     "github.com/apache/camel-k/pkg/apis/camel/v1",
     "github.com/apache/camel-k/pkg/apis/camel/v1/knative",
-    "github.com/apache/camel-k/pkg/client",
     "github.com/apache/camel-k/pkg/client/clientset/versioned",
     "github.com/apache/camel-k/pkg/client/clientset/versioned/fake",
     "github.com/apache/camel-k/pkg/client/clientset/versioned/scheme",
