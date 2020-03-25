@@ -62,7 +62,7 @@ func (s *DispatcherFailNatssSubscription) Start(_ context.Context) error {
 }
 
 // UpdateSubscriptions returns a failed natss subscription
-func (s *DispatcherFailNatssSubscription) UpdateSubscriptions(_ context.Context, 	channel *messagingv1alpha1.Channel, _ bool) (map[eventingduck.SubscriberSpec]error, error) {
+func (s *DispatcherFailNatssSubscription) UpdateSubscriptions(_ context.Context, channel *messagingv1alpha1.Channel, _ bool) (map[eventingduck.SubscriberSpec]error, error) {
 	failedSubscriptions := make(map[eventingduck.SubscriberSpec]error, 0)
 	for _, sub := range channel.Spec.Subscribable.Subscribers {
 		failedSubscriptions[sub] = errors.New("ups")
