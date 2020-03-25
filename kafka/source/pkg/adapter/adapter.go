@@ -74,6 +74,16 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 	return &adapterConfig{}
 }
 
+func SplitOnCommas(str string) []string {
+	items := []string{}
+	for _, item := range strings.Split(str, ",") {
+		if item != "" {
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
 type Adapter struct {
 	config            *adapterConfig
 	httpMessageSender *kncloudevents.HttpMessageSender
@@ -129,7 +139,11 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	}
 
 	// Start with a ceClient
-	client, err := sarama.NewClient(strings.Split(a.config.BootstrapServers, ","), kafkaConfig)
+	servers := SplitOnCommas(a.config.BootstrapServers)
+	if len(servers) == 0 {
+		panic(fmt.Errorf("No bootstrap servers specified in %q", a.config.BootstrapServers))
+	}
+	client, err := sarama.NewClient(servers, kafkaConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -137,7 +151,11 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 
 	// init consumer group
 	consumerGroupFactory := kafka.NewConsumerGroupFactory(client)
-	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, strings.Split(a.config.Topics, ","), a.logger, a)
+	topics := SplitOnCommas(a.config.Topics)
+	if len(topics) == 0 {
+		panic(fmt.Errorf("No topics specified in %q", a.config.Topics))
+	}
+	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, topics, a.logger, a)
 	if err != nil {
 		panic(err)
 	}

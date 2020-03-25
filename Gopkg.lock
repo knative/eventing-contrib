@@ -607,14 +607,6 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  branch = "master"
-  digest = "1:109171fef99d467911ae11b7f9f8b19ec78e7367f45110cb7045811288dd0301"
-  name = "github.com/juju/errors"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "d42613fe1ab9e303fc850e7a19fda2e8eeb6516e"
-
-[[projects]]
   digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
@@ -1827,7 +1819,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ba3903fd813e026364cf3313970cab8f8050b280027d5b81bfaa2a28e4d40aaa"
+  digest = "1:c5f8526383eb0265da414b942bda966f471bee73e148e5c9477fa4daa55ad368"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1934,7 +1926,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "235dd2228b43cfa71a82e6593c0bde0dda1575b6"
+  revision = "a0e635064ad2cb9f9c3e28b3a556c2e64a52501b"
 
 [[projects]]
   branch = "master"
@@ -2126,7 +2118,6 @@
     "github.com/google/go-github/github",
     "github.com/google/uuid",
     "github.com/gorilla/websocket",
-    "github.com/juju/errors",
     "github.com/kelseyhightower/envconfig",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
