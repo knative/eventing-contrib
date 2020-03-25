@@ -197,8 +197,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "0331394117d40bbbe9448cb7008cf2566fa29a86"
-  version = "v2.0.0-preview6"
+  revision = "123def5bff3a506e15cc0bc581a72efd9bda4783"
+  version = "v2.0.0-preview7"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1875,7 +1875,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c5f8526383eb0265da414b942bda966f471bee73e148e5c9477fa4daa55ad368"
+  digest = "1:c74b26e8ad576a93ecd9c00397fb2ae6b3aea234f61781a8a8ac0196b0bfdb79"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1982,11 +1982,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "a0e635064ad2cb9f9c3e28b3a556c2e64a52501b"
+  revision = "8b4a6f7b49643df73ae95d457181b6614e9d4f75"
 
 [[projects]]
   branch = "master"
-  digest = "1:7912249df5f43ca10fa1c3f8a3febdc3c0f7b320698787fa73c9fb1920a832d6"
+  digest = "1:9a3d6a5933182bb0ac923b36a7e581b19ea23edeb6684eabe14002758cd7b067"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2062,7 +2062,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "0840da9555a3a75f801abc1d654fb00dfe9a687a"
+  revision = "9f9f7bea94e15840f36f08b90a2c03203e886f91"
 
 [[projects]]
   branch = "master"
@@ -2106,18 +2106,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "ce10070bb7ef12eefc20abcb01b14d8910692336"
+  revision = "aa3d5708fb6bc8e35324f3dab764c2ca0a7e6892"
 
 [[projects]]
   branch = "master"
-  digest = "1:3f2366ce9a05503ac8da902b58e898c285cc9a972e0e89fda0b2a2fedcd4fb46"
+  digest = "1:2987a1db00b983af9e5d5281639a754fb6449eef01e6a375894829eaec17cb2a"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "0042e9ca752c8339c3c245e1d2c76b891a144b7e"
+  revision = "9a501343b4dafbac1a1a5dcfe2cb46975a78abb5"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
