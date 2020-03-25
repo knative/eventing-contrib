@@ -18,25 +18,20 @@ package gitlab
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/url"
-	"reflect"
 	"strings"
 	"time"
 
 	//k8s.io imports
 
-	"github.com/juju/errors"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/kmeta"
 
 	//knative.dev/serving imports
@@ -50,31 +45,16 @@ import (
 	clientset "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned"
 	listers "knative.dev/eventing-contrib/gitlab/pkg/client/listers/sources/v1alpha1"
 
-	//knative.dev/eventing imports
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/reconciler"
-
 	//knative.dev/pkg imports
 
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 )
 
-const (
-	controllerAgentName = "gitlab-source-controller"
-	finalizerName       = controllerAgentName
-	raImageEnvVar       = "GL_RA_IMAGE"
-
-	gitLabSourceUpdateStatusFailed = "GitLabSourceUpdateStatusFailed"
-	gitLabSourceReadinessChanged   = "GitLabSourceReadinessChanged"
-	gitLabSourceReconciled         = "GitLabSourceReconciled"
-)
-
-var receiveAdapterImage string
-
 // Reconciler reconciles a GitLabSource object
 type Reconciler struct {
-	*reconciler.Base
+	kubeClientSet kubernetes.Interface
 
 	gitlabClientSet clientset.Interface
 	gitlabLister    listers.GitLabSourceLister
@@ -83,7 +63,6 @@ type Reconciler struct {
 	servingLister    servinglisters.ServiceLister
 
 	receiveAdapterImage string
-	eventTypeLister     eventinglisters.EventTypeLister
 
 	deploymentLister appsv1listers.DeploymentLister
 	sinkResolver     *resolver.URIResolver
@@ -92,72 +71,9 @@ type Reconciler struct {
 	loggingConfig  *logging.Config
 }
 
-// Reconcile reads that state of the cluster for a GitLabSource object and makes changes based on the state read
-// and what is in the GitLabSource.Spec
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	logger := logging.FromContext(ctx)
-
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		logger.Error("invalid resource key: %s", zap.Any("key", key))
-	}
-
-	logger.Info("Reconciling " + namespace)
-
-	// Fetch the GitLabSource instance
-	source, err := r.gitlabLister.GitLabSources(namespace).Get(name)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			// Object not found, return.  Created objects are automatically garbage collected.
-			// Finalizers ensure that controller gets chance to process gitlabsource  delete
-			return nil
-		}
-		// Error reading the object - requeue the request.
-		return err
-	}
-
-	// Don't modify the original (informers) copy
-	gitlab := source.DeepCopy()
-
-	var reconcileErr error
-	if gitlab.ObjectMeta.GetDeletionTimestamp() == nil {
-		reconcileErr = r.reconcile(gitlab)
-	} else {
-		if r.hasFinalizer(gitlab) {
-			reconcileErr = r.finalize(gitlab)
-		}
-		return reconcileErr
-	}
-	if _, updateStatusErr := r.updateStatus(ctx, gitlab.DeepCopy()); updateStatusErr != nil {
-		logging.FromContext(ctx).Warn("Failed to update the GitLabSource", zap.Error(updateStatusErr))
-		r.Recorder.Eventf(gitlab, corev1.EventTypeWarning, gitLabSourceUpdateStatusFailed, "Failed to update GitLabSource's status: %v", updateStatusErr)
-		return updateStatusErr
-	}
-
-	return reconcileErr
-}
-
-func getGitlabBaseURL(projectUrl string) (string, error) {
-	u, err := url.Parse(projectUrl)
-	if err != nil {
-		return "", err
-	}
-	projectName := u.Path[1:]
-	baseURL := strings.TrimSuffix(projectUrl, projectName)
-	return baseURL, nil
-}
-
-func getProjectName(projectUrl string) (string, error) {
-	u, err := url.Parse(projectUrl)
-	if err != nil {
-		return "", err
-	}
-	projectName := u.Path[1:]
-	return projectName, nil
-}
-
-func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
+func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.GitLabSource) reconciler.Event {
 	source.Status.InitializeConditions()
+	source.Status.ObservedGeneration = source.Generation
 
 	projectName, err := getProjectName(source.Spec.ProjectUrl)
 	if err != nil {
@@ -225,9 +141,6 @@ func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			ksvc = r.generateKnativeServiceObject(source, r.receiveAdapterImage)
-			// if err = controllerutil.SetControllerReference(source, ksvc, r.scheme); err != nil {
-			// return fmt.Errorf("Failed to create knative service for the gitlabsource: " + err.Error())
-			// }
 			if _, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ksvc); err != nil {
 				return nil
 			}
@@ -236,7 +149,7 @@ func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 		}
 	}
 
-	ksvc, err = r.waitForKnativeServiceReady(source)
+	ksvc, err = r.waitForKnativeServiceReady(source) // TODO: remove this. setup a watch on the service instead.
 	if err != nil {
 		return err
 	}
@@ -255,11 +168,10 @@ func (r *Reconciler) reconcile(source *sourcesv1alpha1.GitLabSource) error {
 		return fmt.Errorf("Failed to create project hook: " + err.Error())
 	}
 	source.Status.Id = hookID
-	r.addFinalizer(source)
 	return nil
 }
 
-func (r *Reconciler) finalize(source *sourcesv1alpha1.GitLabSource) error {
+func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.GitLabSource) reconciler.Event {
 	if source.Status.Id != "" {
 		hookOptions := projectHookOptions{}
 		projectName, err := getProjectName(source.Spec.ProjectUrl)
@@ -283,14 +195,31 @@ func (r *Reconciler) finalize(source *sourcesv1alpha1.GitLabSource) error {
 		}
 		source.Status.Id = ""
 	}
-	r.removeFinalizer(source)
-	_, err := r.gitlabClientSet.SourcesV1alpha1().GitLabSources(source.Namespace).Update(source)
-	return err
+	return nil
+}
+
+func getGitlabBaseURL(projectUrl string) (string, error) {
+	u, err := url.Parse(projectUrl)
+	if err != nil {
+		return "", err
+	}
+	projectName := u.Path[1:]
+	baseURL := strings.TrimSuffix(projectUrl, projectName)
+	return baseURL, nil
+}
+
+func getProjectName(projectUrl string) (string, error) {
+	u, err := url.Parse(projectUrl)
+	if err != nil {
+		return "", err
+	}
+	projectName := u.Path[1:]
+	return projectName, nil
 }
 
 func (r *Reconciler) secretFrom(namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
 	secret := &corev1.Secret{}
-	secret, err := r.KubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
+	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -300,42 +229,6 @@ func (r *Reconciler) secretFrom(namespace string, secretKeySelector *corev1.Secr
 		return "", fmt.Errorf(`key "%s" not found in secret "%s"`, secretKeySelector.Key, secretKeySelector.Name)
 	}
 	return string(secretVal), nil
-}
-
-func (r *Reconciler) addFinalizer(src *sourcesv1alpha1.GitLabSource) error {
-	finalizers := sets.NewString(src.Finalizers...)
-	if finalizers.Has(finalizerName) {
-		return nil
-	}
-
-	mergePatch := map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"finalizers":      append(src.Finalizers, finalizerName),
-			"resourceVersion": src.ResourceVersion,
-		},
-	}
-
-	patch, err := json.Marshal(mergePatch)
-	if err != nil {
-		return nil
-	}
-	_, err = r.gitlabClientSet.SourcesV1alpha1().GitLabSources(src.Namespace).Patch(src.Name, types.MergePatchType, patch)
-	return err
-}
-
-func (r *Reconciler) removeFinalizer(source *sourcesv1alpha1.GitLabSource) {
-	finalizers := sets.NewString(source.Finalizers...)
-	finalizers.Delete(finalizerName)
-	source.Finalizers = finalizers.List()
-}
-
-func (r *Reconciler) hasFinalizer(source *sourcesv1alpha1.GitLabSource) bool {
-	for _, finalizerStr := range source.Finalizers {
-		if finalizerStr == finalizerName {
-			return true
-		}
-	}
-	return false
 }
 
 func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLabSource, receiveAdapterImage string) *servingv1.Service {
@@ -350,7 +243,7 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 			},
 		}, {
 			Name:  "K_SINK",
-			Value: source.Status.SinkURI,
+			Value: source.Status.SinkURI.String(),
 		}, {
 			Name:  "NAMESPACE",
 			Value: source.GetNamespace(),
@@ -412,7 +305,7 @@ func (r *Reconciler) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource
 }
 
 // UpdateFromLoggingConfigMap loads logger configuration from configmap
-func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
+func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) { // TODO: remove this.
 	if cfg != nil {
 		delete(cfg.Data, "_example")
 	}
@@ -440,30 +333,4 @@ func (r *Reconciler) waitForKnativeServiceReady(source *sourcesv1alpha1.GitLabSo
 		time.Sleep(2000 * time.Millisecond)
 	}
 	return nil, fmt.Errorf("Failed to get service to be in ready state")
-}
-
-func (r *Reconciler) updateStatus(ctx context.Context, source *sourcesv1alpha1.GitLabSource) (*sourcesv1alpha1.GitLabSource, error) {
-	gitlab, err := r.gitlabLister.GitLabSources(source.Namespace).Get(source.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	// If the status remains the same (nothing to update), return.
-	if reflect.DeepEqual(gitlab.Status, source.Status) {
-		return gitlab, nil
-	}
-
-	becomesReady := source.Status.IsReady() && !gitlab.Status.IsReady()
-
-	// We avoid modifying the informer's copy
-	existing := gitlab.DeepCopy()
-	existing.Status = source.Status
-
-	result, err := r.gitlabClientSet.SourcesV1alpha1().GitLabSources(source.Namespace).UpdateStatus(existing)
-	if err == nil && becomesReady {
-		duration := time.Since(result.ObjectMeta.CreationTimestamp.Time)
-		logging.FromContext(ctx).Info("GitLabSource became ready after", zap.Duration("duration", duration))
-		r.Recorder.Event(gitlab, corev1.EventTypeNormal, gitLabSourceReadinessChanged, fmt.Sprintf("GitLabSource %q became ready", gitlab.Name))
-	}
-	return result, err
 }

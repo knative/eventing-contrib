@@ -51,3 +51,19 @@ spec:
           - containerPort: 9090
             name: metrics
         # TODO set proper resource limits.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    eventing.knative.dev/release: devel
+    role: github-webhook
+  name: github-webhook
+  namespace: knative-sources
+spec:
+  ports:
+    - name: https-webhook
+      port: 443
+      targetPort: 8443
+  selector:
+    role: github-webhook

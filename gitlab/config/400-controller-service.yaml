@@ -16,6 +16,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    contrib.eventing.knative.dev/release: devel
     control-plane: gitlab-controller-manager
   name: gitlab-controller-manager-service
   namespace: knative-sources

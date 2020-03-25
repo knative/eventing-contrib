@@ -160,7 +160,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:1174f23d8f01df878217718904bad3702a0bcf0812223fbb00893d97dae9fb42"
+  digest = "1:529bd84e1970910b86ad0220aabbe8587a2f0657fb254e0ecba4afd62bfd9341"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -197,8 +197,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "0a5202bf31a5927f261fb8ee0bba88cef0963d8c"
-  version = "v2.0.0-preview4"
+  revision = "0331394117d40bbbe9448cb7008cf2566fa29a86"
+  version = "v2.0.0-preview6"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -384,7 +384,7 @@
   version = "v0.0.1"
 
 [[projects]]
-  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
+  digest = "1:f0ae868d945753df81e797524bb7f3c577bcf751ce515c18162d259ca3ff8de7"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
@@ -395,7 +395,8 @@
     "cmp/internal/value",
   ]
   pruneopts = "NUT"
-  revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
+  revision = "5a6f75716e1203a923a78c9efb94089d857df0f6"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:ecc8bd577aaaa8ce2c3ad060e61e1daeadbab1d14a0934f019ad2995c3a666b0"
@@ -618,14 +619,6 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
-
-[[projects]]
-  branch = "master"
-  digest = "1:109171fef99d467911ae11b7f9f8b19ec78e7367f45110cb7045811288dd0301"
-  name = "github.com/juju/errors"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "d42613fe1ab9e303fc850e7a19fda2e8eeb6516e"
 
 [[projects]]
   digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
@@ -1882,7 +1875,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c5b197cb347ad2b7efcb51b3c22fca59b62c3c2dceeefc104e7a9cc64a52217e"
+  digest = "1:c5f8526383eb0265da414b942bda966f471bee73e148e5c9477fa4daa55ad368"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1949,7 +1942,6 @@
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
     "pkg/client/injection/informers/eventing/v1alpha1/broker",
-    "pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "pkg/client/injection/informers/factory",
     "pkg/client/injection/reconciler/eventing/v1alpha1/broker",
     "pkg/client/listers/configs/v1alpha1",
@@ -1990,11 +1982,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "12f2bebda46a10f07b5759f76d683772199b7a14"
+  revision = "a0e635064ad2cb9f9c3e28b3a556c2e64a52501b"
 
 [[projects]]
   branch = "master"
-  digest = "1:94d7cfde4eee652c089b47f0200b86bc28e618de18a2e5368b0bbc8e2b601026"
+  digest = "1:7912249df5f43ca10fa1c3f8a3febdc3c0f7b320698787fa73c9fb1920a832d6"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2070,11 +2062,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "c13e86e2d4f484f1dd3b8ca6474994c16da74f20"
+  revision = "0840da9555a3a75f801abc1d654fb00dfe9a687a"
 
 [[projects]]
   branch = "master"
-  digest = "1:8dc739cc25ba035aff7ddc063361c396f96a236f887d5fc70353502cb5447cc1"
+  digest = "1:a7e36b2c89e3f2ca8247d82c318e7a4c8f657e27c685914224a71bd191fad3cc"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2114,7 +2106,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "3107e1c0f13d33e01b67f1d58e24541b862bb16b"
+  revision = "ce10070bb7ef12eefc20abcb01b14d8910692336"
 
 [[projects]]
   branch = "master"
@@ -2125,7 +2117,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "64929018c86389e47a88782619565b6d099c0a5a"
+  revision = "0042e9ca752c8339c3c245e1d2c76b891a144b7e"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2232,7 +2224,6 @@
     "github.com/google/go-github/github",
     "github.com/google/uuid",
     "github.com/gorilla/websocket",
-    "github.com/juju/errors",
     "github.com/kelseyhightower/envconfig",
     "github.com/nats-io/go-nats-streaming",
     "github.com/nats-io/nats-streaming-server/server",
@@ -2306,7 +2297,6 @@
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client",
     "knative.dev/eventing/pkg/client/injection/client/fake",
-    "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype",
     "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1",
     "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/kncloudevents/testing",

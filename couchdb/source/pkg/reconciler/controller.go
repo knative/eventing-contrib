@@ -23,7 +23,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
-	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	"knative.dev/eventing/pkg/reconciler"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
@@ -57,7 +56,6 @@ func NewController(
 ) *controller.Impl {
 	deploymentInformer := deploymentinformer.Get(ctx)
 	couchdbSourceInformer := couchdbinformer.Get(ctx)
-	eventTypeInformer := eventtypeinformer.Get(ctx)
 
 	raImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
@@ -69,7 +67,6 @@ func NewController(
 		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
 		receiveAdapterImage: raImage,
 		deploymentLister:    deploymentInformer.Lister(),
-		eventTypeLister:     eventTypeInformer.Lister(),
 	}
 	impl := cdbreconciler.NewImpl(ctx, r)
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
@@ -78,11 +75,6 @@ func NewController(
 	couchdbSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("CouchDbSource")),
-		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
-	})
-
-	eventTypeInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("CouchDbSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})

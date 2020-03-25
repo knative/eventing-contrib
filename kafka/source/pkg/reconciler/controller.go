@@ -25,8 +25,6 @@ import (
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client"
 	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource"
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
-	eventingclient "knative.dev/eventing/pkg/client/injection/client"
-	eventtypeinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventtype"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 
@@ -51,17 +49,14 @@ func NewController(
 	}
 
 	kafkaInformer := kafkainformer.Get(ctx)
-	eventTypeInformer := eventtypeinformer.Get(ctx)
 	deploymentInformer := deploymentinformer.Get(ctx)
 
 	c := &Reconciler{
 		KubeClientSet:       kubeclient.Get(ctx),
-		EventingClientSet:   eventingclient.Get(ctx),
 		kafkaClientSet:      kafkaclient.Get(ctx),
 		kafkaLister:         kafkaInformer.Lister(),
 		deploymentLister:    deploymentInformer.Lister(),
 		receiveAdapterImage: raImage,
-		eventTypeLister:     eventTypeInformer.Lister(),
 		loggingContext:      ctx,
 	}
 
@@ -73,11 +68,6 @@ func NewController(
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("KafkaSource")),
-		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
-	})
-
-	eventTypeInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("KafkaSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})

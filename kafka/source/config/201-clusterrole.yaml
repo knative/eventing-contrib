@@ -62,11 +62,6 @@ rules:
   verbs: *everything
 
 - apiGroups:
-  - eventing.knative.dev
-  resources:
-  - eventtypes
-  verbs: *everything
-- apiGroups:
   - "coordination.k8s.io"
   resources:
   - leases

@@ -20,6 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/client-go/kubernetes"
+	"knative.dev/pkg/controller"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/robfig/cron"
 	"go.uber.org/zap"
@@ -32,10 +35,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"knative.dev/eventing-contrib/prometheus/pkg/reconciler/resources"
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/reconciler"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -49,25 +51,18 @@ const (
 	prometheussourceDeploymentUpdated = "PrometheusSourceDeploymentUpdated"
 )
 
-var (
-	prometheusEventTypes = []string{
-		v1alpha1.PromQLPrometheusSourceEventType,
-	}
-)
-
 type envConfig struct {
 	Image string `envconfig:"PROMETHEUS_RA_IMAGE" required:"true"`
 }
 
 // Reconciler reconciles a PrometheusSource object
 type Reconciler struct {
-	*reconciler.Base
+	kubeClientSet kubernetes.Interface
 
 	receiveAdapterImage string
 
 	// listers index properties about resources
 	deploymentLister appsv1listers.DeploymentLister
-	eventTypeLister  eventinglisters.EventTypeLister
 
 	sinkResolver *resolver.URIResolver
 }
@@ -88,27 +83,14 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.Prometh
 		// no Namespace defined in dest.Ref, we will use the Namespace of the source
 		// as the Namespace of dest.Ref.
 		if dest.Ref.Namespace == "" {
-			//TODO how does this work with deprecated fields
 			dest.Ref.Namespace = source.GetNamespace()
 		}
-	} else if dest.DeprecatedName != "" && dest.DeprecatedNamespace == "" {
-		// If Ref is nil and the deprecated ref is present, we need to check for
-		// DeprecatedNamespace. This can be removed when DeprecatedNamespace is
-		// removed.
-		dest.DeprecatedNamespace = source.GetNamespace()
 	}
 
-	sinkURI, err := r.sinkResolver.URIFromDestination(*dest, source)
+	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return err
-	}
-	if source.Spec.Sink.DeprecatedAPIVersion != "" &&
-		source.Spec.Sink.DeprecatedKind != "" &&
-		source.Spec.Sink.DeprecatedName != "" {
-		source.Status.MarkSinkWarnRefDeprecated(sinkURI)
-	} else {
-		source.Status.MarkSink(sinkURI)
 	}
 	source.Status.MarkSink(sinkURI)
 
@@ -121,29 +103,27 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.Prometh
 
 	ra, err := r.createReceiveAdapter(ctx, source, sinkURI)
 	if err != nil {
-		r.Logger.Error("Unable to create the receive adapter", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
 	// Update source status// Update source status
 	source.Status.PropagateDeploymentAvailability(ra)
 
-	err = r.reconcileEventTypes(ctx, source)
-	if err != nil {
-		source.Status.MarkNoEventTypes("EventTypesReconcileFailed", "")
-		return err
-	}
-	source.Status.MarkEventTypes()
+	source.Status.CloudEventAttributes = []duckv1.CloudEventAttributes{{
+		Type:   v1alpha1.PromQLPrometheusSourceEventType,
+		Source: r.makeEventSource(source),
+	}}
 
 	return nil
 }
 
-func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.PrometheusSource, sinkURI string) (*appsv1.Deployment, error) {
+func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.PrometheusSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
 	eventSource := r.makeEventSource(src)
 	logging.FromContext(ctx).Debug("event source", zap.Any("source", eventSource))
 
 	env := &envConfig{}
 	if err := envconfig.Process("", env); err != nil {
-		r.Logger.Panicf("required environment variable is not defined: %v", err)
+		logging.FromContext(ctx).Panicf("required environment variable is not defined: %v", err)
 	}
 
 	adapterArgs := resources.ReceiveAdapterArgs{
@@ -151,14 +131,14 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Pro
 		Image:       env.Image,
 		Source:      src,
 		Labels:      resources.Labels(src.Name),
-		SinkURI:     sinkURI,
+		SinkURI:     sinkURI.String(),
 	}
 	expected := resources.MakeReceiveAdapter(&adapterArgs)
 
-	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
+	ra, err := r.kubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentCreated, "Deployment created, error: %v", err)
+		ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
+		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentCreated, "Deployment created, error: %v", err)
 		return ra, err
 	} else if err != nil {
 		return nil, fmt.Errorf("error getting receive adapter: %v", err)
@@ -166,123 +146,15 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Pro
 		return nil, fmt.Errorf("deployment %q is not owned by PrometheusSource %q", ra.Name, src.Name)
 	} else if r.podSpecChanged(ra.Spec.Template.Spec, expected.Spec.Template.Spec) {
 		ra.Spec.Template.Spec = expected.Spec.Template.Spec
-		if ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
+		if ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
 			return ra, err
 		}
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentUpdated, "Deployment updated")
+		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, prometheussourceDeploymentUpdated, "Deployment updated")
 		return ra, nil
 	} else {
 		logging.FromContext(ctx).Debug("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 	}
 	return ra, nil
-}
-
-func (r *Reconciler) reconcileEventTypes(ctx context.Context, src *v1alpha1.PrometheusSource) error {
-	current, err := r.getEventTypes(ctx, src)
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to get existing event types", zap.Error(err))
-		return err
-	}
-
-	expected, err := r.makeEventTypes(src)
-	if err != nil {
-		return err
-	}
-
-	toCreate, toDelete := r.computeDiff(current, expected)
-
-	for _, eventType := range toDelete {
-		if err = r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).Delete(eventType.Name, &metav1.DeleteOptions{}); err != nil {
-			logging.FromContext(ctx).Error("Error deleting eventType", zap.Any("eventType", eventType))
-			return err
-		}
-	}
-
-	for _, eventType := range toCreate {
-		if _, err = r.EventingClientSet.EventingV1alpha1().EventTypes(src.Namespace).Create(&eventType); err != nil {
-			logging.FromContext(ctx).Error("Error creating eventType", zap.Any("eventType", eventType))
-			return err
-		}
-	}
-
-	return err
-}
-
-func (r *Reconciler) getEventTypes(ctx context.Context, src *v1alpha1.PrometheusSource) ([]eventingv1alpha1.EventType, error) {
-	etl, err := r.eventTypeLister.EventTypes(src.Namespace).List(r.getLabelSelector(src))
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to list event types: %v", zap.Error(err))
-		return nil, err
-	}
-	eventTypes := make([]eventingv1alpha1.EventType, 0)
-	for _, et := range etl {
-		if metav1.IsControlledBy(et, src) {
-			eventTypes = append(eventTypes, *et)
-		}
-	}
-	return eventTypes, nil
-}
-
-func (r *Reconciler) makeEventTypes(src *v1alpha1.PrometheusSource) ([]eventingv1alpha1.EventType, error) {
-	eventTypes := make([]eventingv1alpha1.EventType, 0, len(prometheusEventTypes))
-
-	// Only create EventTypes for Broker sinks.
-	// We add this check here in case the PrometheusSource was changed from Broker to non-Broker sink.
-	// If so, we need to delete the existing ones, thus we return empty expected.
-	if ref := src.Spec.Sink.GetRef(); ref == nil || ref.Kind != "Broker" {
-		return eventTypes, nil
-	}
-
-	args := &resources.EventTypeArgs{
-		Src:    src,
-		Source: r.makeEventSource(src),
-	}
-	for _, apiEventType := range prometheusEventTypes {
-		args.Type = apiEventType
-		eventType := resources.MakeEventType(args)
-		eventTypes = append(eventTypes, eventType)
-	}
-	return eventTypes, nil
-}
-
-func (r *Reconciler) computeDiff(current []eventingv1alpha1.EventType, expected []eventingv1alpha1.EventType) ([]eventingv1alpha1.EventType, []eventingv1alpha1.EventType) {
-	toCreate := make([]eventingv1alpha1.EventType, 0)
-	toDelete := make([]eventingv1alpha1.EventType, 0)
-	currentMap := asMap(current, keyFromEventType)
-	expectedMap := asMap(expected, keyFromEventType)
-
-	// Iterate over the slices instead of the maps for predictable UT expectations.
-	for _, e := range expected {
-		if c, ok := currentMap[keyFromEventType(&e)]; !ok {
-			toCreate = append(toCreate, e)
-		} else {
-			if !equality.Semantic.DeepEqual(e.Spec, c.Spec) {
-				toDelete = append(toDelete, c)
-				toCreate = append(toCreate, e)
-			}
-		}
-	}
-	// Need to check whether the current EventTypes are not in the expected map. If so, we have to delete them.
-	// This could happen if the PrometheusSource CO changes its broker.
-	for _, c := range current {
-		if _, ok := expectedMap[keyFromEventType(&c)]; !ok {
-			toDelete = append(toDelete, c)
-		}
-	}
-	return toCreate, toDelete
-}
-
-func asMap(eventTypes []eventingv1alpha1.EventType, keyFunc func(*eventingv1alpha1.EventType) string) map[string]eventingv1alpha1.EventType {
-	eventTypesAsMap := make(map[string]eventingv1alpha1.EventType, 0)
-	for _, eventType := range eventTypes {
-		key := keyFunc(&eventType)
-		eventTypesAsMap[key] = eventType
-	}
-	return eventTypesAsMap
-}
-
-func keyFromEventType(eventType *eventingv1alpha1.EventType) string {
-	return fmt.Sprintf("%s_%s_%s_%s", eventType.Spec.Type, eventType.Spec.Source, eventType.Spec.Schema, eventType.Spec.Broker)
 }
 
 func (r *Reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {

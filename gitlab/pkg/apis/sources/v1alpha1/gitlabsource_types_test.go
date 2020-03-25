@@ -114,6 +114,16 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 			return s
 		}(),
 		want: true,
+	}, {
+		name: "mark sink nil, secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink(nil)
+			s.MarkSecret()
+			return s
+		}(),
+		want: false,
 	}}
 
 	for _, test := range tests {

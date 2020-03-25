@@ -24,5 +24,5 @@ import (
 )
 
 func TestEventTransformationForTrigger(t *testing.T) {
-	helpers.EventTransformationForTriggerTestHelper(t, channelTestRunner)
+	helpers.EventTransformationForTriggerTestHelper(t, "ChannelBasedBroker" /*brokerClass*/, channelTestRunner)
 }

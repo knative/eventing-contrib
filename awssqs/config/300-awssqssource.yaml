@@ -18,6 +18,7 @@ metadata:
   labels:
     contrib.eventing.knative.dev/release: devel
     eventing.knative.dev/source: "true"
+    duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
   annotations:
     registry.knative.dev/eventTypes: |
@@ -29,10 +30,10 @@ spec:
   group: sources.knative.dev
   names:
     categories:
-    - all
-    - knative
-    - eventing
-    - sources
+      - all
+      - knative
+      - eventing
+      - sources
     kind: AwsSqsSource
     plural: awssqssources
   scope: Namespaced
@@ -54,7 +55,7 @@ spec:
             sink:
               type: object
           required:
-          - queueUrl
+            - queueUrl
           type: object
         status:
           properties:
@@ -76,8 +77,8 @@ spec:
                   type:
                     type: string
                 required:
-                - type
-                - status
+                  - type
+                  - status
                 type: object
               type: array
             sinkUri:

@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/test/lib/resources"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgTest "knative.dev/pkg/test"
 
 	kafkasourcev1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
@@ -84,8 +84,13 @@ func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectRef
 			BootstrapServers: bootstrapServer,
 			Topics:           topicName,
 			ConsumerGroup:    "test-consumer-group",
-			Sink: &duckv1beta1.Destination{
-				Ref: ref,
+			Sink: &duckv1.Destination{
+				Ref: &duckv1.KReference{
+					APIVersion: ref.APIVersion,
+					Kind:       ref.Kind,
+					Name:       ref.Name,
+					Namespace:  ref.Namespace,
+				},
 			},
 		},
 	}
