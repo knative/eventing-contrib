@@ -28,6 +28,7 @@ import (
 	"go.uber.org/zap"
 
 	"knative.dev/eventing/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/eventing/pkg/utils"
 )
 
@@ -158,6 +159,7 @@ func (r *EventReceiver) ServeHTTP(ctx context.Context, event cloudevents.Event, 
 	sctx := utils.ReceivingContextFrom(ctx)
 	AppendHistory(&event, host)
 
+	event = tracing.AddTraceparentAttributeFromContext(ctx, event)
 	err = r.receiverFunc(sctx, channel, event)
 	if err != nil {
 		if _, ok := err.(*UnknownChannelError); ok {
