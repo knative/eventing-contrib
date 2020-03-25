@@ -19,19 +19,18 @@ limitations under the License.
 package e2e
 
 import (
-	"context"
 	"testing"
 	"time"
 
+	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
+
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 	knativeduck "knative.dev/pkg/apis/duck/v1beta1"
-	runtime "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestCamelSource(t *testing.T) {
@@ -128,7 +127,7 @@ func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
 	}
 }
 
-func createCamelPlatformOrFail(c *lib.Client, camelClient runtime.Client, camelSourceName string) {
+func createCamelPlatformOrFail(c *lib.Client, camelClient camelclientset.Interface, camelSourceName string) {
 	platform := camelv1.IntegrationPlatform{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "camel-k",
@@ -139,12 +138,12 @@ func createCamelPlatformOrFail(c *lib.Client, camelClient runtime.Client, camelS
 		},
 	}
 
-	if err := camelClient.Create(context.TODO(), &platform); err != nil {
+	if _, err := camelClient.CamelV1().IntegrationPlatforms(c.Namespace).Create(&platform); err != nil {
 		c.T.Fatalf("Failed to create IntegrationPlatform for CamelSource %q: %v", camelSourceName, err)
 	}
 }
 
-func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSourceName string) {
+func createCamelKitOrFail(c *lib.Client, camelClient camelclientset.Interface, camelSourceName string) {
 	// Creating this kit manually because the Camel K platform is not configured to do it on its own.
 	// Testing that Camel K works is not in scope for this test.
 	kit := camelv1.IntegrationKit{
@@ -167,22 +166,11 @@ func createCamelKitOrFail(c *lib.Client, camelClient runtime.Client, camelSource
 		},
 	}
 
-	if err := camelClient.Create(context.TODO(), &kit); err != nil {
+	if _, err := camelClient.CamelV1().IntegrationKits(c.Namespace).Create(&kit); err != nil {
 		c.T.Fatalf("Failed to create IntegrationKit for CamelSource %q: %v", camelSourceName, err)
 	}
 }
 
-func getCamelKClient(c *lib.Client) runtime.Client {
-	scheme := k8sruntime.NewScheme()
-	scheme.AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationPlatform{}, &camelv1.IntegrationPlatformList{})
-	scheme.AddKnownTypes(camelv1.SchemeGroupVersion, &camelv1.IntegrationKit{}, &camelv1.IntegrationKitList{})
-	meta.AddToGroupVersion(scheme, camelv1.SchemeGroupVersion)
-	options := runtime.Options{
-		Scheme: scheme,
-	}
-	client, err := runtime.New(c.Config, options)
-	if err != nil {
-		c.T.Fatalf("Failed to create initialize generic client for Camel K resources: %v", err)
-	}
-	return client
+func getCamelKClient(c *lib.Client) camelclientset.Interface {
+	return camelclientset.NewForConfigOrDie(c.Config)
 }

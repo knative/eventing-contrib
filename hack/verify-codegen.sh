@@ -22,7 +22,6 @@ source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
 readonly TMP_DIFFROOT="$(mktemp -d ${REPO_ROOT_DIR}/tmpdiffroot.XXXXXX)"
 
-
 cleanup() {
   rm -rf "${TMP_DIFFROOT}"
 }
@@ -36,7 +35,6 @@ mkdir -p "${TMP_DIFFROOT}"
 
 cp -aR \
   "${REPO_ROOT_DIR}/Gopkg.lock" \
-  "${REPO_ROOT_DIR}/pkg" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor" \
   "${TMP_DIFFROOT}"
@@ -47,9 +45,6 @@ ret=0
 
 diff -Naupr --no-dereference \
   "${REPO_ROOT_DIR}/Gopkg.lock" "${TMP_DIFFROOT}/Gopkg.lock" || ret=1
-
-diff -Naupr --no-dereference \
-  "${REPO_ROOT_DIR}/pkg" "${TMP_DIFFROOT}/pkg" || ret=1
 
 echo "###############"
 cat "${REPO_ROOT_DIR}/third_party/VENDOR-LICENSE"
@@ -66,7 +61,6 @@ diff -Naupr --no-dereference \
 # Restore working tree state
 rm -fr \
   "${REPO_ROOT_DIR}/Gopkg.lock" \
-  "${REPO_ROOT_DIR}/pkg" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor"
 
