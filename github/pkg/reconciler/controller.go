@@ -33,9 +33,9 @@ import (
 
 	//knative.dev/eventing imports
 	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing/pkg/reconciler"
 
 	//knative.dev/pkg imports
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -57,7 +57,7 @@ func NewController(
 	serviceInformer := kserviceinformer.Get(ctx)
 
 	r := &Reconciler{
-		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
+		kubeClientSet:       kubeclient.Get(ctx),
 		servingLister:       serviceInformer.Lister(),
 		servingClientSet:    serviceclient.Get(ctx),
 		webhookClient:       gitHubWebhookClient{},
@@ -68,7 +68,7 @@ func NewController(
 
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
-	r.Logger.Info("Setting up GitHub event handlers")
+	logging.FromContext(ctx).Info("Setting up GitHub event handlers")
 
 	githubInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
