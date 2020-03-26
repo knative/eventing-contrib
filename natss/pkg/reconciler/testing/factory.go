@@ -44,10 +44,10 @@ const (
 )
 
 // Ctor functions create a k8s controller with given params.
-type Ctor func(context.Context, *Listers) controller.Reconciler
+type Ctor func(context.Context, *Listers, record.EventRecorder) controller.Reconciler
 
-// makeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
-func makeFactory(ctor Ctor) Factory {
+// MakeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
+func MakeFactory(ctor Ctor) Factory {
 	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList) {
 		ls := NewListers(r.Objects)
 
@@ -86,11 +86,7 @@ func makeFactory(ctor Ctor) Factory {
 
 		ctx = controller.WithEventRecorder(ctx, eventRecorder)
 
-		c := ctor(ctx, &ls)
+		c := ctor(ctx, &ls, eventRecorder)
 		return c, actionRecorderList, eventList
 	}
-}
-
-func MakeFactoryWithContext(ctor func(context.Context, *Listers) controller.Reconciler) Factory {
-	return makeFactory(ctor)
 }

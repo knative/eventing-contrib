@@ -20,14 +20,14 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
-	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/utils"
-
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	"knative.dev/pkg/configmap"
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/client-go/tools/record"
 
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
@@ -45,19 +46,11 @@ import (
 )
 
 const (
-	systemNS                 = "knative-eventing"
 	testNS                   = "test-namespace"
 	ncName                   = "test-nc"
 	dispatcherDeploymentName = "test-deployment"
 	dispatcherServiceName    = "test-service"
 	channelServiceAddress    = "test-nc-kn-channel.test-namespace.svc.cluster.local"
-)
-
-var (
-	trueVal = true
-	// deletionTime is used when objects are marked as deleted. Rfc3339Copy()
-	// truncates to seconds to match the loss of precision during serialization.
-	deletionTime = metav1.Now().Rfc3339Copy()
 )
 
 func init() {
@@ -219,7 +212,7 @@ func TestAllCases(t *testing.T) {
 				makeService(),
 				makeReadyEndpoints(),
 				reconciletesting.NewNatssChannel(ncName, testNS),
-				makeChannelServiceNotOwnedByUs(reconciletesting.NewNatssChannel(ncName, testNS)),
+				makeChannelServiceNotOwnedByUs(),
 			},
 			WantErr: true,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
@@ -266,16 +259,17 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers, recorder record.EventRecorder) controller.Reconciler {
 		return &Reconciler{
-			Base:                     reconciler.NewBase(ctx, controllerAgentName, configmap.NewStaticWatcher()),
 			dispatcherNamespace:      testNS,
 			dispatcherDeploymentName: dispatcherDeploymentName,
 			dispatcherServiceName:    dispatcherServiceName,
 			natsschannelLister:       listers.GetNatssChannelLister(),
-			NatssClientSet:           fakeclientset.Get(ctx),
-			// TODO fix
-			natsschannelInformer: nil,
+			natssClientSet:           fakeclientset.Get(ctx),
+			kubeClientSet:            fakekubeclient.Get(ctx),
+			recorder:                 recorder,
+			statsReporter:            func(kind, namespace, service string, d time.Duration) error { return nil },
+			logger:                   logging.FromContext(ctx),
 			deploymentLister:     listers.GetDeploymentLister(),
 			serviceLister:        listers.GetServiceLister(),
 			endpointsLister:      listers.GetEndpointsLister(),
@@ -339,7 +333,7 @@ func makeChannelService(nc *v1alpha1.NatssChannel) *corev1.Service {
 	}
 }
 
-func makeChannelServiceNotOwnedByUs(nc *v1alpha1.NatssChannel) *corev1.Service {
+func makeChannelServiceNotOwnedByUs() *corev1.Service {
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

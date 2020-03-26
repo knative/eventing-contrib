@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"knative.dev/pkg/apis"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
@@ -32,15 +33,20 @@ import (
 
 	"go.uber.org/zap"
 
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
+	eventingScheme "knative.dev/eventing/pkg/client/clientset/versioned/scheme"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
@@ -68,11 +74,16 @@ const (
 	dispatcherName = "natss-ch-dispatcher"
 )
 
+func init() {
+	_ = eventingScheme.AddToScheme(scheme.Scheme)
+}
+
 // Reconciler reconciles NATSS Channels.
 type Reconciler struct {
-	*reconciler.Base
-
-	NatssClientSet clientset.Interface
+	natssClientSet clientset.Interface
+	kubeClientSet  kubernetes.Interface
+	recorder       record.EventRecorder
+	statsReporter  func(kind, namespace, service string, d time.Duration) error
 
 	dispatcherNamespace      string
 	dispatcherDeploymentName string
@@ -84,12 +95,9 @@ type Reconciler struct {
 	serviceLister        corev1listers.ServiceLister
 	endpointsLister      corev1listers.EndpointsLister
 	impl                 *controller.Impl
-}
 
-var (
-	deploymentGVK = appsv1.SchemeGroupVersion.WithKind("Deployment")
-	serviceGVK    = corev1.SchemeGroupVersion.WithKind("Service")
-)
+	logger *zap.SugaredLogger
+}
 
 // Check that our Reconciler implements controller.Reconciler.
 var _ controller.Reconciler = (*Reconciler)(nil)
@@ -99,20 +107,18 @@ var _ cache.ResourceEventHandler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(
-	ctx context.Context,
-	cmw configmap.Watcher,
-	config *rest.Config,
-) *controller.Impl {
+func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config) *controller.Impl {
 
+	logger := logging.FromContext(ctx).Sugar()
 	channelInformer := natsschannel.Get(ctx)
 	deploymentInformer := deploymentinformer.Get(ctx)
 	serviceInformer := service.Get(ctx)
 	endpointsInformer := endpoints.Get(ctx)
+	kubeClient := kubeclient.Get(ctx)
 
 	r := &Reconciler{
-		Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-		NatssClientSet:           clientset.NewForConfigOrDie(config),
+		natssClientSet:           clientset.NewForConfigOrDie(config),
+		kubeClientSet:            kubeClient,
 		dispatcherNamespace:      system.Namespace(),
 		dispatcherDeploymentName: dispatcherName,
 		dispatcherServiceName:    dispatcherName,
@@ -121,10 +127,11 @@ func NewController(
 		deploymentLister:         deploymentInformer.Lister(),
 		serviceLister:            serviceInformer.Lister(),
 		endpointsLister:          endpointsInformer.Lister(),
+		logger:                   logger,
 	}
-	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
+	r.impl = controller.NewImpl(r, logger, ReconcilerName)
 
-	r.Logger.Info("Setting up event handlers")
+	logger.Info("Setting up event handlers")
 	channelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
 
 	// Set up watches for dispatcher resources we care about, since any changes to these
@@ -142,6 +149,39 @@ func NewController(
 		FilterFunc: controller.FilterWithNameAndNamespace(r.dispatcherNamespace, r.dispatcherServiceName),
 		Handler:    r,
 	})
+
+	recorder := controller.GetEventRecorder(ctx)
+	if recorder == nil {
+		// Create event broadcaster
+		logger.Debug("Creating event broadcaster")
+		eventBroadcaster := record.NewBroadcaster()
+		watches := []watch.Interface{
+			eventBroadcaster.StartLogging(logger.Named("event-broadcaster").Infof),
+			eventBroadcaster.StartRecordingToSink(
+				&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")}),
+		}
+		recorder = eventBroadcaster.NewRecorder(
+			scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
+		go func() {
+			<-ctx.Done()
+			for _, w := range watches {
+				w.Stop()
+			}
+		}()
+	}
+	r.recorder = recorder
+
+	statsReporter := reconciler.GetStatsReporter(ctx)
+	if statsReporter == nil {
+		logger.Debug("Creating stats reporter")
+		var err error
+		statsReporter, err = reconciler.NewStatsReporter(controllerAgentName)
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}
+	r.statsReporter = statsReporter.ReportReady
+
 	return r.impl
 }
 
@@ -189,15 +229,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	reconcileErr := r.reconcile(ctx, channel)
 	if reconcileErr != nil {
 		logging.FromContext(ctx).Error("Error reconciling NatssChannel", zap.Error(reconcileErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "NatssChannel reconciliation failed: %v", reconcileErr)
+		r.recorder.Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "NatssChannel reconciliation failed: %v", reconcileErr)
 	} else {
 		logging.FromContext(ctx).Debug("NatssChannel reconciled")
-		r.Recorder.Event(channel, corev1.EventTypeNormal, channelReconciled, "NatssChannel reconciled")
+		r.recorder.Event(channel, corev1.EventTypeNormal, channelReconciled, "NatssChannel reconciled")
 	}
 
 	if _, updateStatusErr := r.updateStatus(ctx, channel); updateStatusErr != nil {
 		logging.FromContext(ctx).Error("Failed to update NatssChannel status", zap.Error(updateStatusErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update NatssChannel's status: %v", updateStatusErr)
+		r.recorder.Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update NatssChannel's status: %v", updateStatusErr)
 		return updateStatusErr
 	}
 
@@ -306,7 +346,7 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alp
 				logger.Error("Failed to create the channel service object", zap.Error(err))
 				return nil, err
 			}
-			svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Create(svc)
+			svc, err = r.kubeClientSet.CoreV1().Services(channel.Namespace).Create(svc)
 			if err != nil {
 				logger.Error("Failed to create the channel service", zap.Error(err))
 				return nil, err
@@ -339,12 +379,12 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	existing := kc.DeepCopy()
 	existing.Status = desired.Status
 
-	new, err := r.NatssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
+	new, err := r.natssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
 	if err == nil && becomesReady {
 		duration := time.Since(new.ObjectMeta.CreationTimestamp.Time)
-		r.Logger.Infof("NatssChannel %q became ready after %v", kc.Name, duration)
-		if err := r.StatsReporter.ReportReady("NatssChannel", kc.Namespace, kc.Name, duration); err != nil {
-			r.Logger.Infof("Failed to record ready for NatssChannel %q: %v", kc.Name, err)
+		r.logger.Infof("NatssChannel %q became ready after %v", kc.Name, duration)
+		if err := r.statsReporter("NatssChannel", kc.Namespace, kc.Name, duration); err != nil {
+			r.logger.Infof("Failed to record ready for NatssChannel %q: %v", kc.Name, err)
 		}
 	}
 	return new, err
