@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/client-go/tools/record"
 
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
@@ -36,7 +37,6 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	"knative.dev/eventing/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/natss/pkg/client/injection/client"
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
@@ -113,7 +113,7 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers, _ record.EventRecorder) controller.Reconciler {
 		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
 			return dispatchertesting.NewDispatcherDoNothing()
 		})
@@ -183,7 +183,7 @@ func TestFailedNatssSubscription(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactoryWithContext(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers, _ record.EventRecorder) controller.Reconciler {
 		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
 			return dispatchertesting.NewDispatcherFailNatssSubscription()
 		})
@@ -206,7 +206,6 @@ func createReconciler(
 ) controller.Reconciler {
 
 	return &Reconciler{
-		Base:               reconciler.NewBase(ctx, controllerAgentName, configmap.NewStaticWatcher()),
 		natssDispatcher:    dispatcherFactory(),
 		natsschannelLister: listers.GetNatssChannelLister(),
 		natssClientSet:     client.Get(ctx),
