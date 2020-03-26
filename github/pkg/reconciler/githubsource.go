@@ -42,10 +42,10 @@ import (
 
 	//knative.dev/pkg imports
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/controller"
 
 )
 
