@@ -22,11 +22,13 @@ import (
 	"reflect"
 
 	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
+
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/channel/fanout"
@@ -72,8 +74,6 @@ const (
 
 // Reconciler reconciles Kafka Channels.
 type Reconciler struct {
-	*reconciler.Base
-
 	kafkaDispatcher *dispatcher.KafkaDispatcher
 
 	kafkaClientSet       kafkaclientset.Interface
@@ -131,16 +131,16 @@ func NewController(
 	logger.Info("Starting the Kafka dispatcher")
 	logger.Info("Kafka broker configuration", zap.Strings(utils.BrokerConfigMapKey, kafkaConfig.Brokers))
 
+	sugaredLogger := logger.Sugar()
 	r := &Reconciler{
-		Base:                 base,
 		kafkaDispatcher:      kafkaDispatcher,
 		kafkachannelLister:   kafkaChannelInformer.Lister(),
 		kafkachannelInformer: kafkaChannelInformer.Informer(),
 		kafkaClientSet:       kafkaclientsetinjection.Get(ctx),
 	}
-	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
+	r.impl = controller.NewImpl(r, sugaredLogger, ReconcilerName)
 
-	r.Logger.Info("Setting up event handlers")
+	logger.Info("Setting up event handlers")
 
 	// Watch for kafka channels.
 	kafkaChannelInformer.Informer().AddEventHandler(
@@ -196,16 +196,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	reconcileErr := r.reconcile(ctx, channel)
 	if reconcileErr != nil {
 		logging.FromContext(ctx).Error("Error reconciling KafkaChannel", zap.Error(reconcileErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: %v", reconcileErr)
+		controller.GetEventRecorder(ctx).Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "KafkaChannel reconciliation failed: %v", reconcileErr)
 	} else {
 		logging.FromContext(ctx).Debug("KafkaChannel reconciled")
-		r.Recorder.Event(channel, corev1.EventTypeNormal, channelReconciled, "KafkaChannel reconciled")
+		controller.GetEventRecorder(ctx).Event(channel, corev1.EventTypeNormal, channelReconciled, "KafkaChannel reconciled")
 	}
 
 	// TODO: Should this check for subscribable status rather than entire status?
 	if _, updateStatusErr := r.updateStatus(ctx, channel); updateStatusErr != nil {
 		logging.FromContext(ctx).Error("Failed to update KafkaChannel status", zap.Error(updateStatusErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update KafkaChannel's status: %v", updateStatusErr)
+		controller.GetEventRecorder(ctx).Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update KafkaChannel's status: %v", updateStatusErr)
 		return updateStatusErr
 	}
 

@@ -33,7 +33,6 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/rbac/v1/rolebinding"
 
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/system"
@@ -59,7 +58,6 @@ func NewController(
 	serviceInformer := service.Get(ctx)
 
 	r := &Reconciler{
-		Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
 		systemNamespace: system.Namespace(),
 
 		KubeClientSet:        kubeclient.Get(ctx),
@@ -72,6 +70,7 @@ func NewController(
 		endpointsLister:      endpointsInformer.Lister(),
 		serviceAccountLister: serviceAccountInformer.Lister(),
 		roleBindingLister:    roleBindingInformer.Lister(),
+		logger:               logging.FromContext(ctx).Sugar(),
 	}
 
 	env := &envConfig{}
