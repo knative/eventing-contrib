@@ -44,7 +44,7 @@ import (
 
 func NewController(
 	ctx context.Context,
-	cmw configmap.Watcher,
+	_ configmap.Watcher,
 ) *controller.Impl {
 
 	raImage, defined := os.LookupEnv(raImageEnvVar)

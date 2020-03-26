@@ -19,7 +19,6 @@ package github
 import (
 	"context"
 	"fmt"
-	"knative.dev/pkg/controller"
 	"strings"
 
 	//k8s.io imports
@@ -46,6 +45,8 @@ import (
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/controller"
+
 )
 
 const (
