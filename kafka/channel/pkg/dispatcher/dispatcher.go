@@ -324,8 +324,7 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 	chMap := d.getHostToChannelMap()
 	cr, ok := chMap[host]
 	if !ok {
-		//TODO this should return UnknownHostError
-		return cr, fmt.Errorf("invalid Hostname:%s. Hostname not found in ConfigMap for any Channel", host)
+		return cr, eventingchannels.UnknownHostError(host)
 	}
 	return cr, nil
 }
