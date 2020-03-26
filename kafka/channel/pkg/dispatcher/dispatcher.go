@@ -135,7 +135,7 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	if message.ReadEncoding() == binding.EncodingUnknown {
 		return false, errors.New("received a message with unknown encoding")
 	}
-	err := c.dispatcher.DispatchMessageWithDelivery(ctx, message, nil, c.sub.SubscriberURI, c.sub.ReplyURI, &c.sub.Delivery)
+	err := c.dispatcher.DispatchMessage(ctx, message, nil, c.sub.SubscriberURI.URL(), c.sub.ReplyURI.URL(), c.sub.DeadLetterSinkURI.URL())
 	// NOTE: only return `true` here if DispatchEventWithDelivery actually delivered the message.
 	return err == nil, err
 }
@@ -143,12 +143,9 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 var _ kafka.KafkaConsumerHandler = (*consumerMessageHandler)(nil)
 
 type subscription struct {
-	Namespace     string
-	Name          string
-	UID           string
-	SubscriberURI string
-	ReplyURI      string
-	Delivery      eventingchannels.DeliveryOptions
+	eventingduck.SubscriberSpec
+	Namespace string
+	Name      string
 }
 
 // configDiff diffs the new config with the existing config. If there are no differences, then the
@@ -327,23 +324,16 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 	chMap := d.getHostToChannelMap()
 	cr, ok := chMap[host]
 	if !ok {
+		//TODO this should return UnknownHostError
 		return cr, fmt.Errorf("invalid Hostname:%s. Hostname not found in ConfigMap for any Channel", host)
 	}
 	return cr, nil
 }
 
 func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace string) subscription {
-	sub := subscription{
-		Name:          name,
-		Namespace:     namespace,
-		UID:           string(spec.UID),
-		SubscriberURI: spec.SubscriberURI.String(),
-		ReplyURI:      spec.ReplyURI.String(),
+	return subscription{
+		SubscriberSpec: spec,
+		Name:           name,
+		Namespace:      namespace,
 	}
-	if spec.Delivery != nil {
-		sub.Delivery = eventingchannels.DeliveryOptions{
-			DeadLetterSink: spec.DeadLetterSinkURI.String(),
-		}
-	}
-	return sub
 }

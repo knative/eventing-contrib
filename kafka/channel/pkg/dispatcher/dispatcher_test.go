@@ -324,7 +324,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			oldSubscribers := sets.NewString()
 			for _, subMap := range d.kafkaConsumerGroups {
 				for sub := range subMap {
-					oldSubscribers.Insert(sub.UID)
+					oldSubscribers.Insert(string(sub.UID))
 				}
 			}
 			if diff := sets.NewString(tc.unsubscribes...).Difference(oldSubscribers); diff.Len() != 0 {
@@ -350,7 +350,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			var newSubscribers []string
 			for _, subMap := range d.kafkaConsumerGroups {
 				for sub := range subMap {
-					newSubscribers = append(newSubscribers, sub.UID)
+					newSubscribers = append(newSubscribers, string(sub.UID))
 				}
 			}
 
@@ -398,7 +398,9 @@ func TestSubscribeError(t *testing.T) {
 	}
 
 	subRef := subscription{
-		UID: "test-sub",
+		SubscriberSpec: eventingduck.SubscriberSpec{
+			UID: "test-sub",
+		},
 	}
 	err := d.subscribe(channelRef, subRef)
 	if err == nil {
@@ -419,7 +421,9 @@ func TestUnsubscribeUnknownSub(t *testing.T) {
 	}
 
 	subRef := subscription{
-		UID: "test-sub",
+		SubscriberSpec: eventingduck.SubscriberSpec{
+			UID: "test-sub",
+		},
 	}
 	if err := d.unsubscribe(channelRef, subRef); err != nil {
 		t.Errorf("Unsubscribe error: %v", err)
