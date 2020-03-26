@@ -24,8 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/client-go/tools/record"
-
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
 	"knative.dev/pkg/configmap"
@@ -113,7 +111,7 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers, _ record.EventRecorder) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
 			return dispatchertesting.NewDispatcherDoNothing()
 		})
@@ -183,7 +181,7 @@ func TestFailedNatssSubscription(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers, _ record.EventRecorder) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
 			return dispatchertesting.NewDispatcherFailNatssSubscription()
 		})
