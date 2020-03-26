@@ -270,9 +270,9 @@ func TestAllCases(t *testing.T) {
 			recorder:                 recorder,
 			statsReporter:            func(kind, namespace, service string, d time.Duration) error { return nil },
 			logger:                   logging.FromContext(ctx),
-			deploymentLister:     listers.GetDeploymentLister(),
-			serviceLister:        listers.GetServiceLister(),
-			endpointsLister:      listers.GetEndpointsLister(),
+			deploymentLister:         listers.GetDeploymentLister(),
+			serviceLister:            listers.GetServiceLister(),
+			endpointsLister:          listers.GetEndpointsLister(),
 		}
 	}))
 }
