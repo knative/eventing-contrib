@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
+	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/utils"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
@@ -37,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/client-go/tools/record"
 
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
@@ -259,7 +258,7 @@ func TestAllCases(t *testing.T) {
 	}
 	defer logtesting.ClearAll()
 
-	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers, recorder record.EventRecorder) controller.Reconciler {
+	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		return &Reconciler{
 			dispatcherNamespace:      testNS,
 			dispatcherDeploymentName: dispatcherDeploymentName,
@@ -267,12 +266,12 @@ func TestAllCases(t *testing.T) {
 			natsschannelLister:       listers.GetNatssChannelLister(),
 			natssClientSet:           fakeclientset.Get(ctx),
 			kubeClientSet:            fakekubeclient.Get(ctx),
-			recorder:                 recorder,
-			statsReporter:            func(kind, namespace, service string, d time.Duration) error { return nil },
+			recorder:                 controller.GetEventRecorder(ctx),
+			statsReporter:            reconciler.GetStatsReporter(ctx),
 			logger:                   logging.FromContext(ctx),
-			deploymentLister:     listers.GetDeploymentLister(),
-			serviceLister:        listers.GetServiceLister(),
-			endpointsLister:      listers.GetEndpointsLister(),
+			deploymentLister:         listers.GetDeploymentLister(),
+			serviceLister:            listers.GetServiceLister(),
+			endpointsLister:          listers.GetEndpointsLister(),
 		}
 	}))
 }
