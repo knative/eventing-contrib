@@ -22,13 +22,13 @@ import (
 
 	"knative.dev/pkg/kmp"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/utils"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
 func TestMakeEventType(t *testing.T) {
@@ -43,8 +43,8 @@ func TestMakeEventType(t *testing.T) {
 				Topics:             "topic1,topic2",
 				BootstrapServers:   "server1,server2",
 				ConsumerGroup:      "group",
-				Sink: &duckv1beta1.Destination{
-					Ref: &corev1.ObjectReference{
+				Sink: &duckv1.Destination{
+					Ref: &duckv1.KReference{
 						Name:       "test-sink",
 						Kind:       "Sink",
 						APIVersion: "duck.knative.dev/v1",
