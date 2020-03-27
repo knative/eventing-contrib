@@ -54,14 +54,19 @@ A more detailed example of the `KafkaSource` can be found in the
 
 ## Experimental KEDA support in Kafka Event Source
 
-Warning: this is *experimental* and may be changed in future. Should not be used in production. This is mainly for discussion and evolving scaling in Knative eventing.
+Warning: this is _experimental_ and may be changed in future. Should not be used
+in production. This is mainly for discussion and evolving scaling in Knative
+eventing.
 
-The code is using Unstructured and also imported KEDA API - this is for discussion which version should be used (right now only Unstructured is fully implemented).
-KEDA to provide client-go support discussion #494 <https://github.com/kedacore/keda/issues/494>
+The code is using Unstructured and also imported KEDA API - this is for
+discussion which version should be used (right now only Unstructured is fully
+implemented). KEDA to provide client-go support discussion #494
+<https://github.com/kedacore/keda/issues/494>
 
 ### Install KEDA
 
-To install the version I used for the experiment (the latest version from master should work too):
+To install the version I used for the experiment (the latest version from master
+should work too):
 
 ```bash
 git clone https://github.com/kedacore/keda.git
@@ -69,7 +74,8 @@ cd keda
 git checkout v1.3.0
 ```
 
-Then follow [KEDA setup instructions](https://keda.sh/deploy/) to deploy using YAML:
+Then follow [KEDA setup instructions](https://keda.sh/deploy/) to deploy using
+YAML:
 
 ```bash
 kubectl apply -f deploy/crds/keda.k8s.io_scaledobjects_crd.yaml
@@ -103,9 +109,14 @@ go run kafka/source/cmd/controller/main.go -kubeconfig $KUBECONFIG
 
 ### Create Kafka Source that uses KEDA
 
-To use KEDA the YAML file must have one of autoscaling annotations (such as minScale).
+To use KEDA the YAML file must have one of autoscaling annotations (such as
+minScale).
 
-Warning: temporary limitation - do not give KafkaSource name longer than 4 characters as KEDA will add prefix to deployment name that already has UUID appended HAP can not be created if its name exceed 64 character name limit (keda-hpa-kafkasource-SO_NAME-999036a8-af6e-4431-b671-d052842dddf1). For more details see https://github.com/kedacore/keda/issues/704
+Warning: temporary limitation - do not give KafkaSource name longer 
+than 4 characters as KEDA will add prefix to deployment name that 
+already has UUID appended HAP can not be created if its name exceeds 
+64 character name limit (keda-hpa-kafkasource-SO_NAME-999036a8-af6e-4431-b671-d052842dddf1). 
+For more details see https://github.com/kedacore/keda/issues/704
 
 Example:
 
@@ -131,7 +142,8 @@ spec:
       name: event-display
 ```
 
-To verify that Kafka source is using KEDA retrieve the scaled object created by Kafka source:
+To verify that Kafka source is using KEDA retrieve the scaled object created by
+Kafka source:
 
 ```bash
 ⇒ kubectl get scaledobjects.keda.k8s.io
