@@ -37,8 +37,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/resources"
+	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/scaling"
 
 	// NewController stuff
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
@@ -84,7 +86,8 @@ func newDeploymentFailed(namespace, name string, err error) pkgreconciler.Event 
 
 type Reconciler struct {
 	// KubeClientSet allows us to talk to the k8s for core APIs
-	KubeClientSet kubernetes.Interface
+	KubeClientSet    kubernetes.Interface
+	DynamicClientSet dynamic.Interface
 
 	receiveAdapterImage string
 
@@ -145,6 +148,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 		logging.FromContext(ctx).Error("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
+	scaling.ScaleKafkaSourceWithKeda(ctx, ra, src, r.DynamicClientSet)
 	src.Status.MarkDeployed(ra)
 	src.Status.CloudEventAttributes = r.createCloudEventAttributes(src)
 

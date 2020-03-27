@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	kafka "knative.dev/eventing-contrib/kafka/source/pkg/reconciler"
 	"knative.dev/pkg/injection/sharedmain"
 )

@@ -27,6 +27,7 @@ import (
 	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -53,6 +54,7 @@ func NewController(
 
 	c := &Reconciler{
 		KubeClientSet:       kubeclient.Get(ctx),
+		DynamicClientSet:    dynamicclient.Get(ctx),
 		kafkaClientSet:      kafkaclient.Get(ctx),
 		kafkaLister:         kafkaInformer.Lister(),
 		deploymentLister:    deploymentInformer.Lister(),
