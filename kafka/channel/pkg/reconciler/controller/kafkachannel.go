@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"time"
 
 	"github.com/Shopify/sarama"
 
@@ -43,7 +42,6 @@ import (
 	"knative.dev/eventing/pkg/apis/eventing"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
 
 	"knative.dev/pkg/apis"
@@ -126,8 +124,6 @@ type Reconciler struct {
 	endpointsLister      corev1listers.EndpointsLister
 	serviceAccountLister corev1listers.ServiceAccountLister
 	roleBindingLister    rbacv1listers.RoleBindingLister
-
-	logger *zap.SugaredLogger
 }
 
 var (
@@ -299,7 +295,7 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 		kc.Status.MarkDispatcherUnknown("DispatcherDeploymentFailed", "Failed to get dispatcher deployment: %v", err)
 		return nil, err
 	} else if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image) {
-		r.logger.Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
+		logging.FromContext(ctx).Sugar().Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
 		d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
 		if err == nil {
 			controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
@@ -429,33 +425,6 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, dispatcherName
 	return svc, nil
 }
 
-func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaChannel) (*v1alpha1.KafkaChannel, error) {
-	kc, err := r.kafkachannelLister.KafkaChannels(desired.Namespace).Get(desired.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	if reflect.DeepEqual(kc.Status, desired.Status) {
-		return kc, nil
-	}
-
-	becomesReady := desired.Status.IsReady() && !kc.Status.IsReady()
-
-	// Don't modify the informers copy.
-	existing := kc.DeepCopy()
-	existing.Status = desired.Status
-
-	new, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
-	if err == nil && becomesReady {
-		duration := time.Since(new.ObjectMeta.CreationTimestamp.Time)
-		r.logger.Infof("KafkaChannel %q became ready after %v", kc.Name, duration)
-		if err := reconciler.GetStatsReporter(ctx).ReportReady("KafkaChannel", kc.Namespace, kc.Name, duration); err != nil {
-			r.logger.Infof("Failed to record ready for KafkaChannel %q: %v", kc.Name, err)
-		}
-	}
-	return new, err
-}
-
 func (r *Reconciler) createClient(ctx context.Context, kc *v1alpha1.KafkaChannel) (sarama.ClusterAdmin, error) {
 	// We don't currently initialize r.kafkaClusterAdmin, hence we end up creating the cluster admin client every time.
 	// This is because of an issue with Shopify/sarama. See https://github.com/Shopify/sarama/issues/1162.
@@ -507,17 +476,16 @@ func (r *Reconciler) deleteTopic(ctx context.Context, channel *v1alpha1.KafkaCha
 	return err
 }
 
-func (r *Reconciler) updateKafkaConfig(configMap *corev1.ConfigMap) {
-	r.logger.Info("Reloading Kafka configuration")
+func (r *Reconciler) updateKafkaConfig(ctx context.Context, configMap *corev1.ConfigMap) {
+	logging.FromContext(ctx).Info("Reloading Kafka configuration")
 	kafkaConfig, err := utils.GetKafkaConfig(configMap.Data)
 	if err != nil {
-		r.logger.Errorw("Error reading Kafka configuration", zap.Error(err))
+		logging.FromContext(ctx).Error("Error reading Kafka configuration", zap.Error(err))
 	}
 	// For now just override the previous config.
 	// Eventually the previous config should be snapshotted to delete Kafka topics
 	r.kafkaConfig = kafkaConfig
 	r.kafkaConfigError = err
-
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, kc *v1alpha1.KafkaChannel) pkgreconciler.Event {

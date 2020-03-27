@@ -340,7 +340,7 @@ func TestAllCases(t *testing.T) {
 			KubeClientSet:        kubeclient.Get(ctx),
 			EventingClientSet:    eventingClient.Get(ctx),
 		}
-		return kafkachannel.NewReconciler(ctx, r.logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
+		return kafkachannel.NewReconciler(ctx, logging.FromContext(ctx), r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
 	}, zap.L()))
 }
 
@@ -406,7 +406,7 @@ func TestTopicExists(t *testing.T) {
 			KubeClientSet:     kubeclient.Get(ctx),
 			EventingClientSet: eventingClient.Get(ctx),
 		}
-		return kafkachannel.NewReconciler(ctx, r.logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
+		return kafkachannel.NewReconciler(ctx, logging.FromContext(ctx), r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
 	}, zap.L()))
 }
 
@@ -475,9 +475,8 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 			kafkaClientSet:    fakekafkaclient.Get(ctx),
 			KubeClientSet:     kubeclient.Get(ctx),
 			EventingClientSet: eventingClient.Get(ctx),
-			logger:            logging.FromContext(ctx),
 		}
-		return kafkachannel.NewReconciler(ctx, r.logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
+		return kafkachannel.NewReconciler(ctx, logging.FromContext(ctx), r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
 	}, zap.L()))
 }
 
