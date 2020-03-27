@@ -51,3 +51,86 @@ event sink.
 
 A more detailed example of the `KafkaSource` can be found in the
 [Knative documentation](https://knative.dev/docs/eventing/samples/).
+
+## Experimental KEDA support in Kafka Event Source
+
+Warning: this is *experimental* and may be changed in future. Should not be used in production. This is mainly for discussion and evolving scaling in Knative eventing.
+
+The code is using Unstructured and also imported KEDA API - this is for discussion which version should be used (right now only Unstructured is fully implemented).
+KEDA to provide client-go support discussion #494 <https://github.com/kedacore/keda/issues/494>
+
+### Install KEDA
+
+To install the version I used for the experiment (the latest version from master should work too):
+
+```bash
+git clone https://github.com/kedacore/keda.git
+cd keda
+git checkout v1.3.0
+```
+
+Then follow [KEDA setup instructions](https://keda.sh/deploy/) to deploy using YAML:
+
+```bash
+kubectl apply -f deploy/crds/keda.k8s.io_scaledobjects_crd.yaml
+kubectl apply -f deploy/crds/keda.k8s.io_triggerauthentications_crd.yaml
+kubectl apply -f deploy/
+```
+
+If worked expected to have in keda namespace:
+
+```bash
+kubectl get pods -n keda
+NAME                                      READY   STATUS    RESTARTS   AGE
+keda-metrics-apiserver-5bb8b6664c-vrhrj   1/1     Running   0          38s
+keda-operator-865ccfb9d9-xd85w            1/1     Running   0          39s
+```
+
+### Run Kafka Source Controller
+
+Install expermiental Kafka source controller with KEDA support from source code:
+
+```bash
+export KO_DOCKER_REPO=...
+ko apply -f kafka/source/config/
+```
+
+#### Local testing
+
+```bash
+go run kafka/source/cmd/controller/main.go -kubeconfig $KUBECONFIG
+```
+
+### Create Kafka Source that uses KEDA
+
+To use KEDA the YAML file must have one of autoscaling annotations (for example minScale):
+
+```yaml
+apiVersion: sources.knative.dev/v1alpha1
+kind: KafkaSource
+metadata:
+  name: knative-demo-kafka-keda-src1
+  annotations:
+    autoscaling.knative.dev/minScale: "0"
+    autoscaling.knative.dev/maxScale: "10"
+    autoscaling.knative.dev/class: keda.autoscaling.knative.dev
+    keda.autoscaling.knative.dev/pollingInterval: "2"
+    keda.autoscaling.knative.dev/cooldownPeriod: "15"
+spec:
+  bootstrapServers: my-cluster-kafka-bootstrap.kafka:9092 #note the .kafka in URL for namespace
+  consumerGroup: knative-demo-kafka-keda-src1
+  topics: knative-demo-topic
+  sink:
+    ref:
+      apiVersion: serving.knative.dev/v1alpha1
+      kind: Service
+      name: event-display
+```
+
+To verify that Kafka source is using KEDA retrieve the scaled object created by Kafka source:
+
+```bash
+kubectl get scaledobjects.keda.k8s.io
+NAME                           DEPLOYMENT                                                        TRIGGERS   AGE
+knative-demo-kafka-keda-src1   kafkasource-knative-demo-k-999036a8-af6e-4431-b671-d052842dddf1   kafka      31s
+```
