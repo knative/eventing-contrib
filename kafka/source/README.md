@@ -105,7 +105,7 @@ go run kafka/source/cmd/controller/main.go -kubeconfig $KUBECONFIG
 
 To use KEDA the YAML file must have one of autoscaling annotations (such as minScale).
 
-Warning: do not give KafkaSource name longer than 4 characters as KEDA will add prefix to deployment name that already has UUID appended HAP can not be created if its name exceed 64 character name limit (keda-hpa-kafkasource-NAME-999036a8-af6e-4431-b671-d052842dddf1)
+Warning: temporary limitation - do not give KafkaSource name longer than 4 characters as KEDA will add prefix to deployment name that already has UUID appended HAP can not be created if its name exceed 64 character name limit (keda-hpa-kafkasource-SO_NAME-999036a8-af6e-4431-b671-d052842dddf1). For more details see https://github.com/kedacore/keda/issues/704
 
 Example:
 
@@ -134,7 +134,10 @@ spec:
 To verify that Kafka source is using KEDA retrieve the scaled object created by Kafka source:
 
 ```bash
-kubectl get scaledobjects.keda.k8s.io
-NAME                           DEPLOYMENT                                                        TRIGGERS   AGE
-knative-demo-kafka-keda-src1   kafkasource-knative-demo-k-999036a8-af6e-4431-b671-d052842dddf1   kafka      31s
+⇒ kubectl get scaledobjects.keda.k8s.io
+NAME   DEPLOYMENT                                             TRIGGERS   AGE
+kn1    kafkasource-kn1-0e12266a-93c2-48ee-8d8d-3b6ffbe9d18f   kafka      26m
+⇒  kubectl get horizontalpodautoscalers.autoscaling
+NAME                                                            REFERENCE                                                         TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+keda-hpa-kafkasource-kn1-0e12266a-93c2-48ee-8d8d-3b6ffbe9d18f   Deployment/kafkasource-kn1-0e12266a-93c2-48ee-8d8d-3b6ffbe9d18f   <unknown>/10 (avg)   1         10        0          26m
 ```
