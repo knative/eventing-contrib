@@ -36,8 +36,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
@@ -59,6 +61,10 @@ import (
 const (
 	// ReconcilerName is the name of the reconciler.
 	ReconcilerName = "NatssChannels"
+
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "natss-ch-controller"
 
 	// Name of the corev1.Events emitted from the reconciliation process.
 	channelReconciled         = "ChannelReconciled"
@@ -113,8 +119,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config
 	r := &Reconciler{
 		natssClientSet:           clientset.NewForConfigOrDie(config),
 		kubeClientSet:            kubeClient,
-		recorder:                 controller.GetEventRecorder(ctx),
-		statsReporter:            reconciler.GetStatsReporter(ctx),
+		recorder:                 getRecorder(ctx, config),
+		statsReporter:            getStatsReporter(ctx),
 		dispatcherNamespace:      system.Namespace(),
 		dispatcherDeploymentName: dispatcherName,
 		dispatcherServiceName:    dispatcherName,
@@ -147,6 +153,41 @@ func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config
 	})
 
 	return r.impl
+}
+
+func getStatsReporter(ctx context.Context) reconciler.StatsReporter {
+	statsReporter := reconciler.GetStatsReporter(ctx)
+	if statsReporter == nil {
+		r, err := reconciler.NewStatsReporter(controllerAgentName)
+		if err != nil {
+			logging.FromContext(ctx).Fatal("Failed to create stats reporter", zap.Error(err))
+		}
+		statsReporter = r
+	}
+	return statsReporter
+}
+
+func getRecorder(ctx context.Context, cfg *rest.Config) record.EventRecorder {
+	recorder := controller.GetEventRecorder(ctx)
+	if recorder == nil {
+		// Create event broadcaster
+		logging.FromContext(ctx).Debug("Creating event broadcaster")
+		eventBroadcaster := record.NewBroadcaster()
+		watches := []watch.Interface{
+			eventBroadcaster.StartLogging(logging.FromContext(ctx).Sugar().Named("event-broadcaster").Infof),
+			eventBroadcaster.StartRecordingToSink(
+				&typedcorev1.EventSinkImpl{Interface: kubernetes.NewForConfigOrDie(cfg).CoreV1().Events("")}),
+		}
+		recorder = eventBroadcaster.NewRecorder(
+			scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
+		go func() {
+			<-ctx.Done()
+			for _, w := range watches {
+				w.Stop()
+			}
+		}()
+	}
+	return recorder
 }
 
 // cache.ResourceEventHandler implementation.
