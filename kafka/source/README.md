@@ -112,7 +112,7 @@ go run kafka/source/cmd/controller/main.go -kubeconfig $KUBECONFIG
 To use KEDA the YAML file must have one of autoscaling annotations (such as
 minScale).
 
-Warning: temporary limitation - do not give KafkaSource name longer 
+Warning: temporary limitation - do not give KafkaSource name longer
 than 4 characters as KEDA will add prefix to deployment name that 
 already has UUID appended HAP can not be created if its name exceeds 
 64 character name limit (keda-hpa-kafkasource-SO_NAME-999036a8-af6e-4431-b671-d052842dddf1). 
