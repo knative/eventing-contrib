@@ -103,13 +103,17 @@ go run kafka/source/cmd/controller/main.go -kubeconfig $KUBECONFIG
 
 ### Create Kafka Source that uses KEDA
 
-To use KEDA the YAML file must have one of autoscaling annotations (for example minScale):
+To use KEDA the YAML file must have one of autoscaling annotations (such as minScale).
+
+Warning: do not give KafkaSource name longer than 4 characters as KEDA will add prefix to deployment name that already has UUID appended HAP can not be created if its name exceed 64 character name limit (keda-hpa-kafkasource-NAME-999036a8-af6e-4431-b671-d052842dddf1)
+
+Example:
 
 ```yaml
 apiVersion: sources.knative.dev/v1alpha1
 kind: KafkaSource
 metadata:
-  name: knative-demo-kafka-keda-src1
+  name: kn1
   annotations:
     autoscaling.knative.dev/minScale: "0"
     autoscaling.knative.dev/maxScale: "10"
