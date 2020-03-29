@@ -173,8 +173,9 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		if err != nil {
 			source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
 			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning,
-				"FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
-			return err
+				"WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			// return EventTypeNormal to avoid finalize loop
+			return pkgreconciler.NewEvent(corev1.EventTypeNormal, "WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
 		}
 
 		args := &webhookArgs{
@@ -186,8 +187,9 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		// Delete the webhook using the access token and stored webhook ID
 		err = r.deleteWebhook(ctx, args)
 		if err != nil {
-			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
-			return err
+			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning, "WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			// return EventTypeNormal to avoid finalize loop
+			return pkgreconciler.NewEvent(corev1.EventTypeNormal, "WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
 		}
 		// Webhook deleted, clear ID
 		source.Status.WebhookIDKey = ""
