@@ -1797,7 +1797,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c74b26e8ad576a93ecd9c00397fb2ae6b3aea234f61781a8a8ac0196b0bfdb79"
+  digest = "1:43f8e5d57348804637ae74536a90c75eb15fe55e95a03f0589fd6a3647541f6d"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1823,7 +1823,6 @@
     "pkg/channel",
     "pkg/channel/fanout",
     "pkg/channel/multichannelfanout",
-    "pkg/channel/swappable",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -2215,7 +2214,6 @@
     "knative.dev/eventing/pkg/channel",
     "knative.dev/eventing/pkg/channel/fanout",
     "knative.dev/eventing/pkg/channel/multichannelfanout",
-    "knative.dev/eventing/pkg/channel/swappable",
     "knative.dev/eventing/pkg/client/clientset/versioned",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client",
