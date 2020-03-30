@@ -27,7 +27,6 @@ import (
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
@@ -268,7 +267,6 @@ func TestAllCases(t *testing.T) {
 			kubeClientSet:            fakekubeclient.Get(ctx),
 			recorder:                 controller.GetEventRecorder(ctx),
 			statsReporter:            reconciler.GetStatsReporter(ctx),
-			logger:                   logging.FromContext(ctx),
 			deploymentLister:         listers.GetDeploymentLister(),
 			serviceLister:            listers.GetServiceLister(),
 			endpointsLister:          listers.GetEndpointsLister(),

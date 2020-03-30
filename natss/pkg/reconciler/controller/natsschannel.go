@@ -95,8 +95,6 @@ type Reconciler struct {
 	serviceLister        corev1listers.ServiceLister
 	endpointsLister      corev1listers.EndpointsLister
 	impl                 *controller.Impl
-
-	logger *zap.SugaredLogger
 }
 
 // Check that our Reconciler implements controller.Reconciler.
@@ -129,7 +127,6 @@ func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config
 		deploymentLister:         deploymentInformer.Lister(),
 		serviceLister:            serviceInformer.Lister(),
 		endpointsLister:          endpointsInformer.Lister(),
-		logger:                   logger,
 	}
 	r.impl = controller.NewImpl(r, logger, ReconcilerName)
 
@@ -387,9 +384,9 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	new, err := r.natssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
 	if err == nil && becomesReady {
 		duration := time.Since(new.ObjectMeta.CreationTimestamp.Time)
-		r.logger.Infof("NatssChannel %q became ready after %v", kc.Name, duration)
+		logging.FromContext(ctx).Sugar().Infof("NatssChannel %q became ready after %v", kc.Name, duration)
 		if err := r.statsReporter.ReportReady("NatssChannel", kc.Namespace, kc.Name, duration); err != nil {
-			r.logger.Infof("Failed to record ready for NatssChannel %q: %v", kc.Name, err)
+			logging.FromContext(ctx).Sugar().Infof("Failed to record ready for NatssChannel %q: %v", kc.Name, err)
 		}
 	}
 	return new, err
