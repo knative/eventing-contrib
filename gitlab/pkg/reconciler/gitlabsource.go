@@ -24,7 +24,6 @@ import (
 
 	//k8s.io imports
 
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -299,19 +298,4 @@ func (r *Reconciler) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource
 	}
 
 	return nil, apierrors.NewNotFound(servingv1.Resource("services"), "")
-}
-
-// UpdateFromLoggingConfigMap loads logger configuration from configmap
-func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) { // TODO: remove this.
-	if cfg != nil {
-		delete(cfg.Data, "_example")
-	}
-
-	logcfg, err := logging.NewConfigFromConfigMap(cfg)
-	if err != nil {
-		logging.FromContext(r.loggingContext).Warn("failed to create logging config from configmap", zap.String("cfg.Name", cfg.Name))
-		return
-	}
-	r.loggingConfig = logcfg
-	logging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
 }
