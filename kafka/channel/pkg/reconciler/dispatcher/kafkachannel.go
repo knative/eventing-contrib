@@ -38,7 +38,6 @@ import (
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
-	"knative.dev/eventing/pkg/channel/swappable"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
@@ -112,15 +111,9 @@ func NewController(ctx context.Context, _ configmap.Watcher, cfg *rest.Config) *
 		MaxIdleConnsPerHost: kafkaConfig.MaxIdleConnsPerHost,
 	}
 
-	handler, err := swappable.NewEmptyHandler(logger)
-	if err != nil {
-		logger.Fatal("Error creating multichannelfanout.Handler", zap.Error(err))
-	}
-
 	kafkaChannelInformer := kafkachannel.Get(ctx)
 	args := &dispatcher.KafkaDispatcherArgs{
 		KnCEConnectionArgs: connectionArgs,
-		Handler:            handler,
 		ClientID:           "kafka-ch-dispatcher",
 		Brokers:            kafkaConfig.Brokers,
 		TopicFunc:          utils.TopicName,
