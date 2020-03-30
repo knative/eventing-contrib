@@ -142,18 +142,14 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 			ksvc = r.generateKnativeServiceObject(source, r.receiveAdapterImage)
 			ksvc, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ksvc)
 			if err != nil {
-				return nil
+				return err
 			}
 		} else {
 			return fmt.Errorf("Failed to verify if knative service is created for the gitlabsource: %v", err)
 		}
-		ksvc, err = r.waitForKnativeService(ksvc)
-		if err != nil {
-			return fmt.Errorf("Waiting for service URL: %v", err)
-		}
 	}
 	if ksvc.Status.URL == nil {
-		return fmt.Errorf("Service status URL is nil")
+		return nil
 	}
 	hookOptions.url = ksvc.Status.URL.String()
 	if source.Spec.SslVerify {
@@ -318,29 +314,4 @@ func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) { // TODO
 	}
 	r.loggingConfig = logcfg
 	logging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
-}
-
-func (r *Reconciler) waitForKnativeService(service *servingv1.Service) (*servingv1.Service, error) {
-	watcher, err := r.servingClientSet.ServingV1().Services(service.Namespace).Watch(metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", service.Name),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("get service watch interface: %v", err)
-	}
-	defer watcher.Stop()
-
-	for event := range watcher.ResultChan() {
-		if event.Object == nil {
-			continue
-		}
-
-		serviceEvent, ok := event.Object.(*servingv1.Service)
-		if !ok {
-			continue
-		}
-		if serviceEvent.Status.IsReady() {
-			return serviceEvent, nil
-		}
-	}
-	return nil, fmt.Errorf("watcher closed")
 }
