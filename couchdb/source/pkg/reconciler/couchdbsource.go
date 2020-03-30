@@ -21,6 +21,10 @@ import (
 	"fmt"
 	"net/url"
 
+	"knative.dev/pkg/controller"
+
+	"k8s.io/client-go/kubernetes"
+
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -31,16 +35,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	cdbreconciler "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/reconciler/sources/v1alpha1/couchdbsource"
-	"knative.dev/eventing-contrib/couchdb/source/pkg/reconciler/resources"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/couchdb/source/pkg/reconciler/resources"
 )
 
 const (
@@ -55,11 +58,13 @@ const (
 
 // Reconciler reconciles a CouchDbSource object
 type Reconciler struct {
-	*reconciler.Base
-
 	receiveAdapterImage string
 
+	// Clients
+	kubeClientSet kubernetes.Interface
+
 	// listers index properties about resources
+
 	deploymentLister appsv1listers.DeploymentLister
 	eventTypeLister  eventinglisters.EventTypeLister
 
@@ -96,15 +101,15 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.CouchDb
 
 	ra, err := r.createReceiveAdapter(ctx, source, sinkURI)
 	if err != nil {
-		r.Logger.Error("Unable to create the receive adapter", zap.Error(err))
+		logging.FromContext(ctx).Error("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
 	// Update source status// Update source status
 	source.Status.PropagateDeploymentAvailability(ra)
 
-	ceSource, err := r.makeEventSource(source)
+	ceSource, err := r.makeEventSource(ctx, source)
 	if err != nil {
-		r.Logger.Error("Unable to create the CloudEvents source", zap.Error(err))
+		logging.FromContext(ctx).Error("Unable to create the CloudEvents source", zap.Error(err))
 		return err
 	}
 
@@ -113,7 +118,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.CouchDb
 }
 
 func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.CouchDbSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
-	eventSource, err := r.makeEventSource(src)
+	eventSource, err := r.makeEventSource(ctx, src)
 	if err != nil {
 		return nil, err
 	}
@@ -128,10 +133,10 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 	}
 	expected := resources.MakeReceiveAdapter(&adapterArgs)
 
-	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
+	ra, err := r.kubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, couchdbsourceDeploymentCreated, "Deployment created, error: %v", err)
+		ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
+		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, couchdbsourceDeploymentCreated, "Deployment created, error: %v", err)
 		return ra, err
 	} else if err != nil {
 		return nil, fmt.Errorf("error getting receive adapter: %v", err)
@@ -139,10 +144,10 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 		return nil, fmt.Errorf("deployment %q is not owned by CouchDbSource %q", ra.Name, src.Name)
 	} else if r.podSpecChanged(ra.Spec.Template.Spec, expected.Spec.Template.Spec) {
 		ra.Spec.Template.Spec = expected.Spec.Template.Spec
-		if ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
+		if ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
 			return ra, err
 		}
-		r.Recorder.Eventf(src, corev1.EventTypeNormal, couchdbsourceDeploymentUpdated, "Deployment updated")
+		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, couchdbsourceDeploymentUpdated, "Deployment updated")
 		return ra, nil
 	} else {
 		logging.FromContext(ctx).Debug("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
@@ -184,20 +189,20 @@ func (r *Reconciler) getLabelSelector(src *v1alpha1.CouchDbSource) labels.Select
 }
 
 // MakeEventSource computes the Cloud Event source attribute for the given source
-func (r *Reconciler) makeEventSource(src *v1alpha1.CouchDbSource) (string, error) {
+func (r *Reconciler) makeEventSource(ctx context.Context, src *v1alpha1.CouchDbSource) (string, error) {
 	namespace := src.Spec.CouchDbCredentials.Namespace
 	if namespace == "" {
 		namespace = src.Namespace
 	}
 
-	secret, err := r.KubeClientSet.CoreV1().Secrets(namespace).Get(src.Spec.CouchDbCredentials.Name, metav1.GetOptions{})
+	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(src.Spec.CouchDbCredentials.Name, metav1.GetOptions{})
 	if err != nil {
-		r.Logger.Error("Unable to read CouchDB credentials secret", zap.Error(err))
+		logging.FromContext(ctx).Error("Unable to read CouchDB credentials secret", zap.Error(err))
 		return "", err
 	}
 	rawurl, ok := secret.Data["url"]
 	if !ok {
-		r.Logger.Error("Unable to get CouchDB url field", zap.Any("secretName", secret.Name), zap.Any("secretNamespace", secret.Namespace))
+		logging.FromContext(ctx).Error("Unable to get CouchDB url field", zap.Any("secretName", secret.Name), zap.Any("secretNamespace", secret.Namespace))
 		return "", err
 	}
 

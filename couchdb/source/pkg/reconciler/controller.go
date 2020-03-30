@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing/pkg/reconciler"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -38,10 +38,6 @@ import (
 const (
 	// ReconcilerName is the name of the reconciler
 	ReconcilerName = "CouchDbSource"
-
-	// controllerAgentName is the string used by this controller to identify
-	// itself when creating events.
-	controllerAgentName = "couchdb-source-controller"
 )
 
 func init() {
@@ -64,14 +60,14 @@ func NewController(
 	}
 
 	r := &Reconciler{
-		Base:                reconciler.NewBase(ctx, controllerAgentName, cmw),
 		receiveAdapterImage: raImage,
+		kubeClientSet:       kubeclient.Get(ctx),
 		deploymentLister:    deploymentInformer.Lister(),
 	}
 	impl := cdbreconciler.NewImpl(ctx, r)
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
-	r.Logger.Info("Setting up event handlers")
+	logging.FromContext(ctx).Info("Setting up event handlers")
 	couchdbSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{

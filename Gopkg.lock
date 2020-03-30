@@ -1741,7 +1741,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4cf2b24d3e4ad2be508e95c90cbf917a1b924ce015e3446b0dbe138e360fb73b"
+  digest = "1:1339bb4ce72e33d5e3db4552d326c661fed31372fbace9f45c1dcd09e061654b"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1767,7 +1767,6 @@
     "pkg/channel",
     "pkg/channel/fanout",
     "pkg/channel/multichannelfanout",
-    "pkg/channel/swappable",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -1848,7 +1847,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "73e179b468bf39ee7a964c234fa5a3c65d8ebf63"
+  revision = "b4de32c4f9cdd1c16af824a84e55fcd6aa37adf5"
 
 [[projects]]
   branch = "master"
@@ -1932,7 +1931,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a7e36b2c89e3f2ca8247d82c318e7a4c8f657e27c685914224a71bd191fad3cc"
+  digest = "1:f65701e6532841e4c73f39b2f40b54aa9766aa7a4d5f776033bda3b8387d134c"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1972,7 +1971,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "06230dc73f2a476d6b4897552ce434e48428c40f"
+  revision = "e1bc4d1f4e872bedd6c939388292d57cd2343c86"
 
 [[projects]]
   branch = "master"
@@ -1983,7 +1982,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "d19eedb9432c5515a7ccc19a09cb4d2440df7e18"
+  revision = "d878fef854182d0cb2ab2190c66a785b8f05e3e2"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
@@ -2107,7 +2106,6 @@
     "knative.dev/eventing/pkg/channel",
     "knative.dev/eventing/pkg/channel/fanout",
     "knative.dev/eventing/pkg/channel/multichannelfanout",
-    "knative.dev/eventing/pkg/channel/swappable",
     "knative.dev/eventing/pkg/client/clientset/versioned",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client",
