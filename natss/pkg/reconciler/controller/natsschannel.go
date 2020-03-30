@@ -29,6 +29,7 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
 
 	"go.uber.org/zap"
@@ -36,18 +37,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
-
-	eventingScheme "knative.dev/eventing/pkg/client/clientset/versioned/scheme"
-	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
 
@@ -62,10 +56,6 @@ const (
 	// ReconcilerName is the name of the reconciler.
 	ReconcilerName = "NatssChannels"
 
-	// controllerAgentName is the string used by this controller to identify
-	// itself when creating events.
-	controllerAgentName = "natss-ch-controller"
-
 	// Name of the corev1.Events emitted from the reconciliation process.
 	channelReconciled         = "ChannelReconciled"
 	channelReconcileFailed    = "ChannelReconcileFailed"
@@ -74,16 +64,10 @@ const (
 	dispatcherName = "natss-ch-dispatcher"
 )
 
-func init() {
-	_ = eventingScheme.AddToScheme(scheme.Scheme)
-}
-
 // Reconciler reconciles NATSS Channels.
 type Reconciler struct {
 	natssClientSet clientset.Interface
 	kubeClientSet  kubernetes.Interface
-	recorder       record.EventRecorder
-	statsReporter  reconciler.StatsReporter
 
 	dispatcherNamespace      string
 	dispatcherDeploymentName string
@@ -107,7 +91,7 @@ var _ cache.ResourceEventHandler = (*Reconciler)(nil)
 // Registers event handlers to enqueue events.
 func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config) *controller.Impl {
 
-	logger := logging.FromContext(ctx).Sugar()
+	logger := logging.FromContext(ctx)
 	channelInformer := natsschannel.Get(ctx)
 	deploymentInformer := deploymentinformer.Get(ctx)
 	serviceInformer := service.Get(ctx)
@@ -117,8 +101,6 @@ func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config
 	r := &Reconciler{
 		natssClientSet:           clientset.NewForConfigOrDie(config),
 		kubeClientSet:            kubeClient,
-		recorder:                 getRecorder(ctx, config),
-		statsReporter:            getStatsReporter(ctx),
 		dispatcherNamespace:      system.Namespace(),
 		dispatcherDeploymentName: dispatcherName,
 		dispatcherServiceName:    dispatcherName,
@@ -150,41 +132,6 @@ func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config
 	})
 
 	return r.impl
-}
-
-func getStatsReporter(ctx context.Context) reconciler.StatsReporter {
-	statsReporter := reconciler.GetStatsReporter(ctx)
-	if statsReporter == nil {
-		r, err := reconciler.NewStatsReporter(controllerAgentName)
-		if err != nil {
-			logging.FromContext(ctx).Fatal("Failed to create stats reporter", zap.Error(err))
-		}
-		statsReporter = r
-	}
-	return statsReporter
-}
-
-func getRecorder(ctx context.Context, cfg *rest.Config) record.EventRecorder {
-	recorder := controller.GetEventRecorder(ctx)
-	if recorder == nil {
-		// Create event broadcaster
-		logging.FromContext(ctx).Debug("Creating event broadcaster")
-		eventBroadcaster := record.NewBroadcaster()
-		watches := []watch.Interface{
-			eventBroadcaster.StartLogging(logging.FromContext(ctx).Sugar().Named("event-broadcaster").Infof),
-			eventBroadcaster.StartRecordingToSink(
-				&typedcorev1.EventSinkImpl{Interface: kubernetes.NewForConfigOrDie(cfg).CoreV1().Events("")}),
-		}
-		recorder = eventBroadcaster.NewRecorder(
-			scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
-		go func() {
-			<-ctx.Done()
-			for _, w := range watches {
-				w.Stop()
-			}
-		}()
-	}
-	return recorder
 }
 
 // cache.ResourceEventHandler implementation.
@@ -231,15 +178,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	reconcileErr := r.reconcile(ctx, channel)
 	if reconcileErr != nil {
 		logging.FromContext(ctx).Error("Error reconciling NatssChannel", zap.Error(reconcileErr))
-		r.recorder.Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "NatssChannel reconciliation failed: %v", reconcileErr)
+		controller.GetEventRecorder(ctx).Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "NatssChannel reconciliation failed: %v", reconcileErr)
 	} else {
 		logging.FromContext(ctx).Debug("NatssChannel reconciled")
-		r.recorder.Event(channel, corev1.EventTypeNormal, channelReconciled, "NatssChannel reconciled")
+		controller.GetEventRecorder(ctx).Event(channel, corev1.EventTypeNormal, channelReconciled, "NatssChannel reconciled")
 	}
 
 	if _, updateStatusErr := r.updateStatus(ctx, channel); updateStatusErr != nil {
 		logging.FromContext(ctx).Error("Failed to update NatssChannel status", zap.Error(updateStatusErr))
-		r.recorder.Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update NatssChannel's status: %v", updateStatusErr)
+		controller.GetEventRecorder(ctx).Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update NatssChannel's status: %v", updateStatusErr)
 		return updateStatusErr
 	}
 
@@ -384,9 +331,9 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	new, err := r.natssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
 	if err == nil && becomesReady {
 		duration := time.Since(new.ObjectMeta.CreationTimestamp.Time)
-		logging.FromContext(ctx).Sugar().Infof("NatssChannel %q became ready after %v", kc.Name, duration)
-		if err := r.statsReporter.ReportReady("NatssChannel", kc.Namespace, kc.Name, duration); err != nil {
-			logging.FromContext(ctx).Sugar().Infof("Failed to record ready for NatssChannel %q: %v", kc.Name, err)
+		logging.FromContext(ctx).Infof("NatssChannel %q became ready after %v", kc.Name, duration)
+		if err := reconciler.GetStatsReporter(ctx).ReportReady("NatssChannel", kc.Namespace, kc.Name, duration); err != nil {
+			logging.FromContext(ctx).Infof("Failed to record ready for NatssChannel %q: %v", kc.Name, err)
 		}
 	}
 	return new, err

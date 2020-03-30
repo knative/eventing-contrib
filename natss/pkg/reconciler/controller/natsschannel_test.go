@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"testing"
 
-	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/utils"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
@@ -265,8 +264,6 @@ func TestAllCases(t *testing.T) {
 			natsschannelLister:       listers.GetNatssChannelLister(),
 			natssClientSet:           fakeclientset.Get(ctx),
 			kubeClientSet:            fakekubeclient.Get(ctx),
-			recorder:                 controller.GetEventRecorder(ctx),
-			statsReporter:            reconciler.GetStatsReporter(ctx),
 			deploymentLister:         listers.GetDeploymentLister(),
 			serviceLister:            listers.GetServiceLister(),
 			endpointsLister:          listers.GetEndpointsLister(),
