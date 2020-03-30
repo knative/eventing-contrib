@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
 	//k8s.io imports
 
@@ -141,31 +140,29 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			ksvc = r.generateKnativeServiceObject(source, r.receiveAdapterImage)
-			if _, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ksvc); err != nil {
-				return nil
+			ksvc, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ksvc)
+			if err != nil {
+				return err
 			}
 		} else {
-			return fmt.Errorf("Failed to verify if knative service is created for the gitlabsource: " + err.Error())
+			return fmt.Errorf("Failed to verify if knative service is created for the gitlabsource: %v", err)
 		}
 	}
-
-	ksvc, err = r.waitForKnativeServiceReady(source) // TODO: remove this. setup a watch on the service instead.
-	if err != nil {
-		return err
+	if ksvc.Status.URL == nil {
+		return nil
 	}
 	hookOptions.url = ksvc.Status.URL.String()
 	if source.Spec.SslVerify {
 		hookOptions.EnableSSLVerification = true
 	}
-
 	baseURL, err := getGitlabBaseURL(source.Spec.ProjectUrl)
 	if err != nil {
-		return fmt.Errorf("Failed to process project url to get the base url: " + err.Error())
+		return fmt.Errorf("Failed to process project url to get the base url: %v", err)
 	}
 	gitlabClient := gitlabHookClient{}
 	hookID, err := gitlabClient.Create(baseURL, &hookOptions)
 	if err != nil {
-		return fmt.Errorf("Failed to create project hook: " + err.Error())
+		return fmt.Errorf("Failed to create project hook: %v", err)
 	}
 	source.Status.Id = hookID
 	return nil
@@ -317,20 +314,4 @@ func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) { // TODO
 	}
 	r.loggingConfig = logcfg
 	logging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
-}
-
-func (r *Reconciler) waitForKnativeServiceReady(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
-	for attempts := 0; attempts < 4; attempts++ {
-		ksvc, err := r.getOwnedKnativeService(source)
-		if err != nil {
-			return nil, err
-		}
-		routeCondition := ksvc.Status.GetCondition(servingv1.ServiceConditionRoutesReady)
-		receiveAdapterDomain := ksvc.Status.URL.String()
-		if routeCondition != nil && routeCondition.Status == corev1.ConditionTrue && receiveAdapterDomain != "" {
-			return ksvc, nil
-		}
-		time.Sleep(2000 * time.Millisecond)
-	}
-	return nil, fmt.Errorf("Failed to get service to be in ready state")
 }
