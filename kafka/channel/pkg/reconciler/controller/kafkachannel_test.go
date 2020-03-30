@@ -22,22 +22,25 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
-	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/runtime"
-	"knative.dev/eventing/pkg/reconciler"
-	"knative.dev/eventing/pkg/utils"
-	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/kmeta"
 
-	. "knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+	"go.uber.org/zap"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
+
+	eventingClient "knative.dev/eventing/pkg/client/injection/client"
+	"knative.dev/eventing/pkg/utils"
+
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
@@ -47,12 +50,10 @@ import (
 	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
 	reconcilekafkatesting "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/testing"
 	reconcilertesting "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/testing"
-	eventingClient "knative.dev/eventing/pkg/client/injection/client"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	. "knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
 
 const (
-	systemNS              = "knative-eventing"
 	testNS                = "test-namespace"
 	kcName                = "test-kc"
 	testDispatcherImage   = "test-image"
@@ -62,11 +63,6 @@ const (
 )
 
 var (
-	trueVal = true
-	// deletionTime is used when objects are marked as deleted. Rfc3339Copy()
-	// truncates to seconds to match the loss of precision during serialization.
-	deletionTime = metav1.Now().Rfc3339Copy()
-
 	finalizerUpdatedEvent = Eventf(corev1.EventTypeNormal, "FinalizerUpdate", `Updated "test-kc" finalizers`)
 )
 
@@ -270,7 +266,7 @@ func TestAllCases(t *testing.T) {
 				makeReadyEndpoints(),
 				reconcilekafkatesting.NewKafkaChannel(kcName, testNS,
 					reconcilekafkatesting.WithKafkaFinalizer(finalizerName)),
-				makeChannelServiceNotOwnedByUs(reconcilekafkatesting.NewKafkaChannel(kcName, testNS)),
+				makeChannelServiceNotOwnedByUs(),
 			},
 			WantErr: true,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
@@ -328,7 +324,6 @@ func TestAllCases(t *testing.T) {
 	table.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
 		r := &Reconciler{
-			Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
 			systemNamespace: testNS,
 			dispatcherImage: testDispatcherImage,
 			kafkaConfig: &KafkaConfig{
@@ -345,7 +340,7 @@ func TestAllCases(t *testing.T) {
 			KubeClientSet:        kubeclient.Get(ctx),
 			EventingClientSet:    eventingClient.Get(ctx),
 		}
-		return kafkachannel.NewReconciler(ctx, r.Logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), r.Recorder, r)
+		return kafkachannel.NewReconciler(ctx, logging.FromContext(ctx), r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
 	}, zap.L()))
 }
 
@@ -387,7 +382,6 @@ func TestTopicExists(t *testing.T) {
 	row.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
 		r := &Reconciler{
-			Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
 			systemNamespace: testNS,
 			dispatcherImage: testDispatcherImage,
 			kafkaConfig: &KafkaConfig{
@@ -412,7 +406,7 @@ func TestTopicExists(t *testing.T) {
 			KubeClientSet:     kubeclient.Get(ctx),
 			EventingClientSet: eventingClient.Get(ctx),
 		}
-		return kafkachannel.NewReconciler(ctx, r.Logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), r.Recorder, r)
+		return kafkachannel.NewReconciler(ctx, logging.FromContext(ctx), r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
 	}, zap.L()))
 }
 
@@ -458,7 +452,6 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 	row.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
 		r := &Reconciler{
-			Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
 			systemNamespace: testNS,
 			dispatcherImage: testDispatcherImage,
 			kafkaConfig: &KafkaConfig{
@@ -483,7 +476,7 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 			KubeClientSet:     kubeclient.Get(ctx),
 			EventingClientSet: eventingClient.Get(ctx),
 		}
-		return kafkachannel.NewReconciler(ctx, r.Logger, r.kafkaClientSet, listers.GetKafkaChannelLister(), r.Recorder, r)
+		return kafkachannel.NewReconciler(ctx, logging.FromContext(ctx), r.kafkaClientSet, listers.GetKafkaChannelLister(), controller.GetEventRecorder(ctx), r)
 	}, zap.L()))
 }
 
@@ -611,7 +604,7 @@ func makeChannelService(nc *v1alpha1.KafkaChannel) *corev1.Service {
 	}
 }
 
-func makeChannelServiceNotOwnedByUs(nc *v1alpha1.KafkaChannel) *corev1.Service {
+func makeChannelServiceNotOwnedByUs() *corev1.Service {
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -655,15 +648,6 @@ func patchFinalizers(namespace, name string) clientgotesting.PatchActionImpl {
 	action.Name = name
 	action.Namespace = namespace
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
-	action.Patch = []byte(patch)
-	return action
-}
-
-func patchRemoveFinalizers(namespace, name string) clientgotesting.PatchActionImpl {
-	action := clientgotesting.PatchActionImpl{}
-	action.Name = name
-	action.Namespace = namespace
-	patch := `{"metadata":{"finalizers":[],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
 }
