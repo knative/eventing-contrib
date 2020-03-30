@@ -89,6 +89,10 @@ func MakeFactory(ctor Ctor) Factory {
 		statsReporter, _ := reconciler.NewStatsReporter("")
 		ctx = reconciler.WithStatsReporter(ctx, statsReporter)
 
+		if r.Ctx == nil {
+			r.Ctx = ctx
+		}
+
 		c := ctor(ctx, &ls)
 
 		return c, actionRecorderList, eventList
