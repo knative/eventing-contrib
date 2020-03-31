@@ -152,7 +152,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:8579079770a2c0bd9139993eecae525880851475e7121a13e67ea1c9cd015f9c"
+  digest = "1:78576a1cc74a53ddcf6faebb6c880bfb26cf39a64da1e316b225ca22fe32faea"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -190,8 +190,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "123def5bff3a506e15cc0bc581a72efd9bda4783"
-  version = "v2.0.0-preview7"
+  revision = "6dc020a8df7f3ee38d729e53cde2193ea7edf12a"
+  version = "v2.0.0-preview8"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1797,7 +1797,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c73ff55f1670233220a5cd7af0620d972fb027e82c0c5c871926be8d7f8a4918"
+  digest = "1:1339bb4ce72e33d5e3db4552d326c661fed31372fbace9f45c1dcd09e061654b"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1903,11 +1903,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "bf7b1bcb500c0bd1ec2b9300ebbf246152a7ab7c"
+  revision = "ca142293acffc2e2e2d86ce3372fd8811ed04c33"
 
 [[projects]]
   branch = "master"
-  digest = "1:664207d75dbcaeab206d93b3dcd8098c59e3b6b21378af02d686579e491fc859"
+  digest = "1:18f4c5453f19fef868e3da19f815840517c4bfa28e15fb2cccd504a9b96ce68d"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1983,11 +1983,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "8a6d25b30970038d1e24ddf5f6e0cec129c9564c"
+  revision = "e2ee5bed78d74604ed87dcb761a6f6e10a2e355c"
 
 [[projects]]
   branch = "master"
-  digest = "1:d0fd8dcde6ecbd968c72f5d286613525253af8bed45f114cb653f6d382174cf0"
+  digest = "1:329ea5ddb92331cc810239af9e3360a60dfc137ac655727ecf1b156032a86795"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2027,18 +2027,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "54cbd0ecf2f8247b5a93a2c0e6785e541ad2d399"
+  revision = "57579418bcc80cfa2a3ce45bf4b819d87ec2c4bd"
 
 [[projects]]
   branch = "master"
-  digest = "1:2987a1db00b983af9e5d5281639a754fb6449eef01e6a375894829eaec17cb2a"
+  digest = "1:41da78d06d64a1eb47a1d3f8209d33af386fa8f22d1b04b25825ae5cd187be1d"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "9a6c4b1d41ce980537cebe2b34c4b8c92fbd2b47"
+  revision = "030e4e29cb8ba9502a06b667b1450f6a725371b1"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
