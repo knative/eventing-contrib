@@ -16,6 +16,14 @@ limitations under the License.
 
 package stanutil
 
+import (
+	"testing"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"knative.dev/pkg/logging"
+)
+
 //import (
 //	"os"
 //	"testing"
@@ -91,34 +99,42 @@ package stanutil
 //func stopNatss(server *server.StanServer) {
 //	server.Shutdown()
 //}
-//
-//func newLoggingConfig() *logging.Config {
-//	lc := &logging.Config{}
-//	lc.LoggingConfig = `{
-//		"level": "info",
-//		"development": false,
-//		"outputPaths": ["stdout"],
-//		"errorOutputPaths": ["stderr"],
-//		"encoding": "json",
-//		"encoderConfig": {
-//			"timeKey": "ts",
-//			"levelKey": "level",
-//			"nameKey": "logger",
-//			"callerKey": "caller",
-//			"messageKey": "msg",
-//			"stacktraceKey": "stacktrace",
-//			"lineEnding": "",
-//			"levelEncoder": "",
-//			"timeEncoder": "iso8601",
-//			"durationEncoder": "",
-//			"callerEncoder": ""
-//		}
-//	}`
-//	lc.LoggingLevel = make(map[string]zapcore.Level)
-//	return lc
-//}
-//
-//func setupLogger() *zap.SugaredLogger {
-//	logger, _ := logging.NewLoggerFromConfig(newLoggingConfig(), "stanutil_test")
-//	return logger
-//}
+
+func TestConnect(t *testing.T) {
+	_, err := Connect("localhost", "my-client", "localhost", setupLogger())
+	if err == nil {
+		t.Errorf("Connect() expecting err")
+		return
+	}
+}
+
+func newLoggingConfig() *logging.Config {
+	lc := &logging.Config{}
+	lc.LoggingConfig = `{
+		"level": "info",
+		"development": false,
+		"outputPaths": ["stdout"],
+		"errorOutputPaths": ["stderr"],
+		"encoding": "json",
+		"encoderConfig": {
+			"timeKey": "ts",
+			"levelKey": "level",
+			"nameKey": "logger",
+			"callerKey": "caller",
+			"messageKey": "msg",
+			"stacktraceKey": "stacktrace",
+			"lineEnding": "",
+			"levelEncoder": "",
+			"timeEncoder": "iso8601",
+			"durationEncoder": "",
+			"callerEncoder": ""
+		}
+	}`
+	lc.LoggingLevel = make(map[string]zapcore.Level)
+	return lc
+}
+
+func setupLogger() *zap.SugaredLogger {
+	logger, _ := logging.NewLoggerFromConfig(newLoggingConfig(), "stanutil_test")
+	return logger
+}
