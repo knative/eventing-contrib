@@ -76,14 +76,6 @@
   version = "1.0.0-RC2"
 
 [[projects]]
-  digest = "1:d55aefa30a913ef8c5eaec45062c6b2674d017762b228f51334c0a1205f4f043"
-  name = "github.com/armon/go-metrics"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "38377b616bac08306ad0903d5fb436a5330d2973"
-  version = "v0.3.3"
-
-[[projects]]
   digest = "1:283fd34a116a5e926c20fcda1995875b4e8ef1a732496ca2a036c2def08fd143"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -514,30 +506,6 @@
   version = "v1.12.1"
 
 [[projects]]
-  digest = "1:248b3a5671bdc577f25a2896ffd355ea2660a338c358f61c321e4bc728f636e6"
-  name = "github.com/hashicorp/go-hclog"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "ea00810e77bdfb95e93c28be25194796a3f6ced6"
-  version = "v0.12.1"
-
-[[projects]]
-  digest = "1:567be8fb6d5f31755cca01db649a5045a054123f6b2109c7a0375a60cbdbfd4d"
-  name = "github.com/hashicorp/go-immutable-radix"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "e47f517af50356c81b117418760ac7dfd7b7af62"
-  version = "v1.2.0"
-
-[[projects]]
-  digest = "1:96303573c0bb8fb3f7192575cf6b03260de1eb694c63ef2719e3cce73594632e"
-  name = "github.com/hashicorp/go-msgpack"
-  packages = ["codec"]
-  pruneopts = "NUT"
-  revision = "ad60660ecf9c5a1eae0ca32182ed72bab5807961"
-  version = "v0.5.5"
-
-[[projects]]
   digest = "1:6876abc0847343a3e222ebd074431ff7102ce215087c797be0562e9e21e24db4"
   name = "github.com/hashicorp/go-uuid"
   packages = ["."]
@@ -555,14 +523,6 @@
   pruneopts = "NUT"
   revision = "7f827b33c0f158ec5dfbba01bb0b14a4541fd81d"
   version = "v0.5.3"
-
-[[projects]]
-  digest = "1:6f9cf0612f5ad923813888e2ea48bf9e57fe1fe4beba7f1b8ad2b6473b319fc0"
-  name = "github.com/hashicorp/raft"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "b334037d68838a5338fe1b5f5687901089078cd2"
-  version = "v1.1.2"
 
 [[projects]]
   digest = "1:7c47a990a91ab4922f4009c8ba8dcf35dad08e2b697cf26ea87eaae90e3f7aa1"
@@ -715,59 +675,12 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:3a007c2952878394de42747f04bf7fead5c9df9ecb4d16735c734b269f275612"
-  name = "github.com/nats-io/gnatsd"
-  packages = [
-    "conf",
-    "logger",
-    "server",
-    "server/pse",
-  ]
-  pruneopts = "NUT"
-  revision = "3e64f0bfd1fe4c2cf6599f064ff72fa7af439663"
-  version = "v1.4.1"
-
-[[projects]]
-  digest = "1:c525e25319b805711985485b95285fcfda9a97563919c7b9f709f6ef1e553efe"
-  name = "github.com/nats-io/go-nats"
-  packages = [
-    ".",
-    "encoders/builtin",
-    "util",
-  ]
-  pruneopts = "NUT"
-  revision = "70fe06cee50d4b6f98248d9675fb55f2a3aa7228"
-  version = "v1.7.2"
-
-[[projects]]
-  digest = "1:5a2971cb8a8583171b6946bc82fa2cea3d79a77b7d50e831895decb28a805860"
-  name = "github.com/nats-io/go-nats-streaming"
-  packages = ["pb"]
-  pruneopts = "NUT"
-  revision = "7cd94c239033c0405a43454be55a0810d3a3ca89"
-  version = "v0.4.4"
-
-[[projects]]
   digest = "1:2a2300e9d1c7eee7b1c7bfab3cba485823c036620e63b68c0bdb2d3ba4ace216"
   name = "github.com/nats-io/jwt"
   packages = ["."]
   pruneopts = "NUT"
   revision = "0c3fc7aed8bb2534e7bfdf0968a75890402d48cd"
   version = "v0.3.2"
-
-[[projects]]
-  digest = "1:14e32c27cba8116b9b4df54cf50e16da79bf045505f4c9cb91e2fc9333ccaace"
-  name = "github.com/nats-io/nats-streaming-server"
-  packages = [
-    "logger",
-    "server",
-    "spb",
-    "stores",
-    "util",
-  ]
-  pruneopts = "NUT"
-  revision = "1ce767705f3a16654fe0b7d34f4b11eb71499426"
-  version = "v0.14.3"
 
 [[projects]]
   digest = "1:8fdfe362fb878cfd0740ead278723a92af8668db959cbe3df58d679ac4dff7bd"
@@ -982,14 +895,6 @@
   version = "v0.28.0"
 
 [[projects]]
-  digest = "1:39b88e09bb30e15e1a016d64dd51c4e0bbe89d4eae615759460649697a976c7c"
-  name = "go.etcd.io/bbolt"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "68cc10a767ea1c6b9e8dcb9847317ff192d6d974"
-  version = "v1.3.4"
-
-[[projects]]
   digest = "1:7c3ff97df88fd061f688c42cc4b99c6636bc256aa6f5c919042bd8cffbdbd71f"
   name = "go.opencensus.io"
   packages = [
@@ -1052,17 +957,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b8767eb26f84b801eea49d01e5304c7318a556e436f697bee53d4d82ab93297a"
+  digest = "1:e27f97566c19ee2ada4ebe8f9914b8366724e413304fa6b4da5592887fcf5577"
   name = "golang.org/x/crypto"
   packages = [
-    "bcrypt",
-    "blowfish",
     "cast5",
-    "chacha20poly1305",
     "ed25519",
     "ed25519/internal/edwards25519",
-    "internal/chacha20",
-    "internal/subtle",
     "md4",
     "openpgp",
     "openpgp/armor",
@@ -1071,7 +971,6 @@
     "openpgp/packet",
     "openpgp/s2k",
     "pbkdf2",
-    "poly1305",
     "ssh/terminal",
   ]
   pruneopts = "NUT"
@@ -1147,17 +1046,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0873f7a72c70afd9ff5651bcb30462a752f365f498be037af7c3f3591222fe39"
+  digest = "1:408a94c76c887b39ec671e814fe27287ac9fa595d58409efdb020890f7acfa5c"
   name = "golang.org/x/sys"
   packages = [
-    "cpu",
     "unix",
     "windows",
-    "windows/registry",
-    "windows/svc",
-    "windows/svc/debug",
-    "windows/svc/eventlog",
-    "windows/svc/mgr",
   ]
   pruneopts = "NUT"
   revision = "f43be2a4598cf3a47be9f94f0c28197ed9eae611"
@@ -2254,7 +2147,6 @@
     "github.com/google/uuid",
     "github.com/gorilla/websocket",
     "github.com/kelseyhightower/envconfig",
-    "github.com/nats-io/nats-streaming-server/server",
     "github.com/nats-io/stan.go",
     "github.com/pkg/errors",
     "github.com/robfig/cron",
