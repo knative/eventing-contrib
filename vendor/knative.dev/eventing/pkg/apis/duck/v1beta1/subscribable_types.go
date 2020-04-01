@@ -105,8 +105,6 @@ var (
 	// Verify SubscribableType resources meet duck contracts.
 	_ duck.Populatable = (*Subscribable)(nil)
 	_ apis.Listable    = (*Subscribable)(nil)
-
-	_ apis.Convertible = (*Subscribable)(nil)
 )
 
 // GetFullType implements duck.Implementable
