@@ -32,13 +32,14 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
-	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	_ "knative.dev/pkg/system/testing"
+
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 )
 
 //----- Mocks

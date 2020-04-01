@@ -396,7 +396,7 @@
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "955bf358a3d8d1ebfa6204338ef3fe364255cd85"
+  revision = "3d03ed9b1ca2ad5d78d43832e8e46adc31d2b961"
 
 [[projects]]
   digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
@@ -1797,7 +1797,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1339bb4ce72e33d5e3db4552d326c661fed31372fbace9f45c1dcd09e061654b"
+  digest = "1:954d17c820feefac404aa2206be78338d79ebc2512fd15bec360cb4c53370693"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1903,11 +1903,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "e9378168a05a36dcac027d5bcad6a2d2c86df994"
+  revision = "dc1c9d5b7a2570cdb03bebdc5183f2e01e3c219a"
 
 [[projects]]
   branch = "master"
-  digest = "1:18f4c5453f19fef868e3da19f815840517c4bfa28e15fb2cccd504a9b96ce68d"
+  digest = "1:1cfbe38d639ea8c4aeb9f1b0b98ac80b0004ef612f0b48eb572ba6bb23bdc003"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1983,7 +1983,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "e2ee5bed78d74604ed87dcb761a6f6e10a2e355c"
+  revision = "94b2b6aaaf4b81c3b26b269bd477518094aa31a5"
 
 [[projects]]
   branch = "master"
@@ -2027,18 +2027,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "57579418bcc80cfa2a3ce45bf4b819d87ec2c4bd"
+  revision = "08ede7f985220d126ca0ccef2ec1609b2ea9877d"
 
 [[projects]]
   branch = "master"
-  digest = "1:41da78d06d64a1eb47a1d3f8209d33af386fa8f22d1b04b25825ae5cd187be1d"
+  digest = "1:5da0f15efcd7dafa6296be9cd4a630fcb5253cf202e54638299221ae7df419ab"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "030e4e29cb8ba9502a06b667b1450f6a725371b1"
+  revision = "5bdfbd623938f0cc4a260bf06c503bbb0a76d6f9"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2206,6 +2206,7 @@
     "knative.dev/eventing/pkg/adapter",
     "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
+    "knative.dev/eventing/pkg/apis/duck/v1beta1",
     "knative.dev/eventing/pkg/apis/eventing",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",

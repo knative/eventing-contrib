@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	nethttp "net/http"
+	"net/url"
 	"sync"
 	"sync/atomic"
 
@@ -29,7 +30,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
@@ -135,7 +136,19 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	if message.ReadEncoding() == binding.EncodingUnknown {
 		return false, errors.New("received a message with unknown encoding")
 	}
-	err := c.dispatcher.DispatchMessage(ctx, message, nil, c.sub.SubscriberURI.URL(), c.sub.ReplyURI.URL(), c.sub.DeadLetterSinkURI.URL())
+	var destination *url.URL
+	if c.sub.SubscriberURI != nil {
+		destination = c.sub.SubscriberURI.URL()
+	}
+	var reply *url.URL
+	if c.sub.ReplyURI != nil {
+		reply = c.sub.ReplyURI.URL()
+	}
+	var deadLetter *url.URL
+	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && c.sub.Delivery.DeadLetterSink.URI != nil {
+		deadLetter = c.sub.Delivery.DeadLetterSink.URI.URL()
+	}
+	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
 	// NOTE: only return `true` here if DispatchEventWithDelivery actually delivered the message.
 	return err == nil, err
 }

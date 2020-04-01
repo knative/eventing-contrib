@@ -34,7 +34,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
@@ -253,26 +254,32 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 		return err
 	}
 
-	failedSubscriptions, err := r.kafkaDispatcher.UpdateKafkaConsumers(config)
+	failedSubscriptionsv1beta1, err := r.kafkaDispatcher.UpdateKafkaConsumers(config)
 	if err != nil {
 		logging.FromContext(ctx).Error("Error updating kafka consumers in dispatcher")
 		return err
 	}
-	kc.Status.SubscribableTypeStatus.SubscribableStatus = r.createSubscribableStatus(kc.Spec.Subscribable, failedSubscriptions)
-	if len(failedSubscriptions) > 0 {
+	failedSubscriptionsv1alpha1 := make(map[eventingduckv1alpha1.SubscriberSpec]error, len(failedSubscriptionsv1beta1))
+	for k, v := range failedSubscriptionsv1beta1 {
+		newSub := eventingduckv1alpha1.SubscriberSpec{}
+		newSub.ConvertFrom(context.TODO(), k)
+		failedSubscriptionsv1alpha1[newSub] = v
+	}
+	kc.Status.SubscribableTypeStatus.SubscribableStatus = r.createSubscribableStatus(kc.Spec.Subscribable, failedSubscriptionsv1alpha1)
+	if len(failedSubscriptionsv1alpha1) > 0 {
 		logging.FromContext(ctx).Error("Some kafka subscriptions failed to subscribe")
 		return fmt.Errorf("Some kafka subscriptions failed to subscribe")
 	}
 	return nil
 }
 
-func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscribable, failedSubscriptions map[eventingduck.SubscriberSpec]error) *eventingduck.SubscribableStatus {
+func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1.Subscribable, failedSubscriptions map[eventingduckv1alpha1.SubscriberSpec]error) *eventingduckv1alpha1.SubscribableStatus {
 	if subscribable == nil {
 		return nil
 	}
-	subscriberStatus := make([]eventingduck.SubscriberStatus, 0)
+	subscriberStatus := make([]eventingduckv1alpha1.SubscriberStatus, 0)
 	for _, sub := range subscribable.Subscribers {
-		status := eventingduck.SubscriberStatus{
+		status := eventingduckv1alpha1.SubscriberStatus{
 			UID:                sub.UID,
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,
@@ -283,7 +290,7 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscri
 		}
 		subscriberStatus = append(subscriberStatus, status)
 	}
-	return &eventingduck.SubscribableStatus{
+	return &eventingduckv1alpha1.SubscribableStatus{
 		Subscribers: subscriberStatus,
 	}
 }
@@ -295,10 +302,14 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 		Name:      c.Name,
 		HostName:  c.Status.Address.Hostname,
 	}
+	newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(c.Spec.Subscribable.Subscribers))
+	for i, source := range c.Spec.Subscribable.Subscribers {
+		source.ConvertTo(context.TODO(), &newSubs[i])
+	}
 	if c.Spec.Subscribable != nil {
 		channelConfig.FanoutConfig = fanout.Config{
 			AsyncHandler:  true,
-			Subscriptions: c.Spec.Subscribable.Subscribers,
+			Subscriptions: newSubs,
 		}
 	}
 	return &channelConfig
@@ -331,4 +342,20 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaCh
 
 	new, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
 	return new, err
+}
+
+func convertv1alpha1SubsTov1beta1Subs(subs []eventingduckv1alpha1.SubscriberSpec) []eventingduckv1beta1.SubscriberSpec {
+	newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(subs))
+	for i, source := range subs {
+		source.ConvertTo(context.TODO(), &newSubs[i])
+	}
+	return newSubs
+}
+
+func convertv1beta1SubsTov1alpha1Subs(subs []eventingduckv1beta1.SubscriberSpec) []eventingduckv1alpha1.SubscriberSpec {
+	newSubs := make([]eventingduckv1alpha1.SubscriberSpec, len(subs))
+	for i, source := range subs {
+		newSubs[i].ConvertFrom(context.TODO(), source)
+	}
+	return newSubs
 }
