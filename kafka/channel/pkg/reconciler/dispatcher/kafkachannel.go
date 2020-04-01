@@ -307,7 +307,7 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 		for i, source := range c.Spec.Subscribable.Subscribers {
 			source.ConvertTo(context.TODO(), &newSubs[i])
 			fmt.Printf("Converted \n%+v\n To\n%+v\n", source, newSubs[i])
-			fmt.Printf("Delivery converted \n%v\nto\n%v\n", source.Delivery, newSubs[i].Delivery)
+			fmt.Printf("Delivery converted \n%+v\nto\n%+v\n", source.Delivery, newSubs[i].Delivery)
 		}
 		channelConfig.FanoutConfig = fanout.Config{
 			AsyncHandler:  true,
