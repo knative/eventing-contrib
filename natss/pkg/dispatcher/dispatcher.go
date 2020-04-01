@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -286,7 +287,7 @@ func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventin
 			return
 		}
 		s.logger.Debug("NATSS message received", zap.String("subject", stanMsg.Subject), zap.Uint64("sequence", stanMsg.Sequence), zap.Time("timestamp", time.Unix(stanMsg.Timestamp, 0)))
-		if err := s.dispatcher.DispatchMessage(ctx, message, nil, subscription.SubscriberURI.URL(), subscription.ReplyURI.URL(), subscription.DeadLetterSinkURI.URL()); err != nil {
+		if err := s.dispatcher.DispatchMessage(ctx, message, nil, (*url.URL)(subscription.SubscriberURI), (*url.URL)(subscription.ReplyURI), (*url.URL)(subscription.DeadLetterSinkURI)); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}

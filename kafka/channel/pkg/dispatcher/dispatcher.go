@@ -137,15 +137,15 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		return false, errors.New("received a message with unknown encoding")
 	}
 	var destination *url.URL
-	if c.sub.SubscriberURI != nil {
+	if !c.sub.SubscriberURI.IsEmpty() {
 		destination = c.sub.SubscriberURI.URL()
 	}
 	var reply *url.URL
-	if c.sub.ReplyURI != nil {
+	if !c.sub.ReplyURI.IsEmpty() {
 		reply = c.sub.ReplyURI.URL()
 	}
 	var deadLetter *url.URL
-	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && c.sub.Delivery.DeadLetterSink.URI != nil {
+	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && !c.sub.Delivery.DeadLetterSink.URI.IsEmpty() {
 		deadLetter = c.sub.Delivery.DeadLetterSink.URI.URL()
 	}
 	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
