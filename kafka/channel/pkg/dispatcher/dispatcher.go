@@ -150,8 +150,9 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		deadLetter = c.sub.Delivery.DeadLetterSink.URI.URL()
 	}
 	fmt.Printf("Going to dispatch the message to\n  destination: %v\n  reply: %v\n  dead letter: %v\n", destination, reply, deadLetter)
-	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
-	// NOTE: only return `true` here if DispatchEventWithDelivery actually delivered the message.
+	err := c.dispatcher.DispatchMessage(context.Background(), message, nil, destination, reply, deadLetter)
+	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
+	fmt.Printf("error? %+v\n", err)
 	return err == nil, err
 }
 
