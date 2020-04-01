@@ -201,6 +201,16 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 		}
 	}
 
+	fmt.Printf("new stuff\n")
+	for s, _ := range newSubs {
+		fmt.Printf("%+v\n", s)
+	}
+
+	fmt.Printf("failed stuff\n")
+	for f, _ := range failedToSubscribe {
+		fmt.Printf("%+v\n", f)
+	}
+
 	// Unsubscribe and close consumer for any deleted subscriptions
 	for channelRef, subMap := range d.kafkaConsumerGroups {
 		for sub := range subMap {
