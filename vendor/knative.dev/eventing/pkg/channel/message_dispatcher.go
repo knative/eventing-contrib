@@ -84,6 +84,7 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	destination = d.sanitizeURL(destination)
 	reply = d.sanitizeURL(reply)
 	deadLetter = d.sanitizeURL(deadLetter)
+	fmt.Printf("URLs sanitized\n  destination: %v\n  reply: %v\n  dead letter: %v\n", destination, reply, deadLetter)
 
 	// If there is a destination, variables response* are filled with the response of the destination
 	// Otherwise, they are filled with the original message
@@ -91,6 +92,7 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	var responseAdditionalHeaders nethttp.Header
 
 	if destination != nil {
+		fmt.Printf("destination not nil")
 		var err error
 		// Try to send to destination
 		messagesToFinish = append(messagesToFinish, initialMessage)
@@ -99,6 +101,7 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 		if err != nil {
 			// DeadLetter is configured, send the message to it
 			if deadLetter != nil {
+				fmt.Printf("dead letter not nil - destination")
 				deadLetterResponse, _, deadLetterErr := d.executeRequest(ctx, deadLetter, initialMessage, initialAdditionalHeaders)
 				if deadLetterErr != nil {
 					return fmt.Errorf("unable to complete request to either %s (%v) or %s (%v)", destination, err, deadLetter, deadLetterErr)
@@ -112,6 +115,7 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 		}
 	} else {
 		// No destination url, try to send to reply if available
+		fmt.Printf("destination nil")
 		responseMessage = initialMessage
 		responseAdditionalHeaders = initialAdditionalHeaders
 	}
@@ -132,6 +136,7 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	if err != nil {
 		// DeadLetter is configured, send the message to it
 		if deadLetter != nil {
+			fmt.Printf("deadletter not nil - reply")
 			deadLetterResponse, _, deadLetterErr := d.executeRequest(ctx, deadLetter, initialMessage, responseAdditionalHeaders)
 			if deadLetterErr != nil {
 				return fmt.Errorf("failed to forward reply to %s (%v) and failed to send it to the dead letter sink %s (%v)", reply, err, deadLetter, deadLetterErr)

@@ -96,7 +96,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 				Topic: dispatcher.topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
 			}
 
-			dispatcher.logger.Debug("Received a new message from MessageReceiver, dispatching to Kafka", zap.Any("channel", channel))
+			fmt.Printf("Received a new message from MessageReceiver, dispatching to Kafka. Channel: %+v", channel)
 			err := protocolkafka.WriteProducerMessage(ctx, message, &kafkaProducerMessage, transformers...)
 			if err != nil {
 				return err
