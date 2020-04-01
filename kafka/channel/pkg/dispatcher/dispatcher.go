@@ -96,6 +96,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 				Topic: dispatcher.topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
 			}
 
+			dispatcher.logger.Debug("Received a new message from MessageReceiver, dispatching to Kafka", zap.Any("channel", channel))
 			err := protocolkafka.WriteProducerMessage(ctx, message, &kafkaProducerMessage, transformers...)
 			if err != nil {
 				return err
@@ -148,6 +149,7 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && !c.sub.Delivery.DeadLetterSink.URI.IsEmpty() {
 		deadLetter = c.sub.Delivery.DeadLetterSink.URI.URL()
 	}
+	fmt.Printf("Going to dispatch the message to\n  destination: %v\n  reply: %v\n  dead letter: %v", destination, reply, deadLetter)
 	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
 	// NOTE: only return `true` here if DispatchEventWithDelivery actually delivered the message.
 	return err == nil, err
