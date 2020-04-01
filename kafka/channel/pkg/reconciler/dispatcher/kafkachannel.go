@@ -302,11 +302,11 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 		Name:      c.Name,
 		HostName:  c.Status.Address.Hostname,
 	}
-	newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(c.Spec.Subscribable.Subscribers))
-	for i, source := range c.Spec.Subscribable.Subscribers {
-		source.ConvertTo(context.TODO(), &newSubs[i])
-	}
 	if c.Spec.Subscribable != nil {
+		newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(c.Spec.Subscribable.Subscribers))
+		for i, source := range c.Spec.Subscribable.Subscribers {
+			source.ConvertTo(context.TODO(), &newSubs[i])
+		}
 		channelConfig.FanoutConfig = fanout.Config{
 			AsyncHandler:  true,
 			Subscriptions: newSubs,
