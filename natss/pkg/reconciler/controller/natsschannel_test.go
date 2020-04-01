@@ -262,7 +262,6 @@ func TestAllCases(t *testing.T) {
 			dispatcherDeploymentName: dispatcherDeploymentName,
 			dispatcherServiceName:    dispatcherServiceName,
 			natsschannelLister:       listers.GetNatssChannelLister(),
-			natssClientSet:           fakeclientset.Get(ctx),
 			kubeClientSet:            fakekubeclient.Get(ctx),
 			deploymentLister:         listers.GetDeploymentLister(),
 			serviceLister:            listers.GetServiceLister(),
