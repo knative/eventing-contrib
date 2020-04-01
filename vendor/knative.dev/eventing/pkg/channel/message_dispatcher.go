@@ -170,14 +170,17 @@ func (d *MessageDispatcherImpl) executeRequest(ctx context.Context, url *url.URL
 
 	response, err := d.sender.Send(req)
 	if err != nil {
+		fmt.Printf("executeRequest Err %+v\n", err)
 		return nil, nil, err
 	}
 	if isFailure(response.StatusCode) {
+		fmt.Printf("%Failure +v\n", response)
 		// Reject non-successful responses.
 		return nil, nil, fmt.Errorf("unexpected HTTP response, expected 2xx, got %d", response.StatusCode)
 	}
 	responseMessage := http.NewMessageFromHttpResponse(response)
 	if responseMessage.ReadEncoding() == binding.EncodingUnknown {
+		fmt.Printf("EncodingUnknown %+v\n", response)
 		d.logger.Debug("Response is a non event, discarding it", zap.Int("status_code", response.StatusCode))
 		return nil, nil, nil
 	}
