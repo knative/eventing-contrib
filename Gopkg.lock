@@ -1797,7 +1797,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c74b26e8ad576a93ecd9c00397fb2ae6b3aea234f61781a8a8ac0196b0bfdb79"
+  digest = "1:c73ff55f1670233220a5cd7af0620d972fb027e82c0c5c871926be8d7f8a4918"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1823,7 +1823,6 @@
     "pkg/channel",
     "pkg/channel/fanout",
     "pkg/channel/multichannelfanout",
-    "pkg/channel/swappable",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -1904,11 +1903,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "8b4a6f7b49643df73ae95d457181b6614e9d4f75"
+  revision = "bf7b1bcb500c0bd1ec2b9300ebbf246152a7ab7c"
 
 [[projects]]
   branch = "master"
-  digest = "1:9a3d6a5933182bb0ac923b36a7e581b19ea23edeb6684eabe14002758cd7b067"
+  digest = "1:664207d75dbcaeab206d93b3dcd8098c59e3b6b21378af02d686579e491fc859"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1984,11 +1983,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "9f9f7bea94e15840f36f08b90a2c03203e886f91"
+  revision = "8a6d25b30970038d1e24ddf5f6e0cec129c9564c"
 
 [[projects]]
   branch = "master"
-  digest = "1:a7e36b2c89e3f2ca8247d82c318e7a4c8f657e27c685914224a71bd191fad3cc"
+  digest = "1:d0fd8dcde6ecbd968c72f5d286613525253af8bed45f114cb653f6d382174cf0"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2028,7 +2027,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "aa3d5708fb6bc8e35324f3dab764c2ca0a7e6892"
+  revision = "54cbd0ecf2f8247b5a93a2c0e6785e541ad2d399"
 
 [[projects]]
   branch = "master"
@@ -2039,7 +2038,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "9a501343b4dafbac1a1a5dcfe2cb46975a78abb5"
+  revision = "9a6c4b1d41ce980537cebe2b34c4b8c92fbd2b47"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2215,7 +2214,6 @@
     "knative.dev/eventing/pkg/channel",
     "knative.dev/eventing/pkg/channel/fanout",
     "knative.dev/eventing/pkg/channel/multichannelfanout",
-    "knative.dev/eventing/pkg/channel/swappable",
     "knative.dev/eventing/pkg/client/clientset/versioned",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client",

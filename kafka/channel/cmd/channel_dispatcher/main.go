@@ -17,8 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"os"
 
+	"knative.dev/pkg/configmap"
+	pkgcontroller "knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
@@ -35,5 +38,8 @@ func main() {
 		ctx = injection.WithNamespaceScope(ctx, ns)
 	}
 
-	sharedmain.MainWithContext(ctx, component, controller.NewController)
+	cfg := sharedmain.ParseAndGetConfigOrDie()
+	sharedmain.MainWithConfig(ctx, component, cfg, func(ctx context.Context, watcher configmap.Watcher) *pkgcontroller.Impl {
+		return controller.NewController(ctx, watcher, cfg)
+	})
 }

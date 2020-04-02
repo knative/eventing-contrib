@@ -26,6 +26,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes"
 
 	//knative.dev/serving imports
 	v1 "knative.dev/serving/pkg/apis/serving/v1"
@@ -37,11 +38,11 @@ import (
 	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
 	"knative.dev/eventing-contrib/github/pkg/reconciler/resources"
 
-	"knative.dev/eventing/pkg/reconciler"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	//knative.dev/pkg imports
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -56,7 +57,7 @@ const (
 
 // Reconciler reconciles a GitHubSource object
 type Reconciler struct {
-	*reconciler.Base
+	kubeClientSet kubernetes.Interface
 
 	servingClientSet servingclientset.Interface
 	servingLister    servinglisters.ServiceLister
@@ -122,7 +123,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		if err != nil {
 			return err
 		}
-		r.Recorder.Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
+		controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
 		// TODO: Mark Deploying for the ksvc
 		// Wait for the Service to get a status
 	} else if err != nil {
@@ -171,7 +172,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 		if err != nil {
 			source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
-			r.Recorder.Eventf(source, corev1.EventTypeWarning,
+			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning,
 				"FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
 			return err
 		}
@@ -185,7 +186,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		// Delete the webhook using the access token and stored webhook ID
 		err = r.deleteWebhook(ctx, args)
 		if err != nil {
-			r.Recorder.Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
 			return err
 		}
 		// Webhook deleted, clear ID
@@ -296,7 +297,7 @@ func (r *Reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 
 func (r *Reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
 	secret := &corev1.Secret{}
-	secret, err := r.KubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
+	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

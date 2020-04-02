@@ -37,6 +37,7 @@ fi
 
 # Eventing main config path from HEAD.
 readonly EVENTING_CONFIG="${GOPATH}/src/knative.dev/eventing/config/"
+readonly EVENTING_CHANNEL_BROKER_CONFIG="${GOPATH}/src/knative.dev/eventing/config/brokers/channel-broker"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -49,7 +50,7 @@ readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
 readonly NATSS_CRD_CONFIG_DIR="natss/config"
 
 # Strimzi installation config template used for starting up Kafka clusters.
-readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.16.2.yaml"
+readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.17.0.yaml"
 # Strimzi installation config.
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp)"
 # Kafka cluster CR config file.
@@ -83,6 +84,8 @@ function knative_setup() {
     git clone https://github.com/knative/eventing
     popd
     ko apply -f ${EVENTING_CONFIG}
+    # Install Channel Based Broker
+    ko apply -f ${EVENTING_CHANNEL_BROKER_CONFIG}
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
 

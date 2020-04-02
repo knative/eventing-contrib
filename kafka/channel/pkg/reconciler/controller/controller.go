@@ -20,11 +20,13 @@ import (
 	"context"
 
 	"github.com/kelseyhightower/envconfig"
-	"go.uber.org/zap"
-	"k8s.io/client-go/tools/cache"
 
+	"go.uber.org/zap"
+
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
@@ -33,7 +35,6 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/rbac/v1/rolebinding"
 
 	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/system"
@@ -59,9 +60,7 @@ func NewController(
 	serviceInformer := service.Get(ctx)
 
 	r := &Reconciler{
-		Base:            reconciler.NewBase(ctx, controllerAgentName, cmw),
-		systemNamespace: system.Namespace(),
-
+		systemNamespace:      system.Namespace(),
 		KubeClientSet:        kubeclient.Get(ctx),
 		kafkaClientSet:       kafkaChannelClient.Get(ctx),
 		EventingClientSet:    eventingClient.Get(ctx),
@@ -89,7 +88,9 @@ func NewController(
 
 	// Get and Watch the Kakfa config map and dynamically update Kafka configuration.
 	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get("config-kafka", metav1.GetOptions{}); err == nil {
-		cmw.Watch("config-kafka", r.updateKafkaConfig)
+		cmw.Watch("config-kafka", func(configMap *v1.ConfigMap) {
+			r.updateKafkaConfig(ctx, configMap)
+		})
 	} else if !apierrors.IsNotFound(err) {
 		logging.FromContext(ctx).With(zap.Error(err)).Fatal("Error reading ConfigMap 'config-kafka'")
 	}

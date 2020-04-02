@@ -32,7 +32,6 @@ import (
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
-	"knative.dev/eventing/pkg/channel/swappable"
 	"knative.dev/eventing/pkg/kncloudevents"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
@@ -46,7 +45,6 @@ type KafkaDispatcher struct {
 	// hostToChannelMapLock is used to update hostToChannelMap
 	hostToChannelMapLock sync.Mutex
 
-	handler       *swappable.Handler
 	messageSender *kncloudevents.HttpMessageSender
 	receiver      *eventingchannels.MessageReceiver
 	dispatcher    *eventingchannels.MessageDispatcherImpl
@@ -89,7 +87,6 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 		kafkaAsyncProducer:   producer,
 		logger:               args.Logger,
 		messageSender:        messageSender,
-		handler:              args.Handler,
 		topicFunc:            args.TopicFunc,
 	}
 	receiverFunc, err := eventingchannels.NewMessageReceiver(
@@ -122,7 +119,6 @@ type TopicFunc func(separator, namespace, name string) string
 
 type KafkaDispatcherArgs struct {
 	KnCEConnectionArgs *kncloudevents.ConnectionArgs
-	Handler            *swappable.Handler
 	ClientID           string
 	Brokers            []string
 	TopicFunc          TopicFunc
