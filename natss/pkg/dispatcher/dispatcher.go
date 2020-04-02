@@ -281,6 +281,16 @@ func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventin
 	s.logger.Info("Subscribe to channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
 
 	mcb := func(stanMsg *stan.Msg) {
+		defer func() {
+			if r := recover(); r != nil {
+				s.logger.Warn("Panic happened while handling a message",
+					zap.String("messages", stanMsg.String()),
+					zap.String("sub", string(subscription.UID)),
+					zap.Any("panic value", r),
+				)
+			}
+		}()
+
 		message, err := natsscloudevents.NewMessage(stanMsg, natsscloudevents.WithManualAcks())
 		if err != nil {
 			s.logger.Error("could not create a message", zap.Error(err))
