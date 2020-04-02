@@ -19,15 +19,15 @@ package controller
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing-contrib/natss/pkg/client/injection/reconciler/messaging/v1alpha1/natsschannel"
-	"knative.dev/pkg/logging"
 	"testing"
 
 	"knative.dev/eventing/pkg/utils"
+
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
@@ -40,6 +40,7 @@ import (
 
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
+	"knative.dev/eventing-contrib/natss/pkg/client/injection/reconciler/messaging/v1alpha1/natsschannel"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller/resources"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
 )
