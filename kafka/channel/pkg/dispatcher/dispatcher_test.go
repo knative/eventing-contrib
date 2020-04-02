@@ -24,6 +24,8 @@ import (
 	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"go.uber.org/zap/zaptest"
+	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis"
 
 	"github.com/Shopify/sarama"
@@ -309,9 +311,11 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			t.Logf("Running %s", t.Name())
 			d := &KafkaDispatcher{
 				kafkaConsumerFactory: &mockKafkaConsumerFactory{},
-				kafkaConsumerGroups:  make(map[eventingchannels.ChannelReference]map[subscription]sarama.ConsumerGroup),
+				channelSubscriptions: make(map[eventingchannels.ChannelReference][]types.UID),
+				subsConsumerGroups:   make(map[types.UID]sarama.ConsumerGroup),
+				subscriptions:        make(map[types.UID]subscription),
 				topicFunc:            utils.TopicName,
-				logger:               zap.NewNop(),
+				logger:               zaptest.NewLogger(t),
 			}
 			d.setConfig(&multichannelfanout.Config{})
 			d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
@@ -323,10 +327,8 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				t.Errorf("unexpected error: %v", err)
 			}
 			oldSubscribers := sets.NewString()
-			for _, subMap := range d.kafkaConsumerGroups {
-				for sub := range subMap {
-					oldSubscribers.Insert(string(sub.UID))
-				}
+			for _, sub := range d.subscriptions {
+				oldSubscribers.Insert(string(sub.UID))
 			}
 			if diff := sets.NewString(tc.unsubscribes...).Difference(oldSubscribers); diff.Len() != 0 {
 				t.Errorf("subscriptions %+v were never subscribed", diff)
@@ -349,10 +351,8 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			}
 
 			var newSubscribers []string
-			for _, subMap := range d.kafkaConsumerGroups {
-				for sub := range subMap {
-					newSubscribers = append(newSubscribers, string(sub.UID))
-				}
+			for id, _ := range d.subscriptions {
+				newSubscribers = append(newSubscribers, string(id))
 			}
 
 			if diff := cmp.Diff(tc.subscribes, newSubscribers, sortStrings); diff != "" {
@@ -458,7 +458,7 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 func TestNewDispatcher(t *testing.T) {
 	args := &KafkaDispatcherArgs{
 		ClientID:  "kafka-ch-dispatcher",
-		Brokers:   []string{"127.0.0.1:9092"},
+		Brokers:   []string{"localhost:10000"},
 		TopicFunc: utils.TopicName,
 		Logger:    nil,
 	}

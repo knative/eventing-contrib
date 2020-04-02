@@ -152,7 +152,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:78576a1cc74a53ddcf6faebb6c880bfb26cf39a64da1e316b225ca22fe32faea"
+  digest = "1:e5cf53ca405e30a44554778b83ba07f9c0d13dd7b2045e833dcc7918824e7580"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -173,6 +173,7 @@
     "v2/binding/buffering",
     "v2/binding/format",
     "v2/binding/spec",
+    "v2/binding/test",
     "v2/binding/transformer",
     "v2/client",
     "v2/context",
@@ -756,6 +757,14 @@
   version = "v0.8.1"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "NUT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:3d7ad9c93ee2e43dc7dd48b76f96804c365be7fe30e75f7405028c4e633d189a"
   name = "github.com/prometheus/client_golang"
   packages = [
@@ -871,6 +880,17 @@
   version = "v1.0.5"
 
 [[projects]]
+  digest = "1:e6aedc9ffe708685ae5bb6c1e9fb12ce9d3ef0aa14872c620c8d34e13fc233e2"
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require",
+  ]
+  pruneopts = "NUT"
+  revision = "3ebf1ddaeb260c4b1ae502a01c7844fa8c1fa0e9"
+  version = "v1.5.1"
+
+[[projects]]
   digest = "1:435d9fe926ee0d903662215091e27fba6f1b7228d33a30c289cdb5aeff1c8fc8"
   name = "github.com/tsenart/vegeta"
   packages = ["lib"]
@@ -940,7 +960,7 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:5ab79d2a36037de1ab2908733a2cab0c08b12f6956e3e1eab07cd1b2abf7b903"
+  digest = "1:44dab140255ddb95bf5ed192b0b4f1cce1b64b9c0ad8d075152e4309d536a61a"
   name = "go.uber.org/zap"
   packages = [
     ".",
@@ -953,7 +973,8 @@
     "zaptest",
   ]
   pruneopts = "NUT"
-  revision = "67bc79d13d155c02fd008f721863ff8cc5f30659"
+  revision = "2aa9fa25da83bdfff756c36a91442edc9a84576c"
+  version = "v1.14.1"
 
 [[projects]]
   branch = "master"
@@ -2131,6 +2152,8 @@
     "github.com/cloudevents/sdk-go/v1/cloudevents/types",
     "github.com/cloudevents/sdk-go/v2",
     "github.com/cloudevents/sdk-go/v2/binding",
+    "github.com/cloudevents/sdk-go/v2/binding/test",
+    "github.com/cloudevents/sdk-go/v2/binding/transformer",
     "github.com/cloudevents/sdk-go/v2/protocol/http",
     "github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama",
     "github.com/cloudevents/sdk-go/v2/protocol/stan",

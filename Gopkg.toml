@@ -146,7 +146,7 @@ required = [
 # needed because pkg upgraded
 [[override]]
   name = "go.uber.org/zap"
-  revision = "67bc79d13d155c02fd008f721863ff8cc5f30659"
+  version = "v1.14.1"
 
 # Required for opencensus.
 [[override]]

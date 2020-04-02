@@ -18,12 +18,26 @@ package v1alpha1
 
 import (
 	"context"
+	"fmt"
 
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 )
+
+// ConvertTo implements apis.Convertible
+// Converts source (from v1alpha1.SubscribableType) into v1beta1.Subscribable
+func (source *SubscribableType) ConvertTo(ctx context.Context, obj apis.Convertible) error {
+	switch sink := obj.(type) {
+	case *duckv1beta1.Subscribable:
+		sink.ObjectMeta = source.ObjectMeta
+		source.Status.ConvertTo(ctx, &sink.Status)
+		return source.Spec.ConvertTo(ctx, &sink.Spec)
+	default:
+		return fmt.Errorf("unknown version, got: %T", sink)
+	}
+}
 
 // ConvertTo helps implement apis.Convertible
 func (source *SubscribableTypeSpec) ConvertTo(ctx context.Context, sink *duckv1beta1.SubscribableSpec) error {
@@ -68,6 +82,20 @@ func (source *SubscribableTypeStatus) ConvertTo(ctx context.Context, sink *duckv
 				Message:            ss.Message,
 			}
 		}
+	}
+}
+
+// ConvertFrom implements apis.Convertible.
+// Converts obj v1beta1.Subscribable into v1alpha1.Subscribable
+func (sink *SubscribableType) ConvertFrom(ctx context.Context, obj apis.Convertible) error {
+	switch source := obj.(type) {
+	case *duckv1beta1.Subscribable:
+		sink.ObjectMeta = source.ObjectMeta
+		sink.Status.ConvertFrom(ctx, source.Status)
+		sink.Spec.ConvertFrom(ctx, source.Spec)
+		return nil
+	default:
+		return fmt.Errorf("unknown version, got: %T", source)
 	}
 }
 

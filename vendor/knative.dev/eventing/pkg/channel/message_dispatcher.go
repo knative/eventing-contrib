@@ -25,6 +25,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -76,6 +77,9 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	var messagesToFinish []binding.Message
 	defer func() {
 		for _, msg := range messagesToFinish {
+			if msg == nil {
+				d.logger.Debug("Shit this stuff is nil")
+			}
 			_ = msg.Finish(nil)
 		}
 	}()
@@ -84,7 +88,6 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	destination = d.sanitizeURL(destination)
 	reply = d.sanitizeURL(reply)
 	deadLetter = d.sanitizeURL(deadLetter)
-	fmt.Printf("URLs sanitized\n  destination: %v\n  reply: %v\n  dead letter: %v\n", destination, reply, deadLetter)
 
 	// If there is a destination, variables response* are filled with the response of the destination
 	// Otherwise, they are filled with the original message
@@ -92,36 +95,44 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	var responseAdditionalHeaders nethttp.Header
 
 	if destination != nil {
-		fmt.Printf("destination not nil")
+		d.logger.Debug("Sending to destination")
+
 		var err error
 		// Try to send to destination
 		messagesToFinish = append(messagesToFinish, initialMessage)
 
 		responseMessage, responseAdditionalHeaders, err = d.executeRequest(ctx, destination, initialMessage, initialAdditionalHeaders)
 		if err != nil {
+			d.logger.Debug("Destination failed")
 			// DeadLetter is configured, send the message to it
 			if deadLetter != nil {
-				fmt.Printf("dead letter not nil - destination")
+				d.logger.Debug("Sending to deadletter")
 				deadLetterResponse, _, deadLetterErr := d.executeRequest(ctx, deadLetter, initialMessage, initialAdditionalHeaders)
 				if deadLetterErr != nil {
+					d.logger.Debug("Dead letter failed")
 					return fmt.Errorf("unable to complete request to either %s (%v) or %s (%v)", destination, err, deadLetter, deadLetterErr)
 				}
-				messagesToFinish = append(messagesToFinish, deadLetterResponse)
+				if deadLetterResponse != nil {
+					messagesToFinish = append(messagesToFinish, deadLetterResponse)
+				}
+
+				d.logger.Debug("Dead letter fine")
 
 				return nil
 			}
+			d.logger.Debug("Destination fine")
 			// No DeadLetter, just fail
 			return fmt.Errorf("unable to complete request to %s: %v", destination, err)
 		}
 	} else {
 		// No destination url, try to send to reply if available
-		fmt.Printf("destination nil")
 		responseMessage = initialMessage
 		responseAdditionalHeaders = initialAdditionalHeaders
 	}
 
 	// No response, dispatch completed
 	if responseMessage == nil {
+		d.logger.Debug("No response message")
 		return nil
 	}
 
@@ -132,16 +143,24 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 		return nil
 	}
 
+	d.logger.Debug("Sending to reply")
+
 	responseResponseMessage, _, err := d.executeRequest(ctx, reply, responseMessage, responseAdditionalHeaders)
 	if err != nil {
+		d.logger.Debug("Reply failed")
 		// DeadLetter is configured, send the message to it
 		if deadLetter != nil {
-			fmt.Printf("deadletter not nil - reply")
+			d.logger.Debug("Sending to deadletter")
 			deadLetterResponse, _, deadLetterErr := d.executeRequest(ctx, deadLetter, initialMessage, responseAdditionalHeaders)
 			if deadLetterErr != nil {
+				d.logger.Debug("Dead letter failed")
 				return fmt.Errorf("failed to forward reply to %s (%v) and failed to send it to the dead letter sink %s (%v)", reply, err, deadLetter, deadLetterErr)
 			}
-			messagesToFinish = append(messagesToFinish, deadLetterResponse)
+			if deadLetterResponse != nil {
+				messagesToFinish = append(messagesToFinish, deadLetterResponse)
+			}
+
+			d.logger.Debug("Dead letter fine")
 
 			return nil
 		}
@@ -170,17 +189,14 @@ func (d *MessageDispatcherImpl) executeRequest(ctx context.Context, url *url.URL
 
 	response, err := d.sender.Send(req)
 	if err != nil {
-		fmt.Printf("executeRequest Err %+v\n", err)
-		return nil, nil, err
+		return nil, nil, errors.WithStack(err)
 	}
 	if isFailure(response.StatusCode) {
-		fmt.Printf("%Failure +v\n", response)
 		// Reject non-successful responses.
 		return nil, nil, fmt.Errorf("unexpected HTTP response, expected 2xx, got %d", response.StatusCode)
 	}
 	responseMessage := http.NewMessageFromHttpResponse(response)
 	if responseMessage.ReadEncoding() == binding.EncodingUnknown {
-		fmt.Printf("EncodingUnknown %+v\n", response)
 		d.logger.Debug("Response is a non event, discarding it", zap.Int("status_code", response.StatusCode))
 		return nil, nil, nil
 	}
