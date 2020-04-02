@@ -23,7 +23,7 @@ rules:
   - apps
   resources:
   - deployments
-  verbs:
+  verbs: &everything
   - get
   - list
   - watch
@@ -37,30 +37,20 @@ rules:
   - clusterroles
   verbs:
   - list
+
 - apiGroups:
-  - ""
+    - ""
   resources:
-  - events
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+    - events
+    - configmaps
+  verbs: *everything
+
 - apiGroups:
   - sources.knative.dev
   resources:
   - camelsources
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything
+
 - apiGroups:
   - sources.knative.dev
   resources:
@@ -70,18 +60,12 @@ rules:
   - get
   - update
   - patch
+
 - apiGroups:
   - camel.apache.org
   resources:
   - '*'
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  verbs: *everything
 
 ---
 # The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".

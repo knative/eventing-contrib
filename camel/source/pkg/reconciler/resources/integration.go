@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"knative.dev/pkg/kmeta"
+
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	camelknativev1 "github.com/apache/camel-k/pkg/apis/camel/v1/knative"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,6 +84,9 @@ func MakeIntegration(args *CamelArguments) (*camelv1.Integration, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: args.Name + "-",
 			Namespace:    args.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				*kmeta.NewControllerRef(args.Owner),
+			},
 		},
 		Spec: *spec,
 	}

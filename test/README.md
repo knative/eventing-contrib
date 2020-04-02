@@ -64,7 +64,7 @@ with `test/e2e-tests.sh --run-tests --skip-knative-setup`.
 You can also use `go test` command to run unit tests:
 
 ```shell
-go test -v ./pkg/...
+go test -v ./...
 ```
 
 _By default `go test` will not run [the e2e tests](#running-end-to-end-tests),

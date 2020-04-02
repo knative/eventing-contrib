@@ -35,7 +35,6 @@ mkdir -p "${TMP_DIFFROOT}"
 
 cp -aR \
   "${REPO_ROOT_DIR}/Gopkg.lock" \
-  "${REPO_ROOT_DIR}/pkg" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor" \
   "${TMP_DIFFROOT}"
@@ -48,9 +47,6 @@ diff -Naupr --no-dereference \
   "${REPO_ROOT_DIR}/Gopkg.lock" "${TMP_DIFFROOT}/Gopkg.lock" || ret=1
 
 diff -Naupr --no-dereference \
-  "${REPO_ROOT_DIR}/pkg" "${TMP_DIFFROOT}/pkg" || ret=1
-
-diff -Naupr --no-dereference \
   "${REPO_ROOT_DIR}/third_party" "${TMP_DIFFROOT}/third_party" || ret=1
 
 diff -Naupr --no-dereference \
@@ -59,7 +55,6 @@ diff -Naupr --no-dereference \
 # Restore working tree state
 rm -fr \
   "${REPO_ROOT_DIR}/Gopkg.lock" \
-  "${REPO_ROOT_DIR}/pkg" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor"
 
