@@ -345,19 +345,3 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaCh
 	new, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
 	return new, err
 }
-
-func convertv1alpha1SubsTov1beta1Subs(subs []eventingduckv1alpha1.SubscriberSpec) []eventingduckv1beta1.SubscriberSpec {
-	newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(subs))
-	for i, source := range subs {
-		source.ConvertTo(context.TODO(), &newSubs[i])
-	}
-	return newSubs
-}
-
-func convertv1beta1SubsTov1alpha1Subs(subs []eventingduckv1beta1.SubscriberSpec) []eventingduckv1alpha1.SubscriberSpec {
-	newSubs := make([]eventingduckv1alpha1.SubscriberSpec, len(subs))
-	for i, source := range subs {
-		newSubs[i].ConvertFrom(context.TODO(), source)
-	}
-	return newSubs
-}
