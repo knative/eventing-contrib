@@ -35,7 +35,6 @@ import (
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/eventing/pkg/logging"
 
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
 
@@ -417,11 +416,11 @@ func newHostNameToChannelRefMap(cList []messagingv1alpha1.Channel) (map[string]e
 func (s *SubscriptionsSupervisor) ProcessChannels(ctx context.Context, chanList []messagingv1alpha1.Channel) error {
 	hostToChanMap, err := newHostNameToChannelRefMap(chanList)
 	if err != nil {
-		logging.FromContext(ctx).Info("ProcessChannels: Error occurred when creating the new hostToChannel map.", zap.Error(err))
+		s.logger.Info("ProcessChannels: Error occurred when creating the new hostToChannel map.", zap.Error(err))
 		return err
 	}
 	s.setHostToChannelMap(hostToChanMap)
-	logging.FromContext(ctx).Info("hostToChannelMap updated successfully.")
+	s.logger.Info("hostToChannelMap updated successfully.")
 	return nil
 }
 
