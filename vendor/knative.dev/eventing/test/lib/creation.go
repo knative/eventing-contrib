@@ -291,14 +291,25 @@ func (client *Client) CreateSinkBindingV1Alpha2OrFail(sb *sourcesv1alpha2.SinkBi
 }
 
 // CreateApiServerSourceOrFail will create an ApiServerSource
-func (client *Client) CreateApiServerSourceOrFail(apiServerSource *sourcesv1alpha1.ApiServerSource) {
+func (client *Client) CreateApiServerSourceOrFail(apiServerSource *sourcesv1alpha2.ApiServerSource) {
 	client.T.Logf("Creating apiserversource %+v", apiServerSource)
-	apiServerInterface := client.Eventing.SourcesV1alpha1().ApiServerSources(client.Namespace)
+	apiServerInterface := client.Eventing.SourcesV1alpha2().ApiServerSources(client.Namespace)
 	_, err := apiServerInterface.Create(apiServerSource)
 	if err != nil {
 		client.T.Fatalf("Failed to create apiserversource %q: %v", apiServerSource.Name, err)
 	}
 	client.Tracker.AddObj(apiServerSource)
+}
+
+// CreateContainerSourceV1Alpha2OrFail will create a ContainerSource.
+func (client *Client) CreateContainerSourceV1Alpha2OrFail(containerSource *sourcesv1alpha2.ContainerSource) {
+	client.T.Logf("Creating containersource %+v", containerSource)
+	containerInterface := client.Eventing.SourcesV1alpha2().ContainerSources(client.Namespace)
+	_, err := containerInterface.Create(containerSource)
+	if err != nil {
+		client.T.Fatalf("Failed to create containersource %q: %v", containerSource.Name, err)
+	}
+	client.Tracker.AddObj(containerSource)
 }
 
 // CreatePingSourceV1Alpha1OrFail will create an PingSource
