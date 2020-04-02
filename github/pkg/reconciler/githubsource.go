@@ -18,7 +18,9 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	//k8s.io imports
@@ -46,6 +48,8 @@ import (
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+
+	ghclient "github.com/google/go-github/github"
 )
 
 const (
@@ -170,11 +174,16 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 	if source.Status.WebhookIDKey != "" {
 		// Get access token
 		accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
 			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning,
-				"FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
-			return err
+				"WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			// return EventTypeNormal to avoid finalize loop
+			return pkgreconciler.NewEvent(corev1.EventTypeNormal, "WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+		} else if err != nil {
+			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning,
+				"WebhookDeletionFailed", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			return fmt.Errorf("error getting secret: %v", err)
 		}
 
 		args := &webhookArgs{
@@ -185,9 +194,17 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		}
 		// Delete the webhook using the access token and stored webhook ID
 		err = r.deleteWebhook(ctx, args)
-		if err != nil {
-			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning, "FailedFinalize", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
-			return err
+		var gherr *ghclient.ErrorResponse
+		if errors.As(err, &gherr) {
+			if gherr.Response.StatusCode == http.StatusNotFound {
+				controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning, "WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+				// return EventTypeNormal to avoid finalize loop
+				return pkgreconciler.NewEvent(corev1.EventTypeNormal, "WebhookDeletionSkipped", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			}
+		} else {
+			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning,
+				"WebhookDeletionFailed", "Could not delete webhook %q: %v", source.Status.WebhookIDKey, err)
+			return fmt.Errorf("error deleting webhook: %v", err)
 		}
 		// Webhook deleted, clear ID
 		source.Status.WebhookIDKey = ""
@@ -290,7 +307,7 @@ func (r *Reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 	}
 	err = r.webhookClient.Delete(ctx, hookOptions, args.hookID, args.alternateGitHubAPIURL)
 	if err != nil {
-		return fmt.Errorf("failed to delete webhook: %v", err)
+		return fmt.Errorf("failed to delete webhook: %w", err)
 	}
 	return nil
 }

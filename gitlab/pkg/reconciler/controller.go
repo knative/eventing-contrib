@@ -49,7 +49,7 @@ type envConfig struct {
 // NewController returns the controller implementation with reconciler structure and logger
 func NewController(
 	ctx context.Context,
-	cmw configmap.Watcher,
+	_ configmap.Watcher,
 ) *controller.Impl {
 	gitlabInformer := gitlabinformer.Get(ctx)
 	serviceInformer := kserviceinformer.Get(ctx)
@@ -81,7 +81,6 @@ func NewController(
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
-	cmw.Watch(logging.ConfigMapName(), r.UpdateFromLoggingConfigMap)
 	return impl
 
 }
