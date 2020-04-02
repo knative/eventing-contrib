@@ -23,12 +23,10 @@ import (
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
-	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
 
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
 	"knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel"
@@ -37,7 +35,7 @@ import (
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config) *controller.Impl {
+func NewController(ctx context.Context) *controller.Impl {
 
 	logger := logging.FromContext(ctx)
 	channelInformer := natsschannel.Get(ctx)

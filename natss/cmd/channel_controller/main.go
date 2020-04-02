@@ -40,8 +40,7 @@ func main() {
 		ctx = injection.WithNamespaceScope(ctx, ns)
 	}
 
-	cfg := sharedmain.ParseAndGetConfigOrDie()
-	sharedmain.MainWithConfig(ctx, component, cfg, func(ctx context.Context, watcher configmap.Watcher) *kncontroller.Impl {
-		return controller.NewController(ctx, watcher, cfg)
+	sharedmain.MainWithContext(ctx, component, func(ctx context.Context, watcher configmap.Watcher) *kncontroller.Impl {
+		return controller.NewController(ctx)
 	})
 }
