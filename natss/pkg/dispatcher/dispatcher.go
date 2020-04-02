@@ -287,7 +287,24 @@ func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventin
 			return
 		}
 		s.logger.Debug("NATSS message received", zap.String("subject", stanMsg.Subject), zap.Uint64("sequence", stanMsg.Sequence), zap.Time("timestamp", time.Unix(stanMsg.Timestamp, 0)))
-		if err := s.dispatcher.DispatchMessage(ctx, message, nil, (*url.URL)(subscription.SubscriberURI), (*url.URL)(subscription.ReplyURI), (*url.URL)(subscription.DeadLetterSinkURI)); err != nil {
+
+		var destination *url.URL
+		if !subscription.SubscriberURI.IsEmpty() {
+			destination = subscription.SubscriberURI.URL()
+		}
+		var reply *url.URL
+		if !subscription.ReplyURI.IsEmpty() {
+			reply = subscription.ReplyURI.URL()
+		}
+		var deadLetter *url.URL
+		if subscription.Delivery != nil && subscription.Delivery.DeadLetterSink != nil && !subscription.Delivery.DeadLetterSink.URI.IsEmpty() {
+			deadLetter = subscription.Delivery.DeadLetterSink.URI.URL()
+		}
+		if !subscription.DeadLetterSinkURI.IsEmpty() {
+			deadLetter = subscription.DeadLetterSinkURI.URL()
+		}
+
+		if err := s.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter); err != nil {
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}

@@ -108,6 +108,20 @@ function knative_teardown() {
   wait_until_object_does_not_exist namespaces knative-eventing
 }
 
+# Add function call to trap
+# Parameters: $1 - Function to call
+#             $2...$n - Signals for trap
+function add_trap() {
+  local cmd=$1
+  shift
+  for trap_signal in $@; do
+    local current_trap="$(trap -p $trap_signal | cut -d\' -f2)"
+    local new_cmd="($cmd)"
+    [[ -n "${current_trap}" ]] && new_cmd="${current_trap};${new_cmd}"
+    trap -- "${new_cmd}" $trap_signal
+  done
+}
+
 function test_setup() {
   natss_setup || return 1
   kafka_setup || return 1
@@ -115,6 +129,17 @@ function test_setup() {
 
   install_channel_crds || return 1
   install_sources_crds || return 1
+
+  # Install kail if needed.
+  if ! which kail > /dev/null; then
+    bash <( curl -sfL https://raw.githubusercontent.com/boz/kail/master/godownloader.sh) -b "$GOPATH/bin"
+  fi
+
+  # Capture all logs.
+  kail > ${ARTIFACTS}/k8s.log.txt &
+  local kail_pid=$!
+  # Clean up kail so it doesn't interfere with job shutting down
+  add_trap "kill $kail_pid || true" EXIT
 
   # Publish test images.
   echo ">> Publishing test images from vendor"
