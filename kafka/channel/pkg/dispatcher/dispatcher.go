@@ -160,9 +160,6 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	)
 	err := c.dispatcher.DispatchMessage(context.Background(), message, nil, destination, reply, deadLetter)
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
-	if err != nil {
-		c.logger.Warn("Error with dispathing", zap.Error(err))
-	}
 	return err == nil, err
 }
 

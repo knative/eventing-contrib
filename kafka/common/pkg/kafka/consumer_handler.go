@@ -76,6 +76,7 @@ func (consumer *saramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 		mustMark, err := consumer.handler.Handle(session.Context(), message)
 
 		if err != nil {
+			consumer.logger.Info("Failure while handling a message", zap.String("topic", message.Topic), zap.Int32("partition", message.Partition), zap.Int64("offset", message.Offset), zap.Error(err))
 			consumer.errors <- err
 		}
 		if mustMark {
