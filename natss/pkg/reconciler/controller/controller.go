@@ -15,7 +15,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
-	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
 	"knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel"
 	natssChannelReconciler "knative.dev/eventing-contrib/natss/pkg/client/injection/reconciler/messaging/v1alpha1/natsschannel"
 )
@@ -32,7 +31,6 @@ func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config
 	kubeClient := kubeclient.Get(ctx)
 
 	r := &Reconciler{
-		natssClientSet:           clientset.NewForConfigOrDie(config),
 		kubeClientSet:            kubeClient,
 		dispatcherNamespace:      system.Namespace(),
 		dispatcherDeploymentName: dispatcherName,

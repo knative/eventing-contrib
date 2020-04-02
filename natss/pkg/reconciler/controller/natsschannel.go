@@ -46,8 +46,15 @@ const (
 	ReconcilerName = "NatssChannel"
 
 	// Name of the corev1.Events emitted from the reconciliation process.
-	channelReconciled      = "NatssChannelReconciled"
-	channelReconcileFailed = "NatssChannelReconcileFailed"
+	channelReconciled            = "NatssChannelReconciled"
+	channelReconcileFailed       = "NatssChannelReconcileFailed"
+	dispatcherDeploymentNotFound = "DispatcherDeploymentDoesNotExist"
+	dispatcherDeploymentFailed   = "DispatcherDeploymentFailed"
+	dispatcherServiceFailed      = "DispatcherServiceFailed"
+	dispatcherServiceNotFound    = "DispatcherServiceDoesNotExist"
+	dispatcherEndpointsNotFound  = "DispatcherEndpointsDoesNotExist"
+	dispatcherEndpointsFailed    = "DispatcherEndpointsFailed"
+	channelServiceFailed         = "ChannelServiceFailed"
 
 	dispatcherName = "natss-ch-dispatcher"
 
@@ -57,7 +64,7 @@ const (
 
 // Reconciler reconciles NATSS Channels.
 type Reconciler struct {
-	kubeClientSet  kubernetes.Interface
+	kubeClientSet kubernetes.Interface
 
 	dispatcherNamespace      string
 	dispatcherDeploymentName string
@@ -71,22 +78,16 @@ type Reconciler struct {
 }
 
 var _ natssChannelReconciler.Interface = (*Reconciler)(nil)
-var _ natssChannelReconciler.Finalizer = (*Reconciler)(nil)
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, nc *v1alpha1.NatssChannel) reconciler.Event {
 	nc.Status.InitializeConditions()
 
 	logger := logging.FromContext(ctx)
 	// Verify channel is valid.
+	nc.SetDefaults(ctx)
 	if err := nc.Validate(ctx); err != nil {
 		logger.Error("Invalid natss channel", zap.String("channel", nc.Name), zap.Error(err))
 		return err
-	}
-
-	// See if the channel has been deleted.
-	if nc.DeletionTimestamp != nil {
-		// K8s garbage collection will delete the K8s service for this channel.
-		return nil
 	}
 
 	// We reconcile the status of the Channel by looking at:
@@ -98,13 +99,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, nc *v1alpha1.NatssChanne
 	// Get the Dispatcher Deployment and propagate the status to the Channel
 	d, err := r.deploymentLister.Deployments(r.dispatcherNamespace).Get(r.dispatcherDeploymentName)
 	if err != nil {
+		logger.Error("Unable to get the dispatcher Deployment", zap.Error(err))
 		if apierrs.IsNotFound(err) {
-			nc.Status.MarkDispatcherFailed("DispatcherDeploymentDoesNotExist", "Dispatcher Deployment does not exist")
+			nc.Status.MarkDispatcherFailed(dispatcherDeploymentNotFound, "Dispatcher Deployment does not exist")
 		} else {
-			logger.Error("Unable to get the dispatcher Deployment", zap.Error(err))
-			nc.Status.MarkDispatcherFailed("DispatcherDeploymentGetFailed", "Failed to get dispatcher Deployment")
+			nc.Status.MarkDispatcherFailed(dispatcherDeploymentFailed, "Failed to get dispatcher Deployment")
 		}
-		return err
+		return newError(err)
 	}
 	nc.Status.PropagateDispatcherStatus(&d.Status)
 
@@ -113,13 +114,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, nc *v1alpha1.NatssChanne
 	// an existence check. Then below we check the endpoints targeting it.
 	_, err = r.serviceLister.Services(r.dispatcherNamespace).Get(r.dispatcherServiceName)
 	if err != nil {
+		logger.Error("Unable to get the dispatcher service", zap.Error(err))
 		if apierrs.IsNotFound(err) {
-			nc.Status.MarkServiceFailed("DispatcherServiceDoesNotExist", "Dispatcher Service does not exist")
+			nc.Status.MarkServiceFailed(dispatcherServiceNotFound, "Dispatcher Service does not exist")
 		} else {
-			logger.Error("Unable to get the dispatcher service", zap.Error(err))
-			nc.Status.MarkServiceFailed("DispatcherServiceGetFailed", "Failed to get dispatcher service")
+			nc.Status.MarkServiceFailed(dispatcherServiceFailed, "Failed to get dispatcher service")
 		}
-		return err
+		return newError(err)
 	}
 	nc.Status.MarkServiceTrue()
 
@@ -127,13 +128,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, nc *v1alpha1.NatssChanne
 	// endpoints has the same name as the service, so not a bug.
 	e, err := r.endpointsLister.Endpoints(r.dispatcherNamespace).Get(r.dispatcherServiceName)
 	if err != nil {
+		logger.Error("Unable to get the dispatcher endpoints", zap.Error(err))
 		if apierrs.IsNotFound(err) {
-			nc.Status.MarkEndpointsFailed("DispatcherEndpointsDoesNotExist", "Dispatcher Endpoints does not exist")
+			nc.Status.MarkEndpointsFailed(dispatcherEndpointsNotFound, "Dispatcher Endpoints does not exist")
 		} else {
-			logger.Error("Unable to get the dispatcher endpoints", zap.Error(err))
-			nc.Status.MarkEndpointsFailed("DispatcherEndpointsGetFailed", "Failed to get dispatcher endpoints")
+			nc.Status.MarkEndpointsFailed(dispatcherEndpointsFailed, "Failed to get dispatcher endpoints")
 		}
-		return err
+		return newError(err)
 	}
 
 	if len(e.Subsets) == 0 {
@@ -146,8 +147,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, nc *v1alpha1.NatssChanne
 	// Reconcile the k8s service representing the actual Channel. It points to the Dispatcher service via ExternalName
 	svc, err := r.reconcileChannelService(ctx, nc)
 	if err != nil {
-		nc.Status.MarkChannelServiceFailed("ChannelServiceFailed", fmt.Sprintf("Channel Service failed: %s", err))
-		return err
+		nc.Status.MarkChannelServiceFailed(channelServiceFailed, fmt.Sprintf("Channel Service failed: %s", err))
+		return newError(err)
 	}
 	nc.Status.MarkChannelServiceTrue()
 	nc.Status.SetAddress(&apis.URL{
@@ -191,10 +192,14 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alp
 	return svc, nil
 }
 
-func (r *Reconciler) FinalizeKind(ctx context.Context, o *v1alpha1.NatssChannel) reconciler.Event {
-	return newReconciledNormal(o.Namespace, o.Name)
+func (r *Reconciler) FinalizeKind(ctx context.Context, nc *v1alpha1.NatssChannel) reconciler.Event {
+	return newReconciledNormal(nc.Namespace, nc.Name)
 }
 
 func newReconciledNormal(namespace, name string) reconciler.Event {
 	return reconciler.NewEvent(corev1.EventTypeNormal, channelReconciled, reconciledNormalFmt, namespace, name)
+}
+
+func newError(err error) error {
+	return fmt.Errorf(ReconcilerName+" reconciliation failed with: %s", err)
 }
