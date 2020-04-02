@@ -1817,7 +1817,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4f5b498cebda87e2920e848988cbb36004de61a63792f54dad5838ca8d4655c8"
+  digest = "1:5dc7c5574e2af6847969f993aebdfb1f2dadeb0eda5c9cea20b2aa535ad5446c"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1923,7 +1923,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "4d8b7b77044df67ed901d9a5e09474b8a4ff7c2c"
+  revision = "fc14c80f64196ce3e8ef7d6e7a6362ecfb8e04be"
 
 [[projects]]
   branch = "master"
