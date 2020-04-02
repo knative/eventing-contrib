@@ -27,6 +27,7 @@ import (
 
 	"github.com/nats-io/stan.go"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	"go.uber.org/zap"
 
@@ -61,8 +62,10 @@ type SubscriptionsSupervisor struct {
 	receiver   *eventingchannels.MessageReceiver
 	dispatcher *eventingchannels.MessageDispatcherImpl
 
-	subscriptionsMux sync.Mutex
-	subscriptions    SubscriptionChannelMapping
+	subscriptionsMux     sync.Mutex
+	channelSubscriptions map[eventingchannels.ChannelReference][]types.UID
+	subsStanSubscription map[types.UID]*stan.Subscription
+	subscriptions        map[types.UID]subscriptionReference
 
 	connect   chan struct{}
 	natssURL  string
@@ -98,13 +101,15 @@ func NewDispatcher(args Args) (NatssDispatcher, error) {
 	}
 
 	d := &SubscriptionsSupervisor{
-		logger:        args.Logger,
-		dispatcher:    eventingchannels.NewMessageDispatcher(args.Logger),
-		subscriptions: make(SubscriptionChannelMapping),
-		connect:       make(chan struct{}, maxElements),
-		natssURL:      args.NatssURL,
-		clusterID:     args.ClusterID,
-		clientID:      args.ClientID,
+		logger:               args.Logger,
+		dispatcher:           eventingchannels.NewMessageDispatcher(args.Logger),
+		channelSubscriptions: make(map[eventingchannels.ChannelReference][]types.UID),
+		subsStanSubscription: make(map[types.UID]*stan.Subscription),
+		subscriptions:        make(map[types.UID]subscriptionReference),
+		connect:              make(chan struct{}, maxElements),
+		natssURL:             args.NatssURL,
+		clusterID:            args.ClusterID,
+		clientID:             args.ClientID,
 	}
 
 	receiver, err := eventingchannels.NewMessageReceiver(
@@ -223,56 +228,50 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(ctx context.Context, chann
 	s.logger.Info("Update subscriptions", zap.String("cRef", cRef.String()), zap.String("subscribable", fmt.Sprintf("%v", channel)), zap.Bool("isFinalizer", isFinalizer))
 	if channel.Spec.Subscribable == nil || isFinalizer {
 		s.logger.Sugar().Infof("Empty subscriptions for channel Ref: %v; unsubscribe all active subscriptions, if any", cRef)
-		chMap, ok := s.subscriptions[cRef]
+		subs, ok := s.channelSubscriptions[cRef]
 		if !ok {
 			// nothing to do
 			s.logger.Sugar().Infof("No channel Ref %v found in subscriptions map", cRef)
 			return failedToSubscribe, nil
 		}
-		for sub := range chMap {
+		for _, sub := range subs {
 			s.unsubscribe(cRef, sub)
 		}
-		delete(s.subscriptions, cRef)
+		delete(s.channelSubscriptions, cRef)
 		return failedToSubscribe, nil
 	}
 
 	subscriptions := channel.Spec.Subscribable.Subscribers
-	activeSubs := make(map[subscriptionReference]bool) // it's logically a set
+	activeSubs := make(map[types.UID]bool) // it's logically a set
 
-	chMap, ok := s.subscriptions[cRef]
-	if !ok {
-		chMap = make(map[subscriptionReference]*stan.Subscription)
-		s.subscriptions[cRef] = chMap
-	}
 	var errStrings []string
 	for _, sub := range subscriptions {
 		// check if the subscription already exist and do nothing in this case
 		subRef := newSubscriptionReference(sub)
-		if _, ok := chMap[subRef]; ok {
-			activeSubs[subRef] = true
+		if _, ok := s.subsStanSubscription[sub.UID]; ok {
+			activeSubs[subRef.UID] = true
 			s.logger.Sugar().Infof("Subscription: %v already active for channel: %v", sub, cRef)
 			continue
 		}
 		// subscribe and update failedSubscription if subscribe fails
-		natssSub, err := s.subscribe(ctx, cRef, subRef)
+		_, err := s.subscribe(ctx, cRef, subRef)
 		if err != nil {
 			errStrings = append(errStrings, err.Error())
 			s.logger.Sugar().Errorf("failed to subscribe (subscription:%q) to channel: %v. Error:%s", sub, cRef, err.Error())
 			failedToSubscribe[sub] = err
 			continue
 		}
-		chMap[subRef] = natssSub
-		activeSubs[subRef] = true
+		activeSubs[subRef.UID] = true
 	}
 	// Unsubscribe for deleted subscriptions
-	for sub := range chMap {
+	for sub := range s.subscriptions {
 		if ok := activeSubs[sub]; !ok {
 			s.unsubscribe(cRef, sub)
 		}
 	}
 	// delete the channel from s.subscriptions if chMap is empty
-	if len(s.subscriptions[cRef]) == 0 {
-		delete(s.subscriptions, cRef)
+	if len(s.channelSubscriptions[cRef]) == 0 {
+		delete(s.channelSubscriptions, cRef)
 	}
 	return failedToSubscribe, nil
 }
@@ -347,21 +346,36 @@ func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventin
 		return nil, err
 	}
 
+	s.channelSubscriptions[channel] = append(s.channelSubscriptions[channel], subscription.UID)
+	s.subsStanSubscription[subscription.UID] = &natssSub
+	s.subscriptions[subscription.UID] = subscription
+
 	s.logger.Sugar().Infof("NATSS Subscription created: %+v", natssSub)
 	return &natssSub, nil
 }
 
 // should be called only while holding subscriptionsMux
-func (s *SubscriptionsSupervisor) unsubscribe(channel eventingchannels.ChannelReference, subscription subscriptionReference) error {
-	s.logger.Info("Unsubscribe from channel:", zap.Any("channel", channel), zap.Any("subscription", subscription))
+func (s *SubscriptionsSupervisor) unsubscribe(channel eventingchannels.ChannelReference, subId types.UID) error {
+	s.logger.Info("Unsubscribe from channel:", zap.Any("channel", channel), zap.Any("subscription", subId))
 
-	if stanSub, ok := s.subscriptions[channel][subscription]; ok {
-		// delete from NATSS
+	delete(s.subscriptions, subId)
+
+	if subsSlice, ok := s.channelSubscriptions[channel]; ok {
+		var newSlice []types.UID
+		for _, oldSub := range subsSlice {
+			if oldSub != subId {
+				newSlice = append(newSlice, oldSub)
+			}
+		}
+		s.channelSubscriptions[channel] = newSlice
+	}
+
+	if stanSub, ok := s.subsStanSubscription[subId]; ok {
 		if err := (*stanSub).Unsubscribe(); err != nil {
 			s.logger.Error("Unsubscribing NATSS Streaming subscription failed: ", zap.Error(err))
 			return err
 		}
-		delete(s.subscriptions[channel], subscription)
+		delete(s.subsStanSubscription, subId)
 	}
 	return nil
 }
