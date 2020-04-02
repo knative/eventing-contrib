@@ -138,6 +138,15 @@ type consumerMessageHandler struct {
 }
 
 func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sarama.ConsumerMessage) (bool, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			c.logger.Warn("Panic happened while handling a message",
+				zap.String("topic", consumerMessage.Topic),
+				zap.String("sub", string(c.sub.UID)),
+				zap.Any("panic value", r),
+			)
+		}
+	}()
 	message := protocolkafka.NewMessageFromConsumerMessage(consumerMessage)
 	if message.ReadEncoding() == binding.EncodingUnknown {
 		return false, errors.New("received a message with unknown encoding")

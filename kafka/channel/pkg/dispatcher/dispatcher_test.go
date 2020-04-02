@@ -351,7 +351,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 			}
 
 			var newSubscribers []string
-			for id, _ := range d.subscriptions {
+			for id := range d.subscriptions {
 				newSubscribers = append(newSubscribers, string(id))
 			}
 
