@@ -20,15 +20,14 @@ import (
 	"context"
 	"testing"
 
-	"knative.dev/pkg/injection/sharedmain"
+	"k8s.io/client-go/rest"
 
 	"knative.dev/pkg/injection"
 )
 
 func TestNewController(t *testing.T) {
 	ctx := context.Background()
-	cfg, _ := sharedmain.GetConfig("", "")
-	ctx, _ = injection.Default.SetupInformers(ctx, cfg)
+	ctx, _ = injection.Default.SetupInformers(ctx, &rest.Config{})
 	// no panic
 	_ = NewController(ctx)
 }
