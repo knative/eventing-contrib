@@ -25,7 +25,6 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -77,9 +76,6 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	var messagesToFinish []binding.Message
 	defer func() {
 		for _, msg := range messagesToFinish {
-			if msg == nil {
-				d.logger.Debug("Shit this stuff is nil")
-			}
 			_ = msg.Finish(nil)
 		}
 	}()
@@ -95,32 +91,24 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 	var responseAdditionalHeaders nethttp.Header
 
 	if destination != nil {
-		d.logger.Debug("Sending to destination")
-
 		var err error
 		// Try to send to destination
 		messagesToFinish = append(messagesToFinish, initialMessage)
 
 		responseMessage, responseAdditionalHeaders, err = d.executeRequest(ctx, destination, initialMessage, initialAdditionalHeaders)
 		if err != nil {
-			d.logger.Debug("Destination failed")
 			// DeadLetter is configured, send the message to it
 			if deadLetter != nil {
-				d.logger.Debug("Sending to deadletter")
 				deadLetterResponse, _, deadLetterErr := d.executeRequest(ctx, deadLetter, initialMessage, initialAdditionalHeaders)
 				if deadLetterErr != nil {
-					d.logger.Debug("Dead letter failed")
 					return fmt.Errorf("unable to complete request to either %s (%v) or %s (%v)", destination, err, deadLetter, deadLetterErr)
 				}
 				if deadLetterResponse != nil {
 					messagesToFinish = append(messagesToFinish, deadLetterResponse)
 				}
 
-				d.logger.Debug("Dead letter fine")
-
 				return nil
 			}
-			d.logger.Debug("Destination fine")
 			// No DeadLetter, just fail
 			return fmt.Errorf("unable to complete request to %s: %v", destination, err)
 		}
@@ -132,7 +120,6 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 
 	// No response, dispatch completed
 	if responseMessage == nil {
-		d.logger.Debug("No response message")
 		return nil
 	}
 
@@ -143,24 +130,17 @@ func (d *MessageDispatcherImpl) DispatchMessage(ctx context.Context, initialMess
 		return nil
 	}
 
-	d.logger.Debug("Sending to reply")
-
 	responseResponseMessage, _, err := d.executeRequest(ctx, reply, responseMessage, responseAdditionalHeaders)
 	if err != nil {
-		d.logger.Debug("Reply failed")
 		// DeadLetter is configured, send the message to it
 		if deadLetter != nil {
-			d.logger.Debug("Sending to deadletter")
 			deadLetterResponse, _, deadLetterErr := d.executeRequest(ctx, deadLetter, initialMessage, responseAdditionalHeaders)
 			if deadLetterErr != nil {
-				d.logger.Debug("Dead letter failed")
 				return fmt.Errorf("failed to forward reply to %s (%v) and failed to send it to the dead letter sink %s (%v)", reply, err, deadLetter, deadLetterErr)
 			}
 			if deadLetterResponse != nil {
 				messagesToFinish = append(messagesToFinish, deadLetterResponse)
 			}
-
-			d.logger.Debug("Dead letter fine")
 
 			return nil
 		}
@@ -189,7 +169,7 @@ func (d *MessageDispatcherImpl) executeRequest(ctx context.Context, url *url.URL
 
 	response, err := d.sender.Send(req)
 	if err != nil {
-		return nil, nil, errors.WithStack(err)
+		return nil, nil, err
 	}
 	if isFailure(response.StatusCode) {
 		// Reject non-successful responses.

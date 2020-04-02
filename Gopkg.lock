@@ -960,7 +960,7 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:44dab140255ddb95bf5ed192b0b4f1cce1b64b9c0ad8d075152e4309d536a61a"
+  digest = "1:5ab79d2a36037de1ab2908733a2cab0c08b12f6956e3e1eab07cd1b2abf7b903"
   name = "go.uber.org/zap"
   packages = [
     ".",
@@ -973,8 +973,7 @@
     "zaptest",
   ]
   pruneopts = "NUT"
-  revision = "2aa9fa25da83bdfff756c36a91442edc9a84576c"
-  version = "v1.14.1"
+  revision = "67bc79d13d155c02fd008f721863ff8cc5f30659"
 
 [[projects]]
   branch = "master"
@@ -1818,7 +1817,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:954d17c820feefac404aa2206be78338d79ebc2512fd15bec360cb4c53370693"
+  digest = "1:4f5b498cebda87e2920e848988cbb36004de61a63792f54dad5838ca8d4655c8"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1924,11 +1923,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "dc1c9d5b7a2570cdb03bebdc5183f2e01e3c219a"
+  revision = "4d8b7b77044df67ed901d9a5e09474b8a4ff7c2c"
 
 [[projects]]
   branch = "master"
-  digest = "1:1cfbe38d639ea8c4aeb9f1b0b98ac80b0004ef612f0b48eb572ba6bb23bdc003"
+  digest = "1:ae72dd6d2950c1ffe31061c827bb8904fce102f9134c4309cca0fe1ac5864c26"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -2004,11 +2003,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "94b2b6aaaf4b81c3b26b269bd477518094aa31a5"
+  revision = "55250e6aab62f767b8680a12ddeb771c519d78fe"
 
 [[projects]]
   branch = "master"
-  digest = "1:329ea5ddb92331cc810239af9e3360a60dfc137ac655727ecf1b156032a86795"
+  digest = "1:7cb2882424cf97b13609f9ef64261a88a15a6b8bdbba85bce1833e99f8da9d53"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -2048,7 +2047,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "08ede7f985220d126ca0ccef2ec1609b2ea9877d"
+  revision = "bed443c6dceca5106125082a079f4d6326734489"
 
 [[projects]]
   branch = "master"
@@ -2059,7 +2058,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "5bdfbd623938f0cc4a260bf06c503bbb0a76d6f9"
+  revision = "163337c1d67d883a84d10c4e769e6fc493649341"
 
 [[projects]]
   digest = "1:fc6463b2db1240176327f3c259d3c7101e8340e2e8a6368fc39d69e9967bd8af"
@@ -2181,6 +2180,7 @@
     "go.opencensus.io/tag",
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
+    "go.uber.org/zap/zaptest",
     "golang.org/x/net/context",
     "golang.org/x/net/http2",
     "golang.org/x/oauth2",

@@ -137,7 +137,7 @@ required = [
 
 [[constraint]]
   name = "github.com/cloudevents/sdk-go"
-  version = "v2.0.0-preview7"
+  version = "v2.0.0-preview8"
 
 [[constraint]]
   name = "github.com/apache/camel-k"
@@ -146,7 +146,7 @@ required = [
 # needed because pkg upgraded
 [[override]]
   name = "go.uber.org/zap"
-  version = "v1.14.1"
+  revision = "67bc79d13d155c02fd008f721863ff8cc5f30659"
 
 # Required for opencensus.
 [[override]]

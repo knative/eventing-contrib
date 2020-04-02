@@ -157,9 +157,6 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	c.logger.Debug("Going to dispatch the message",
 		zap.String("topic", consumerMessage.Topic),
 		zap.String("sub", string(c.sub.UID)),
-		zap.Any("destination", destination),
-		zap.Any("reply", reply),
-		zap.Any("deadLetter", deadLetter),
 	)
 	err := c.dispatcher.DispatchMessage(context.Background(), message, nil, destination, reply, deadLetter)
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
