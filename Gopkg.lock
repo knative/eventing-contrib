@@ -162,7 +162,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:8579079770a2c0bd9139993eecae525880851475e7121a13e67ea1c9cd015f9c"
+  digest = "1:e5cf53ca405e30a44554778b83ba07f9c0d13dd7b2045e833dcc7918824e7580"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -183,6 +183,7 @@
     "v2/binding/buffering",
     "v2/binding/format",
     "v2/binding/spec",
+    "v2/binding/test",
     "v2/binding/transformer",
     "v2/client",
     "v2/context",
@@ -200,8 +201,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "123def5bff3a506e15cc0bc581a72efd9bda4783"
-  version = "v2.0.0-preview7"
+  revision = "6dc020a8df7f3ee38d729e53cde2193ea7edf12a"
+  version = "v2.0.0-preview8"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -390,7 +391,7 @@
   name = "github.com/google/go-containerregistry"
   packages = ["pkg/name"]
   pruneopts = "NUT"
-  revision = "955bf358a3d8d1ebfa6204338ef3fe364255cd85"
+  revision = "3d03ed9b1ca2ad5d78d43832e8e46adc31d2b961"
 
 [[projects]]
   digest = "1:91099c6f78b1e7bdf9ed06eb4cb7f017174293a3689d76b995a06f4c8d64a7f0"
@@ -726,6 +727,14 @@
   version = "v0.8.1"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "NUT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:3d7ad9c93ee2e43dc7dd48b76f96804c365be7fe30e75f7405028c4e633d189a"
   name = "github.com/prometheus/client_golang"
   packages = [
@@ -831,6 +840,17 @@
   pruneopts = "NUT"
   revision = "2e9d26c8c37aae03e3f9d4e90b7116f5accb7cab"
   version = "v1.0.5"
+
+[[projects]]
+  digest = "1:e6aedc9ffe708685ae5bb6c1e9fb12ce9d3ef0aa14872c620c8d34e13fc233e2"
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require",
+  ]
+  pruneopts = "NUT"
+  revision = "3ebf1ddaeb260c4b1ae502a01c7844fa8c1fa0e9"
+  version = "v1.5.1"
 
 [[projects]]
   digest = "1:435d9fe926ee0d903662215091e27fba6f1b7228d33a30c289cdb5aeff1c8fc8"
@@ -1741,7 +1761,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1339bb4ce72e33d5e3db4552d326c661fed31372fbace9f45c1dcd09e061654b"
+  digest = "1:5dc7c5574e2af6847969f993aebdfb1f2dadeb0eda5c9cea20b2aa535ad5446c"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1847,11 +1867,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "b4de32c4f9cdd1c16af824a84e55fcd6aa37adf5"
+  revision = "79bd95a3e7ce7a9d02c9d49a5af98edac2a5e834"
 
 [[projects]]
   branch = "master"
-  digest = "1:664207d75dbcaeab206d93b3dcd8098c59e3b6b21378af02d686579e491fc859"
+  digest = "1:ae72dd6d2950c1ffe31061c827bb8904fce102f9134c4309cca0fe1ac5864c26"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1927,11 +1947,11 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "8a6d25b30970038d1e24ddf5f6e0cec129c9564c"
+  revision = "55250e6aab62f767b8680a12ddeb771c519d78fe"
 
 [[projects]]
   branch = "master"
-  digest = "1:f65701e6532841e4c73f39b2f40b54aa9766aa7a4d5f776033bda3b8387d134c"
+  digest = "1:7cb2882424cf97b13609f9ef64261a88a15a6b8bdbba85bce1833e99f8da9d53"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1971,18 +1991,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "e1bc4d1f4e872bedd6c939388292d57cd2343c86"
+  revision = "bed443c6dceca5106125082a079f4d6326734489"
 
 [[projects]]
   branch = "master"
-  digest = "1:2987a1db00b983af9e5d5281639a754fb6449eef01e6a375894829eaec17cb2a"
+  digest = "1:5da0f15efcd7dafa6296be9cd4a630fcb5253cf202e54638299221ae7df419ab"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "d878fef854182d0cb2ab2190c66a785b8f05e3e2"
+  revision = "163337c1d67d883a84d10c4e769e6fc493649341"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
@@ -2025,6 +2045,8 @@
     "github.com/cloudevents/sdk-go/v1/cloudevents/types",
     "github.com/cloudevents/sdk-go/v2",
     "github.com/cloudevents/sdk-go/v2/binding",
+    "github.com/cloudevents/sdk-go/v2/binding/test",
+    "github.com/cloudevents/sdk-go/v2/binding/transformer",
     "github.com/cloudevents/sdk-go/v2/protocol/http",
     "github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama",
     "github.com/cloudevents/sdk-go/v2/protocol/stan",
@@ -2052,6 +2074,7 @@
     "go.opencensus.io/tag",
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
+    "go.uber.org/zap/zaptest",
     "golang.org/x/net/context",
     "golang.org/x/net/http2",
     "golang.org/x/oauth2",
@@ -2098,6 +2121,7 @@
     "knative.dev/eventing/pkg/adapter",
     "knative.dev/eventing/pkg/apis/duck",
     "knative.dev/eventing/pkg/apis/duck/v1alpha1",
+    "knative.dev/eventing/pkg/apis/duck/v1beta1",
     "knative.dev/eventing/pkg/apis/eventing",
     "knative.dev/eventing/pkg/apis/eventing/v1alpha1",
     "knative.dev/eventing/pkg/apis/messaging/v1alpha1",

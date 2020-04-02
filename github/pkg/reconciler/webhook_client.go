@@ -145,7 +145,7 @@ func (client gitHubWebhookClient) Delete(ctx context.Context, options *webhookOp
 	}
 	if err != nil {
 		logger.Infof("delete webhook error response:\n%+v", resp)
-		return fmt.Errorf("failed to delete the webhook: %v", err)
+		return fmt.Errorf("failed to delete the webhook: %w", err)
 	}
 
 	logger.Infof("deleted hook: %s", hook.ID)

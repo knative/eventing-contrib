@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/webhook/resourcesemantics"
 )
 
 // +genclient
@@ -42,6 +43,7 @@ type KafkaSource struct {
 
 // Check that KafkaSource can be validated and can be defaulted.
 var _ runtime.Object = (*KafkaSource)(nil)
+var _ resourcesemantics.GenericCRD = (*KafkaSource)(nil)
 var _ kmeta.OwnerRefable = (*KafkaSource)(nil)
 
 type KafkaSourceSASLSpec struct {
