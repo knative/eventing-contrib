@@ -164,8 +164,24 @@ func (l *Listers) GetPingSourceLister() sourcelisters.PingSourceLister {
 	return sourcelisters.NewPingSourceLister(l.indexerFor(&sourcesv1alpha1.PingSource{}))
 }
 
+func (l *Listers) GetSinkBindingLister() sourcelisters.SinkBindingLister {
+	return sourcelisters.NewSinkBindingLister(l.indexerFor(&sourcesv1alpha1.SinkBinding{}))
+}
+
 func (l *Listers) GetPingSourceV1alpha2Lister() sourcev1alpha2listers.PingSourceLister {
 	return sourcev1alpha2listers.NewPingSourceLister(l.indexerFor(&sourcesv1alpha2.PingSource{}))
+}
+
+func (l *Listers) GetContainerSourceLister() sourcev1alpha2listers.ContainerSourceLister {
+	return sourcev1alpha2listers.NewContainerSourceLister(l.indexerFor(&sourcesv1alpha2.ContainerSource{}))
+}
+
+func (l *Listers) GetSinkBindingV1alpha2Lister() sourcev1alpha2listers.SinkBindingLister {
+	return sourcev1alpha2listers.NewSinkBindingLister(l.indexerFor(&sourcesv1alpha2.SinkBinding{}))
+}
+
+func (l *Listers) GetApiServerSourceV1alpha2Lister() sourcev1alpha2listers.ApiServerSourceLister {
+	return sourcev1alpha2listers.NewApiServerSourceLister(l.indexerFor(&sourcesv1alpha2.ApiServerSource{}))
 }
 
 func (l *Listers) GetDeploymentLister() appsv1listers.DeploymentLister {

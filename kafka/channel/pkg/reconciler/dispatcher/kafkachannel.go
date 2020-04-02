@@ -34,7 +34,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
@@ -253,26 +254,32 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 		return err
 	}
 
-	failedSubscriptions, err := r.kafkaDispatcher.UpdateKafkaConsumers(config)
+	failedSubscriptionsv1beta1, err := r.kafkaDispatcher.UpdateKafkaConsumers(config)
 	if err != nil {
 		logging.FromContext(ctx).Error("Error updating kafka consumers in dispatcher")
 		return err
 	}
-	kc.Status.SubscribableTypeStatus.SubscribableStatus = r.createSubscribableStatus(kc.Spec.Subscribable, failedSubscriptions)
-	if len(failedSubscriptions) > 0 {
+	failedSubscriptionsv1alpha1 := make(map[eventingduckv1alpha1.SubscriberSpec]error, len(failedSubscriptionsv1beta1))
+	for k, v := range failedSubscriptionsv1beta1 {
+		newSub := eventingduckv1alpha1.SubscriberSpec{}
+		newSub.ConvertFrom(context.TODO(), k)
+		failedSubscriptionsv1alpha1[newSub] = v
+	}
+	kc.Status.SubscribableTypeStatus.SubscribableStatus = r.createSubscribableStatus(kc.Spec.Subscribable, failedSubscriptionsv1alpha1)
+	if len(failedSubscriptionsv1alpha1) > 0 {
 		logging.FromContext(ctx).Error("Some kafka subscriptions failed to subscribe")
 		return fmt.Errorf("Some kafka subscriptions failed to subscribe")
 	}
 	return nil
 }
 
-func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscribable, failedSubscriptions map[eventingduck.SubscriberSpec]error) *eventingduck.SubscribableStatus {
+func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1.Subscribable, failedSubscriptions map[eventingduckv1alpha1.SubscriberSpec]error) *eventingduckv1alpha1.SubscribableStatus {
 	if subscribable == nil {
 		return nil
 	}
-	subscriberStatus := make([]eventingduck.SubscriberStatus, 0)
+	subscriberStatus := make([]eventingduckv1alpha1.SubscriberStatus, 0)
 	for _, sub := range subscribable.Subscribers {
-		status := eventingduck.SubscriberStatus{
+		status := eventingduckv1alpha1.SubscriberStatus{
 			UID:                sub.UID,
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,
@@ -283,7 +290,7 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscri
 		}
 		subscriberStatus = append(subscriberStatus, status)
 	}
-	return &eventingduck.SubscribableStatus{
+	return &eventingduckv1alpha1.SubscribableStatus{
 		Subscribers: subscriberStatus,
 	}
 }
@@ -296,9 +303,15 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 		HostName:  c.Status.Address.Hostname,
 	}
 	if c.Spec.Subscribable != nil {
+		newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(c.Spec.Subscribable.Subscribers))
+		for i, source := range c.Spec.Subscribable.Subscribers {
+			source.ConvertTo(context.TODO(), &newSubs[i])
+			fmt.Printf("Converted \n%+v\n To\n%+v\n", source, newSubs[i])
+			fmt.Printf("Delivery converted \n%+v\nto\n%+v\n", source.Delivery, newSubs[i].Delivery)
+		}
 		channelConfig.FanoutConfig = fanout.Config{
 			AsyncHandler:  true,
-			Subscriptions: c.Spec.Subscribable.Subscribers,
+			Subscriptions: newSubs,
 		}
 	}
 	return &channelConfig
