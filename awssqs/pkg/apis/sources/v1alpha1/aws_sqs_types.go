@@ -166,7 +166,3 @@ type AwsSqsSourceList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AwsSqsSource `json:"items"`
 }
-
-func init() {
-	SchemeBuilder.Register(&AwsSqsSource{}, &AwsSqsSourceList{})
-}

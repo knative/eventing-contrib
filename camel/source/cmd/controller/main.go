@@ -17,70 +17,12 @@ limitations under the License.
 package main
 
 import (
-	"log"
-	"os"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"knative.dev/eventing-contrib/camel/source/pkg/apis"
-	"knative.dev/eventing-contrib/camel/source/pkg/install"
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler"
-	"knative.dev/pkg/logging/logkey"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
-)
-
-const (
-	// envCamelKInstalled determines whether the controller should consider Camel K already installed without checking
-	envCamelKInstalled = "CAMEL_K_INSTALLED"
+	"knative.dev/pkg/injection/sharedmain"
 )
 
 func main() {
-	// Get a config to talk to the apiserver
-	logCfg := zap.NewProductionConfig()
-	logCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	logger, err := logCfg.Build()
-	logger = logger.With(zap.String(logkey.ControllerType, "camel-controller"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cfg, err := config.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if "true" == os.Getenv(envCamelKInstalled) {
-		log.Printf("Camel K is already installed. Skipping the check...")
-	} else {
-		// Check Camel K is installed before proceeding
-		install.EnsureCamelKInstalled(cfg)
-		log.Printf("Camel K is correctly installed in the cluster.")
-	}
-
-	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Registering Components.")
-
-	// Setup Scheme for all resources
-	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Setting up Controllers.")
-
-	// Setup all Controllers
-	if err := reconciler.Add(mgr, logger.Sugar()); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Starting Camel controller.")
-
-	// Start the Cmd
-	log.Fatal(mgr.Start(signals.SetupSignalHandler()))
+	sharedmain.Main("camel-k-controller",
+		reconciler.NewController,
+	)
 }

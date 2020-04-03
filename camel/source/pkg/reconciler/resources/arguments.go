@@ -18,11 +18,13 @@ package resources
 
 import (
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/pkg/kmeta"
 )
 
 type CamelArguments struct {
 	Name      string
 	Namespace string
+	Owner     kmeta.OwnerRefable
 	Source    v1alpha1.CamelSourceOriginSpec
 	SinkURL   string
 	Overrides map[string]string

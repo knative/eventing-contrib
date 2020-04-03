@@ -69,7 +69,7 @@ func TestDispatcher(t *testing.T) {
 	// Create the dispatcher. At this point, if Kafka is not up, this thing fails
 	dispatcher, err := NewDispatcher(context.Background(), &dispatcherArgs)
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("no dispatcher: %v", err)
 	}
 
 	// Start the dispatcher

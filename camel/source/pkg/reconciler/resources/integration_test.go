@@ -19,6 +19,8 @@ package resources
 import (
 	"testing"
 
+	"knative.dev/pkg/ptr"
+
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
@@ -30,6 +32,13 @@ func TestMakeDeployment_sink(t *testing.T) {
 	got, err := MakeIntegration(&CamelArguments{
 		Name:      "test-name",
 		Namespace: "test-namespace",
+		Owner: &v1alpha1.CamelSource{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "bar",
+				UID:       "abc-123",
+			},
+		},
 		Source: v1alpha1.CamelSourceOriginSpec{
 			Flow: &v1alpha1.Flow{
 				"from": map[string]interface{}{
@@ -68,6 +77,14 @@ func TestMakeDeployment_sink(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "test-name-",
 			Namespace:    "test-namespace",
+			OwnerReferences: []metav1.OwnerReference{{
+				Kind:               "CamelSource",
+				Name:               "foo",
+				UID:                "abc-123",
+				APIVersion:         "sources.knative.dev/v1alpha1",
+				Controller:         ptr.Bool(true),
+				BlockOwnerDeletion: ptr.Bool(true),
+			}},
 		},
 		Spec: camelv1.IntegrationSpec{
 			ServiceAccountName: "test-service-account",
