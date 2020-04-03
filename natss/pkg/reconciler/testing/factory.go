@@ -28,6 +28,7 @@ import (
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	"knative.dev/eventing/pkg/reconciler"
 
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
@@ -46,8 +47,8 @@ const (
 // Ctor functions create a k8s controller with given params.
 type Ctor func(context.Context, *Listers) controller.Reconciler
 
-// makeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
-func makeFactory(ctor Ctor) Factory {
+// MakeFactory creates a reconciler factory with fake clients and controller created by `ctor`.
+func MakeFactory(ctor Ctor) Factory {
 	return func(t *testing.T, r *TableRow) (controller.Reconciler, ActionRecorderList, EventList) {
 		ls := NewListers(r.Objects)
 
@@ -63,6 +64,7 @@ func makeFactory(ctor Ctor) Factory {
 
 		ctx, dynamicClient := fakedynamicclient.With(ctx, dynamicScheme, ls.GetAllObjects()...)
 		eventRecorder := record.NewFakeRecorder(maxEventBufferSize)
+		ctx = controller.WithEventRecorder(ctx, eventRecorder)
 
 		// Set up our Controller from the fakes.
 
@@ -84,13 +86,15 @@ func makeFactory(ctor Ctor) Factory {
 		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
 
-		ctx = controller.WithEventRecorder(ctx, eventRecorder)
+		statsReporter, _ := reconciler.NewStatsReporter("")
+		ctx = reconciler.WithStatsReporter(ctx, statsReporter)
+
+		if r.Ctx == nil {
+			r.Ctx = ctx
+		}
 
 		c := ctor(ctx, &ls)
+
 		return c, actionRecorderList, eventList
 	}
-}
-
-func MakeFactoryWithContext(ctor func(context.Context, *Listers) controller.Reconciler) Factory {
-	return makeFactory(ctor)
 }

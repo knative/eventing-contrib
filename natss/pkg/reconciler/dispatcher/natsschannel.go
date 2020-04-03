@@ -23,12 +23,8 @@ import (
 	"reflect"
 	"strings"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
-	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/eventing/pkg/reconciler"
-
 	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +33,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -62,8 +62,6 @@ const (
 
 // Reconciler reconciles NATSS Channels.
 type Reconciler struct {
-	*reconciler.Base
-
 	natssDispatcher dispatcher.NatssDispatcher
 
 	natssClientSet clientset.Interface
@@ -77,10 +75,9 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(ctx context.Context, watcher configmap.Watcher, config *rest.Config) *controller.Impl {
+func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config) *controller.Impl {
 
 	logger := logging.FromContext(ctx)
-	base := reconciler.NewBase(ctx, controllerAgentName, watcher)
 
 	natssConfig := util.GetNatssConfig()
 	dispatcherArgs := dispatcher.Args{
@@ -104,12 +101,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, config *rest.
 	channelInformer := natsschannel.Get(ctx)
 
 	r := &Reconciler{
-		Base:               base,
 		natssDispatcher:    natssDispatcher,
 		natsschannelLister: channelInformer.Lister(),
 		natssClientSet:     clientset.NewForConfigOrDie(config),
 	}
-	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
+	r.impl = controller.NewImpl(r, logger.Sugar(), ReconcilerName)
 
 	logger.Info("Setting up event handlers")
 

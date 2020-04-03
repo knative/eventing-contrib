@@ -19,60 +19,52 @@ package controller
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"time"
-
-	"knative.dev/pkg/apis"
-	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
-	"knative.dev/pkg/client/injection/kube/informers/core/v1/endpoints"
-	"knative.dev/pkg/client/injection/kube/informers/core/v1/service"
-	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/system"
 
 	"go.uber.org/zap"
 
-	appsv1 "k8s.io/api/apps/v1"
+	"knative.dev/pkg/apis"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/reconciler"
+
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
-	"knative.dev/eventing/pkg/logging"
-	"knative.dev/eventing/pkg/reconciler"
 	"knative.dev/eventing/pkg/reconciler/names"
 
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
-	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
-	"knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel"
+	natssChannelReconciler "knative.dev/eventing-contrib/natss/pkg/client/injection/reconciler/messaging/v1alpha1/natsschannel"
 	listers "knative.dev/eventing-contrib/natss/pkg/client/listers/messaging/v1alpha1"
 	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller/resources"
 )
 
 const (
-	// ReconcilerName is the name of the reconciler.
-	ReconcilerName = "NatssChannels"
-
-	// controllerAgentName is the string used by this controller to identify
-	// itself when creating events.
-	controllerAgentName = "natss-ch-controller"
+	ReconcilerName = "NatssChannel"
 
 	// Name of the corev1.Events emitted from the reconciliation process.
-	channelReconciled         = "ChannelReconciled"
-	channelReconcileFailed    = "ChannelReconcileFailed"
-	channelUpdateStatusFailed = "ChannelUpdateStatusFailed"
+	channelReconciled            = "NatssChannelReconciled"
+	channelReconcileFailed       = "NatssChannelReconcileFailed"
+	dispatcherDeploymentNotFound = "DispatcherDeploymentDoesNotExist"
+	dispatcherDeploymentFailed   = "DispatcherDeploymentFailed"
+	dispatcherServiceFailed      = "DispatcherServiceFailed"
+	dispatcherServiceNotFound    = "DispatcherServiceDoesNotExist"
+	dispatcherEndpointsNotFound  = "DispatcherEndpointsDoesNotExist"
+	dispatcherEndpointsFailed    = "DispatcherEndpointsFailed"
+	channelServiceFailed         = "ChannelServiceFailed"
 
 	dispatcherName = "natss-ch-dispatcher"
+
+	// reconciled normal message format (namespace, name)
+	reconciledNormalFmt = ReconcilerName + " reconciled: \"%s/%s\""
 )
 
 // Reconciler reconciles NATSS Channels.
 type Reconciler struct {
-	*reconciler.Base
-
-	NatssClientSet clientset.Interface
+	kubeClientSet kubernetes.Interface
 
 	dispatcherNamespace      string
 	dispatcherDeploymentName string
@@ -83,142 +75,19 @@ type Reconciler struct {
 	deploymentLister     appsv1listers.DeploymentLister
 	serviceLister        corev1listers.ServiceLister
 	endpointsLister      corev1listers.EndpointsLister
-	impl                 *controller.Impl
 }
 
-var (
-	deploymentGVK = appsv1.SchemeGroupVersion.WithKind("Deployment")
-	serviceGVK    = corev1.SchemeGroupVersion.WithKind("Service")
-)
+var _ natssChannelReconciler.Interface = (*Reconciler)(nil)
 
-// Check that our Reconciler implements controller.Reconciler.
-var _ controller.Reconciler = (*Reconciler)(nil)
-
-// Check that our Reconciler implements cache.ResourceEventHandler
-var _ cache.ResourceEventHandler = (*Reconciler)(nil)
-
-// NewController initializes the controller and is called by the generated code.
-// Registers event handlers to enqueue events.
-func NewController(
-	ctx context.Context,
-	cmw configmap.Watcher,
-	config *rest.Config,
-) *controller.Impl {
-
-	channelInformer := natsschannel.Get(ctx)
-	deploymentInformer := deploymentinformer.Get(ctx)
-	serviceInformer := service.Get(ctx)
-	endpointsInformer := endpoints.Get(ctx)
-
-	r := &Reconciler{
-		Base:                     reconciler.NewBase(ctx, controllerAgentName, cmw),
-		NatssClientSet:           clientset.NewForConfigOrDie(config),
-		dispatcherNamespace:      system.Namespace(),
-		dispatcherDeploymentName: dispatcherName,
-		dispatcherServiceName:    dispatcherName,
-		natsschannelLister:       channelInformer.Lister(),
-		natsschannelInformer:     channelInformer.Informer(),
-		deploymentLister:         deploymentInformer.Lister(),
-		serviceLister:            serviceInformer.Lister(),
-		endpointsLister:          endpointsInformer.Lister(),
-	}
-	r.impl = controller.NewImpl(r, r.Logger, ReconcilerName)
-
-	r.Logger.Info("Setting up event handlers")
-	channelInformer.Informer().AddEventHandler(controller.HandleAll(r.impl.Enqueue))
-
-	// Set up watches for dispatcher resources we care about, since any changes to these
-	// resources will affect our Channels. So, set up a watch here, that will cause
-	// a global Resync for all the channels to take stock of their health when these change.
-	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(r.dispatcherNamespace, r.dispatcherDeploymentName),
-		Handler:    r,
-	})
-	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(r.dispatcherNamespace, r.dispatcherServiceName),
-		Handler:    r,
-	})
-	endpointsInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(r.dispatcherNamespace, r.dispatcherServiceName),
-		Handler:    r,
-	})
-	return r.impl
-}
-
-// cache.ResourceEventHandler implementation.
-// These 3 functions just cause a Global Resync of the channels, because any changes here
-// should be reflected onto the channels.
-func (r *Reconciler) OnAdd(obj interface{}) {
-	r.impl.GlobalResync(r.natsschannelInformer)
-}
-
-func (r *Reconciler) OnUpdate(old, new interface{}) {
-	r.impl.GlobalResync(r.natsschannelInformer)
-}
-
-func (r *Reconciler) OnDelete(obj interface{}) {
-	r.impl.GlobalResync(r.natsschannelInformer)
-}
-
-// Reconcile compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the NatssChannel resource
-// with the current status of the resource.
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	// Convert the namespace/name string into a distinct namespace and name.
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		logging.FromContext(ctx).Error("invalid resource key", zap.Error(err))
-		return nil
-	}
-
-	// Get the NatssChannels resource with this namespace/name.
-	original, err := r.natsschannelLister.NatssChannels(namespace).Get(name)
-	if apierrs.IsNotFound(err) {
-		// The resource may no longer exist, in which case we stop processing.
-		logging.FromContext(ctx).Error("NatssChannel key in work queue no longer exists")
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	// Don't modify the informers copy.
-	channel := original.DeepCopy()
-
-	// Reconcile this copy of the NatssChannels and then write back any status updates regardless of
-	// whether the reconcile error out.
-	reconcileErr := r.reconcile(ctx, channel)
-	if reconcileErr != nil {
-		logging.FromContext(ctx).Error("Error reconciling NatssChannel", zap.Error(reconcileErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelReconcileFailed, "NatssChannel reconciliation failed: %v", reconcileErr)
-	} else {
-		logging.FromContext(ctx).Debug("NatssChannel reconciled")
-		r.Recorder.Event(channel, corev1.EventTypeNormal, channelReconciled, "NatssChannel reconciled")
-	}
-
-	if _, updateStatusErr := r.updateStatus(ctx, channel); updateStatusErr != nil {
-		logging.FromContext(ctx).Error("Failed to update NatssChannel status", zap.Error(updateStatusErr))
-		r.Recorder.Eventf(channel, corev1.EventTypeWarning, channelUpdateStatusFailed, "Failed to update NatssChannel's status: %v", updateStatusErr)
-		return updateStatusErr
-	}
-
-	// Requeue if the resource is not ready
-	return reconcileErr
-}
-
-func (r *Reconciler) reconcile(ctx context.Context, nc *v1alpha1.NatssChannel) error {
+func (r *Reconciler) ReconcileKind(ctx context.Context, nc *v1alpha1.NatssChannel) reconciler.Event {
 	nc.Status.InitializeConditions()
 
 	logger := logging.FromContext(ctx)
 	// Verify channel is valid.
+	nc.SetDefaults(ctx)
 	if err := nc.Validate(ctx); err != nil {
 		logger.Error("Invalid natss channel", zap.String("channel", nc.Name), zap.Error(err))
 		return err
-	}
-
-	// See if the channel has been deleted.
-	if nc.DeletionTimestamp != nil {
-		// K8s garbage collection will delete the K8s service for this channel.
-		return nil
 	}
 
 	// We reconcile the status of the Channel by looking at:
@@ -230,13 +99,13 @@ func (r *Reconciler) reconcile(ctx context.Context, nc *v1alpha1.NatssChannel) e
 	// Get the Dispatcher Deployment and propagate the status to the Channel
 	d, err := r.deploymentLister.Deployments(r.dispatcherNamespace).Get(r.dispatcherDeploymentName)
 	if err != nil {
+		logger.Error("Unable to get the dispatcher Deployment", zap.Error(err))
 		if apierrs.IsNotFound(err) {
-			nc.Status.MarkDispatcherFailed("DispatcherDeploymentDoesNotExist", "Dispatcher Deployment does not exist")
+			nc.Status.MarkDispatcherFailed(dispatcherDeploymentNotFound, "Dispatcher Deployment does not exist")
 		} else {
-			logger.Error("Unable to get the dispatcher Deployment", zap.Error(err))
-			nc.Status.MarkDispatcherFailed("DispatcherDeploymentGetFailed", "Failed to get dispatcher Deployment")
+			nc.Status.MarkDispatcherFailed(dispatcherDeploymentFailed, "Failed to get dispatcher Deployment")
 		}
-		return err
+		return newError(err)
 	}
 	nc.Status.PropagateDispatcherStatus(&d.Status)
 
@@ -245,13 +114,13 @@ func (r *Reconciler) reconcile(ctx context.Context, nc *v1alpha1.NatssChannel) e
 	// an existence check. Then below we check the endpoints targeting it.
 	_, err = r.serviceLister.Services(r.dispatcherNamespace).Get(r.dispatcherServiceName)
 	if err != nil {
+		logger.Error("Unable to get the dispatcher service", zap.Error(err))
 		if apierrs.IsNotFound(err) {
-			nc.Status.MarkServiceFailed("DispatcherServiceDoesNotExist", "Dispatcher Service does not exist")
+			nc.Status.MarkServiceFailed(dispatcherServiceNotFound, "Dispatcher Service does not exist")
 		} else {
-			logger.Error("Unable to get the dispatcher service", zap.Error(err))
-			nc.Status.MarkServiceFailed("DispatcherServiceGetFailed", "Failed to get dispatcher service")
+			nc.Status.MarkServiceFailed(dispatcherServiceFailed, "Failed to get dispatcher service")
 		}
-		return err
+		return newError(err)
 	}
 	nc.Status.MarkServiceTrue()
 
@@ -259,13 +128,13 @@ func (r *Reconciler) reconcile(ctx context.Context, nc *v1alpha1.NatssChannel) e
 	// endpoints has the same name as the service, so not a bug.
 	e, err := r.endpointsLister.Endpoints(r.dispatcherNamespace).Get(r.dispatcherServiceName)
 	if err != nil {
+		logger.Error("Unable to get the dispatcher endpoints", zap.Error(err))
 		if apierrs.IsNotFound(err) {
-			nc.Status.MarkEndpointsFailed("DispatcherEndpointsDoesNotExist", "Dispatcher Endpoints does not exist")
+			nc.Status.MarkEndpointsFailed(dispatcherEndpointsNotFound, "Dispatcher Endpoints does not exist")
 		} else {
-			logger.Error("Unable to get the dispatcher endpoints", zap.Error(err))
-			nc.Status.MarkEndpointsFailed("DispatcherEndpointsGetFailed", "Failed to get dispatcher endpoints")
+			nc.Status.MarkEndpointsFailed(dispatcherEndpointsFailed, "Failed to get dispatcher endpoints")
 		}
-		return err
+		return newError(err)
 	}
 
 	if len(e.Subsets) == 0 {
@@ -278,8 +147,8 @@ func (r *Reconciler) reconcile(ctx context.Context, nc *v1alpha1.NatssChannel) e
 	// Reconcile the k8s service representing the actual Channel. It points to the Dispatcher service via ExternalName
 	svc, err := r.reconcileChannelService(ctx, nc)
 	if err != nil {
-		nc.Status.MarkChannelServiceFailed("ChannelServiceFailed", fmt.Sprintf("Channel Service failed: %s", err))
-		return err
+		nc.Status.MarkChannelServiceFailed(channelServiceFailed, fmt.Sprintf("Channel Service failed: %s", err))
+		return newError(err)
 	}
 	nc.Status.MarkChannelServiceTrue()
 	nc.Status.SetAddress(&apis.URL{
@@ -289,7 +158,7 @@ func (r *Reconciler) reconcile(ctx context.Context, nc *v1alpha1.NatssChannel) e
 
 	// Ok, so now the Dispatcher Deployment & Service have been created, we're golden since the
 	// dispatcher watches the Channel and where it needs to dispatch events to.
-	return nil
+	return newReconciledNormal(nc.Namespace, nc.Name)
 }
 
 func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alpha1.NatssChannel) (*corev1.Service, error) {
@@ -306,7 +175,7 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alp
 				logger.Error("Failed to create the channel service object", zap.Error(err))
 				return nil, err
 			}
-			svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Create(svc)
+			svc, err = r.kubeClientSet.CoreV1().Services(channel.Namespace).Create(svc)
 			if err != nil {
 				logger.Error("Failed to create the channel service", zap.Error(err))
 				return nil, err
@@ -323,29 +192,14 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alp
 	return svc, nil
 }
 
-func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssChannel) (*v1alpha1.NatssChannel, error) {
-	kc, err := r.natsschannelLister.NatssChannels(desired.Namespace).Get(desired.Name)
-	if err != nil {
-		return nil, err
-	}
+func (r *Reconciler) FinalizeKind(ctx context.Context, nc *v1alpha1.NatssChannel) reconciler.Event {
+	return newReconciledNormal(nc.Namespace, nc.Name)
+}
 
-	if reflect.DeepEqual(kc.Status, desired.Status) {
-		return kc, nil
-	}
+func newReconciledNormal(namespace, name string) reconciler.Event {
+	return reconciler.NewEvent(corev1.EventTypeNormal, channelReconciled, reconciledNormalFmt, namespace, name)
+}
 
-	becomesReady := desired.Status.IsReady() && !kc.Status.IsReady()
-
-	// Don't modify the informers copy.
-	existing := kc.DeepCopy()
-	existing.Status = desired.Status
-
-	new, err := r.NatssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
-	if err == nil && becomesReady {
-		duration := time.Since(new.ObjectMeta.CreationTimestamp.Time)
-		r.Logger.Infof("NatssChannel %q became ready after %v", kc.Name, duration)
-		if err := r.StatsReporter.ReportReady("NatssChannel", kc.Namespace, kc.Name, duration); err != nil {
-			r.Logger.Infof("Failed to record ready for NatssChannel %q: %v", kc.Name, err)
-		}
-	}
-	return new, err
+func newError(err error) error {
+	return fmt.Errorf(ReconcilerName+" reconciliation failed with: %s", err)
 }

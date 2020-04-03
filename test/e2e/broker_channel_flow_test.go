@@ -24,6 +24,5 @@ import (
 )
 
 func TestBrokerChannelFlow(t *testing.T) {
-	t.Skip("NATSSChannel broken")
 	helpers.BrokerChannelFlowTestHelper(t, "ChannelBasedBroker" /*brokerClass*/, channelTestRunner)
 }
