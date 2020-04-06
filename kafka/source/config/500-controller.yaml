@@ -53,3 +53,19 @@ spec:
             memory: 20Mi
       serviceAccount: kafka-controller-manager
       terminationGracePeriodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    role: webhook
+    contrib.eventing.knative.dev/release: devel
+  name: kafka-source-webhook
+  namespace: knative-sources
+spec:
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    control-plane: kafka-controller-manager
