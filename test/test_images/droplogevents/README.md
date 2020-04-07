@@ -9,5 +9,5 @@ Accepted events are logged to the standard output.
 
 ### Images
 
-- [Fibonacci](fibonacci.yaml) 
+- [Fibonacci](fibonacci.yaml)
 - [First `NUMBER` events](first.yaml)
