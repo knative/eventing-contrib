@@ -22,7 +22,10 @@ import (
 	"fmt"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"github.com/Shopify/sarama"
+
 	"go.uber.org/zap"
 )
 
@@ -113,6 +116,8 @@ func (m mockMessageHandler) Handle(ctx context.Context, message *sarama.Consumer
 //------ Tests
 
 func Test(t *testing.T) {
+	t.Parallel()
+
 	tests := []mockMessageHandler{
 		{
 			shouldErr:  false,
@@ -129,7 +134,7 @@ func Test(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("shouldErr: %v, shouldMark: %v", test.shouldErr, test.shouldMark), func(t *testing.T) {
-			cgh := NewConsumerHandler(zap.NewNop(), test)
+			cgh := NewConsumerHandlerWithBackoff(zap.NewNop(), test, wait.Backoff{Steps: 1})
 
 			session := mockConsumerGroupSession{}
 			claim := mockConsumerGroupClaim{msg: &mockMessage}

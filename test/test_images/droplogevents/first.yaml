@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: droplogeventsfirst
+spec:
+  containers:
+    - name: droplogeventsfirst
+      image: ko://knative.dev/eventing-contrib/test/test_images/droplogevents/droplogeventsfirst
+      env:
+        - name: NUMBER
+          value: 10

@@ -28,6 +28,7 @@ var newConsumerGroupFromClient = sarama.NewConsumerGroupFromClient
 // Kafka consumer factory creates the ConsumerGroup and start consuming the specified topic
 type KafkaConsumerGroupFactory interface {
 	StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error)
+	StartConsumerGroupWithContext(ctx context.Context, groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error)
 }
 
 type kafkaConsumerGroupFactoryImpl struct {
@@ -68,6 +69,17 @@ func (c customConsumerGroup) Errors() <-chan error {
 var _ sarama.ConsumerGroup = (*customConsumerGroup)(nil)
 
 func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
+	return c.StartConsumerGroupWithContext(context.Background(), groupID, topics, logger, handler)
+}
+
+func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroupWithContext(
+	ctx context.Context,
+	groupID string,
+	topics []string,
+	logger *zap.Logger,
+	handler KafkaConsumerHandler,
+) (sarama.ConsumerGroup, error) {
+
 	consumerGroup, err := newConsumerGroupFromClient(groupID, c.client)
 
 	if err != nil {
@@ -77,7 +89,7 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 	consumerHandler := NewConsumerHandler(logger, handler)
 
 	go func() {
-		err2 := consumerGroup.Consume(context.TODO(), topics, &consumerHandler)
+		err2 := consumerGroup.Consume(ctx, topics, &consumerHandler)
 		if err2 != nil {
 			consumerHandler.errors <- err2
 		}

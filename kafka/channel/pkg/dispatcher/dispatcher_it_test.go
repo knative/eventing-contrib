@@ -190,7 +190,7 @@ func TestDispatcher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	failed, err := dispatcher.UpdateKafkaConsumers(&config)
+	failed, err := dispatcher.UpdateKafkaConsumers(context.TODO(), &config)
 	if err != nil {
 		t.Fatal(err)
 	}

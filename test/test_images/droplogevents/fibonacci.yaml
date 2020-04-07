@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: droplogeventsfibonacci
+spec:
+  containers:
+    - name: droplogeventsfibonacci
+      image: ko://knative.dev/eventing-contrib/test/test_images/droplogevents/droplogeventsfibonacci

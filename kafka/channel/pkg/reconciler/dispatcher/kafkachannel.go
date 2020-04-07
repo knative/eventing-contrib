@@ -248,13 +248,13 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 			kafkaChannels = append(kafkaChannels, channel)
 		}
 	}
-	config := r.newConfigFromKafkaChannels(kafkaChannels)
+	config := r.newConfigFromKafkaChannels(ctx, kafkaChannels)
 	if err := r.kafkaDispatcher.UpdateHostToChannelMap(config); err != nil {
 		logging.FromContext(ctx).Error("Error updating host to channel map in dispatcher")
 		return err
 	}
 
-	failedSubscriptionsv1beta1, err := r.kafkaDispatcher.UpdateKafkaConsumers(config)
+	failedSubscriptionsv1beta1, err := r.kafkaDispatcher.UpdateKafkaConsumers(ctx, config)
 	if err != nil {
 		logging.FromContext(ctx).Error("Error updating kafka consumers in dispatcher")
 		return err
@@ -296,7 +296,7 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) *multichannelfanout.ChannelConfig {
+func (r *Reconciler) newChannelConfigFromKafkaChannel(ctx context.Context, c *v1alpha1.KafkaChannel) *multichannelfanout.ChannelConfig {
 	channelConfig := multichannelfanout.ChannelConfig{
 		Namespace: c.Namespace,
 		Name:      c.Name,
@@ -305,9 +305,10 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 	if c.Spec.Subscribable != nil {
 		newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(c.Spec.Subscribable.Subscribers))
 		for i, source := range c.Spec.Subscribable.Subscribers {
-			source.ConvertTo(context.TODO(), &newSubs[i])
-			fmt.Printf("Converted \n%+v\n To\n%+v\n", source, newSubs[i])
-			fmt.Printf("Delivery converted \n%+v\nto\n%+v\n", source.Delivery, newSubs[i].Delivery)
+			source.ConvertTo(ctx, &newSubs[i])
+			logger := logging.FromContext(ctx).Sugar()
+			logger.Debugf("Converted \n%+v\n To\n%+v\n", source, newSubs[i])
+			logger.Debugf("Delivery converted \n%+v\nto\n%+v\n", source.Delivery, newSubs[i].Delivery)
 		}
 		channelConfig.FanoutConfig = fanout.Config{
 			AsyncHandler:  true,
@@ -318,10 +319,10 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1alpha1.KafkaChannel) *multichannelfanout.Config {
+func (r *Reconciler) newConfigFromKafkaChannels(ctx context.Context, channels []*v1alpha1.KafkaChannel) *multichannelfanout.Config {
 	cc := make([]multichannelfanout.ChannelConfig, 0)
 	for _, c := range channels {
-		channelConfig := r.newChannelConfigFromKafkaChannel(c)
+		channelConfig := r.newChannelConfigFromKafkaChannel(ctx, c)
 		cc = append(cc, *channelConfig)
 	}
 	return &multichannelfanout.Config{
@@ -342,6 +343,5 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaCh
 	existing := kc.DeepCopy()
 	existing.Status = desired.Status
 
-	new, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
-	return new, err
+	return r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
 }

@@ -19,12 +19,13 @@ package dispatcher
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/nats-io/stan.go"
 	"github.com/pkg/errors"
@@ -44,6 +45,8 @@ import (
 const (
 	// maxElements defines a maximum number of outstanding re-connect requests
 	maxElements = 10
+	// queueGroup defines the QueueGroup name of the subscription
+	queueGroup = "knative-natss-dispatcher"
 )
 
 var (
@@ -97,8 +100,11 @@ func NewDispatcher(args Args) (NatssDispatcher, error) {
 	}
 
 	d := &SubscriptionsSupervisor{
-		logger:        args.Logger,
-		dispatcher:    eventingchannels.NewMessageDispatcher(args.Logger),
+		logger: args.Logger,
+		dispatcher: eventingchannels.NewMessageDispatcherFromConfig(
+			args.Logger,
+			eventingchannels.EventDispatcherConfig{ConnectionArgs: args.Cargs},
+		),
 		subscriptions: make(SubscriptionChannelMapping),
 		connect:       make(chan struct{}, maxElements),
 		natssURL:      args.NatssURL,
@@ -284,14 +290,14 @@ func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventin
 		defer func() {
 			if r := recover(); r != nil {
 				s.logger.Warn("Panic happened while handling a message",
-					zap.String("messages", stanMsg.String()),
 					zap.String("sub", string(subscription.UID)),
 					zap.Any("panic value", r),
 				)
 			}
 		}()
 
-		message, err := natsscloudevents.NewMessage(stanMsg, natsscloudevents.WithManualAcks())
+		// Note: do not use natsscloudevents.WithManualAcks() option because the message will be ack'ed even if an error occurs during the dispatch
+		message, err := natsscloudevents.NewMessage(stanMsg)
 		if err != nil {
 			s.logger.Error("could not create a message", zap.Error(err))
 			return
@@ -322,8 +328,8 @@ func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventin
 			s.logger.Error("Failed to dispatch message: ", zap.Error(err))
 			return
 		}
-		if err := stanMsg.Ack(); err != nil {
-			s.logger.Error("failed to acknowledge message", zap.Error(err))
+		if err := message.Msg.Ack(); err != nil {
+			s.logger.Error("Failed to ack the message", zap.Error(err))
 		}
 
 		s.logger.Debug("message dispatched", zap.Any("channel", channel))
@@ -340,7 +346,7 @@ func (s *SubscriptionsSupervisor) subscribe(ctx context.Context, channel eventin
 		return nil, errors.New("no Connection to NATSS")
 	}
 
-	subscriber := &natsscloudevents.RegularSubscriber{}
+	subscriber := &natsscloudevents.QueueSubscriber{QueueGroup: queueGroup}
 	natssSub, err := subscriber.Subscribe(*currentNatssConn, ch, mcb, stan.DurableName(sub), stan.SetManualAckMode(), stan.AckWait(1*time.Minute))
 	if err != nil {
 		s.logger.Error(" Create new NATSS Subscription failed: ", zap.Error(err))

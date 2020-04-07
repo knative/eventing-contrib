@@ -59,6 +59,10 @@ func (c mockKafkaConsumerFactory) StartConsumerGroup(groupID string, topics []st
 	return mockConsumerGroup{}, nil
 }
 
+func (c mockKafkaConsumerFactory) StartConsumerGroupWithContext(ctx context.Context, groupID string, topics []string, logger *zap.Logger, handler kafka.KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
+	return c.StartConsumerGroup(groupID, topics, logger, handler)
+}
+
 var _ kafka.KafkaConsumerGroupFactory = (*mockKafkaConsumerFactory)(nil)
 
 type mockConsumerGroup struct{}
@@ -85,7 +89,7 @@ func (d *KafkaDispatcher) checkConfigAndUpdate(config *multichannelfanout.Config
 		return errors.New("nil config")
 	}
 
-	if _, err := d.UpdateKafkaConsumers(config); err != nil {
+	if _, err := d.UpdateKafkaConsumers(context.TODO(), config); err != nil {
 		// failed to update dispatchers consumers
 		return err
 	}
@@ -317,7 +321,6 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				topicFunc:            utils.TopicName,
 				logger:               zaptest.NewLogger(t),
 			}
-			d.setConfig(&multichannelfanout.Config{})
 			d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 
 			// Initialize using oldConfig
@@ -403,7 +406,7 @@ func TestSubscribeError(t *testing.T) {
 			UID: "test-sub",
 		},
 	}
-	err := d.subscribe(channelRef, subRef)
+	err := d.subscribe(context.TODO(), channelRef, subRef)
 	if err == nil {
 		t.Errorf("Expected error want %s, got %s", "error creating consumer", err)
 	}
