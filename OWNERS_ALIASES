@@ -11,6 +11,7 @@ aliases:
 
   github-approvers:
     - lberk
+    - mattmoor
   github-reviewers:
     - lberk
     - rootfs
