@@ -49,6 +49,23 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  name: eventing-sources-github-podspecable-binding
+  labels:
+    contrib.eventing.knative.dev/release: devel
+subjects:
+  - kind: ServiceAccount
+    name: github-webhook
+    namespace: knative-sources
+roleRef:
+  kind: ClusterRole
+  name: podspecable-binding
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
   name: eventing-sources-github-addressable-resolver
   labels:
     contrib.eventing.knative.dev/release: devel

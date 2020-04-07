@@ -14,17 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
-
-import (
-	github "knative.dev/eventing-contrib/github/pkg/reconciler/source"
-	"knative.dev/pkg/injection/sharedmain"
-)
-
-const (
-	component = "github-controller"
-)
-
-func main() {
-	sharedmain.Main(component, github.NewController)
-}
+// Package source implements a GitHubSource controller.
+package source
