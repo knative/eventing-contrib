@@ -17,7 +17,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: defaulting.webhook.kafka.sources.knative.dev
   labels:
-    samples.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
 webhooks:
 - admissionReviewVersions:
   - v1beta1
@@ -33,7 +33,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.kafka.sources.knative.dev
   labels:
-    samples.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
 webhooks:
 - admissionReviewVersions:
   - v1beta1
@@ -61,7 +61,7 @@ webhooks:
   name: config.webhook.kafka.sources.knative.dev
   namespaceSelector:
     matchExpressions:
-    - key: samples.knative.dev/release
+    - key: contrib.eventing.knative.dev/release
       operator: Exists
 ---
 apiVersion: v1
@@ -70,5 +70,5 @@ metadata:
   name: kafka-source-webhook-certs
   namespace: knative-sources
   labels:
-    samples.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
 # The data is populated at install time.
