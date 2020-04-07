@@ -569,6 +569,14 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
+  branch = "master"
+  digest = "1:cf68a79fd02ab0f6942b9567d03d054b6568212fcc22de2a4afdefd096923749"
+  name = "github.com/kballard/go-shellquote"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
+
+[[projects]]
   digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
@@ -1761,7 +1769,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b0fed5f77d9338e72dfcad16f9c250c8e7d6c9e3db9a6be21a42e58e2ed33663"
+  digest = "1:2980d411d09214ebd64d08ba537e7bd329cfab25f232508a30e2086aa1118b22"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1867,11 +1875,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "fbd7f669404b9a30fec824fcd80cd52ca96b76c2"
+  revision = "a83f70c7b94bd55b6bd16465331fb09b70588f5b"
 
 [[projects]]
   branch = "master"
-  digest = "1:ae72dd6d2950c1ffe31061c827bb8904fce102f9134c4309cca0fe1ac5864c26"
+  digest = "1:462fe2b87ea48e65015f45b404de9db04ebd1332fca8f06e19642641308869f7"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1924,6 +1932,7 @@
     "system",
     "system/testing",
     "test",
+    "test/cmd",
     "test/ghutil",
     "test/helpers",
     "test/ingress",
@@ -1949,7 +1958,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "55250e6aab62f767b8680a12ddeb771c519d78fe"
+  revision = "466c676678ddd57b3ec05a06a2d0bc6cfca8c3db"
 
 [[projects]]
   branch = "master"
@@ -1993,18 +2002,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "44befeddeef77c5a65b040e4cb678c6b9a09fab5"
+  revision = "877f5a24bf4145253ba989c75051f93d8b82a1fe"
 
 [[projects]]
   branch = "master"
-  digest = "1:d8858077778bca77705b26d5b5262bf33a6bfbaa701fffca1578fd7ef4c4b975"
+  digest = "1:ce8214f24f811aa582a58b2680e3380ff3fac7668a00d490fb23349a21051dcb"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "cdec09517ea85b37691ab4a81ee85d74e7e91b7e"
+  revision = "a7b18bf0c37bf1a10743fba5c1ce988b7c2e0e30"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
