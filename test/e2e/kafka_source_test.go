@@ -78,8 +78,10 @@ func TestKafkaSource(t *testing.T) {
 		expectedCheckInLog string
 	}{
 		"no_event": {
-			messageKey:         "0",
-			messageHeaders:     map[string]string{},
+			messageKey: "0",
+			messageHeaders: map[string]string{
+				"content-type": "application/json",
+			},
 			messagePayload:     "{\"value\":5}",
 			expectedCheckInLog: "\"value\": 5",
 		},

@@ -64,12 +64,7 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.C
 
 	dumpKafkaMetaToEvent(&event, a.keyTypeMapper, cm.Key, kafkaMsg)
 
-	ct := kafkaMsg.ContentType
-	if ct == "" {
-		ct = cloudevents.ApplicationJSON
-	}
-
-	err := event.SetData(ct, kafkaMsg.Value)
+	err := event.SetData(kafkaMsg.ContentType, kafkaMsg.Value)
 	if err != nil {
 		return err
 	}
