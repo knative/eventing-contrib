@@ -569,14 +569,6 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  branch = "master"
-  digest = "1:cf68a79fd02ab0f6942b9567d03d054b6568212fcc22de2a4afdefd096923749"
-  name = "github.com/kballard/go-shellquote"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
-
-[[projects]]
   digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
@@ -1875,7 +1867,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "65d49ea9de7643ffa33bdbce275eccaf10ef8d49"
+  revision = "8d8bfdb98348f8f8ab9b0d0340fa0bec0dc86b07"
 
 [[projects]]
   branch = "release-0.14"
@@ -1932,7 +1924,6 @@
     "system",
     "system/testing",
     "test",
-    "test/cmd",
     "test/ghutil",
     "test/helpers",
     "test/ingress",
@@ -2002,18 +1993,18 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "877f5a24bf4145253ba989c75051f93d8b82a1fe"
+  revision = "c21fc71fca9587022406eb0e999893ad1d861b04"
 
 [[projects]]
   branch = "master"
-  digest = "1:ce8214f24f811aa582a58b2680e3380ff3fac7668a00d490fb23349a21051dcb"
+  digest = "1:50482e6fd500cf50c4a29d640cda026206145c6716dff72e4368a5e57fdb7095"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "a7b18bf0c37bf1a10743fba5c1ce988b7c2e0e30"
+  revision = "193c078363dbb0b817068820dcbe7b238dd2eb02"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
