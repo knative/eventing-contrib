@@ -71,6 +71,14 @@ rules:
   - configmaps
   verbs: *everything
 
+  # For actually registering our webhook.
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs: *everything
+
 ---
 # The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
 # See https://knative.dev/eventing/blob/master/config/200-source-observer-clusterrole.yaml.
