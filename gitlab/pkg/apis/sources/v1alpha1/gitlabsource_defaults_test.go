@@ -29,7 +29,7 @@ func TestGitlabSourceDefaults(t *testing.T) {
 		expected GitLabSource
 	}{
 		"nil spec": {
-			initial: GitLabbSource{},
+			initial: GitLabSource{},
 			expected: GitLabSource{
 				Spec: GitLabSourceSpec{},
 			},
