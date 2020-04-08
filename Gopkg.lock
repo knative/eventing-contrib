@@ -1761,7 +1761,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2980d411d09214ebd64d08ba537e7bd329cfab25f232508a30e2086aa1118b22"
+  digest = "1:f7b063d16a5b87d7eabd1bf49a25779fb7005b06e200e73a5da1033d2cf79333"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1843,7 +1843,6 @@
     "pkg/kncloudevents/testing",
     "pkg/logconfig",
     "pkg/logging",
-    "pkg/reconciler",
     "pkg/reconciler/names",
     "pkg/reconciler/namespace/resources",
     "pkg/reconciler/testing",
@@ -2140,7 +2139,6 @@
     "knative.dev/eventing/pkg/kncloudevents/testing",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
-    "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/eventing/test",
