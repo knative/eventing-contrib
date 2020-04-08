@@ -1760,6 +1760,7 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
+  branch = "master"
   digest = "1:375488059eab073f3181d7d7e01eeb7b1d5d6904dffb2de1d381f9b61e33ca15"
   name = "knative.dev/eventing"
   packages = [
@@ -1866,8 +1867,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "42095d584398899028db3bba8954d67f950bdb44"
-  source = "github.com/slinkydeveloper/eventing"
+  revision = "9dcd733d1c5798156267ea343078b3b465e01ff0"
 
 [[projects]]
   branch = "release-0.14"
@@ -1993,7 +1993,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "088ae55df460ebe0e5d86a4c302371bc1f548069"
+  revision = "6aec2dfe4571beeec3f480c0c1752ae392420d4e"
 
 [[projects]]
   branch = "master"

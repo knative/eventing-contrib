@@ -109,8 +109,7 @@ required = [
 
 [[constraint]]
   name = "knative.dev/eventing"
-  source = "github.com/slinkydeveloper/eventing"
-  revision = "42095d584398899028db3bba8954d67f950bdb44"
+  branch = "master"
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]
