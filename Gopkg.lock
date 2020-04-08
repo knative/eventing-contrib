@@ -162,7 +162,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:b0acdb73bbe66f0736e3a7d56f41cd06ef4ab728e41ad0579b9dc8dd7c3eceed"
+  digest = "1:f9e04ad348243fe7582633b579a31d4c57f0e957f387719d72c86ac9a3ce41ba"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -201,7 +201,7 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "4a880eb10fc640ee82d0f01e3eb241b8ffe83e50"
+  revision = "3638af885cfe1cc7dd7421d23ebe4dbf278d1937"
   version = "v2.0.0-RC1"
 
 [[projects]]
@@ -2004,7 +2004,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "193c078363dbb0b817068820dcbe7b238dd2eb02"
+  revision = "9fa5882b65c5fe7e177bb74874e9a5ac87b84e98"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
@@ -2142,6 +2142,7 @@
     "knative.dev/eventing/pkg/logging",
     "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/reconciler/names",
+    "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/eventing/test",
     "knative.dev/eventing/test/e2e/helpers",
