@@ -41,48 +41,37 @@ type ReceiveAdapterArgs struct {
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	replicas := int32(1)
 
-	env := []corev1.EnvVar{
-		{
-			Name:  "KAFKA_BOOTSTRAP_SERVERS",
-			Value: args.Source.Spec.BootstrapServers,
-		},
-		{
-			Name:  "KAFKA_TOPICS",
-			Value: args.Source.Spec.Topics,
-		},
-		{
-			Name:  "KAFKA_CONSUMER_GROUP",
-			Value: args.Source.Spec.ConsumerGroup,
-		},
-		{
-			Name:  "KAFKA_NET_SASL_ENABLE",
-			Value: strconv.FormatBool(args.Source.Spec.Net.SASL.Enable),
-		},
-		{
-			Name:  "KAFKA_NET_TLS_ENABLE",
-			Value: strconv.FormatBool(args.Source.Spec.Net.TLS.Enable),
-		},
-		{
-			Name:  "SINK_URI",
-			Value: args.SinkURI,
-		},
-		{
-			Name:  "NAME",
-			Value: args.Source.Name,
-		},
-		{
-			Name:  "NAMESPACE",
-			Value: args.Source.Namespace,
-		},
-		{
-			Name:  "K_LOGGING_CONFIG",
-			Value: args.LoggingConfig,
-		},
-		{
-			Name:  "K_METRICS_CONFIG",
-			Value: args.MetricsConfig,
-		},
-	}
+	env := []corev1.EnvVar{{
+		Name:  "KAFKA_BOOTSTRAP_SERVERS",
+		Value: args.Source.Spec.BootstrapServers,
+	}, {
+		Name:  "KAFKA_TOPICS",
+		Value: args.Source.Spec.Topics,
+	}, {
+		Name:  "KAFKA_CONSUMER_GROUP",
+		Value: args.Source.Spec.ConsumerGroup,
+	}, {
+		Name:  "KAFKA_NET_SASL_ENABLE",
+		Value: strconv.FormatBool(args.Source.Spec.Net.SASL.Enable),
+	}, {
+		Name:  "KAFKA_NET_TLS_ENABLE",
+		Value: strconv.FormatBool(args.Source.Spec.Net.TLS.Enable),
+	}, {
+		Name:  "SINK_URI",
+		Value: args.SinkURI,
+	}, {
+		Name:  "NAME",
+		Value: args.Source.Name,
+	}, {
+		Name:  "NAMESPACE",
+		Value: args.Source.Namespace,
+	}, {
+		Name:  "K_LOGGING_CONFIG",
+		Value: args.LoggingConfig,
+	}, {
+		Name:  "K_METRICS_CONFIG",
+		Value: args.MetricsConfig,
+	}}
 
 	if val, ok := args.Source.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
 		env = append(env, corev1.EnvVar{

@@ -43,6 +43,31 @@ rules:
   - update
   - patch
 
+
+- apiGroups:
+  - bindings.knative.dev
+  resources:
+  - kafkabindings
+  - kafkabindings/finalizers
+  verbs: &everything
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+
+- apiGroups:
+  - bindings.knative.dev
+  resources:
+  - kafkabindings/status
+  verbs:
+  - get
+  - update
+  - patch
+
+
 - apiGroups:
   - apps
   resources:

@@ -29,6 +29,22 @@ webhooks:
   name: defaulting.webhook.kafka.sources.knative.dev
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kafkabindings.webhook.kafka.sources.knative.dev
+  labels:
+    samples.knative.dev/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: kafka-source-webhook
+      namespace: knative-sources
+  failurePolicy: Fail
+  name: kafkabindings.webhook.kafka.sources.knative.dev
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.kafka.sources.knative.dev

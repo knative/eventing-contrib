@@ -23,9 +23,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
+	"knative.dev/pkg/tracker"
 
 	lib2 "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
@@ -59,9 +61,25 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 		resources.ServiceRef(loggerPodName),
 	))
 
+	selector := map[string]string{
+		"topic": kafkaTopicName,
+	}
+
+	t.Logf("Creating KafkaBinding")
+	lib2.CreateKafkaBindingOrFail(client, contribresources.KafkaBinding(
+		kafkaBootstrapUrl,
+		&tracker.Reference{
+			APIVersion: "batch/v1",
+			Kind:       "Job",
+			Selector: &metav1.LabelSelector{
+				MatchLabels: selector,
+			},
+		},
+	))
+
 	client.WaitForAllTestResourcesReadyOrFail()
 
-	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
+	helpers.MustPublishKafkaMessage(client, selector, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 
 	// verify the logger service receives the event
 	if err := client.CheckLog(loggerPodName, lib.CheckerContains(expectedCheckInLog)); err != nil {

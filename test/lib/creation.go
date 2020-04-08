@@ -19,12 +19,13 @@ package lib
 import (
 	"knative.dev/eventing/test/lib"
 
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	kafkasourceclient "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
+	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	kafkaclientset "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
 )
 
-func CreateKafkaSourceOrFail(c *lib.Client, kafkaSource *v1alpha1.KafkaSource) {
-	kafkaSourceClientSet, err := kafkasourceclient.NewForConfig(c.Config)
+func CreateKafkaSourceOrFail(c *lib.Client, kafkaSource *sourcesv1alpha1.KafkaSource) {
+	kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
 	if err != nil {
 		c.T.Fatalf("Failed to create KafkaSource client: %v", err)
 	}
@@ -34,5 +35,19 @@ func CreateKafkaSourceOrFail(c *lib.Client, kafkaSource *v1alpha1.KafkaSource) {
 		c.T.Fatalf("Failed to create KafkaSource %q: %v", kafkaSource.Name, err)
 	} else {
 		c.Tracker.AddObj(createdKafkaSource)
+	}
+}
+
+func CreateKafkaBindingOrFail(c *lib.Client, kafkaBinding *bindingsv1alpha1.KafkaBinding) {
+	kafkaBindingClientSet, err := kafkaclientset.NewForConfig(c.Config)
+	if err != nil {
+		c.T.Fatalf("Failed to create KafkaBinding client: %v", err)
+	}
+
+	kBindings := kafkaBindingClientSet.BindingsV1alpha1().KafkaBindings(c.Namespace)
+	if createdKafkaBinding, err := kBindings.Create(kafkaBinding); err != nil {
+		c.T.Fatalf("Failed to create KafkaBinding %q: %v", kafkaBinding.Name, err)
+	} else {
+		c.Tracker.AddObj(createdKafkaBinding)
 	}
 }

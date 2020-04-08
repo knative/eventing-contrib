@@ -20,15 +20,18 @@ import (
 	"context"
 	"testing"
 
+	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 var (
 	fullSpec = KafkaSourceSpec{
-		BootstrapServers: "servers",
-		Topics:           "topics",
-		ConsumerGroup:    "group",
+		KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+			BootstrapServers: "servers",
+		},
+		Topics:        "topics",
+		ConsumerGroup: "group",
 		Sink: &duckv1.Destination{
 			Ref: &duckv1.KReference{
 				APIVersion: "foo",
@@ -63,7 +66,9 @@ func TestKafkaSourceCheckImmutableFields(t *testing.T) {
 		"Bootstrap servers changed": {
 			orig: &fullSpec,
 			updated: KafkaSourceSpec{
-				BootstrapServers:   "server1,server2",
+				KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+					BootstrapServers: "server1,server2",
+				},
 				Sink:               fullSpec.Sink,
 				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
