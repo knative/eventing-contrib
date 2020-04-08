@@ -162,7 +162,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:e5cf53ca405e30a44554778b83ba07f9c0d13dd7b2045e833dcc7918824e7580"
+  digest = "1:5249abd07b1b606a05f8dbfe09731ceca5f3400d2acb91759b64953aae155490"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -201,8 +201,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "6dc020a8df7f3ee38d729e53cde2193ea7edf12a"
-  version = "v2.0.0-preview8"
+  revision = "c875624dcc187e3e2119e41e51ad83f1962dd20f"
+  version = "v2.0.0-RC1"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1760,8 +1760,7 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:2980d411d09214ebd64d08ba537e7bd329cfab25f232508a30e2086aa1118b22"
+  digest = "1:375488059eab073f3181d7d7e01eeb7b1d5d6904dffb2de1d381f9b61e33ca15"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1867,7 +1866,8 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "8d8bfdb98348f8f8ab9b0d0340fa0bec0dc86b07"
+  revision = "42095d584398899028db3bba8954d67f950bdb44"
+  source = "github.com/slinkydeveloper/eventing"
 
 [[projects]]
   branch = "release-0.14"
@@ -1993,7 +1993,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "c21fc71fca9587022406eb0e999893ad1d861b04"
+  revision = "50dff30e8607d7c47155dbf24c0c946656cb82c4"
 
 [[projects]]
   branch = "master"

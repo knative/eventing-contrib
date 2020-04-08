@@ -34,8 +34,6 @@ import (
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
-var transformerFactories = binding.TransformerFactories{}
-
 func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
 	msg := kafka_sarama.NewMessageFromConsumerMessage(cm)
 
@@ -48,7 +46,7 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.C
 
 	if msg.ReadEncoding() != binding.EncodingUnknown {
 		// Message is a CloudEvent -> Encode directly to HTTP
-		return http.WriteRequest(ctx, msg, req, transformerFactories)
+		return http.WriteRequest(ctx, msg, req)
 	}
 
 	// Message is not a CloudEvent -> We need to translate it to a valid CloudEvent
@@ -69,7 +67,7 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.C
 		return err
 	}
 
-	return http.WriteRequest(ctx, binding.ToMessage(&event), req, transformerFactories)
+	return http.WriteRequest(ctx, binding.ToMessage(&event), req)
 }
 
 func makeEventId(partition int32, offset int64) string {
