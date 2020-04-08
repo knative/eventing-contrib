@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,25 +21,34 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"knative.dev/pkg/webhook/resourcesemantics"
+
+	"knative.dev/pkg/apis"
 )
 
-func TestGithubSourceDefaults(t *testing.T) {
+func TestGitLabSourceValidation(t *testing.T) {
 	testCases := map[string]struct {
-		initial  GitHubSource
-		expected GitHubSource
+		cr   resourcesemantics.GenericCRD
+		want *apis.FieldError
 	}{
-		"nil spec": {
-			initial: GitHubSource{},
-			expected: GitHubSource{
-				Spec: GitHubSourceSpec{},
+		"missing sink": {
+			cr: &GitLabSource{
+				Spec: GitLabSourceSpec{},
 			},
+			want: func() *apis.FieldError {
+				var errs *apis.FieldError
+				fe := apis.ErrMissingField("spec.sink")
+				errs = errs.Also(fe)
+				return errs
+			}(),
 		},
 	}
-	for n, tc := range testCases {
+
+	for n, test := range testCases {
 		t.Run(n, func(t *testing.T) {
-			tc.initial.SetDefaults(context.TODO())
-			if diff := cmp.Diff(tc.expected, tc.initial); diff != "" {
-				t.Fatalf("Unexpected defaults (-want, +got): %s", diff)
+			got := test.cr.Validate(context.Background())
+			if diff := cmp.Diff(test.want.Error(), got.Error()); diff != "" {
+				t.Errorf("%s: validate (-want, +got) = %v", n, diff)
 			}
 		})
 	}

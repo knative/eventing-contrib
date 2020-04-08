@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,29 +18,25 @@ package v1alpha1
 
 import (
 	"context"
-	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"knative.dev/pkg/apis"
 )
 
-func TestGithubSourceDefaults(t *testing.T) {
-	testCases := map[string]struct {
-		initial  GitHubSource
-		expected GitHubSource
-	}{
-		"nil spec": {
-			initial: GitHubSource{},
-			expected: GitHubSource{
-				Spec: GitHubSourceSpec{},
-			},
-		},
+// Validate GitLab source object fields
+func (g *GitLabSource) Validate(ctx context.Context) *apis.FieldError {
+	return g.Spec.Validate(ctx).ViaField("spec")
+}
+
+// Validate GitLab source Spec object fields
+func (gs *GitLabSourceSpec) Validate(ctx context.Context) *apis.FieldError {
+	var errs *apis.FieldError
+
+	// Validate sink
+	if gs.Sink == nil {
+		fe := apis.ErrMissingField("sink")
+		errs = errs.Also(fe)
+	} else if fe := gs.Sink.Validate(ctx); fe != nil {
+		errs = errs.Also(fe.ViaField("sink"))
 	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			tc.initial.SetDefaults(context.TODO())
-			if diff := cmp.Diff(tc.expected, tc.initial); diff != "" {
-				t.Fatalf("Unexpected defaults (-want, +got): %s", diff)
-			}
-		})
-	}
+	return errs
 }

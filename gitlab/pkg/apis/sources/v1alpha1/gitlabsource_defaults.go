@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,29 +18,12 @@ package v1alpha1
 
 import (
 	"context"
-	"testing"
-
-	"github.com/google/go-cmp/cmp"
 )
 
-func TestGithubSourceDefaults(t *testing.T) {
-	testCases := map[string]struct {
-		initial  GitHubSource
-		expected GitHubSource
-	}{
-		"nil spec": {
-			initial: GitHubSource{},
-			expected: GitHubSource{
-				Spec: GitHubSourceSpec{},
-			},
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			tc.initial.SetDefaults(context.TODO())
-			if diff := cmp.Diff(tc.expected, tc.initial); diff != "" {
-				t.Fatalf("Unexpected defaults (-want, +got): %s", diff)
-			}
-		})
-	}
+func (g *GitLabSource) SetDefaults(ctx context.Context) {
+	g.Spec.SetDefaults(ctx)
+}
+
+func (gs *GitLabSourceSpec) SetDefaults(ctx context.Context) {
+	// Nothing yet.
 }

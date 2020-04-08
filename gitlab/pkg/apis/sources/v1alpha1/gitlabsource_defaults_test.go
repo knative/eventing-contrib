@@ -23,15 +23,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestGithubSourceDefaults(t *testing.T) {
+func TestGitlabSourceDefaults(t *testing.T) {
 	testCases := map[string]struct {
-		initial  GitHubSource
-		expected GitHubSource
+		initial  GitLabSource
+		expected GitLabSource
 	}{
 		"nil spec": {
-			initial: GitHubSource{},
-			expected: GitHubSource{
-				Spec: GitHubSourceSpec{},
+			initial: GitLabbSource{},
+			expected: GitLabSource{
+				Spec: GitLabSourceSpec{},
 			},
 		},
 	}
