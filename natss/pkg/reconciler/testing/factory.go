@@ -28,7 +28,6 @@ import (
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	"knative.dev/eventing/pkg/reconciler"
 
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
@@ -85,9 +84,6 @@ func MakeFactory(ctor Ctor) Factory {
 
 		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
-
-		statsReporter, _ := reconciler.NewStatsReporter("")
-		ctx = reconciler.WithStatsReporter(ctx, statsReporter)
 
 		if r.Ctx == nil {
 			r.Ctx = ctx
