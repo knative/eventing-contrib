@@ -19,12 +19,13 @@ package dispatcher
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/nats-io/stan.go"
 	"github.com/pkg/errors"
