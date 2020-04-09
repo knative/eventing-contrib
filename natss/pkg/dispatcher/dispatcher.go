@@ -128,7 +128,7 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 }
 
 func messageReceiverFunc(s *SubscriptionsSupervisor) eventingchannels.UnbufferedMessageReceiverFunc {
-	return func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.TransformerFactory, header http.Header) error {
+	return func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.Transformer, header http.Header) error {
 		s.logger.Info("Received event", zap.String("channel", channel.String()))
 
 		s.natssConnMux.Lock()

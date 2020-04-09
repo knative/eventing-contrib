@@ -440,7 +440,7 @@ func TestKafkaDispatcher_Start(t *testing.T) {
 	}
 
 	receiver, err := eventingchannels.NewMessageReceiver(
-		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, _ []binding.TransformerFactory, _ http.Header) error {
+		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, _ []binding.Transformer, _ http.Header) error {
 			return nil
 		},
 		zap.NewNop(),

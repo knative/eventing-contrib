@@ -36,6 +36,7 @@ import (
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
+	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -57,6 +58,8 @@ func TestDispatcher(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	tracing.SetupStaticPublishing(logger.Sugar(), "localhost", tracing.AlwaysSample)
 
 	dispatcherArgs := KafkaDispatcherArgs{
 		KnCEConnectionArgs: nil,
