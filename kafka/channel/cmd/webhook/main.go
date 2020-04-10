@@ -37,6 +37,8 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
 }
 
+var callbacks = map[schema.GroupVersionKind]validation.Callback{}
+
 func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
 	return defaulting.NewAdmissionController(ctx,
 		// Name of the resource webhook.
@@ -45,7 +47,7 @@ func NewDefaultingAdmissionController(ctx context.Context, cmw configmap.Watcher
 		// The path on which to serve the webhook.
 		"/defaulting",
 
-		// The resources to validate and default.
+		// The resources to default.
 		types,
 
 		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
@@ -66,7 +68,7 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 		// The path on which to serve the webhook.
 		"/resource-validation",
 
-		// The resources to validate and default.
+		// The resources to validate.
 		types,
 
 		// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
@@ -76,6 +78,9 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 
 		// Whether to disallow unknown fields.
 		true,
+
+		// Extra validating callbacks to be applied to resources.
+		callbacks,
 	)
 }
 
