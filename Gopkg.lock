@@ -1867,7 +1867,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "955aa36a5e926aa68846391300aaf875752af730"
+  revision = "02bc51668a0c7d2d8cbb56823c5aecbeec46253d"
 
 [[projects]]
   branch = "release-0.14"
@@ -1952,7 +1952,7 @@
   revision = "2a1db869228ceaca9df34790b49cdf4893a5d39d"
 
 [[projects]]
-  branch = "master"
+  branch = "release-0.14"
   digest = "1:d9d41a3881b4f29602781af607ac438620a4b276e936ade125058aaa456e96ca"
   name = "knative.dev/serving"
   packages = [
@@ -1993,7 +1993,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "9985919eee99248255428f59adfc333019715d35"
+  revision = "f87352b72c48286f164838ddc6684c805ea082a9"
 
 [[projects]]
   branch = "release-0.14"

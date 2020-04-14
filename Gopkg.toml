@@ -111,7 +111,7 @@ required = [
 
 [[constraint]]
   name = "knative.dev/serving"
-  branch = "master"
+  branch = "release-0.14"
 
 [[constraint]]
   name = "knative.dev/eventing"
