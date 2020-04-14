@@ -95,7 +95,7 @@ func main() {
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
 		ServiceName: "gitlab-source-webhook",
 		Port:        8443,
-		SecretName:  "sources-webhook-certs",
+		SecretName:  "gitlabsource-webhook-certs",
 	})
 
 	sharedmain.WebhookMainWithContext(ctx, component,

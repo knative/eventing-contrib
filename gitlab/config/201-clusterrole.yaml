@@ -62,7 +62,7 @@ rules:
   - get
   - list
   - watch
-  # Webhook controller needs it to update "sources-webhook-certs" contents
+  # Webhook controller needs it to update certs in secret
   - update
 
 # Events admin
