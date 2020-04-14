@@ -115,7 +115,7 @@ required = [
 
 [[constraint]]
   name = "knative.dev/eventing"
-  branch = "master"
+  branch = "release-0.14"
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]

@@ -1760,7 +1760,7 @@
   revision = "8d271d903fe4c290aa361acfb242cff7bcee96f1"
 
 [[projects]]
-  branch = "master"
+  branch = "release-0.14"
   digest = "1:4ddb096e26b508fed6d8196e3654781341e994b32e7f4dbf5c480b3e8258cbd9"
   name = "knative.dev/eventing"
   packages = [
