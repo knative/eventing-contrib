@@ -1761,7 +1761,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4ddb096e26b508fed6d8196e3654781341e994b32e7f4dbf5c480b3e8258cbd9"
+  digest = "1:69a90f92827fe27249167b0cb422d0d4d4bf2abd5c581f69a2ede741097634af"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1843,7 +1843,6 @@
     "pkg/kncloudevents/testing",
     "pkg/logconfig",
     "pkg/logging",
-    "pkg/reconciler",
     "pkg/reconciler/names",
     "pkg/reconciler/namespace/resources",
     "pkg/reconciler/testing",
@@ -1993,7 +1992,7 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "8c7134ebfe368ee178229e99166e5bff8167b8ed"
+  revision = "156e30d285efb1407a89601fa5a73740868bb986"
 
 [[projects]]
   branch = "master"
@@ -2140,7 +2139,6 @@
     "knative.dev/eventing/pkg/kncloudevents/testing",
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
-    "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/reconciler/names",
     "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
