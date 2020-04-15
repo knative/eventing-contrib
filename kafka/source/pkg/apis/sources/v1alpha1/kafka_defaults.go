@@ -18,9 +18,13 @@ package v1alpha1
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 // SetDefaults ensures KafkaSource reflects the default values.
-func (r *KafkaSource) SetDefaults(ctx context.Context) {
-	// No defaults
+func (k *KafkaSource) SetDefaults(ctx context.Context) {
+	if k != nil && k.Spec.ConsumerGroup == "" {
+		k.Spec.ConsumerGroup = uuid.New().String()
+	}
 }

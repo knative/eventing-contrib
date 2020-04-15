@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/webhook/resourcesemantics"
@@ -45,6 +46,8 @@ type KafkaSource struct {
 var _ runtime.Object = (*KafkaSource)(nil)
 var _ resourcesemantics.GenericCRD = (*KafkaSource)(nil)
 var _ kmeta.OwnerRefable = (*KafkaSource)(nil)
+var _ apis.Defaultable = (*KafkaSource)(nil)
+var _ apis.Validatable = (*KafkaSource)(nil)
 
 type KafkaSourceSASLSpec struct {
 	Enable bool `json:"enable,omitempty"`
@@ -109,8 +112,8 @@ type KafkaSourceSpec struct {
 	Topics string `json:"topics"`
 
 	// ConsumerGroupID is the consumer group ID.
-	// +required
-	ConsumerGroup string `json:"consumerGroup"`
+	// +optional
+	ConsumerGroup string `json:"consumerGroup,omitempty"`
 
 	Net KafkaSourceNetSpec `json:"net,omitempty"`
 
