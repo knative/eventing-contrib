@@ -162,7 +162,7 @@
   version = "v0.2.1"
 
 [[projects]]
-  digest = "1:e5cf53ca405e30a44554778b83ba07f9c0d13dd7b2045e833dcc7918824e7580"
+  digest = "1:f9e04ad348243fe7582633b579a31d4c57f0e957f387719d72c86ac9a3ce41ba"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     "v1",
@@ -201,8 +201,8 @@
     "v2/types",
   ]
   pruneopts = "NUT"
-  revision = "6dc020a8df7f3ee38d729e53cde2193ea7edf12a"
-  version = "v2.0.0-preview8"
+  revision = "3638af885cfe1cc7dd7421d23ebe4dbf278d1937"
+  version = "v2.0.0-RC1"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1866,11 +1866,11 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "8d8bfdb98348f8f8ab9b0d0340fa0bec0dc86b07"
+  revision = "02bc51668a0c7d2d8cbb56823c5aecbeec46253d"
 
 [[projects]]
   branch = "release-0.14"
-  digest = "1:20ae66cd133413ed130ba9bd3b63143b87b103647971c2956410e5b109f0ae13"
+  digest = "1:f806eb7e5629d594362dc18905d092888b1d56fbfe026a597d25b86e846f2d53"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1948,10 +1948,10 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "0c36abbff9e5ad06cbea50d55c0989485c236180"
+  revision = "2a1db869228ceaca9df34790b49cdf4893a5d39d"
 
 [[projects]]
-  branch = "master"
+  branch = "release-0.14"
   digest = "1:d9d41a3881b4f29602781af607ac438620a4b276e936ade125058aaa456e96ca"
   name = "knative.dev/serving"
   packages = [
@@ -1992,10 +1992,10 @@
     "pkg/client/listers/serving/v1beta1",
   ]
   pruneopts = "NUT"
-  revision = "c21fc71fca9587022406eb0e999893ad1d861b04"
+  revision = "f87352b72c48286f164838ddc6684c805ea082a9"
 
 [[projects]]
-  branch = "master"
+  branch = "release-0.14"
   digest = "1:50482e6fd500cf50c4a29d640cda026206145c6716dff72e4368a5e57fdb7095"
   name = "knative.dev/test-infra"
   packages = [
@@ -2003,7 +2003,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "193c078363dbb0b817068820dcbe7b238dd2eb02"
+  revision = "9fa5882b65c5fe7e177bb74874e9a5ac87b84e98"
 
 [[projects]]
   digest = "1:c4e8f6509ee8cec911985a812ed3f9cc024404acc45ac613fa103f735cf3222a"
@@ -2140,6 +2140,7 @@
     "knative.dev/eventing/pkg/logconfig",
     "knative.dev/eventing/pkg/logging",
     "knative.dev/eventing/pkg/reconciler/names",
+    "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/eventing/test",
     "knative.dev/eventing/test/e2e/helpers",

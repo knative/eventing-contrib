@@ -52,8 +52,14 @@ required = [
   name = "k8s.io/gengo"
   unused-packages = false
 
+# Our master branch tracks knative/pkg master or a release.
 [[override]]
   name = "knative.dev/pkg"
+  branch = "release-0.14"
+
+# Our master branch tracks knative/test-infra master or a release.
+[[override]]
+  name = "knative.dev/test-infra"
   branch = "release-0.14"
 
 [[constraint]]
@@ -105,11 +111,11 @@ required = [
 
 [[constraint]]
   name = "knative.dev/serving"
-  branch = "master"
+  branch = "release-0.14"
 
 [[constraint]]
   name = "knative.dev/eventing"
-  branch = "master"
+  branch = "release-0.14"
 
 # For dependency below: Refer to issue https://github.com/golang/dep/issues/1799
 [[override]]
@@ -133,7 +139,7 @@ required = [
 
 [[constraint]]
   name = "github.com/cloudevents/sdk-go"
-  version = "v2.0.0-preview8"
+  version = "=v2.0.0-RC1"
 
 [[constraint]]
   name = "github.com/apache/camel-k"

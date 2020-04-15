@@ -19,12 +19,13 @@ package dispatcher
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 	"net/url"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/nats-io/stan.go"
 	"github.com/pkg/errors"
@@ -128,7 +129,7 @@ func (s *SubscriptionsSupervisor) signalReconnect() {
 }
 
 func messageReceiverFunc(s *SubscriptionsSupervisor) eventingchannels.UnbufferedMessageReceiverFunc {
-	return func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.TransformerFactory, header http.Header) error {
+	return func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.Transformer, header http.Header) error {
 		s.logger.Info("Received event", zap.String("channel", channel.String()))
 
 		s.natssConnMux.Lock()

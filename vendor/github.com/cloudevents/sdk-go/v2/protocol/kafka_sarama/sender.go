@@ -13,10 +13,10 @@ type Sender struct {
 	topic        string
 	syncProducer sarama.SyncProducer
 
-	transformers binding.TransformerFactories
+	transformers binding.Transformers
 }
 
-// Returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
+// NewSender returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, options ...SenderOptionFunc) (*Sender, error) {
 	client, err := sarama.NewClient(brokers, saramaConfig)
 	if err != nil {
@@ -26,7 +26,7 @@ func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, opti
 	return NewSenderFromClient(client, topic, options...)
 }
 
-// Returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
+// NewSenderFromClient returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOptionFunc) (*Sender, error) {
 	producer, err := sarama.NewSyncProducerFromClient(client)
 	if err != nil {
@@ -36,7 +36,7 @@ func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOp
 	s := &Sender{
 		topic:        topic,
 		syncProducer: producer,
-		transformers: make(binding.TransformerFactories, 0),
+		transformers: make(binding.Transformers, 0),
 	}
 	for _, o := range options {
 		o(s)
@@ -50,7 +50,7 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) error {
 
 	kafkaMessage := sarama.ProducerMessage{Topic: s.topic}
 
-	if err = WriteProducerMessage(ctx, m, &kafkaMessage, s.transformers); err != nil {
+	if err = WriteProducerMessage(ctx, m, &kafkaMessage, s.transformers...); err != nil {
 		return err
 	}
 
