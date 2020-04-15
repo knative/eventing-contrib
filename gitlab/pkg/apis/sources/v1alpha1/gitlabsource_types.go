@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
@@ -27,6 +28,10 @@ import (
 
 // Check that GitLabSource implements the Conditions duck type.
 var _ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
+
+var _ apis.Validatable = (*GitLabSource)(nil)
+var _ apis.Defaultable = (*GitLabSource)(nil)
+var _ runtime.Object = (*GitLabSource)(nil)
 
 // GitLabSourceSpec defines the desired state of GitLabSource
 // +kubebuilder:categories=all,knative,eventing,sources
