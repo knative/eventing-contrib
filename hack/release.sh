@@ -28,6 +28,7 @@ COMPONENTS=(
   ["couchdb.yaml"]="couchdb/source/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["github.yaml"]="github/config"
+  ["gitlab.yaml"]="gitlab/config"
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
   ["natss-channel.yaml"]="natss/config"
