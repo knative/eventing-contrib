@@ -22,9 +22,13 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	uuidPrefix = "knative-kafka-source-"
+)
+
 // SetDefaults ensures KafkaSource reflects the default values.
 func (k *KafkaSource) SetDefaults(ctx context.Context) {
 	if k != nil && k.Spec.ConsumerGroup == "" {
-		k.Spec.ConsumerGroup = uuid.New().String()
+		k.Spec.ConsumerGroup = uuidPrefix + uuid.New().String()
 	}
 }

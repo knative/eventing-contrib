@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -33,7 +34,8 @@ type defaultKafkaTestArgs struct {
 
 func TestSetDefaults(t *testing.T) {
 	assertUUID := func(t *testing.T, ks KafkaSource, expected string) {
-		_, err := uuid.Parse(ks.Spec.ConsumerGroup)
+		consumerGroup := strings.Split(ks.Spec.ConsumerGroup, uuidPrefix)
+		_, err := uuid.Parse(consumerGroup[len(consumerGroup)-1])
 		if err != nil {
 			t.Fatalf("Error Parsing UUID value: %w", err)
 		}
