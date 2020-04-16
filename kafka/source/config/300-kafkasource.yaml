@@ -68,7 +68,6 @@ spec:
               minLength: 1
             consumerGroup:
               type: string
-              minLength: 1
             net:
               properties:
                 sasl:
