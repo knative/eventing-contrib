@@ -72,12 +72,6 @@ func BenchmarkHandle(b *testing.B) {
 
 	statsReporter, _ := source.NewStatsReporter()
 
-	cfg := sarama.NewConfig()
-	client, err := sarama.NewClient([]string{"server1", "server2"}, cfg)
-	if err != nil {
-		b.Fatalf("sarama.NewClient() = %v", err)
-	}
-
 	a := &Adapter{
 		config: &adapterConfig{
 			EnvConfig: adapter.EnvConfig{
@@ -88,7 +82,6 @@ func BenchmarkHandle(b *testing.B) {
 			ConsumerGroup: "group",
 			Name:          "test",
 		},
-		client:            client,
 		httpMessageSender: &s,
 		logger:            zap.NewNop(),
 		keyTypeMapper:     getKeyTypeMapper(""),
