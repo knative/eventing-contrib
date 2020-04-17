@@ -49,8 +49,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: SECRET_NAME
-          value: gitlabsource-webhook-server-secret
         image: ko://knative.dev/eventing-contrib/gitlab/cmd/controller
         imagePullPolicy: Always
         resources:
@@ -60,19 +58,4 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-        volumeMounts:
-        - mountPath: /tmp/cert
-          name: cert
-          readOnly: true
       terminationGracePeriodSeconds: 10
-      volumes:
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: gitlabsource-webhook-server-secret
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: gitlabsource-webhook-server-secret
-  namespace: knative-sources

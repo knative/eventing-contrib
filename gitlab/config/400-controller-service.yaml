@@ -27,3 +27,19 @@ spec:
     targetPort: 8443
   selector:
     control-plane: gitlab-controller-manager
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    contrib.eventing.knative.dev/release: devel
+    role: webhook
+  name: gitlab-source-webhook
+  namespace: knative-sources
+spec:
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    control-plane: gitlab-controller-manager
