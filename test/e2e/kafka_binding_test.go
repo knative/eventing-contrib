@@ -19,30 +19,24 @@ limitations under the License.
 package e2e
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/google/uuid"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
+	"knative.dev/pkg/tracker"
 
 	lib2 "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
-// This test take for granted that the kafka cluster already exists together with the test-topic topic
-const (
-	kafkaBootstrapUrl     = "my-cluster-kafka-bootstrap.kafka.svc:9092"
-	kafkaClusterName      = "my-cluster"
-	kafkaClusterNamespace = "kafka"
-)
-
-func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedCheckInLog string) {
+func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedCheckInLog string) {
 	client := lib.Setup(t, true)
 
 	kafkaTopicName := uuid.New().String()
-	loggerPodName := "e2e-kafka-source-event-logger"
+	loggerPodName := "e2e-kafka-binding-event-logger"
 
 	defer lib.TearDown(client)
 
@@ -59,9 +53,25 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 		resources.ServiceRef(loggerPodName),
 	))
 
+	selector := map[string]string{
+		"topic": kafkaTopicName,
+	}
+
+	t.Logf("Creating KafkaBinding")
+	lib2.CreateKafkaBindingOrFail(client, contribresources.KafkaBinding(
+		kafkaBootstrapUrl,
+		&tracker.Reference{
+			APIVersion: "batch/v1",
+			Kind:       "Job",
+			Selector: &metav1.LabelSelector{
+				MatchLabels: selector,
+			},
+		},
+	))
+
 	client.WaitForAllTestResourcesReadyOrFail()
 
-	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
+	helpers.MustPublishKafkaMessageViaBinding(client, selector, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 
 	// verify the logger service receives the event
 	if err := client.CheckLog(loggerPodName, lib.CheckerContains(expectedCheckInLog)); err != nil {
@@ -69,7 +79,7 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 	}
 }
 
-func TestKafkaSource(t *testing.T) {
+func TestKafkaBinding(t *testing.T) {
 	tests := map[string]struct {
 		messageKey         string
 		messageHeaders     map[string]string
@@ -108,15 +118,7 @@ func TestKafkaSource(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			testKafkaSource(t, test.messageKey, test.messageHeaders, test.messagePayload, test.expectedCheckInLog)
+			testKafkaBinding(t, test.messageKey, test.messageHeaders, test.messagePayload, test.expectedCheckInLog)
 		})
 	}
-}
-
-func mustJsonMarshal(t *testing.T, val interface{}) string {
-	data, err := json.Marshal(val)
-	if err != nil {
-		t.Errorf("unexpected error, %v", err)
-	}
-	return string(data)
 }
