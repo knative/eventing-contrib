@@ -49,64 +49,58 @@ type envConfig struct {
 	Net              AdapterNet
 }
 
-func NewConsumer(ctx context.Context) (sarama.Client, error) {
+// NewConfig extracts the Kafka configuration from the environment.
+func NewConfig(ctx context.Context) ([]string, *sarama.Config, error) {
 	cfg := sarama.NewConfig()
 	cfg.Version = sarama.V2_0_0_0
 
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
+		return nil, nil, err
+	}
+
+	if env.Net.SASL.Enable {
+		cfg.Net.SASL.Enable = true
+		cfg.Net.SASL.User = env.Net.SASL.User
+		cfg.Net.SASL.Password = env.Net.SASL.Password
+	}
+
+	if env.Net.TLS.Enable {
+		cfg.Net.TLS.Enable = true
+		tlsConfig, err := newTLSConfig(env.Net.TLS.Cert, env.Net.TLS.Key, env.Net.TLS.CACert)
+		if err != nil {
+			return nil, nil, err
+		}
+		cfg.Net.TLS.Config = tlsConfig
+	}
+
+	return env.BootstrapServers, cfg, nil
+}
+
+// NewConsumer is a helper method for constructing a client for consuming kafka messages.
+func NewConsumer(ctx context.Context) (sarama.Client, error) {
+	bs, cfg, err := NewConfig(ctx)
+	if err != nil {
 		return nil, err
 	}
 
 	cfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	cfg.Consumer.Return.Errors = true
 
-	if env.Net.SASL.Enable {
-		cfg.Net.SASL.Enable = true
-		cfg.Net.SASL.User = env.Net.SASL.User
-		cfg.Net.SASL.Password = env.Net.SASL.Password
-	}
-
-	if env.Net.TLS.Enable {
-		cfg.Net.TLS.Enable = true
-		tlsConfig, err := newTLSConfig(env.Net.TLS.Cert, env.Net.TLS.Key, env.Net.TLS.CACert)
-		if err != nil {
-			return nil, err
-		}
-		cfg.Net.TLS.Config = tlsConfig
-	}
-
-	return sarama.NewClient(env.BootstrapServers, cfg)
+	return sarama.NewClient(bs, cfg)
 }
 
+// NewProducer is a helper method for constructing a client for producing kafka methods.
 func NewProducer(ctx context.Context) (sarama.Client, error) {
-	cfg := sarama.NewConfig()
-	cfg.Version = sarama.V2_0_0_0
-
-	var env envConfig
-	if err := envconfig.Process("", &env); err != nil {
+	bs, cfg, err := NewConfig(ctx)
+	if err != nil {
 		return nil, err
 	}
 
 	cfg.Producer.Return.Successes = true
 	cfg.Producer.Return.Errors = true
 
-	if env.Net.SASL.Enable {
-		cfg.Net.SASL.Enable = true
-		cfg.Net.SASL.User = env.Net.SASL.User
-		cfg.Net.SASL.Password = env.Net.SASL.Password
-	}
-
-	if env.Net.TLS.Enable {
-		cfg.Net.TLS.Enable = true
-		tlsConfig, err := newTLSConfig(env.Net.TLS.Cert, env.Net.TLS.Key, env.Net.TLS.CACert)
-		if err != nil {
-			return nil, err
-		}
-		cfg.Net.TLS.Config = tlsConfig
-	}
-
-	return sarama.NewClient(env.BootstrapServers, cfg)
+	return sarama.NewClient(bs, cfg)
 }
 
 // newTLSConfig returns a *tls.Config using the given ceClient cert, ceClient key,
