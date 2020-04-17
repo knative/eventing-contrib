@@ -19,11 +19,6 @@ metadata:
     contrib.eventing.knative.dev/release: devel
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-  annotations:
-    registry.knative.dev/eventTypes: |
-      [
-        { "type": "dev.knative.kafka.event" }
-      ]
   name: kafkabindings.bindings.knative.dev
 spec:
   group: bindings.knative.dev
