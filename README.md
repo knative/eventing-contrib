@@ -6,7 +6,8 @@
 [![LICENSE](https://img.shields.io/github/license/knative/eventing-contrib.svg)](https://github.com/knative/eventing-contrib/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://knative.slack.com)
 
-The Knative Eventing Contrib project provides source and channel implementations that:
+The Knative Eventing Contrib project provides source and channel implementations
+that:
 
 - Integrate with Apache Camel-K
 - Integrate with Apache CouchDB
