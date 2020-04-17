@@ -36,16 +36,58 @@ const (
 	GHHeaderDelivery = "GitHub-Delivery"
 )
 
+var validEvents = []gh.Event{
+	gh.CheckSuiteEvent,
+	gh.CommitCommentEvent,
+	gh.CommitCommentEvent,
+	gh.CreateEvent,
+	gh.DeleteEvent,
+	gh.DeploymentEvent,
+	gh.DeploymentStatusEvent,
+	gh.ForkEvent,
+	gh.GollumEvent,
+	gh.InstallationEvent,
+	gh.IntegrationInstallationEvent,
+	gh.IssueCommentEvent,
+	gh.IssuesEvent,
+	gh.LabelEvent,
+	gh.MemberEvent,
+	gh.MembershipEvent,
+	gh.MilestoneEvent,
+	gh.OrganizationEvent,
+	gh.OrgBlockEvent,
+	gh.PageBuildEvent,
+	gh.PingEvent,
+	gh.ProjectCardEvent,
+	gh.ProjectColumnEvent,
+	gh.ProjectEvent,
+	gh.PublicEvent,
+	gh.PullRequestEvent,
+	gh.PullRequestReviewEvent,
+	gh.PullRequestReviewCommentEvent,
+	gh.PushEvent,
+	gh.ReleaseEvent,
+	gh.RepositoryEvent,
+	gh.StatusEvent,
+	gh.TeamEvent,
+	gh.TeamAddEvent,
+	gh.WatchEvent,
+}
+
 // Adapter converts incoming GitHub webhook events to CloudEvents
 type Adapter struct {
 	client cloudevents.Client
 	source string
+	hook   *gh.Webhook
 }
 
 // New creates an adapter to convert incoming GitHub webhook events to CloudEvents and
 // then sends them to the specified Sink
-func New(sinkURI, ownerRepo string) (*Adapter, error) {
+func New(sinkURI, ownerRepo, secretToken string) (*Adapter, error) {
 	a := new(Adapter)
+
+	a.hook, _ = gh.New(gh.Options.Secret(secretToken))
+
 	var err error
 	a.client, err = kncloudevents.NewDefaultClient(sinkURI)
 	if err != nil {
@@ -68,6 +110,23 @@ func (a *Adapter) HandleEvent(payload interface{}, header http.Header) {
 	if err != nil {
 		log.Printf("unexpected error handling GitHub event: %s", err)
 	}
+}
+
+func (a *Adapter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	event, err := a.hook.Parse(r, validEvents...)
+	if err != nil {
+		if err == gh.ErrEventNotFound {
+			w.WriteHeader(http.StatusNotFound)
+
+			log.Print("Event not found")
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("Error processing request: %s", err)
+		return
+	}
+
+	a.HandleEvent(event, r.Header)
 }
 
 func (a *Adapter) handleEvent(payload interface{}, hdr http.Header) error {

@@ -23,40 +23,40 @@ import (
 	"net/http"
 	"strings"
 
-	//k8s.io imports
+	ghclient "github.com/google/go-github/github"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 
-	//knative.dev/serving imports
-	v1 "knative.dev/serving/pkg/apis/serving/v1"
-	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
-	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
-
-	//knative.dev/eventing-contrib imports
-	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
-	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
-	"knative.dev/eventing-contrib/github/pkg/reconciler/source/resources"
-
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
-	//knative.dev/pkg imports
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
+	"knative.dev/pkg/tracker"
 
-	ghclient "github.com/google/go-github/github"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
+	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
+
+	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
+	"knative.dev/eventing-contrib/github/pkg/common"
+	"knative.dev/eventing-contrib/github/pkg/reconciler/source/resources"
 )
 
 const (
-	// controllerAgentName is the string used by this controller to identify
-	// itself when creating events.
-	controllerAgentName = "github-source-controller"
-	raImageEnvVar       = "GH_RA_IMAGE"
+	saName        = "github-mt-adapter"
+	mtadapterName = "githubsource-mt-adapter"
+	raImageEnvVar = "GH_RA_IMAGE"
+
+	GitHubSourceServiceCreated = "GitHubSourceServiceCreated"
+	GitHubSourceServiceUpdated = "GitHubSourceServiceUpdated"
 )
 
 // Reconciler reconciles a GitHubSource object
@@ -67,6 +67,9 @@ type Reconciler struct {
 	servingLister    servinglisters.ServiceLister
 
 	receiveAdapterImage string
+
+	// tracking mt adapter ksvc changes
+	tracker tracker.Interface
 
 	sinkResolver *resolver.URIResolver
 
@@ -88,12 +91,12 @@ type webhookArgs struct {
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.GitHubSource) pkgreconciler.Event {
 	source.Status.InitializeConditions()
 
-	accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	accessToken, err := common.SecretFrom(r.kubeClientSet, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 	if err != nil {
 		source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
 		return err
 	}
-	secretToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	secretToken, err := common.SecretFrom(r.kubeClientSet, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
 	if err != nil {
 		source.Status.MarkNoSecrets("SecretTokenNotFound", "%s", err)
 		return err
@@ -117,30 +120,32 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	}
 	source.Status.MarkSink(uri)
 
-	ksvc, err := r.getOwnedService(ctx, source)
-	if apierrors.IsNotFound(err) {
-		ksvc = resources.MakeService(&resources.ServiceArgs{
-			Source:              source,
-			ReceiveAdapterImage: r.receiveAdapterImage,
-		})
-		ksvc, err = r.servingClientSet.ServingV1().Services(source.Namespace).Create(ksvc)
-		if err != nil {
-			return err
-		}
-		controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
-		// TODO: Mark Deploying for the ksvc
-		// Wait for the Service to get a status
-	} else if err != nil {
-		// Error was something other than NotFound
+	ksvc, err := r.reconcileMTReceiveAdapter(ctx, source)
+	if err != nil {
+		logging.FromContext(ctx).Error("Unable to reconcile the mt receive adapter", zap.Error(err))
 		return err
-	} else if !metav1.IsControlledBy(ksvc, source) {
-		return fmt.Errorf("Service %q is not owned by GitHubSource %q", ksvc.Name, source.Name)
 	}
+
+	// Tell tracker to reconcile this GitHubSource whenever the Kservice changes
+	err = r.tracker.TrackReference(tracker.Reference{
+		APIVersion: "serving.knative.dev/v1",
+		Kind:       "Service",
+		Namespace:  ksvc.Namespace,
+		Name:       ksvc.Name,
+	}, source)
+
+	if err != nil {
+		logging.FromContext(ctx).Error("Unable to track the deployment", zap.Error(err))
+		return err
+	}
+
+	withPath := *ksvc.Status.URL
+	withPath.Path = fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
 
 	if ksvc.Status.IsReady() && ksvc.Status.URL != nil {
 		args := &webhookArgs{
 			source:                source,
-			url:                   ksvc.Status.URL,
+			url:                   &withPath,
 			accessToken:           accessToken,
 			secretToken:           secretToken,
 			alternateGitHubAPIURL: source.Spec.GitHubAPIURL,
@@ -173,7 +178,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 	// If a webhook was created, try to delete it
 	if source.Status.WebhookIDKey != "" {
 		// Get access token
-		accessToken, err := r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+		accessToken, err := common.SecretFrom(r.kubeClientSet, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 		if apierrors.IsNotFound(err) {
 			source.Status.MarkNoSecrets("AccessTokenNotFound", "%s", err)
 			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning,
@@ -210,6 +215,38 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		source.Status.WebhookIDKey = ""
 	}
 	return nil
+}
+
+func (r *Reconciler) reconcileMTReceiveAdapter(ctx context.Context, source *v1alpha1.GitHubSource) (*servingv1.Service, error) {
+	expected := resources.MakeService(&resources.ServiceArgs{
+		ServiceAccountName:  saName,
+		ReceiveAdapterImage: r.receiveAdapterImage,
+		AdapterName:         mtadapterName,
+	})
+
+	s, err := r.servingLister.Services(system.Namespace()).Get(mtadapterName)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			s, err := r.servingClientSet.ServingV1().Services(system.Namespace()).Create(expected)
+			if err != nil {
+				controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeWarning, GitHubSourceServiceCreated, "Cluster-scoped Knative service not created (%v)", err)
+				return nil, err
+			}
+			controller.GetEventRecorder(ctx).Event(source, corev1.EventTypeNormal, GitHubSourceServiceCreated, "Cluster-scoped Knative service created")
+			return s, nil
+		}
+		return nil, fmt.Errorf("error getting mt adapter Knative service %v", err)
+	} else if podSpecChanged(s.Spec.Template.Spec.PodSpec, expected.Spec.Template.Spec.PodSpec) {
+		s.Spec.Template.Spec = expected.Spec.Template.Spec
+		if s, err = r.servingClientSet.ServingV1().Services(system.Namespace()).Update(s); err != nil {
+			return s, err
+		}
+		controller.GetEventRecorder(ctx).Event(source, corev1.EventTypeNormal, GitHubSourceServiceUpdated, "Cluster-scoped Knative service updated")
+		return s, nil
+	} else {
+		logging.FromContext(ctx).Debug("Reusing existing cluster-scoped Knative service", zap.Any("ksvc", s))
+	}
+	return s, nil
 }
 
 func (r *Reconciler) createWebhook(ctx context.Context, args *webhookArgs) (string, error) {
@@ -312,19 +349,6 @@ func (r *Reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 	return nil
 }
 
-func (r *Reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
-	secret := &corev1.Secret{}
-	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
-	if err != nil {
-		return "", err
-	}
-	secretVal, ok := secret.Data[secretKeySelector.Key]
-	if !ok {
-		return "", fmt.Errorf(`key "%s" not found in secret "%s"`, secretKeySelector.Key, secretKeySelector.Name)
-	}
-	return string(secretVal), nil
-}
-
 func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 	components := strings.Split(ownerAndRepository, "/")
 	if len(components) > 2 {
@@ -342,20 +366,6 @@ func parseOwnerRepoFrom(ownerAndRepository string) (string, string, error) {
 	return owner, repo, nil
 }
 
-func (r *Reconciler) getOwnedService(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*v1.Service, error) {
-	serviceList, err := r.servingLister.Services(source.Namespace).List(labels.Everything())
-	if err != nil {
-		return nil, err
-	}
-	for _, ksvc := range serviceList {
-		if metav1.IsControlledBy(ksvc, source) {
-			//TODO if there are >1 controlled, delete all but first?
-			return ksvc, nil
-		}
-	}
-	return nil, apierrors.NewNotFound(v1.Resource("services"), "")
-}
-
 func (r *Reconciler) createCloudEventAttributes(src *sourcesv1alpha1.GitHubSource) []duckv1.CloudEventAttributes {
 	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(src.Spec.EventTypes))
 	for _, ghType := range src.Spec.EventTypes {
@@ -365,4 +375,19 @@ func (r *Reconciler) createCloudEventAttributes(src *sourcesv1alpha1.GitHubSourc
 		})
 	}
 	return ceAttributes
+}
+
+func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
+	if !equality.Semantic.DeepDerivative(newPodSpec, oldPodSpec) {
+		return true
+	}
+	if len(oldPodSpec.Containers) != len(newPodSpec.Containers) {
+		return true
+	}
+	for i := range newPodSpec.Containers {
+		if !equality.Semantic.DeepEqual(newPodSpec.Containers[i].Env, oldPodSpec.Containers[i].Env) {
+			return true
+		}
+	}
+	return false
 }

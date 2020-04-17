@@ -20,33 +20,28 @@ import (
 	"context"
 	"os"
 
-	//k8s.io imports
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 
-	//Injection imports
-	sourcescheme "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/scheme"
-	githubinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource"
-	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
-	serviceclient "knative.dev/serving/pkg/client/injection/client"
-	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
-
-	//knative.dev/eventing imports
-	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
-
-	//knative.dev/pkg imports
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
+	"knative.dev/pkg/tracker"
+	serviceclient "knative.dev/serving/pkg/client/injection/client"
+	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
+
+	sourcescheme "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/scheme"
+	githubinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource"
+	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
 )
 
 func NewController(
 	ctx context.Context,
 	_ configmap.Watcher,
 ) *controller.Impl {
-
 	raImage, defined := os.LookupEnv(raImageEnvVar)
 	if !defined {
 		logging.FromContext(ctx).Errorf("required environment variable '%s' not defined", raImageEnvVar)
@@ -63,7 +58,6 @@ func NewController(
 		webhookClient:       gitHubWebhookClient{},
 		receiveAdapterImage: raImage,
 	}
-
 	impl := ghreconciler.NewImpl(ctx, r)
 
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
@@ -72,13 +66,14 @@ func NewController(
 
 	githubInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
+	// Tracker is used to notify us that the mt adapter KService has changed so that
+	// we can reconcile all GitHubSources that depends on it
+	r.tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("GitHubSource")),
-		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
-	})
+		FilterFunc: controller.FilterWithNameAndNamespace(system.Namespace(), mtadapterName),
+		Handler:    controller.HandleAll(r.tracker.OnChanged)})
 
 	return impl
-
 }
 
 func init() {

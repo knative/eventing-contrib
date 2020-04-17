@@ -121,3 +121,59 @@ rules:
       - get
       - list
       - watch
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: eventing-sources-githubsource-mt-adapter
+  labels:
+    contrib.eventing.knative.dev/release: devel
+rules:
+  - apiGroups:
+      - sources.knative.dev
+    resources:
+      - githubsources
+    verbs: &read-watch
+      - get
+      - list
+      - watch
+
+  # Sources finalizer
+  - apiGroups:
+      - sources.knative.dev
+    resources:
+      - githubsources/finalizers
+    verbs: &everything
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  # Secrets read
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Events admin
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs: *everything
+
+  # Configmap read
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs: *read-watch
