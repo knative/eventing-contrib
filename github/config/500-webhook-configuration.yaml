@@ -44,10 +44,26 @@ webhooks:
   failurePolicy: Fail
   name: validation.webhook.github.sources.knative.dev
 ---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: githubbindings.webhook.github.sources.knative.dev
+  labels:
+    samples.knative.dev/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: github-webhook
+      namespace: knative-sources
+  failurePolicy: Fail
+  name: githubbindings.webhook.github.sources.knative.dev
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: sources-webhook-certs
+  name: github-webhook-certs
   namespace: knative-sources
   labels:
     contrib.eventing.knative.dev/release: devel

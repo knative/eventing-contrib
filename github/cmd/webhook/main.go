@@ -17,23 +17,29 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	githubv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	bindingv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/bindings/v1alpha1"
+	sourcev1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/github/pkg/reconciler/binding"
 	"knative.dev/eventing/pkg/logconfig"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection"
 	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
+	"knative.dev/pkg/webhook/psbinding"
 	"knative.dev/pkg/webhook/resourcesemantics"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 )
 
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
-	githubv1alpha1.SchemeGroupVersion.WithKind("GitHubSource"): &githubv1alpha1.GitHubSource{},
+	sourcev1alpha1.SchemeGroupVersion.WithKind("GitHubSource"):   &sourcev1alpha1.GitHubSource{},
+	bindingv1alpha1.SchemeGroupVersion.WithKind("GitHubBinding"): &bindingv1alpha1.GitHubBinding{},
 }
 
 var callbacks = map[schema.GroupVersionKind]validation.Callback{}
@@ -83,18 +89,49 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 	)
 }
 
+func NewGitHubBindingWebhook(opts ...psbinding.ReconcilerOption) injection.ControllerConstructor {
+	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+		return psbinding.NewAdmissionController(ctx,
+
+			// Name of the resource webhook.
+			"githubbindings.webhook.github.sources.knative.dev",
+
+			// The path on which to serve the webhook.
+			"/githubbindings",
+
+			// How to get all the Bindables for configuring the mutating webhook.
+			binding.ListAll,
+
+			// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
+			func(ctx context.Context, _ psbinding.Bindable) (context.Context, error) {
+				// Here is where you would infuse the context with state
+				// (e.g. attach a store with configmap data)
+				return ctx, nil
+			},
+			opts...,
+		)
+	}
+}
+
 func main() {
 	// Set up a signal context with our webhook options
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
 		ServiceName: logconfig.WebhookName(),
 		Port:        8443,
-		SecretName:  "sources-webhook-certs",
+		SecretName:  "github-webhook-certs",
 	})
+
+	ghbSelector := psbinding.WithSelector(psbinding.ExclusionSelector)
+	if os.Getenv("GITHUB_BINDING_SELECTION_MODE") == "inclusion" {
+		ghbSelector = psbinding.WithSelector(psbinding.InclusionSelector)
+	}
 
 	sharedmain.WebhookMainWithContext(ctx, logconfig.WebhookName(),
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewValidationAdmissionController,
-		// TODO(mattmoor): Support config validation in eventing-contrib.
+
+		// For each binding we have a controller and a binding webhook.
+		binding.NewController, NewGitHubBindingWebhook(ghbSelector),
 	)
 }

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package github
+package source
 
 import (
 	"context"
@@ -38,7 +38,7 @@ import (
 	//knative.dev/eventing-contrib imports
 	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
-	"knative.dev/eventing-contrib/github/pkg/reconciler/resources"
+	"knative.dev/eventing-contrib/github/pkg/reconciler/source/resources"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 

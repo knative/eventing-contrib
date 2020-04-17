@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,17 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
-
-import (
-	github "knative.dev/eventing-contrib/github/pkg/reconciler/source"
-	"knative.dev/pkg/injection/sharedmain"
-)
+package bindings
 
 const (
-	component = "github-controller"
+	// GroupName is the group name for knative binding resources.
+	GroupName = "bindings.knative.dev"
 )
-
-func main() {
-	sharedmain.Main(component, github.NewController)
-}
