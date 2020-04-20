@@ -66,6 +66,9 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSourc
 	logging.FromContext(ctx).Info("synchronizing githubsource")
 
 	secretToken, err := common.SecretFrom(r.kubeClientSet, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	if err != nil {
+		return err
+	}
 
 	adapter, err := New(source.Status.SinkURI.String(), source.Spec.OwnerAndRepository, secretToken)
 	if err != nil {

@@ -26,7 +26,9 @@ import (
 	// Fake injection clients and informers
 	_ "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource/fake"
 	_ "knative.dev/eventing/pkg/client/injection/client/fake"
+	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	_ "knative.dev/pkg/client/injection/kube/client/fake"
+	_ "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	_ "knative.dev/serving/pkg/client/injection/client/fake"
 	_ "knative.dev/serving/pkg/client/injection/informers/serving/v1/service/fake"
 )

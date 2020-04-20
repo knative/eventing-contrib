@@ -25,7 +25,6 @@ import (
 )
 
 func SecretFrom(kubeClientSet kubernetes.Interface, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
-	secret := &corev1.Secret{}
 	secret, err := kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
