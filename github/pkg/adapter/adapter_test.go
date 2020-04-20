@@ -37,8 +37,9 @@ import (
 )
 
 const (
-	testSubject   = "1234"
-	testOwnerRepo = "test-user/test-repo"
+	testSubject     = "1234"
+	testOwnerRepo   = "test-user/test-repo"
+	testSecretToken = "59hriuh92"
 )
 
 var (
@@ -426,7 +427,7 @@ func TestAllCases(t *testing.T) {
 		sinkServer := httptest.NewServer(h)
 		defer sinkServer.Close()
 
-		ra, err := New(sinkServer.URL, testOwnerRepo)
+		ra, err := New(sinkServer.URL, testOwnerRepo, testSecretToken)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -562,7 +563,7 @@ func TestHandleEvent(t *testing.T) {
 	sinkServer := httptest.NewServer(h)
 	defer sinkServer.Close()
 
-	ra, err := New(sinkServer.URL, testOwnerRepo)
+	ra, err := New(sinkServer.URL, testOwnerRepo, testSecretToken)
 	if err != nil {
 		t.Fatal(err)
 	}

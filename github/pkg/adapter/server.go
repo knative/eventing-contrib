@@ -62,3 +62,11 @@ func (h *Handler) Unregister(path string) {
 	defer h.handlersMu.Unlock()
 	delete(h.handlers, path)
 }
+
+// NewServer creates a new http server receiving events from github
+func NewServer(handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:    ":8080",
+		Handler: handler,
+	}
+}

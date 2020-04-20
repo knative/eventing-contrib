@@ -20,6 +20,8 @@ import (
 	"context"
 	"net/http"
 
+	"golang.org/x/sync/errgroup"
+
 	"go.uber.org/zap"
 
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
@@ -64,9 +66,20 @@ func NewController(
 	// Watch for githubsource objects
 	githubsourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	// Start our GitHub webhook handler
+	// Start our GitHub webhook server
+	server := NewServer(r.handler)
+
+	eg, egCtx := errgroup.WithContext(ctx)
+	eg.Go(server.ListenAndServe)
 	go func() {
-		http.ListenAndServe(":8080", r.handler)
+		// This will block until either a signal arrives or one of the grouped functions
+		// returns an error.
+		<-egCtx.Done()
+
+		server.Shutdown(context.Background())
+		if err := eg.Wait(); err != nil && err != http.ErrServerClosed {
+			logger.Errorw("Error while running server", zap.Error(err))
+		}
 	}()
 
 	return impl
