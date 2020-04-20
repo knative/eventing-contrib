@@ -39,9 +39,28 @@ subjects:
 - kind: ServiceAccount
   name: kafka-controller-manager
   namespace: knative-sources
-# An aggregated ClusterRole for all Addressable CRDs. 
+# An aggregated ClusterRole for all Addressable CRDs.
 # Ref: https://knative.dev/eventing/blob/master/config/200-addressable-resolvers-clusterrole.yaml
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: addressable-resolver
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eventing-sources-kafka-controller-podspecable-binding
+  labels:
+    contrib.eventing.knative.dev/release: devel
+subjects:
+- kind: ServiceAccount
+  name: kafka-controller-manager
+  namespace: knative-sources
+# An aggregated ClusterRole for all PodSpecable CRDs.
+# Ref: https://knative.dev/eventing/blob/master/config/core/roles/podspecable-binding-clusterrole.yaml
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: podspecable-binding

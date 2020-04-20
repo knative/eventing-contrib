@@ -23,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/pkg/kmp"
 )
@@ -36,52 +37,54 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		Spec: v1alpha1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
 			Topics:             "topic1,topic2",
-			BootstrapServers:   "server1,server2",
 			ConsumerGroup:      "group",
-			Net: v1alpha1.KafkaSourceNetSpec{
-				SASL: v1alpha1.KafkaSourceSASLSpec{
-					Enable: true,
-					User: v1alpha1.SecretValueFromSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "the-user-secret",
+			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+				BootstrapServers: "server1,server2",
+				Net: bindingsv1alpha1.KafkaNetSpec{
+					SASL: bindingsv1alpha1.KafkaSASLSpec{
+						Enable: true,
+						User: bindingsv1alpha1.SecretValueFromSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "the-user-secret",
+								},
+								Key: "user",
 							},
-							Key: "user",
+						},
+						Password: bindingsv1alpha1.SecretValueFromSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "the-password-secret",
+								},
+								Key: "password",
+							},
 						},
 					},
-					Password: v1alpha1.SecretValueFromSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "the-password-secret",
+					TLS: bindingsv1alpha1.KafkaTLSSpec{
+						Enable: true,
+						Cert: bindingsv1alpha1.SecretValueFromSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "the-cert-secret",
+								},
+								Key: "tls.crt",
 							},
-							Key: "password",
 						},
-					},
-				},
-				TLS: v1alpha1.KafkaSourceTLSSpec{
-					Enable: true,
-					Cert: v1alpha1.SecretValueFromSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "the-cert-secret",
+						Key: bindingsv1alpha1.SecretValueFromSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "the-key-secret",
+								},
+								Key: "tls.key",
 							},
-							Key: "tls.crt",
 						},
-					},
-					Key: v1alpha1.SecretValueFromSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "the-key-secret",
+						CACert: bindingsv1alpha1.SecretValueFromSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "the-ca-cert-secret",
+								},
+								Key: "tls.crt",
 							},
-							Key: "tls.key",
-						},
-					},
-					CACert: v1alpha1.SecretValueFromSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "the-ca-cert-secret",
-							},
-							Key: "tls.crt",
 						},
 					},
 				},
@@ -253,8 +256,10 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 		Spec: v1alpha1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
 			Topics:             "topic1,topic2",
-			BootstrapServers:   "server1,server2",
-			ConsumerGroup:      "group",
+			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+				BootstrapServers: "server1,server2",
+			},
+			ConsumerGroup: "group",
 		},
 	}
 
@@ -481,8 +486,10 @@ func TestMakeReceiveAdapterKeyType(t *testing.T) {
 		Spec: v1alpha1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
 			Topics:             "topic1,topic2",
-			BootstrapServers:   "server1,server2",
-			ConsumerGroup:      "group",
+			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+				BootstrapServers: "server1,server2",
+			},
+			ConsumerGroup: "group",
 		},
 	}
 

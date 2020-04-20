@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kafka
+package source
 
 import (
 	"context"
@@ -36,7 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/resources"
+	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source/resources"
 
 	// NewController stuff
 	"k8s.io/client-go/kubernetes"
@@ -140,6 +140,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 		}
 	}
 
+	// TODO(mattmoor): create KafkaBinding for the receive adapter.
+
 	ra, err := r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
 		logging.FromContext(ctx).Error("Unable to create the receive adapter", zap.Error(err))
@@ -152,7 +154,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 }
 
 func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
-
 	for _, rsrc := range []struct {
 		key   string
 		field string
@@ -182,7 +183,6 @@ func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
 }
 
 func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
-
 	if err := checkResourcesStatus(src); err != nil {
 		return nil, err
 	}

@@ -19,15 +19,21 @@ package main
 import (
 	"context"
 
+	"os"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
-	kafka "knative.dev/eventing-contrib/kafka/source/pkg/reconciler"
+	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/binding"
+	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection"
 	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
+	"knative.dev/pkg/webhook/psbinding"
 	"knative.dev/pkg/webhook/resourcesemantics"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
@@ -39,7 +45,8 @@ const (
 
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	// List the types to validate.
-	sourcesv1alpha1.SchemeGroupVersion.WithKind("KafkaSource"): &sourcesv1alpha1.KafkaSource{},
+	sourcesv1alpha1.SchemeGroupVersion.WithKind("KafkaSource"):   &sourcesv1alpha1.KafkaSource{},
+	bindingsv1alpha1.SchemeGroupVersion.WithKind("KafkaBinding"): &bindingsv1alpha1.KafkaBinding{},
 }
 
 var callbacks = map[schema.GroupVersionKind]validation.Callback{}
@@ -95,6 +102,30 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 	)
 }
 
+func NewKafkaBindingWebhook(opts ...psbinding.ReconcilerOption) injection.ControllerConstructor {
+	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+		return psbinding.NewAdmissionController(ctx,
+
+			// Name of the resource webhook.
+			"kafkabindings.webhook.kafka.sources.knative.dev",
+
+			// The path on which to serve the webhook.
+			"/kafkabindings",
+
+			// How to get all the Bindables for configuring the mutating webhook.
+			binding.ListAll,
+
+			// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
+			func(ctx context.Context, _ psbinding.Bindable) (context.Context, error) {
+				// Here is where you would infuse the context with state
+				// (e.g. attach a store with configmap data)
+				return ctx, nil
+			},
+			opts...,
+		)
+	}
+}
+
 func main() {
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
 		ServiceName: "kafka-source-webhook",
@@ -102,11 +133,19 @@ func main() {
 		SecretName:  "kafka-source-webhook-certs",
 	})
 
+	kfkSelector := psbinding.WithSelector(psbinding.ExclusionSelector)
+	if os.Getenv("KAFKA_BINDING_SELECTION_MODE") == "inclusion" {
+		kfkSelector = psbinding.WithSelector(psbinding.InclusionSelector)
+	}
+
 	sharedmain.WebhookMainWithContext(ctx, component,
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewValidationAdmissionController,
 
-		kafka.NewController,
+		// For each binding we have a controller and a binding webhook.
+		binding.NewController, NewKafkaBindingWebhook(kfkSelector),
+
+		source.NewController,
 	)
 }

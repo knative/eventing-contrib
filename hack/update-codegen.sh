@@ -36,7 +36,7 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dir
 )
 
 # Just Sources
-API_DIRS_SOURCES=(gitlab/pkg camel/source/pkg kafka/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
+API_DIRS_SOURCES=(gitlab/pkg camel/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
 
 for DIR in "${API_DIRS_SOURCES[@]}"; do
   # generate the code with:
@@ -56,7 +56,7 @@ for DIR in "${API_DIRS_SOURCES[@]}"; do
 done
 
 # Sources and Bindings
-API_DIRS_SOURCES_AND_BINDINGS=(github/pkg )
+API_DIRS_SOURCES_AND_BINDINGS=(github/pkg kafka/source/pkg )
 
 for DIR in "${API_DIRS_SOURCES_AND_BINDINGS[@]}"; do
   # generate the code with:

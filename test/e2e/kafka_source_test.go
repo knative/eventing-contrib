@@ -70,7 +70,6 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 }
 
 func TestKafkaSource(t *testing.T) {
-
 	tests := map[string]struct {
 		messageKey         string
 		messageHeaders     map[string]string
