@@ -32,7 +32,6 @@ import (
 	protocolhttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"go.uber.org/zap"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	"knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
@@ -153,8 +152,7 @@ func TestDispatcher(t *testing.T) {
 				Name:      "channela",
 				HostName:  "channela.svc",
 				FanoutConfig: fanout.Config{
-					AsyncHandler:     false,
-					DispatcherConfig: channel.EventDispatcherConfig{},
+					AsyncHandler: false,
 					Subscriptions: []eventingduck.SubscriberSpec{{
 						UID:           "aaaa",
 						Generation:    1,
@@ -176,8 +174,7 @@ func TestDispatcher(t *testing.T) {
 				Name:      "channelb",
 				HostName:  "channelb.svc",
 				FanoutConfig: fanout.Config{
-					AsyncHandler:     false,
-					DispatcherConfig: channel.EventDispatcherConfig{},
+					AsyncHandler: false,
 					Subscriptions: []eventingduck.SubscriberSpec{{
 						UID:           "bbbb",
 						Generation:    1,
