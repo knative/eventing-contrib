@@ -19,6 +19,7 @@ package resources
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -43,10 +44,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 
 	env := []corev1.EnvVar{{
 		Name:  "KAFKA_BOOTSTRAP_SERVERS",
-		Value: args.Source.Spec.BootstrapServers,
+		Value: strings.Join(args.Source.Spec.BootstrapServers, ","),
 	}, {
 		Name:  "KAFKA_TOPICS",
-		Value: args.Source.Spec.Topics,
+		Value: strings.Join(args.Source.Spec.Topics, ","),
 	}, {
 		Name:  "KAFKA_CONSUMER_GROUP",
 		Value: args.Source.Spec.ConsumerGroup,
