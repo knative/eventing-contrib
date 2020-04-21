@@ -906,6 +906,18 @@
   version = "v0.22.1"
 
 [[projects]]
+  digest = "1:8dd0eb34abada570618ce982ec22f197fc97edb6f6d5e6ef76dc2069bd5a30e7"
+  name = "go.opentelemetry.io/otel"
+  packages = [
+    "api/core",
+    "api/propagation",
+    "api/trace",
+  ]
+  pruneopts = "NUT"
+  revision = "857e80c27031b0e05246974a78769e7ea41fca23"
+  version = "v0.4.2"
+
+[[projects]]
   digest = "1:cc9d86ec4e6e3bdf87e3a421273bfeed003cf8e21351c0302fe8b0eb7b10efe6"
   name = "go.uber.org/atomic"
   packages = ["."]
@@ -1761,7 +1773,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:69a90f92827fe27249167b0cb422d0d4d4bf2abd5c581f69a2ede741097634af"
+  digest = "1:c2cee756a4b0e21677c8344d9afdf34679b92a9962f67a5e6a7a26fedb37b162"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1849,6 +1861,8 @@
     "pkg/tracing",
     "pkg/utils",
     "test",
+    "test/conformance/helpers",
+    "test/conformance/helpers/tracing",
     "test/e2e/helpers",
     "test/lib",
     "test/lib/cloudevents",
@@ -2148,6 +2162,7 @@
     "knative.dev/eventing/pkg/tracing",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/eventing/test",
+    "knative.dev/eventing/test/conformance/helpers",
     "knative.dev/eventing/test/e2e/helpers",
     "knative.dev/eventing/test/lib",
     "knative.dev/eventing/test/lib/resources",
@@ -2197,6 +2212,7 @@
     "knative.dev/pkg/system",
     "knative.dev/pkg/system/testing",
     "knative.dev/pkg/test",
+    "knative.dev/pkg/test/zipkin",
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/webhook",
     "knative.dev/pkg/webhook/certificates",
