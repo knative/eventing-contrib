@@ -243,7 +243,9 @@ func TestKafkaBindingDoSASL(t *testing.T) {
 	vsb := &KafkaBinding{
 		Spec: KafkaBindingSpec{
 			KafkaAuthSpec: KafkaAuthSpec{
-				BootstrapServers: url.String(),
+				BootstrapServers: []string{
+					url.String(),
+				},
 				Net: KafkaNetSpec{
 					SASL: KafkaSASLSpec{
 						Enable: true,
@@ -499,7 +501,9 @@ func TestKafkaBindingDoTLS(t *testing.T) {
 	vsb := &KafkaBinding{
 		Spec: KafkaBindingSpec{
 			KafkaAuthSpec: KafkaAuthSpec{
-				BootstrapServers: url.String(),
+				BootstrapServers: []string{
+					url.String(),
+				},
 				Net: KafkaNetSpec{
 					TLS: KafkaTLSSpec{
 						Enable: true,

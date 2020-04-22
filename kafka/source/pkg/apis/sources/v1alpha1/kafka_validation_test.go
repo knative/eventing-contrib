@@ -28,9 +28,9 @@ import (
 var (
 	fullSpec = KafkaSourceSpec{
 		KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
-			BootstrapServers: "servers",
+			BootstrapServers: []string{"servers"},
 		},
-		Topics:        "topics",
+		Topics:        []string{"topics"},
 		ConsumerGroup: "group",
 		Sink: &duckv1.Destination{
 			Ref: &duckv1.KReference{
@@ -57,7 +57,7 @@ func TestKafkaSourceCheckImmutableFields(t *testing.T) {
 		"Topic changed": {
 			orig: &fullSpec,
 			updated: KafkaSourceSpec{
-				Topics:             "some-other-topic",
+				Topics:             []string{"some-other-topic"},
 				Sink:               fullSpec.Sink,
 				ServiceAccountName: fullSpec.ServiceAccountName,
 			},
@@ -67,7 +67,7 @@ func TestKafkaSourceCheckImmutableFields(t *testing.T) {
 			orig: &fullSpec,
 			updated: KafkaSourceSpec{
 				KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
-					BootstrapServers: "server1,server2",
+					BootstrapServers: []string{"server1,server2"},
 				},
 				Sink:               fullSpec.Sink,
 				ServiceAccountName: fullSpec.ServiceAccountName,
