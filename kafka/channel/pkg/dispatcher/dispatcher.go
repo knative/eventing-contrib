@@ -81,6 +81,18 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 	}
 	receiverFunc, err := eventingchannels.NewMessageReceiver(
 		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.Transformer, _ nethttp.Header) error {
+
+			// If we record the trace, we need to write the span info into the event
+			// using the distributed tracing extension.
+			// If the span is not recorded, we just not send these info
+			span := trace.FromContext(ctx)
+			if span.IsRecordingEvents() {
+				dte := extensions.FromSpanContext(span.SpanContext())
+				transformers = append(transformers, dte.WriteTransformer())
+				// Because on the other side we need to extract the span, we force binary mode of the event
+				ctx = binding.WithForceBinary(ctx)
+			}
+
 			kafkaProducerMessage := sarama.ProducerMessage{
 				Topic: dispatcher.topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
 			}
@@ -151,7 +163,13 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		zap.String("topic", consumerMessage.Topic),
 		zap.String("sub", string(c.sub.UID)),
 	)
-	err := c.dispatcher.DispatchMessage(context.Background(), message, nil, destination, reply, deadLetter)
+
+	tracingCtx, err := extractTrace(ctx, message)
+	if err != nil {
+		return false, err
+	}
+
+	err = c.dispatcher.DispatchMessage(tracingCtx, message, nil, destination, reply, deadLetter)
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
 	return err == nil, err
 }
@@ -364,4 +382,26 @@ func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace st
 		Name:           name,
 		Namespace:      namespace,
 	}
+}
+
+func extractTrace(inCtx context.Context, message *protocolkafka.Message) (context.Context, error) {
+	// Recording span are injected only and only if the initial span is recording
+	if message.ReadEncoding() == binding.EncodingBinary {
+		dte := extensions.DistributedTracingExtension{}
+		err := dte.ReadTransformer().Transform(message, nil)
+		if err != nil {
+			return nil, err
+		}
+		// There is a span!
+		if dte.TraceParent != "" {
+			if sc, err := dte.ToSpanContext(); err == nil {
+				outCtx, _ := trace.StartSpanWithRemoteParent(inCtx, "kafkachannel", sc)
+				return outCtx, nil
+			} else {
+				return nil, err
+			}
+		}
+	}
+	outCtx, _ := trace.StartSpan(inCtx, "kafkachannel", trace.WithSampler(trace.NeverSample()))
+	return outCtx, nil
 }
