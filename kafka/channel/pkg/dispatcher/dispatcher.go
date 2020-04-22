@@ -84,7 +84,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 
 			// If we record the trace, we need to write the span info into the event
 			// using the distributed tracing extension.
-			// If the span is not recorded, we just not send these info
+			// If the span is not recorded, we just don't send these info
 			span := trace.FromContext(ctx)
 			defer span.End()
 			if span.IsRecordingEvents() {
@@ -388,6 +388,7 @@ func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace st
 
 func extractTrace(inCtx context.Context, message *protocolkafka.Message) (context.Context, *trace.Span, error) {
 	// Recording span are injected only and only if the initial span is recording
+	// If the span is recording, then the message is sent as binary mode
 	if message.ReadEncoding() == binding.EncodingBinary {
 		dte := extensions.DistributedTracingExtension{}
 		err := dte.ReadTransformer().Transform(message, nil)
