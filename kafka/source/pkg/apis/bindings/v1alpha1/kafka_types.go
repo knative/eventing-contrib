@@ -85,7 +85,7 @@ type KafkaNetSpec struct {
 type KafkaAuthSpec struct {
 	// Bootstrap servers are the Kafka servers the consumer will connect to.
 	// +required
-	BootstrapServers string `json:"bootstrapServers"`
+	BootstrapServers []string `json:"bootstrapServers"`
 
 	Net KafkaNetSpec `json:"net,omitempty"`
 }

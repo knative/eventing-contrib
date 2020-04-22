@@ -294,13 +294,15 @@ func (r *Reconciler) UpdateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
 }
 
 func (r *Reconciler) createCloudEventAttributes(src *v1alpha1.KafkaSource) []duckv1.CloudEventAttributes {
-	topics := strings.Split(src.Spec.Topics, ",")
-	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(topics))
-	for _, topic := range topics {
-		ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
-			Type:   v1alpha1.KafkaEventType,
-			Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
-		})
+	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(src.Spec.Topics))
+	for i := range src.Spec.Topics {
+		topics := strings.Split(src.Spec.Topics[i], ",")
+		for _, topic := range topics {
+			ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
+				Type:   v1alpha1.KafkaEventType,
+				Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
+			})
+		}
 	}
 	return ceAttributes
 }

@@ -140,6 +140,11 @@ func (in *KafkaSourceList) DeepCopyObject() runtime.Object {
 func (in *KafkaSourceSpec) DeepCopyInto(out *KafkaSourceSpec) {
 	*out = *in
 	in.KafkaAuthSpec.DeepCopyInto(&out.KafkaAuthSpec)
+	if in.Topics != nil {
+		in, out := &in.Topics, &out.Topics
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Sink != nil {
 		in, out := &in.Sink, &out.Sink
 		*out = new(v1.Destination)

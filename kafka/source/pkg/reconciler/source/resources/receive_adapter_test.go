@@ -36,10 +36,10 @@ func TestMakeReceiveAdapter(t *testing.T) {
 		},
 		Spec: v1alpha1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
-			Topics:             "topic1,topic2",
+			Topics:             []string{"topic1,topic2"},
 			ConsumerGroup:      "group",
 			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
-				BootstrapServers: "server1,server2",
+				BootstrapServers: []string{"server1,server2"},
 				Net: bindingsv1alpha1.KafkaNetSpec{
 					SASL: bindingsv1alpha1.KafkaSASLSpec{
 						Enable: true,
@@ -255,9 +255,9 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 		},
 		Spec: v1alpha1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
-			Topics:             "topic1,topic2",
+			Topics:             []string{"topic1,topic2"},
 			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
-				BootstrapServers: "server1,server2",
+				BootstrapServers: []string{"server1,server2"},
 			},
 			ConsumerGroup: "group",
 		},
@@ -485,9 +485,9 @@ func TestMakeReceiveAdapterKeyType(t *testing.T) {
 		},
 		Spec: v1alpha1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
-			Topics:             "topic1,topic2",
+			Topics:             []string{"topic1,topic2"},
 			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
-				BootstrapServers: "server1,server2",
+				BootstrapServers: []string{"server1,server2"},
 			},
 			ConsumerGroup: "group",
 		},

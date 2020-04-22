@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -80,7 +81,7 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 	for i := range spec.InitContainers {
 		spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 			Name:  "KAFKA_BOOTSTRAP_SERVERS",
-			Value: kfb.Spec.BootstrapServers,
+			Value: strings.Join(kfb.Spec.BootstrapServers, ","),
 		})
 		if kfb.Spec.Net.SASL.Enable {
 			spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
@@ -124,8 +125,9 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 	for i := range spec.Containers {
 		spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 			Name:  "KAFKA_BOOTSTRAP_SERVERS",
-			Value: kfb.Spec.BootstrapServers,
+			Value: strings.Join(kfb.Spec.BootstrapServers, ","),
 		})
+
 		if kfb.Spec.Net.SASL.Enable {
 			spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 				Name:  "KAFKA_NET_SASL_ENABLE",
