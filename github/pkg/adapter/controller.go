@@ -18,9 +18,6 @@ package adapter
 
 import (
 	"context"
-	"net/http"
-
-	"golang.org/x/sync/errgroup"
 
 	"go.uber.org/zap"
 
@@ -56,7 +53,7 @@ func NewController(
 		kubeClientSet:      kubeclient.Get(ctx),
 		eventingClientSet:  eventingclient.Get(ctx),
 		githubsourceLister: githubsourceInformer.Lister(),
-		handler:            NewHandler(logger),
+		handler:            HandlerFromContext(ctx),
 	}
 
 	impl := githubsourcereconciler.NewImpl(ctx, r)
@@ -65,22 +62,6 @@ func NewController(
 
 	// Watch for githubsource objects
 	githubsourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
-
-	// Start our GitHub webhook server
-	server := NewServer(r.handler)
-
-	eg, egCtx := errgroup.WithContext(ctx)
-	eg.Go(server.ListenAndServe)
-	go func() {
-		// This will block until either a signal arrives or one of the grouped functions
-		// returns an error.
-		<-egCtx.Done()
-
-		server.Shutdown(context.Background())
-		if err := eg.Wait(); err != nil && err != http.ErrServerClosed {
-			logger.Errorw("Error while running server", zap.Error(err))
-		}
-	}()
 
 	return impl
 }

@@ -17,11 +17,30 @@ limitations under the License.
 package adapter
 
 import (
+	"context"
 	"net/http"
 	"sync"
 
 	"go.uber.org/zap"
 )
+
+type handlerKey struct{}
+
+// WithHandler returns a copy of parent context in which the
+// value associated with handler key is the supplied handler.
+func WithHandler(ctx context.Context, handler *Handler) context.Context {
+	return context.WithValue(ctx, handlerKey{}, handler)
+}
+
+// FromContext returns the handler stored in context.
+// Returns nil if no handler is set in context, or if the stored value is
+// not of correct type.
+func HandlerFromContext(ctx context.Context) *Handler {
+	if handler, ok := ctx.Value(handlerKey{}).(*Handler); ok {
+		return handler
+	}
+	return nil
+}
 
 // Handler holds the main GitHub webhook HTTP handler and delegate to sub-handlers
 type Handler struct {

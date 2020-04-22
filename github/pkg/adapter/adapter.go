@@ -105,8 +105,7 @@ func New(sinkURI, ownerRepo, secretToken string) (*Adapter, error) {
 
 // HandleEvent is invoked whenever an event comes in from GitHub
 func (a *Adapter) HandleEvent(payload interface{}, header http.Header) {
-	hdr := http.Header(header)
-	err := a.handleEvent(payload, hdr)
+	err := a.handleEvent(payload, header)
 	if err != nil {
 		log.Printf("unexpected error handling GitHub event: %s", err)
 	}

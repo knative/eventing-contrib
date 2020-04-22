@@ -18,7 +18,8 @@ package source
 
 import (
 	"context"
-	"os"
+
+	"github.com/kelseyhightower/envconfig"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
@@ -38,14 +39,23 @@ import (
 	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
 )
 
+// envConfig will be used to extract the required environment variables.
+// If this configuration cannot be extracted, then NewController will panic.
+type envConfig struct {
+	Image string `envconfig:"GH_RA_IMAGE" required:"true"`
+
+	// Add this for validation purpose only of validation.
+	ControllerName string `envconfig:"CONTROLLER_NAME" required:"true"`
+	ControllerUID  string `envconfig:"CONTROLLER_UID" required:"true"`
+}
+
 func NewController(
 	ctx context.Context,
 	_ configmap.Watcher,
 ) *controller.Impl {
-	raImage, defined := os.LookupEnv(raImageEnvVar)
-	if !defined {
-		logging.FromContext(ctx).Errorf("required environment variable '%s' not defined", raImageEnvVar)
-		return nil
+	env := &envConfig{}
+	if err := envconfig.Process("", env); err != nil {
+		logging.FromContext(ctx).Panicf("unable to process GitHubSource's required environment variables: %v", err)
 	}
 
 	githubInformer := githubinformer.Get(ctx)
@@ -56,7 +66,7 @@ func NewController(
 		servingLister:       serviceInformer.Lister(),
 		servingClientSet:    serviceclient.Get(ctx),
 		webhookClient:       gitHubWebhookClient{},
-		receiveAdapterImage: raImage,
+		receiveAdapterImage: env.Image,
 	}
 	impl := ghreconciler.NewImpl(ctx, r)
 
@@ -70,7 +80,7 @@ func NewController(
 	// we can reconcile all GitHubSources that depends on it
 	r.tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(system.Namespace(), mtadapterName),
+		FilterFunc: controller.FilterWithNameAndNamespace(system.Namespace(), adapterName),
 		Handler:    controller.HandleAll(r.tracker.OnChanged)})
 
 	return impl

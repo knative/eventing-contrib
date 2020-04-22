@@ -85,14 +85,14 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: knative-eventing-githubsource-mt-adapter
+  name: knative-eventing-githubsource-adapter
   labels:
     eventing.knative.dev/release: devel
 subjects:
   - kind: ServiceAccount
-    name: github-mt-adapter
+    name: github-adapter
     namespace: knative-sources
 roleRef:
   kind: ClusterRole
-  name: eventing-sources-githubsource-mt-adapter
+  name: eventing-sources-githubsource-adapter
   apiGroup: rbac.authorization.k8s.io

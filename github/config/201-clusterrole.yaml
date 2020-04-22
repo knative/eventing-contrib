@@ -127,7 +127,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: eventing-sources-githubsource-mt-adapter
+  name: eventing-sources-githubsource-adapter
   labels:
     contrib.eventing.knative.dev/release: devel
 rules:

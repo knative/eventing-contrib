@@ -51,8 +51,8 @@ import (
 )
 
 const (
-	saName        = "github-mt-adapter"
-	mtadapterName = "githubsource-mt-adapter"
+	saName        = "github-adapter"
+	adapterName   = "githubsource-adapter"
 	raImageEnvVar = "GH_RA_IMAGE"
 
 	GitHubSourceServiceCreated = "GitHubSourceServiceCreated"
@@ -120,7 +120,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	}
 	source.Status.MarkSink(uri)
 
-	ksvc, err := r.reconcileMTReceiveAdapter(ctx, source)
+	ksvc, err := r.reconcileReceiveAdapter(ctx, source)
 	if err != nil {
 		logging.FromContext(ctx).Error("Unable to reconcile the mt receive adapter", zap.Error(err))
 		return err
@@ -217,14 +217,14 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 	return nil
 }
 
-func (r *Reconciler) reconcileMTReceiveAdapter(ctx context.Context, source *v1alpha1.GitHubSource) (*servingv1.Service, error) {
+func (r *Reconciler) reconcileReceiveAdapter(ctx context.Context, source *v1alpha1.GitHubSource) (*servingv1.Service, error) {
 	expected := resources.MakeService(&resources.ServiceArgs{
 		ServiceAccountName:  saName,
 		ReceiveAdapterImage: r.receiveAdapterImage,
-		AdapterName:         mtadapterName,
+		AdapterName:         adapterName,
 	})
 
-	s, err := r.servingLister.Services(system.Namespace()).Get(mtadapterName)
+	s, err := r.servingLister.Services(system.Namespace()).Get(adapterName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			s, err := r.servingClientSet.ServingV1().Services(system.Namespace()).Create(expected)

@@ -37,6 +37,8 @@ func TestNew(t *testing.T) {
 	ctx, _ := SetupFakeContext(t)
 
 	os.Setenv(raImageEnvVar, "dummy")
+	os.Setenv("CONTROLLER_NAME", "dummy")
+	os.Setenv("CONTROLLER_UID", "dummy")
 
 	c := NewController(ctx, &configmap.InformedWatcher{})
 
