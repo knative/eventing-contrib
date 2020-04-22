@@ -85,9 +85,9 @@ func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectRef
 		},
 		Spec: kafkasourcev1alpha1.KafkaSourceSpec{
 			KafkaAuthSpec: kafkabindingv1alpha1.KafkaAuthSpec{
-				BootstrapServers: bootstrapServer,
+				BootstrapServers: []string{bootstrapServer},
 			},
-			Topics:        topicName,
+			Topics:        []string{topicName},
 			ConsumerGroup: "test-consumer-group",
 			Sink: &duckv1.Destination{
 				Ref: &duckv1.KReference{
@@ -108,7 +108,7 @@ func KafkaBinding(bootstrapServer string, ref *tracker.Reference) *kafkabindingv
 		},
 		Spec: kafkabindingv1alpha1.KafkaBindingSpec{
 			KafkaAuthSpec: kafkabindingv1alpha1.KafkaAuthSpec{
-				BootstrapServers: bootstrapServer,
+				BootstrapServers: []string{bootstrapServer},
 			},
 			BindingSpec: duckv1alpha1.BindingSpec{
 				Subject: *ref,
