@@ -85,8 +85,8 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 			// If we record the trace, we need to write the span info into the event
 			// using the distributed tracing extension.
 			// If the span is not recorded, we just don't send these info
+			// to avoid expensive computations
 			span := trace.FromContext(ctx)
-			defer span.End()
 			if span.IsRecordingEvents() {
 				dte := extensions.FromSpanContext(span.SpanContext())
 				transformers = append(transformers, dte.WriteTransformer())
@@ -165,13 +165,13 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		zap.String("sub", string(c.sub.UID)),
 	)
 
-	tracingCtx, span, err := extractTrace(ctx, message)
+	ctx, span, err := startTraceFromMessage(ctx, message, consumerMessage.Topic)
 	if err != nil {
-		return false, err
+		return true, err
 	}
 	defer span.End()
 
-	err = c.dispatcher.DispatchMessage(tracingCtx, message, nil, destination, reply, deadLetter)
+	err = c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
 	return err == nil, err
 }
@@ -386,7 +386,7 @@ func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace st
 	}
 }
 
-func extractTrace(inCtx context.Context, message *protocolkafka.Message) (context.Context, *trace.Span, error) {
+func startTraceFromMessage(inCtx context.Context, message *protocolkafka.Message, topic string) (context.Context, *trace.Span, error) {
 	// Recording span are injected only and only if the initial span is recording
 	// If the span is recording, then the message is sent as binary mode
 	if message.ReadEncoding() == binding.EncodingBinary {
@@ -397,14 +397,10 @@ func extractTrace(inCtx context.Context, message *protocolkafka.Message) (contex
 		}
 		// There is a span!
 		if dte.TraceParent != "" {
-			if sc, err := dte.ToSpanContext(); err == nil {
-				outCtx, s := trace.StartSpanWithRemoteParent(inCtx, "kafkachannel", sc)
-				return outCtx, s, nil
-			} else {
-				return nil, nil, err
-			}
+			ctx, span := dte.StartChildSpan(inCtx, "kafkachannel-"+topic)
+			return ctx, span, nil
 		}
 	}
-	outCtx, s := trace.StartSpan(inCtx, "kafkachannel", trace.WithSampler(trace.NeverSample()))
+	outCtx, s := trace.StartSpan(inCtx, "kafkachannel-"+topic, trace.WithSampler(trace.NeverSample()))
 	return outCtx, s, nil
 }
