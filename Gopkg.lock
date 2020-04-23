@@ -1773,7 +1773,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:900a3b678808abc9b2f147ad24c993de6ef7db218b5f8805f2c8ef294bc1d0c1"
+  digest = "1:99336eb19499e29395da1d4213a49077cb12d72f203cb434c0d5cbbf56af7457"
   name = "knative.dev/eventing"
   packages = [
     "pkg/adapter",
@@ -1880,7 +1880,7 @@
     "test/test_images/transformevents",
   ]
   pruneopts = "UT"
-  revision = "8216e70e970a09ce2ceece75b7fbcf68729818e5"
+  revision = "7a2e16a60f696e9fa45d912febbe6697d28f5e81"
 
 [[projects]]
   branch = "master"
@@ -1912,6 +1912,7 @@
     "client/injection/kube/informers/factory/fake",
     "client/injection/kube/informers/rbac/v1/rolebinding",
     "configmap",
+    "configmap/testing",
     "controller",
     "injection",
     "injection/clients/dynamicclient",
