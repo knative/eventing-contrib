@@ -84,6 +84,7 @@ rules:
   - events
   - configmaps
   - secrets
+  - namespaces
   verbs: *everything
 
 - apiGroups:
