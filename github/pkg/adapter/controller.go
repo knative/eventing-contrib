@@ -21,7 +21,6 @@ import (
 
 	"go.uber.org/zap"
 
-	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/eventing/pkg/tracing"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
@@ -31,6 +30,10 @@ import (
 
 	githubsourceinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource"
 	githubsourcereconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
+)
+
+const (
+	adapterFinalizerName = "adapter.githubsources.sources.knative.dev"
 )
 
 // NewController initializes the controller and is called by the generated code.
@@ -50,13 +53,17 @@ func NewController(
 	githubsourceInformer := githubsourceinformer.Get(ctx)
 
 	r := &Reconciler{
-		kubeClientSet:      kubeclient.Get(ctx),
-		eventingClientSet:  eventingclient.Get(ctx),
-		githubsourceLister: githubsourceInformer.Lister(),
-		handler:            HandlerFromContext(ctx),
+		kubeClientSet: kubeclient.Get(ctx),
+		handler:       HandlerFromContext(ctx),
 	}
 
-	impl := githubsourcereconciler.NewImpl(ctx, r)
+	options := func(*controller.Impl) controller.Options {
+		return controller.Options{
+			FinalizerName: adapterFinalizerName,
+		}
+	}
+
+	impl := githubsourcereconciler.NewImpl(ctx, r, options)
 
 	logger.Info("Setting up event handlers")
 

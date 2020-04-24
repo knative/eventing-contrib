@@ -20,26 +20,21 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/client-go/kubernetes"
-	"knative.dev/eventing-contrib/github/pkg/common"
-
 	"go.uber.org/zap"
-	clientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	"knative.dev/eventing/pkg/logging"
+	"k8s.io/client-go/kubernetes"
+
+	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 	githubsourcereconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
-	sourceslisters "knative.dev/eventing-contrib/github/pkg/client/listers/sources/v1alpha1"
+	"knative.dev/eventing-contrib/github/pkg/common"
 )
 
 // Reconciler updates the internal Adapter cache GitHubSources
 type Reconciler struct {
-	kubeClientSet      kubernetes.Interface
-	eventingClientSet  clientset.Interface
-	githubsourceLister sourceslisters.GitHubSourceLister
-
-	handler *Handler
+	kubeClientSet kubernetes.Interface
+	handler       *Handler
 }
 
 // Check that our Reconciler implements ReconcileKind.
@@ -63,8 +58,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.GitHubS
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSource) error {
-	logging.FromContext(ctx).Info("synchronizing githubsource")
-
 	secretToken, err := common.SecretFrom(r.kubeClientSet, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
 	if err != nil {
 		return err
@@ -77,10 +70,13 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSourc
 
 	path := fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
 	r.handler.Register(path, adapter)
-	return nil
 
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, source *v1alpha1.GitHubSource) pkgreconciler.Event {
+	path := fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
+	r.handler.Unregister(path)
+
 	return nil
 }
