@@ -21,6 +21,7 @@ import (
 
 	ghbinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/bindings/v1alpha1/githubbinding"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/podspecable"
+	"knative.dev/pkg/client/injection/kube/informers/core/v1/namespace"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -51,6 +52,7 @@ func NewController(
 	ghbInformer := ghbinformer.Get(ctx)
 	dc := dynamicclient.Get(ctx)
 	psInformerFactory := podspecable.Get(ctx)
+	namespaceInformer := namespace.Get(ctx)
 
 	c := &psbinding.BaseReconciler{
 		GVR: v1alpha1.SchemeGroupVersion.WithResource("githubbindings"),
@@ -60,12 +62,14 @@ func NewController(
 		DynamicClient: dc,
 		Recorder: record.NewBroadcaster().NewRecorder(
 			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),
+		NamespaceLister: namespaceInformer.Lister(),
 	}
 	impl := controller.NewImpl(c, logger, "GitHubBindings")
 
 	logger.Info("Setting up event handlers")
 
 	ghbInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	namespaceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	c.Factory = &duck.CachedInformerFactory{
