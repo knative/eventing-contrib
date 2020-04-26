@@ -34,7 +34,7 @@ type mockConsumerGroup struct {
 	consumeMustReturnError         bool
 }
 
-func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
+func (m mockConsumerGroup) Consume(_ context.Context, _ []string, handler sarama.ConsumerGroupHandler) error {
 	if m.mustGenerateHandlerError {
 		go func() {
 			h := handler.(*saramaConsumerHandler)
@@ -86,7 +86,10 @@ func TestErrorPropagationCustomConsumerGroup(t *testing.T) {
 	// Mock newConsumerGroupFromClient to return our custom stuff
 	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, false, false)
 
-	factory := NewConsumerGroupFactory(nil)
+	factory := kafkaConsumerGroupFactoryImpl{
+		client:       saramaClientMock{},
+		clientCloner: func(client sarama.Client) (sarama.Client, error) { return client, nil },
+	}
 	consumerGroup, err := factory.StartConsumerGroup("bla", []string{}, zap.NewNop(), nil)
 
 	if err != nil {
@@ -120,7 +123,10 @@ func TestErrorWhileCreatingNewConsumerGroup(t *testing.T) {
 	// Mock newConsumerGroupFromClient to return our custom stuff
 	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, false, true)
 
-	factory := NewConsumerGroupFactory(nil)
+	factory := kafkaConsumerGroupFactoryImpl{
+		client:       saramaClientMock{},
+		clientCloner: func(client sarama.Client) (sarama.Client, error) { return client, nil },
+	}
 	_, err := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
 
 	if err == nil || err.Error() != "failed" {
@@ -132,7 +138,10 @@ func TestErrorWhileNewConsumerGroup(t *testing.T) {
 	// Mock newConsumerGroupFromClient to return our custom stuff
 	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, false, false, true, false)
 
-	factory := NewConsumerGroupFactory(nil)
+	factory := kafkaConsumerGroupFactoryImpl{
+		client:       saramaClientMock{},
+		clientCloner: func(client sarama.Client) (sarama.Client, error) { return client, nil },
+	}
 	cg, _ := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
 
 	err := <-cg.Errors()
@@ -141,3 +150,75 @@ func TestErrorWhileNewConsumerGroup(t *testing.T) {
 		t.Errorf("Should contain an error with message boom!. Got %v", err)
 	}
 }
+
+type saramaClientMock struct{}
+
+func (s saramaClientMock) Config() *sarama.Config {
+	return sarama.NewConfig()
+}
+
+func (s saramaClientMock) Controller() (*sarama.Broker, error) {
+	return sarama.NewBroker(""), nil
+}
+
+func (s saramaClientMock) Brokers() []*sarama.Broker {
+	return []*sarama.Broker{sarama.NewBroker("")}
+}
+
+func (s saramaClientMock) Topics() ([]string, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) Partitions(_ string) ([]int32, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) WritablePartitions(_ string) ([]int32, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) Leader(_ string, _ int32) (*sarama.Broker, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) Replicas(_ string, _ int32) ([]int32, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) InSyncReplicas(_ string, _ int32) ([]int32, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) OfflineReplicas(_ string, _ int32) ([]int32, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) RefreshMetadata(_ ...string) error {
+	panic("implement me")
+}
+
+func (s saramaClientMock) GetOffset(_ string, _ int32, _ int64) (int64, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) Coordinator(_ string) (*sarama.Broker, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) RefreshCoordinator(_ string) error {
+	panic("implement me")
+}
+
+func (s saramaClientMock) InitProducerID() (*sarama.InitProducerIDResponse, error) {
+	panic("implement me")
+}
+
+func (s saramaClientMock) Close() error {
+	panic("implement me")
+}
+
+func (s saramaClientMock) Closed() bool {
+	panic("implement me")
+}
+
+var _ sarama.Client = saramaClientMock{}

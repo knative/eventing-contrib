@@ -17,6 +17,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/Shopify/sarama"
@@ -31,7 +32,8 @@ type KafkaConsumerGroupFactory interface {
 }
 
 type kafkaConsumerGroupFactoryImpl struct {
-	client sarama.Client
+	client       sarama.Client
+	clientCloner func(client sarama.Client) (sarama.Client, error)
 }
 
 type customConsumerGroup struct {
@@ -68,8 +70,12 @@ func (c customConsumerGroup) Errors() <-chan error {
 var _ sarama.ConsumerGroup = (*customConsumerGroup)(nil)
 
 func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
-	consumerGroup, err := newConsumerGroupFromClient(groupID, c.client)
+	newClient, err := c.clientCloner(c.client)
+	if err != nil {
+		return nil, err
+	}
 
+	consumerGroup, err := newConsumerGroupFromClient(groupID, newClient)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +93,20 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 }
 
 func NewConsumerGroupFactory(client sarama.Client) KafkaConsumerGroupFactory {
-	return kafkaConsumerGroupFactoryImpl{client}
+	return kafkaConsumerGroupFactoryImpl{client: client, clientCloner: cloneClient}
+}
+
+func cloneClient(client sarama.Client) (sarama.Client, error) {
+	newConfig := *client.Config()
+	brokers := make([]string, len(client.Brokers()))
+	for i, b := range client.Brokers() {
+		brokers[i] = b.Addr()
+	}
+	newClient, err := sarama.NewClient(brokers, &newConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create the client: %w", err)
+	}
+	return newClient, nil
 }
 
 var _ KafkaConsumerGroupFactory = (*kafkaConsumerGroupFactoryImpl)(nil)
