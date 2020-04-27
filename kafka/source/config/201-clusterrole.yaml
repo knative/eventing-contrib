@@ -84,8 +84,20 @@ rules:
   - events
   - configmaps
   - secrets
-  - namespaces
   verbs: *everything
+
+# let the webhook label the appropriate namespace
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - create
+  - update
+  - list
+  - watch
+  - patch
 
 - apiGroups:
   - "coordination.k8s.io"
