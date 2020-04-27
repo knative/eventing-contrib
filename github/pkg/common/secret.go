@@ -17,6 +17,7 @@ limitations under the License.
 package common
 
 import (
+	"errors"
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
@@ -25,6 +26,10 @@ import (
 )
 
 func SecretFrom(kubeClientSet kubernetes.Interface, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
+	if secretKeySelector == nil {
+		return "", errors.New("missing secret key selector")
+	}
+
 	secret, err := kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err

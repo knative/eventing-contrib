@@ -75,7 +75,8 @@ func main() {
 		logger.Fatalw("Failed to start informers", zap.Error(err))
 	}
 	logger.Info("Starting controllers...")
-	go controller.StartAll(ctx.Done(), ra)
+
+	go controller.StartAll(ctx, ra)
 
 	// Start our GitHub webhook server
 	server := adapter.NewServer(handler)

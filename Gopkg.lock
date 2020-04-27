@@ -310,13 +310,15 @@
   version = "v1.7.1"
 
 [[projects]]
-  digest = "1:12d0e1c90b8ac588d97e90b642d065af77b749436ad9bd3b80c05566ae17d272"
+  digest = "1:b38ab1b8cf42d089d9f31d4918c57c2dd47d42f3e7fc50e12142140228cf81a9"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
+    "jsonpb",
     "proto",
     "protoc-gen-gogo/descriptor",
     "sortkeys",
+    "types",
   ]
   pruneopts = "NUT"
   revision = "5628607bb4c51c3157aacc3a50f0ab707582b805"
@@ -545,6 +547,21 @@
   pruneopts = "NUT"
   revision = "dc7c13fece037a4a36e2b3c69db4991498d30692"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:1e59759b895f57302df03c5632dc6bbedcdf6782a2b6259246ff653dd214ac45"
+  name = "github.com/jetstack/cert-manager"
+  packages = [
+    "pkg/apis/acme",
+    "pkg/apis/acme/v1alpha2",
+    "pkg/apis/certmanager",
+    "pkg/apis/certmanager/v1alpha2",
+    "pkg/apis/meta",
+    "pkg/apis/meta/v1",
+  ]
+  pruneopts = "NUT"
+  revision = "0e384f5d0d2afd8bb9caf10b165aa80c2d3fbd7e"
+  version = "v0.12.0"
 
 [[projects]]
   digest = "1:1f2aebae7e7c856562355ec0198d8ca2fa222fb05e5b1b66632a1fce39631885"
@@ -1369,6 +1386,30 @@
   version = "2019.2.3"
 
 [[projects]]
+  digest = "1:68155060a29bf71d7047eca2e5aa201fdc3b76d9b7d9f6f3207af980965f60f9"
+  name = "istio.io/api"
+  packages = ["networking/v1alpha3"]
+  pruneopts = "NUT"
+  revision = "4b064f75ad8f6cd93521b0527e9ec9fc60f42900"
+  version = "1.5.2"
+
+[[projects]]
+  digest = "1:e75a62ec4aa488947396f31f691708319f60540f174b585935d92c5ecc90b984"
+  name = "istio.io/client-go"
+  packages = ["pkg/apis/networking/v1alpha3"]
+  pruneopts = "NUT"
+  revision = "289a91f51a8e5dafc058e038ab737621273fb984"
+  version = "1.5.2"
+
+[[projects]]
+  digest = "1:fcf227730189418d83fabd8d0a0f52562749dfe002f81507e4ccce92c607a412"
+  name = "istio.io/gogo-genproto"
+  packages = ["googleapis/google/api"]
+  pruneopts = "NUT"
+  revision = "d3e214cd829acb60b7be007b636f0c7eb023d0a1"
+  version = "1.5.2"
+
+[[projects]]
   digest = "1:d77b48cc0ea74f3edbc8e0515a0ce2fa2154eb414137dd4fb5a642a73296d403"
   name = "k8s.io/api"
   packages = [
@@ -1773,6 +1814,25 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:1b7acca267c36b27fe00fcaa37547b12f8c29592cea8f738cf8cd093a7afa59d"
+  name = "knative.dev/caching"
+  packages = [
+    "pkg/apis/caching",
+    "pkg/apis/caching/v1alpha1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/fake",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/caching/v1alpha1",
+    "pkg/client/clientset/versioned/typed/caching/v1alpha1/fake",
+    "pkg/client/injection/client",
+    "pkg/client/injection/client/fake",
+    "pkg/client/listers/caching/v1alpha1",
+  ]
+  pruneopts = "NUT"
+  revision = "c8036952a659bd0f3643d579a59ea0b004889d32"
+
+[[projects]]
+  branch = "master"
   digest = "1:dc874dee8c98af4ab217169c2175b7e0b83f71d827ea6a5297444a5e2eb28251"
   name = "knative.dev/eventing"
   packages = [
@@ -1972,7 +2032,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:34c79b0af1687abcdfa714bd3734c40a87f56ac8bba1edf052a3c0a51c75e8d7"
+  digest = "1:8ae2ce0a8a0c5bdb83260eb82be674048d0bef498fb8c04ad2377ac426a86aea"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
@@ -1985,6 +2045,17 @@
     "pkg/apis/serving/v1alpha1",
     "pkg/apis/serving/v1beta1",
     "pkg/autoscaler/config",
+    "pkg/client/certmanager/clientset/versioned",
+    "pkg/client/certmanager/clientset/versioned/fake",
+    "pkg/client/certmanager/clientset/versioned/scheme",
+    "pkg/client/certmanager/clientset/versioned/typed/acme/v1alpha2",
+    "pkg/client/certmanager/clientset/versioned/typed/acme/v1alpha2/fake",
+    "pkg/client/certmanager/clientset/versioned/typed/certmanager/v1alpha2",
+    "pkg/client/certmanager/clientset/versioned/typed/certmanager/v1alpha2/fake",
+    "pkg/client/certmanager/injection/client",
+    "pkg/client/certmanager/injection/client/fake",
+    "pkg/client/certmanager/listers/acme/v1alpha2",
+    "pkg/client/certmanager/listers/certmanager/v1alpha2",
     "pkg/client/clientset/versioned",
     "pkg/client/clientset/versioned/fake",
     "pkg/client/clientset/versioned/scheme",
@@ -2014,11 +2085,20 @@
     "pkg/client/injection/informers/factory/fake",
     "pkg/client/injection/informers/serving/v1/service",
     "pkg/client/injection/informers/serving/v1/service/fake",
+    "pkg/client/istio/clientset/versioned",
+    "pkg/client/istio/clientset/versioned/fake",
+    "pkg/client/istio/clientset/versioned/scheme",
+    "pkg/client/istio/clientset/versioned/typed/networking/v1alpha3",
+    "pkg/client/istio/clientset/versioned/typed/networking/v1alpha3/fake",
+    "pkg/client/istio/injection/client",
+    "pkg/client/istio/injection/client/fake",
+    "pkg/client/istio/listers/networking/v1alpha3",
     "pkg/client/listers/autoscaling/v1alpha1",
     "pkg/client/listers/networking/v1alpha1",
     "pkg/client/listers/serving/v1",
     "pkg/client/listers/serving/v1alpha1",
     "pkg/client/listers/serving/v1beta1",
+    "pkg/reconciler/testing/v1",
   ]
   pruneopts = "NUT"
   revision = "cac3287054faf4bc657725674912f2d1a8e842e2"
@@ -2244,6 +2324,7 @@
     "knative.dev/serving/pkg/client/injection/informers/serving/v1/service",
     "knative.dev/serving/pkg/client/injection/informers/serving/v1/service/fake",
     "knative.dev/serving/pkg/client/listers/serving/v1",
+    "knative.dev/serving/pkg/reconciler/testing/v1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
   ]

@@ -45,14 +45,24 @@ func NewGitHubSourceV1Alpha1(name, namespace string, o ...GitHubSourceOptionV1Al
 	return c
 }
 
+func NewSecretValueFromSource(name, key string) v1alpha1.SecretValueFromSource {
+	return v1alpha1.SecretValueFromSource{
+		SecretKeyRef: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{Name: name},
+			Key:                  key,
+		},
+	}
+}
+
 func WithGitHubSecretTokenSpecV1Alpha1(name, key string) GitHubSourceOptionV1Alpha1 {
 	return func(c *v1alpha1.GitHubSource) {
-		c.Spec.SecretToken = v1alpha1.SecretValueFromSource{
-			SecretKeyRef: &corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{Name: name},
-				Key:                  key,
-			},
-		}
+		c.Spec.SecretToken = NewSecretValueFromSource(name, key)
+	}
+}
+
+func WithGitHubAccessTokenSpecV1Alpha1(name, key string) GitHubSourceOptionV1Alpha1 {
+	return func(c *v1alpha1.GitHubSource) {
+		c.Spec.AccessToken = NewSecretValueFromSource(name, key)
 	}
 }
 
