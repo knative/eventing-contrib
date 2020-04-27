@@ -25,9 +25,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	cloudevents "github.com/cloudevents/sdk-go/v1"
-	ce_client "github.com/cloudevents/sdk-go/v1/cloudevents/client"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
 
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -54,7 +52,7 @@ type Adapter struct {
 	OnFailedPollWaitSecs time.Duration
 
 	// Client sends cloudevents to the target.
-	client ce_client.Client
+	client cloudevents.Client
 }
 
 // getRegion takes an AWS SQS URL and extracts the region from it

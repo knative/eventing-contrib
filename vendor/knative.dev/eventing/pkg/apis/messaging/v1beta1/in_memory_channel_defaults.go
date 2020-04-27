@@ -23,17 +23,12 @@ import (
 )
 
 func (imc *InMemoryChannel) SetDefaults(ctx context.Context) {
-	// Set the duck subscription to the stored version of the duck
-	// we support. Reason for this is that the stored version will
-	// not get a chance to get modified, but for newer versions
-	// conversion webhook will be able to take a crack at it and
-	// can modify it to match the duck shape.
+	// Set the duck subscription to indicate that we support
+	// v1beta1 version of the Subscribable.
 	if imc.Annotations == nil {
 		imc.Annotations = make(map[string]string)
 	}
-	if _, ok := imc.Annotations[messaging.SubscribableDuckVersionAnnotation]; !ok {
-		imc.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1alpha1"
-	}
+	imc.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1beta1"
 
 	imc.Spec.SetDefaults(ctx)
 }

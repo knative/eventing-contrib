@@ -25,7 +25,7 @@ type Protocol struct {
 
 	// Sender options
 	SenderContextDecorators []func(context.Context) context.Context
-	senderTransformers      binding.Transformers
+	senderTransformers      binding.TransformerFactories
 	senderTopic             string
 
 	// Consumer
@@ -69,7 +69,6 @@ func NewProtocolFromClient(client sarama.Client, sendToTopic string, receiveFrom
 	if err != nil {
 		return nil, err
 	}
-	p.Sender.transformers = p.senderTransformers
 
 	if p.receiverTopic == "" {
 		return nil, errors.New("you didn't specify the topic to receive from")
@@ -86,7 +85,7 @@ func (p *Protocol) applyOptions(opts ...ProtocolOptionFunc) error {
 	return nil
 }
 
-// OpenInbound implements Opener.OpenInbound
+// StartReceiver implements Protocol.StartReceiver
 // NOTE: This is a blocking call.
 func (p *Protocol) OpenInbound(ctx context.Context) error {
 	p.consumerMux.Lock()

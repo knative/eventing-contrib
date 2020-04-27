@@ -13,9 +13,9 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// WriteProducerMessage fills the provided producerMessage with the message m.
+// Fill the provided producerMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.Transformer) error {
+func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.TransformerFactory) error {
 	enc := (*kafkaProducerMessageWriter)(producerMessage)
 
 	_, err := binding.Write(
@@ -67,40 +67,21 @@ func (b *kafkaProducerMessageWriter) SetData(reader io.Reader) error {
 }
 
 func (b *kafkaProducerMessageWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
-	if attribute.Kind() == spec.DataContentType {
-		if value == nil {
-			b.removeHeader(contentTypeHeader)
-			return nil
-		}
+	// Everything is a string here
+	s, err := types.Format(value)
+	if err != nil {
+		return err
+	}
 
-		// Everything is a string here
-		s, err := types.Format(value)
-		if err != nil {
-			return err
-		}
+	if attribute.Kind() == spec.DataContentType {
 		b.Headers = append(b.Headers, sarama.RecordHeader{Key: []byte(contentTypeHeader), Value: []byte(s)})
 	} else {
-		if value == nil {
-			b.removeHeader(prefix + attribute.Name())
-			return nil
-		}
-
-		// Everything is a string here
-		s, err := types.Format(value)
-		if err != nil {
-			return err
-		}
 		b.Headers = append(b.Headers, sarama.RecordHeader{Key: []byte(prefix + attribute.Name()), Value: []byte(s)})
 	}
 	return nil
 }
 
 func (b *kafkaProducerMessageWriter) SetExtension(name string, value interface{}) error {
-	if value == nil {
-		b.removeHeader(prefix + name)
-		return nil
-	}
-
 	// Kafka headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
@@ -108,16 +89,6 @@ func (b *kafkaProducerMessageWriter) SetExtension(name string, value interface{}
 	}
 	b.Headers = append(b.Headers, sarama.RecordHeader{Key: []byte(prefix + name), Value: []byte(s)})
 	return nil
-}
-
-func (b *kafkaProducerMessageWriter) removeHeader(name string) {
-	k := []byte(name)
-	for index, h := range b.Headers {
-		if bytes.Equal(k, h.Key) {
-			b.Headers = append(b.Headers[:index], b.Headers[index+1:]...)
-			return
-		}
-	}
 }
 
 var _ binding.StructuredWriter = (*kafkaProducerMessageWriter)(nil) // Test it conforms to the interface
