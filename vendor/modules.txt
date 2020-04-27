@@ -1032,7 +1032,7 @@ knative.dev/eventing/test/performance/infra/common
 knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
-# knative.dev/pkg v0.0.0-20200425232149-7b6e21a57a31
+# knative.dev/pkg v0.0.0-20200427190051-6b9ee63b4aad
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/v1
@@ -1064,6 +1064,7 @@ knative.dev/pkg/codegen/cmd/injection-gen/generators
 knative.dev/pkg/configmap
 knative.dev/pkg/configmap/testing
 knative.dev/pkg/controller
+knative.dev/pkg/hack
 knative.dev/pkg/injection
 knative.dev/pkg/injection/clients/dynamicclient
 knative.dev/pkg/injection/clients/dynamicclient/fake

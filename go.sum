@@ -1241,8 +1241,8 @@ k8s.io/utils v0.0.0-20191010214722-8d271d903fe4 h1:Gi+/O1saihwDqnlmC8Vhv1M5Sp4+r
 k8s.io/utils v0.0.0-20191010214722-8d271d903fe4/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=
 knative.dev/pkg v0.0.0-20200113182502-b8dc5fbc6d2f/go.mod h1:pgODObA1dTyhNoFxPZTTjNWfx6F0aKsKzn+vaT9XO/Q=
 knative.dev/pkg v0.0.0-20200417160248-9320e44d1bf7/go.mod h1:pgODObA1dTyhNoFxPZTTjNWfx6F0aKsKzn+vaT9XO/Q=
-knative.dev/pkg v0.0.0-20200425232149-7b6e21a57a31 h1:hZt104Ch1OXJzyLzzp6glT/dBcyS0Oai7NvbjTMhgZY=
-knative.dev/pkg v0.0.0-20200425232149-7b6e21a57a31/go.mod h1:pgODObA1dTyhNoFxPZTTjNWfx6F0aKsKzn+vaT9XO/Q=
+knative.dev/pkg v0.0.0-20200427190051-6b9ee63b4aad h1:NpDDOgClFe9Y7XAOiEP+84ByR8NPfEEj0P/zCh+ZbsA=
+knative.dev/pkg v0.0.0-20200427190051-6b9ee63b4aad/go.mod h1:pgODObA1dTyhNoFxPZTTjNWfx6F0aKsKzn+vaT9XO/Q=
 knative.dev/serving v0.12.1/go.mod h1:x2n255JS2XBI39tmjZ8CwTxIf9EKNMCrkVuiOttLRm0=
 knative.dev/serving v0.14.1-0.20200426043050-7ad5cc721f86 h1:cQ+/smEqSRvaE5sSUbvKUYpFbfdSAvqwYf6jmvTH5aM=
 knative.dev/serving v0.14.1-0.20200426043050-7ad5cc721f86/go.mod h1:x2n255JS2XBI39tmjZ8CwTxIf9EKNMCrkVuiOttLRm0=

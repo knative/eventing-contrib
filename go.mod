@@ -52,12 +52,10 @@ require (
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/code-generator v0.18.0
-	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9
+	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 	knative.dev/eventing v0.14.1-0.20200427112650-40f0a540923e
-	knative.dev/pkg v0.0.0-20200425232149-7b6e21a57a31
+	knative.dev/pkg v0.0.0-20200427190051-6b9ee63b4aad
 	knative.dev/serving v0.14.1-0.20200426043050-7ad5cc721f86
-	knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5
 )
 
 replace (
