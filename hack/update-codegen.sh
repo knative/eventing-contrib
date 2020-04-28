@@ -27,7 +27,7 @@ CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vend
 KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/knative.dev/pkg 2>/dev/null || echo ../pkg)}
 
 chmod +x ${CODEGEN_PKG}/generate-groups.sh
-chmod +x ${CODEGEN_PKG}/generate-knative.sh
+chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 
 (
   # External Camel API

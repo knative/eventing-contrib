@@ -2,7 +2,7 @@ package stan
 
 import (
 	"errors"
-	"github.com/cloudevents/sdk-go/v2/binding"
+
 	"github.com/nats-io/stan.go"
 )
 
@@ -68,7 +68,7 @@ func WithSubscriptionOptions(opts ...stan.SubscriptionOption) ConsumerOption {
 	}
 }
 
-// WithUnsubscribeOnClose configures the Protocol to unsubscribe subscriptions on close, rather than just closing.
+// WithUnsubscribeOnClose configures the Consumer to unsubscribe when OpenInbound context is cancelled or when Consumer.Close() is invoked.
 // This causes durable subscriptions to be forgotten by the STAN service and recreated durable subscriptions will
 // act like they are newly created.
 func WithUnsubscribeOnClose() ConsumerOption {
@@ -79,11 +79,3 @@ func WithUnsubscribeOnClose() ConsumerOption {
 }
 
 type SenderOption func(*Sender) error
-
-// Add a transformer, which Protocol uses while encoding a binding.Message to an stan.Message
-func WithTransformer(transformer binding.TransformerFactory) SenderOption {
-	return func(p *Sender) error {
-		p.Transformers = append(p.Transformers, transformer)
-		return nil
-	}
-}
