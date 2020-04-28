@@ -23,6 +23,8 @@ import (
 	"reflect"
 	"strings"
 
+	"knative.dev/pkg/injection"
+
 	"go.uber.org/zap"
 
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
@@ -75,7 +76,7 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config) *controller.Impl {
+func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 
 	logger := logging.FromContext(ctx)
 
@@ -103,7 +104,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, config *rest.Config
 	r := &Reconciler{
 		natssDispatcher:    natssDispatcher,
 		natsschannelLister: channelInformer.Lister(),
-		natssClientSet:     clientset.NewForConfigOrDie(config),
+		natssClientSet:     clientset.NewForConfigOrDie(injection.GetConfig(ctx)),
 	}
 	r.impl = controller.NewImpl(r, logger.Sugar(), ReconcilerName)
 
