@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors.
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package v1alpha1
 
-import (
-	gitlab "knative.dev/eventing-contrib/gitlab/pkg/reconciler/source"
+import "testing"
 
-	"knative.dev/pkg/injection/sharedmain"
-)
-
-const (
-	component = "gitlab_controller"
-)
-
-func main() {
-	sharedmain.Main(component, gitlab.NewController)
+func TestGitLabBinding_GetGroupVersionKind(t *testing.T) {
+	sb := GitLabBinding{}
+	gvk := sb.GetGroupVersionKind()
+	if gvk.Kind != "GitLabBinding" {
+		t.Errorf("Should be GitLabBinding.")
+	}
 }

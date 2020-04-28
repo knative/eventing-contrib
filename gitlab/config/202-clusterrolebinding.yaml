@@ -28,6 +28,7 @@ subjects:
   namespace: knative-sources
 
 ---
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -44,3 +45,20 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: addressable-resolver
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eventing-sources-gitlab-webhook
+  labels:
+    contrib.eventing.knative.dev/release: devel
+subjects:
+- kind: ServiceAccount
+  name: gitlab-webhook
+  namespace: knative-sources
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gitlab-webhook
