@@ -102,6 +102,20 @@ rules:
     - "list"
     - "watch"
 
+# Namespace labelling for webhook
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - create
+  - update
+  - list
+  - watch
+  - patch
+
+
 # For actually registering our webhook.
 - apiGroups:
   - "admissionregistration.k8s.io"
