@@ -76,7 +76,7 @@ func TestGitHubSource(t *testing.T) {
 
 			reconciler := Reconciler{
 				kubeClientSet: kubeClient,
-				handler:       NewHandler(logging.FromContext(ctx).Sugar()),
+				handler:       NewHandler(logging.FromContext(ctx).Sugar(), nil),
 			}
 
 			event := reconciler.ReconcileKind(ctx, test.source)
@@ -85,7 +85,6 @@ func TestGitHubSource(t *testing.T) {
 				t.Errorf("Unexpected event Want %v, got %v", test.expectEvent, event)
 			}
 
-			reconciler.FinalizeKind(ctx, test.source)
 		})
 	}
 }

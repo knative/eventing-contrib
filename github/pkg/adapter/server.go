@@ -22,7 +22,10 @@ import (
 	"sync"
 
 	"go.uber.org/zap"
+	"knative.dev/eventing-contrib/github/pkg/client/listers/sources/v1alpha1"
 )
+
+// Context
 
 type handlerKey struct{}
 
@@ -42,38 +45,60 @@ func HandlerFromContext(ctx context.Context) *Handler {
 	return nil
 }
 
+// Handler
+
+type keyedHandler struct {
+	handler   http.Handler
+	namespace string
+	name      string
+}
+
 // Handler holds the main GitHub webhook HTTP handler and delegate to sub-handlers
 type Handler struct {
 	log        *zap.SugaredLogger
 	handlersMu sync.RWMutex
-	handlers   map[string]http.Handler
+	handlers   map[string]keyedHandler
+	lister     v1alpha1.GitHubSourceLister
 }
 
 // NewHandler create a new GitHub webhook handler receiving GitHub events
-func NewHandler(logger *zap.SugaredLogger) *Handler {
+func NewHandler(logger *zap.SugaredLogger, lister v1alpha1.GitHubSourceLister) *Handler {
 	return &Handler{
 		log:      logger,
-		handlers: make(map[string]http.Handler),
+		handlers: make(map[string]keyedHandler),
+		lister:   lister,
 	}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Path-based dispatch
 	h.handlersMu.RLock()
-	handler, ok := h.handlers[r.URL.Path]
+	keyedHandler, ok := h.handlers[r.URL.Path]
 	h.handlersMu.RUnlock()
 
 	if ok {
-		handler.ServeHTTP(w, r)
-	} else {
-		http.NotFoundHandler().ServeHTTP(w, r)
+		// Still exists?
+		_, err := h.lister.GitHubSources(keyedHandler.namespace).Get(keyedHandler.name)
+		if err == nil {
+			keyedHandler.handler.ServeHTTP(w, r)
+			return
+
+		}
+
+		h.Unregister(r.URL.Path)
 	}
+
+	http.NotFoundHandler().ServeHTTP(w, r)
 }
 
-func (h *Handler) Register(path string, handler http.Handler) {
+func (h *Handler) Register(name, namespace, path string, handler http.Handler) {
 	h.handlersMu.Lock()
 	defer h.handlersMu.Unlock()
-	h.handlers[path] = handler
+	h.handlers[path] = keyedHandler{
+		handler:   handler,
+		namespace: namespace,
+		name:      name,
+	}
 }
 
 func (h *Handler) Unregister(path string) {

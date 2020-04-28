@@ -40,9 +40,6 @@ type Reconciler struct {
 // Check that our Reconciler implements ReconcileKind.
 var _ githubsourcereconciler.Interface = (*Reconciler)(nil)
 
-// Check that our Reconciler implements FinalizeKind.
-var _ githubsourcereconciler.Finalizer = (*Reconciler)(nil)
-
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.GitHubSource) pkgreconciler.Event {
 	if !source.Status.IsReady() {
 		return fmt.Errorf("GitHubSource is not ready. Cannot configure the adapter")
@@ -69,14 +66,7 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSourc
 	}
 
 	path := fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
-	r.handler.Register(path, adapter)
-
-	return nil
-}
-
-func (r *Reconciler) FinalizeKind(ctx context.Context, source *v1alpha1.GitHubSource) pkgreconciler.Event {
-	path := fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
-	r.handler.Unregister(path)
+	r.handler.Register(source.Name, source.Namespace, path, adapter)
 
 	return nil
 }

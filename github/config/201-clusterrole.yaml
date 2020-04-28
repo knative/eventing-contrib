@@ -140,20 +140,6 @@ rules:
       - list
       - watch
 
-  # Sources finalizer
-  - apiGroups:
-      - sources.knative.dev
-    resources:
-      - githubsources/finalizers
-    verbs: &everything
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-
   # Secrets read
   - apiGroups:
       - ""
@@ -169,7 +155,14 @@ rules:
       - ""
     resources:
       - events
-    verbs: *everything
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
 
   # Configmap read
   - apiGroups:

@@ -32,10 +32,6 @@ import (
 	githubsourcereconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
 )
 
-const (
-	adapterFinalizerName = "adapter.githubsources.sources.knative.dev"
-)
-
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
 func NewController(
@@ -50,24 +46,17 @@ func NewController(
 		logger.Fatalw("Error setting up trace publishing", zap.Error(err))
 	}
 
-	githubsourceInformer := githubsourceinformer.Get(ctx)
-
 	r := &Reconciler{
 		kubeClientSet: kubeclient.Get(ctx),
 		handler:       HandlerFromContext(ctx),
 	}
 
-	options := func(*controller.Impl) controller.Options {
-		return controller.Options{
-			FinalizerName: adapterFinalizerName,
-		}
-	}
-
-	impl := githubsourcereconciler.NewImpl(ctx, r, options)
+	impl := githubsourcereconciler.NewImpl(ctx, r)
 
 	logger.Info("Setting up event handlers")
 
 	// Watch for githubsource objects
+	githubsourceInformer := githubsourceinformer.Get(ctx)
 	githubsourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	return impl

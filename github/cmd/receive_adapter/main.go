@@ -19,15 +19,16 @@ package main
 import (
 	"context"
 
-	"knative.dev/eventing-contrib/github/pkg/adapter"
-	"knative.dev/pkg/metrics"
-
 	"go.uber.org/zap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/signals"
+
+	"knative.dev/eventing-contrib/github/pkg/adapter"
+	githubsourceinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource"
 )
 
 const (
@@ -56,7 +57,9 @@ func main() {
 
 	cmw := sharedmain.SetupConfigMapWatchOrDie(ctx, logger)
 
-	handler := adapter.NewHandler(logger)
+	// Setting up Webhook event handler
+	lister := githubsourceinformer.Get(ctx).Lister()
+	handler := adapter.NewHandler(logger, lister)
 	ctx = adapter.WithHandler(ctx, handler)
 
 	ra := adapter.NewController(ctx, cmw)
