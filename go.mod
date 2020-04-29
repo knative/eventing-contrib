@@ -1,6 +1,6 @@
 module knative.dev/eventing-contrib
 
-go 1.14
+go 1.13
 
 require (
 	github.com/Shopify/sarama v1.24.0
