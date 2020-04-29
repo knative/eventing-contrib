@@ -98,7 +98,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 							Image: "test-image",
 							Env: []corev1.EnvVar{
 								{
-									Name:  "SINK_URI",
+									Name:  "K_SINK",
 									Value: "sink-uri",
 								}, {
 									Name:  "EVENT_SOURCE",
