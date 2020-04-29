@@ -38,8 +38,8 @@ if [ "$(uname)" == "Darwin" ]; then
 fi
 
 # Eventing main config path from HEAD.
-readonly EVENTING_CONFIG="${GOPATH}/src/knative.dev/eventing/config/"
-readonly EVENTING_CHANNEL_BROKER_CONFIG="${GOPATH}/src/knative.dev/eventing/config/brokers/channel-broker"
+readonly EVENTING_CONFIG="./config/"
+readonly EVENTING_CHANNEL_BROKER_CONFIG="./config/brokers/channel-broker"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -79,10 +79,11 @@ function knative_setup() {
     pushd .
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
     git clone https://github.com/knative/eventing
-    popd
+    cd ${GOPATH}/src/knative.dev/eventing
     ko apply -f ${EVENTING_CONFIG}
     # Install Channel Based Broker
     ko apply -f ${EVENTING_CHANNEL_BROKER_CONFIG}
+    popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
 
