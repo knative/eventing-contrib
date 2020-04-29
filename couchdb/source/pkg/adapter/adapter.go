@@ -24,17 +24,15 @@ import (
 	"strings"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/go-kivik/couchdb"
-	"github.com/go-kivik/kivik"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/go-kivik/couchdb/v3"
+	"github.com/go-kivik/kivik/v3"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"knative.dev/eventing/pkg/adapter"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/source"
-
 	"knative.dev/eventing-contrib/couchdb/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing/pkg/adapter/v2"
+	"knative.dev/pkg/logging"
 )
 
 type envConfig struct {
@@ -49,7 +47,6 @@ type envConfig struct {
 type couchDbAdapter struct {
 	namespace string
 	ce        cloudevents.Client
-	reporter  source.StatsReporter
 	logger    *zap.SugaredLogger
 
 	source  string
@@ -75,7 +72,7 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 
 // NewAdapter creates an adapter to convert incoming CouchDb changes events to CloudEvents and
 // then sends them to the specified Sink
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
 
@@ -92,10 +89,10 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 		driver = "cloudant"
 	}
 
-	return newAdapter(ctx, env, ceClient, reporter, url, driver)
+	return newAdapter(ctx, env, ceClient, url, driver)
 }
 
-func newAdapter(ctx context.Context, env *envConfig, ceClient cloudevents.Client, reporter source.StatsReporter, url string, driver string) adapter.Adapter {
+func newAdapter(ctx context.Context, env *envConfig, ceClient cloudevents.Client, url string, driver string) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 
 	client, err := kivik.New(driver, url)
@@ -111,7 +108,6 @@ func newAdapter(ctx context.Context, env *envConfig, ceClient cloudevents.Client
 	return &couchDbAdapter{
 		namespace: env.Namespace,
 		ce:        ceClient,
-		reporter:  reporter,
 		logger:    logger,
 
 		couchDB: db,
@@ -148,7 +144,7 @@ func (a *couchDbAdapter) processChanges() {
 				a.logger.Error("error making event", zap.Error(err))
 			}
 
-			if _, _, err := a.ce.Send(context.TODO(), *event); err != nil {
+			if err := a.ce.Send(context.TODO(), *event); err != nil {
 				a.logger.Error("event delivery failed", zap.Error(err))
 			}
 
@@ -170,7 +166,6 @@ func (a *couchDbAdapter) makeEvent(changes *kivik.Changes) (*cloudevents.Event, 
 	event.SetID(changes.Seq())
 	event.SetSource(a.source)
 	event.SetSubject(changes.ID())
-	event.SetDataContentType(cloudevents.ApplicationJSON)
 
 	if changes.Deleted() {
 		event.SetType(v1alpha1.CouchDbSourceDeleteEventType)
@@ -178,7 +173,7 @@ func (a *couchDbAdapter) makeEvent(changes *kivik.Changes) (*cloudevents.Event, 
 		event.SetType(v1alpha1.CouchDbSourceUpdateEventType)
 	}
 
-	if err := event.SetData(changes.Changes()); err != nil {
+	if err := event.SetData(cloudevents.ApplicationJSON, changes.Changes()); err != nil {
 		return nil, err
 	}
 	return &event, nil

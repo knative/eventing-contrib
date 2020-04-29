@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,7 +41,7 @@ var kafkachannelsResource = schema.GroupVersionResource{Group: "messaging.knativ
 var kafkachannelsKind = schema.GroupVersionKind{Group: "messaging.knative.dev", Version: "v1alpha1", Kind: "KafkaChannel"}
 
 // Get takes name of the kafkaChannel, and returns the corresponding kafkaChannel object, and an error if there is any.
-func (c *FakeKafkaChannels) Get(name string, options v1.GetOptions) (result *v1alpha1.KafkaChannel, err error) {
+func (c *FakeKafkaChannels) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.KafkaChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(kafkachannelsResource, c.ns, name), &v1alpha1.KafkaChannel{})
 
@@ -50,7 +52,7 @@ func (c *FakeKafkaChannels) Get(name string, options v1.GetOptions) (result *v1a
 }
 
 // List takes label and field selectors, and returns the list of KafkaChannels that match those selectors.
-func (c *FakeKafkaChannels) List(opts v1.ListOptions) (result *v1alpha1.KafkaChannelList, err error) {
+func (c *FakeKafkaChannels) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.KafkaChannelList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(kafkachannelsResource, kafkachannelsKind, c.ns, opts), &v1alpha1.KafkaChannelList{})
 
@@ -72,14 +74,14 @@ func (c *FakeKafkaChannels) List(opts v1.ListOptions) (result *v1alpha1.KafkaCha
 }
 
 // Watch returns a watch.Interface that watches the requested kafkaChannels.
-func (c *FakeKafkaChannels) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeKafkaChannels) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(kafkachannelsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a kafkaChannel and creates it.  Returns the server's representation of the kafkaChannel, and an error, if there is any.
-func (c *FakeKafkaChannels) Create(kafkaChannel *v1alpha1.KafkaChannel) (result *v1alpha1.KafkaChannel, err error) {
+func (c *FakeKafkaChannels) Create(ctx context.Context, kafkaChannel *v1alpha1.KafkaChannel, opts v1.CreateOptions) (result *v1alpha1.KafkaChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(kafkachannelsResource, c.ns, kafkaChannel), &v1alpha1.KafkaChannel{})
 
@@ -90,7 +92,7 @@ func (c *FakeKafkaChannels) Create(kafkaChannel *v1alpha1.KafkaChannel) (result 
 }
 
 // Update takes the representation of a kafkaChannel and updates it. Returns the server's representation of the kafkaChannel, and an error, if there is any.
-func (c *FakeKafkaChannels) Update(kafkaChannel *v1alpha1.KafkaChannel) (result *v1alpha1.KafkaChannel, err error) {
+func (c *FakeKafkaChannels) Update(ctx context.Context, kafkaChannel *v1alpha1.KafkaChannel, opts v1.UpdateOptions) (result *v1alpha1.KafkaChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(kafkachannelsResource, c.ns, kafkaChannel), &v1alpha1.KafkaChannel{})
 
@@ -102,7 +104,7 @@ func (c *FakeKafkaChannels) Update(kafkaChannel *v1alpha1.KafkaChannel) (result 
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeKafkaChannels) UpdateStatus(kafkaChannel *v1alpha1.KafkaChannel) (*v1alpha1.KafkaChannel, error) {
+func (c *FakeKafkaChannels) UpdateStatus(ctx context.Context, kafkaChannel *v1alpha1.KafkaChannel, opts v1.UpdateOptions) (*v1alpha1.KafkaChannel, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(kafkachannelsResource, "status", c.ns, kafkaChannel), &v1alpha1.KafkaChannel{})
 
@@ -113,7 +115,7 @@ func (c *FakeKafkaChannels) UpdateStatus(kafkaChannel *v1alpha1.KafkaChannel) (*
 }
 
 // Delete takes name of the kafkaChannel and deletes it. Returns an error if one occurs.
-func (c *FakeKafkaChannels) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeKafkaChannels) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(kafkachannelsResource, c.ns, name), &v1alpha1.KafkaChannel{})
 
@@ -121,15 +123,15 @@ func (c *FakeKafkaChannels) Delete(name string, options *v1.DeleteOptions) error
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeKafkaChannels) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(kafkachannelsResource, c.ns, listOptions)
+func (c *FakeKafkaChannels) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(kafkachannelsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.KafkaChannelList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched kafkaChannel.
-func (c *FakeKafkaChannels) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.KafkaChannel, err error) {
+func (c *FakeKafkaChannels) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.KafkaChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(kafkachannelsResource, c.ns, name, pt, data, subresources...), &v1alpha1.KafkaChannel{})
 

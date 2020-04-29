@@ -19,6 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,13 +62,13 @@ func NewFilteredCouchDbSourceInformer(client versioned.Interface, namespace stri
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourcesV1alpha1().CouchDbSources(namespace).List(options)
+				return client.SourcesV1alpha1().CouchDbSources(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SourcesV1alpha1().CouchDbSources(namespace).Watch(options)
+				return client.SourcesV1alpha1().CouchDbSources(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&sourcesv1alpha1.CouchDbSource{},

@@ -35,7 +35,7 @@ import (
 	"k8s.io/gengo/types"
 	"sigs.k8s.io/yaml"
 
-	"k8s.io/klog/v2"
+	"k8s.io/klog"
 )
 
 const (

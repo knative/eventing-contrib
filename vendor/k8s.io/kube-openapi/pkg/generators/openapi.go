@@ -30,7 +30,7 @@ import (
 	"k8s.io/gengo/types"
 	openapi "k8s.io/kube-openapi/pkg/common"
 
-	"k8s.io/klog/v2"
+	"k8s.io/klog"
 )
 
 // This is the comment tag that carries parameters for open API generation.

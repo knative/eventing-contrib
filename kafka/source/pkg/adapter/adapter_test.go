@@ -227,7 +227,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"content-type": "application/cloudevents+json; charset=UTF-8",
+				"content-type": "application/cloudevents+json",
 			},
 			expectedBody: string(mustJsonMarshal(t, map[string]interface{}{
 				"specversion":          "1.0",

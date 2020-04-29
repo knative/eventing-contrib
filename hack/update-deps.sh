@@ -36,10 +36,12 @@ FLOATING_DEPS=(
 
 # Parse flags to determine any we should pass to dep.
 GO_GET=0
+DO_DEP_COLLECTOR=1
 while [[ $# -ne 0 ]]; do
   parameter=$1
   case ${parameter} in
     --upgrade) GO_GET=1 ;;
+    --yolo) DO_DEP_COLLECTOR=0 ;;
     *) abort "unknown option ${parameter}" ;;
   esac
   shift
@@ -60,13 +62,11 @@ rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
 rm -rf $(find vendor/ -name '*_test.go')
 
-update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./github/cmd/*" "./camel/source/cmd/*" \
-		"./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" "./gitlab/cmd/*" \
-		"./natss/cmd/*" "./couchdb/source/cmd/*" "./ceph/cmd/*"
-
-# Patch Kivik
-# see https://github.com/go-kivik/kivik/issues/420
-git apply ${REPO_ROOT_DIR}/hack/kivik-set-zero.patch
+if (( DO_DEP_COLLECTOR )); then
+  update_licenses third_party/VENDOR-LICENSE "./cmd/*" "./github/cmd/*" \
+      "./kafka/source/cmd/*" "./kafka/channel/cmd/*" "./awssqs/cmd/*" "./gitlab/cmd/*" \
+      "./natss/cmd/*" "./couchdb/source/cmd/*" "./ceph/cmd/*"
+fi
 
 ## Hack to vendor performance image from eventing
 rm -rf ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/*

@@ -37,7 +37,7 @@ func TestSetDefaults(t *testing.T) {
 		consumerGroup := strings.Split(ks.Spec.ConsumerGroup, uuidPrefix)
 		_, err := uuid.Parse(consumerGroup[len(consumerGroup)-1])
 		if err != nil {
-			t.Fatalf("Error Parsing UUID value: %w", err)
+			t.Fatalf("Error Parsing UUID value: %s", err)
 		}
 	}
 	assertGivenGroup := func(t *testing.T, ks KafkaSource, expected string) {

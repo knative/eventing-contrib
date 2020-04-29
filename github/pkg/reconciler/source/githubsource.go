@@ -49,7 +49,7 @@ import (
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
-	ghclient "github.com/google/go-github/github"
+	ghclient "github.com/google/go-github/v31/github"
 )
 
 const (

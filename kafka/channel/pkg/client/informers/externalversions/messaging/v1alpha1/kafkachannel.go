@@ -19,6 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,13 +62,13 @@ func NewFilteredKafkaChannelInformer(client versioned.Interface, namespace strin
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MessagingV1alpha1().KafkaChannels(namespace).List(options)
+				return client.MessagingV1alpha1().KafkaChannels(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MessagingV1alpha1().KafkaChannels(namespace).Watch(options)
+				return client.MessagingV1alpha1().KafkaChannels(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&messagingv1alpha1.KafkaChannel{},

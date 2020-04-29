@@ -69,11 +69,6 @@ readonly KAFKA_CRD_CONFIG_DIR="$(mktemp -d)"
 # Kafka channel CRD config template directory.
 readonly KAFKA_SOURCE_CRD_CONFIG_DIR="kafka/source/config"
 
-# CamelK installation
-readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.0.0-RC2.yaml"
-# Camel source CRD config template directory
-readonly CAMEL_SOURCE_CRD_CONFIG_DIR="camel/source/config"
-
 
 function knative_setup() {
   if is_release_branch; then
@@ -127,7 +122,6 @@ function add_trap() {
 function test_setup() {
   natss_setup || return 1
   kafka_setup || return 1
-  camel_setup || return 1
 
   install_channel_crds || return 1
   install_sources_crds || return 1
@@ -155,7 +149,6 @@ function test_setup() {
 function test_teardown() {
   natss_teardown
   kafka_teardown
-  camel_teardown
 
   uninstall_channel_crds
   uninstall_sources_crds
@@ -178,10 +171,6 @@ function install_sources_crds() {
   ko apply -f ${KAFKA_SOURCE_CRD_CONFIG_DIR} || return 1
   wait_until_pods_running knative-eventing || fail_test "Failed to install the Kafka Source CRD"
   wait_until_pods_running knative-sources || fail_test "Failed to install the Kafka Source CRD"
-
-  echo "Installing Camel Source CRD"
-  ko apply -f ${CAMEL_SOURCE_CRD_CONFIG_DIR} || return 1
-  wait_until_pods_running knative-sources || fail_test "Failed to install the Camel Source CRD"
 }
 
 function uninstall_channel_crds() {
@@ -227,18 +216,6 @@ function kafka_teardown() {
   kubectl delete -f ${KAFKA_INSTALLATION_CONFIG} -n kafka
   kubectl delete -f "${STRIMZI_INSTALLATION_CONFIG}" -n kafka
   kubectl delete namespace kafka
-}
-
-function camel_setup() {
-  echo "Installing CamelK"
-  kubectl create namespace camelk || return 1
-  kubectl apply -f "${CAMELK_INSTALLATION_CONFIG}" -n camelk
-}
-
-function camel_teardown() {
-  echo "Uninstalling CamelK"
-  kubectl delete -f "${CAMELK_INSTALLATION_CONFIG}" -n camelk
-  kubectl delete namespace camelk
 }
 
 initialize $@ --skip-istio-addon

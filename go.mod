@@ -1,28 +1,23 @@
 module knative.dev/eventing-contrib
 
-go 1.13
+go 1.14
 
 require (
 	github.com/Shopify/sarama v1.24.0
-	github.com/apache/camel-k v0.0.0-20200224174830-24ddce5afb41
-	github.com/aws/aws-sdk-go v1.29.34
+	github.com/aws/aws-sdk-go v1.30.16
 	github.com/cloudevents/sdk-go v1.2.0
 	github.com/cloudevents/sdk-go/v2 v2.0.0-RC2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/flimzy/diff v0.1.7 // indirect
-	github.com/flimzy/testy v0.1.17 // indirect
-	github.com/go-kivik/couchdb v2.0.0-pre3.0.20190830175249-a8dab644dca9+incompatible
-	github.com/go-kivik/kivik v2.0.0-pre2.0.20191021113424-7eea98010d9d+incompatible
-	github.com/go-kivik/kivikmock v2.0.0-pre3+incompatible
-	github.com/go-kivik/kiviktest v2.0.0+incompatible // indirect
+	github.com/go-kivik/couchdb/v3 v3.0.4
+	github.com/go-kivik/kivik/v3 v3.0.2
+	github.com/go-kivik/kivikmock/v3 v3.0.0
 	github.com/golang/protobuf v1.3.5
 	github.com/google/go-cmp v0.4.0
-	github.com/google/go-containerregistry v0.0.0-20200331213917-3d03ed9b1ca2 // indirect
-	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-github/v31 v31.0.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.1
-	github.com/influxdata/tdigest v0.0.1 // indirect
 	github.com/jcmturner/gofork v1.0.0 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/klauspost/compress v1.9.1 // indirect
@@ -42,14 +37,12 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/jcmturner/gokrb5.v7 v7.3.0 // indirect
-	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
-	knative.dev/eventing v0.14.1-0.20200427112650-40f0a540923e
-	knative.dev/pkg v0.0.0-20200428133551-22b961371934
-	knative.dev/serving v0.14.1-0.20200426043050-7ad5cc721f86
+	knative.dev/eventing v0.14.1-0.20200429150142-6fd15c83fba5
+	knative.dev/pkg v0.0.0-20200429162142-5e151d3ad9ea
+	knative.dev/serving v0.14.1-0.20200429161342-b14c082272a0
 )
 
 replace (
@@ -59,28 +52,5 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.4
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.4
 	k8s.io/apiserver => k8s.io/apiserver v0.16.4
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.16.4
 	k8s.io/client-go => k8s.io/client-go v0.16.4
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.16.4
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.16.4
-	k8s.io/code-generator => k8s.io/code-generator v0.16.4
-	k8s.io/component-base => k8s.io/component-base v0.16.4
-	k8s.io/cri-api => k8s.io/cri-api v0.16.4
-	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.16.4
-	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.16.4
-	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.16.4
-	k8s.io/kube-proxy => k8s.io/kube-proxy v0.16.4
-	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.16.4
-	k8s.io/kubectl => k8s.io/kubectl v0.16.4
-	k8s.io/kubelet => k8s.io/kubelet v0.16.4
-	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.16.4
-	k8s.io/metrics => k8s.io/metrics v0.16.4
-	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.16.4
-
-	// TODO: DO NOT SUBMIT
-	knative.dev/eventing => github.com/n3wscott/eventing v0.0.0-20200428162401-111382c901f6
-	knative.dev/pkg => github.com/chizhg/pkg v0.0.0-20200427225849-8dd906c83e27
 )
-
-// because of camel-k
-replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm

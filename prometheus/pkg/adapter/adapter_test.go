@@ -125,7 +125,7 @@ func TestStartAdaptor(t *testing.T) {
 				PromQL:      "prom-ql",
 				Schedule:    "bad_schedule",
 			},
-			wantErrMsg: "expected exactly 5 fields, found 1: [bad_schedule]",
+			wantErrMsg: "Expected exactly 5 fields, found 1: bad_schedule",
 		},
 		"no-schedule": {
 			opt: envConfig{
@@ -136,7 +136,7 @@ func TestStartAdaptor(t *testing.T) {
 				ServerURL:   "http://server.url",
 				PromQL:      "prom-ql",
 			},
-			wantErrMsg: "empty spec string",
+			wantErrMsg: "Empty spec string",
 		},
 		"bad-auth-token-file": {
 			opt: envConfig{
