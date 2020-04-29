@@ -46,6 +46,7 @@ require (
 )
 
 replace (
+	github.com/Azure/go-autorest/autorest => github.com/Azure/go-autorest/autorest v0.9.6
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.3.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
 	k8s.io/api => k8s.io/api v0.16.4
