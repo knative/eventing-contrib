@@ -19,7 +19,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
 	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,15 +37,15 @@ type NatssChannelsGetter interface {
 
 // NatssChannelInterface has methods to work with NatssChannel resources.
 type NatssChannelInterface interface {
-	Create(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.CreateOptions) (*v1alpha1.NatssChannel, error)
-	Update(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.UpdateOptions) (*v1alpha1.NatssChannel, error)
-	UpdateStatus(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.UpdateOptions) (*v1alpha1.NatssChannel, error)
-	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
-	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.NatssChannel, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.NatssChannelList, error)
-	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.NatssChannel, err error)
+	Create(*v1alpha1.NatssChannel) (*v1alpha1.NatssChannel, error)
+	Update(*v1alpha1.NatssChannel) (*v1alpha1.NatssChannel, error)
+	UpdateStatus(*v1alpha1.NatssChannel) (*v1alpha1.NatssChannel, error)
+	Delete(name string, options *v1.DeleteOptions) error
+	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
+	Get(name string, options v1.GetOptions) (*v1alpha1.NatssChannel, error)
+	List(opts v1.ListOptions) (*v1alpha1.NatssChannelList, error)
+	Watch(opts v1.ListOptions) (watch.Interface, error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.NatssChannel, err error)
 	NatssChannelExpansion
 }
 
@@ -65,20 +64,20 @@ func newNatssChannels(c *MessagingV1alpha1Client, namespace string) *natssChanne
 }
 
 // Get takes name of the natssChannel, and returns the corresponding natssChannel object, and an error if there is any.
-func (c *natssChannels) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.NatssChannel, err error) {
+func (c *natssChannels) Get(name string, options v1.GetOptions) (result *v1alpha1.NatssChannel, err error) {
 	result = &v1alpha1.NatssChannel{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("natsschannels").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of NatssChannels that match those selectors.
-func (c *natssChannels) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.NatssChannelList, err error) {
+func (c *natssChannels) List(opts v1.ListOptions) (result *v1alpha1.NatssChannelList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -89,13 +88,13 @@ func (c *natssChannels) List(ctx context.Context, opts v1.ListOptions) (result *
 		Resource("natsschannels").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested natssChannels.
-func (c *natssChannels) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *natssChannels) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -106,90 +105,87 @@ func (c *natssChannels) Watch(ctx context.Context, opts v1.ListOptions) (watch.I
 		Resource("natsschannels").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch(ctx)
+		Watch()
 }
 
 // Create takes the representation of a natssChannel and creates it.  Returns the server's representation of the natssChannel, and an error, if there is any.
-func (c *natssChannels) Create(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.CreateOptions) (result *v1alpha1.NatssChannel, err error) {
+func (c *natssChannels) Create(natssChannel *v1alpha1.NatssChannel) (result *v1alpha1.NatssChannel, err error) {
 	result = &v1alpha1.NatssChannel{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("natsschannels").
-		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(natssChannel).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // Update takes the representation of a natssChannel and updates it. Returns the server's representation of the natssChannel, and an error, if there is any.
-func (c *natssChannels) Update(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.UpdateOptions) (result *v1alpha1.NatssChannel, err error) {
+func (c *natssChannels) Update(natssChannel *v1alpha1.NatssChannel) (result *v1alpha1.NatssChannel, err error) {
 	result = &v1alpha1.NatssChannel{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("natsschannels").
 		Name(natssChannel.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(natssChannel).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *natssChannels) UpdateStatus(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.UpdateOptions) (result *v1alpha1.NatssChannel, err error) {
+
+func (c *natssChannels) UpdateStatus(natssChannel *v1alpha1.NatssChannel) (result *v1alpha1.NatssChannel, err error) {
 	result = &v1alpha1.NatssChannel{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("natsschannels").
 		Name(natssChannel.Name).
 		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(natssChannel).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }
 
 // Delete takes name of the natssChannel and deletes it. Returns an error if one occurs.
-func (c *natssChannels) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *natssChannels) Delete(name string, options *v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("natsschannels").
 		Name(name).
-		Body(&opts).
-		Do(ctx).
+		Body(options).
+		Do().
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *natssChannels) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *natssChannels) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("natsschannels").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
+		VersionedParams(&listOptions, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
+		Body(options).
+		Do().
 		Error()
 }
 
 // Patch applies the patch and returns the patched natssChannel.
-func (c *natssChannels) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.NatssChannel, err error) {
+func (c *natssChannels) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.NatssChannel, err error) {
 	result = &v1alpha1.NatssChannel{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("natsschannels").
-		Name(name).
 		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
+		Name(name).
 		Body(data).
-		Do(ctx).
+		Do().
 		Into(result)
 	return
 }

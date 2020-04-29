@@ -19,8 +19,6 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -41,7 +39,7 @@ var natsschannelsResource = schema.GroupVersionResource{Group: "messaging.knativ
 var natsschannelsKind = schema.GroupVersionKind{Group: "messaging.knative.dev", Version: "v1alpha1", Kind: "NatssChannel"}
 
 // Get takes name of the natssChannel, and returns the corresponding natssChannel object, and an error if there is any.
-func (c *FakeNatssChannels) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.NatssChannel, err error) {
+func (c *FakeNatssChannels) Get(name string, options v1.GetOptions) (result *v1alpha1.NatssChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(natsschannelsResource, c.ns, name), &v1alpha1.NatssChannel{})
 
@@ -52,7 +50,7 @@ func (c *FakeNatssChannels) Get(ctx context.Context, name string, options v1.Get
 }
 
 // List takes label and field selectors, and returns the list of NatssChannels that match those selectors.
-func (c *FakeNatssChannels) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.NatssChannelList, err error) {
+func (c *FakeNatssChannels) List(opts v1.ListOptions) (result *v1alpha1.NatssChannelList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(natsschannelsResource, natsschannelsKind, c.ns, opts), &v1alpha1.NatssChannelList{})
 
@@ -74,14 +72,14 @@ func (c *FakeNatssChannels) List(ctx context.Context, opts v1.ListOptions) (resu
 }
 
 // Watch returns a watch.Interface that watches the requested natssChannels.
-func (c *FakeNatssChannels) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeNatssChannels) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(natsschannelsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a natssChannel and creates it.  Returns the server's representation of the natssChannel, and an error, if there is any.
-func (c *FakeNatssChannels) Create(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.CreateOptions) (result *v1alpha1.NatssChannel, err error) {
+func (c *FakeNatssChannels) Create(natssChannel *v1alpha1.NatssChannel) (result *v1alpha1.NatssChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(natsschannelsResource, c.ns, natssChannel), &v1alpha1.NatssChannel{})
 
@@ -92,7 +90,7 @@ func (c *FakeNatssChannels) Create(ctx context.Context, natssChannel *v1alpha1.N
 }
 
 // Update takes the representation of a natssChannel and updates it. Returns the server's representation of the natssChannel, and an error, if there is any.
-func (c *FakeNatssChannels) Update(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.UpdateOptions) (result *v1alpha1.NatssChannel, err error) {
+func (c *FakeNatssChannels) Update(natssChannel *v1alpha1.NatssChannel) (result *v1alpha1.NatssChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(natsschannelsResource, c.ns, natssChannel), &v1alpha1.NatssChannel{})
 
@@ -104,7 +102,7 @@ func (c *FakeNatssChannels) Update(ctx context.Context, natssChannel *v1alpha1.N
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeNatssChannels) UpdateStatus(ctx context.Context, natssChannel *v1alpha1.NatssChannel, opts v1.UpdateOptions) (*v1alpha1.NatssChannel, error) {
+func (c *FakeNatssChannels) UpdateStatus(natssChannel *v1alpha1.NatssChannel) (*v1alpha1.NatssChannel, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(natsschannelsResource, "status", c.ns, natssChannel), &v1alpha1.NatssChannel{})
 
@@ -115,7 +113,7 @@ func (c *FakeNatssChannels) UpdateStatus(ctx context.Context, natssChannel *v1al
 }
 
 // Delete takes name of the natssChannel and deletes it. Returns an error if one occurs.
-func (c *FakeNatssChannels) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeNatssChannels) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(natsschannelsResource, c.ns, name), &v1alpha1.NatssChannel{})
 
@@ -123,15 +121,15 @@ func (c *FakeNatssChannels) Delete(ctx context.Context, name string, opts v1.Del
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeNatssChannels) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(natsschannelsResource, c.ns, listOpts)
+func (c *FakeNatssChannels) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(natsschannelsResource, c.ns, listOptions)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.NatssChannelList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched natssChannel.
-func (c *FakeNatssChannels) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.NatssChannel, err error) {
+func (c *FakeNatssChannels) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.NatssChannel, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(natsschannelsResource, c.ns, name, pt, data, subresources...), &v1alpha1.NatssChannel{})
 

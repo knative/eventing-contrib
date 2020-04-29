@@ -77,6 +77,11 @@ func main() {
 
 	// Override defaults.
 	arguments.GoHeaderFilePath = filepath.Join(args.DefaultSourceTree(), util.BoilerplatePath())
+	arguments.InputDirs = []string{
+		"k8s.io/kubernetes/pkg/...",
+		"k8s.io/kubernetes/cmd/...",
+		"k8s.io/kubernetes/plugin/...",
+	}
 	pflag.CommandLine.BoolVar(&arguments.IncludeTestFiles, "include-test-files", false, "If true, include *_test.go files.")
 
 	if err := arguments.Execute(

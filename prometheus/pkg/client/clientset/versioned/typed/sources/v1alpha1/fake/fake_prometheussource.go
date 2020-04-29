@@ -19,8 +19,6 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -41,7 +39,7 @@ var prometheussourcesResource = schema.GroupVersionResource{Group: "sources.knat
 var prometheussourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "PrometheusSource"}
 
 // Get takes name of the prometheusSource, and returns the corresponding prometheusSource object, and an error if there is any.
-func (c *FakePrometheusSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PrometheusSource, err error) {
+func (c *FakePrometheusSources) Get(name string, options v1.GetOptions) (result *v1alpha1.PrometheusSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(prometheussourcesResource, c.ns, name), &v1alpha1.PrometheusSource{})
 
@@ -52,7 +50,7 @@ func (c *FakePrometheusSources) Get(ctx context.Context, name string, options v1
 }
 
 // List takes label and field selectors, and returns the list of PrometheusSources that match those selectors.
-func (c *FakePrometheusSources) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PrometheusSourceList, err error) {
+func (c *FakePrometheusSources) List(opts v1.ListOptions) (result *v1alpha1.PrometheusSourceList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(prometheussourcesResource, prometheussourcesKind, c.ns, opts), &v1alpha1.PrometheusSourceList{})
 
@@ -74,14 +72,14 @@ func (c *FakePrometheusSources) List(ctx context.Context, opts v1.ListOptions) (
 }
 
 // Watch returns a watch.Interface that watches the requested prometheusSources.
-func (c *FakePrometheusSources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakePrometheusSources) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(prometheussourcesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a prometheusSource and creates it.  Returns the server's representation of the prometheusSource, and an error, if there is any.
-func (c *FakePrometheusSources) Create(ctx context.Context, prometheusSource *v1alpha1.PrometheusSource, opts v1.CreateOptions) (result *v1alpha1.PrometheusSource, err error) {
+func (c *FakePrometheusSources) Create(prometheusSource *v1alpha1.PrometheusSource) (result *v1alpha1.PrometheusSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(prometheussourcesResource, c.ns, prometheusSource), &v1alpha1.PrometheusSource{})
 
@@ -92,7 +90,7 @@ func (c *FakePrometheusSources) Create(ctx context.Context, prometheusSource *v1
 }
 
 // Update takes the representation of a prometheusSource and updates it. Returns the server's representation of the prometheusSource, and an error, if there is any.
-func (c *FakePrometheusSources) Update(ctx context.Context, prometheusSource *v1alpha1.PrometheusSource, opts v1.UpdateOptions) (result *v1alpha1.PrometheusSource, err error) {
+func (c *FakePrometheusSources) Update(prometheusSource *v1alpha1.PrometheusSource) (result *v1alpha1.PrometheusSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(prometheussourcesResource, c.ns, prometheusSource), &v1alpha1.PrometheusSource{})
 
@@ -104,7 +102,7 @@ func (c *FakePrometheusSources) Update(ctx context.Context, prometheusSource *v1
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePrometheusSources) UpdateStatus(ctx context.Context, prometheusSource *v1alpha1.PrometheusSource, opts v1.UpdateOptions) (*v1alpha1.PrometheusSource, error) {
+func (c *FakePrometheusSources) UpdateStatus(prometheusSource *v1alpha1.PrometheusSource) (*v1alpha1.PrometheusSource, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(prometheussourcesResource, "status", c.ns, prometheusSource), &v1alpha1.PrometheusSource{})
 
@@ -115,7 +113,7 @@ func (c *FakePrometheusSources) UpdateStatus(ctx context.Context, prometheusSour
 }
 
 // Delete takes name of the prometheusSource and deletes it. Returns an error if one occurs.
-func (c *FakePrometheusSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakePrometheusSources) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(prometheussourcesResource, c.ns, name), &v1alpha1.PrometheusSource{})
 
@@ -123,15 +121,15 @@ func (c *FakePrometheusSources) Delete(ctx context.Context, name string, opts v1
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakePrometheusSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(prometheussourcesResource, c.ns, listOpts)
+func (c *FakePrometheusSources) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(prometheussourcesResource, c.ns, listOptions)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.PrometheusSourceList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched prometheusSource.
-func (c *FakePrometheusSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PrometheusSource, err error) {
+func (c *FakePrometheusSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.PrometheusSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(prometheussourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.PrometheusSource{})
 

@@ -19,8 +19,6 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -41,7 +39,7 @@ var gitlabsourcesResource = schema.GroupVersionResource{Group: "sources.knative.
 var gitlabsourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "GitLabSource"}
 
 // Get takes name of the gitLabSource, and returns the corresponding gitLabSource object, and an error if there is any.
-func (c *FakeGitLabSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GitLabSource, err error) {
+func (c *FakeGitLabSources) Get(name string, options v1.GetOptions) (result *v1alpha1.GitLabSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(gitlabsourcesResource, c.ns, name), &v1alpha1.GitLabSource{})
 
@@ -52,7 +50,7 @@ func (c *FakeGitLabSources) Get(ctx context.Context, name string, options v1.Get
 }
 
 // List takes label and field selectors, and returns the list of GitLabSources that match those selectors.
-func (c *FakeGitLabSources) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GitLabSourceList, err error) {
+func (c *FakeGitLabSources) List(opts v1.ListOptions) (result *v1alpha1.GitLabSourceList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(gitlabsourcesResource, gitlabsourcesKind, c.ns, opts), &v1alpha1.GitLabSourceList{})
 
@@ -74,14 +72,14 @@ func (c *FakeGitLabSources) List(ctx context.Context, opts v1.ListOptions) (resu
 }
 
 // Watch returns a watch.Interface that watches the requested gitLabSources.
-func (c *FakeGitLabSources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeGitLabSources) Watch(opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(gitlabsourcesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gitLabSource and creates it.  Returns the server's representation of the gitLabSource, and an error, if there is any.
-func (c *FakeGitLabSources) Create(ctx context.Context, gitLabSource *v1alpha1.GitLabSource, opts v1.CreateOptions) (result *v1alpha1.GitLabSource, err error) {
+func (c *FakeGitLabSources) Create(gitLabSource *v1alpha1.GitLabSource) (result *v1alpha1.GitLabSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(gitlabsourcesResource, c.ns, gitLabSource), &v1alpha1.GitLabSource{})
 
@@ -92,7 +90,7 @@ func (c *FakeGitLabSources) Create(ctx context.Context, gitLabSource *v1alpha1.G
 }
 
 // Update takes the representation of a gitLabSource and updates it. Returns the server's representation of the gitLabSource, and an error, if there is any.
-func (c *FakeGitLabSources) Update(ctx context.Context, gitLabSource *v1alpha1.GitLabSource, opts v1.UpdateOptions) (result *v1alpha1.GitLabSource, err error) {
+func (c *FakeGitLabSources) Update(gitLabSource *v1alpha1.GitLabSource) (result *v1alpha1.GitLabSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(gitlabsourcesResource, c.ns, gitLabSource), &v1alpha1.GitLabSource{})
 
@@ -104,7 +102,7 @@ func (c *FakeGitLabSources) Update(ctx context.Context, gitLabSource *v1alpha1.G
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGitLabSources) UpdateStatus(ctx context.Context, gitLabSource *v1alpha1.GitLabSource, opts v1.UpdateOptions) (*v1alpha1.GitLabSource, error) {
+func (c *FakeGitLabSources) UpdateStatus(gitLabSource *v1alpha1.GitLabSource) (*v1alpha1.GitLabSource, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(gitlabsourcesResource, "status", c.ns, gitLabSource), &v1alpha1.GitLabSource{})
 
@@ -115,7 +113,7 @@ func (c *FakeGitLabSources) UpdateStatus(ctx context.Context, gitLabSource *v1al
 }
 
 // Delete takes name of the gitLabSource and deletes it. Returns an error if one occurs.
-func (c *FakeGitLabSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeGitLabSources) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(gitlabsourcesResource, c.ns, name), &v1alpha1.GitLabSource{})
 
@@ -123,15 +121,15 @@ func (c *FakeGitLabSources) Delete(ctx context.Context, name string, opts v1.Del
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeGitLabSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(gitlabsourcesResource, c.ns, listOpts)
+func (c *FakeGitLabSources) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(gitlabsourcesResource, c.ns, listOptions)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.GitLabSourceList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gitLabSource.
-func (c *FakeGitLabSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GitLabSource, err error) {
+func (c *FakeGitLabSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GitLabSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(gitlabsourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.GitLabSource{})
 
