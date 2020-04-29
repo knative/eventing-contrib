@@ -78,8 +78,7 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 
 	go func() {
 		for {
-			err2 := consumerGroup.Consume(context.Background(), topics, &consumerHandler)
-			if err2 != nil {
+			if err2 := consumerGroup.Consume(context.Background(), topics, &consumerHandler); err2 != nil {
 				consumerHandler.errors <- err2
 			}
 		}
