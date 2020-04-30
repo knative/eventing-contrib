@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gopkg.in/go-playground/webhooks.v5/gitlab"

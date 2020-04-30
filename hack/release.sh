@@ -19,6 +19,8 @@
 
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
 
+export GO111MODULE=on
+
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(

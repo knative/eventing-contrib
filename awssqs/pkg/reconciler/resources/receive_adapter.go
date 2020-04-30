@@ -61,7 +61,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 			Value: args.Source.Spec.QueueURL,
 		},
 		{
-			Name:  "SINK_URI",
+			Name:  "K_SINK",
 			Value: args.SinkURI,
 		},
 	}

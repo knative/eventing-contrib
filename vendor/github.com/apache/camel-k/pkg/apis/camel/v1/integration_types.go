@@ -56,6 +56,7 @@ type IntegrationStatus struct {
 	Conditions         []IntegrationCondition `json:"conditions,omitempty"`
 	Version            string                 `json:"version,omitempty"`
 	Replicas           *int32                 `json:"replicas,omitempty"`
+	Capabilities       []string               `json:"capabilities,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -113,6 +114,9 @@ type SourceSpec struct {
 	// Loader is an optional id of the org.apache.camel.k.RoutesLoader that will
 	// interpret this source at runtime
 	Loader string `json:"loader,omitempty"`
+	// Interceptors are optional identifiers the org.apache.camel.k.RoutesLoader
+	// uses to pre/post process sources
+	Interceptors []string `json:"interceptors,omitempty"`
 }
 
 // Language --
@@ -188,6 +192,8 @@ const (
 	IntegrationConditionPrometheusAvailable IntegrationConditionType = "PrometheusAvailable"
 	// IntegrationConditionJolokiaAvailable --
 	IntegrationConditionJolokiaAvailable IntegrationConditionType = "JolokiaAvailable"
+	// IntegrationConditionProbesAvailable --
+	IntegrationConditionProbesAvailable IntegrationConditionType = "ProbesAvailable"
 
 	// IntegrationConditionKitAvailableReason --
 	IntegrationConditionKitAvailableReason string = "IntegrationKitAvailable"
@@ -223,6 +229,8 @@ const (
 	IntegrationConditionPrometheusAvailableReason string = "PrometheusAvailable"
 	// IntegrationConditionJolokiaAvailableReason --
 	IntegrationConditionJolokiaAvailableReason string = "JolokiaAvailable"
+	// IntegrationConditionProbesAvailableReason --
+	IntegrationConditionProbesAvailableReason string = "ProbesAvailable"
 )
 
 // IntegrationCondition describes the state of a resource at a certain point.
@@ -239,8 +247,4 @@ type IntegrationCondition struct {
 	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
 	Message string `json:"message,omitempty"`
-}
-
-func init() {
-	SchemeBuilder.Register(&Integration{}, &IntegrationList{})
 }

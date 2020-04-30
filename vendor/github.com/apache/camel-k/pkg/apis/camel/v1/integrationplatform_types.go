@@ -121,6 +121,7 @@ type IntegrationPlatformRegistrySpec struct {
 	Insecure     bool   `json:"insecure,omitempty"`
 	Address      string `json:"address,omitempty"`
 	Secret       string `json:"secret,omitempty"`
+	CA           string `json:"ca,omitempty"`
 	Organization string `json:"organization,omitempty"`
 }
 
@@ -129,22 +130,38 @@ type IntegrationPlatformBuildStrategy string
 
 const (
 	// IntegrationPlatformBuildStrategyRoutine performs the build in a routine
-	IntegrationPlatformBuildStrategyRoutine = "routine"
+	IntegrationPlatformBuildStrategyRoutine IntegrationPlatformBuildStrategy = "routine"
 	// IntegrationPlatformBuildStrategyPod performs the build in a pod
-	IntegrationPlatformBuildStrategyPod = "pod"
+	IntegrationPlatformBuildStrategyPod IntegrationPlatformBuildStrategy = "pod"
 )
+
+// IntegrationPlatformBuildStrategies --
+var IntegrationPlatformBuildStrategies = []IntegrationPlatformBuildStrategy{
+	IntegrationPlatformBuildStrategyRoutine,
+	IntegrationPlatformBuildStrategyPod,
+}
 
 // IntegrationPlatformBuildPublishStrategy enumerates all implemented publish strategies
 type IntegrationPlatformBuildPublishStrategy string
 
 const (
-	// IntegrationPlatformBuildPublishStrategyBuildah
-	IntegrationPlatformBuildPublishStrategyBuildah = "Buildah"
-	// IntegrationPlatformBuildPublishStrategyKaniko
-	IntegrationPlatformBuildPublishStrategyKaniko = "Kaniko"
-	// IntegrationPlatformBuildPublishStrategyS2I
-	IntegrationPlatformBuildPublishStrategyS2I = "S2I"
+	// IntegrationPlatformBuildPublishStrategyBuildah --
+	IntegrationPlatformBuildPublishStrategyBuildah IntegrationPlatformBuildPublishStrategy = "Buildah"
+	// IntegrationPlatformBuildPublishStrategyKaniko --
+	IntegrationPlatformBuildPublishStrategyKaniko IntegrationPlatformBuildPublishStrategy = "Kaniko"
+	// IntegrationPlatformBuildPublishStrategyS2I --
+	IntegrationPlatformBuildPublishStrategyS2I IntegrationPlatformBuildPublishStrategy = "S2I"
+	// IntegrationPlatformBuildPublishStrategySpectrum --
+	IntegrationPlatformBuildPublishStrategySpectrum IntegrationPlatformBuildPublishStrategy = "Spectrum"
 )
+
+// IntegrationPlatformBuildPublishStrategies --
+var IntegrationPlatformBuildPublishStrategies = []IntegrationPlatformBuildPublishStrategy{
+	IntegrationPlatformBuildPublishStrategyBuildah,
+	IntegrationPlatformBuildPublishStrategyKaniko,
+	IntegrationPlatformBuildPublishStrategyS2I,
+	IntegrationPlatformBuildPublishStrategySpectrum,
+}
 
 // IntegrationPlatformPhase --
 type IntegrationPlatformPhase string
@@ -184,8 +201,4 @@ type IntegrationPlatformCondition struct {
 	Reason string `json:"reason,omitempty"`
 	// A human readable message indicating details about the transition.
 	Message string `json:"message,omitempty"`
-}
-
-func init() {
-	SchemeBuilder.Register(&IntegrationPlatform{}, &IntegrationPlatformList{})
 }

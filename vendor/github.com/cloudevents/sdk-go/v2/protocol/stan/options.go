@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	"github.com/nats-io/stan.go"
-
-	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
 var ErrInvalidQueueName = errors.New("invalid queue name for QueueSubscriber")
@@ -27,14 +25,6 @@ func WithConsumerOptions(opts ...ConsumerOption) ProtocolOption {
 func WithSenderOptions(opts ...SenderOption) ProtocolOption {
 	return func(p *Protocol) error {
 		p.senderOptions = opts
-		return nil
-	}
-}
-
-// WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to an stan.Message
-func WithTransformer(transformer binding.Transformer) SenderOption {
-	return func(s *Sender) error {
-		s.Transformers = append(s.Transformers, transformer)
 		return nil
 	}
 }
@@ -78,7 +68,7 @@ func WithSubscriptionOptions(opts ...stan.SubscriptionOption) ConsumerOption {
 	}
 }
 
-// WithUnsubscribeOnClose configures the Protocol to unsubscribe subscriptions on close, rather than just closing.
+// WithUnsubscribeOnClose configures the Consumer to unsubscribe when OpenInbound context is cancelled or when Consumer.Close() is invoked.
 // This causes durable subscriptions to be forgotten by the STAN service and recreated durable subscriptions will
 // act like they are newly created.
 func WithUnsubscribeOnClose() ConsumerOption {

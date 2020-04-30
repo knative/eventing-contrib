@@ -22,11 +22,7 @@ import (
 	"log"
 	"os"
 
-	"knative.dev/eventing/pkg/kncloudevents"
-
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
-
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/gorilla/websocket"
 )
 
@@ -64,7 +60,7 @@ func main() {
 		eventSource = source
 	}
 
-	ce, err := kncloudevents.NewDefaultClient(sink)
+	ce, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("Failed to create a http cloudevent client: %s", err.Error())
 	}
@@ -74,6 +70,8 @@ func main() {
 		log.Fatal("error connecting:", err)
 	}
 
+	ctx := cloudevents.ContextWithTarget(context.Background(), sink)
+
 	for {
 		_, message, err := ws.ReadMessage()
 		if err != nil {
@@ -82,15 +80,12 @@ func main() {
 			return
 		}
 
-		event := cloudevents.Event{
-			Context: cloudevents.EventContextV1{
-				Type:   eventType,
-				Source: *types.ParseURIRef(eventSource),
-			}.AsV1(),
-			Data: message,
-		}
-		if _, _, err := ce.Send(context.TODO(), event); err != nil {
-			log.Printf("sending event to channel failed: %v", err)
+		event := cloudevents.NewEvent(cloudevents.VersionV1)
+		event.SetType(eventType)
+		event.SetSource(eventSource)
+		_ = event.SetData(cloudevents.ApplicationJSON, message)
+		if result := ce.Send(ctx, event); !cloudevents.IsACK(result) {
+			log.Printf("sending event to channel failed: %v", result)
 		}
 	}
 }

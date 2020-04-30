@@ -22,7 +22,7 @@ import (
 	"net/url"
 	"strconv"
 
-	ghclient "github.com/google/go-github/github"
+	ghclient "github.com/google/go-github/v31/github"
 	"golang.org/x/oauth2"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
