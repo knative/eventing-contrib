@@ -243,7 +243,7 @@ initialize $@ --skip-istio-addon
 
 # TODO: Figure out why kafka channels do not like parallel=12 (which it was)
 # https://github.com/knative/eventing-contrib/issues/917
-go_test_e2e -timeout=20m -parallel=1 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
+go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
 
 go_test_e2e -timeout=5m -parallel=2 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
 
