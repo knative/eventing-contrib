@@ -17,17 +17,14 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"flag"
 	"os"
 
 	controller "knative.dev/eventing-contrib/natss/pkg/reconciler/dispatcher"
 
-	kncontroller "knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
 	"knative.dev/pkg/injection/sharedmain"
 
-	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/signals"
 )
 
@@ -41,8 +38,5 @@ func main() {
 		ctx = injection.WithNamespaceScope(ctx, ns)
 	}
 
-	cfg := sharedmain.ParseAndGetConfigOrDie()
-	sharedmain.MainWithConfig(ctx, component, cfg, func(ctx context.Context, watcher configmap.Watcher) *kncontroller.Impl {
-		return controller.NewController(ctx, watcher, cfg)
-	})
+	sharedmain.MainWithContext(ctx, component, controller.NewController)
 }

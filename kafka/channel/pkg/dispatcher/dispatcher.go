@@ -67,13 +67,8 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 	conf.Version = sarama.V2_0_0_0
 	conf.ClientID = args.ClientID
 	conf.Consumer.Return.Errors = true // Returns the errors in ConsumerGroup#Errors() https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
-	client, err := sarama.NewClient(args.Brokers, conf)
 
-	if err != nil {
-		return nil, fmt.Errorf("unable to create kafka client: %v", err)
-	}
-
-	producer, err := sarama.NewAsyncProducerFromClient(client)
+	producer, err := sarama.NewAsyncProducer(args.Brokers, conf)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create kafka producer: %v", err)
 	}
@@ -85,7 +80,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 
 	dispatcher := &KafkaDispatcher{
 		dispatcher:           eventingchannels.NewMessageDispatcher(args.Logger),
-		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(client),
+		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(args.Brokers, conf),
 		channelSubscriptions: make(map[eventingchannels.ChannelReference][]types.UID),
 		subsConsumerGroups:   make(map[types.UID]sarama.ConsumerGroup),
 		subscriptions:        make(map[types.UID]subscription),
@@ -332,7 +327,7 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 	// this goroutine logs errors incoming
 	go func() {
 		for err = range consumerGroup.Errors() {
-			panic(err)
+			d.logger.Warn("Error in consumer group", zap.Error(err))
 		}
 	}()
 

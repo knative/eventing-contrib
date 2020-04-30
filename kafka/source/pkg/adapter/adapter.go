@@ -54,7 +54,6 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 
 type Adapter struct {
 	config            *adapterConfig
-	client            sarama.Client
 	httpMessageSender *kncloudevents.HttpMessageSender
 	reporter          source.StatsReporter
 	logger            *zap.Logger
@@ -68,14 +67,8 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMe
 	logger := logging.FromContext(ctx).Desugar()
 	config := processed.(*adapterConfig)
 
-	client, err := kafkabinding.NewConsumer(context.Background())
-	if err != nil {
-		panic(err)
-	}
-
 	return &Adapter{
 		config:            config,
-		client:            client,
 		httpMessageSender: httpMessageSender,
 		reporter:          reporter,
 		logger:            logger,
@@ -94,10 +87,12 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 		zap.String("Namespace", a.config.Namespace),
 	)
 
-	defer func() { _ = a.client.Close() }()
-
 	// init consumer group
-	consumerGroupFactory := kafka.NewConsumerGroupFactory(a.client)
+	addrs, config, err := kafkabinding.NewConfig(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to create the config: %w", err)
+	}
+	consumerGroupFactory := kafka.NewConsumerGroupFactory(addrs, config)
 	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, a.config.Topics, a.logger, a)
 	if err != nil {
 		panic(err)
@@ -111,12 +106,10 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 		}
 	}()
 
-	for {
-		select {
-		case <-stopCh:
-			a.logger.Info("Shutting down...")
-			return nil
-		}
+	select {
+	case <-stopCh:
+		a.logger.Info("Shutting down...")
+		return nil
 	}
 }
 

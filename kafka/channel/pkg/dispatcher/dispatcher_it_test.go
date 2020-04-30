@@ -227,6 +227,20 @@ func TestDispatcher(t *testing.T) {
 	deadLetterWg.Wait()
 	transformationsWg.Wait()
 	receiverWg.Wait()
+
+	// Try to close consumer groups
+	err = dispatcher.UpdateHostToChannelMap(&multichannelfanout.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	failed, err = dispatcher.UpdateKafkaConsumers(&multichannelfanout.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(failed) != 0 {
+		t.Fatal(err)
+	}
 }
 
 func createReverseProxy(t *testing.T, host string) *httputil.ReverseProxy {

@@ -93,7 +93,7 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(ctx context.Context, _ configmap.Watcher, cfg *rest.Config) *controller.Impl {
+func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 
 	logger := logging.FromContext(ctx)
 
@@ -128,7 +128,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, cfg *rest.Config) *
 	logger.Info("Kafka broker configuration", zap.Strings(utils.BrokerConfigMapKey, kafkaConfig.Brokers))
 
 	r := &Reconciler{
-		recorder:             getRecorder(ctx, cfg),
+		recorder:             getRecorder(ctx, injection.GetConfig(ctx)),
 		kafkaDispatcher:      kafkaDispatcher,
 		kafkaClientSet:       kafkaclientsetinjection.Get(ctx),
 		kafkachannelLister:   kafkaChannelInformer.Lister(),

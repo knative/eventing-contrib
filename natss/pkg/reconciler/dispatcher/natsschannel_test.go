@@ -143,9 +143,10 @@ func TestNewController(t *testing.T) {
 	ctx, _ = fakedynamicclient.With(ctx, runtime.NewScheme())
 	ctx, _ = fakeclientset.With(ctx)
 	cfg := &rest.Config{}
+	ctx = injection.WithConfig(ctx, cfg)
 	ctx, _ = injection.Fake.SetupInformers(ctx, cfg)
 
-	NewController(ctx, configmap.NewStaticWatcher(), cfg)
+	NewController(ctx, configmap.NewStaticWatcher())
 }
 
 func TestFailedNatssSubscription(t *testing.T) {

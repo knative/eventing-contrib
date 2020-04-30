@@ -19,6 +19,7 @@ package kafka
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -32,14 +33,17 @@ type mockConsumerGroup struct {
 	mustGenerateConsumerGroupError bool
 	mustGenerateHandlerError       bool
 	consumeMustReturnError         bool
+	generateErrorOnce              sync.Once
 }
 
-func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
+func (m *mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
 	if m.mustGenerateHandlerError {
 		go func() {
-			h := handler.(*saramaConsumerHandler)
-			h.errors <- errors.New("cgh")
-			_ = h.Cleanup(nil)
+			m.generateErrorOnce.Do(func() {
+				h := handler.(*saramaConsumerHandler)
+				h.errors <- errors.New("cgh")
+				_ = h.Cleanup(nil)
+			})
 		}()
 	}
 	if m.consumeMustReturnError {
@@ -48,7 +52,7 @@ func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler
 	return nil
 }
 
-func (m mockConsumerGroup) Errors() <-chan error {
+func (m *mockConsumerGroup) Errors() <-chan error {
 	ch := make(chan error)
 	go func() {
 		if m.mustGenerateConsumerGroupError {
@@ -59,22 +63,23 @@ func (m mockConsumerGroup) Errors() <-chan error {
 	return ch
 }
 
-func (m mockConsumerGroup) Close() error {
+func (m *mockConsumerGroup) Close() error {
 	return nil
 }
 
-func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMessage, mustGenerateConsumerGroupError bool, mustGenerateHandlerError bool, consumeMustReturnError bool, mustFail bool) func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
+func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMessage, mustGenerateConsumerGroupError bool, mustGenerateHandlerError bool, consumeMustReturnError bool, mustFail bool) func(addrs []string, groupID string, config *sarama.Config) (sarama.ConsumerGroup, error) {
 	if !mustFail {
-		return func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
-			return mockConsumerGroup{
+		return func(addrs []string, groupID string, config *sarama.Config) (sarama.ConsumerGroup, error) {
+			return &mockConsumerGroup{
 				mockInputMessageCh:             mockInputMessageCh,
 				mustGenerateConsumerGroupError: mustGenerateConsumerGroupError,
 				mustGenerateHandlerError:       mustGenerateHandlerError,
 				consumeMustReturnError:         consumeMustReturnError,
+				generateErrorOnce:              sync.Once{},
 			}, nil
 		}
 	} else {
-		return func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
+		return func(addrs []string, groupID string, config *sarama.Config) (sarama.ConsumerGroup, error) {
 			return nil, errors.New("failed")
 		}
 	}
@@ -83,12 +88,15 @@ func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMe
 //------ Tests
 
 func TestErrorPropagationCustomConsumerGroup(t *testing.T) {
-	// Mock newConsumerGroupFromClient to return our custom stuff
-	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, false, false)
 
-	factory := NewConsumerGroupFactory(nil)
+	newConsumerGroup = mockedNewConsumerGroupFromClient(nil, true, true, false, false)
+
+	factory := kafkaConsumerGroupFactoryImpl{
+		config: sarama.NewConfig(),
+		addrs:  []string{"b1", "b2"},
+	}
+
 	consumerGroup, err := factory.StartConsumerGroup("bla", []string{}, zap.NewNop(), nil)
-
 	if err != nil {
 		t.Errorf("Should not throw error %v", err)
 	}
@@ -117,10 +125,13 @@ func assertContainsError(t *testing.T, collection []error, errorStr string) {
 }
 
 func TestErrorWhileCreatingNewConsumerGroup(t *testing.T) {
-	// Mock newConsumerGroupFromClient to return our custom stuff
-	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, true, true, false, true)
 
-	factory := NewConsumerGroupFactory(nil)
+	newConsumerGroup = mockedNewConsumerGroupFromClient(nil, true, true, false, true)
+
+	factory := kafkaConsumerGroupFactoryImpl{
+		config: sarama.NewConfig(),
+		addrs:  []string{"b1", "b2"},
+	}
 	_, err := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
 
 	if err == nil || err.Error() != "failed" {
@@ -129,10 +140,13 @@ func TestErrorWhileCreatingNewConsumerGroup(t *testing.T) {
 }
 
 func TestErrorWhileNewConsumerGroup(t *testing.T) {
-	// Mock newConsumerGroupFromClient to return our custom stuff
-	newConsumerGroupFromClient = mockedNewConsumerGroupFromClient(nil, false, false, true, false)
 
-	factory := NewConsumerGroupFactory(nil)
+	newConsumerGroup = mockedNewConsumerGroupFromClient(nil, false, false, true, false)
+
+	factory := kafkaConsumerGroupFactoryImpl{
+		config: sarama.NewConfig(),
+		addrs:  []string{"b1", "b2"},
+	}
 	cg, _ := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
 
 	err := <-cg.Errors()
