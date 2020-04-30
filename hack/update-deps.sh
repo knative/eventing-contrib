@@ -61,8 +61,3 @@ rm -rf $(find vendor/ -name 'BUILD.bazel')
 rm -rf $(find vendor/ -name '*_test.go')
 
 update_licenses third_party/VENDOR-LICENSE "./..."
-
-## Hack to vendor performance image from eventing
-rm -rf ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/*
-ln -s ../../../../../../../.git/HEAD ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/HEAD
-ln -s ../../../../../../../.git/refs ${REPO_ROOT_DIR}/vendor/knative.dev/eventing/test/test_images/performance/kodata/refs
