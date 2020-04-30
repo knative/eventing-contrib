@@ -83,19 +83,6 @@ rules:
   - configmaps
   verbs: *everything
 
-# Namespace labelling for webhook
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - create
-  - update
-  - list
-  - watch
-  - patch
-
 - apiGroups:
   - coordination.k8s.io
   resources:

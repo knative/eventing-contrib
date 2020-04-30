@@ -75,6 +75,17 @@ rules:
   - list
   - watch
 
+# Namespace labelling for webhook
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+
 # Events admin
 - apiGroups:
   - ""
