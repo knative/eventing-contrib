@@ -444,4 +444,3 @@ subjects:
 - kind: ServiceAccount
   name: camel-k-operator
   namespace: camelk
-  
