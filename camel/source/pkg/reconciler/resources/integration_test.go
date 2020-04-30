@@ -111,7 +111,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Traits: map[string]camelv1.TraitSpec{
 				"knative": {
 					Configuration: map[string]string{
-						"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","ce.override.ce-a":"b","ce.override.ce-source":"camel-source:test-namespace/test-name","knative.apiVersion":"","knative.kind":"","service.path":"/"}}]}`,
+						"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","ce.override.ce-a":"b","ce.override.ce-source":"camel-source:test-namespace/test-name","knative.apiVersion":"","knative.kind":""}}]}`,
 					},
 				},
 			},
