@@ -35,12 +35,13 @@ type kafkaConsumerGroupFactoryImpl struct {
 }
 
 type customConsumerGroup struct {
+	closeFn             context.CancelFunc
 	handlerErrorChannel chan error
 	sarama.ConsumerGroup
 }
 
 // Merge handler errors chan and consumer group error chan
-func (c customConsumerGroup) Errors() <-chan error {
+func (c *customConsumerGroup) Errors() <-chan error {
 	errors := make(chan error, 10)
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -65,6 +66,11 @@ func (c customConsumerGroup) Errors() <-chan error {
 	return errors
 }
 
+func (c *customConsumerGroup) Close() error {
+	c.closeFn()
+	return c.ConsumerGroup.Close()
+}
+
 var _ sarama.ConsumerGroup = (*customConsumerGroup)(nil)
 
 func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
@@ -76,15 +82,24 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 
 	consumerHandler := NewConsumerHandler(logger, handler)
 
+	ctx, cancelFn := context.WithCancel(context.Background())
+
 	go func() {
 		for {
 			if err2 := consumerGroup.Consume(context.Background(), topics, &consumerHandler); err2 != nil {
 				consumerHandler.errors <- err2
 			}
+			// Let's check if Consume stopped because of closing
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				continue
+			}
 		}
 	}()
 
-	return customConsumerGroup{consumerHandler.errors, consumerGroup}, err
+	return &customConsumerGroup{cancelFn, consumerHandler.errors, consumerGroup}, err
 }
 
 func NewConsumerGroupFactory(client sarama.Client) KafkaConsumerGroupFactory {
