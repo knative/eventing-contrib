@@ -21,4 +21,16 @@ package tools
 import (
 	_ "knative.dev/pkg/hack"
 	_ "knative.dev/test-infra/scripts"
+
+	// Test images from eventing
+	_ "knative.dev/eventing/test/test_images/eventdetails"
+	_ "knative.dev/eventing/test/test_images/filterevents"
+	_ "knative.dev/eventing/test/test_images/heartbeats"
+	_ "knative.dev/eventing/test/test_images/logevents"
+	_ "knative.dev/eventing/test/test_images/performance"
+	_ "knative.dev/eventing/test/test_images/print"
+	_ "knative.dev/eventing/test/test_images/recordevents"
+	_ "knative.dev/eventing/test/test_images/sendevents"
+	_ "knative.dev/eventing/test/test_images/sequencestepper"
+	_ "knative.dev/eventing/test/test_images/transformevents"
 )

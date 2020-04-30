@@ -143,7 +143,7 @@ function test_setup() {
   add_trap "kill $kail_pid || true" EXIT
 
   # Publish test images.
-  echo ">> Publishing test images from vendor"
+  echo ">> Publishing test images from eventing"
   # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
   # path has to be a GOPATH.
   sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"/*/*.yaml
