@@ -23,18 +23,20 @@ import (
 	"go.uber.org/zap"
 )
 
+var newConsumerGroup = sarama.NewConsumerGroup
+
 // Kafka consumer factory creates the ConsumerGroup and start consuming the specified topic
 type KafkaConsumerGroupFactory interface {
 	StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error)
 }
 
 type kafkaConsumerGroupFactoryImpl struct {
-	config               *sarama.Config
-	addrs                []string
-	newConsumerGroupFunc func(addrs []string, groupID string, config *sarama.Config) (sarama.ConsumerGroup, error)
+	config *sarama.Config
+	addrs  []string
 }
 
 type customConsumerGroup struct {
+	cancel              func()
 	handlerErrorChannel chan error
 	sarama.ConsumerGroup
 }
@@ -65,18 +67,24 @@ func (c *customConsumerGroup) Errors() <-chan error {
 	return errors
 }
 
+func (c *customConsumerGroup) Close() error {
+	c.cancel()
+	return c.ConsumerGroup.Close()
+}
+
 var _ sarama.ConsumerGroup = (*customConsumerGroup)(nil)
 
 func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
-	consumerGroup, err := c.newConsumerGroupFunc(c.addrs, groupID, c.config)
+	consumerGroup, err := newConsumerGroup(c.addrs, groupID, c.config)
 	if err != nil {
 		return nil, err
 	}
 
 	consumerHandler := NewConsumerHandler(logger, handler)
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	go func() {
-		ctx := context.Background()
 		for {
 			err := consumerGroup.Consume(ctx, topics, &consumerHandler)
 			if err == sarama.ErrClosedConsumerGroup {
@@ -85,14 +93,20 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 			if err != nil {
 				consumerHandler.errors <- err
 			}
+
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
 		}
 	}()
 
-	return &customConsumerGroup{consumerHandler.errors, consumerGroup}, err
+	return &customConsumerGroup{cancel, consumerHandler.errors, consumerGroup}, err
 }
 
 func NewConsumerGroupFactory(addrs []string, config *sarama.Config) KafkaConsumerGroupFactory {
-	return kafkaConsumerGroupFactoryImpl{addrs: addrs, config: config, newConsumerGroupFunc: sarama.NewConsumerGroup}
+	return kafkaConsumerGroupFactoryImpl{addrs: addrs, config: config}
 }
 
 var _ KafkaConsumerGroupFactory = (*kafkaConsumerGroupFactoryImpl)(nil)

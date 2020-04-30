@@ -401,3 +401,12 @@ func sinkAccepted(writer http.ResponseWriter, req *http.Request) {
 func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusRequestTimeout)
 }
+
+func TestAdapter_Start(t *testing.T) { // just increase code coverage
+	ctx, cancel := context.WithCancel(context.Background())
+
+	a := NewAdapter(ctx, NewEnvConfig(), nil, nil)
+	_ = a.Start(ctx.Done())
+
+	cancel()
+}

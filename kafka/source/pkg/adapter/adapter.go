@@ -106,12 +106,10 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 		}
 	}()
 
-	for {
-		select {
-		case <-stopCh:
-			a.logger.Info("Shutting down...")
-			return nil
-		}
+	select {
+	case <-stopCh:
+		a.logger.Info("Shutting down...")
+		return nil
 	}
 }
 
