@@ -19,7 +19,6 @@ set -o nounset
 set -o pipefail
 
 export GO111MODULE=on
-export GOFLAGS=-mod=vendor
 
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
@@ -59,5 +58,7 @@ rm -rf $(find vendor/ -name 'OWNERS_ALIASES')
 rm -rf $(find vendor/ -name 'BUILD')
 rm -rf $(find vendor/ -name 'BUILD.bazel')
 rm -rf $(find vendor/ -name '*_test.go')
+
+export GOFLAGS=-mod=vendor
 
 update_licenses third_party/VENDOR-LICENSE "./..."
