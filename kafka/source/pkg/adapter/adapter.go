@@ -89,6 +89,9 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 
 	// init consumer group
 	addrs, config, err := kafkabinding.NewConfig(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to create the config: %w", err)
+	}
 	consumerGroupFactory := kafka.NewConsumerGroupFactory(addrs, config)
 	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, a.config.Topics, a.logger, a)
 	if err != nil {
