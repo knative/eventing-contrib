@@ -1,5 +1,7 @@
+// +build tools
+
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,29 +16,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package tools
 
+// This package imports things required by this repository, to force `go mod` to see them as dependencies
 import (
-	"flag"
-	"os"
+	_ "k8s.io/code-generator"
+	_ "k8s.io/code-generator/cmd/client-gen"
+	_ "k8s.io/code-generator/cmd/deepcopy-gen"
+	_ "k8s.io/code-generator/cmd/defaulter-gen"
+	_ "k8s.io/code-generator/cmd/informer-gen"
+	_ "k8s.io/code-generator/cmd/lister-gen"
+	_ "k8s.io/kube-openapi/cmd/openapi-gen"
 
-	controller "knative.dev/eventing-contrib/natss/pkg/reconciler/dispatcher"
+	_ "knative.dev/pkg/codegen/cmd/injection-gen"
 
-	"knative.dev/pkg/injection"
-	"knative.dev/pkg/injection/sharedmain"
-
-	"knative.dev/pkg/signals"
+	_ "knative.dev/test-infra/scripts"
 )
-
-const component = "natsschannel_dispatcher"
-
-func main() {
-	flag.Parse()
-	ctx := signals.NewContext()
-	ns := os.Getenv("NAMESPACE")
-	if ns != "" {
-		ctx = injection.WithNamespaceScope(ctx, ns)
-	}
-
-	sharedmain.MainWithContext(ctx, component, controller.NewController)
-}

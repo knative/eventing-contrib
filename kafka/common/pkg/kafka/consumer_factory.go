@@ -17,14 +17,11 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 )
-
-var newConsumerGroupFromClient = sarama.NewConsumerGroupFromClient
 
 // Kafka consumer factory creates the ConsumerGroup and start consuming the specified topic
 type KafkaConsumerGroupFactory interface {
@@ -32,8 +29,9 @@ type KafkaConsumerGroupFactory interface {
 }
 
 type kafkaConsumerGroupFactoryImpl struct {
-	client       sarama.Client
-	clientCloner func(client sarama.Client) (sarama.Client, error)
+	config               *sarama.Config
+	addrs                []string
+	newConsumerGroupFunc func(addrs []string, groupID string, config *sarama.Config) (sarama.ConsumerGroup, error)
 }
 
 type customConsumerGroup struct {
@@ -42,7 +40,7 @@ type customConsumerGroup struct {
 }
 
 // Merge handler errors chan and consumer group error chan
-func (c customConsumerGroup) Errors() <-chan error {
+func (c *customConsumerGroup) Errors() <-chan error {
 	errors := make(chan error, 10)
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -70,12 +68,7 @@ func (c customConsumerGroup) Errors() <-chan error {
 var _ sarama.ConsumerGroup = (*customConsumerGroup)(nil)
 
 func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
-	newClient, err := c.clientCloner(c.client)
-	if err != nil {
-		return nil, err
-	}
-
-	consumerGroup, err := newConsumerGroupFromClient(groupID, newClient)
+	consumerGroup, err := c.newConsumerGroupFunc(c.addrs, groupID, c.config)
 	if err != nil {
 		return nil, err
 	}
@@ -83,30 +76,23 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 	consumerHandler := NewConsumerHandler(logger, handler)
 
 	go func() {
-		err2 := consumerGroup.Consume(context.TODO(), topics, &consumerHandler)
-		if err2 != nil {
-			consumerHandler.errors <- err2
+		ctx := context.Background()
+		for {
+			err := consumerGroup.Consume(ctx, topics, &consumerHandler)
+			if err == sarama.ErrClosedConsumerGroup {
+				return
+			}
+			if err != nil {
+				consumerHandler.errors <- err
+			}
 		}
 	}()
 
-	return customConsumerGroup{consumerHandler.errors, consumerGroup}, err
+	return &customConsumerGroup{consumerHandler.errors, consumerGroup}, err
 }
 
-func NewConsumerGroupFactory(client sarama.Client) KafkaConsumerGroupFactory {
-	return kafkaConsumerGroupFactoryImpl{client: client, clientCloner: cloneClient}
-}
-
-func cloneClient(client sarama.Client) (sarama.Client, error) {
-	newConfig := *client.Config()
-	brokers := make([]string, len(client.Brokers()))
-	for i, b := range client.Brokers() {
-		brokers[i] = b.Addr()
-	}
-	newClient, err := sarama.NewClient(brokers, &newConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create the client: %w", err)
-	}
-	return newClient, nil
+func NewConsumerGroupFactory(addrs []string, config *sarama.Config) KafkaConsumerGroupFactory {
+	return kafkaConsumerGroupFactoryImpl{addrs: addrs, config: config, newConsumerGroupFunc: sarama.NewConsumerGroup}
 }
 
 var _ KafkaConsumerGroupFactory = (*kafkaConsumerGroupFactoryImpl)(nil)

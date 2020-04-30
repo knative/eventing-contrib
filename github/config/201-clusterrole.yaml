@@ -81,7 +81,6 @@ rules:
   resources:
   - events
   - configmaps
-  - namespaces
   verbs: *everything
 
 - apiGroups:
