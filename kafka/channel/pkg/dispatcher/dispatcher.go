@@ -332,7 +332,7 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 	// this goroutine logs errors incoming
 	go func() {
 		for err = range consumerGroup.Errors() {
-			panic(err)
+			d.logger.Warn("Error in consumer group", zap.Error(err))
 		}
 	}()
 
