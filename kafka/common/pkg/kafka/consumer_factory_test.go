@@ -19,6 +19,7 @@ package kafka
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -32,14 +33,17 @@ type mockConsumerGroup struct {
 	mustGenerateConsumerGroupError bool
 	mustGenerateHandlerError       bool
 	consumeMustReturnError         bool
+	generateErrorOnce              sync.Once
 }
 
-func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
+func (m *mockConsumerGroup) Consume(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
 	if m.mustGenerateHandlerError {
 		go func() {
-			h := handler.(*saramaConsumerHandler)
-			h.errors <- errors.New("cgh")
-			_ = h.Cleanup(nil)
+			m.generateErrorOnce.Do(func() {
+				h := handler.(*saramaConsumerHandler)
+				h.errors <- errors.New("cgh")
+				_ = h.Cleanup(nil)
+			})
 		}()
 	}
 	if m.consumeMustReturnError {
@@ -48,7 +52,7 @@ func (m mockConsumerGroup) Consume(ctx context.Context, topics []string, handler
 	return nil
 }
 
-func (m mockConsumerGroup) Errors() <-chan error {
+func (m *mockConsumerGroup) Errors() <-chan error {
 	ch := make(chan error)
 	go func() {
 		if m.mustGenerateConsumerGroupError {
@@ -59,18 +63,19 @@ func (m mockConsumerGroup) Errors() <-chan error {
 	return ch
 }
 
-func (m mockConsumerGroup) Close() error {
+func (m *mockConsumerGroup) Close() error {
 	return nil
 }
 
 func mockedNewConsumerGroupFromClient(mockInputMessageCh chan *sarama.ConsumerMessage, mustGenerateConsumerGroupError bool, mustGenerateHandlerError bool, consumeMustReturnError bool, mustFail bool) func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
 	if !mustFail {
 		return func(groupID string, client sarama.Client) (group sarama.ConsumerGroup, e error) {
-			return mockConsumerGroup{
+			return &mockConsumerGroup{
 				mockInputMessageCh:             mockInputMessageCh,
 				mustGenerateConsumerGroupError: mustGenerateConsumerGroupError,
 				mustGenerateHandlerError:       mustGenerateHandlerError,
 				consumeMustReturnError:         consumeMustReturnError,
+				generateErrorOnce:              sync.Once{},
 			}, nil
 		}
 	} else {
