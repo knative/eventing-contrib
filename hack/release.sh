@@ -26,6 +26,7 @@ declare -A COMPONENTS
 COMPONENTS=(
   ["appender.yaml"]="config/tools/appender"
   ["awssqs.yaml"]="awssqs/config"
+  ["camel.yaml"]="camel/source/config"
   ["couchdb.yaml"]="couchdb/source/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["github.yaml"]="github/config"

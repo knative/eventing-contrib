@@ -20,6 +20,19 @@ github.com/PuerkitoBio/purell
 github.com/PuerkitoBio/urlesc
 # github.com/Shopify/sarama v1.24.0
 github.com/Shopify/sarama
+# github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
+github.com/apache/camel-k/pkg/apis/camel/v1
+github.com/apache/camel-k/pkg/apis/camel/v1/knative
+github.com/apache/camel-k/pkg/client/clientset/versioned
+github.com/apache/camel-k/pkg/client/clientset/versioned/fake
+github.com/apache/camel-k/pkg/client/clientset/versioned/scheme
+github.com/apache/camel-k/pkg/client/clientset/versioned/typed/camel/v1
+github.com/apache/camel-k/pkg/client/clientset/versioned/typed/camel/v1/fake
+github.com/apache/camel-k/pkg/client/informers/externalversions
+github.com/apache/camel-k/pkg/client/informers/externalversions/camel
+github.com/apache/camel-k/pkg/client/informers/externalversions/camel/v1
+github.com/apache/camel-k/pkg/client/informers/externalversions/internalinterfaces
+github.com/apache/camel-k/pkg/client/listers/camel/v1
 # github.com/aws/aws-sdk-go v1.30.16
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr

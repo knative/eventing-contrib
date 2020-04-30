@@ -1,0 +1,29 @@
+# Apache Camel Source "Hello World"
+#
+# Full documentation and other examples at: https://knative.dev/docs/eventing/samples/apache-camel-source/
+#
+apiVersion: sources.knative.dev/v1alpha1
+kind: CamelSource
+metadata:
+  name: camel-timer-source
+spec:
+  source:
+    flow:
+      from:
+        uri: timer:tick
+        parameters:
+          period: 3s
+        steps:
+          - set-header:
+              name: Content-Type
+              constant: text/plain
+          - set-body:
+              constant: Hello world!
+  ceOverrides:
+    extensions:
+      kind: hello-world
+  sink:
+    ref:
+      apiVersion: messaging.knative.dev/v1alpha1
+      kind: InMemoryChannel
+      name: camel-test

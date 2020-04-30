@@ -29,8 +29,19 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dir
 chmod +x ${CODEGEN_PKG}/generate-groups.sh
 chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 
+(
+  # External Camel API
+  OUTPUT_PKG="knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection" \
+  VERSIONED_CLIENTSET_PKG="github.com/apache/camel-k/pkg/client/clientset/versioned" \
+  EXTERNAL_INFORMER_PKG="github.com/apache/camel-k/pkg/client/informers/externalversions" \
+    ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+      "knative.dev/eventing-contrib/camel/source/pkg/client/camel" "github.com/apache/camel-k/pkg/apis" \
+      "camel:v1" \
+      --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
+)
+
 # Just Sources
-API_DIRS_SOURCES=(gitlab/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
+API_DIRS_SOURCES=(gitlab/pkg camel/source/pkg awssqs/pkg couchdb/source/pkg prometheus/pkg)
 
 for DIR in "${API_DIRS_SOURCES[@]}"; do
   # generate the code with:
@@ -96,6 +107,7 @@ ${GOPATH}/bin/deepcopy-gen \
   -i knative.dev/eventing-contrib/prometheus/pkg/apis \
   -i knative.dev/eventing-contrib/awssqs/pkg/apis \
   -i knative.dev/eventing-contrib/couchdb/source/pkg/apis \
+  -i knative.dev/eventing-contrib/camel/source/pkg/apis \
   -i knative.dev/eventing-contrib/github/pkg/apis \
   -i knative.dev/eventing-contrib/gitlab/pkg/apis
 

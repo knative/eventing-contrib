@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/Shopify/sarama v1.24.0
+	github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
 	github.com/aws/aws-sdk-go v1.30.16
 	github.com/cloudevents/sdk-go v1.2.0
 	github.com/cloudevents/sdk-go/v2 v2.0.0-RC2
@@ -37,6 +38,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/jcmturner/gokrb5.v7 v7.3.0 // indirect
+	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible

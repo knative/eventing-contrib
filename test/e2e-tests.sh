@@ -25,8 +25,6 @@
 # project $PROJECT_ID, start Knative eventing system, install resources
 # in eventing-contrib, run the tests and delete the cluster.
 
-export GO111MODULE=on
-
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/e2e-tests.sh
 
 # If gcloud is not available make it a no-op, not an error.
@@ -38,8 +36,8 @@ if [ "$(uname)" == "Darwin" ]; then
 fi
 
 # Eventing main config path from HEAD.
-readonly EVENTING_CONFIG="./config/"
-readonly EVENTING_CHANNEL_BROKER_CONFIG="./config/brokers/channel-broker"
+readonly EVENTING_CONFIG="${GOPATH}/src/knative.dev/eventing/config/"
+readonly EVENTING_CHANNEL_BROKER_CONFIG="${GOPATH}/src/knative.dev/eventing/config/brokers/channel-broker"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -69,6 +67,11 @@ readonly KAFKA_CRD_CONFIG_DIR="$(mktemp -d)"
 # Kafka channel CRD config template directory.
 readonly KAFKA_SOURCE_CRD_CONFIG_DIR="kafka/source/config"
 
+# CamelK installation
+readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.0.0-RC2.yaml"
+# Camel source CRD config template directory
+readonly CAMEL_SOURCE_CRD_CONFIG_DIR="camel/source/config"
+
 
 function knative_setup() {
   if is_release_branch; then
@@ -79,11 +82,10 @@ function knative_setup() {
     pushd .
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
     git clone https://github.com/knative/eventing
-    cd ${GOPATH}/src/knative.dev/eventing
+    popd
     ko apply -f ${EVENTING_CONFIG}
     # Install Channel Based Broker
     ko apply -f ${EVENTING_CHANNEL_BROKER_CONFIG}
-    popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
 
@@ -123,6 +125,7 @@ function add_trap() {
 function test_setup() {
   natss_setup || return 1
   kafka_setup || return 1
+  camel_setup || return 1
 
   install_channel_crds || return 1
   install_sources_crds || return 1
@@ -150,6 +153,7 @@ function test_setup() {
 function test_teardown() {
   natss_teardown
   kafka_teardown
+  camel_teardown
 
   uninstall_channel_crds
   uninstall_sources_crds
@@ -172,6 +176,10 @@ function install_sources_crds() {
   ko apply -f ${KAFKA_SOURCE_CRD_CONFIG_DIR} || return 1
   wait_until_pods_running knative-eventing || fail_test "Failed to install the Kafka Source CRD"
   wait_until_pods_running knative-sources || fail_test "Failed to install the Kafka Source CRD"
+
+  echo "Installing Camel Source CRD"
+  ko apply -f ${CAMEL_SOURCE_CRD_CONFIG_DIR} || return 1
+  wait_until_pods_running knative-sources || fail_test "Failed to install the Camel Source CRD"
 }
 
 function uninstall_channel_crds() {
@@ -219,14 +227,28 @@ function kafka_teardown() {
   kubectl delete namespace kafka
 }
 
+function camel_setup() {
+  echo "Installing CamelK"
+  kubectl create namespace camelk || return 1
+  kubectl apply -f "${CAMELK_INSTALLATION_CONFIG}" -n camelk
+}
+
+function camel_teardown() {
+  echo "Uninstalling CamelK"
+  kubectl delete -f "${CAMELK_INSTALLATION_CONFIG}" -n camelk
+  kubectl delete namespace camelk
+}
+
+# TODO: en-enable e2e tests after go mod changes land. Currently the script does not install knative correctly
+# with go mod in-use.
+
 # initialize $@ --skip-istio-addon
 
-# TODO: en-enable e2e tests after go mod changes land.
 # TODO: Figure out why kafka channels do not like parallel=12 (which it was)
 # https://github.com/knative/eventing-contrib/issues/917
-# go_test_e2e -timeout=20m -parallel=1 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
+#go_test_e2e -timeout=20m -parallel=1 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
 
-# go_test_e2e -timeout=5m -parallel=2 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
+#go_test_e2e -timeout=5m -parallel=2 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
 
 # If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands
 # trap - SIGINT SIGQUIT SIGTSTP EXIT
