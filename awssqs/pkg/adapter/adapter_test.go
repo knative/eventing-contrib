@@ -18,11 +18,12 @@ package adapter
 
 import (
 	"context"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 
 	"go.uber.org/zap"
 
