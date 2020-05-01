@@ -36,8 +36,8 @@ if [ "$(uname)" == "Darwin" ]; then
 fi
 
 # Eventing main config path from HEAD.
-readonly EVENTING_CONFIG="${GOPATH}/src/knative.dev/eventing/config/"
-readonly EVENTING_CHANNEL_BROKER_CONFIG="${GOPATH}/src/knative.dev/eventing/config/brokers/channel-broker"
+readonly EVENTING_CONFIG="./config/"
+readonly EVENTING_CHANNEL_BROKER_CONFIG="./config/brokers/channel-broker"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -82,10 +82,11 @@ function knative_setup() {
     pushd .
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
     git clone https://github.com/knative/eventing
-    popd
+    cd eventing
     ko apply -f ${EVENTING_CONFIG}
     # Install Channel Based Broker
     ko apply -f ${EVENTING_CHANNEL_BROKER_CONFIG}
+    popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
 
@@ -103,7 +104,7 @@ function knative_teardown() {
     kubectl delete -f ${KNATIVE_EVENTING_RELEASE}
   else
     echo ">> Uninstalling Knative Eventing from HEAD"
-    ko delete --ignore-not-found=true --now --timeout 60s -f ${EVENTING_CONFIG}
+    kubectl delete --ignore-not-found=true --now --timeout 60s -f ${EVENTING_CONFIG}
   fi
   wait_until_object_does_not_exist namespaces knative-eventing
 }
@@ -142,10 +143,10 @@ function test_setup() {
   add_trap "kill $kail_pid || true" EXIT
 
   # Publish test images.
-  echo ">> Publishing test images from vendor"
+  echo ">> Publishing test images from eventing"
   # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
   # path has to be a GOPATH.
-  sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"/*/*.yaml
+  sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
   $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 }
@@ -239,14 +240,11 @@ function camel_teardown() {
   kubectl delete namespace camelk
 }
 
-# TODO: en-enable e2e tests after go mod changes land. Currently the script does not install knative correctly
-# with go mod in-use.
+initialize $@ --skip-istio-addon
 
-# initialize $@ --skip-istio-addon
+go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
 
-#go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
-
-#go_test_e2e -timeout=5m -parallel=2 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
+go_test_e2e -timeout=5m -parallel=2 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
 
 # If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands
 # trap - SIGINT SIGQUIT SIGTSTP EXIT

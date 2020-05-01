@@ -1,0 +1,446 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: camel-k
+  name: integrationplatforms.camel.apache.org
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The IntegrationPlatform phase
+    name: Phase
+    type: string
+  group: camel.apache.org
+  names:
+    kind: IntegrationPlatform
+    listKind: IntegrationPlatformList
+    plural: integrationplatforms
+    shortNames:
+    - ip
+    singular: integrationplatform
+  scope: Namespaced
+  subresources:
+    status: {}
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: false
+  - name: v1
+    served: true
+    storage: true
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: camel-k
+  name: integrationkits.camel.apache.org
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The IntegrationKit phase
+    name: Phase
+    type: string
+  - JSONPath: .metadata.labels.camel\.apache\.org\/kit\.type
+    description: The IntegrationKit type
+    name: Type
+    type: string
+  - JSONPath: .status.image
+    description: The IntegrationKit image
+    name: Image
+    type: string
+  group: camel.apache.org
+  names:
+    kind: IntegrationKit
+    listKind: IntegrationKitList
+    plural: integrationkits
+    shortNames:
+    - ik
+    singular: integrationkit
+  scope: Namespaced
+  subresources:
+    status: {}
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: false
+  - name: v1
+    served: true
+    storage: true
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: camel-k
+  name: integrations.camel.apache.org
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The integration phase
+    name: Phase
+    type: string
+  - JSONPath: .status.kit
+    description: The integration kit
+    name: Kit
+    type: string
+  - JSONPath: .status.replicas
+    description: The number of pods
+    name: Replicas
+    type: integer
+  group: camel.apache.org
+  names:
+    kind: Integration
+    listKind: IntegrationList
+    plural: integrations
+    shortNames:
+    - it
+    singular: integration
+  scope: Namespaced
+  subresources:
+    scale:
+      specReplicasPath: .spec.replicas
+      statusReplicasPath: .status.replicas
+    status: {}
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: false
+  - name: v1
+    served: true
+    storage: true
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: camel-k
+  name: camelcatalogs.camel.apache.org
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.version
+    description: The Camel version
+    name: Camel Version
+    type: string
+  - JSONPath: .spec.runtimeVersion
+    description: The Camel K Runtime version
+    name: Runtime Version
+    type: string
+  group: camel.apache.org
+  names:
+    kind: CamelCatalog
+    listKind: CamelCatalogList
+    plural: camelcatalogs
+    shortNames:
+    - cc
+    singular: camelcatalog
+  scope: Namespaced
+  subresources:
+    status: {}
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: false
+  - name: v1
+    served: true
+    storage: true
+
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: camel-k
+  name: builds.camel.apache.org
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The build phase
+    name: Phase
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    description: The time at which the build was created
+    name: Age
+    type: date
+  - JSONPath: .status.startedAt
+    description: The time at which the build was last (re-)started
+    name: Started
+    type: date
+  - JSONPath: .status.duration
+    description: The build last execution duration
+    name: Duration
+    type: string
+  - JSONPath: .status.failure.recovery.attempt
+    description: The number of execution attempts
+    name: Attempts
+    type: integer
+  group: camel.apache.org
+  names:
+    kind: Build
+    listKind: BuildList
+    plural: builds
+    singular: build
+  scope: Namespaced
+  subresources:
+    status: {}
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: false
+  - name: v1
+    served: true
+    storage: true
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  labels:
+    app: camel-k
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  name: camel-k:edit
+rules:
+- apiGroups:
+  - camel.apache.org
+  resources:
+  - '*'
+  verbs:
+  - '*'
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: null
+  labels:
+    app: camel-k
+  name: camel-k-operator
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  labels:
+    app: camel-k
+  name: camel-k-operator
+rules:
+- apiGroups:
+  - camel.apache.org
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - configmaps
+  - secrets
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  creationTimestamp: null
+  labels:
+    app: camel-k
+  name: camel-k-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: camel-k-operator
+subjects:
+- kind: ServiceAccount
+  name: camel-k-operator
+  namespace: camelk
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: camel-k
+    camel.apache.org/component: operator
+  name: camel-k-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: camel-k-operator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: camel-k
+        camel.apache.org/component: operator
+        name: camel-k-operator
+    spec:
+      containers:
+      - command:
+        - kamel
+        - operator
+        env:
+        - name: WATCH_NAMESPACE
+          value: ""
+        - name: OPERATOR_NAME
+          value: camel-k
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: docker.io/apache/camel-k:1.0.0-RC2
+        imagePullPolicy: IfNotPresent
+        name: camel-k-operator
+        resources: {}
+      serviceAccountName: camel-k-operator
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  labels:
+    app: camel-k
+  name: camel-k-operator-knative
+rules:
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eventing.knative.dev
+  - messaging.knative.dev
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  creationTimestamp: null
+  labels:
+    app: camel-k
+  name: camel-k-operator-knative
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: camel-k-operator-knative
+subjects:
+- kind: ServiceAccount
+  name: camel-k-operator
+  namespace: camelk

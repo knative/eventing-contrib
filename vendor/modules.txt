@@ -1044,6 +1044,16 @@ knative.dev/eventing/test/performance/infra/common
 knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
+knative.dev/eventing/test/test_images/eventdetails
+knative.dev/eventing/test/test_images/filterevents
+knative.dev/eventing/test/test_images/heartbeats
+knative.dev/eventing/test/test_images/logevents
+knative.dev/eventing/test/test_images/performance
+knative.dev/eventing/test/test_images/print
+knative.dev/eventing/test/test_images/recordevents
+knative.dev/eventing/test/test_images/sendevents
+knative.dev/eventing/test/test_images/sequencestepper
+knative.dev/eventing/test/test_images/transformevents
 # knative.dev/pkg v0.0.0-20200429162142-5e151d3ad9ea
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
