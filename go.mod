@@ -9,7 +9,6 @@ require (
 	github.com/cloudevents/sdk-go v1.2.0
 	github.com/cloudevents/sdk-go/v2 v2.0.0-RC2
 	github.com/davecgh/go-spew v1.1.1
-	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/flimzy/diff v0.1.7 // indirect
 	github.com/go-kivik/couchdb/v3 v3.0.4
 	github.com/go-kivik/kivik/v3 v3.0.2
@@ -19,9 +18,7 @@ require (
 	github.com/google/go-github/v31 v31.0.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.1
-	github.com/jcmturner/gofork v1.0.0 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/klauspost/compress v1.9.1 // indirect
 	github.com/nats-io/nats-server/v2 v2.1.6 // indirect
 	github.com/nats-io/stan.go v0.6.0
 	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
@@ -33,19 +30,18 @@ require (
 	gitlab.com/flimzy/testy v0.2.1 // indirect
 	go.opencensus.io v0.22.3
 	go.opentelemetry.io/otel v0.4.2 // indirect
-	go.uber.org/zap v1.10.0
+	go.uber.org/zap v1.14.1
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
-	gopkg.in/jcmturner/gokrb5.v7 v7.3.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
-	knative.dev/eventing v0.14.1-0.20200429150142-6fd15c83fba5
-	knative.dev/pkg v0.0.0-20200429162142-5e151d3ad9ea
-	knative.dev/serving v0.14.1-0.20200429161342-b14c082272a0
-	knative.dev/test-infra v0.0.0-20200429211942-f4c4853375cf
+	knative.dev/eventing v0.14.1-0.20200505181144-03d6bf3dc08f
+	knative.dev/pkg v0.0.0-20200505191044-3da93ebb24c2
+	knative.dev/serving v0.14.1-0.20200505185644-383a4b41cfce
+	knative.dev/test-infra v0.0.0-20200505192244-75864c82db21
 )
 
 replace (
