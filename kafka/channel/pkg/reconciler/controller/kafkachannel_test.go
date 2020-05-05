@@ -326,7 +326,7 @@ func TestAllCases(t *testing.T) {
 		r := &Reconciler{
 			systemNamespace: testNS,
 			dispatcherImage: testDispatcherImage,
-			kafkaConfig: &KafkaConfig{
+			clusterKafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
 			kafkachannelLister: listers.GetKafkaChannelLister(),
@@ -384,7 +384,7 @@ func TestTopicExists(t *testing.T) {
 		r := &Reconciler{
 			systemNamespace: testNS,
 			dispatcherImage: testDispatcherImage,
-			kafkaConfig: &KafkaConfig{
+			clusterKafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
 			kafkachannelLister: listers.GetKafkaChannelLister(),
@@ -454,7 +454,7 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 		r := &Reconciler{
 			systemNamespace: testNS,
 			dispatcherImage: testDispatcherImage,
-			kafkaConfig: &KafkaConfig{
+			clusterKafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
 			kafkachannelLister: listers.GetKafkaChannelLister(),

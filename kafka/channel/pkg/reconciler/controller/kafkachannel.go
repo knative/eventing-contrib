@@ -109,9 +109,9 @@ type Reconciler struct {
 	systemNamespace string
 	dispatcherImage string
 
-	kafkaConfig      *utils.KafkaConfig
-	kafkaConfigError error
-	kafkaClientSet   kafkaclientset.Interface
+	clusterKafkaConfig      *utils.KafkaConfig
+	clusterKafkaConfigError error
+	kafkaClientSet          kafkaclientset.Interface
 
 	// Using a shared kafkaClusterAdmin does not work currently because of an issue with
 	// Shopify/sarama, see https://github.com/Shopify/sarama/issues/1162.
@@ -150,12 +150,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1alpha1.KafkaChanne
 		return err
 	}
 
-	if r.kafkaConfig == nil {
-		if r.kafkaConfigError == nil {
-			r.kafkaConfigError = errors.New("The config map 'config-kafka' does not exist")
+	if r.clusterKafkaConfig == nil {
+		if r.clusterKafkaConfigError == nil {
+			r.clusterKafkaConfigError = errors.New("The config map 'config-kafka' does not exist")
 		}
-		kc.Status.MarkConfigFailed("MissingConfiguration", "%v", r.kafkaConfigError)
-		return r.kafkaConfigError
+		kc.Status.MarkConfigFailed("MissingConfiguration", "%v", r.clusterKafkaConfigError)
+		return r.clusterKafkaConfigError
 	}
 
 	kafkaClusterAdmin, err := r.createClient(ctx, kc)
@@ -433,7 +433,7 @@ func (r *Reconciler) createClient(ctx context.Context, kc *v1alpha1.KafkaChannel
 	kafkaClusterAdmin := r.kafkaClusterAdmin
 	if kafkaClusterAdmin == nil {
 		var err error
-		kafkaClusterAdmin, err = resources.MakeClient(controllerAgentName, r.kafkaConfig.Brokers)
+		kafkaClusterAdmin, err = resources.MakeClient(controllerAgentName, r.clusterKafkaConfig.Brokers)
 		if err != nil {
 			return nil, err
 		}
@@ -484,14 +484,14 @@ func (r *Reconciler) updateKafkaConfig(ctx context.Context, configMap *corev1.Co
 	}
 	// For now just override the previous config.
 	// Eventually the previous config should be snapshotted to delete Kafka topics
-	r.kafkaConfig = kafkaConfig
-	r.kafkaConfigError = err
+	r.clusterKafkaConfig = kafkaConfig
+	r.clusterKafkaConfigError = err
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, kc *v1alpha1.KafkaChannel) pkgreconciler.Event {
 	// Do not attempt retrying creating the client because it might be a permanent error
 	// in which case the finalizer will never get removed.
-	if kafkaClusterAdmin, err := r.createClient(ctx, kc); err == nil && r.kafkaConfig != nil {
+	if kafkaClusterAdmin, err := r.createClient(ctx, kc); err == nil && r.clusterKafkaConfig != nil {
 		if err := r.deleteTopic(ctx, kc, kafkaClusterAdmin); err != nil {
 			return err
 		}
