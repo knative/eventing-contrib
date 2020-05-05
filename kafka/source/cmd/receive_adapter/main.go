@@ -17,8 +17,9 @@ limitations under the License.
 package main
 
 import (
-	kadapter "knative.dev/eventing-contrib/kafka/source/pkg/adapter"
 	"knative.dev/eventing/pkg/adapter/v2"
+
+	kadapter "knative.dev/eventing-contrib/kafka/source/pkg/adapter"
 )
 
 func main() {
