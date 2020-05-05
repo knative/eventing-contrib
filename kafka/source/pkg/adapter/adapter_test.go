@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/v2/types"
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/pkg/source"
 
 	"go.uber.org/zap"
@@ -331,7 +331,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				config: &adapterConfig{
 					EnvConfig: adapter.EnvConfig{
-						SinkURI:   sinkServer.URL,
+						Sink:      sinkServer.URL,
 						Namespace: "test",
 					},
 					Topics:        []string{"topic1", "topic2"},
