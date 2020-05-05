@@ -18,7 +18,7 @@ package main
 
 import (
 	kadapter "knative.dev/eventing-contrib/kafka/source/pkg/adapter"
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 )
 
 func main() {
