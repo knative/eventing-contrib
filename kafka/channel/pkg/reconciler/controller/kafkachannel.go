@@ -49,7 +49,6 @@ import (
 	pkgreconciler "knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
-	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
 	kafkaScheme "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme"
 	kafkaChannelReconciler "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1alpha1/kafkachannel"
 	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
@@ -111,7 +110,6 @@ type Reconciler struct {
 
 	clusterKafkaConfig      *utils.KafkaConfig
 	clusterKafkaConfigError error
-	kafkaClientSet          kafkaclientset.Interface
 
 	// Using a shared kafkaClusterAdmin does not work currently because of an issue with
 	// Shopify/sarama, see https://github.com/Shopify/sarama/issues/1162.
