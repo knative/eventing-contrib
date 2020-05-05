@@ -188,27 +188,22 @@ func MustParseClientGenTags(lines []string) Tags {
 	return ret
 }
 
-func extractCommentTags(t *types.Type) map[string]map[string]string {
+func extractReconcilerClassTag(t *types.Type) (string, bool) {
 	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
-	return ExtractCommentTags("+", comments)
+	values := types.ExtractCommentTags("+", comments)["genreconciler:class"]
+	for _, v := range values {
+		if len(v) == 0 {
+			continue
+		}
+		return v, true
+	}
+	return "", false
 }
 
-func extractReconcilerClassTag(tags map[string]map[string]string) (classname string, has bool) {
-	vals, has := tags["genreconciler"]
-	if !has {
-		return
-	}
-	classname, _ = vals["class"]
-	return
-}
-
-func isNonNamespaced(tags map[string]map[string]string) bool {
-	vals, has := tags["genclient"]
-	if !has {
-		return false
-	}
-	_, has = vals["nonNamespaced"]
-	return has
+func isNonNamespaced(t *types.Type) bool {
+	comments := append(append([]string{}, t.SecondClosestCommentLines...), t.CommentLines...)
+	_, nonNamespaced := types.ExtractCommentTags("+", comments)["genclient:nonNamespaced"]
+	return nonNamespaced
 }
 
 func vendorless(p string) string {
@@ -421,9 +416,8 @@ func reconcilerPackages(basePackage string, groupPkgName string, gv clientgentyp
 		// Fix for golang iterator bug.
 		t := t
 
-		extracted := extractCommentTags(t)
-		reconcilerClass, hasReconcilerClass := extractReconcilerClassTag(extracted)
-		nonNamespaced := isNonNamespaced(extracted)
+		reconcilerClass, hasReconcilerClass := extractReconcilerClassTag(t)
+		nonNamespaced := isNonNamespaced(t)
 
 		packagePath := filepath.Join(packagePath, strings.ToLower(t.Name.Name))
 

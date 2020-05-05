@@ -185,42 +185,6 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 
 	{{.type|lowercaseSingular}}Informer := {{.informerGet|raw}}(ctx)
 
-	rec := &reconcilerImpl{
-		Client:  {{.clientGet|raw}}(ctx),
-		Lister:  {{.type|lowercaseSingular}}Informer.Lister(),
-		reconciler:    r,
-		finalizerName: defaultFinalizerName,
-		{{if .hasClass}}classValue: classValue,{{end}}
-	}
-
-	t := {{.reflectTypeOf|raw}}(r).Elem()
-	queueName := {{.fmtSprintf|raw}}("%s.%s", {{.stringsReplaceAll|raw}}(t.PkgPath(), "/", "-"), t.Name())
-
-	impl := {{.controllerNewImpl|raw}}(rec, logger, queueName)
-	agentName := defaultControllerAgentName
-
-	// Pass impl to the options. Save any optional results.
-	for _, fn := range optionsFns {
-		opts := fn(impl)
-		if opts.ConfigStore != nil {
-			rec.configStore = opts.ConfigStore
-		}
-		if opts.FinalizerName != "" {
-			rec.finalizerName = opts.FinalizerName
-		}
-		if opts.AgentName != "" {
-			agentName = opts.AgentName
-		}
-	}
-
-	rec.Recorder = createRecorder(ctx, agentName)
-
-	return impl
-}
-
-func createRecorder(ctx context.Context, agentName string) record.EventRecorder {
-	logger := {{.loggingFromContext|raw}}(ctx)
-
 	recorder := {{.controllerGetEventRecorder|raw}}(ctx)
 	if recorder == nil {
 		// Create event broadcaster
@@ -231,7 +195,7 @@ func createRecorder(ctx context.Context, agentName string) record.EventRecorder 
 			eventBroadcaster.StartRecordingToSink(
 				&{{.typedcorev1EventSinkImpl|raw}}{Interface: {{.kubeclientGet|raw}}(ctx).CoreV1().Events("")}),
 		}
-		recorder = eventBroadcaster.NewRecorder({{.schemeScheme|raw}}, {{.corev1EventSource|raw}}{Component: agentName})
+		recorder = eventBroadcaster.NewRecorder({{.schemeScheme|raw}}, {{.corev1EventSource|raw}}{Component: defaultControllerAgentName})
 		go func() {
 			<-ctx.Done()
 			for _, w := range watches {
@@ -240,7 +204,32 @@ func createRecorder(ctx context.Context, agentName string) record.EventRecorder 
 		}()
 	}
 
-	return recorder
+	rec := &reconcilerImpl{
+		Client:  {{.clientGet|raw}}(ctx),
+		Lister:  {{.type|lowercaseSingular}}Informer.Lister(),
+		Recorder: recorder,
+		reconciler:    r,
+		finalizerName: defaultFinalizerName,
+		{{if .hasClass}}classValue: classValue,{{end}}
+	}
+
+	t := {{.reflectTypeOf|raw}}(r).Elem()
+	queueName := {{.fmtSprintf|raw}}("%s.%s", {{.stringsReplaceAll|raw}}(t.PkgPath(), "/", "-"), t.Name())
+
+	impl := {{.controllerNewImpl|raw}}(rec, logger, queueName)
+
+	// Pass impl to the options. Save any optional results.
+	for _, fn := range optionsFns {
+		opts := fn(impl)
+		if opts.ConfigStore != nil {
+			rec.configStore = opts.ConfigStore
+		}
+		if opts.FinalizerName != "" {
+			rec.finalizerName = opts.FinalizerName
+		}
+	}
+
+	return impl
 }
 
 func init() {

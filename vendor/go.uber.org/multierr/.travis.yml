@@ -5,7 +5,6 @@ go_import_path: go.uber.org/multierr
 env:
   global:
     - GO15VENDOREXPERIMENT=1
-    - GO111MODULE=on
 
 go:
   - 1.11.x
@@ -19,11 +18,16 @@ cache:
 before_install:
 - go version
 
+install:
+- |
+  set -e
+  make install_ci
+
 script:
 - |
   set -e
   make lint
-  make cover
+  make test_ci
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)

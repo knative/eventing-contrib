@@ -19,7 +19,6 @@ package network
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -56,17 +55,10 @@ var backOffTemplate = wait.Backoff{
 
 var errDialTimeout = errors.New("timed out dialing")
 
-// DialWithBackOff executes `net.Dialer.DialContext()` with exponentially increasing
+// dialWithBackOff executes `net.Dialer.DialContext()` with exponentially increasing
 // dial timeouts. In addition it sleeps with random jitter between tries.
-var DialWithBackOff = NewBackoffDialer(backOffTemplate)
-
-// NewBackoffDialer returns a dialer that executes `net.Dialer.DialContext()` with
-// exponentially increasing dial timeouts. In addition it sleeps with random jitter
-// between tries.
-func NewBackoffDialer(backoffConfig wait.Backoff) func(context.Context, string, string) (net.Conn, error) {
-	return func(ctx context.Context, network, address string) (net.Conn, error) {
-		return dialBackOffHelper(ctx, network, address, backoffConfig, sleepTO)
-	}
+func dialWithBackOff(ctx context.Context, network, address string) (net.Conn, error) {
+	return dialBackOffHelper(ctx, network, address, backOffTemplate, sleepTO)
 }
 
 func dialBackOffHelper(ctx context.Context, network, address string, bo wait.Backoff, sleep time.Duration) (net.Conn, error) {
@@ -75,7 +67,6 @@ func dialBackOffHelper(ctx context.Context, network, address string, bo wait.Bac
 		KeepAlive: 5 * time.Second,
 		DualStack: true,
 	}
-	start := time.Now()
 	for {
 		c, err := dialer.DialContext(ctx, network, address)
 		if err != nil {
@@ -91,8 +82,7 @@ func dialBackOffHelper(ctx context.Context, network, address string, bo wait.Bac
 		}
 		return c, nil
 	}
-	elapsed := time.Now().Sub(start)
-	return nil, fmt.Errorf("timed out dialing after %.2fs", elapsed.Seconds())
+	return nil, errDialTimeout
 }
 
 func newHTTPTransport(connTimeout time.Duration, disableKeepAlives bool) http.RoundTripper {
@@ -107,7 +97,7 @@ func newHTTPTransport(connTimeout time.Duration, disableKeepAlives bool) http.Ro
 		DisableKeepAlives:     disableKeepAlives,
 
 		// This is bespoke.
-		DialContext: DialWithBackOff,
+		DialContext: dialWithBackOff,
 	}
 }
 
