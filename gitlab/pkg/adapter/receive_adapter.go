@@ -22,13 +22,12 @@ import (
 	"net/http"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gopkg.in/go-playground/webhooks.v5/gitlab"
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/source"
 )
 
 const (
@@ -61,7 +60,7 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 }
 
 // NewAdapter returns the instance of gitLabReceiveAdapter that implements adapter.Adapter interface
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
 
@@ -177,11 +176,16 @@ func (ra *gitLabReceiveAdapter) postMessage(payload interface{}, source, eventTy
 	event.SetID(eventID)
 	event.SetType(eventType)
 	event.SetSource(source)
-	event.SetDataContentType(cloudevents.ApplicationJSON)
-	event.SetData(payload)
+	err := event.SetData(cloudevents.ApplicationJSON, payload)
+	if err != nil {
+		return err
+	}
 
-	_, _, err := ra.client.Send(context.Background(), event)
-	return err
+	result := ra.client.Send(context.Background(), event)
+	if !cloudevents.IsACK(result) {
+		return result
+	}
+	return nil
 }
 
 func sourceFromGitLabEvent(gitLabEvent gitlab.Event, payload interface{}) string {

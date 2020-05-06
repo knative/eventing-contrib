@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"go.uber.org/zap"
 	"gopkg.in/go-playground/webhooks.v5/gitlab"
-	"knative.dev/eventing/pkg/adapter"
-	kncetesting "knative.dev/eventing/pkg/kncloudevents/testing"
+	"knative.dev/eventing/pkg/adapter/v2"
+	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/source"
@@ -155,7 +155,7 @@ var testCases = []testCase{
 }
 
 func TestGracefullShutdown(t *testing.T) {
-	ce := newTestCeClient()
+	ce := adaptertest.NewTestClient()
 	ra := newTestAdapter(t, ce)
 	stopCh := make(chan struct{}, 1)
 
@@ -174,7 +174,7 @@ func TestGracefullShutdown(t *testing.T) {
 
 func TestServer(t *testing.T) {
 	for _, tc := range testCases {
-		ce := newTestCeClient()
+		ce := adaptertest.NewTestClient()
 		ra := newTestAdapter(t, ce)
 		hook, err := gitlab.New(gitlab.Options.Secret(ra.secretToken))
 		if err != nil {
@@ -188,7 +188,7 @@ func TestServer(t *testing.T) {
 	}
 }
 
-func newTestAdapter(t *testing.T, ce *adapterTestCeClient) *gitLabReceiveAdapter {
+func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitLabReceiveAdapter {
 	env := envConfig{
 		EnvConfig: adapter.EnvConfig{
 			Namespace: "default",
@@ -196,16 +196,15 @@ func newTestAdapter(t *testing.T, ce *adapterTestCeClient) *gitLabReceiveAdapter
 		EnvSecret: secretToken,
 		Port:      "8080",
 	}
-	r := &mockReporter{}
 	ctx, _ := pkgtesting.SetupFakeContext(t)
 	logger := zap.NewExample().Sugar()
 	ctx = logging.WithLogger(ctx, logger)
 
-	return NewAdapter(ctx, &env, ce, r).(*gitLabReceiveAdapter)
+	return NewAdapter(ctx, &env, ce).(*gitLabReceiveAdapter)
 }
 
 // runner returns a testing func that can be passed to t.Run.
-func (tc *testCase) runner(t *testing.T, url string, ceClient *adapterTestCeClient) func(*testing.T) {
+func (tc *testCase) runner(t *testing.T, url string, ceClient *adaptertest.TestCloudEventsClient) func(*testing.T) {
 	return func(t *testing.T) {
 		body, _ := json.Marshal(tc.payload)
 		req, err := http.NewRequest("POST", url, bytes.NewReader(body))
@@ -238,20 +237,6 @@ func (tc *testCase) runner(t *testing.T, url string, ceClient *adapterTestCeClie
 	}
 }
 
-func newTestCeClient() *adapterTestCeClient {
-	return &adapterTestCeClient{
-		kncetesting.NewTestClient(),
-		make(chan struct{}, 1),
-	}
-}
-
-type adapterTestCeClient struct {
-	*kncetesting.TestCloudEventsClient
-	stopCh chan struct{}
-}
-
-var _ cloudevents.Client = (*adapterTestCeClient)(nil)
-
 type mockReporter struct {
 	eventCount int
 }
@@ -261,20 +246,20 @@ func (r *mockReporter) ReportEventCount(args *source.ReportArgs, responseCode in
 	return nil
 }
 
-func (tc *testCase) validateAcceptedPayload(t *testing.T, ce *adapterTestCeClient) error {
+func (tc *testCase) validateAcceptedPayload(t *testing.T, ce *adaptertest.TestCloudEventsClient) error {
 	if len(ce.Sent()) != 1 {
 		return nil
 	}
 
-	got := ce.Sent()[0].Data
+	got := ce.Sent()[0].Data()
 
 	data, err := json.Marshal(tc.payload)
 	if err != nil {
 		return fmt.Errorf("Could not marshal sent payload: %v", err)
 	}
 
-	if string(got.([]byte)) != string(data) {
-		return fmt.Errorf("Expected %q event to be sent, got %q", data, string(got.([]byte)))
+	if string(got) != string(data) {
+		return fmt.Errorf("Expected %q event to be sent, got %q", data, string(got))
 	}
 	return nil
 }
