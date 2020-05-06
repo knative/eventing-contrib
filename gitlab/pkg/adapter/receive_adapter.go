@@ -178,7 +178,7 @@ func (ra *gitLabReceiveAdapter) postMessage(payload interface{}, source, eventTy
 	event.SetSource(source)
 	err := event.SetData(cloudevents.ApplicationJSON, payload)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal event data: %w", err)
 	}
 
 	result := ra.client.Send(context.Background(), event)
