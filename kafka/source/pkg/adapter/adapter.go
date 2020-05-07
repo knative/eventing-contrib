@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"strings"
 
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/source"
 
@@ -82,7 +82,7 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 	a.logger.Info("Starting with config: ",
 		zap.String("Topics", strings.Join(a.config.Topics, ",")),
 		zap.String("ConsumerGroup", a.config.ConsumerGroup),
-		zap.String("SinkURI", a.config.SinkURI),
+		zap.String("SinkURI", a.config.Sink),
 		zap.String("Name", a.config.Name),
 		zap.String("Namespace", a.config.Namespace),
 	)

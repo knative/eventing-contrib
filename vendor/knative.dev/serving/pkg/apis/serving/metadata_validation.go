@@ -41,9 +41,10 @@ var (
 
 // ValidateObjectMetadata validates that `metadata` stanza of the
 // resources is correct.
-func ValidateObjectMetadata(meta metav1.Object) *apis.FieldError {
+func ValidateObjectMetadata(ctx context.Context, meta metav1.Object) *apis.FieldError {
+	allowZeroInitialScale := config.FromContextOrDefaults(ctx).Autoscaler.AllowZeroInitialScale
 	return apis.ValidateObjectMetadata(meta).
-		Also(autoscaling.ValidateAnnotations(meta.GetAnnotations()).
+		Also(autoscaling.ValidateAnnotations(allowZeroInitialScale, meta.GetAnnotations()).
 			Also(validateKnativeAnnotations(meta.GetAnnotations())).
 			ViaField("annotations"))
 }
@@ -140,14 +141,14 @@ func ValidateRevisionName(ctx context.Context, name, generateName string) *apis.
 	if generateName != "" {
 		if msgs := validation.NameIsDNS1035Label(generateName, true); len(msgs) > 0 {
 			return apis.ErrInvalidValue(
-				fmt.Sprintf("not a DNS 1035 label prefix: %v", msgs),
+				fmt.Sprint("not a DNS 1035 label prefix: ", msgs),
 				"metadata.generateName")
 		}
 	}
 	if name != "" {
 		if msgs := validation.NameIsDNS1035Label(name, false); len(msgs) > 0 {
 			return apis.ErrInvalidValue(
-				fmt.Sprintf("not a DNS 1035 label: %v", msgs),
+				fmt.Sprint("not a DNS 1035 label: ", msgs),
 				"metadata.name")
 		}
 		om := apis.ParentMeta(ctx)

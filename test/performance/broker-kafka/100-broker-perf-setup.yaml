@@ -87,15 +87,29 @@ data:
 
 ---
 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-test-broker
+  namespace: perf-eventing
+data:
+  channelTemplateSpec: |
+    apiVersion: messaging.knative.dev/v1alpha1
+    kind: KafkaChannel
+
+---
+
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Broker
 metadata:
   name: kafka-test-broker
   namespace: perf-eventing
 spec:
-  channelTemplateSpec:
-    apiVersion: messaging.knative.dev/v1alpha1
-    kind: KafkaChannel
+  config:
+    apiVersion: v1
+    kind: ConfigMap
+    name: kafka-test-broker
+    namespace: perf-eventing
 
 ---
 

@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/source"
 
@@ -75,7 +75,7 @@ func BenchmarkHandle(b *testing.B) {
 	a := &Adapter{
 		config: &adapterConfig{
 			EnvConfig: adapter.EnvConfig{
-				SinkURI:   sinkUrl,
+				Sink:      sinkUrl,
 				Namespace: "test",
 			},
 			Topics:        []string{"topic1", "topic2"},
