@@ -944,7 +944,6 @@ k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
 # knative.dev/eventing v0.14.1-0.20200507211745-bf60a211013c
-knative.dev/eventing/pkg/adapter
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
 knative.dev/eventing/pkg/apis/config
@@ -1022,7 +1021,6 @@ knative.dev/eventing/pkg/client/listers/sources/v1alpha1
 knative.dev/eventing/pkg/client/listers/sources/v1alpha2
 knative.dev/eventing/pkg/configmap
 knative.dev/eventing/pkg/kncloudevents
-knative.dev/eventing/pkg/kncloudevents/testing
 knative.dev/eventing/pkg/logconfig
 knative.dev/eventing/pkg/logging
 knative.dev/eventing/pkg/reconciler/names

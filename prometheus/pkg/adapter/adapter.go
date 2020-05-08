@@ -20,18 +20,18 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/robfig/cron"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/source"
 
 	"knative.dev/eventing-contrib/prometheus/pkg/apis/sources/v1alpha1"
 )
@@ -51,7 +51,6 @@ type envConfig struct {
 type prometheusAdapter struct {
 	source          string
 	ce              cloudevents.Client
-	reporter        source.StatsReporter
 	namespace       string
 	logger          *zap.SugaredLogger
 	serverURL       string
@@ -71,14 +70,13 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 }
 
 // NewAdapter creates an adapter to convert PromQL replies to CloudEvents
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
 
 	a := &prometheusAdapter{
 		source:          env.EventSource,
 		ce:              ceClient,
-		reporter:        reporter,
 		logger:          logger,
 		namespace:       env.Namespace,
 		serverURL:       env.ServerURL,
@@ -147,8 +145,9 @@ func (a *prometheusAdapter) send() {
 			a.logger.Error("Cloud Event creation error", zap.Error(err))
 			return
 		}
-		if _, _, err = a.ce.Send(context.Background(), *event); err != nil {
-			a.logger.Error("Cloud Event delivery error", zap.Error(err))
+		result := a.ce.Send(context.Background(), *event)
+		if !cloudevents.IsACK(result) {
+			a.logger.Error("Cloud Event delivery error", zap.Error(result))
 			return
 		}
 	}
@@ -159,10 +158,9 @@ func (a *prometheusAdapter) makeEvent(payload interface{}) (*cloudevents.Event, 
 	event.SetSource(a.source)
 	event.SetID(string(uuid.NewUUID()))
 	event.SetType(v1alpha1.PromQLPrometheusSourceEventType)
-	event.SetDataContentType(cloudevents.ApplicationJSON)
 
-	if err := event.SetData(payload); err != nil {
-		return nil, err
+	if err := event.SetData(cloudevents.ApplicationJSON, payload); err != nil {
+		return nil, fmt.Errorf("failed to marshal event data: %w", err)
 	}
 
 	a.logger.Info(&event)
@@ -171,13 +169,13 @@ func (a *prometheusAdapter) makeEvent(payload interface{}) (*cloudevents.Event, 
 }
 
 func (a *prometheusAdapter) makeInvocationURL() string {
-	range_query := (a.step != "")
+	rangeQuery := (a.step != "")
 	ret := a.serverURL + `/api/v1/query`
-	if range_query {
+	if rangeQuery {
 		ret += `_range`
 	}
 	ret += `?query=` + a.promQL
-	if range_query {
+	if rangeQuery {
 		ret += `&start=` + a.lastRun.Format(time.RFC3339) +
 			`&end=` + time.Now().Format(time.RFC3339) +
 			`&step=` + a.step
