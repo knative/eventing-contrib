@@ -21,17 +21,17 @@ import (
 	"os"
 
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing/pkg/reconciler/source"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client"
 	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource"
-	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
@@ -58,6 +58,7 @@ func NewController(
 		deploymentLister:    deploymentInformer.Lister(),
 		receiveAdapterImage: raImage,
 		loggingContext:      ctx,
+		configs:             source.StartWatchingSourceConfigurations(ctx, component, cmw),
 	}
 
 	impl := kafkasource.NewImpl(ctx, c)
@@ -72,7 +73,5 @@ func NewController(
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
-	cmw.Watch(logging.ConfigMapName(), c.UpdateFromLoggingConfigMap)
-	cmw.Watch(metrics.ConfigMapName(), c.UpdateFromMetricsConfigMap)
 	return impl
 }

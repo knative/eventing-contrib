@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"strings"
 
+	"go.opencensus.io/trace"
 	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/source"
@@ -116,12 +117,15 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 // --------------------------------------------------------------------
 
 func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool, error) {
+	ctx, span := trace.StartSpan(ctx, "kafka-source")
+	defer span.End()
+
 	req, err := a.httpMessageSender.NewCloudEventRequest(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	err = a.ConsumerMessageToHttpRequest(ctx, msg, req, a.logger)
+	err = a.ConsumerMessageToHttpRequest(ctx, span, msg, req, a.logger)
 	if err != nil {
 		return true, err
 	}
