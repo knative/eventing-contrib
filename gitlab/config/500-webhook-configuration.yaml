@@ -43,12 +43,21 @@ webhooks:
       namespace: knative-sources
   failurePolicy: Fail
   name: validation.webhook.gitlab.sources.knative.dev
+
 ---
-apiVersion: v1
-kind: Secret
+
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
 metadata:
-  name: gitlabsource-webhook-certs
-  namespace: knative-sources
+  name: gitlabbindings.webhook.gitlab.sources.knative.dev
   labels:
-    contrib.eventing.knative.dev/release: devel
-# The data is populated at install time.
+    samples.knative.dev/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: gitlab-source-webhook
+      namespace: knative-sources
+  failurePolicy: Fail
+  name: gitlabbindings.webhook.gitlab.sources.knative.dev

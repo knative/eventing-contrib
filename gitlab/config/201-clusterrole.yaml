@@ -65,20 +65,19 @@ rules:
   # Webhook controller needs it to update certs in secret
   - update
 
+# Deployments admin
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs: *everything
+
 # Events admin
 - apiGroups:
   - ""
   resources:
   - events
   - configmaps
-  verbs: *everything
-
-  # For actually registering our webhook.
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  - validatingwebhookconfigurations
   verbs: *everything
 
 ---

@@ -214,7 +214,6 @@ func getProjectName(projectUrl string) (string, error) {
 }
 
 func (r *Reconciler) secretFrom(namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
-	secret := &corev1.Secret{}
 	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err

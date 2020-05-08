@@ -26,12 +26,15 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-// Check that GitLabSource implements the Conditions duck type.
-var _ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
+var (
 
-var _ apis.Validatable = (*GitLabSource)(nil)
-var _ apis.Defaultable = (*GitLabSource)(nil)
-var _ runtime.Object = (*GitLabSource)(nil)
+	// Check that GitLabSource implements the Conditions duck type.
+	_ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
+
+	_ apis.Validatable = (*GitLabSource)(nil)
+	_ apis.Defaultable = (*GitLabSource)(nil)
+	_ runtime.Object   = (*GitLabSource)(nil)
+)
 
 // GitLabSourceSpec defines the desired state of GitLabSource
 // +kubebuilder:categories=all,knative,eventing,sources
