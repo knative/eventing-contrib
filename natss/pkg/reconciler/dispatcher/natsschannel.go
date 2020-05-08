@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
@@ -242,9 +243,9 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscri
 	if subscribable == nil {
 		return nil
 	}
-	subscriberStatus := make([]eventingduck.SubscriberStatus, 0)
+	subscriberStatus := make([]eventingduckv1beta1.SubscriberStatus, 0)
 	for _, sub := range subscribable.Subscribers {
-		status := eventingduck.SubscriberStatus{
+		status := eventingduckv1beta1.SubscriberStatus{
 			UID:                sub.UID,
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,

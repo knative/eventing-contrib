@@ -87,15 +87,29 @@ data:
 
 ---
 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: natss-test-broker
+  namespace: perf-eventing
+data:
+  channelTemplateSpec: |
+    apiVersion: messaging.knative.dev/v1alpha1
+    kind: NatssChannel
+
+---
+
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Broker
 metadata:
   name: natss-test-broker
   namespace: perf-eventing
 spec:
-  channelTemplateSpec:
-    apiVersion: messaging.knative.dev/v1alpha1
-    kind: NatssChannel
+  config:
+    apiVersion: v1
+    kind: ConfigMap
+    name: natss-test-broker
+    namespace: perf-eventing
 
 ---
 

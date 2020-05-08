@@ -277,9 +277,9 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1
 	if subscribable == nil {
 		return nil
 	}
-	subscriberStatus := make([]eventingduckv1alpha1.SubscriberStatus, 0)
+	subscriberStatus := make([]eventingduckv1beta1.SubscriberStatus, 0)
 	for _, sub := range subscribable.Subscribers {
-		status := eventingduckv1alpha1.SubscriberStatus{
+		status := eventingduckv1beta1.SubscriberStatus{
 			UID:                sub.UID,
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,
