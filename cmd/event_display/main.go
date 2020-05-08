@@ -21,34 +21,29 @@ import (
 	"fmt"
 	"log"
 
-	cloudevents "github.com/cloudevents/sdk-go"
-	"knative.dev/eventing/pkg/kncloudevents"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 /*
 Example Output:
 
-☁  cloudevents.Event:
+☁️  cloudevents.Event
 Validation: valid
 Context Attributes,
-  SpecVersion: 0.2
-  Type: dev.knative.eventing.samples.heartbeat
-  Source: https://knative.dev/eventing-contrib/cmd/heartbeats/#local/demo
-  ID: 3d2b5a1f-10ca-437b-a374-9c49e43c02fb
-  Time: 2019-03-14T21:21:29.366002Z
-  ContentType: application/json
-  Extensions:
-    the: 42
-    beats: true
-    heart: yes
-Transport Context,
-  URI: /
-  Host: localhost:8080
-  Method: POST
+  specversion: 1.0
+  type: dev.knative.eventing.samples.heartbeat
+  source: https://knative.dev/eventing-contrib/cmd/heartbeats/#event-test/mypod
+  id: 2b72d7bf-c38f-4a98-a433-608fbcdd2596
+  time: 2019-10-18T15:23:20.809775386Z
+  contenttype: application/json
+Extensions,
+  beats: true
+  heart: yes
+  the: 42
 Data,
   {
-    "id":162,
-    "label":""
+    "id": 2,
+    "label": ""
   }
 */
 
@@ -57,7 +52,7 @@ func display(event cloudevents.Event) {
 }
 
 func main() {
-	c, err := kncloudevents.NewDefaultClient()
+	c, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatal("Failed to create client, ", err)
 	}
