@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/kelseyhightower/envconfig"
-	"knative.dev/eventing/pkg/reconciler/source"
 
 	//k8s.io imports
 	"k8s.io/client-go/kubernetes/scheme"
@@ -30,18 +29,18 @@ import (
 	serviceclient "knative.dev/serving/pkg/client/injection/client"
 	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
 
-	//Injection imports
 	"knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
 	sourcescheme "knative.dev/eventing-contrib/gitlab/pkg/client/clientset/versioned/scheme"
 	gitlabclient "knative.dev/eventing-contrib/gitlab/pkg/client/injection/client"
 	gitlabinformer "knative.dev/eventing-contrib/gitlab/pkg/client/injection/informers/sources/v1alpha1/gitlabsource"
 	v1alpha1gitlabsource "knative.dev/eventing-contrib/gitlab/pkg/client/injection/reconciler/sources/v1alpha1/gitlabsource"
 
-	//knative.dev/pkg imports
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
+
+	"knative.dev/eventing/pkg/reconciler/source"
 )
 
 type envConfig struct {
