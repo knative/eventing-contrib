@@ -1521,8 +1521,8 @@ k8s.io/utils v0.0.0-20200124190032-861946025e34 h1:HjlUD6M0K3P8nRXmr2B9o4F9dUy9T
 k8s.io/utils v0.0.0-20200124190032-861946025e34/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=
 knative.dev/caching v0.0.0-20190719140829-2032732871ff/go.mod h1:dHXFU6CGlLlbzaWc32g80cR92iuBSpsslDNBWI8C7eg=
 knative.dev/caching v0.0.0-20200506161844-ca448db68d1e/go.mod h1:wz6R2jeEPHXnnjpClXymiumyqixYFb/2luEjZyI/wQE=
-knative.dev/eventing v0.14.1-0.20200508130445-bc8943084002 h1:Nuqu9evuluevqfVeMDrXNXeZlAlKM2A6kdW9M/0Hu6k=
-knative.dev/eventing v0.14.1-0.20200508130445-bc8943084002/go.mod h1:fO3vWf/dAXF3pvRV7M3M2GVEn5BoRo+7cfu3zZNrfo8=
+knative.dev/eventing v0.14.1-0.20200508151645-a65602d38427 h1:U0bFcTx3qri16kzO7BGQSxZPJWOVpj/5BySs/eTBzB8=
+knative.dev/eventing v0.14.1-0.20200508151645-a65602d38427/go.mod h1:fO3vWf/dAXF3pvRV7M3M2GVEn5BoRo+7cfu3zZNrfo8=
 knative.dev/eventing-contrib v0.6.1-0.20190723221543-5ce18048c08b/go.mod h1:SnXZgSGgMSMLNFTwTnpaOH7hXDzTFtw0J8OmHflNx3g=
 knative.dev/pkg v0.0.0-20191101194912-56c2594e4f11/go.mod h1:pgODObA1dTyhNoFxPZTTjNWfx6F0aKsKzn+vaT9XO/Q=
 knative.dev/pkg v0.0.0-20191111150521-6d806b998379/go.mod h1:pgODObA1dTyhNoFxPZTTjNWfx6F0aKsKzn+vaT9XO/Q=
@@ -1535,8 +1535,8 @@ knative.dev/pkg v0.0.0-20200507011344-2581370e4a37 h1:1YJwMfDREOHhMFtNEOSDqGO4Dv
 knative.dev/pkg v0.0.0-20200507011344-2581370e4a37/go.mod h1:MUQe/bW75GmlVeyHmdKag77FJWQrNH3rxt2Q9E1JZJs=
 knative.dev/pkg v0.0.0-20200508041145-19b1d7b64df3 h1:qNt1XRLZriXPA6JLZvticQCWnNvJGiRaBPX34xlI2y8=
 knative.dev/pkg v0.0.0-20200508041145-19b1d7b64df3/go.mod h1:MUQe/bW75GmlVeyHmdKag77FJWQrNH3rxt2Q9E1JZJs=
-knative.dev/serving v0.14.1-0.20200508125645-16c19636983b h1:D3+W/sguQZgjsXnKRI8WNRAHIXim7Eas3ITZyJfZg7w=
-knative.dev/serving v0.14.1-0.20200508125645-16c19636983b/go.mod h1:aTmoynyk4W9q3naDb7072+sL1XSbA6w7Cox3HCnEDU8=
+knative.dev/serving v0.14.1-0.20200508144754-1b8f6fc30e3f h1:1LSXB3uXyY/8d1P2Hxk8nWUEJROxDdpenodYppvKPhA=
+knative.dev/serving v0.14.1-0.20200508144754-1b8f6fc30e3f/go.mod h1:aTmoynyk4W9q3naDb7072+sL1XSbA6w7Cox3HCnEDU8=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5 h1:BEfxItc0hPeQmojxoiOwbCbmdVz0+L2SYWKUSQeFF8g=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
 knative.dev/test-infra v0.0.0-20200430225942-f7c1fafc1cde/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=

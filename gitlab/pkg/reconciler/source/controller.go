@@ -20,10 +20,15 @@ import (
 	"context"
 
 	"github.com/kelseyhightower/envconfig"
+	"knative.dev/eventing/pkg/reconciler/source"
 
 	//k8s.io imports
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
+
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	serviceclient "knative.dev/serving/pkg/client/injection/client"
+	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
 
 	//Injection imports
 	"knative.dev/eventing-contrib/gitlab/pkg/apis/sources/v1alpha1"
@@ -31,9 +36,6 @@ import (
 	gitlabclient "knative.dev/eventing-contrib/gitlab/pkg/client/injection/client"
 	gitlabinformer "knative.dev/eventing-contrib/gitlab/pkg/client/injection/informers/sources/v1alpha1/gitlabsource"
 	v1alpha1gitlabsource "knative.dev/eventing-contrib/gitlab/pkg/client/injection/reconciler/sources/v1alpha1/gitlabsource"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	serviceclient "knative.dev/serving/pkg/client/injection/client"
-	kserviceinformer "knative.dev/serving/pkg/client/injection/informers/serving/v1/service"
 
 	//knative.dev/pkg imports
 	"knative.dev/pkg/configmap"
@@ -49,7 +51,7 @@ type envConfig struct {
 // NewController returns the controller implementation with reconciler structure and logger
 func NewController(
 	ctx context.Context,
-	_ configmap.Watcher,
+	cmw configmap.Watcher,
 ) *controller.Impl {
 	gitlabInformer := gitlabinformer.Get(ctx)
 	serviceInformer := kserviceinformer.Get(ctx)
@@ -61,6 +63,7 @@ func NewController(
 		gitlabClientSet:  gitlabclient.Get(ctx),
 		gitlabLister:     gitlabInformer.Lister(),
 		loggingContext:   ctx,
+		configs:          source.StartWatchingSourceConfigurations(ctx, "gitlab_controller", cmw),
 	}
 
 	env := &envConfig{}
