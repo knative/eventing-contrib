@@ -67,7 +67,7 @@ type Reconciler struct {
 
 	loggingContext context.Context
 
-	configs *source.ConfigWatcher
+	configs source.ConfigAccessor
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.GitLabSource) reconciler.Event {

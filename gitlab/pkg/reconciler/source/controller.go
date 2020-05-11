@@ -62,7 +62,7 @@ func NewController(
 		gitlabClientSet:  gitlabclient.Get(ctx),
 		gitlabLister:     gitlabInformer.Lister(),
 		loggingContext:   ctx,
-		configs:          source.StartWatchingSourceConfigurations(ctx, "gitlab_controller", cmw),
+		configs:          source.WatchConfigurations(ctx, "gitlab_controller", cmw),
 	}
 
 	env := &envConfig{}
