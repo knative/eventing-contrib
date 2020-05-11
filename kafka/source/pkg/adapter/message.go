@@ -27,14 +27,16 @@ import (
 	"github.com/Shopify/sarama"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/extensions"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
+	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
-func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
+func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
 	msg := kafka_sarama.NewMessageFromConsumerMessage(cm)
 
 	defer func() {
@@ -44,9 +46,12 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.C
 		}
 	}()
 
+	// Build tracing ext to write it as output
+	tracingExt := extensions.FromSpanContext(span.SpanContext())
+
 	if msg.ReadEncoding() != binding.EncodingUnknown {
 		// Message is a CloudEvent -> Encode directly to HTTP
-		return http.WriteRequest(ctx, msg, req)
+		return http.WriteRequest(ctx, msg, req, tracingExt.WriteTransformer())
 	}
 
 	// Message is not a CloudEvent -> We need to translate it to a valid CloudEvent
@@ -67,7 +72,7 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, cm *sarama.C
 		return err
 	}
 
-	return http.WriteRequest(ctx, binding.ToMessage(&event), req)
+	return http.WriteRequest(ctx, binding.ToMessage(&event), req, tracingExt.WriteTransformer())
 }
 
 func makeEventId(partition int32, offset int64) string {

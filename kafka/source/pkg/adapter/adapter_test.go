@@ -25,20 +25,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/v2/types"
+	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/pkg/source"
-
-	"go.uber.org/zap"
-
-	"github.com/Shopify/sarama"
 
 	"knative.dev/eventing/pkg/kncloudevents"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
-func TestPostMessage_ServeHTTP(t *testing.T) {
+func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 	aTimestamp := time.Now()
 
 	testCases := map[string]struct {
@@ -60,12 +58,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "key",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "key",
 			},
 			expectedBody: `{"key":"value"}`,
 			error:        false,
@@ -81,12 +80,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "-16771305",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "-16771305",
 			},
 			expectedBody:  `{"key":"value"}`,
 			error:         false,
@@ -103,12 +103,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "0.00000000000000000000000000000000000002536316309005082",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "0.00000000000000000000000000000000000002536316309005082",
 			},
 			expectedBody:  `{"key":"value"}`,
 			error:         false,
@@ -125,12 +126,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "AQoXFw==",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "AQoXFw==",
 			},
 			expectedBody:  `{"key":"value"}`,
 			error:         false,
@@ -155,6 +157,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
+				"ce-specversion":      "1.0",
 				"ce-id":               makeEventId(1, 2),
 				"ce-time":             types.FormatTime(aTimestamp),
 				"ce-type":             sourcesv1alpha1.KafkaEventType,
@@ -186,6 +189,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
+				"ce-specversion":         "1.0",
 				"ce-id":                  makeEventId(1, 2),
 				"ce-time":                types.FormatTime(aTimestamp),
 				"ce-type":                sourcesv1alpha1.KafkaEventType,
@@ -226,24 +230,20 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				},
 				Timestamp: aTimestamp,
 			},
+			// Because we need to write the distributed tracing extension
 			expectedHeaders: map[string]string{
-				"content-type": "application/cloudevents+json",
+				"ce-specversion":          "1.0",
+				"ce-id":                   "A234-1234-1234",
+				"ce-time":                 "2018-04-05T17:31:00Z",
+				"ce-type":                 "com.github.pull.create",
+				"ce-subject":              "123",
+				"ce-source":               "https://github.com/cloudevents/spec/pull",
+				"ce-comexampleextension1": "value",
+				"ce-comexampleothervalue": "5",
+				"content-type":            "application/json",
 			},
-			expectedBody: string(mustJsonMarshal(t, map[string]interface{}{
-				"specversion":          "1.0",
-				"type":                 "com.github.pull.create",
-				"source":               "https://github.com/cloudevents/spec/pull",
-				"subject":              "123",
-				"id":                   "A234-1234-1234",
-				"time":                 "2018-04-05T17:31:00Z",
-				"comexampleextension1": "value",
-				"comexampleothervalue": 5,
-				"datacontenttype":      "application/json",
-				"data": map[string]string{
-					"hello": "Francesco",
-				},
-			})),
-			error: false,
+			expectedBody: `{"hello":"Francesco"}`,
+			error:        false,
 		},
 		"accepted_binary": {
 			sink: sinkAccepted,
@@ -301,12 +301,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "key",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "key",
 			},
 			expectedBody: `{"key":"value"}`,
 			error:        true,
@@ -322,6 +323,15 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			defer sinkServer.Close()
 
 			statsReporter, _ := source.NewStatsReporter()
+
+			// If you wanna test tracing using a local zipkin server, uncomment this
+			//tracing.SetupStaticPublishing(zap.L().Sugar(), "localhost", &tracingconfig.Config{
+			//	Backend:        tracingconfig.Zipkin,
+			//	Debug:          true,
+			//	SampleRate:     1.0,
+			//	ZipkinEndpoint: "http://localhost:9411/api/v2/spans",
+			//})
+			//defer time.Sleep(1 * time.Second)
 
 			s, err := kncloudevents.NewHttpMessageSender(nil, sinkServer.URL)
 			if err != nil {
@@ -350,12 +360,32 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected error, but got %v", err)
 			}
 
+			// Remove headers we aren't interested to test
+			h.header.Del("user-agent")
+			h.header.Del("accept-encoding")
+			h.header.Del("content-length")
+
 			// Check headers
 			for k, expected := range tc.expectedHeaders {
 				actual := h.header.Get(k)
 				if actual != expected {
 					t.Errorf("Expected header with key %s: '%q', but got '%q'", k, expected, actual)
 				}
+				h.header.Del(k)
+			}
+
+			// Check tracing headers
+			if h.header.Get("traceparent") == "" {
+				t.Errorf("Expected traceparent header")
+			}
+			h.header.Del("traceparent")
+			if h.header.Get("ce-traceparent") == "" {
+				t.Errorf("Expected ce-traceparent header")
+			}
+			h.header.Del("ce-traceparent")
+
+			if len(h.header) != 0 {
+				t.Errorf("Unexpected headers: %v", h.header)
 			}
 
 			// Check body
