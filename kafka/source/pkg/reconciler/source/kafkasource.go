@@ -96,7 +96,7 @@ type Reconciler struct {
 
 	sinkResolver *resolver.URIResolver
 
-	configs *source.ConfigWatcher
+	configs source.ConfigAccessor
 }
 
 // Check that our Reconciler implements Interface
