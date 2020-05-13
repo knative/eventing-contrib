@@ -69,7 +69,7 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	}
 	args = append(args, "/etc/mounted/payload")
 
-	client.T.Logf("Running kafkacat %v", args)
+	client.T.Logf("Running kafkacat %s", strings.Join(args, " "))
 
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

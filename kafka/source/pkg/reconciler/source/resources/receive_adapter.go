@@ -57,7 +57,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		Name:  "KAFKA_NET_TLS_ENABLE",
 		Value: strconv.FormatBool(args.Source.Spec.Net.TLS.Enable),
 	}, {
-		Name:  "SINK_URI",
+		Name:  "K_SINK",
 		Value: args.SinkURI,
 	}, {
 		Name:  "NAME",
