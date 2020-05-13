@@ -70,8 +70,6 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 }
 
 func TestKafkaSource(t *testing.T) {
-	t.Skipf("failing e2e tests. TODO: Fix this.")
-
 	tests := map[string]struct {
 		messageKey         string
 		messageHeaders     map[string]string
