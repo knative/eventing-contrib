@@ -26,3 +26,23 @@ subjects:
 - kind: ServiceAccount
   name: awssqs-controller-manager
   namespace: knative-sources
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eventing-sources-awssqs-controller-addressable-resolver
+  labels:
+    contrib.eventing.knative.dev/release: devel
+subjects:
+- kind: ServiceAccount
+  name: awssqs-controller-manager
+  namespace: knative-sources
+# An aggregated ClusterRole for all Addressable CRDs.
+# Ref: https://knative.dev/eventing/blob/master/config/200-addressable-resolvers-clusterrole.yaml
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: addressable-resolver
+
