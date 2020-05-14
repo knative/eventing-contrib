@@ -61,12 +61,12 @@ type payload struct {
 func gotEvent(inputEvent event.Event) (*event.Event, protocol.Result) {
 	data := &payload{}
 	if err := inputEvent.DataAs(data); err != nil {
-		log.Printf("Got error while unmarshalling data: %s\n", err.Error())
+		log.Printf("Got error while unmarshalling data: %s", err.Error())
 		return nil, http.NewResult(400, "got error while unmarshalling data: %w", err)
 	}
 
 	log.Println("Received a new event: ")
-	log.Printf("[%v] %s %s: %+v\n", inputEvent.Time(), inputEvent.Source(), inputEvent.Type(), data)
+	log.Printf("[%v] %s %s: %+v", inputEvent.Time(), inputEvent.Source(), inputEvent.Type(), data)
 
 	// append eventMsgAppender to message of the data
 	data.Message = data.Message + env.Msg
@@ -75,7 +75,7 @@ func gotEvent(inputEvent event.Event) (*event.Event, protocol.Result) {
 	outputEvent := inputEvent.Clone()
 
 	if err := outputEvent.SetData(cloudevents.ApplicationJSON, data); err != nil {
-		log.Printf("Got error while marshalling data: %s\n", err.Error())
+		log.Printf("Got error while marshalling data: %s", err.Error())
 		return nil, http.NewResult(500, "got error while marshalling data: %w", err)
 	}
 
@@ -85,7 +85,7 @@ func gotEvent(inputEvent event.Event) (*event.Event, protocol.Result) {
 	}
 
 	log.Println("Transform the event to: ")
-	log.Printf("[%s] %s %s: %+v\n", outputEvent.Time(), outputEvent.Source(), outputEvent.Type(), data)
+	log.Printf("[%s] %s %s: %+v", outputEvent.Time(), outputEvent.Source(), outputEvent.Type(), data)
 
 	return &outputEvent, nil
 }
