@@ -21,9 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"knative.dev/eventing/pkg/kncloudevents"
-
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 type Heartbeat struct {
@@ -32,20 +30,19 @@ type Heartbeat struct {
 }
 
 func receive(event cloudevents.Event) {
-	ec := event.Context.AsV02()
 	hb := &Heartbeat{}
 	if err := event.DataAs(hb); err != nil {
 		fmt.Printf("got data error: %s\n", err.Error())
 	}
 	log.Printf("CloudEvent:\n%s", event)
-	log.Printf("[%s] %s %s: ", ec.Time, event.DataContentType(), ec.Source.String())
-	log.Printf("\t%d, %q", hb.Sequence, hb.Label)
+	log.Printf("[%s] %s %s: ", event.Time(), event.DataContentType(), event.Source())
+	log.Printf("\tSequence number: %d, label: %q", hb.Sequence, hb.Label)
 }
 
 func main() {
 	ctx := context.TODO()
 
-	c, err := kncloudevents.NewDefaultClient()
+	c, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())
 	}
