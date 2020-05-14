@@ -18,27 +18,31 @@ package adapter
 
 import (
 	"bytes"
-	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-	"strings"
 	"testing"
+	"time"
 
 	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing/pkg/adapter/v2"
+	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
+	"knative.dev/pkg/logging"
+	pkgtesting "knative.dev/pkg/reconciler/testing"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/go-cmp/cmp"
-
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"go.uber.org/zap"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
 )
 
 const (
 	testSubject   = "1234"
 	testOwnerRepo = "test-user/test-repo"
+	secretToken   = "gitHubsecret"
+	eventID       = "12345"
 )
 
 var (
@@ -49,16 +53,6 @@ var (
 type testCase struct {
 	// name is a descriptive name for this test suitable as a first argument to t.Run()
 	name string
-
-	// sink the response from the fake sink
-	sink func(http.ResponseWriter, *http.Request)
-
-	// wantErr is true when we expect the test to return an error.
-	wantErr bool
-
-	// wantErrMsg contains the pattern to match the returned error message.
-	// Implies wantErr = true.
-	wantErrMsg string
 
 	// payload contains the GitHub event payload
 	payload interface{}
@@ -82,9 +76,10 @@ var testCases = []testCase{
 		payload: func() interface{} {
 			pl := gh.CheckSuitePayload{}
 			id, _ := strconv.ParseInt(testSubject, 10, 64)
-			pl.Repository.ID = id
+			pl.CheckSuite.ID = id
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "check_suite",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -94,7 +89,9 @@ var testCases = []testCase{
 			pl.Comment.HTMLURL = fmt.Sprintf("http://test/%s", testSubject)
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "commit_comment",
+		wantCloudEventType:    "dev.knative.source.github.commit_comment",
 		wantCloudEventSubject: testSubject,
 	}, {
 		name: "valid create",
@@ -103,6 +100,7 @@ var testCases = []testCase{
 			pl.RefType = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "create",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -112,6 +110,7 @@ var testCases = []testCase{
 			pl.RefType = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "delete",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -122,6 +121,7 @@ var testCases = []testCase{
 			pl.Deployment.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "deployment",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -132,6 +132,7 @@ var testCases = []testCase{
 			pl.Deployment.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "deployment_status",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -142,6 +143,7 @@ var testCases = []testCase{
 			pl.Forkee.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "fork",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -151,6 +153,7 @@ var testCases = []testCase{
 			// Leaving the subject as empty.
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "gollum",
 		wantCloudEventSubject: "",
 	}, {
@@ -161,6 +164,7 @@ var testCases = []testCase{
 			pl.Installation.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "installation",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -171,6 +175,7 @@ var testCases = []testCase{
 			pl.Installation.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "integration_installation",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -180,6 +185,7 @@ var testCases = []testCase{
 			pl.Comment.HTMLURL = fmt.Sprintf("http://test/%s", testSubject)
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "issue_comment",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -190,6 +196,7 @@ var testCases = []testCase{
 			pl.Issue.Number = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "issues",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -199,6 +206,7 @@ var testCases = []testCase{
 			pl.Label.Name = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "label",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -209,6 +217,7 @@ var testCases = []testCase{
 			pl.Member.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "member",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -219,6 +228,7 @@ var testCases = []testCase{
 			pl.Member.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "membership",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -229,6 +239,7 @@ var testCases = []testCase{
 			pl.Milestone.Number = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "milestone",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -238,6 +249,7 @@ var testCases = []testCase{
 			pl.Action = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "organization",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -247,6 +259,7 @@ var testCases = []testCase{
 			pl.Action = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "org_block",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -257,6 +270,7 @@ var testCases = []testCase{
 			pl.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "page_build",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -267,6 +281,7 @@ var testCases = []testCase{
 			pl.HookID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "ping",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -276,6 +291,7 @@ var testCases = []testCase{
 			pl.Action = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "project_card",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -285,6 +301,7 @@ var testCases = []testCase{
 			pl.Action = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "project_column",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -294,6 +311,7 @@ var testCases = []testCase{
 			pl.Action = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "project",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -304,8 +322,10 @@ var testCases = []testCase{
 			pl.Repository.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "public",
 		wantCloudEventSubject: testSubject,
+		wantCloudEventType:    "dev.knative.source.github.public",
 	}, {
 		name: "valid pull_request",
 		payload: func() interface{} {
@@ -314,6 +334,7 @@ var testCases = []testCase{
 			pl.PullRequest.Number = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "pull_request",
 		wantCloudEventType:    "dev.knative.source.github.pull_request",
 		wantCloudEventSubject: testSubject,
@@ -325,6 +346,7 @@ var testCases = []testCase{
 			pl.Review.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "pull_request_review",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -335,6 +357,7 @@ var testCases = []testCase{
 			pl.Comment.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "pull_request_review_comment",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -344,6 +367,7 @@ var testCases = []testCase{
 			pl.Compare = fmt.Sprintf("http://test/%s", testSubject)
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "push",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -353,6 +377,7 @@ var testCases = []testCase{
 			pl.Release.TagName = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "release",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -363,6 +388,7 @@ var testCases = []testCase{
 			pl.Repository.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "repository",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -372,6 +398,7 @@ var testCases = []testCase{
 			pl.Sha = testSubject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "status",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -382,6 +409,7 @@ var testCases = []testCase{
 			pl.Team.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "team",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -392,6 +420,7 @@ var testCases = []testCase{
 			pl.Repository.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "team_add",
 		wantCloudEventSubject: testSubject,
 	}, {
@@ -402,236 +431,125 @@ var testCases = []testCase{
 			pl.Repository.ID = subject
 			return pl
 		}(),
+		eventID:               eventID,
 		eventType:             "watch",
 		wantCloudEventSubject: testSubject,
 	},
 }
 
-// mockTransport is a simple fake HTTP transport
-type mockTransport func(req *http.Request) (*http.Response, error)
+func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitHubAdapter {
+	env := envConfig{
+		EnvConfig: adapter.EnvConfig{
+			Namespace: "default",
+		},
+		EnvSecret:    secretToken,
+		EnvPort:      "8080",
+		EnvOwnerRepo: "test.repo",
+	}
+	ctx, _ := pkgtesting.SetupFakeContext(t)
+	logger := zap.NewExample().Sugar()
+	ctx = logging.WithLogger(ctx, logger)
 
-// RoundTrip implements the required RoundTripper interface for
-// mockTransport
-func (mt mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return mt(req)
+	return NewAdapter(ctx, &env, ce).(*gitHubAdapter)
 }
 
-// TestAllCases runs all the table tests
-func TestAllCases(t *testing.T) {
-	for _, tc := range testCases {
-		h := &fakeHandler{
-			//handler: tc.sink,
-			handler: sinkAccepted, // No tests expect the sink to do anything interesting
-		}
-		sinkServer := httptest.NewServer(h)
-		defer sinkServer.Close()
+func TestGracefullShutdown(t *testing.T) {
+	ce := adaptertest.NewTestClient()
+	ra := newTestAdapter(t, ce)
+	stopCh := make(chan struct{}, 1)
 
-		ra, err := New(sinkServer.URL, testOwnerRepo)
+	go func(stopCh chan struct{}) {
+		defer close(stopCh)
+		time.Sleep(time.Second)
+
+	}(stopCh)
+
+	t.Logf("starting webhook server")
+	err := ra.Start(stopCh)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestServer(t *testing.T) {
+	for _, tc := range testCases {
+		ce := adaptertest.NewTestClient()
+		adapter := newTestAdapter(t, ce)
+		hook, err := gh.New()
 		if err != nil {
 			t.Fatal(err)
 		}
+		router := adapter.newRouter(hook)
+		server := httptest.NewServer(router)
+		defer server.Close()
 
-		t.Run(tc.name, tc.runner(t, *ra))
+		t.Run(tc.name, tc.runner(t, server.URL, ce))
 	}
 }
 
 // runner returns a testing func that can be passed to t.Run.
-func (tc *testCase) runner(t *testing.T, ra Adapter) func(t *testing.T) {
+func (tc *testCase) runner(t *testing.T, url string, ceClient *adaptertest.TestCloudEventsClient) func(t *testing.T) {
 	return func(t *testing.T) {
 		if tc.eventType == "" {
 			t.Fatal("eventType is required for table tests")
 		}
-		eventID := "12345"
-		if tc.eventID != "" {
-			eventID = tc.eventID
+		body, _ := json.Marshal(tc.payload)
+		req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
 		}
-		hdr := http.Header{}
-		hdr.Set("X-GitHub-Event", tc.eventType)
-		hdr.Set("X-GitHub-Delivery", eventID)
-		evtErr := ra.handleEvent(tc.payload, hdr)
 
-		if err := tc.verifyErr(evtErr); err != nil {
+		req.Header.Set(GHHeaderEvent, tc.eventType)
+		req.Header.Set(GHHeaderDelivery, eventID)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
 			t.Error(err)
 		}
+		defer resp.Body.Close()
+
+		tc.validateAcceptedPayload(t, ceClient)
 	}
 }
 
-func (tc *testCase) handleRequest(req *http.Request) (*http.Response, error) {
-
-	codec := cehttp.Codec{}
-
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		return nil, err
-	}
-	msg := &cehttp.Message{
-		Header: req.Header,
-		Body:   body,
-	}
-
-	event, err := codec.Decode(context.Background(), msg)
-	if err != nil {
-		return nil, fmt.Errorf("unexpected error decoding cloudevent: %s", err)
-	}
-
-	if tc.wantCloudEventType != "" && tc.wantCloudEventType != event.Type() {
-		return nil, fmt.Errorf("want cloud event type %s, got %s",
-			tc.wantCloudEventType, event.Type())
-	}
-
-	gotSource := event.Source()
-	if testSource != gotSource {
-		return nil, fmt.Errorf("want source %s, got %s", testSource, gotSource)
-	}
-
-	gotSubject := event.Context.GetSubject()
-	if tc.wantCloudEventSubject != "" && tc.wantCloudEventSubject != gotSubject {
-		return nil, fmt.Errorf("want subject %s, got %s", tc.wantCloudEventSubject, gotSubject)
-	}
-
-	return &http.Response{
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBufferString("")),
-		Header:     make(http.Header),
-	}, nil
-}
-
-func (tc *testCase) verifyErr(err error) error {
-	wantErr := tc.wantErr || tc.wantErrMsg != ""
-
-	if wantErr && err == nil {
-		return errors.New("want error, got nil")
-	}
-
-	if !wantErr && err != nil {
-		return fmt.Errorf("want no error, got %v", err)
-	}
-
-	if err != nil {
-		if diff := cmp.Diff(tc.wantErrMsg, err.Error()); diff != "" {
-			return fmt.Errorf("incorrect error (-want, +got): %v", diff)
-		}
-	}
-	return nil
-}
-
-// Direct Unit tests
-
-var (
-	// Headers that are added to the response, but we don't want to check in our assertions.
-	unimportantHeaders = map[string]struct{}{
-		"accept-encoding": {},
-		"content-length":  {},
-		"user-agent":      {},
-		"ce-time":         {},
-		"ce-traceparent":  {},
-		"traceparent":     {},
-		"x-b3-sampled":    {},
-		"x-b3-spanid":     {},
-		"x-b3-traceid":    {},
-	}
-)
-
-type requestValidation struct {
-	Host    string
-	Headers http.Header
-	Body    string
-}
-
-func TestHandleEvent(t *testing.T) {
-	eventID := "12345"
-	eventType := "pull_request"
-
-	expectedRequest := requestValidation{
-		Headers: map[string][]string{
-			"ce-specversion": {"1.0"},
-			"ce-id":          {"12345"},
-			"ce-time":        {"2019-01-29T09:35:10.69383396-08:00"},
-			"ce-type":        {"dev.knative.source.github.pull_request"},
-			"ce-source":      {testSource},
-			"ce-subject":     {testSubject},
-			"content-type":   {"application/json"},
-		},
-		Body: `{"action":"","number":0,"pull_request":{"url":"","id":0,"node_id":"","html_url":"","diff_url":"","patch_url":"","issue_url":"","number":1234,"state":"","locked":false,"title":"","user":{"login":"","id":0,"node_id":"","avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"body":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","closed_at":null,"merged_at":null,"merge_commit_sha":null,"assignee":null,"assignees":null,"milestone":null,"commits_url":"","review_comments_url":"","review_comment_url":"","comments_url":"","statuses_url":"","labels":null,"head":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"node_id":"","avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"node_id":"","name":"","full_name":"","owner":{"login":"","id":0,"node_id":"","avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"base":{"label":"","ref":"","sha":"","user":{"login":"","id":0,"node_id":"","avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"repo":{"id":0,"node_id":"","name":"","full_name":"","owner":{"login":"","id":0,"node_id":"","avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""}},"_links":{"self":{"href":""},"html":{"href":""},"issue":{"href":""},"comments":{"href":""},"review_comments":{"href":""},"review_comment":{"href":""},"commits":{"href":""},"statuses":{"href":""}},"merged":false,"mergeable":null,"mergeable_state":"","merged_by":null,"comments":0,"review_comments":0,"commits":0,"additions":0,"deletions":0,"changed_files":0},"label":{"id":0,"node_id":"","description":"","url":"","name":"","color":"","default":false},"repository":{"id":0,"node_id":"","name":"","full_name":"","owner":{"login":"","node_id":"","id":0,"avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"private":false,"html_url":"","description":"","fork":false,"url":"","forks_url":"","keys_url":"","collaborators_url":"","teams_url":"","hooks_url":"","issue_events_url":"","events_url":"","assignees_url":"","branches_url":"","tags_url":"","blobs_url":"","git_tags_url":"","git_refs_url":"","trees_url":"","statuses_url":"","languages_url":"","stargazers_url":"","contributors_url":"","subscribers_url":"","subscription_url":"","commits_url":"","git_commits_url":"","comments_url":"","issue_comment_url":"","contents_url":"","compare_url":"","merges_url":"","archive_url":"","downloads_url":"","issues_url":"","pulls_url":"","milestones_url":"","notifications_url":"","labels_url":"","releases_url":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z","pushed_at":"0001-01-01T00:00:00Z","git_url":"","ssh_url":"","clone_url":"","svn_url":"","homepage":null,"size":0,"stargazers_count":0,"watchers_count":0,"language":null,"has_issues":false,"has_downloads":false,"has_wiki":false,"has_pages":false,"forks_count":0,"mirror_url":null,"open_issues_count":0,"forks":0,"open_issues":0,"watchers":0,"default_branch":""},"sender":{"login":"","id":0,"node_id":"","avatar_url":"","gravatar_id":"","url":"","html_url":"","followers_url":"","following_url":"","gists_url":"","starred_url":"","subscriptions_url":"","organizations_url":"","repos_url":"","events_url":"","received_events_url":"","type":"","site_admin":false},"assignee":null,"requested_reviewer":null,"requested_team":{"name":"","id":0,"node_id":"","slug":"","description":"","privacy":"","url":"","html_url":"","members_url":"","repositories_url":"","permission":""},"installation":{"id":0}}`,
-	}
-
-	h := &fakeHandler{
-		//handler: tc.sink,
-		handler: sinkAccepted, // No tests expect the sink to do anything interesting
-	}
-	sinkServer := httptest.NewServer(h)
-	defer sinkServer.Close()
-
-	ra, err := New(sinkServer.URL, testOwnerRepo)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	payload := gh.PullRequestPayload{}
-	subject, _ := strconv.ParseInt(testSubject, 10, 64)
-	payload.PullRequest.Number = subject
-	header := http.Header{}
-	header.Set("X-"+GHHeaderEvent, eventType)
-	header.Set("X-"+GHHeaderDelivery, eventID)
-	ra.HandleEvent(payload, http.Header(header))
-
-	// TODO(https://knative.dev/pkg/issues/250): clean this up when there is a shared test client.
-
-	canonicalizeHeaders(expectedRequest)
-	if diff := cmp.Diff(expectedRequest.Headers, h.header); diff != "" {
-		t.Errorf("Unexpected difference (-want, +got): %v", diff)
-	}
-
-	if diff := cmp.Diff(expectedRequest.Body, string(h.body)); diff != "" {
-		t.Errorf("Unexpected difference (-want, +got): %v", diff)
-	}
-}
-
-type fakeHandler struct {
-	body   []byte
-	header http.Header
-
-	handler func(http.ResponseWriter, *http.Request)
-}
-
-func (h *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "can not read body", http.StatusBadRequest)
+func (tc *testCase) validateAcceptedPayload(t *testing.T, ce *adaptertest.TestCloudEventsClient) {
+	t.Helper()
+	if len(ce.Sent()) != 1 {
 		return
 	}
-	h.body = body
-	h.header = make(map[string][]string)
+	eventSubject := ce.Sent()[0].Subject()
+	if eventSubject != tc.wantCloudEventSubject {
+		t.Fatalf("Expected %q event subject to be sent, got %q", tc.wantCloudEventSubject, eventSubject)
+	}
 
-	for n, v := range r.Header {
-		ln := strings.ToLower(n)
-		if _, present := unimportantHeaders[ln]; !present {
-			h.header[ln] = v
+	if tc.wantCloudEventType != "" {
+		eventType := ce.Sent()[0].Type()
+		if eventType != tc.wantCloudEventType {
+			t.Fatalf("Expected %q event type to be sent, got %q", tc.wantCloudEventType, eventType)
 		}
 	}
 
-	defer r.Body.Close()
-	h.handler(w, r)
-}
+	eventID := ce.Sent()[0].ID()
+	if eventID != tc.eventID {
+		t.Fatalf("Expected %q event id to be sent, got %q", tc.eventID, eventID)
+	}
+	data := ce.Sent()[0].Data()
 
-func sinkAccepted(writer http.ResponseWriter, req *http.Request) {
-	writer.WriteHeader(http.StatusOK)
-}
+	var got interface{}
+	var want interface{}
 
-func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
-	writer.WriteHeader(http.StatusRequestTimeout)
-}
-
-func canonicalizeHeaders(rvs ...requestValidation) {
-	// HTTP header names are case-insensitive, so normalize them to lower case for comparison.
-	for _, rv := range rvs {
-		headers := rv.Headers
-		for n, v := range headers {
-			delete(headers, n)
-			ln := strings.ToLower(n)
-			if _, present := unimportantHeaders[ln]; !present {
-				headers[ln] = v
-			}
-		}
+	err := json.Unmarshal(data, &got)
+	if err != nil {
+		t.Fatalf("Could not unmarshal sent data: %v", err)
+	}
+	payload, err := json.Marshal(tc.payload)
+	if err != nil {
+		t.Fatalf("Could not marshal sent payload: %v", err)
+	}
+	err = json.Unmarshal(payload, &want)
+	if err != nil {
+		t.Fatalf("Could not unmarshal sent payload: %v", err)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("unexpected event data (-want, +got) = %v", diff)
 	}
 }
