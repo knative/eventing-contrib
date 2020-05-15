@@ -51,6 +51,17 @@ spec:
           requests:
             cpu: 20m
             memory: 20Mi
+
+        readinessProbe: &probe
+          periodSeconds: 1
+          httpGet:
+            scheme: HTTPS
+            port: 8443
+            httpHeaders:
+            - name: k-kubelet-probe
+              value: "webhook"
+        livenessProbe: *probe
+
       serviceAccount: kafka-controller-manager
       terminationGracePeriodSeconds: 10
 
