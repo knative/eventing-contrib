@@ -196,7 +196,7 @@ func TestAdapter_CreateChannel(t *testing.T) {
 		reporter: 		   statsReporter,
 	}
 
-	for i := 1; i <= 10000; i++ {
+	for i := 1; i <= 2048; i++ {
 		channel, _ := a.CreateChannel(nil, conn, logging.FromContext(context.TODO()))
 		if channel == nil {
 			t.Logf("Failed to open a channel")
