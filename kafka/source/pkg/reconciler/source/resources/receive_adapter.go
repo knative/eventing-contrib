@@ -31,18 +31,17 @@ import (
 )
 
 type ReceiveAdapterArgs struct {
-	Image         string
-	Source        *v1alpha1.KafkaSource
-	Labels        map[string]string
-	SinkURI       string
-	MetricsConfig string
-	LoggingConfig string
+	Image          string
+	Source         *v1alpha1.KafkaSource
+	Labels         map[string]string
+	SinkURI        string
+	AdditionalEnvs []corev1.EnvVar
 }
 
 func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	replicas := int32(1)
 
-	env := []corev1.EnvVar{{
+	env := append([]corev1.EnvVar{{
 		Name:  "KAFKA_BOOTSTRAP_SERVERS",
 		Value: strings.Join(args.Source.Spec.BootstrapServers, ","),
 	}, {
@@ -58,7 +57,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		Name:  "KAFKA_NET_TLS_ENABLE",
 		Value: strconv.FormatBool(args.Source.Spec.Net.TLS.Enable),
 	}, {
-		Name:  "SINK_URI",
+		Name:  "K_SINK",
 		Value: args.SinkURI,
 	}, {
 		Name:  "NAME",
@@ -66,13 +65,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	}, {
 		Name:  "NAMESPACE",
 		Value: args.Source.Namespace,
-	}, {
-		Name:  "K_LOGGING_CONFIG",
-		Value: args.LoggingConfig,
-	}, {
-		Name:  "K_METRICS_CONFIG",
-		Value: args.MetricsConfig,
-	}}
+	}}, args.AdditionalEnvs...)
 
 	if val, ok := args.Source.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
 		env = append(env, corev1.EnvVar{

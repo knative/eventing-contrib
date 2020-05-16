@@ -19,10 +19,11 @@ package resources
 import (
 	"testing"
 
-	v1 "k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/pkg/kmp"
@@ -103,7 +104,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 	})
 
 	one := int32(1)
-	want := &v1.Deployment{
+	want := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    "source-namespace",
 			GenerateName: "source-name-",
@@ -112,7 +113,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 				"test-key2": "test-value2",
 			},
 		},
-		Spec: v1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"test-key1": "test-value1",
@@ -274,7 +275,7 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 	})
 
 	one := int32(1)
-	want := &v1.Deployment{
+	want := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    "source-namespace",
 			GenerateName: "source-name-",
@@ -283,7 +284,7 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 				"test-key2": "test-value2",
 			},
 		},
-		Spec: v1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"test-key1": "test-value1",
@@ -504,7 +505,7 @@ func TestMakeReceiveAdapterKeyType(t *testing.T) {
 	})
 
 	one := int32(1)
-	want := &v1.Deployment{
+	want := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    "source-namespace",
 			GenerateName: "source-name-",
@@ -513,7 +514,7 @@ func TestMakeReceiveAdapterKeyType(t *testing.T) {
 				"test-key2": "test-value2",
 			},
 		},
-		Spec: v1.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"test-key1": "test-value1",

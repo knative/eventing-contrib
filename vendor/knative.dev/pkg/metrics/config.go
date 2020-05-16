@@ -21,20 +21,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.opencensus.io/stats"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/metrics/metricskey"
-)
-
-const (
-	DomainEnv = "METRICS_DOMAIN"
 )
 
 // metricsBackend specifies the backend to use for metrics
@@ -53,6 +51,8 @@ const (
 	StackdriverGCPLocationKey = "metrics.stackdriver-gcp-location"
 	StackdriverClusterNameKey = "metrics.stackdriver-cluster-name"
 	StackdriverUseSecretKey   = "metrics.stackdriver-use-secret"
+
+	DomainEnv = "METRICS_DOMAIN"
 
 	// Stackdriver is used for Stackdriver backend
 	Stackdriver metricsBackend = "stackdriver"
@@ -119,6 +119,8 @@ type metricsConfig struct {
 	stackdriverClientConfig StackdriverClientConfig
 }
 
+var logOnce sync.Once
+
 // StackdriverClientConfig encapsulates the metadata required to configure a Stackdriver client.
 type StackdriverClientConfig struct {
 	// ProjectID is the stackdriver project ID to which data is uploaded.
@@ -153,7 +155,21 @@ func NewStackdriverClientConfigFromMap(config map[string]string) *StackdriverCli
 // record applies the `ros` Options to each measurement in `mss` and then records the resulting
 // measurements in the metricsConfig's designated backend.
 func (mc *metricsConfig) record(ctx context.Context, mss []stats.Measurement, ros ...stats.Options) error {
-	if mc == nil || mc.recorder == nil {
+	if mc == nil {
+		logOnce.Do(func() {
+			log.Println(`The metricsConfig has not been initialized yet.
+If this is a Go unit test consuming metric.Record(...) or metric.RecordBatch(...) then
+it should add the following import:
+import (
+	_ "knative.dev/pkg/metrics/testing"
+)`)
+		})
+
+		// Don't record data points if the metric config is not initialized yet.
+		// At this point, it's unclear whether should record or not.
+		return nil
+	}
+	if mc.recorder == nil {
 		return stats.RecordWithOptions(ctx, append(ros, stats.WithMeasurements(mss...))...)
 	}
 	return mc.recorder(ctx, mss, ros...)

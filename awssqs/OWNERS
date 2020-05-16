@@ -1,0 +1,9 @@
+approvers:
+  - awssqs-approvers
+
+reviewers:
+  - awssqs-reviewers
+
+labels:
+  - area/awssqs
+

@@ -36,6 +36,7 @@ COMPONENTS=(
   ["natss-channel.yaml"]="natss/config"
   ["prometheus-source.yaml"]="prometheus/config"
   ["rabbitmq.yaml"]="rabbitmq/source/config"
+  ["websocket-source.yaml"]="config/tools/websocket-source"
 )
 readonly COMPONENTS
 
