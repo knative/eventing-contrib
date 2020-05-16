@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
+	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/kmeta"
 
 	//knative.dev/serving imports
@@ -45,7 +46,6 @@ import (
 
 	//knative.dev/pkg imports
 
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 )
@@ -66,7 +66,8 @@ type Reconciler struct {
 	sinkResolver     *resolver.URIResolver
 
 	loggingContext context.Context
-	loggingConfig  *logging.Config
+
+	configs source.ConfigAccessor
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.GitLabSource) reconciler.Event {
@@ -230,7 +231,8 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 	labels := map[string]string{
 		"receive-adapter": "gitlab",
 	}
-	env := []corev1.EnvVar{
+
+	env := append([]corev1.EnvVar{
 		{
 			Name: "GITLAB_SECRET_TOKEN",
 			ValueFrom: &corev1.EnvVarSource{
@@ -245,14 +247,8 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 		}, {
 			Name:  "METRICS_DOMAIN",
 			Value: "knative.dev/eventing",
-		}, {
-			Name:  "K_METRICS_CONFIG",
-			Value: "",
-		}, {
-			Name:  "K_LOGGING_CONFIG",
-			Value: "",
-		},
-	}
+		}},
+		r.configs.ToEnvVars()...)
 	return &servingv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", source.Name),

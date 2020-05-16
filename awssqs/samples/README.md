@@ -54,7 +54,7 @@ aws_secret_access_key = ...
 Then create a secret for the downloaded key:
 
 ```shell
-kubectl -n knative-sources create secret generic awssqs-source-credentials --from-file=credentials=PATH_TO_CREDENTIALS_FILE
+kubectl -n knative-sources create secret generic awssqs-credentials --from-file=credentials=PATH_TO_CREDENTIALS_FILE
 ```
 
 ### Set up [Kube2IAM](https://github.com/jtblin/kube2iam) credentials

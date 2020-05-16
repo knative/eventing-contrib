@@ -40,7 +40,7 @@ subjects:
   name: camel-controller-manager
   namespace: knative-sources
 # An aggregated ClusterRole for all Addressable CRDs.
-# Ref: https://github.com/knative/eventing/blob/master/config/200-addressable-resolvers-clusterrole.yaml
+# Ref: https://github.com/knative/eventing/tree/master/config/core/rolesaddressable-resolvers-clusterrole.yaml
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

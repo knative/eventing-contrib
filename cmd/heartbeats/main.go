@@ -28,9 +28,7 @@ import (
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing/pkg/kncloudevents"
-
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -96,7 +94,12 @@ func main() {
 		ceOverrides = &overrides
 	}
 
-	c, err := kncloudevents.NewDefaultClient(sink)
+	p, err := cloudevents.NewHTTP(cloudevents.WithTarget(sink))
+	if err != nil {
+		log.Fatalf("failed to create http protocol: %s", err.Error())
+	}
+
+	c, err := cloudevents.NewClient(p, cloudevents.WithUUIDs(), cloudevents.WithTimeNow())
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())
 	}
@@ -127,7 +130,6 @@ func main() {
 		event := cloudevents.NewEvent("1.0")
 		event.SetType(eventType)
 		event.SetSource(eventSource)
-		event.SetDataContentType(cloudevents.ApplicationJSON)
 		event.SetExtension("the", 42)
 		event.SetExtension("heart", "yes")
 		event.SetExtension("beats", true)
@@ -138,12 +140,12 @@ func main() {
 			}
 		}
 
-		if err := event.SetData(hb); err != nil {
+		if err := event.SetData(cloudevents.ApplicationJSON, hb); err != nil {
 			log.Printf("failed to set cloudevents data: %s", err.Error())
 		}
 
 		log.Printf("sending cloudevent to %s", sink)
-		if _, _, err := c.Send(context.Background(), event); err != nil {
+		if res := c.Send(context.Background(), event); !cloudevents.IsACK(res) {
 			log.Printf("failed to send cloudevent: %s", err.Error())
 		}
 

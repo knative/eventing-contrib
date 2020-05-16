@@ -22,10 +22,6 @@ import (
 	"fmt"
 	"strings"
 
-	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/metrics"
-
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -35,18 +31,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/eventing/pkg/reconciler/source"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source/resources"
 
-	// NewController stuff
 	"k8s.io/client-go/kubernetes"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	"knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
-	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
-	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+
+	"knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
+	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
+	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
 )
 
 const (
@@ -93,10 +93,10 @@ type Reconciler struct {
 
 	kafkaClientSet versioned.Interface
 	loggingContext context.Context
-	loggingConfig  *logging.Config
-	metricsConfig  *metrics.ExporterOptions
 
 	sinkResolver *resolver.URIResolver
+
+	configs source.ConfigAccessor
 }
 
 // Check that our Reconciler implements Interface
@@ -187,22 +187,12 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 		return nil, err
 	}
 
-	loggingConfig, err := logging.LoggingConfigToJson(r.loggingConfig)
-	if err != nil {
-		logging.FromContext(ctx).Error("error while converting logging config to JSON", zap.Any("receiveAdapter", err))
-	}
-	metricsConfig, err := metrics.MetricsOptionsToJson(r.metricsConfig)
-	if err != nil {
-		logging.FromContext(ctx).Error("error while converting metrics config to JSON", zap.Any("receiveAdapter", err))
-	}
-
 	raArgs := resources.ReceiveAdapterArgs{
-		Image:         r.receiveAdapterImage,
-		Source:        src,
-		Labels:        resources.GetLabels(src.Name),
-		LoggingConfig: loggingConfig,
-		MetricsConfig: metricsConfig,
-		SinkURI:       sinkURI.String(),
+		Image:          r.receiveAdapterImage,
+		Source:         src,
+		Labels:         resources.GetLabels(src.Name),
+		SinkURI:        sinkURI.String(),
+		AdditionalEnvs: r.configs.ToEnvVars(),
 	}
 	expected := resources.MakeReceiveAdapter(&raArgs)
 
@@ -264,33 +254,6 @@ func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaS
 
 func (r *Reconciler) getLabelSelector(src *v1alpha1.KafkaSource) labels.Selector {
 	return labels.SelectorFromSet(resources.GetLabels(src.Name))
-}
-
-func (r *Reconciler) UpdateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
-	if cfg != nil {
-		delete(cfg.Data, "_example")
-	}
-
-	logcfg, err := logging.NewConfigFromConfigMap(cfg)
-	if err != nil {
-		logging.FromContext(r.loggingContext).Warn("failed to create logging config from configmap", zap.String("cfg.Name", cfg.Name))
-		return
-	}
-	r.loggingConfig = logcfg
-	logging.FromContext(r.loggingContext).Info("Update from logging ConfigMap", zap.Any("ConfigMap", cfg))
-}
-
-func (r *Reconciler) UpdateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
-	if cfg != nil {
-		delete(cfg.Data, "_example")
-	}
-
-	r.metricsConfig = &metrics.ExporterOptions{
-		Domain:    metrics.Domain(),
-		Component: component,
-		ConfigMap: cfg.Data,
-	}
-	logging.FromContext(r.loggingContext).Info("Update from metrics ConfigMap", zap.Any("ConfigMap", cfg))
 }
 
 func (r *Reconciler) createCloudEventAttributes(src *v1alpha1.KafkaSource) []duckv1.CloudEventAttributes {

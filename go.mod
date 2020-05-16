@@ -8,7 +8,7 @@ require (
 	github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
 	github.com/aws/aws-sdk-go v1.30.16
 	github.com/cloudevents/sdk-go v1.2.0
-	github.com/cloudevents/sdk-go/v2 v2.0.0-RC2
+	github.com/cloudevents/sdk-go/v2 v2.0.0-RC4
 	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/cli v0.0.0-20200303162255-7d407207c304 // indirect
 	github.com/flimzy/diff v0.1.7 // indirect
