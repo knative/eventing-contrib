@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"k8s.io/client-go/kubernetes"
+	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/controller"
 
 	"github.com/kelseyhightower/envconfig"
@@ -65,6 +66,7 @@ type Reconciler struct {
 	deploymentLister appsv1listers.DeploymentLister
 
 	sinkResolver *resolver.URIResolver
+	configs      *source.ConfigWatcher
 }
 
 var _ promreconciler.Interface = (*Reconciler)(nil)
@@ -127,11 +129,12 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Pro
 	}
 
 	adapterArgs := resources.ReceiveAdapterArgs{
-		EventSource: eventSource,
-		Image:       env.Image,
-		Source:      src,
-		Labels:      resources.Labels(src.Name),
-		SinkURI:     sinkURI.String(),
+		EventSource:    eventSource,
+		Image:          env.Image,
+		Source:         src,
+		Labels:         resources.Labels(src.Name),
+		SinkURI:        sinkURI.String(),
+		AdditionalEnvs: r.configs.ToEnvVars(),
 	}
 	expected := resources.MakeReceiveAdapter(&adapterArgs)
 
