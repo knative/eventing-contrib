@@ -17,13 +17,18 @@ limitations under the License.
 package utils
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 	"strings"
+
+	"knative.dev/pkg/configmap"
 )
 
 const (
-	BrokerConfigMapKey    = "bootstrapServers"
+	BrokerConfigMapKey           = "bootstrapServers"
+	MaxIdleConnectionsKey        = "maxIdleConns"
+	MaxIdleConnectionsPerHostKey = "maxIdleConnsPerHost"
+
 	KafkaChannelSeparator = "."
 
 	// DefaultNumPartitions defines the default number of partitions
@@ -44,8 +49,8 @@ var (
 
 type KafkaConfig struct {
 	Brokers             []string
-	MaxIdleConns        int
-	MaxIdleConnsPerHost int
+	MaxIdleConns        int32
+	MaxIdleConnsPerHost int32
 }
 
 // GetKafkaConfig returns the details of the Kafka cluster.
@@ -54,39 +59,32 @@ func GetKafkaConfig(configMap map[string]string) (*KafkaConfig, error) {
 		return nil, fmt.Errorf("missing configuration")
 	}
 
-	config := &KafkaConfig{}
-
-	if brokers, ok := configMap[BrokerConfigMapKey]; ok {
-		bootstrapServers := strings.Split(brokers, ",")
-		for _, s := range bootstrapServers {
-			if len(s) == 0 {
-				return nil, fmt.Errorf("empty %s value in configuration", BrokerConfigMapKey)
-			}
-		}
-		config.Brokers = bootstrapServers
-	} else {
-		return nil, fmt.Errorf("missing key %s in configuration", BrokerConfigMapKey)
+	config := &KafkaConfig{
+		MaxIdleConns:        DefaultMaxIdleConns,
+		MaxIdleConnsPerHost: DefaultMaxIdleConnsPerHost,
 	}
 
-	if maxConns, ok := configMap["maxIdleConns"]; ok {
-		mc, err := strconv.Atoi(maxConns)
-		if err != nil {
-			config.MaxIdleConns = DefaultMaxIdleConns
-		}
-		config.MaxIdleConns = mc
-	} else {
-		config.MaxIdleConns = DefaultMaxIdleConns
-	}
-	if maxConnsPerHost, ok := configMap["maxIdleConnsPerHost"]; ok {
-		mcph, err := strconv.Atoi(maxConnsPerHost)
-		if err != nil {
-			config.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
-		}
-		config.MaxIdleConnsPerHost = mcph
+	var bootstrapServers string
 
-	} else {
-		config.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
+	err := configmap.Parse(configMap,
+		configmap.AsString(BrokerConfigMapKey, &bootstrapServers),
+		configmap.AsInt32(MaxIdleConnectionsKey, &config.MaxIdleConns),
+		configmap.AsInt32(MaxIdleConnectionsPerHostKey, &config.MaxIdleConnsPerHost),
+	)
+	if err != nil {
+		return nil, err
 	}
+
+	if bootstrapServers == "" {
+		return nil, errors.New("missing or empty key bootstrapServers in configuration")
+	}
+	bootstrapServersSplitted := strings.Split(bootstrapServers, ",")
+	for _, s := range bootstrapServersSplitted {
+		if len(s) == 0 {
+			return nil, fmt.Errorf("empty %s value in configuration", BrokerConfigMapKey)
+		}
+	}
+	config.Brokers = bootstrapServersSplitted
 
 	return config, nil
 }
