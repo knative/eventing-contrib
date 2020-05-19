@@ -1,0 +1,5 @@
+baseImageOverrides:
+  knative.dev/eventing-contrib/kafka/source/cmd/receive_adapter: gcr.io/distroless/static:nonroot
+  knative.dev/eventing-contrib/prometheus/cmd/receive_adapter: gcr.io/distroless/static:nonroot
+  knative.dev/eventing-contrib/github/cmd/receive_adapter: gcr.io/distroless/static:nonroot
+  knative.dev/eventing-contrib/cmd/event_display: gcr.io/distroless/static:nonroot
