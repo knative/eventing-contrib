@@ -43,8 +43,8 @@ type KafkaDispatcher struct {
 	// hostToChannelMapLock is used to update hostToChannelMap
 	hostToChannelMapLock sync.Mutex
 
-	receiver      *eventingchannels.MessageReceiver
-	dispatcher    *eventingchannels.MessageDispatcherImpl
+	receiver   *eventingchannels.MessageReceiver
+	dispatcher *eventingchannels.MessageDispatcherImpl
 
 	kafkaAsyncProducer   sarama.AsyncProducer
 	channelSubscriptions map[eventingchannels.ChannelReference][]types.UID
