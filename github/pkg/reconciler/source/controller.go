@@ -73,7 +73,7 @@ func NewController(
 	githubInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("GitHubSource")),
+		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("GitHubSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

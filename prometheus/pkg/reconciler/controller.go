@@ -60,7 +60,7 @@ func NewController(
 	prometheusSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("PrometheusSource")),
+		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("PrometheusSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

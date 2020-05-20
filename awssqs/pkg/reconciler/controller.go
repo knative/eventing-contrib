@@ -68,7 +68,7 @@ func NewController(
 	awssqssourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("AwsSqsSource")),
+		FilterFunc: controller.FilterControllerGVK(v1alpha1.SchemeGroupVersion.WithKind("AwsSqsSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
