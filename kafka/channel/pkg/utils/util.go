@@ -43,10 +43,6 @@ const (
 	DefaultMaxIdleConnsPerHost = 100
 )
 
-var (
-	firstKafkaConfigMapCall = true
-)
-
 type KafkaConfig struct {
 	Brokers             []string
 	MaxIdleConns        int32

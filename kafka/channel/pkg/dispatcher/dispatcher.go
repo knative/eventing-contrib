@@ -27,7 +27,6 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	protocolkafka "github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
-	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
@@ -173,13 +172,6 @@ type subscription struct {
 	eventingduck.SubscriberSpec
 	Namespace string
 	Name      string
-}
-
-// configDiff diffs the new config with the existing config. If there are no differences, then the
-// empty string is returned. If there are differences, then a non-empty string is returned
-// describing the differences.
-func (d *KafkaDispatcher) configDiff(updated *multichannelfanout.Config) string {
-	return cmp.Diff(d.getConfig(), updated)
 }
 
 // UpdateKafkaConsumers will be called by new CRD based kafka channel dispatcher controller.
@@ -357,9 +349,6 @@ func (d *KafkaDispatcher) unsubscribe(channel eventingchannels.ChannelReference,
 		return consumer.Close()
 	}
 	return nil
-}
-func (d *KafkaDispatcher) getConfig() *multichannelfanout.Config {
-	return d.config.Load().(*multichannelfanout.Config)
 }
 
 func (d *KafkaDispatcher) setConfig(config *multichannelfanout.Config) {

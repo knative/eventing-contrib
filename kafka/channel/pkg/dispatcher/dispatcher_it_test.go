@@ -77,7 +77,7 @@ func TestDispatcher(t *testing.T) {
 	// Start the dispatcher
 	go func() {
 		if err := dispatcher.Start(context.Background()); err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	}()
 

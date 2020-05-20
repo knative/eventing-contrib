@@ -62,8 +62,7 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 
 	client.Tracker.Add(corev1.SchemeGroupVersion.Group, corev1.SchemeGroupVersion.Version, "configmap", client.Namespace, cgName)
 
-	var args []string
-	args = append(args, "-P", "-v", "-b", bootstrapServer, "-t", topic, "-k", key)
+	args := []string{"-P", "-v", "-b", bootstrapServer, "-t", topic, "-k", key}
 	for k, v := range headers {
 		args = append(args, "-H", k+"="+v)
 	}
@@ -116,7 +115,7 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 func MustPublishKafkaMessageViaBinding(client *testlib.Client, selector map[string]string, topic string, key string, headers map[string]string, value string) {
 	cgName := topic + "-" + key
 
-	var kvlist []string
+	kvlist := make([]string, 0, len(headers))
 	for k, v := range headers {
 		kvlist = append(kvlist, k+":"+v)
 	}
