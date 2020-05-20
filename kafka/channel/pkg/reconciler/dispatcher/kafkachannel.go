@@ -108,8 +108,8 @@ func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	}
 
 	connectionArgs := &kncloudevents.ConnectionArgs{
-		MaxIdleConns:        kafkaConfig.MaxIdleConns,
-		MaxIdleConnsPerHost: kafkaConfig.MaxIdleConnsPerHost,
+		MaxIdleConns:        int(kafkaConfig.MaxIdleConns),
+		MaxIdleConnsPerHost: int(kafkaConfig.MaxIdleConnsPerHost),
 	}
 
 	kafkaChannelInformer := kafkachannel.Get(ctx)

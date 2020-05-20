@@ -60,12 +60,12 @@ func TestGetKafkaConfig(t *testing.T) {
 		{
 			name:     "configmap with no bootstrapServers key",
 			data:     map[string]string{"key": "value"},
-			getError: "missing key bootstrapServers in configuration",
+			getError: "missing or empty key bootstrapServers in configuration",
 		},
 		{
 			name:     "configmap with empty bootstrapServers value",
 			data:     map[string]string{"bootstrapServers": ""},
-			getError: "empty bootstrapServers value in configuration",
+			getError: "missing or empty key bootstrapServers in configuration",
 		},
 		{
 			name: "single bootstrapServers",
