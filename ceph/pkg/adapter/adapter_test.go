@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,13 @@ import (
 	"testing"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"go.uber.org/zap"
 	ceph "knative.dev/eventing-contrib/ceph/pkg/apis/v1alpha1"
+	"knative.dev/eventing/pkg/adapter/v2"
+	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
+	"knative.dev/pkg/logging"
+	pkgtesting "knative.dev/pkg/reconciler/testing"
 )
 
 var notification1 = ceph.BucketNotification{
@@ -77,7 +83,6 @@ var jsonData = ceph.BucketNotifications{
 }
 
 func TestRecords(t *testing.T) {
-	port := "28080"
 	var sinkServer *httptest.Server
 	defer func() {
 		if sinkServer != nil {
@@ -92,16 +97,22 @@ func TestRecords(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	var ca *cephReceiveAdapter
+	stopCh := make(chan struct{})
 	go func() {
 		sinkServer = httptest.NewServer(&fakeSink{
 			t:            t,
 			expectedBody: string(notification1Buffer),
 		},
 		)
-		Start(sinkServer.URL, port)
+		ca = newTestAdapter(t, adaptertest.NewTestClient(), sinkServer.URL)
+		err = ca.Start(stopCh)
+		if err != nil {
+			t.Error(err)
+		}
 	}()
 	time.Sleep(5 * time.Second)
-	result, err := http.Post("http://:"+port+"/", "application/json", bytes.NewBuffer(jsonBuffer))
+	result, err := http.Post("http://:"+ca.port+"/", "application/json", bytes.NewBuffer(jsonBuffer))
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,7 +121,7 @@ func TestRecords(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	Stop()
+	close(stopCh)
 }
 
 type fakeSink struct {
@@ -131,4 +142,19 @@ func (h *fakeSink) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.t.Error("Notification Body Mismatch")
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func newTestAdapter(t *testing.T, ce cloudevents.Client, sinkServerURL string) *cephReceiveAdapter {
+	env := envConfig{
+		EnvConfig: adapter.EnvConfig{
+			Namespace: "default",
+		},
+		Port: "28080",
+	}
+	ctx, _ := pkgtesting.SetupFakeContext(t)
+	logger := zap.NewExample().Sugar()
+	ctx = logging.WithLogger(ctx, logger)
+	ctx = cloudevents.ContextWithTarget(ctx, sinkServerURL)
+
+	return NewAdapter(ctx, &env, ce).(*cephReceiveAdapter)
 }
