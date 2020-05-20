@@ -27,20 +27,10 @@ import (
 	kncetesting "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/source"
 
 	"github.com/go-kivik/kivik/v3/driver"
 	"github.com/go-kivik/kivikmock/v3"
 )
-
-type mockReporter struct {
-	eventCount int
-}
-
-func (r *mockReporter) ReportEventCount(args *source.ReportArgs, responseCode int) error {
-	r.eventCount += 1
-	return nil
-}
 
 func TestNewAdapter(t *testing.T) {
 	ce := kncetesting.NewTestClient()
