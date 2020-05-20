@@ -29,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
-	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/kmeta"
 
@@ -62,8 +61,7 @@ type Reconciler struct {
 
 	receiveAdapterImage string
 
-	deploymentLister appsv1listers.DeploymentLister
-	sinkResolver     *resolver.URIResolver
+	sinkResolver *resolver.URIResolver
 
 	loggingContext context.Context
 

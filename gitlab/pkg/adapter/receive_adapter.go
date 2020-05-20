@@ -31,7 +31,6 @@ import (
 )
 
 const (
-	glHeaderToken = "X-Gitlab-Token"
 	glHeaderEvent = "X-Gitlab-Event"
 )
 
