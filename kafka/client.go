@@ -77,19 +77,6 @@ func NewConfig(ctx context.Context) ([]string, *sarama.Config, error) {
 	return env.BootstrapServers, cfg, nil
 }
 
-// NewConsumer is a helper method for constructing a client for consuming kafka messages.
-func NewConsumer(ctx context.Context) (sarama.Client, error) {
-	bs, cfg, err := NewConfig(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	cfg.Consumer.Return.Errors = true
-
-	return sarama.NewClient(bs, cfg)
-}
-
 // NewProducer is a helper method for constructing a client for producing kafka methods.
 func NewProducer(ctx context.Context) (sarama.Client, error) {
 	bs, cfg, err := NewConfig(ctx)
