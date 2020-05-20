@@ -29,8 +29,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -51,17 +49,10 @@ import (
 
 const (
 	raImageEnvVar                = "KAFKA_RA_IMAGE"
-	kafkaReadinessChanged        = "KafkaSourceReadinessChanged"
-	kafkaUpdateStatusFailed      = "KafkaSourceUpdateStatusFailed"
 	kafkaSourceDeploymentCreated = "KafkaSourceDeploymentCreated"
 	kafkaSourceDeploymentUpdated = "KafkaSourceDeploymentUpdated"
 	kafkaSourceDeploymentFailed  = "KafkaSourceDeploymentUpdated"
-	kafkaSourceReconciled        = "KafkaSourceReconciled"
 	component                    = "kafkasource"
-)
-
-var (
-	deploymentGVK = appsv1.SchemeGroupVersion.WithKind("Deployment")
 )
 
 // newDeploymentCreated makes a new reconciler event with event type Normal, and
@@ -133,7 +124,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 				found = true
 			}
 		}
-		if found == false {
+		if found {
 			src.Status.MarkResourcesIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
 			logging.FromContext(ctx).Errorf("Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
 			return errors.New("IncorrectKafkaKeyTypeLabel")
@@ -233,27 +224,6 @@ func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
 		}
 	}
 	return false
-}
-
-func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource) (*appsv1.Deployment, error) {
-	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).List(metav1.ListOptions{
-		LabelSelector: r.getLabelSelector(src).String(),
-	})
-
-	if err != nil {
-		logging.FromContext(ctx).Desugar().Error("Unable to list deployments: %v", zap.Error(err))
-		return nil, err
-	}
-	for _, dep := range ra.Items {
-		if metav1.IsControlledBy(&dep, src) {
-			return &dep, nil
-		}
-	}
-	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
-}
-
-func (r *Reconciler) getLabelSelector(src *v1alpha1.KafkaSource) labels.Selector {
-	return labels.SelectorFromSet(resources.GetLabels(src.Name))
 }
 
 func (r *Reconciler) createCloudEventAttributes(src *v1alpha1.KafkaSource) []duckv1.CloudEventAttributes {

@@ -116,7 +116,6 @@ func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
 			return nil, err
 		}
 		config.Certificates = []tls.Certificate{cert}
-		config.BuildNameToCertificate()
 		valid = true
 	}
 
