@@ -24,6 +24,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+	"sync"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"go.uber.org/zap"
@@ -97,7 +98,9 @@ func TestRecords(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	var ca *cephReceiveAdapter
+	var mu sync.Mutex
 	stopCh := make(chan struct{})
 	go func() {
 		sinkServer = httptest.NewServer(&fakeSink{
@@ -105,14 +108,21 @@ func TestRecords(t *testing.T) {
 			expectedBody: string(notification1Buffer),
 		},
 		)
+		mu.Lock()
 		ca = newTestAdapter(t, adaptertest.NewTestClient(), sinkServer.URL)
+		mu.Unlock()
 		err = ca.Start(stopCh)
 		if err != nil {
 			t.Error(err)
 		}
 	}()
 	time.Sleep(5 * time.Second)
-	result, err := http.Post("http://:"+ca.port+"/", "application/json", bytes.NewBuffer(jsonBuffer))
+
+	mu.Lock()
+	sinkPort := ca.port
+	mu.Unlock()
+
+	result, err := http.Post("http://:"+sinkPort+"/", "application/json", bytes.NewBuffer(jsonBuffer))
 	if err != nil {
 		t.Error(err)
 	}
