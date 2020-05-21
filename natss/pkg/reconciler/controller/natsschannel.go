@@ -47,7 +47,6 @@ const (
 
 	// Name of the corev1.Events emitted from the reconciliation process.
 	channelReconciled            = "NatssChannelReconciled"
-	channelReconcileFailed       = "NatssChannelReconcileFailed"
 	dispatcherDeploymentNotFound = "DispatcherDeploymentDoesNotExist"
 	dispatcherDeploymentFailed   = "DispatcherDeploymentFailed"
 	dispatcherServiceFailed      = "DispatcherServiceFailed"

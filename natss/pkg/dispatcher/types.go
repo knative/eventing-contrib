@@ -17,8 +17,6 @@ limitations under the License.
 package dispatcher
 
 import (
-	"fmt"
-
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 )
 
@@ -29,5 +27,5 @@ func newSubscriptionReference(spec eventingduck.SubscriberSpec) subscriptionRefe
 }
 
 func (r *subscriptionReference) String() string {
-	return fmt.Sprintf("%s", r.UID)
+	return string(r.UID)
 }

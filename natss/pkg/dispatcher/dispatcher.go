@@ -245,7 +245,6 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(ctx context.Context, chann
 		s.subscriptions[cRef] = chMap
 	}
 
-	var errStrings []string
 	for _, sub := range subscriptions {
 		// check if the subscription already exist and do nothing in this case
 		subRef := newSubscriptionReference(sub)
@@ -257,7 +256,6 @@ func (s *SubscriptionsSupervisor) UpdateSubscriptions(ctx context.Context, chann
 		// subscribe and update failedSubscription if subscribe fails
 		natssSub, err := s.subscribe(ctx, cRef, subRef)
 		if err != nil {
-			errStrings = append(errStrings, err.Error())
 			s.logger.Sugar().Errorf("failed to subscribe (subscription:%q) to channel: %v. Error:%s", sub, cRef, err.Error())
 			failedToSubscribe[sub] = err
 			continue
