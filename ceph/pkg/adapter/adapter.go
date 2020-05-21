@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -83,11 +83,10 @@ func (ca *cephReceiveAdapter) postMessage(notification ceph.BucketNotification) 
 		eventTime = time.Now()
 	}
 
-	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event := cloudevents.NewEvent()
 	event.SetID(notification.ResponseElements.XAmzRequestID + notification.ResponseElements.XAmzID2)
 	event.SetSource(notification.EventSource + "." + notification.AwsRegion + "." + notification.S3.Bucket.Name)
 	event.SetType("com.amazonaws." + notification.EventName)
-	event.SetDataContentType(cloudevents.ApplicationJSON)
 	event.SetSubject(notification.S3.Object.Key)
 	event.SetTime(eventTime)
 	err = event.SetData(cloudevents.ApplicationJSON, notification)
