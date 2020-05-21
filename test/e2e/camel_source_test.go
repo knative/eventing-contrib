@@ -169,6 +169,23 @@ func createCamelKitOrFail(c *lib.Client, camelClient camelclientset.Interface, c
 	if _, err := camelClient.CamelV1().IntegrationKits(c.Namespace).Create(&kit); err != nil {
 		c.T.Fatalf("Failed to create IntegrationKit for CamelSource %q: %v", camelSourceName, err)
 	}
+
+	// Wait for the kit to be "Ready" before creating other resources
+	var ik *camelv1.IntegrationKit
+	for i := 0; i < 30; i++ {
+		var err error
+		ik, err = camelClient.CamelV1().IntegrationKits(c.Namespace).Get(kit.Name, meta.GetOptions{})
+		if err != nil {
+			c.T.Fatalf("Failed to retrieve IntegrationKit %q: %v", kit.Name, err)
+		}
+		if ik.Status.Phase == camelv1.IntegrationKitPhaseReady {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if ik == nil || ik.Status.Phase != camelv1.IntegrationKitPhaseReady {
+		c.T.Fatalf("IntegrationKit %q is not ready", kit.Name)
+	}
 }
 
 func getCamelKClient(c *lib.Client) camelclientset.Interface {
