@@ -34,13 +34,13 @@ require (
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
-	knative.dev/eventing v0.14.1-0.20200520062258-49c01f0d5ca3
+	knative.dev/eventing v0.14.1-0.20200520123858-f378da1aafe5
 	knative.dev/pkg v0.0.0-20200519155757-14eb3ae3a5a7
-	knative.dev/serving v0.14.1-0.20200520052457-243225e54403
+	knative.dev/serving v0.14.1-0.20200520101257-064e8097fb0f
 	knative.dev/test-infra v0.0.0-20200519161858-554a95a37986
 )
 
