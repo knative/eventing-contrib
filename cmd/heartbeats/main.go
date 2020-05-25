@@ -146,7 +146,7 @@ func main() {
 
 		log.Printf("sending cloudevent to %s", sink)
 		if res := c.Send(context.Background(), event); !cloudevents.IsACK(res) {
-			log.Printf("failed to send cloudevent: %s", err.Error())
+			log.Printf("failed to send cloudevent: %v", res)
 		}
 
 		if env.OneShot {
