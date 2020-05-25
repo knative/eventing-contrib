@@ -47,13 +47,24 @@ func MakeService(args *ServiceArgs) *v1.Service {
 			SecretKeyRef: args.Source.Spec.SecretToken.SecretKeyRef,
 		},
 	}, {
-		Name:  "SINK",
+		Name:  "K_SINK",
 		Value: sinkURI.String(),
 	}, {
 		Name:  "GITHUB_OWNER_REPO",
 		Value: args.Source.Spec.OwnerAndRepository,
+	}, {
+		Name:  "NAMESPACE",
+		Value: args.Source.Namespace,
+	}, {
+		Name:  "METRICS_DOMAIN",
+		Value: "knative.dev/eventing",
+	}, {
+		Name:  "K_METRICS_CONFIG",
+		Value: "",
+	}, {
+		Name:  "K_LOGGING_CONFIG",
+		Value: "",
 	}}
-	containerArgs := []string{fmt.Sprintf("--sink=%s", sinkURI.String())}
 	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", args.Source.Name),
@@ -71,7 +82,6 @@ func MakeService(args *ServiceArgs) *v1.Service {
 							Containers: []corev1.Container{{
 								Image: args.ReceiveAdapterImage,
 								Env:   env,
-								Args:  containerArgs,
 							}},
 						},
 					},
