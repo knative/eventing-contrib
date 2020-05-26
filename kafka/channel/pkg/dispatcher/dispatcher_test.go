@@ -316,7 +316,6 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				topicFunc:            utils.TopicName,
 				logger:               zaptest.NewLogger(t),
 			}
-			d.setConfig(&multichannelfanout.Config{})
 			d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 
 			// Initialize using oldConfig
