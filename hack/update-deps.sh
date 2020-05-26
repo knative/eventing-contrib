@@ -31,7 +31,7 @@ VERSION="master"
 FLOATING_DEPS=(
   "knative.dev/pkg@release-0.15"
   "knative.dev/eventing@${VERSION}"
-  "knative.dev/serving@${VERSION}"
+  "knative.dev/serving@release-0.15"
   "knative.dev/test-infra@release-0.15"
 )
 
