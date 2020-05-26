@@ -19,6 +19,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -31,18 +32,19 @@ type KafkaConsumerHandler interface {
 }
 
 // ConsumerHandler implements sarama.ConsumerGroupHandler and provides some glue code to simplify message handling
-// You must implement KafkaConsumerHandler and create a new saramaConsumerHandler with it
-type saramaConsumerHandler struct {
+// You must implement KafkaConsumerHandler and create a new SaramaConsumerHandler with it
+type SaramaConsumerHandler struct {
 	// The user message handler
 	handler KafkaConsumerHandler
 
 	logger *zap.Logger
 	// Errors channel
-	errors chan error
+	closeErrors sync.Once
+	errors      chan error
 }
 
-func NewConsumerHandler(logger *zap.Logger, handler KafkaConsumerHandler) saramaConsumerHandler {
-	return saramaConsumerHandler{
+func NewConsumerHandler(logger *zap.Logger, handler KafkaConsumerHandler) SaramaConsumerHandler {
+	return SaramaConsumerHandler{
 		logger:  logger,
 		handler: handler,
 		errors:  make(chan error, 10), // Some buffering to avoid blocking the message processing
@@ -50,18 +52,20 @@ func NewConsumerHandler(logger *zap.Logger, handler KafkaConsumerHandler) sarama
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
-func (consumer *saramaConsumerHandler) Setup(sarama.ConsumerGroupSession) error {
+func (consumer *SaramaConsumerHandler) Setup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
-func (consumer *saramaConsumerHandler) Cleanup(session sarama.ConsumerGroupSession) error {
-	close(consumer.errors)
+func (consumer *SaramaConsumerHandler) Cleanup(session sarama.ConsumerGroupSession) error {
+	consumer.closeErrors.Do(func() {
+		close(consumer.errors)
+	})
 	return nil
 }
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
-func (consumer *saramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (consumer *SaramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	consumer.logger.Info(fmt.Sprintf("Starting partition consumer, topic: %s, partition: %d, initialOffset: %d", claim.Topic(), claim.Partition(), claim.InitialOffset()))
 
 	// NOTE:
@@ -92,4 +96,4 @@ func (consumer *saramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 	return nil
 }
 
-var _ sarama.ConsumerGroupHandler = (*saramaConsumerHandler)(nil)
+var _ sarama.ConsumerGroupHandler = (*SaramaConsumerHandler)(nil)

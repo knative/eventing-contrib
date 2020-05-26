@@ -40,7 +40,7 @@ func (m *mockConsumerGroup) Consume(ctx context.Context, topics []string, handle
 	if m.mustGenerateHandlerError {
 		go func() {
 			m.generateErrorOnce.Do(func() {
-				h := handler.(*saramaConsumerHandler)
+				h := handler.(*SaramaConsumerHandler)
 				h.errors <- errors.New("cgh")
 				_ = h.Cleanup(nil)
 			})
