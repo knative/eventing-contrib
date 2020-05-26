@@ -114,9 +114,8 @@ func TestRecords(t *testing.T) {
 }
 
 type fakeSink struct {
-	t              *testing.T
-	expectedBody   string
-	expectedHeader string
+	t            *testing.T
+	expectedBody string
 }
 
 func (h *fakeSink) ServeHTTP(w http.ResponseWriter, r *http.Request) {
