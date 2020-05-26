@@ -9,4 +9,3 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 19090
-
