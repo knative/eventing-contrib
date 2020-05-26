@@ -40,7 +40,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	knative.dev/eventing v0.14.1-0.20200525135947-3d65f33aa46c
 	knative.dev/pkg v0.0.0-20200519155757-14eb3ae3a5a7
-	knative.dev/serving v0.14.1-0.20200524222346-2b805814b468
+	knative.dev/serving v0.15.0
 	knative.dev/test-infra v0.0.0-20200519161858-554a95a37986
 )
 
