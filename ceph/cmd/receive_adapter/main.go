@@ -17,25 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"flag"
-	"log"
+	"knative.dev/eventing/pkg/adapter/v2"
 
-	"knative.dev/eventing-contrib/ceph/pkg/adapter"
+	cephadapter "knative.dev/eventing-contrib/ceph/pkg/adapter"
 )
 
 func main() {
-	sink := flag.String("sink", "", "uri to send events to")
-	listenPort := flag.String("port", "8080", "listening port")
-
-	flag.Parse()
-
-	if sink == nil || *sink == "" {
-		log.Fatalf("No sink given")
-	}
-
-	log.Printf("Sink is: %q. Listening on port: %q", *sink, *listenPort)
-
-	// if successful, this should be a blocking call
-	// ends only when the HTTP server exist
-	adapter.Start(*sink, *listenPort)
+	adapter.Main("cephsource", cephadapter.NewEnvConfig, cephadapter.NewAdapter)
 }
