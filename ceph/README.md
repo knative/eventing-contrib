@@ -38,10 +38,10 @@ kubectl apply -f samples/ceph-bucket-notification-svc.yaml -n ceph-eventing
 ko apply -f samples/ceph-display-resources.yaml -n ceph-eventing
 ```
 
-- Build and deploy the Ceph container source:
+- Build and deploy the Ceph source adapter with SinkBinding to inject the sink:
 
 ```
-ko apply -f samples/ceph-container-source.yaml -n ceph-eventing
+ko apply -f samples/ceph-source.yaml -n ceph-eventing
 ```
 
 - Deploy a test pod that has cURL installed and a JSON file with bucket
@@ -61,7 +61,7 @@ kubectl exec test -n ceph-eventing -- curl -d "@records.json" -X POST ceph-bucke
 - To verify that the events reached the ceph-event-display service, call:
 
 ```
-kubectl logs -l serving.knative.dev/service=ceph-event-display -n ceph-eventing -c user-container --tail=100
+kubectl logs -l serving.knative.dev/service=ceph-event-display -n ceph-eventing -c ceph-display-container --tail=100
 ```
 
 ## PubSub (TODO)
