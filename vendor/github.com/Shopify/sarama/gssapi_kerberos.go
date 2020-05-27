@@ -200,7 +200,6 @@ func (krbAuth *GSSAPIKerberosAuth) initSecContext(bytes []byte, kerberosClient K
 
 /* This does the handshake for authorization */
 func (krbAuth *GSSAPIKerberosAuth) Authorize(broker *Broker) error {
-
 	kerberosClient, err := krbAuth.NewKerberosClientFunc(krbAuth.Config)
 	if err != nil {
 		Logger.Printf("Kerberos client error: %s", err)
@@ -243,7 +242,7 @@ func (krbAuth *GSSAPIKerberosAuth) Authorize(broker *Broker) error {
 		}
 		broker.updateOutgoingCommunicationMetrics(bytesWritten)
 		if krbAuth.step == GSS_API_VERIFY {
-			var bytesRead = 0
+			bytesRead := 0
 			receivedBytes, bytesRead, err = krbAuth.readPackage(broker)
 			requestLatency := time.Since(requestTime)
 			broker.updateIncomingCommunicationMetrics(bytesRead, requestLatency)

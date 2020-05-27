@@ -3,7 +3,7 @@ module knative.dev/eventing-contrib
 go 1.13
 
 require (
-	github.com/Shopify/sarama v1.24.0
+	github.com/Shopify/sarama v1.26.4
 	github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
 	github.com/aws/aws-sdk-go v1.30.16
 	github.com/cloudevents/sdk-go v1.2.0
@@ -21,9 +21,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nats-io/nats-server/v2 v2.1.6 // indirect
 	github.com/nats-io/stan.go v0.6.0
-	github.com/pierrec/lz4 v2.3.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
 	github.com/robfig/cron v1.2.0
 	github.com/slinkydeveloper/loadastic v0.0.0-20191203132749-9afe5a010a57
 	github.com/xanzy/go-gitlab v0.28.0
