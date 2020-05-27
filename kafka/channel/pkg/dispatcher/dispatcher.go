@@ -26,7 +26,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/v2/binding"
-	protocolkafka "github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
+	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"

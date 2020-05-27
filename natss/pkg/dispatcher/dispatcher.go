@@ -39,7 +39,7 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/stanutil"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
-	natsscloudevents "github.com/cloudevents/sdk-go/v2/protocol/stan"
+	natsscloudevents "github.com/cloudevents/sdk-go/protocol/stan/v2"
 )
 
 const (
