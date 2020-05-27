@@ -485,6 +485,18 @@ type mockClusterAdmin struct {
 	mockDeleteTopicFunc func(topic string) error
 }
 
+func (ca *mockClusterAdmin) AlterPartitionReassignments(topic string, assignment [][]int32) error {
+	return nil
+}
+
+func (ca *mockClusterAdmin) ListPartitionReassignments(topics string, partitions []int32) (topicStatus map[string]map[int32]*sarama.PartitionReplicaReassignmentsStatus, err error) {
+	return nil, nil
+}
+
+func (ca *mockClusterAdmin) DescribeLogDirs(brokers []int32) (map[int32][]sarama.DescribeLogDirsResponseDirMetadata, error) {
+	return nil, nil
+}
+
 func (ca *mockClusterAdmin) CreateTopic(topic string, detail *sarama.TopicDetail, validateOnly bool) error {
 	if ca.mockCreateTopicFunc != nil {
 		return ca.mockCreateTopicFunc(topic, detail, validateOnly)
@@ -559,6 +571,8 @@ func (ca *mockClusterAdmin) DescribeCluster() (brokers []*sarama.Broker, control
 func (ca *mockClusterAdmin) DeleteConsumerGroup(group string) error {
 	return nil
 }
+
+var _ sarama.ClusterAdmin = (*mockClusterAdmin)(nil)
 
 func makeDeploymentWithImage(image string) *appsv1.Deployment {
 	return resources.MakeDispatcher(resources.DispatcherArgs{

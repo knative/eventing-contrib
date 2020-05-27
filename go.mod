@@ -3,7 +3,7 @@ module knative.dev/eventing-contrib
 go 1.13
 
 require (
-	github.com/Shopify/sarama v1.24.0
+	github.com/Shopify/sarama v1.26.4
 	github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
 	github.com/aws/aws-sdk-go v1.30.16
 	github.com/cloudevents/sdk-go v1.2.0
@@ -37,10 +37,10 @@ require (
 	k8s.io/api v0.17.4
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v12.0.0+incompatible
-	knative.dev/eventing v0.14.1-0.20200522004258-12c1ec1d407b
-	knative.dev/pkg v0.0.0-20200519155757-14eb3ae3a5a7
-	knative.dev/serving v0.14.1-0.20200522094558-1a37ebcb13f8
-	knative.dev/test-infra v0.0.0-20200519161858-554a95a37986
+	knative.dev/eventing v0.15.1-0.20200526194657-a0991ef60ca9
+	knative.dev/pkg v0.0.0-20200526194649-c48d2ebdae96
+	knative.dev/serving v0.15.1-0.20200526190149-e88e1d6b8eeb
+	knative.dev/test-infra v0.0.0-20200526171149-39b911556285
 )
 
 replace (

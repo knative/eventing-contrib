@@ -18,13 +18,13 @@ package adapter
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"go.uber.org/zap"
@@ -33,7 +33,6 @@ import (
 	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/source"
 )
 
 const (
@@ -154,22 +153,23 @@ var testCases = []testCase{
 	},
 }
 
-func TestGracefullShutdown(t *testing.T) {
+func TestGracefulShutdown(t *testing.T) {
 	ce := adaptertest.NewTestClient()
 	ra := newTestAdapter(t, ce)
+	ctx, cancel := context.WithCancel(context.TODO())
 	stopCh := make(chan struct{}, 1)
 
-	go func(stopCh chan struct{}) {
-		defer close(stopCh)
-		time.Sleep(time.Second)
+	go func() {
+		t.Logf("starting webhook server")
+		err := ra.Start(stopCh)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cancel()
+	}()
 
-	}(stopCh)
-
-	t.Logf("starting webhook server")
-	err := ra.Start(stopCh)
-	if err != nil {
-		t.Error(err)
-	}
+	close(stopCh)
+	<-ctx.Done()
 }
 
 func TestServer(t *testing.T) {
@@ -235,15 +235,6 @@ func (tc *testCase) runner(t *testing.T, url string, ceClient *adaptertest.TestC
 			t.Error(err)
 		}
 	}
-}
-
-type mockReporter struct {
-	eventCount int
-}
-
-func (r *mockReporter) ReportEventCount(args *source.ReportArgs, responseCode int) error {
-	r.eventCount++
-	return nil
 }
 
 func (tc *testCase) validateAcceptedPayload(t *testing.T, ce *adaptertest.TestCloudEventsClient) error {

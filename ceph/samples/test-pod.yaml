@@ -6,4 +6,3 @@ spec:
   containers:
     - name: curl-runner
       image: docker.io/yuvalif/test-ceph-notifications
-

@@ -42,11 +42,6 @@ type projectHookOptions struct {
 	EnableSSLVerification    bool
 }
 
-type projectHookClient interface {
-	Create(options *projectHookOptions) (string, error)
-	Delete(options *projectHookOptions, hookID string) error
-}
-
 type gitlabHookClient struct{}
 
 func (client gitlabHookClient) Create(baseURL string, options *projectHookOptions) (string, error) {

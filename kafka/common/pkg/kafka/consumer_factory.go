@@ -43,28 +43,7 @@ type customConsumerGroup struct {
 
 // Merge handler errors chan and consumer group error chan
 func (c *customConsumerGroup) Errors() <-chan error {
-	errors := make(chan error, 10)
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		for e := range c.ConsumerGroup.Errors() {
-			errors <- e
-		}
-		wg.Done()
-	}()
-	go func() {
-		for e := range c.handlerErrorChannel {
-			errors <- e
-		}
-		wg.Done()
-	}()
-
-	// Synchronization routine to close the error channel
-	go func() {
-		wg.Wait()
-		close(errors)
-	}()
-	return errors
+	return mergeErrorChannels(c.ConsumerGroup.Errors(), c.handlerErrorChannel)
 }
 
 func (c *customConsumerGroup) Close() error {
@@ -86,7 +65,7 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 
 	go func() {
 		for {
-			err := consumerGroup.Consume(ctx, topics, &consumerHandler)
+			err := consumerGroup.Consume(context.Background(), topics, &consumerHandler)
 			if err == sarama.ErrClosedConsumerGroup {
 				return
 			}
@@ -110,3 +89,22 @@ func NewConsumerGroupFactory(addrs []string, config *sarama.Config) KafkaConsume
 }
 
 var _ KafkaConsumerGroupFactory = (*kafkaConsumerGroupFactoryImpl)(nil)
+
+func mergeErrorChannels(channels ...<-chan error) <-chan error {
+	out := make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(len(channels))
+	for _, channel := range channels {
+		go func(c <-chan error) {
+			for v := range c {
+				out <- v
+			}
+			wg.Done()
+		}(channel)
+	}
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+	return out
+}
