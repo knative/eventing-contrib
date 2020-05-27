@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -73,35 +74,37 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 
 // Start implements adapter.Adapter
 func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
-	endCtx, endCancel := context.WithCancel(context.Background())
-
 	hook, err := gitlab.New(gitlab.Options.Secret(ra.secretToken))
 	if err != nil {
 		return fmt.Errorf("cannot create gitlab hook: %v", err)
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	server := &http.Server{
 		Addr:    ":" + ra.port,
 		Handler: ra.newRouter(hook),
 	}
 
-	go gracefulShutdown(server, ra.logger, stopCh, endCancel)
+	go func() {
+		defer wg.Done()
+		gracefulShutdown(server, ra.logger, stopCh)
+	}()
 
 	ra.logger.Infof("Server is ready to handle requests at %s", server.Addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("could not listen on %s: %v", server.Addr, err)
 	}
 
-	<-endCtx.Done()
+	wg.Wait()
 	ra.logger.Infof("Server stopped")
 	return nil
 }
 
-func gracefulShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-chan struct{}, end context.CancelFunc) {
+func gracefulShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-chan struct{}) {
 	<-stopCh
 	logger.Info("Server is shutting down...")
-
-	defer end()
 
 	// Try to graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
