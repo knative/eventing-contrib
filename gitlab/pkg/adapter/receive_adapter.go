@@ -79,13 +79,13 @@ func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
 		return fmt.Errorf("cannot create gitlab hook: %v", err)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-
 	server := &http.Server{
 		Addr:    ":" + ra.port,
 		Handler: ra.newRouter(hook),
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	go func() {
 		defer wg.Done()
