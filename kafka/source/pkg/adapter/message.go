@@ -25,11 +25,11 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
+	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/extensions"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
-	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
