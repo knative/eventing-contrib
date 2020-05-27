@@ -37,7 +37,7 @@ fi
 
 # Eventing main config path from HEAD.
 readonly EVENTING_CONFIG="./config/"
-readonly EVENTING_CHANNEL_BROKER_CONFIG="./config/brokers/channel-broker"
+readonly EVENTING_MT_CHANNEL_BROKER_CONFIG="./config/brokers/mt-channel-broker"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -84,8 +84,8 @@ function knative_setup() {
     git clone https://github.com/knative/eventing
     cd eventing
     ko apply -f ${EVENTING_CONFIG}
-    # Install Channel Based Broker
-    ko apply -f ${EVENTING_CHANNEL_BROKER_CONFIG}
+    # Install MT Channel Based Broker
+    ko apply -f ${EVENTING_MT_CHANNEL_BROKER_CONFIG}
     popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"

@@ -24,5 +24,5 @@ import (
 )
 
 func TestBrokerChannelFlow(t *testing.T) {
-	helpers.BrokerChannelFlowTestHelper(t, "ChannelBasedBroker" /*brokerClass*/, channelTestRunner)
+	helpers.BrokerChannelFlowTestHelper(t, "MTChannelBasedBroker" /*brokerClass*/, channelTestRunner)
 }
