@@ -36,7 +36,7 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.17.6
 	k8s.io/apimachinery v0.17.6
-	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/eventing v0.15.1-0.20200526203649-32751c56844f
 	knative.dev/pkg v0.0.0-20200527173759-2d1a04d1ff82
 	knative.dev/serving v0.15.1-0.20200527191659-6cbfe5686d5c
@@ -48,10 +48,10 @@ replace (
 	github.com/cloudevents/sdk-go/v2 => github.com/cloudevents/sdk-go/v2 v2.0.0
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.3.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
-	k8s.io/api => k8s.io/api v0.16.4
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.4
-	k8s.io/apimachinery => k8s.io/apimachinery v0.16.4
-	k8s.io/apiserver => k8s.io/apiserver v0.16.4
-	k8s.io/client-go => k8s.io/client-go v0.16.4
-	k8s.io/code-generator => k8s.io/code-generator v0.16.4
+	k8s.io/api => k8s.io/api v0.17.6
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.6
+	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
+	k8s.io/apiserver => k8s.io/apiserver v0.17.6
+	k8s.io/client-go => k8s.io/client-go v0.17.6
+	k8s.io/code-generator => k8s.io/code-generator v0.17.6
 )
