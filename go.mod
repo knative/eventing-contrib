@@ -34,13 +34,13 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.17.4
-	k8s.io/apimachinery v0.17.4
-	k8s.io/client-go v12.0.0+incompatible
-	knative.dev/eventing v0.15.1-0.20200526194657-a0991ef60ca9
-	knative.dev/pkg v0.0.0-20200526194649-c48d2ebdae96
-	knative.dev/serving v0.15.1-0.20200526190149-e88e1d6b8eeb
-	knative.dev/test-infra v0.0.0-20200526171149-39b911556285
+	k8s.io/api v0.17.6
+	k8s.io/apimachinery v0.17.6
+	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
+	knative.dev/eventing v0.15.1-0.20200527233859-c55c44cd96c0
+	knative.dev/pkg v0.0.0-20200527173759-2d1a04d1ff82
+	knative.dev/serving v0.15.1-0.20200527215759-9f098e1bf542
+	knative.dev/test-infra v0.0.0-20200527191759-5ba38edc41ae
 )
 
 replace (
@@ -48,10 +48,10 @@ replace (
 	github.com/cloudevents/sdk-go/v2 => github.com/cloudevents/sdk-go/v2 v2.0.0
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.3.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
-	k8s.io/api => k8s.io/api v0.16.4
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.4
-	k8s.io/apimachinery => k8s.io/apimachinery v0.16.4
-	k8s.io/apiserver => k8s.io/apiserver v0.16.4
-	k8s.io/client-go => k8s.io/client-go v0.16.4
-	k8s.io/code-generator => k8s.io/code-generator v0.16.4
+	k8s.io/api => k8s.io/api v0.17.6
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.6
+	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
+	k8s.io/apiserver => k8s.io/apiserver v0.17.6
+	k8s.io/client-go => k8s.io/client-go v0.17.6
+	k8s.io/code-generator => k8s.io/code-generator v0.17.6
 )
