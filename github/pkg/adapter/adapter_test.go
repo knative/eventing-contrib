@@ -443,7 +443,7 @@ func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitHubAdapter {
 			Namespace: "default",
 		},
 		EnvSecret:    secretToken,
-		EnvPort:      "8080",
+		EnvPort:      "12341",
 		EnvOwnerRepo: "test.repo",
 	}
 	ctx, _ := pkgtesting.SetupFakeContext(t)
@@ -453,7 +453,7 @@ func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitHubAdapter {
 	return NewAdapter(ctx, &env, ce).(*gitHubAdapter)
 }
 
-func TestGracefullShutdown(t *testing.T) {
+func TestGracefulShutdown(t *testing.T) {
 	ce := adaptertest.NewTestClient()
 	ra := newTestAdapter(t, ce)
 	stopCh := make(chan struct{}, 1)

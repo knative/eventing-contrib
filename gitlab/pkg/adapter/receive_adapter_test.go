@@ -194,7 +194,7 @@ func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitLabReceiveAdapter {
 			Namespace: "default",
 		},
 		EnvSecret: secretToken,
-		Port:      "8080",
+		Port:      "12342",
 	}
 	ctx, _ := pkgtesting.SetupFakeContext(t)
 	logger := zap.NewExample().Sugar()
