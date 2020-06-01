@@ -18,7 +18,12 @@ package source
 
 import (
 	"context"
-	"os"
+
+	"knative.dev/pkg/system"
+
+	"knative.dev/pkg/tracker"
+
+	"github.com/kelseyhightower/envconfig"
 
 	//k8s.io imports
 	"k8s.io/client-go/kubernetes/scheme"
@@ -42,15 +47,16 @@ import (
 	"knative.dev/pkg/resolver"
 )
 
-func NewController(
-	ctx context.Context,
-	_ configmap.Watcher,
-) *controller.Impl {
+// envConfig will be used to extract the required environment variables.
+// If this configuration cannot be extracted, then NewController will panic.
+type envConfig struct {
+	Image string `envconfig:"GH_RA_IMAGE"`
+}
 
-	raImage, defined := os.LookupEnv(raImageEnvVar)
-	if !defined {
-		logging.FromContext(ctx).Errorf("required environment variable '%s' not defined", raImageEnvVar)
-		return nil
+func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
+	env := &envConfig{}
+	if err := envconfig.Process("", env); err != nil {
+		logging.FromContext(ctx).Panicf("unable to process GitHubSource's required environment variables: %v", err)
 	}
 
 	githubInformer := githubinformer.Get(ctx)
@@ -61,24 +67,36 @@ func NewController(
 		servingLister:       serviceInformer.Lister(),
 		servingClientSet:    serviceclient.Get(ctx),
 		webhookClient:       gitHubWebhookClient{},
-		receiveAdapterImage: raImage,
+		receiveAdapterImage: env.Image, // can be empty
 	}
-
 	impl := ghreconciler.NewImpl(ctx, r)
 
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
 	logging.FromContext(ctx).Info("Setting up GitHub event handlers")
 
+	// Watch for changes from any GitHubSource object
 	githubInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("GitHubSource")),
-		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
-	})
+	if r.receiveAdapterImage == "" {
+		// Tracker is used to notify us that the mt receive adapter has changed so that
+		// we can reconcile all GitHubSources that depends on it
+		r.tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+
+		// Watch for changes from the multi-tenant receive adapter
+		serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+			FilterFunc: controller.FilterWithNameAndNamespace(system.Namespace(), adapterName),
+			Handler:    controller.HandleAll(r.tracker.OnChanged)})
+
+	} else {
+		// Watch for changes from any Knative service owned by a GitHubSource
+		serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+			FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("GitHubSource")),
+			Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+		})
+	}
 
 	return impl
-
 }
 
 func init() {

@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Veroute.on 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package adapter
+package mtadapter
 
 import (
 	"bytes"
@@ -31,19 +31,27 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
-
 	"knative.dev/eventing/pkg/adapter/v2"
 	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
 
+	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/github/pkg/common"
+
+	// Fake injection informers
+	_ "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource/fake"
 )
 
 const (
-	testSubject = "1234"
-	secretToken = "gitHubsecret"
-	eventID     = "12345"
+	testSubject   = "1234"
+	testOwnerRepo = "test-user/test-repo"
+	secretToken   = "gitHubsecret"
+	eventID       = "12345"
+)
+
+var (
+	testSource = v1alpha1.GitHubEventSource(testOwnerRepo)
 )
 
 // testCase holds a single row of our GitHubSource table tests
@@ -439,18 +447,18 @@ func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitHubAdapter {
 		EnvConfig: adapter.EnvConfig{
 			Namespace: "default",
 		},
-		EnvSecret:    secretToken,
-		EnvPort:      "12341",
-		EnvOwnerRepo: "test.repo",
+		EnvPort: "8080",
 	}
 	ctx, _ := pkgtesting.SetupFakeContext(t)
 	logger := zap.NewExample().Sugar()
 	ctx = logging.WithLogger(ctx, logger)
 
-	return NewAdapter(ctx, &env, ce).(*gitHubAdapter)
+	masterURL := "http://test"
+	kubeConfig := ""
+	return NewAdapter(&masterURL, &kubeConfig)(ctx, &env, ce).(*gitHubAdapter)
 }
 
-func TestGracefulShutdown(t *testing.T) {
+func TestGracefullShutdown(t *testing.T) {
 	ce := adaptertest.NewTestClient()
 	ra := newTestAdapter(t, ce)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -473,9 +481,7 @@ func TestServer(t *testing.T) {
 	for _, tc := range testCases {
 		ce := adaptertest.NewTestClient()
 		adapter := newTestAdapter(t, ce)
-
-		router := adapter.newRouter()
-		server := httptest.NewServer(router)
+		server := httptest.NewServer(adapter.router)
 		defer server.Close()
 
 		t.Run(tc.name, tc.runner(t, server.URL, ce))
