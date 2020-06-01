@@ -65,7 +65,11 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 // Start the ceph bucket notifications to knative adapter
-func (ca *cephReceiveAdapter) Start(stopCh <-chan struct{}) error {
+func (ca *cephReceiveAdapter) Start(ctx context.Context) error {
+	return ca.start(ctx.Done())
+}
+
+func (ca *cephReceiveAdapter) start(stopCh <-chan struct{}) error {
 	http.HandleFunc("/", ca.postHandler)
 	go http.ListenAndServe(":"+ca.port, nil)
 	ca.logger.Info("Ceph to Knative adapter spawned HTTP server")

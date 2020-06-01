@@ -18,6 +18,7 @@ package adapter
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -101,7 +102,8 @@ func TestRecords(t *testing.T) {
 
 	var ca *cephReceiveAdapter
 	var mu sync.Mutex
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+
 	go func() {
 		sinkServer = httptest.NewServer(&fakeSink{
 			t:            t,
@@ -111,7 +113,7 @@ func TestRecords(t *testing.T) {
 		mu.Lock()
 		ca = newTestAdapter(t, adaptertest.NewTestClient(), sinkServer.URL)
 		mu.Unlock()
-		err = ca.Start(stopCh)
+		err = ca.Start(ctx)
 		if err != nil {
 			t.Error(err)
 		}
@@ -131,7 +133,7 @@ func TestRecords(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	close(stopCh)
+	cancel()
 }
 
 type fakeSink struct {

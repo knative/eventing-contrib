@@ -77,7 +77,11 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMe
 	}
 }
 
-func (a *Adapter) Start(stopCh <-chan struct{}) error {
+func (a *Adapter) Start(ctx context.Context) error {
+	return a.start(ctx.Done())
+}
+
+func (a *Adapter) start(stopCh <-chan struct{}) error {
 	a.logger.Info("Starting with config: ",
 		zap.String("Topics", strings.Join(a.config.Topics, ",")),
 		zap.String("ConsumerGroup", a.config.ConsumerGroup),

@@ -88,21 +88,21 @@ func TestNewAdapter(t *testing.T) {
 
 type adapterTestClient struct {
 	*kncetesting.TestCloudEventsClient
-	stopCh chan struct{}
+	cancel context.CancelFunc
 }
 
 var _ cloudevents.Client = (*adapterTestClient)(nil)
 
-func newAdapterTestClient() *adapterTestClient {
+func newAdapterTestClient(cancel context.CancelFunc) *adapterTestClient {
 	return &adapterTestClient{
 		kncetesting.NewTestClient(),
-		make(chan struct{}, 1),
+		cancel,
 	}
 }
 
 func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) cloudevents.Result {
 	retError := c.TestCloudEventsClient.Send(ctx, event)
-	c.stopCh <- struct{}{}
+	c.cancel()
 	return retError
 }
 
@@ -120,7 +120,6 @@ func TestReceiveEventPoll(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ce := newAdapterTestClient()
 
 			env := envConfig{
 				EnvConfig: adapter.EnvConfig{
@@ -144,11 +143,14 @@ func TestReceiveEventPoll(t *testing.T) {
 				Changes: driver.ChangedRevs{"arev"},
 			}))
 
+			ctx, cancel := context.WithCancel(context.Background())
+			ce := newAdapterTestClient(cancel)
+
 			a := newAdapter(ctx, &env, ce, c.DSN(), "kivikmock").(*couchDbAdapter)
 
 			done := make(chan struct{})
 			go func() {
-				err := a.Start(ce.stopCh)
+				err := a.Start(ctx)
 				if err != nil {
 					t.Errorf("expected no error, got %v", err)
 				}

@@ -91,7 +91,11 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	return a
 }
 
-func (a *prometheusAdapter) Start(stopCh <-chan struct{}) error {
+func (a *prometheusAdapter) Start(ctx context.Context) error {
+	return a.start(ctx.Done())
+}
+
+func (a *prometheusAdapter) start(stopCh <-chan struct{}) error {
 	if err := a.readAuthTokenIfNeeded(); err != nil {
 		return err
 	}
