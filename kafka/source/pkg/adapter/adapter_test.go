@@ -436,7 +436,7 @@ func TestAdapter_Start(t *testing.T) { // just increase code coverage
 	ctx, cancel := context.WithCancel(context.Background())
 
 	a := NewAdapter(ctx, NewEnvConfig(), nil, nil)
-	_ = a.Start(ctx.Done())
+	_ = a.Start(ctx)
 
 	cancel()
 }

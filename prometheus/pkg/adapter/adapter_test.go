@@ -162,8 +162,7 @@ func TestStartAdaptor(t *testing.T) {
 			ctx = logging.WithLogger(ctx, logger)
 
 			a := NewAdapter(ctx, &tc.opt, ce)
-			stopCh := make(chan struct{})
-			err := a.Start(stopCh)
+			err := a.Start(ctx)
 
 			if diff := cmp.Diff(tc.wantErrMsg, err.Error()); diff != "" {
 				t.Errorf("unexpected err diff (-want, +got) = %v", diff)
@@ -174,21 +173,21 @@ func TestStartAdaptor(t *testing.T) {
 
 type adapterTestClient struct {
 	*adaptertest.TestCloudEventsClient
-	stopCh chan struct{}
+	cancel context.CancelFunc
 }
 
 var _ cloudevents.Client = (*adapterTestClient)(nil)
 
-func newAdapterTestClient() *adapterTestClient {
+func newAdapterTestClient(cancel context.CancelFunc) *adapterTestClient {
 	return &adapterTestClient{
 		adaptertest.NewTestClient(),
-		make(chan struct{}, 1),
+		cancel,
 	}
 }
 
 func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) protocol.Result {
 	result := c.TestCloudEventsClient.Send(ctx, event)
-	c.stopCh <- struct{}{}
+	c.cancel()
 	return result
 }
 
@@ -232,17 +231,19 @@ func TestReceiveEventPoll(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ce := newAdapterTestClient()
 
 			ctx, _ := pkgtesting.SetupFakeContext(t)
 			logger := zap.NewExample().Sugar()
 			ctx = logging.WithLogger(ctx, logger)
 
+			ctx, cancel := context.WithCancel(ctx)
+			ce := newAdapterTestClient(cancel)
+
 			a := NewAdapter(ctx, &tc.opt, ce)
 
 			done := make(chan struct{})
 			go func() {
-				a.Start(ce.stopCh)
+				a.Start(ctx)
 				done <- struct{}{}
 			}()
 			<-done

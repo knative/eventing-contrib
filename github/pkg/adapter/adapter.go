@@ -117,7 +117,11 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 // Start implements adapter.Adapter
-func (a *gitHubAdapter) Start(stopCh <-chan struct{}) error {
+func (a *gitHubAdapter) Start(ctx context.Context) error {
+	return a.start(ctx.Done())
+}
+
+func (a *gitHubAdapter) start(stopCh <-chan struct{}) error {
 	src := cloudevents.ParseURIRef(a.source)
 	if src == nil {
 		return fmt.Errorf("invalid source for github events: %s", a.source)

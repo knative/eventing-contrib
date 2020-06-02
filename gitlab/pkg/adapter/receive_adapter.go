@@ -73,7 +73,11 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 // Start implements adapter.Adapter
-func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
+func (ra *gitLabReceiveAdapter) Start(ctx context.Context) error {
+	return ra.start(ctx.Done())
+}
+
+func (ra *gitLabReceiveAdapter) start(stopCh <-chan struct{}) error {
 	hook, err := gitlab.New(gitlab.Options.Secret(ra.secretToken))
 	if err != nil {
 		return fmt.Errorf("cannot create gitlab hook: %v", err)

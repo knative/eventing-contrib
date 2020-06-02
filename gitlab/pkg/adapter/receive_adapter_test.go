@@ -157,18 +157,17 @@ func TestGracefulShutdown(t *testing.T) {
 	ce := adaptertest.NewTestClient()
 	ra := newTestAdapter(t, ce)
 	ctx, cancel := context.WithCancel(context.TODO())
-	stopCh := make(chan struct{}, 1)
 
 	go func() {
 		t.Logf("starting webhook server")
-		err := ra.Start(stopCh)
+		err := ra.Start(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 		cancel()
 	}()
 
-	close(stopCh)
+	cancel()
 	<-ctx.Done()
 }
 

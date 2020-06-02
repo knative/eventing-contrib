@@ -18,6 +18,7 @@ package adapter
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -456,16 +457,17 @@ func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitHubAdapter {
 func TestGracefullShutdown(t *testing.T) {
 	ce := adaptertest.NewTestClient()
 	ra := newTestAdapter(t, ce)
-	stopCh := make(chan struct{}, 1)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	go func(stopCh chan struct{}) {
-		defer close(stopCh)
+	go func(cancel context.CancelFunc) {
+		defer cancel()
 		time.Sleep(time.Second)
 
-	}(stopCh)
+	}(cancel)
 
 	t.Logf("starting webhook server")
-	err := ra.Start(stopCh)
+
+	err := ra.Start(ctx)
 	if err != nil {
 		t.Error(err)
 	}
