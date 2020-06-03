@@ -46,11 +46,11 @@ var (
 )
 
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {
-	cgName := topic + "-" + key
+	cgName := topic + "-" + key + "z"
 
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      topic + "-" + key,
+			Name:      cgName,
 			Namespace: client.Namespace,
 		},
 		Data: map[string]string{
@@ -70,7 +70,10 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 
 	client.Tracker.Add(corev1.SchemeGroupVersion.Group, corev1.SchemeGroupVersion.Version, "configmap", client.Namespace, cgName)
 
-	args := []string{"-P", "-v", "-b", bootstrapServer, "-t", topic, "-k", key}
+	args := []string{"-P", "-v", "-b", bootstrapServer, "-t", topic}
+	if len(key) != 0 {
+		args = append(args, "-k", key)
+	}
 	for k, v := range headers {
 		args = append(args, "-H", k+"="+v)
 	}
@@ -117,9 +120,6 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	}, pod.Name, pod.Namespace)
 	if err != nil {
 		client.T.Fatalf("Failed waiting for pod for completeness %q: %v", pod.Name, err)
-	}
-	if err := client.Kube.Kube.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
-		client.T.Fatalf("failed to delete producer pod: %v", err)
 	}
 }
 
