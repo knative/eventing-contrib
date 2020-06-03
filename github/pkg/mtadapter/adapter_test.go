@@ -453,9 +453,7 @@ func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitHubAdapter {
 	logger := zap.NewExample().Sugar()
 	ctx = logging.WithLogger(ctx, logger)
 
-	masterURL := "http://test"
-	kubeConfig := ""
-	return NewAdapter(&masterURL, &kubeConfig)(ctx, &env, ce).(*gitHubAdapter)
+	return NewAdapter(ctx, &env, ce).(*gitHubAdapter)
 }
 
 func TestGracefulShutdown(t *testing.T) {

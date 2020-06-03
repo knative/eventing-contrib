@@ -19,15 +19,12 @@ package mtadapter
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/injection"
-	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/logging"
 
 	githubsourceinformer "knative.dev/eventing-contrib/github/pkg/client/injection/informers/sources/v1alpha1/githubsource"
@@ -58,43 +55,27 @@ type gitHubAdapter struct {
 	controller *controller.Impl
 }
 
-// NewAdapter returns the instance of gitHubReceiveMTAdapter that implements adapter.Adapter interface
-func NewAdapter(masterURL, kubeconfig *string) func(context.Context, adapter.EnvConfigAccessor, cloudevents.Client) adapter.Adapter {
-	return func(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
-		logger := logging.FromContext(ctx)
-		env := processed.(*envConfig)
+// NewAdapter returns the instance of gitHubReceiveAdapter that implements adapter.Adapter interface
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
+	logger := logging.FromContext(ctx)
+	env := processed.(*envConfig)
 
-		// Initialize informers.
-		cfg, err := sharedmain.GetConfig(*masterURL, *kubeconfig)
-		if err != nil {
-			log.Fatalf("Error building kubeconfig: %v", err)
-		}
+	// Setting up the server receiving GitHubEvent
+	lister := githubsourceinformer.Get(ctx).Lister()
+	router := NewRouter(logger, lister, ceClient)
 
-		ctx, informers := injection.Default.SetupInformers(ctx, cfg)
+	return &gitHubAdapter{
+		logger: logger,
+		client: ceClient,
+		port:   env.EnvPort,
 
-		// Setting up the server receiving GitHubEvent
-		lister := githubsourceinformer.Get(ctx).Lister()
-		router := NewRouter(logger, lister, ceClient)
-
-		return &gitHubAdapter{
-			logger: logger,
-			client: ceClient,
-			port:   env.EnvPort,
-
-			informers:  informers,
-			controller: NewController(ctx, router),
-			router:     router,
-		}
+		controller: NewController(ctx, router),
+		router:     router,
 	}
 }
 
 // Start implements adapter.Adapter
 func (a *gitHubAdapter) Start(ctx context.Context) error {
-	a.logger.Info("Starting informers...")
-	if err := controller.StartInformers(ctx.Done(), a.informers...); err != nil {
-		a.logger.Fatalw("Failed to start informers", zap.Error(err))
-	}
-
 	a.logger.Info("Starting controllers...")
 	go controller.StartAll(ctx, a.controller)
 

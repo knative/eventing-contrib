@@ -18,10 +18,16 @@ package main
 
 import (
 	"flag"
+	"log"
 
-	"knative.dev/eventing/pkg/adapter/v2"
+	"knative.dev/pkg/controller"
+
+	"knative.dev/pkg/signals"
 
 	githubadapter "knative.dev/eventing-contrib/github/pkg/mtadapter"
+	"knative.dev/eventing/pkg/adapter/v2"
+	"knative.dev/pkg/injection"
+	"knative.dev/pkg/injection/sharedmain"
 )
 
 var (
@@ -32,5 +38,18 @@ var (
 )
 
 func main() {
-	adapter.Main("githubsource", githubadapter.NewEnvConfig, githubadapter.NewAdapter(masterURL, kubeconfig))
+	cfg, err := sharedmain.GetConfig(*masterURL, *kubeconfig)
+	if err != nil {
+		log.Fatalf("Error building kubeconfig: %v", err)
+	}
+
+	ctx := signals.NewContext()
+	ctx, informers := injection.Default.SetupInformers(ctx, cfg)
+
+	log.Println("Starting informers...")
+	if err := controller.StartInformers(ctx.Done(), informers...); err != nil {
+		log.Fatalf("Failed to start informers: %v", err)
+	}
+
+	adapter.MainWithContext(ctx, "githubsource", githubadapter.NewEnvConfig, githubadapter.NewAdapter)
 }
