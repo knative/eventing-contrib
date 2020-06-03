@@ -20,6 +20,7 @@ package e2e
 
 import (
 	"encoding/json"
+	"sync"
 	"testing"
 
 	"github.com/google/uuid"
@@ -42,30 +43,55 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 	client := lib.Setup(t, true)
 
 	kafkaTopicName := uuid.New().String()
-	loggerPodName := "e2e-kafka-source-event-logger"
 
 	defer lib.TearDown(client)
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
-	t.Logf("Creating EventLogger")
-	pod := resources.EventLoggerPod(loggerPodName)
-	client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
+	loggers := []string{
+		"e2e-kafka-source-event-logger-1",
+		"e2e-kafka-source-event-logger-2",
+		"e2e-kafka-source-event-logger-3",
+	}
 
-	t.Logf("Creating KafkaSource")
-	lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
-		kafkaBootstrapUrl,
-		kafkaTopicName,
-		resources.ServiceRef(loggerPodName),
-	))
+	var wg sync.WaitGroup
+	wg.Add(len(loggers))
+	for _, loggerPodName := range loggers {
+		go func(loggerPodName string) {
+			t.Logf("Creating EventLogger %s", loggerPodName)
+			pod := resources.EventLoggerPod(loggerPodName)
+			client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
+
+			t.Logf("Creating KafkaSource")
+			lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+				kafkaBootstrapUrl,
+				kafkaTopicName,
+				resources.ServiceRef(loggerPodName),
+				contribresources.WithName(loggerPodName),
+				contribresources.WithConsumerGroup(loggerPodName),
+			))
+			wg.Done()
+		}(loggerPodName)
+	}
+	wg.Wait()
 
 	client.WaitForAllTestResourcesReadyOrFail()
 
-	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
+	n := 20
+	wg.Add(n)
+	for i := 0; i < n; i++ {
+		go func() {
+			helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 
-	// verify the logger service receives the event
-	if err := client.CheckLog(loggerPodName, lib.CheckerContains(expectedCheckInLog)); err != nil {
-		t.Fatalf("String %q not found in logs of logger pod %q: %v", expectedCheckInLog, loggerPodName, err)
+	// verify the logger service receives events
+	for _, loggerPodName := range loggers {
+		if err := client.CheckLog(loggerPodName, lib.CheckerContainsCount(expectedCheckInLog, n)); err != nil {
+			t.Fatalf("String %q not found in logs of logger pod %q: %v", expectedCheckInLog, loggerPodName, err)
+		}
 	}
 }
 
@@ -83,6 +109,23 @@ func TestKafkaSource(t *testing.T) {
 			},
 			messagePayload:     "{\"value\":5}",
 			expectedCheckInLog: "\"value\": 5",
+		},
+		"simple_text_no_message_headers": {
+			messageKey:         "0",
+			messagePayload:     "simple 10",
+			expectedCheckInLog: "simple 10",
+		},
+		"simple_text_no_message_headers_no_key": {
+			messagePayload:     "simple 10",
+			expectedCheckInLog: "simple 10",
+		},
+		"simple_text": {
+			messageKey: "0",
+			messageHeaders: map[string]string{
+				"content-type": "text/plain",
+			},
+			messagePayload:     "simple 10",
+			expectedCheckInLog: "simple 10",
 		},
 		"structured": {
 			messageKey: "0",

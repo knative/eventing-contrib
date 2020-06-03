@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/davecgh/go-spew/spew"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -46,7 +48,7 @@ var (
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {
 	cgName := topic + "-" + key
 
-	_, err := client.Kube.Kube.CoreV1().ConfigMaps(client.Namespace).Create(&corev1.ConfigMap{
+	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      topic + "-" + key,
 			Namespace: client.Namespace,
@@ -54,10 +56,16 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 		Data: map[string]string{
 			"payload": value,
 		},
-	})
+	}
+	_, err := client.Kube.Kube.CoreV1().ConfigMaps(client.Namespace).Create(cm)
 	if err != nil {
-		client.T.Fatalf("Failed to create configmap %q: %v", cgName, err)
-		return
+		if !apierrs.IsAlreadyExists(err) {
+			client.T.Fatalf("Failed to create configmap %q: %v", cgName, err)
+			return
+		}
+		if _, err = client.Kube.Kube.CoreV1().ConfigMaps(client.Namespace).Update(cm); err != nil {
+			client.T.Fatalf("failed to update configmap: %q: %v", cgName, err)
+		}
 	}
 
 	client.Tracker.Add(corev1.SchemeGroupVersion.Group, corev1.SchemeGroupVersion.Version, "configmap", client.Namespace, cgName)
@@ -72,7 +80,7 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cgName + "-producer",
+			Name:      uuid.New().String() + "-producer",
 			Namespace: client.Namespace,
 		},
 		Spec: corev1.PodSpec{
@@ -109,6 +117,9 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	}, pod.Name, pod.Namespace)
 	if err != nil {
 		client.T.Fatalf("Failed waiting for pod for completeness %q: %v", pod.Name, err)
+	}
+	if err := client.Kube.Kube.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+		client.T.Fatalf("failed to delete producer pod: %v", err)
 	}
 }
 
