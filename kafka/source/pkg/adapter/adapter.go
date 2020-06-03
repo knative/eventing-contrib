@@ -125,6 +125,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 
 	err = a.ConsumerMessageToHttpRequest(ctx, span, msg, req, a.logger)
 	if err != nil {
+		a.logger.Debug("failed to create request", zap.Error(err))
 		return true, err
 	}
 

@@ -20,7 +20,6 @@ package e2e
 
 import (
 	"encoding/json"
-	"sync"
 	"testing"
 
 	"github.com/google/uuid"
@@ -41,12 +40,21 @@ const (
 
 func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedCheckInLog string) {
 	client := lib.Setup(t, true)
+	defer lib.TearDown(client)
 
 	kafkaTopicName := uuid.New().String()
 
-	defer lib.TearDown(client)
-
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
+
+	const n = 5
+	go func() {
+		client2 := lib.Setup(t, false)
+		defer lib.TearDown(client2)
+
+		for i := 0; i < n; i++ {
+			helpers.MustPublishKafkaMessage(client2, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
+		}
+	}()
 
 	loggers := []string{
 		"e2e-kafka-source-event-logger-1",
@@ -54,38 +62,22 @@ func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]
 		"e2e-kafka-source-event-logger-3",
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(loggers))
 	for _, loggerPodName := range loggers {
-		go func(loggerPodName string) {
-			t.Logf("Creating EventLogger %s", loggerPodName)
-			pod := resources.EventLoggerPod(loggerPodName)
-			client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
+		t.Logf("Creating EventLogger %s", loggerPodName)
+		pod := resources.EventLoggerPod(loggerPodName)
+		client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
 
-			t.Logf("Creating KafkaSource")
-			lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
-				kafkaBootstrapUrl,
-				kafkaTopicName,
-				resources.ServiceRef(loggerPodName),
-				contribresources.WithName(loggerPodName),
-				contribresources.WithConsumerGroup(loggerPodName),
-			))
-			wg.Done()
-		}(loggerPodName)
+		t.Logf("Creating KafkaSource")
+		lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+			kafkaBootstrapUrl,
+			kafkaTopicName,
+			resources.ServiceRef(loggerPodName),
+			contribresources.WithName(loggerPodName),
+			contribresources.WithConsumerGroup(loggerPodName),
+		))
 	}
-	wg.Wait()
 
 	client.WaitForAllTestResourcesReadyOrFail()
-
-	n := 20
-	wg.Add(n)
-	for i := 0; i < n; i++ {
-		go func() {
-			helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
-			wg.Done()
-		}()
-	}
-	wg.Wait()
 
 	// verify the logger service receives events
 	for _, loggerPodName := range loggers {

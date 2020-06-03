@@ -53,6 +53,7 @@ type envConfig struct {
 func NewConfig(ctx context.Context) ([]string, *sarama.Config, error) {
 	cfg := sarama.NewConfig()
 	cfg.Version = sarama.V2_0_0_0
+	cfg.Consumer.Return.Errors = true
 
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
