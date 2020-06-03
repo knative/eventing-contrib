@@ -78,8 +78,22 @@ func KafkaPerformanceImageSenderPod(pace string, warmup string, bootstrapUrl str
 	}
 }
 
-func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectReference) *kafkasourcev1alpha1.KafkaSource {
-	return &kafkasourcev1alpha1.KafkaSource{
+type KafkaSourceOption func(source *kafkasourcev1alpha1.KafkaSource)
+
+func WithName(name string) KafkaSourceOption {
+	return func(source *kafkasourcev1alpha1.KafkaSource) {
+		source.Name = name
+	}
+}
+
+func WithConsumerGroup(cg string) KafkaSourceOption {
+	return func(source *kafkasourcev1alpha1.KafkaSource) {
+		source.Spec.ConsumerGroup = cg
+	}
+}
+
+func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectReference, options ...KafkaSourceOption) *kafkasourcev1alpha1.KafkaSource {
+	source := &kafkasourcev1alpha1.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-kafka-source",
 		},
@@ -99,6 +113,12 @@ func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectRef
 			},
 		},
 	}
+
+	for _, opt := range options {
+		opt(source)
+	}
+
+	return source
 }
 
 func KafkaBinding(bootstrapServer string, ref *tracker.Reference) *kafkabindingv1alpha1.KafkaBinding {
