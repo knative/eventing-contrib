@@ -458,7 +458,7 @@ func newTestAdapter(t *testing.T, ce cloudevents.Client) *gitHubAdapter {
 	return NewAdapter(&masterURL, &kubeConfig)(ctx, &env, ce).(*gitHubAdapter)
 }
 
-func TestGracefullShutdown(t *testing.T) {
+func TestGracefulShutdown(t *testing.T) {
 	ce := adaptertest.NewTestClient()
 	ra := newTestAdapter(t, ce)
 	ctx, cancel := context.WithCancel(context.Background())

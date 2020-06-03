@@ -1,5 +1,5 @@
 /*
-Copyright 2018 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ func (a *gitHubAdapter) Start(ctx context.Context) error {
 	}
 
 	done := make(chan bool, 1)
-	go common.GracefullShutdown(server, a.logger, ctx.Done(), done)
+	go common.GracefulShutdown(server, a.logger, ctx.Done(), done)
 
 	a.logger.Infof("Server is ready to handle requests at %s", server.Addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

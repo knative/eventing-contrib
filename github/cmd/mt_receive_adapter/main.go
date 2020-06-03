@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+
 	"knative.dev/eventing/pkg/adapter/v2"
 
 	githubadapter "knative.dev/eventing-contrib/github/pkg/mtadapter"
