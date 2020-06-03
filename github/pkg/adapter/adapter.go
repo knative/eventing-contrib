@@ -137,7 +137,7 @@ func (a *gitHubAdapter) start(stopCh <-chan struct{}) error {
 		Handler: a.newRouter(hook),
 	}
 
-	go gracefullShutdown(server, a.logger, stopCh, done)
+	go gracefulShutdown(server, a.logger, stopCh, done)
 
 	a.logger.Infof("Server is ready to handle requests at %s", server.Addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -177,7 +177,7 @@ func (a *gitHubAdapter) newRouter(hook *gh.Webhook) *http.ServeMux {
 	return router
 }
 
-func gracefullShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-chan struct{}, done chan<- bool) {
+func gracefulShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-chan struct{}, done chan<- bool) {
 	<-stopCh
 	logger.Info("Server is shutting down...")
 
