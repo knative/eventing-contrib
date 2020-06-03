@@ -16,4 +16,4 @@ limitations under the License.
 
 // Package config is a placeholder that allows us to pull in config files
 // via go mod vendor.
-package adapter
+package config

@@ -30,6 +30,7 @@ COMPONENTS=(
   ["couchdb.yaml"]="couchdb/source/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["github.yaml"]="github/config"
+  ["mt-github.yaml"]="github/config/mt-github"
   ["gitlab.yaml"]="gitlab/config"
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
