@@ -1074,7 +1074,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.15.1-0.20200602073216-77ba1c206907
+# knative.dev/eventing v0.15.1-0.20200603114717-3c35b8885bdc
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
 knative.dev/eventing/pkg/apis/config
@@ -1120,32 +1120,11 @@ knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha2
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha2/fake
-knative.dev/eventing/pkg/client/informers/externalversions
-knative.dev/eventing/pkg/client/informers/externalversions/configs
-knative.dev/eventing/pkg/client/informers/externalversions/configs/v1alpha1
-knative.dev/eventing/pkg/client/informers/externalversions/eventing
-knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1alpha1
-knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1beta1
-knative.dev/eventing/pkg/client/informers/externalversions/flows
-knative.dev/eventing/pkg/client/informers/externalversions/flows/v1alpha1
-knative.dev/eventing/pkg/client/informers/externalversions/flows/v1beta1
-knative.dev/eventing/pkg/client/informers/externalversions/internalinterfaces
-knative.dev/eventing/pkg/client/informers/externalversions/messaging
-knative.dev/eventing/pkg/client/informers/externalversions/messaging/v1alpha1
-knative.dev/eventing/pkg/client/informers/externalversions/messaging/v1beta1
-knative.dev/eventing/pkg/client/informers/externalversions/sources
-knative.dev/eventing/pkg/client/informers/externalversions/sources/v1alpha1
-knative.dev/eventing/pkg/client/informers/externalversions/sources/v1alpha2
 knative.dev/eventing/pkg/client/injection/client
 knative.dev/eventing/pkg/client/injection/client/fake
-knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/broker
-knative.dev/eventing/pkg/client/injection/informers/factory
-knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1alpha1/broker
 knative.dev/eventing/pkg/client/listers/configs/v1alpha1
-knative.dev/eventing/pkg/client/listers/eventing/v1alpha1
 knative.dev/eventing/pkg/client/listers/eventing/v1beta1
 knative.dev/eventing/pkg/client/listers/flows/v1alpha1
-knative.dev/eventing/pkg/client/listers/flows/v1beta1
 knative.dev/eventing/pkg/client/listers/messaging/v1alpha1
 knative.dev/eventing/pkg/client/listers/messaging/v1beta1
 knative.dev/eventing/pkg/client/listers/sources/v1alpha1
@@ -1167,6 +1146,7 @@ knative.dev/eventing/test/lib
 knative.dev/eventing/test/lib/cloudevents
 knative.dev/eventing/test/lib/duck
 knative.dev/eventing/test/lib/resources
+knative.dev/eventing/test/lib/resources/sender
 knative.dev/eventing/test/performance/infra
 knative.dev/eventing/test/performance/infra/aggregator
 knative.dev/eventing/test/performance/infra/common
@@ -1183,7 +1163,7 @@ knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/sendevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-# knative.dev/pkg v0.0.0-20200601184204-18c577c87d4f
+# knative.dev/pkg v0.0.0-20200603004717-9d862737e5c1
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/v1
@@ -1268,7 +1248,7 @@ knative.dev/pkg/webhook/psbinding
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.15.1-0.20200602105317-468ae278d9e3
+# knative.dev/serving v0.15.1-0.20200603103517-7754fd4f2d6f
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
 knative.dev/serving/pkg/apis/config
@@ -1304,7 +1284,7 @@ knative.dev/serving/pkg/client/listers/networking/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1
 knative.dev/serving/pkg/client/listers/serving/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1beta1
-# knative.dev/test-infra v0.0.0-20200602024303-e406de9f65c4
+# knative.dev/test-infra v0.0.0-20200602194317-2a31597e0f46
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
