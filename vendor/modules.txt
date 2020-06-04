@@ -95,7 +95,6 @@ github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1
 github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1
 github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1
 # github.com/cloudevents/sdk-go v1.2.0
-## explicit
 github.com/cloudevents/sdk-go
 github.com/cloudevents/sdk-go/pkg/cloudevents
 github.com/cloudevents/sdk-go/pkg/cloudevents/client
