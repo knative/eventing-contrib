@@ -95,7 +95,6 @@ github.com/census-instrumentation/opencensus-proto/gen-go/metrics/v1
 github.com/census-instrumentation/opencensus-proto/gen-go/resource/v1
 github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1
 # github.com/cloudevents/sdk-go v1.2.0
-## explicit
 github.com/cloudevents/sdk-go
 github.com/cloudevents/sdk-go/pkg/cloudevents
 github.com/cloudevents/sdk-go/pkg/cloudevents/client
@@ -314,6 +313,8 @@ github.com/openzipkin/zipkin-go/model
 github.com/openzipkin/zipkin-go/propagation
 github.com/openzipkin/zipkin-go/reporter
 github.com/openzipkin/zipkin-go/reporter/http
+# github.com/otiai10/copy v1.2.0
+## explicit
 # github.com/pierrec/lz4 v2.5.2+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
@@ -1110,7 +1111,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.15.1-0.20200603220917-589e3834844f
+# knative.dev/eventing v0.15.1-0.20200604110717-36ed1b3a49f1
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1123,7 +1124,6 @@ knative.dev/eventing/pkg/apis/duck/v1beta1
 knative.dev/eventing/pkg/apis/eventing
 knative.dev/eventing/pkg/apis/eventing/v1beta1
 knative.dev/eventing/pkg/apis/flows
-knative.dev/eventing/pkg/apis/flows/v1alpha1
 knative.dev/eventing/pkg/apis/flows/v1beta1
 knative.dev/eventing/pkg/apis/messaging
 knative.dev/eventing/pkg/apis/messaging/config
@@ -1142,8 +1142,6 @@ knative.dev/eventing/pkg/client/clientset/versioned/typed/configs/v1alpha1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/configs/v1alpha1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta1/fake
-knative.dev/eventing/pkg/client/clientset/versioned/typed/flows/v1alpha1
-knative.dev/eventing/pkg/client/clientset/versioned/typed/flows/v1alpha1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/flows/v1beta1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/flows/v1beta1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/messaging/v1alpha1
@@ -1154,11 +1152,28 @@ knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha2
 knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1alpha2/fake
+knative.dev/eventing/pkg/client/informers/externalversions
+knative.dev/eventing/pkg/client/informers/externalversions/configs
+knative.dev/eventing/pkg/client/informers/externalversions/configs/v1alpha1
+knative.dev/eventing/pkg/client/informers/externalversions/eventing
+knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1beta1
+knative.dev/eventing/pkg/client/informers/externalversions/flows
+knative.dev/eventing/pkg/client/informers/externalversions/flows/v1beta1
+knative.dev/eventing/pkg/client/informers/externalversions/internalinterfaces
+knative.dev/eventing/pkg/client/informers/externalversions/messaging
+knative.dev/eventing/pkg/client/informers/externalversions/messaging/v1alpha1
+knative.dev/eventing/pkg/client/informers/externalversions/messaging/v1beta1
+knative.dev/eventing/pkg/client/informers/externalversions/sources
+knative.dev/eventing/pkg/client/informers/externalversions/sources/v1alpha1
+knative.dev/eventing/pkg/client/informers/externalversions/sources/v1alpha2
 knative.dev/eventing/pkg/client/injection/client
 knative.dev/eventing/pkg/client/injection/client/fake
+knative.dev/eventing/pkg/client/injection/informers/eventing/v1beta1/broker
+knative.dev/eventing/pkg/client/injection/informers/factory
+knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1beta1/broker
 knative.dev/eventing/pkg/client/listers/configs/v1alpha1
 knative.dev/eventing/pkg/client/listers/eventing/v1beta1
-knative.dev/eventing/pkg/client/listers/flows/v1alpha1
+knative.dev/eventing/pkg/client/listers/flows/v1beta1
 knative.dev/eventing/pkg/client/listers/messaging/v1alpha1
 knative.dev/eventing/pkg/client/listers/messaging/v1beta1
 knative.dev/eventing/pkg/client/listers/sources/v1alpha1
@@ -1170,6 +1185,7 @@ knative.dev/eventing/pkg/logging
 knative.dev/eventing/pkg/reconciler/names
 knative.dev/eventing/pkg/reconciler/source
 knative.dev/eventing/pkg/reconciler/testing
+knative.dev/eventing/pkg/reconciler/testing/v1beta1
 knative.dev/eventing/pkg/tracing
 knative.dev/eventing/pkg/utils
 knative.dev/eventing/test
@@ -1187,6 +1203,7 @@ knative.dev/eventing/test/performance/infra/common
 knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
+knative.dev/eventing/test/test_images/event-sender
 knative.dev/eventing/test/test_images/eventdetails
 knative.dev/eventing/test/test_images/filterevents
 knative.dev/eventing/test/test_images/heartbeats
@@ -1283,7 +1300,7 @@ knative.dev/pkg/webhook/psbinding
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.15.1-0.20200603185017-d74d6223bc29
+# knative.dev/serving v0.15.1-0.20200604114317-8977f69c8816
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1320,7 +1337,7 @@ knative.dev/serving/pkg/client/listers/networking/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1
 knative.dev/serving/pkg/client/listers/serving/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1beta1
-# knative.dev/test-infra v0.0.0-20200603225718-515c7dca36bb
+# knative.dev/test-infra v0.0.0-20200604141218-ec2263da769d
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
