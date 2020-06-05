@@ -1203,6 +1203,7 @@ knative.dev/eventing/test/performance/infra/common
 knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
+knative.dev/eventing/test/test_images/event-sender
 knative.dev/eventing/test/test_images/eventdetails
 knative.dev/eventing/test/test_images/filterevents
 knative.dev/eventing/test/test_images/heartbeats
