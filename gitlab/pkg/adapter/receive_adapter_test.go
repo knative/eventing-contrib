@@ -162,7 +162,7 @@ func TestGracefulShutdown(t *testing.T) {
 		t.Logf("starting webhook server")
 		err := ra.Start(ctx)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 		cancel()
 	}()
