@@ -17,7 +17,7 @@ limitations under the License.
 package dispatcher
 
 import (
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 )
 
 type subscriptionReference eventingduck.SubscriberSpec

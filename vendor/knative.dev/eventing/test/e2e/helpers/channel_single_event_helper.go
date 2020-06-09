@@ -25,6 +25,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/eventing/test/lib/resources/sender"
 )
@@ -32,8 +33,7 @@ import (
 type SubscriptionVersion string
 
 const (
-	SubscriptionV1alpha1 SubscriptionVersion = "v1alpha1"
-	SubscriptionV1beta1  SubscriptionVersion = "v1beta1"
+	SubscriptionV1beta1 SubscriptionVersion = "v1beta1"
 )
 
 // SingleEventForChannelTestHelper is the helper function for channel_single_event_test
@@ -63,7 +63,7 @@ func SingleEventForChannelTestHelper(t *testing.T, encoding cloudevents.Encoding
 		// create event logger pod and service
 		eventRecordPod := resources.EventRecordPod(eventRecorder)
 		client.CreatePodOrFail(eventRecordPod, lib.WithService(eventRecorder))
-		eventTracker, err := client.NewEventInfoStore(eventRecorder, t.Logf)
+		eventTracker, err := recordevents.NewEventInfoStore(client, eventRecorder)
 		if err != nil {
 			t.Fatalf("Pod tracker failed: %v", err)
 		}
@@ -76,20 +76,15 @@ func SingleEventForChannelTestHelper(t *testing.T, encoding cloudevents.Encoding
 		}
 		// create subscription to subscribe the channel, and forward the received events to the logger service
 		switch subscriptionVersion {
-		case SubscriptionV1alpha1:
+		case SubscriptionV1beta1:
 			client.CreateSubscriptionOrFail(
 				subscriptionName,
 				channelName,
 				&channel,
 				resources.WithSubscriberForSubscription(eventRecorder),
 			)
-		case SubscriptionV1beta1:
-			client.CreateSubscriptionOrFailV1Beta1(
-				subscriptionName,
-				channelName,
-				&channel,
-				resources.WithSubscriberForSubscriptionV1Beta1(eventRecorder),
-			)
+		default:
+			t.Fatalf("Invalid subscription version")
 		}
 
 		// wait for all test resources to be ready, so that we can start sending events
@@ -118,6 +113,6 @@ func SingleEventForChannelTestHelper(t *testing.T, encoding cloudevents.Encoding
 		)
 
 		// verify the logger service receives the event
-		eventTracker.AssertWaitMatchSourceData(t, eventRecorder, eventSource, body, 1, 1)
+		eventTracker.AssertWaitMatchSourceData(t, eventSource, body, 1, 1)
 	})
 }

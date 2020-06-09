@@ -23,6 +23,7 @@ import (
 
 	ce "github.com/cloudevents/sdk-go"
 	ce2 "github.com/cloudevents/sdk-go/v2"
+	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/openzipkin/zipkin-go/model"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -82,7 +83,7 @@ func setupBrokerTracing(brokerClass string) SetupInfrastructureFunc {
 		client *lib.Client,
 		loggerPodName string,
 		tc TracingTestCase,
-	) (tracinghelper.TestSpanTree, lib.EventMatchFunc) {
+	) (tracinghelper.TestSpanTree, cetest.EventMatcher) {
 		// Create a configmap used by the broker.
 		client.CreateBrokerConfigMapOrFail("br", channel)
 
@@ -106,7 +107,7 @@ func setupBrokerTracing(brokerClass string) SetupInfrastructureFunc {
 
 		// Create a transformer (EventTransfrmer) Pod that replies with the same event as the input,
 		// except the reply's event's type is changed to bar.
-		eventTransformerPod := resources.EventTransformationPod("transformer", &cloudevents.CloudEvent{
+		eventTransformerPod := resources.DeprecatedEventTransformationPod("transformer", &cloudevents.CloudEvent{
 			EventContextV1: ce.EventContextV1{
 				Type: etLogger,
 			},

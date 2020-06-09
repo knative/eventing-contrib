@@ -35,9 +35,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/cache"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
@@ -156,7 +156,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 			return err
 		}
 		removeFinalizer(natssChannel)
-		_, err := r.natssClientSet.MessagingV1alpha1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
+		_, err := r.natssClientSet.messagingv1beta1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
 		return err
 	}
 
@@ -221,7 +221,7 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 		return err
 	}
 
-	channels := make([]messagingv1alpha1.Channel, 0)
+	channels := make([]messagingv1beta1.Channel, 0)
 	for _, nc := range natssChannels {
 		if nc.Status.IsReady() {
 			channels = append(channels, *toChannel(nc))
@@ -244,7 +244,7 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscri
 		return nil
 	}
 	subscriberStatus := make([]eventingduckv1beta1.SubscriberStatus, 0)
-	for _, sub := range subscribable.Subscribers {
+	for _, sub := range subscribable.Spec.Subscribers {
 		status := eventingduckv1beta1.SubscriberStatus{
 			UID:                sub.UID,
 			ObservedGeneration: sub.Generation,
@@ -275,7 +275,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	existing := nc.DeepCopy()
 	existing.Status = desired.Status
 
-	return r.natssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
+	return r.natssClientSet.messagingv1beta1().NatssChannels(desired.Namespace).UpdateStatus(existing)
 }
 
 func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
@@ -296,7 +296,7 @@ func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
 		return err
 	}
 
-	_, err = r.natssClientSet.MessagingV1alpha1().NatssChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
+	_, err = r.natssClientSet.messagingv1beta1().NatssChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
 	return err
 }
 
@@ -306,19 +306,24 @@ func removeFinalizer(channel *v1alpha1.NatssChannel) {
 	channel.Finalizers = finalizers.List()
 }
 
-func toChannel(natssChannel *v1alpha1.NatssChannel) *messagingv1alpha1.Channel {
-	channel := &messagingv1alpha1.Channel{
+func toChannel(natssChannel *v1alpha1.NatssChannel) *messagingv1beta1.Channel {
+	channel := &messagingv1beta1.Channel{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      natssChannel.Name,
 			Namespace: natssChannel.Namespace,
 		},
-		Spec: messagingv1alpha1.ChannelSpec{
-			Subscribable: natssChannel.Spec.Subscribable,
+		Spec: messagingv1beta1.ChannelSpec{
+			ChannelableSpec: eventingduckv1beta1.ChannelableSpec{
+				SubscribableSpec: natssChannel.Spec.Subscribable.Spec,
+			},
 		},
 	}
 	if natssChannel.Status.Address != nil {
-		channel.Status = messagingv1alpha1.ChannelStatus{
-			AddressStatus: natssChannel.Status.AddressStatus,
+		channel.Status = messagingv1beta1.ChannelStatus{
+			ChannelableStatus: eventingduckv1beta1.ChannelableStatus{
+				AddressStatus: natssChannel.Status.AddressStatus,
+			},
+			Channel: nil,
 		}
 	}
 	return channel
