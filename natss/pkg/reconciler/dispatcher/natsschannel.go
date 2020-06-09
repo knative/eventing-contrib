@@ -156,7 +156,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 			return err
 		}
 		removeFinalizer(natssChannel)
-		_, err := r.natssClientSet.messagingv1beta1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
+		_, err := r.natssClientSet.MessagingV1alpha1().NatssChannels(natssChannel.Namespace).Update(natssChannel)
 		return err
 	}
 
@@ -239,9 +239,9 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 // createSubscribableStatus creates the SubscribableStatus based on the failedSubscriptions
 // checks for each subscriber on the natss channel if there is a failed subscription on natss side
 // if there is no failed subscription => set ready status
-func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscribable, failedSubscriptions map[eventingduck.SubscriberSpec]error) *eventingduck.SubscribableStatus {
+func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscribable, failedSubscriptions map[eventingduck.SubscriberSpec]error) eventingduck.SubscribableStatus {
 	if subscribable == nil {
-		return nil
+		return eventingduck.SubscribableStatus{}
 	}
 	subscriberStatus := make([]eventingduckv1beta1.SubscriberStatus, 0)
 	for _, sub := range subscribable.Spec.Subscribers {
@@ -256,7 +256,7 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscri
 		}
 		subscriberStatus = append(subscriberStatus, status)
 	}
-	return &eventingduck.SubscribableStatus{
+	return eventingduck.SubscribableStatus{
 		Subscribers: subscriberStatus,
 	}
 }
@@ -275,7 +275,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.NatssCh
 	existing := nc.DeepCopy()
 	existing.Status = desired.Status
 
-	return r.natssClientSet.messagingv1beta1().NatssChannels(desired.Namespace).UpdateStatus(existing)
+	return r.natssClientSet.MessagingV1alpha1().NatssChannels(desired.Namespace).UpdateStatus(existing)
 }
 
 func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
@@ -296,7 +296,7 @@ func (r *Reconciler) ensureFinalizer(channel *v1alpha1.NatssChannel) error {
 		return err
 	}
 
-	_, err = r.natssClientSet.messagingv1beta1().NatssChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
+	_, err = r.natssClientSet.MessagingV1alpha1().NatssChannels(channel.Namespace).Patch(channel.Name, types.MergePatchType, patch)
 	return err
 }
 
@@ -313,11 +313,13 @@ func toChannel(natssChannel *v1alpha1.NatssChannel) *messagingv1beta1.Channel {
 			Namespace: natssChannel.Namespace,
 		},
 		Spec: messagingv1beta1.ChannelSpec{
-			ChannelableSpec: eventingduckv1beta1.ChannelableSpec{
-				SubscribableSpec: natssChannel.Spec.Subscribable.Spec,
-			},
+			ChannelableSpec: eventingduckv1beta1.ChannelableSpec{},
 		},
 	}
+	if natssChannel.Spec.Subscribable != nil {
+		channel.Spec.ChannelableSpec.SubscribableSpec = natssChannel.Spec.Subscribable.Spec
+	}
+
 	if natssChannel.Status.Address != nil {
 		channel.Status = messagingv1beta1.ChannelStatus{
 			ChannelableStatus: eventingduckv1beta1.ChannelableStatus{

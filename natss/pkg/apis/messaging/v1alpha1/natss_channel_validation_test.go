@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"knative.dev/pkg/webhook/resourcesemantics"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/apis"
 )
 
@@ -44,10 +44,11 @@ func TestNatssChannelValidation(t *testing.T) {
 			cr: &NatssChannel{
 				Spec: NatssChannelSpec{
 					Subscribable: &eventingduck.Subscribable{
-						Subscribers: []eventingduck.SubscriberSpec{{
-							SubscriberURI: aURL,
-							ReplyURI:      aURL,
-						}},
+						Spec: eventingduck.SubscribableSpec{
+							Subscribers: []eventingduck.SubscriberSpec{{
+								SubscriberURI: aURL,
+								ReplyURI:      aURL,
+							}}},
 					}},
 			},
 			want: nil,
@@ -56,10 +57,11 @@ func TestNatssChannelValidation(t *testing.T) {
 			cr: &NatssChannel{
 				Spec: NatssChannelSpec{
 					Subscribable: &eventingduck.Subscribable{
-						Subscribers: []eventingduck.SubscriberSpec{{
-							SubscriberURI: aURL,
-							ReplyURI:      aURL,
-						}, {}},
+						Spec: eventingduck.SubscribableSpec{
+							Subscribers: []eventingduck.SubscriberSpec{{
+								SubscriberURI: aURL,
+								ReplyURI:      aURL,
+							}, {}}},
 					}},
 			},
 			want: func() *apis.FieldError {
@@ -72,7 +74,9 @@ func TestNatssChannelValidation(t *testing.T) {
 			cr: &NatssChannel{
 				Spec: NatssChannelSpec{
 					Subscribable: &eventingduck.Subscribable{
-						Subscribers: []eventingduck.SubscriberSpec{{}, {}},
+						Spec: eventingduck.SubscribableSpec{
+							Subscribers: []eventingduck.SubscriberSpec{{}, {}},
+						},
 					},
 				},
 			},

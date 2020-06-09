@@ -20,7 +20,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/apis/duck/v1alpha1"
+	"knative.dev/pkg/apis/duck/v1"
 )
 
 var nc = apis.NewLivingConditionSet(
@@ -75,14 +75,12 @@ func (cs *NatssChannelStatus) InitializeConditions() {
 // SetAddress sets the address (as part of Addressable contract) and marks the correct condition.
 func (cs *NatssChannelStatus) SetAddress(url *apis.URL) {
 	if cs.Address == nil {
-		cs.Address = &v1alpha1.Addressable{}
+		cs.Address = &v1.Addressable{}
 	}
 	if url != nil {
-		cs.Address.Hostname = url.Host
 		cs.Address.URL = url
 		nc.Manage(cs).MarkTrue(NatssChannelConditionAddressable)
 	} else {
-		cs.Address.Hostname = ""
 		cs.Address.URL = nil
 		nc.Manage(cs).MarkFalse(NatssChannelConditionAddressable, "EmptyHostname", "hostname is the empty string")
 	}

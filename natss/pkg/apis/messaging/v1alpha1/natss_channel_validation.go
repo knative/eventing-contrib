@@ -31,7 +31,7 @@ func (cs *NatssChannelSpec) Validate(ctx context.Context) *apis.FieldError {
 	var errs *apis.FieldError
 
 	if cs.Subscribable != nil {
-		for i, subscriber := range cs.Subscribable.Subscribers {
+		for i, subscriber := range cs.Subscribable.Spec.Subscribers {
 			if subscriber.ReplyURI == nil && subscriber.SubscriberURI == nil {
 				fe := apis.ErrMissingField("replyURI", "subscriberURI")
 				fe.Details = "expected at least one of, got none"

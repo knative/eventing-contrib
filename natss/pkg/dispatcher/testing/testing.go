@@ -20,7 +20,7 @@ import (
 	"context"
 	"errors"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"

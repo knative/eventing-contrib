@@ -24,7 +24,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/apis"
 
@@ -132,14 +131,16 @@ func WithNatssChannelSubscribers(t *testing.T, subscriberURI string) NatssChanne
 		t.Errorf("cannot parse url: %v", err)
 	}
 	return func(nc *v1alpha1.NatssChannel) {
-		nc.Spec.Subscribable = &duckv1alpha1.Subscribable{
-			Subscribers: []duckv1alpha1.SubscriberSpec{
-				{
-					UID:               "",
-					Generation:        0,
-					SubscriberURI:     s,
-					ReplyURI:          nil,
-					DeadLetterSinkURI: nil,
+		nc.Spec.Subscribable = &duckv1beta1.Subscribable{
+			Spec: duckv1beta1.SubscribableSpec{
+				Subscribers: []duckv1beta1.SubscriberSpec{
+					{
+						UID:           "",
+						Generation:    0,
+						SubscriberURI: s,
+						ReplyURI:      nil,
+						Delivery:      nil,
+					},
 				},
 			},
 		}
@@ -148,7 +149,7 @@ func WithNatssChannelSubscribers(t *testing.T, subscriberURI string) NatssChanne
 
 func WithNatssChannelSubscribableStatus(ready corev1.ConditionStatus, message string) NatssChannelOption {
 	return func(nc *v1alpha1.NatssChannel) {
-		nc.Status.SubscribableStatus = &duckv1alpha1.SubscribableStatus{
+		nc.Status.SubscribableStatus = duckv1beta1.SubscribableStatus{
 			Subscribers: []duckv1beta1.SubscriberStatus{
 				{
 					Ready:   ready,

@@ -23,9 +23,9 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/apis"
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
@@ -319,22 +319,19 @@ func TestNatssChannelStatus_SetAddressable(t *testing.T) {
 						},
 					},
 				},
-				AddressStatus:          duckv1alpha1.AddressStatus{Address: &duckv1alpha1.Addressable{}},
-				SubscribableTypeStatus: eventingduck.SubscribableTypeStatus{},
+				AddressStatus:      duckv1.AddressStatus{Address: &duckv1.Addressable{}},
+				SubscribableStatus: eventingduck.SubscribableStatus{},
 			},
 		},
 		"has domain": {
 			url: &apis.URL{Scheme: "http", Host: "test-domain"},
 			want: &NatssChannelStatus{
-				AddressStatus: duckv1alpha1.AddressStatus{
-					Address: &duckv1alpha1.Addressable{
-						Addressable: duckv1beta1.Addressable{
-							URL: &apis.URL{
-								Scheme: "http",
-								Host:   "test-domain",
-							},
+				AddressStatus: duckv1.AddressStatus{
+					Address: &duckv1.Addressable{
+						URL: &apis.URL{
+							Scheme: "http",
+							Host:   "test-domain",
 						},
-						Hostname: "test-domain",
 					},
 				},
 				Status: duckv1beta1.Status{
