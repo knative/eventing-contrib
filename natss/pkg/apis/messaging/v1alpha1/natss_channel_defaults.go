@@ -18,9 +18,23 @@ package v1alpha1
 
 import (
 	"context"
+
+	"knative.dev/eventing/pkg/apis/messaging"
 )
 
 func (c *NatssChannel) SetDefaults(ctx context.Context) {
+	// Set the duck subscription to the stored version of the duck
+	// we support. Reason for this is that the stored version will
+	// not get a chance to get modified, but for newer versions
+	// conversion webhook will be able to take a crack at it and
+	// can modify it to match the duck shape.
+	if c.Annotations == nil {
+		c.Annotations = make(map[string]string)
+	}
+	if _, ok := c.Annotations[messaging.SubscribableDuckVersionAnnotation]; !ok {
+		c.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1beta1"
+	}
+
 	c.Spec.SetDefaults(ctx)
 }
 
