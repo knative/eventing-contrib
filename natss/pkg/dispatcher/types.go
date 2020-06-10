@@ -18,12 +18,24 @@ package dispatcher
 
 import (
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	eventingduckbeta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 )
 
 type subscriptionReference eventingduck.SubscriberSpec
 
-func newSubscriptionReference(spec eventingduck.SubscriberSpec) subscriptionReference {
-	return subscriptionReference(spec)
+func newSubscriptionReference(spec eventingduckbeta1.SubscriberSpec) subscriptionReference {
+	s := eventingduck.SubscriberSpec{
+		UID:           spec.UID,
+		Generation:    spec.Generation,
+		SubscriberURI: spec.SubscriberURI,
+		ReplyURI:      spec.ReplyURI,
+		Delivery:      spec.Delivery,
+	}
+
+	if spec.Delivery != nil && spec.Delivery.DeadLetterSink != nil {
+		s.DeadLetterSinkURI = spec.Delivery.DeadLetterSink.URI
+	}
+	return subscriptionReference(s)
 }
 
 func (r *subscriptionReference) String() string {

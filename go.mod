@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.30.16
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.0
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.0
-	github.com/cloudevents/sdk-go/v2 v2.0.0
+	github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
 	github.com/davecgh/go-spew v1.1.1
 	github.com/flimzy/diff v0.1.7 // indirect
 	github.com/go-kivik/couchdb/v3 v3.0.4
@@ -34,18 +34,20 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.17.6
-	k8s.io/apimachinery v0.17.6
+	k8s.io/api v0.18.1
+	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/eventing v0.15.1-0.20200605120418-4085d471bd3a
-	knative.dev/pkg v0.0.0-20200605112617-7b4093b435c0
-	knative.dev/serving v0.15.1-0.20200605022218-74cef7837317
-	knative.dev/test-infra v0.0.0-20200605033518-4b5d9e1bbdbe
+	knative.dev/eventing v0.15.1-0.20200610152122-1873f64a57fb
+	knative.dev/pkg v0.0.0-20200609184032-fef70cc2616b
+	knative.dev/serving v0.15.1-0.20200610170822-42e22bad6559
+	knative.dev/test-infra v0.0.0-20200610141822-fd009ecf10fe
 )
 
 replace (
 	github.com/Azure/go-autorest/autorest => github.com/Azure/go-autorest/autorest v0.9.6
-	github.com/cloudevents/sdk-go/v2 => github.com/cloudevents/sdk-go/v2 v2.0.0
+	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
+	github.com/cloudevents/sdk-go/protocol/stan/v2 => github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
+	github.com/cloudevents/sdk-go/v2 => github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.3.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
 	k8s.io/api => k8s.io/api v0.17.6
@@ -54,4 +56,5 @@ replace (
 	k8s.io/apiserver => k8s.io/apiserver v0.17.6
 	k8s.io/client-go => k8s.io/client-go v0.17.6
 	k8s.io/code-generator => k8s.io/code-generator v0.17.6
+	knative.dev/eventing => knative.dev/eventing v0.15.1-0.20200609184333-fb349c350f10
 )
