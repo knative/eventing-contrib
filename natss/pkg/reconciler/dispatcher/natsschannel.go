@@ -23,6 +23,8 @@ import (
 	"reflect"
 	"strings"
 
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
 	"knative.dev/pkg/injection"
 
 	"go.uber.org/zap"
@@ -37,7 +39,7 @@ import (
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
@@ -221,7 +223,7 @@ func (r *Reconciler) reconcile(ctx context.Context, natssChannel *v1alpha1.Natss
 		return err
 	}
 
-	channels := make([]messagingv1alpha1.Channel, 0)
+	channels := make([]messagingv1beta1.Channel, 0)
 	for _, nc := range natssChannels {
 		if nc.Status.IsReady() {
 			channels = append(channels, *toChannel(nc))
@@ -250,6 +252,7 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduck.Subscri
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,
 		}
+
 		if err, ok := failedSubscriptions[sub]; ok {
 			status.Ready = corev1.ConditionFalse
 			status.Message = err.Error()
@@ -306,20 +309,45 @@ func removeFinalizer(channel *v1alpha1.NatssChannel) {
 	channel.Finalizers = finalizers.List()
 }
 
-func toChannel(natssChannel *v1alpha1.NatssChannel) *messagingv1alpha1.Channel {
-	channel := &messagingv1alpha1.Channel{
+func toChannel(natssChannel *v1alpha1.NatssChannel) *messagingv1beta1.Channel {
+	channel := &messagingv1beta1.Channel{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      natssChannel.Name,
 			Namespace: natssChannel.Namespace,
 		},
-		Spec: messagingv1alpha1.ChannelSpec{
-			Subscribable: natssChannel.Spec.Subscribable,
+		Spec: messagingv1beta1.ChannelSpec{
+			ChannelTemplate: nil,
+			ChannelableSpec: eventingduckv1beta1.ChannelableSpec{
+				SubscribableSpec: eventingduckv1beta1.SubscribableSpec{},
+			},
 		},
 	}
+
 	if natssChannel.Status.Address != nil {
-		channel.Status = messagingv1alpha1.ChannelStatus{
-			AddressStatus: natssChannel.Status.AddressStatus,
+		channel.Status = messagingv1beta1.ChannelStatus{
+			ChannelableStatus: eventingduckv1beta1.ChannelableStatus{
+				AddressStatus: duckv1.AddressStatus{
+					Address: &duckv1.Addressable{
+						URL: natssChannel.Status.Address.URL,
+					}},
+				SubscribableStatus: eventingduckv1beta1.SubscribableStatus{},
+				DeadLetterChannel:  nil,
+			},
+			Channel: nil,
 		}
 	}
+	if natssChannel.Spec.Subscribable != nil {
+		for _, s := range natssChannel.Spec.Subscribable.Subscribers {
+			sbeta1 := eventingduckv1beta1.SubscriberSpec{
+				UID:           s.UID,
+				Generation:    s.Generation,
+				SubscriberURI: s.SubscriberURI,
+				ReplyURI:      s.ReplyURI,
+				Delivery:      s.Delivery,
+			}
+			channel.Spec.Subscribers = append(channel.Spec.Subscribers, sbeta1)
+		}
+	}
+
 	return channel
 }

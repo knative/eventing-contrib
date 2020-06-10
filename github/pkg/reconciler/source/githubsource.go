@@ -137,7 +137,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		return fmt.Errorf("Service %q is not owned by GitHubSource %q", ksvc.Name, source.Name)
 	}
 
-	if ksvc.Status.IsReady() && ksvc.Status.URL != nil {
+	if ksvc.Status.GetCondition(apis.ConditionReady).IsTrue() && ksvc.Status.URL != nil {
 		args := &webhookArgs{
 			source:                source,
 			url:                   ksvc.Status.URL,

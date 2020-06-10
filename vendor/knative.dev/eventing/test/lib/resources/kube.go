@@ -100,11 +100,15 @@ func eventSenderPodImage(imageName string, name string, sink string, event *cete
 }
 
 // EventLoggerPod creates a Pod that logs events received.
+// Deprecated: This test image is gonna be removed soon and you should use EventRecordPod.
+//             Look at recordevents.StartEventRecordOrFail for more info
 func EventLoggerPod(name string) *corev1.Pod {
 	return eventLoggerPod("logevents", name)
 }
 
 // EventDetailsPod creates a Pod that validates events received and log details about events.
+// Deprecated: This test image is gonna be removed soon and you should use EventRecordPod.
+//             Look at recordevents.StartEventRecordOrFail for more info
 func EventDetailsPod(name string) *corev1.Pod {
 	return eventLoggerPod("eventdetails", name)
 }
@@ -131,8 +135,10 @@ func eventLoggerPod(imageName string, name string) *corev1.Pod {
 	}
 }
 
-// EventTransformationPod creates a Pod that transforms events received.
-func EventTransformationPod(name string, event *cetest.CloudEvent) *corev1.Pod {
+// DeprecatedEventTransformationPod creates a Pod that transforms events received.
+// Deprecated: Use EventTransformationPod
+// TODO(nlopezgi): remove once other tests that use sdk1 and depend on this method are migrated.
+func DeprecatedEventTransformationPod(name string, event *cetest.CloudEvent) *corev1.Pod {
 	const imageName = "transformevents"
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -151,6 +157,33 @@ func EventTransformationPod(name string, event *cetest.CloudEvent) *corev1.Pod {
 					event.Source.String(),
 					"-event-data",
 					event.Data,
+				},
+			}},
+			RestartPolicy: corev1.RestartPolicyAlways,
+		},
+	}
+}
+
+// EventTransformationPod creates a Pod that transforms events received receiving as arg a cloudevents sdk2 Event
+func EventTransformationPod(name string, newEventType string, newEventSource string, newEventData []byte) *corev1.Pod {
+	const imageName = "transformevents"
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   name,
+			Labels: map[string]string{"e2etest": string(uuid.NewUUID())},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{{
+				Name:            imageName,
+				Image:           pkgTest.ImagePath(imageName),
+				ImagePullPolicy: corev1.PullAlways,
+				Args: []string{
+					"-event-type",
+					newEventType,
+					"-event-source",
+					newEventSource,
+					"-event-data",
+					string(newEventData),
 				},
 			}},
 			RestartPolicy: corev1.RestartPolicyAlways,

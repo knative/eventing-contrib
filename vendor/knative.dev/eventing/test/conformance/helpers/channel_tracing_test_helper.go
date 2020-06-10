@@ -26,6 +26,7 @@ import (
 
 	ce "github.com/cloudevents/sdk-go"
 	ce2 "github.com/cloudevents/sdk-go/v2"
+	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/openzipkin/zipkin-go/model"
 	"go.opentelemetry.io/otel/api/trace"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +36,7 @@ import (
 	tracinghelper "knative.dev/eventing/test/conformance/helpers/tracing"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/cloudevents"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 )
 
@@ -46,7 +48,7 @@ type SetupInfrastructureFunc func(
 	client *lib.Client,
 	loggerPodName string,
 	tc TracingTestCase,
-) (tracinghelper.TestSpanTree, lib.EventMatchFunc)
+) (tracinghelper.TestSpanTree, cetest.EventMatcher)
 
 // TracingTestCase is the test case information for tracing tests.
 type TracingTestCase struct {
@@ -131,13 +133,13 @@ func tracingTest(
 // matches mustMatch. It is used to show that the expected event was sent to
 // the logger Pod.  It returns a list of the matching events.
 func assertEventMatch(t *testing.T, client *lib.Client, recorderPodName string,
-	mustMatch lib.EventMatchFunc) []lib.EventInfo {
-	targetTracker, err := client.NewEventInfoStore(recorderPodName, t.Logf)
+	mustMatch cetest.EventMatcher) []recordevents.EventInfo {
+	targetTracker, err := recordevents.NewEventInfoStore(client, recorderPodName)
 	if err != nil {
 		t.Fatalf("Pod tracker failed: %v", err)
 	}
 	defer targetTracker.Cleanup()
-	matches, err := targetTracker.WaitAtLeastNMatch(lib.ValidEvFunc(mustMatch), 1)
+	matches, err := targetTracker.WaitAtLeastNMatch(recordevents.MatchEvent(mustMatch), 1)
 	if err != nil {
 		t.Fatalf("Expected messages not found: %v", err)
 	}
@@ -147,7 +149,7 @@ func assertEventMatch(t *testing.T, client *lib.Client, recorderPodName string,
 // getTraceIDHeader gets the TraceID from the passed in events.  It returns the header from the
 // first matching event, but registers a fatal error if more than one traceid header is seen
 // in that message.
-func getTraceIDHeader(t *testing.T, evInfos []lib.EventInfo) string {
+func getTraceIDHeader(t *testing.T, evInfos []recordevents.EventInfo) string {
 	for i := range evInfos {
 		if nil != evInfos[i].HTTPHeaders {
 			sc := trace.RemoteSpanContextFromContext(trace.DefaultHTTPPropagator().Extract(context.TODO(), http.Header(evInfos[i].HTTPHeaders)))
@@ -172,7 +174,7 @@ func setupChannelTracingWithReply(
 	client *lib.Client,
 	loggerPodName string,
 	tc TracingTestCase,
-) (tracinghelper.TestSpanTree, lib.EventMatchFunc) {
+) (tracinghelper.TestSpanTree, cetest.EventMatcher) {
 	// Create the Channels.
 	channelName := "ch"
 	client.CreateChannelOrFail(channelName, channel)
@@ -185,7 +187,7 @@ func setupChannelTracingWithReply(
 	client.CreatePodOrFail(loggerPod, lib.WithService(loggerPodName))
 
 	// Create the subscriber, a Pod that mutates the event.
-	transformerPod := resources.EventTransformationPod("transformer", &cloudevents.CloudEvent{
+	transformerPod := resources.DeprecatedEventTransformationPod("transformer", &cloudevents.CloudEvent{
 		EventContextV1: ce.EventContextV1{
 			Type: "mutated",
 		},
