@@ -26,5 +26,6 @@ import (
 )
 
 func TestChannelStatusSubscriber(t *testing.T) {
+	t.SkipNow()
 	eventingconformancehelpers.ChannelStatusSubscriberTestHelperWithChannelTestRunner(t, channelTestRunner, lib.SetupClientOptionNoop)
 }
