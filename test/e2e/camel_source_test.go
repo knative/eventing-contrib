@@ -22,13 +22,14 @@ import (
 	"testing"
 	"time"
 
-	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
-
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
+	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
+	"github.com/cloudevents/sdk-go/v2/test"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
 	"knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	knativeduck "knative.dev/pkg/apis/duck/v1beta1"
 )
@@ -44,9 +45,9 @@ func TestCamelSource(t *testing.T) {
 	client := lib.Setup(t, true)
 	defer lib.TearDown(client)
 
-	t.Logf("Creating logger Pod")
-	pod := resources.EventLoggerPod(loggerPodName)
-	client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
+	t.Logf("Creating event record")
+	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
+	defer eventTracker.Cleanup()
 
 	camelClient := getCamelKClient(client)
 
@@ -70,6 +71,12 @@ func TestCamelSource(t *testing.T) {
 							&map[string]interface{}{
 								"set-body": &map[string]interface{}{
 									"constant": body,
+								},
+							},
+							&map[string]interface{}{
+								"set-header": &map[string]interface{}{
+									"name":     "Content-Type",
+									"constant": "text/plain",
 								},
 							},
 						},
@@ -99,10 +106,10 @@ func TestCamelSource(t *testing.T) {
 	}
 	printPodLogs(t, client, pods.Items[0].Name, "integration")
 
-	if err := client.CheckLog(loggerPodName, lib.CheckerContains(body)); err != nil {
-		printPodLogs(t, client, pods.Items[0].Name, "integration")
-		t.Fatalf("Strings %q not found in logs of logger pod %q: %v", body, loggerPodName, err)
-	}
+	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(test.AllOf(
+		test.HasData([]byte(body))),
+		test.HasType("org.apache.camel.event"),
+	))
 }
 
 func printPodLogs(t *testing.T, c *lib.Client, podName, containerName string) {
