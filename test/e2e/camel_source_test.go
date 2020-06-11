@@ -73,6 +73,12 @@ func TestCamelSource(t *testing.T) {
 									"constant": body,
 								},
 							},
+							&map[string]interface{}{
+								"set-header": &map[string]interface{}{
+									"name":     "Content-Type",
+									"constant": "text/plain",
+								},
+							},
 						},
 					},
 				},
