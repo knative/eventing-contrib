@@ -101,7 +101,10 @@ func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) i
 		event.SetExtension("key", keyTypeMapper(key))
 	}
 	for k, v := range msg.Headers {
-		event.SetExtension("kafkaheader"+replaceBadCharacters(k, ""), string(v))
+		// Let's skip the content-type, we already transport it with datacontenttype field
+		if k != "content-type" {
+			event.SetExtension("kafkaheader"+replaceBadCharacters(k, ""), string(v))
+		}
 	}
 }
 
