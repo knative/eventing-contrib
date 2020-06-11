@@ -21,10 +21,12 @@ package e2e
 import (
 	"testing"
 
+	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
 	"knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/pkg/tracker"
 
@@ -32,7 +34,7 @@ import (
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
-func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedCheckInLog string) {
+func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedData string) {
 	client := lib.Setup(t, true)
 
 	kafkaTopicName := uuid.New().String()
@@ -42,9 +44,8 @@ func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
-	t.Logf("Creating EventLogger")
-	pod := resources.EventLoggerPod(loggerPodName)
-	client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
+	t.Logf("Creating EventRecord")
+	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
 
 	t.Logf("Creating KafkaSource")
 	lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
@@ -73,26 +74,23 @@ func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string
 
 	helpers.MustPublishKafkaMessageViaBinding(client, selector, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 
-	// verify the logger service receives the event
-	if err := client.CheckLog(loggerPodName, lib.CheckerContains(expectedCheckInLog)); err != nil {
-		t.Fatalf("String %q not found in logs of logger pod %q: %v", expectedCheckInLog, loggerPodName, err)
-	}
+	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(test.HasData([]byte(expectedData))))
 }
 
 func TestKafkaBinding(t *testing.T) {
 	tests := map[string]struct {
-		messageKey         string
-		messageHeaders     map[string]string
-		messagePayload     string
-		expectedCheckInLog string
+		messageKey     string
+		messageHeaders map[string]string
+		messagePayload string
+		expectedData   string
 	}{
 		"no_event": {
 			messageKey: "0",
 			messageHeaders: map[string]string{
 				"content-type": "application/json",
 			},
-			messagePayload:     "{\"value\":5}",
-			expectedCheckInLog: "\"value\": 5",
+			messagePayload: `{"value":5}`,
+			expectedData:   `{"value":5}`,
 		},
 		"structured": {
 			messageKey: "0",
@@ -113,12 +111,13 @@ func TestKafkaBinding(t *testing.T) {
 					"hello": "Francesco",
 				},
 			}),
-			expectedCheckInLog: "\"hello\": \"Francesco\"",
+			expectedData: `{"hello":"Francesco"}`,
 		},
 	}
-	for name, test := range tests {
+	for name, tc := range tests {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
-			testKafkaBinding(t, test.messageKey, test.messageHeaders, test.messagePayload, test.expectedCheckInLog)
+			testKafkaBinding(t, tc.messageKey, tc.messageHeaders, tc.messagePayload, tc.expectedData)
 		})
 	}
 }

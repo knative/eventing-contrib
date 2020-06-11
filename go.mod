@@ -25,6 +25,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/slinkydeveloper/loadastic v0.0.0-20191203132749-9afe5a010a57
+	github.com/stretchr/testify v1.5.1
 	github.com/xanzy/go-gitlab v0.28.0
 	gitlab.com/flimzy/testy v0.2.1 // indirect
 	go.opencensus.io v0.22.3
