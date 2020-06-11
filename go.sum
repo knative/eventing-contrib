@@ -1605,8 +1605,8 @@ knative.dev/pkg v0.0.0-20200606224418-7ed1d4a552bc/go.mod h1:ItJ3UvcHFt7qMoowI2u
 knative.dev/pkg v0.0.0-20200609184032-fef70cc2616b h1:L25RYK4WW4kVVUQHl6JA3oacGTMZxiiOG1QETHtBxR8=
 knative.dev/pkg v0.0.0-20200609184032-fef70cc2616b/go.mod h1:rA+FklsrVahwF4a+D63NyHJlzDoAFH81K4J5CYuE3bA=
 knative.dev/sample-controller v0.0.0-20200510050845-bf7c19498b7e/go.mod h1:D2ZDLrR9Dq9LiiVN7TatzI7WMcEPgk1MHbbhgBKE6W8=
-knative.dev/serving v0.15.1-0.20200610230223-c04fc40072b2 h1:02u+l54oOpAQpgwS75tVbZSLAoo0twigpkPYfxhMpeA=
-knative.dev/serving v0.15.1-0.20200610230223-c04fc40072b2/go.mod h1:pfrG5G1LQ8gNKuY8p6LvsbFs0bZUycS9r1X0jhsMJw4=
+knative.dev/serving v0.15.1-0.20200611133923-d7033ad34264 h1:bpi3TUS8vQQ53ujWd2wo+5eJozmPyjrj2uc3hdD1uPI=
+knative.dev/serving v0.15.1-0.20200611133923-d7033ad34264/go.mod h1:pfrG5G1LQ8gNKuY8p6LvsbFs0bZUycS9r1X0jhsMJw4=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5 h1:BEfxItc0hPeQmojxoiOwbCbmdVz0+L2SYWKUSQeFF8g=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
 knative.dev/test-infra v0.0.0-20200505052144-5ea2f705bb55/go.mod h1:WqF1Azka+FxPZ20keR2zCNtiQA1MP9ZB4BH4HuI+SIU=
