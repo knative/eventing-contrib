@@ -48,13 +48,18 @@ var (
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {
 	cgName := topic + "-" + key + "z"
 
+	payload := value
+	if key != "" {
+		payload = key + "=" + value
+	}
+
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cgName,
 			Namespace: client.Namespace,
 		},
 		Data: map[string]string{
-			"payload": value,
+			"payload": payload,
 		},
 	}
 	_, err := client.Kube.Kube.CoreV1().ConfigMaps(client.Namespace).Create(cm)
@@ -70,14 +75,14 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 
 	client.Tracker.Add(corev1.SchemeGroupVersion.Group, corev1.SchemeGroupVersion.Version, "configmap", client.Namespace, cgName)
 
-	args := []string{"-P", "-v", "-b", bootstrapServer, "-t", topic}
-	if len(key) != 0 {
-		args = append(args, "-k", key)
+	args := []string{"-P", "-T", "-b", bootstrapServer, "-t", topic}
+	if key != "" {
+		args = append(args, "-K=")
 	}
 	for k, v := range headers {
 		args = append(args, "-H", k+"="+v)
 	}
-	args = append(args, "/etc/mounted/payload")
+	args = append(args, "-l", "/etc/mounted/payload")
 
 	client.T.Logf("Running kafkacat %s", strings.Join(args, " "))
 

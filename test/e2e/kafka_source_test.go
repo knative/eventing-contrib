@@ -139,7 +139,6 @@ func TestKafkaSource(t *testing.T) {
 			},
 		},
 		"structured": {
-			messageKey: "0",
 			messageHeaders: map[string]string{
 				"content-type": "application/cloudevents+json",
 			},
