@@ -20,14 +20,20 @@ package e2e
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cetypes "github.com/cloudevents/sdk-go/v2/types"
+	. "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
-	"knative.dev/eventing-contrib/test/e2e/helpers"
 	"knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
-	lib2 "knative.dev/eventing-contrib/test/lib"
+	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/test/e2e/helpers"
+	contriblib "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
@@ -38,78 +44,83 @@ const (
 	kafkaClusterNamespace = "kafka"
 )
 
-func testKafkaSource(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedCheckInLog string) {
+func testKafkaSource(t *testing.T, name string, messageKey string, messageHeaders map[string]string, messagePayload string, matcherGen func(namespace, kafkaSourceName, topic string) EventMatcher) {
+	var (
+		kafkaTopicName = uuid.New().String()
+		consumerGroup = uuid.New().String()
+		recordEventPodName = "e2e-kafka-recordevent-" + strings.ReplaceAll(name, "_", "-")
+		kafkaSourceName = "e2e-kafka-source-" + strings.ReplaceAll(name, "_", "-")
+	)
+
 	client := lib.Setup(t, true)
 	defer lib.TearDown(client)
 
-	kafkaTopicName := uuid.New().String()
-
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
-	const n = 5
-	go func() {
-		client2 := lib.Setup(t, false)
-		defer lib.TearDown(client2)
+	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 
-		for i := 0; i < n; i++ {
-			helpers.MustPublishKafkaMessage(client2, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
-		}
-	}()
+	eventTracker, _ := recordevents.StartEventRecordOrFail(client, recordEventPodName)
 
-	loggers := []string{
-		"e2e-kafka-source-event-logger-1",
-		"e2e-kafka-source-event-logger-2",
-		"e2e-kafka-source-event-logger-3",
-	}
-
-	for _, loggerPodName := range loggers {
-		t.Logf("Creating EventLogger %s", loggerPodName)
-		pod := resources.EventLoggerPod(loggerPodName)
-		client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
-
-		t.Logf("Creating KafkaSource")
-		lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
-			kafkaBootstrapUrl,
-			kafkaTopicName,
-			resources.ServiceRef(loggerPodName),
-			contribresources.WithName(loggerPodName),
-			contribresources.WithConsumerGroup(loggerPodName),
-		))
-	}
+	t.Logf("Creating KafkaSource")
+	contriblib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+		kafkaBootstrapUrl,
+		kafkaTopicName,
+		resources.ServiceRef(recordEventPodName),
+		contribresources.WithName(kafkaSourceName),
+		contribresources.WithConsumerGroup(consumerGroup),
+	))
 
 	client.WaitForAllTestResourcesReadyOrFail()
 
-	// verify the logger service receives events
-	for _, loggerPodName := range loggers {
-		if err := client.CheckLog(loggerPodName, lib.CheckerContainsCount(expectedCheckInLog, n)); err != nil {
-			t.Fatalf("String %q not found in logs of logger pod %q: %v", expectedCheckInLog, loggerPodName, err)
-		}
-	}
+	eventTracker.AssertExact(1, recordevents.MatchEvent(matcherGen(client.Namespace, kafkaSourceName, kafkaTopicName)))
 }
 
 func TestKafkaSource(t *testing.T) {
+	time, _ := cetypes.ParseTime("2018-04-05T17:31:00Z")
+
 	tests := map[string]struct {
 		messageKey         string
 		messageHeaders     map[string]string
 		messagePayload     string
-		expectedCheckInLog string
+		matcherGen         func(namespace, kafkaSourceName, topic string) EventMatcher
 	}{
 		"no_event": {
 			messageKey: "0",
 			messageHeaders: map[string]string{
 				"content-type": "application/json",
 			},
-			messagePayload:     "{\"value\":5}",
-			expectedCheckInLog: "\"value\": 5",
+			messagePayload:     `{"value":5}`,
+			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
+				return AllOf(
+					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
+					HasType(sourcesv1alpha1.KafkaEventType),
+					HasDataContentType("application/json"),
+					HasData([]byte(`{"value":5}`)),
+					HasExtension("key", "0"),
+				)
+			},
 		},
 		"simple_text_no_message_headers": {
 			messageKey:         "0",
 			messagePayload:     "simple 10",
-			expectedCheckInLog: "simple 10",
+			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
+				return AllOf(
+					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
+					HasType(sourcesv1alpha1.KafkaEventType),
+					HasData([]byte("simple 10")),
+					HasExtension("key", "0"),
+				)
+			},
 		},
 		"simple_text_no_message_headers_no_key": {
 			messagePayload:     "simple 10",
-			expectedCheckInLog: "simple 10",
+			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
+				return AllOf(
+					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
+					HasType(sourcesv1alpha1.KafkaEventType),
+					HasData([]byte("simple 10")),
+				)
+			},
 		},
 		"simple_text": {
 			messageKey: "0",
@@ -117,7 +128,15 @@ func TestKafkaSource(t *testing.T) {
 				"content-type": "text/plain",
 			},
 			messagePayload:     "simple 10",
-			expectedCheckInLog: "simple 10",
+			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
+				return AllOf(
+					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
+					HasType(sourcesv1alpha1.KafkaEventType),
+					HasDataContentType("text/plain"),
+					HasData([]byte("simple 10")),
+					HasExtension("key", "0"),
+				)
+			},
 		},
 		"structured": {
 			messageKey: "0",
@@ -131,19 +150,63 @@ func TestKafkaSource(t *testing.T) {
 				"subject":              "123",
 				"id":                   "A234-1234-1234",
 				"time":                 "2018-04-05T17:31:00Z",
-				"comexampleextension1": "value",
-				"comexampleothervalue": 5,
 				"datacontenttype":      "application/json",
 				"data": map[string]string{
 					"hello": "Francesco",
 				},
+				"comexampleextension1": "value",
+				"comexampleothervalue": 5,
 			}),
-			expectedCheckInLog: "\"hello\": \"Francesco\"",
+			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
+				return AllOf(
+					HasSpecVersion(cloudevents.VersionV1),
+					HasType("com.github.pull.create"),
+					HasSource("https://github.com/cloudevents/spec/pull"),
+					HasSubject("123"),
+					HasId("A234-1234-1234"),
+					HasTime(time),
+					HasDataContentType("application/json"),
+					HasData([]byte(`{"hello":"Francesco"}`)),
+					HasExtension("comexampleextension1", "value"),
+					HasExtension("comexampleothervalue", "5"),
+				)
+			},
+		},
+		"binary": {
+			messageHeaders: map[string]string{
+				"ce_specversion":          "1.0",
+				"ce_type":                 "com.github.pull.create",
+				"ce_source":               "https://github.com/cloudevents/spec/pull",
+				"ce_subject":              "123",
+				"ce_id":                   "A234-1234-1234",
+				"ce_time":                 "2018-04-05T17:31:00Z",
+				"content-type":            "application/json",
+				"ce_comexampleextension1": "value",
+				"ce_comexampleothervalue": "5",
+			},
+			messagePayload: mustJsonMarshal(t, map[string]string{
+					"hello": "Francesco",
+			}),
+			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
+				return AllOf(
+					HasSpecVersion(cloudevents.VersionV1),
+					HasType("com.github.pull.create"),
+					HasSource("https://github.com/cloudevents/spec/pull"),
+					HasSubject("123"),
+					HasId("A234-1234-1234"),
+					HasTime(time),
+					HasDataContentType("application/json"),
+					HasData([]byte(`{"hello":"Francesco"}`)),
+					HasExtension("comexampleextension1", "value"),
+					HasExtension("comexampleothervalue", "5"),
+				)
+			},
 		},
 	}
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
-			testKafkaSource(t, test.messageKey, test.messageHeaders, test.messagePayload, test.expectedCheckInLog)
+			testKafkaSource(t, name, test.messageKey, test.messageHeaders, test.messagePayload, test.matcherGen)
 		})
 	}
 }
