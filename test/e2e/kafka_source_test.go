@@ -84,7 +84,7 @@ func TestKafkaSource(t *testing.T) {
 		messagePayload string
 		matcherGen     func(namespace, kafkaSourceName, topic string) EventMatcher
 	}{
-		"no_event_with_content_type": {
+		"no_event": {
 			messageKey: "0",
 			messageHeaders: map[string]string{
 				"content-type": "application/json",
@@ -100,7 +100,7 @@ func TestKafkaSource(t *testing.T) {
 				)
 			},
 		},
-		"no_event_without_content_type": {
+		"no_event_no_content_type": {
 			messageKey:     "0",
 			messagePayload: `{"value":5}`,
 			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
@@ -112,7 +112,7 @@ func TestKafkaSource(t *testing.T) {
 				)
 			},
 		},
-		"no_event_without_content_type_and_without_key": {
+		"no_event_no_content_type_no_key": {
 			messagePayload: `{"value":5}`,
 			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
 				return AllOf(
