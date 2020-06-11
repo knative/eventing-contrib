@@ -134,7 +134,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 	// TODO(mattmoor): create KafkaBinding for the receive adapter.
 
 	ra, err := r.createReceiveAdapter(ctx, src, sinkURI)
-	if err != nil {
+	var event *pkgreconciler.ReconcilerEvent
+	if !pkgreconciler.EventAs(err, &event) || event.EventType != corev1.EventTypeNormal {
 		logging.FromContext(ctx).Error("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
