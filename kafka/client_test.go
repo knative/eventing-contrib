@@ -18,14 +18,18 @@ package kafka
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewTLSConfig(t *testing.T) {
@@ -202,4 +206,17 @@ func generateCert(t *testing.T) (string, string) {
 	}
 
 	return certOut.String(), keyOut.String()
+}
+
+func TestNewConfig(t *testing.T) {
+	ctx := context.Background()
+
+	// Increasing coverage
+	_ = os.Setenv("KAFKA_BOOTSTRAP_SERVERS", "my-cluster-kafka-bootstrap.my-kafka-namespace:9092")
+
+	servers, config, err := NewConfig(ctx)
+
+	require.NoError(t, err)
+	require.NotNil(t, config)
+	require.Equal(t, []string{"my-cluster-kafka-bootstrap.my-kafka-namespace:9092"}, servers)
 }

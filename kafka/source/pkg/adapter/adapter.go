@@ -95,6 +95,8 @@ func (a *Adapter) start(stopCh <-chan struct{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to create the config: %w", err)
 	}
+	config.Consumer.Offsets.AutoCommit.Enable = false
+
 	consumerGroupFactory := kafka.NewConsumerGroupFactory(addrs, config)
 	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, a.config.Topics, a.logger, a)
 	if err != nil {
@@ -125,6 +127,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 
 	err = a.ConsumerMessageToHttpRequest(ctx, span, msg, req, a.logger)
 	if err != nil {
+		a.logger.Debug("failed to create request", zap.Error(err))
 		return true, err
 	}
 
