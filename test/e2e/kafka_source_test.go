@@ -24,8 +24,8 @@ import (
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	. "github.com/cloudevents/sdk-go/v2/test"
+	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"github.com/google/uuid"
 	"knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
@@ -46,18 +46,16 @@ const (
 
 func testKafkaSource(t *testing.T, name string, messageKey string, messageHeaders map[string]string, messagePayload string, matcherGen func(namespace, kafkaSourceName, topic string) EventMatcher) {
 	var (
-		kafkaTopicName = uuid.New().String()
-		consumerGroup = uuid.New().String()
+		kafkaTopicName     = uuid.New().String()
+		consumerGroup      = uuid.New().String()
 		recordEventPodName = "e2e-kafka-recordevent-" + strings.ReplaceAll(name, "_", "-")
-		kafkaSourceName = "e2e-kafka-source-" + strings.ReplaceAll(name, "_", "-")
+		kafkaSourceName    = "e2e-kafka-source-" + strings.ReplaceAll(name, "_", "-")
 	)
 
 	client := lib.Setup(t, true)
 	defer lib.TearDown(client)
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
-
-	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, recordEventPodName)
 
@@ -72,6 +70,8 @@ func testKafkaSource(t *testing.T, name string, messageKey string, messageHeader
 
 	client.WaitForAllTestResourcesReadyOrFail()
 
+	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
+
 	eventTracker.AssertExact(1, recordevents.MatchEvent(matcherGen(client.Namespace, kafkaSourceName, kafkaTopicName)))
 }
 
@@ -79,17 +79,17 @@ func TestKafkaSource(t *testing.T) {
 	time, _ := cetypes.ParseTime("2018-04-05T17:31:00Z")
 
 	tests := map[string]struct {
-		messageKey         string
-		messageHeaders     map[string]string
-		messagePayload     string
-		matcherGen         func(namespace, kafkaSourceName, topic string) EventMatcher
+		messageKey     string
+		messageHeaders map[string]string
+		messagePayload string
+		matcherGen     func(namespace, kafkaSourceName, topic string) EventMatcher
 	}{
 		"no_event": {
 			messageKey: "0",
 			messageHeaders: map[string]string{
 				"content-type": "application/json",
 			},
-			messagePayload:     `{"value":5}`,
+			messagePayload: `{"value":5}`,
 			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
 				return AllOf(
 					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
@@ -101,8 +101,8 @@ func TestKafkaSource(t *testing.T) {
 			},
 		},
 		"simple_text_no_message_headers": {
-			messageKey:         "0",
-			messagePayload:     "simple 10",
+			messageKey:     "0",
+			messagePayload: "simple 10",
 			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
 				return AllOf(
 					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
@@ -113,7 +113,7 @@ func TestKafkaSource(t *testing.T) {
 			},
 		},
 		"simple_text_no_message_headers_no_key": {
-			messagePayload:     "simple 10",
+			messagePayload: "simple 10",
 			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
 				return AllOf(
 					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
@@ -127,7 +127,7 @@ func TestKafkaSource(t *testing.T) {
 			messageHeaders: map[string]string{
 				"content-type": "text/plain",
 			},
-			messagePayload:     "simple 10",
+			messagePayload: "simple 10",
 			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
 				return AllOf(
 					HasSource(sourcesv1alpha1.KafkaEventSource(namespace, kafkaSourceName, topic)),
@@ -144,13 +144,13 @@ func TestKafkaSource(t *testing.T) {
 				"content-type": "application/cloudevents+json",
 			},
 			messagePayload: mustJsonMarshal(t, map[string]interface{}{
-				"specversion":          "1.0",
-				"type":                 "com.github.pull.create",
-				"source":               "https://github.com/cloudevents/spec/pull",
-				"subject":              "123",
-				"id":                   "A234-1234-1234",
-				"time":                 "2018-04-05T17:31:00Z",
-				"datacontenttype":      "application/json",
+				"specversion":     "1.0",
+				"type":            "com.github.pull.create",
+				"source":          "https://github.com/cloudevents/spec/pull",
+				"subject":         "123",
+				"id":              "A234-1234-1234",
+				"time":            "2018-04-05T17:31:00Z",
+				"datacontenttype": "application/json",
 				"data": map[string]string{
 					"hello": "Francesco",
 				},
@@ -185,7 +185,7 @@ func TestKafkaSource(t *testing.T) {
 				"ce_comexampleothervalue": "5",
 			},
 			messagePayload: mustJsonMarshal(t, map[string]string{
-					"hello": "Francesco",
+				"hello": "Francesco",
 			}),
 			matcherGen: func(namespace, kafkaSourceName, topic string) EventMatcher {
 				return AllOf(
