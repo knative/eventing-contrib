@@ -135,8 +135,14 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 
 	ra, err := r.createReceiveAdapter(ctx, src, sinkURI)
 	if err != nil {
-		logging.FromContext(ctx).Error("Unable to create the receive adapter", zap.Error(err))
-		return err
+		var event *pkgreconciler.ReconcilerEvent
+		isReconcilerEvent := pkgreconciler.EventAs(err, &event)
+		if isReconcilerEvent && event.EventType != corev1.EventTypeNormal {
+			logging.FromContext(ctx).Error("Unable to create the receive adapter. Reconciler error", zap.Error(err))
+			return err
+		} else if !isReconcilerEvent {
+			logging.FromContext(ctx).Error("Unable to create the receive adapter. Generic error", zap.Error(err))
+		}
 	}
 	src.Status.MarkDeployed(ra)
 	src.Status.CloudEventAttributes = r.createCloudEventAttributes(src)
