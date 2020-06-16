@@ -1112,7 +1112,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.15.1-0.20200616133424-a31d2d254698 => knative.dev/eventing v0.15.1-0.20200609184333-fb349c350f10
+# knative.dev/eventing v0.15.1-0.20200616144124-9e567548bac0 => knative.dev/eventing v0.15.1-0.20200609184333-fb349c350f10
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1200,14 +1200,11 @@ knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
 knative.dev/eventing/test/test_images/event-sender
-knative.dev/eventing/test/test_images/eventdetails
 knative.dev/eventing/test/test_images/filterevents
 knative.dev/eventing/test/test_images/heartbeats
-knative.dev/eventing/test/test_images/logevents
 knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
-knative.dev/eventing/test/test_images/sendevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
 # knative.dev/networking v0.0.0-20200611155523-bd13675bcf70
