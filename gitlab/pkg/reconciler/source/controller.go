@@ -79,7 +79,7 @@ func NewController(
 	gitlabInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	serviceInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("GitLabSource")),
+		FilterFunc: controller.FilterControllerGVK(v1alpha1.SchemeGroupVersion.WithKind("GitLabSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

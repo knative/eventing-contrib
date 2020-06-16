@@ -193,8 +193,7 @@ func gracefulShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-c
 
 // HandleEvent is invoked whenever an event comes in from GitHub
 func (a *gitHubAdapter) HandleEvent(payload interface{}, header http.Header) error {
-	hdr := http.Header(header)
-	err := a.handleEvent(payload, hdr)
+	err := a.handleEvent(payload, header)
 	return err
 }
 

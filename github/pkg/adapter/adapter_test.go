@@ -27,7 +27,6 @@ import (
 	"testing"
 	"time"
 
-	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing/pkg/adapter/v2"
 	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
@@ -40,14 +39,9 @@ import (
 )
 
 const (
-	testSubject   = "1234"
-	testOwnerRepo = "test-user/test-repo"
-	secretToken   = "gitHubsecret"
-	eventID       = "12345"
-)
-
-var (
-	testSource = v1alpha1.GitHubEventSource(testOwnerRepo)
+	testSubject = "1234"
+	secretToken = "gitHubsecret"
+	eventID     = "12345"
 )
 
 // testCase holds a single row of our GitHubSource table tests
