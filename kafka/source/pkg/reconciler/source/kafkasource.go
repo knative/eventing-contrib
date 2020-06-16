@@ -142,6 +142,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 			return err
 		} else if !isReconcilerEvent {
 			logging.FromContext(ctx).Error("Unable to create the receive adapter. Generic error", zap.Error(err))
+			return err
 		}
 	}
 	src.Status.MarkDeployed(ra)
