@@ -22,24 +22,30 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	nethttp "net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 	"go.uber.org/zap"
 
 	"knative.dev/eventing/pkg/tracing"
 )
 
 var (
-	sink          string
-	inputEvent    string
-	eventEncoding string
-	periodStr     string
-	delayStr      string
-	maxMsgStr     string
-	addTracing    bool
-	incrementalId bool
+	sink              string
+	inputEvent        string
+	eventEncoding     string
+	periodStr         string
+	delayStr          string
+	maxMsgStr         string
+	addTracing        bool
+	incrementalId     bool
+	additionalHeaders string
 )
 
 func init() {
@@ -51,6 +57,7 @@ func init() {
 	flag.StringVar(&maxMsgStr, "max-messages", "1", "The number of messages to attempt to send. 0 for unlimited.")
 	flag.BoolVar(&addTracing, "add-tracing", false, "Should tracing be added to events sent.")
 	flag.BoolVar(&incrementalId, "incremental-id", false, "Override the event id with an incremental id.")
+	flag.StringVar(&additionalHeaders, "additional-headers", "", "Additional non-CloudEvents headers to send")
 }
 
 func parseDurationStr(durationStr string, defaultDuration int) time.Duration {
@@ -98,23 +105,51 @@ func main() {
 		log.Fatalf("unsupported encoding option: %q\n", eventEncoding)
 	}
 
-	t, err := cloudevents.NewHTTP(cloudevents.WithTarget(sink))
+	httpOpts := []cehttp.Option{
+		cloudevents.WithTarget(sink),
+	}
+
+	if addTracing {
+		httpOpts = append(
+			httpOpts,
+			cloudevents.WithRoundTripper(&ochttp.Transport{
+				Base:        nethttp.DefaultTransport,
+				Propagation: &tracecontext.HTTPFormat{},
+			}),
+		)
+	}
+	if additionalHeaders != "" {
+		for _, kv := range strings.Split(additionalHeaders, ",") {
+			splitted := strings.Split(kv, "=")
+			httpOpts = append(httpOpts, cloudevents.WithHeader(splitted[0], splitted[1]))
+		}
+	}
+
+	t, err := cloudevents.NewHTTP(httpOpts...)
 	if err != nil {
 		log.Fatalf("failed to create transport, %v", err)
 	}
 
+	var c cloudevents.Client
 	if addTracing {
 		log.Println("Adding tracing")
 		logger, _ := zap.NewDevelopment()
 		if err := tracing.SetupStaticPublishing(logger.Sugar(), "", tracing.AlwaysSample); err != nil {
 			log.Fatalf("Unable to setup trace publishing: %v", err)
 		}
+
+		c, err = cloudevents.NewClientObserved(t,
+			cloudevents.WithTimeNow(),
+			cloudevents.WithUUIDs(),
+			cloudevents.WithTracePropagation,
+		)
+	} else {
+		c, err = cloudevents.NewClient(t,
+			cloudevents.WithTimeNow(),
+			cloudevents.WithUUIDs(),
+		)
 	}
 
-	c, err := cloudevents.NewClient(t,
-		cloudevents.WithTimeNow(),
-		cloudevents.WithUUIDs(),
-	)
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}

@@ -24,14 +24,11 @@ import (
 
 	// Test images from eventing
 	_ "knative.dev/eventing/test/test_images/event-sender"
-	_ "knative.dev/eventing/test/test_images/eventdetails"
 	_ "knative.dev/eventing/test/test_images/filterevents"
 	_ "knative.dev/eventing/test/test_images/heartbeats"
-	_ "knative.dev/eventing/test/test_images/logevents"
 	_ "knative.dev/eventing/test/test_images/performance"
 	_ "knative.dev/eventing/test/test_images/print"
 	_ "knative.dev/eventing/test/test_images/recordevents"
-	_ "knative.dev/eventing/test/test_images/sendevents"
 	_ "knative.dev/eventing/test/test_images/sequencestepper"
 	_ "knative.dev/eventing/test/test_images/transformevents"
 )

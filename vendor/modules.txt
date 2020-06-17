@@ -1112,7 +1112,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.15.1-0.20200616133424-a31d2d254698 => knative.dev/eventing v0.15.1-0.20200609184333-fb349c350f10
+# knative.dev/eventing v0.15.1-0.20200616173424-015fb143c64c
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1188,7 +1188,6 @@ knative.dev/eventing/test/conformance/helpers
 knative.dev/eventing/test/conformance/helpers/tracing
 knative.dev/eventing/test/e2e/helpers
 knative.dev/eventing/test/lib
-knative.dev/eventing/test/lib/cloudevents
 knative.dev/eventing/test/lib/duck
 knative.dev/eventing/test/lib/recordevents
 knative.dev/eventing/test/lib/resources
@@ -1200,21 +1199,18 @@ knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
 knative.dev/eventing/test/test_images/event-sender
-knative.dev/eventing/test/test_images/eventdetails
 knative.dev/eventing/test/test_images/filterevents
 knative.dev/eventing/test/test_images/heartbeats
-knative.dev/eventing/test/test_images/logevents
 knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
-knative.dev/eventing/test/test_images/sendevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
 # knative.dev/networking v0.0.0-20200611155523-bd13675bcf70
 knative.dev/networking/pkg/apis/config
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200616011124-086ff4395641
+# knative.dev/pkg v0.0.0-20200616180924-0d967ff0d878
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1300,7 +1296,7 @@ knative.dev/pkg/webhook/psbinding
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.15.1-0.20200616123024-a1a08f451a22
+# knative.dev/serving v0.15.1-0.20200616173024-c619ee03a862
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1331,7 +1327,7 @@ knative.dev/serving/pkg/client/listers/autoscaling/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1
 knative.dev/serving/pkg/client/listers/serving/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1beta1
-# knative.dev/test-infra v0.0.0-20200615231324-3a016f44102c
+# knative.dev/test-infra v0.0.0-20200616174024-4d427ddb22d0
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
@@ -1348,4 +1344,3 @@ sigs.k8s.io/yaml
 # k8s.io/apiserver => k8s.io/apiserver v0.17.6
 # k8s.io/client-go => k8s.io/client-go v0.17.6
 # k8s.io/code-generator => k8s.io/code-generator v0.17.6
-# knative.dev/eventing => knative.dev/eventing v0.15.1-0.20200609184333-fb349c350f10
