@@ -66,7 +66,7 @@ func TestCamelSource(t *testing.T) {
 			Source: v1alpha1.CamelSourceOriginSpec{
 				Flow: &v1alpha1.Flow{
 					"from": &map[string]interface{}{
-						"uri": "timer:tick?period=1s",
+						"uri": "timer:tick?period=1000",
 						"steps": []interface{}{
 							&map[string]interface{}{
 								"set-body": &map[string]interface{}{
