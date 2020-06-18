@@ -51,7 +51,6 @@ type gitHubAdapter struct {
 	port   string
 
 	router     *Router
-	informers  []controller.Informer
 	controller *controller.Impl
 }
 
