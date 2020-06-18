@@ -17,14 +17,14 @@ limitations under the License.
 package lib
 
 import (
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 
 	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	kafkaclientset "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
 )
 
-func CreateKafkaSourceOrFail(c *lib.Client, kafkaSource *sourcesv1alpha1.KafkaSource) {
+func CreateKafkaSourceOrFail(c *testlib.Client, kafkaSource *sourcesv1alpha1.KafkaSource) {
 	kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
 	if err != nil {
 		c.T.Fatalf("Failed to create KafkaSource client: %v", err)
@@ -38,7 +38,7 @@ func CreateKafkaSourceOrFail(c *lib.Client, kafkaSource *sourcesv1alpha1.KafkaSo
 	}
 }
 
-func CreateKafkaBindingOrFail(c *lib.Client, kafkaBinding *bindingsv1alpha1.KafkaBinding) {
+func CreateKafkaBindingOrFail(c *testlib.Client, kafkaBinding *bindingsv1alpha1.KafkaBinding) {
 	kafkaBindingClientSet, err := kafkaclientset.NewForConfig(c.Config)
 	if err != nil {
 		c.T.Fatalf("Failed to create KafkaBinding client: %v", err)

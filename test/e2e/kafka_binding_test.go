@@ -25,7 +25,7 @@ import (
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/pkg/tracker"
@@ -35,12 +35,12 @@ import (
 )
 
 func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedData string) {
-	client := lib.Setup(t, true)
+	client := testlib.Setup(t, true)
 
 	kafkaTopicName := uuid.New().String()
 	loggerPodName := "e2e-kafka-binding-event-logger"
 
-	defer lib.TearDown(client)
+	defer testlib.TearDown(client)
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 

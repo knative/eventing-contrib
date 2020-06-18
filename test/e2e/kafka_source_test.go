@@ -27,7 +27,7 @@ import (
 	. "github.com/cloudevents/sdk-go/v2/test"
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"github.com/google/uuid"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
@@ -52,8 +52,8 @@ func testKafkaSource(t *testing.T, name string, messageKey string, messageHeader
 		kafkaSourceName    = "e2e-kafka-source-" + strings.ReplaceAll(name, "_", "-")
 	)
 
-	client := lib.Setup(t, true)
-	defer lib.TearDown(client)
+	client := testlib.Setup(t, true)
+	defer testlib.TearDown(client)
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 

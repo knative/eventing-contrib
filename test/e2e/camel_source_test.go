@@ -28,7 +28,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	knativeduck "knative.dev/pkg/apis/duck/v1beta1"
@@ -42,8 +42,8 @@ func TestCamelSource(t *testing.T) {
 		body            = "Hello, world!"
 	)
 
-	client := lib.Setup(t, true)
-	defer lib.TearDown(client)
+	client := testlib.Setup(t, true)
+	defer testlib.TearDown(client)
 
 	t.Logf("Creating event record")
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
@@ -112,7 +112,7 @@ func TestCamelSource(t *testing.T) {
 	))
 }
 
-func printPodLogs(t *testing.T, c *lib.Client, podName, containerName string) {
+func printPodLogs(t *testing.T, c *testlib.Client, podName, containerName string) {
 	logs, err := c.Kube.PodLogs(podName, containerName, c.Namespace)
 	if err == nil {
 		t.Log(string(logs))
@@ -120,7 +120,7 @@ func printPodLogs(t *testing.T, c *lib.Client, podName, containerName string) {
 	t.Logf("End of pod %s logs", podName)
 }
 
-func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
+func createCamelSourceOrFail(c *testlib.Client, camelSource *v1alpha1.CamelSource) {
 	camelSourceClientSet, err := camelsourceclient.NewForConfig(c.Config)
 	if err != nil {
 		c.T.Fatalf("Failed to create CamelSource client: %v", err)
@@ -134,7 +134,7 @@ func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
 	}
 }
 
-func createCamelPlatformOrFail(c *lib.Client, camelClient camelclientset.Interface, camelSourceName string) {
+func createCamelPlatformOrFail(c *testlib.Client, camelClient camelclientset.Interface, camelSourceName string) {
 	platform := camelv1.IntegrationPlatform{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "camel-k",
@@ -150,7 +150,7 @@ func createCamelPlatformOrFail(c *lib.Client, camelClient camelclientset.Interfa
 	}
 }
 
-func createCamelKitOrFail(c *lib.Client, camelClient camelclientset.Interface, camelSourceName string) {
+func createCamelKitOrFail(c *testlib.Client, camelClient camelclientset.Interface, camelSourceName string) {
 	// Creating this kit manually because the Camel K platform is not configured to do it on its own.
 	// Testing that Camel K works is not in scope for this test.
 	kit := camelv1.IntegrationKit{
@@ -195,6 +195,6 @@ func createCamelKitOrFail(c *lib.Client, camelClient camelclientset.Interface, c
 	}
 }
 
-func getCamelKClient(c *lib.Client) camelclientset.Interface {
+func getCamelKClient(c *testlib.Client) camelclientset.Interface {
 	return camelclientset.NewForConfigOrDie(c.Config)
 }
