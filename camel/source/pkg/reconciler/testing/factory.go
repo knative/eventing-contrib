@@ -22,6 +22,7 @@ import (
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
 	fakecamelkclient "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/client/fake"
@@ -30,6 +31,7 @@ import (
 	"knative.dev/pkg/controller"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/reconciler"
 
 	. "knative.dev/pkg/reconciler/testing"
 )
@@ -66,6 +68,11 @@ func MakeFactory(ctor Ctor, logger *zap.Logger) Factory {
 
 		// Set up our Controller from the fakes.
 		c := ctor(ctx, &ls, configmap.NewStaticWatcher())
+
+		// The Reconciler won't do any work until it becomes the leader.
+		if la, ok := c.(reconciler.LeaderAware); ok {
+			la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
+		}
 
 		for _, reactor := range r.WithReactors {
 			camelClient.PrependReactor("*", "*", reactor)
