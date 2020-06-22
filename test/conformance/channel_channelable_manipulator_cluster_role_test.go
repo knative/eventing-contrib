@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	eventingconformancehelpers "knative.dev/eventing/test/conformance/helpers"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 )
 
 func TestChannelChannelableManipulatorClusterRoleTest(t *testing.T) {
-	eventingconformancehelpers.TestChannelChannelableManipulatorClusterRoleTestRunner(t, channelTestRunner, lib.SetupClientOptionNoop)
+	eventingconformancehelpers.TestChannelChannelableManipulatorClusterRoleTestRunner(t, channelTestRunner, testlib.SetupClientOptionNoop)
 }

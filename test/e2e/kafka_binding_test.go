@@ -25,22 +25,22 @@ import (
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/pkg/tracker"
 
-	lib2 "knative.dev/eventing-contrib/test/lib"
+	contribtestlib "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
 func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedData string) {
-	client := lib.Setup(t, true)
+	client := testlib.Setup(t, true)
 
 	kafkaTopicName := uuid.New().String()
 	loggerPodName := "e2e-kafka-binding-event-logger"
 
-	defer lib.TearDown(client)
+	defer testlib.TearDown(client)
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
@@ -48,7 +48,7 @@ func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
 
 	t.Logf("Creating KafkaSource")
-	lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+	contribtestlib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
 		kafkaBootstrapUrl,
 		kafkaTopicName,
 		resources.ServiceRef(loggerPodName),
@@ -59,7 +59,7 @@ func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string
 	}
 
 	t.Logf("Creating KafkaBinding")
-	lib2.CreateKafkaBindingOrFail(client, contribresources.KafkaBinding(
+	contribtestlib.CreateKafkaBindingOrFail(client, contribresources.KafkaBinding(
 		kafkaBootstrapUrl,
 		&tracker.Reference{
 			APIVersion: "batch/v1",

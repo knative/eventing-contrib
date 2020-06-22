@@ -27,13 +27,13 @@ import (
 	. "github.com/cloudevents/sdk-go/v2/test"
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"github.com/google/uuid"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
-	contriblib "knative.dev/eventing-contrib/test/lib"
+	contribtestlib "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
@@ -52,15 +52,15 @@ func testKafkaSource(t *testing.T, name string, messageKey string, messageHeader
 		kafkaSourceName    = "e2e-kafka-source-" + strings.ReplaceAll(name, "_", "-")
 	)
 
-	client := lib.Setup(t, true)
-	defer lib.TearDown(client)
+	client := testlib.Setup(t, true)
+	defer testlib.TearDown(client)
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, recordEventPodName)
 
 	t.Logf("Creating KafkaSource")
-	contriblib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+	contribtestlib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
 		kafkaBootstrapUrl,
 		kafkaTopicName,
 		resources.ServiceRef(recordEventPodName),

@@ -18,7 +18,7 @@ package helpers
 
 import (
 	"github.com/pkg/errors"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/duck"
 	"knative.dev/eventing/test/lib/resources"
 
@@ -26,11 +26,8 @@ import (
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 
+	"knative.dev/eventing/pkg/apis/messaging"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
-)
-
-const (
-	SubscribableAnnotationKey = "messaging.knative.dev/subscribable"
 )
 
 var (
@@ -42,7 +39,7 @@ var (
 	}
 )
 
-func getChannelDuckTypeSupportVersion(channelName string, client *lib.Client, channel *metav1.TypeMeta) (string, error) {
+func getChannelDuckTypeSupportVersion(channelName string, client *testlib.Client, channel *metav1.TypeMeta) (string, error) {
 	metaResource := resources.NewMetaResource(channelName, client.Namespace, channel)
 	obj, err := duck.GetGenericObject(client.Dynamic, metaResource, &eventingduckv1beta1.Channelable{})
 	if err != nil {
@@ -52,10 +49,10 @@ func getChannelDuckTypeSupportVersion(channelName string, client *lib.Client, ch
 	if !ok {
 		return "", errors.Wrapf(err, "Unable to cast the channel %v", metaResource)
 	}
-	return channelable.ObjectMeta.Annotations[SubscribableAnnotationKey], nil
+	return channelable.ObjectMeta.Annotations[messaging.SubscribableDuckVersionAnnotation], nil
 }
 
-func getChannelAsV1Beta1Channelable(channelName string, client *lib.Client, channel metav1.TypeMeta) (*eventingduckv1beta1.Channelable, error) {
+func getChannelAsV1Beta1Channelable(channelName string, client *testlib.Client, channel metav1.TypeMeta) (*eventingduckv1beta1.Channelable, error) {
 	metaResource := resources.NewMetaResource(channelName, client.Namespace, &channel)
 	obj, err := duck.GetGenericObject(client.Dynamic, metaResource, &eventingduckv1beta1.Channelable{})
 	if err != nil {
@@ -69,7 +66,7 @@ func getChannelAsV1Beta1Channelable(channelName string, client *lib.Client, chan
 	return channelable, nil
 }
 
-func getChannelAsV1Alpha1Channelable(channelName string, client *lib.Client, channel metav1.TypeMeta) (*eventingduckv1alpha1.Channelable, error) {
+func getChannelAsV1Alpha1Channelable(channelName string, client *testlib.Client, channel metav1.TypeMeta) (*eventingduckv1alpha1.Channelable, error) {
 	metaResource := resources.NewMetaResource(channelName, client.Namespace, &channel)
 	obj, err := duck.GetGenericObject(client.Dynamic, metaResource, &eventingduckv1alpha1.Channelable{})
 	if err != nil {

@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	eventingconformancehelpers "knative.dev/eventing/test/conformance/helpers"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 )
 
 func TestChannelStatus(t *testing.T) {
-	eventingconformancehelpers.ChannelStatusTestHelperWithChannelTestRunner(t, channelTestRunner, lib.SetupClientOptionNoop)
+	eventingconformancehelpers.ChannelStatusTestHelperWithChannelTestRunner(t, channelTestRunner, testlib.SetupClientOptionNoop)
 }

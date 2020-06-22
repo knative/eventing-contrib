@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	eventingconformancehelpers "knative.dev/eventing/test/conformance/helpers"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
 )
 
 func TestChannelCRDMetadata(t *testing.T) {
-	eventingconformancehelpers.ChannelCRDMetadataTestHelperWithChannelTestRunner(t, channelTestRunner, lib.SetupClientOptionNoop)
+	eventingconformancehelpers.ChannelCRDMetadataTestHelperWithChannelTestRunner(t, channelTestRunner, testlib.SetupClientOptionNoop)
 }
