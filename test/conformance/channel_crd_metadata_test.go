@@ -26,5 +26,5 @@ import (
 )
 
 func TestChannelCRDMetadata(t *testing.T) {
-	eventingconformancehelpers.ChannelCRDMetadataTestHelperWithChannelTestRunner(t, channelTestRunner, lib.SetupClientOptionNoop)
+	eventingconformancehelpers.ChannelCRDMetadataTestHelperWithChannelTestRunner(t, channelTestRunner, testlib.SetupClientOptionNoop)
 }
