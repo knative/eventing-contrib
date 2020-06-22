@@ -30,7 +30,7 @@ import (
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/pkg/tracker"
 
-	lib2 "knative.dev/eventing-contrib/test/lib"
+	contribtestlib "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
@@ -48,7 +48,7 @@ func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
 
 	t.Logf("Creating KafkaSource")
-	lib2.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+	contribtestlib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
 		kafkaBootstrapUrl,
 		kafkaTopicName,
 		resources.ServiceRef(loggerPodName),
@@ -59,7 +59,7 @@ func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string
 	}
 
 	t.Logf("Creating KafkaBinding")
-	lib2.CreateKafkaBindingOrFail(client, contribresources.KafkaBinding(
+	contribtestlib.CreateKafkaBindingOrFail(client, contribresources.KafkaBinding(
 		kafkaBootstrapUrl,
 		&tracker.Reference{
 			APIVersion: "batch/v1",

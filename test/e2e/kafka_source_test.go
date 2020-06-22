@@ -33,7 +33,7 @@ import (
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
-	contriblib "knative.dev/eventing-contrib/test/lib"
+	contribtestlib "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
@@ -60,7 +60,7 @@ func testKafkaSource(t *testing.T, name string, messageKey string, messageHeader
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, recordEventPodName)
 
 	t.Logf("Creating KafkaSource")
-	contriblib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
+	contribtestlib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
 		kafkaBootstrapUrl,
 		kafkaTopicName,
 		resources.ServiceRef(recordEventPodName),
