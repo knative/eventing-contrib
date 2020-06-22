@@ -28,7 +28,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/xanzy/go-gitlab v0.28.0
 	gitlab.com/flimzy/testy v0.2.1 // indirect
-	go.opencensus.io v0.22.3
+	go.opencensus.io v0.22.4
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.14.1
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
@@ -38,10 +38,10 @@ require (
 	k8s.io/api v0.18.1
 	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	knative.dev/eventing v0.15.1-0.20200618135024-d77f1c5b17ce
-	knative.dev/pkg v0.0.0-20200618002824-96c250871fac
-	knative.dev/serving v0.15.1-0.20200618034425-c99ed421d333
-	knative.dev/test-infra v0.0.0-20200617235125-6382dba95484
+	knative.dev/eventing v0.15.1-0.20200622062326-b94519042ea1
+	knative.dev/pkg v0.0.0-20200622015826-5e60b6f8633c
+	knative.dev/serving v0.15.1-0.20200622070826-ac2f58ac1fe6
+	knative.dev/test-infra v0.0.0-20200619200026-0b0587234302
 )
 
 replace (
