@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
@@ -34,6 +35,7 @@ import (
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
+	"knative.dev/pkg/reconciler"
 	. "knative.dev/pkg/reconciler/testing"
 )
 
@@ -66,7 +68,6 @@ func MakeFactory(ctor Ctor) Factory {
 		ctx = controller.WithEventRecorder(ctx, eventRecorder)
 
 		// Set up our Controller from the fakes.
-
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
 			eventingClient.PrependReactor("*", "*", reactor)
@@ -90,6 +91,11 @@ func MakeFactory(ctor Ctor) Factory {
 		}
 
 		c := ctor(ctx, &ls)
+
+		// The Reconciler won't do any work until it becomes the leader.
+		if la, ok := c.(reconciler.LeaderAware); ok {
+			la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
+		}
 
 		return c, actionRecorderList, eventList
 	}
