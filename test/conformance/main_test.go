@@ -28,6 +28,7 @@ import (
 )
 
 var channelTestRunner testlib.ComponentsTestRunner
+var sourcesTestRunner testlib.ComponentsTestRunner
 
 func TestMain(m *testing.M) {
 	os.Exit(func() int {
@@ -36,7 +37,9 @@ func TestMain(m *testing.M) {
 			ComponentFeatureMap: test.ChannelFeatureMap,
 			ComponentsToTest:    eventingTest.EventingFlags.Channels,
 		}
-
+		sourcesTestRunner = testlib.ComponentsTestRunner{
+			ComponentsToTest: eventingTest.EventingFlags.Sources,
+		}
 		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
 		// place that cleans it up. If an individual test calls this instead, then it will break other
 		// tests that need the tracing in place.
