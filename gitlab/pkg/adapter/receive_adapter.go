@@ -181,7 +181,7 @@ func (ra *gitLabReceiveAdapter) handleEvent(payload interface{}, header http.Hea
 
 func (ra *gitLabReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
 	extensions map[string]interface{}) error {
-	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	event.SetID(eventID)
 	event.SetType(eventType)
 	event.SetSource(source)
