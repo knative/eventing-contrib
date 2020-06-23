@@ -50,11 +50,11 @@ readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
 readonly NATSS_CRD_CONFIG_DIR="natss/config"
 
 # Strimzi installation config template used for starting up Kafka clusters.
-readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.17.0.yaml"
+readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.18.0.yaml"
 # Strimzi installation config.
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp)"
 # Kafka cluster CR config file.
-readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-2.4.0.yaml"
+readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-2.5.0.yaml"
 readonly KAFKA_TOPIC_INSTALLATION_CONFIG="test/config/100-kafka-topic.yaml"
 # Kafka cluster URL for our installation
 readonly KAFKA_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka:9092"
