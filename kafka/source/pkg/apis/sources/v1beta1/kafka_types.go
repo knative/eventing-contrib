@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
+	bindingsv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
@@ -66,7 +66,7 @@ type KafkaResourceSpec struct {
 
 // KafkaSourceSpec defines the desired state of the KafkaSource.
 type KafkaSourceSpec struct {
-	bindingsv1alpha1.KafkaAuthSpec `json:",inline"`
+	bindingsv1beta1.KafkaAuthSpec `json:",inline"`
 
 	// Topic topics to consume messages from
 	// +required
@@ -76,18 +76,12 @@ type KafkaSourceSpec struct {
 	// +optional
 	ConsumerGroup string `json:"consumerGroup,omitempty"`
 
-	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
-	// +optional
-	Sink *duckv1.Destination `json:"sink,omitempty"`
-
-	// ServiceAccoutName is the name of the ServiceAccount that will be used to run the Receive
-	// Adapter Deployment.
-	// Deprecated: v1beta1 drops this field.
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
-
-	// Resource limits and Request specifications of the Receive Adapter Deployment
-	// Deprecated: v1beta1 drops this field.
-	Resources KafkaResourceSpec `json:"resources,omitempty"`
+	// inherits duck/v1 SourceSpec, which currently provides:
+	// * Sink - a reference to an object that will resolve to a domain name or
+	//   a URI directly to use as the sink.
+	// * CloudEventOverrides - defines overrides to control the output format
+	//   and modifications of the event sent to the sink.
+	duckv1.SourceSpec `json:",inline"`
 }
 
 const (
