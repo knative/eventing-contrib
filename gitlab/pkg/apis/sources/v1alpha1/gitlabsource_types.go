@@ -34,6 +34,7 @@ var (
 	_ apis.Validatable = (*GitLabSource)(nil)
 	_ apis.Defaultable = (*GitLabSource)(nil)
 	_ runtime.Object   = (*GitLabSource)(nil)
+	_ duckv1.KRShaped  = (*GitLabSource)(nil)
 )
 
 // GitLabSourceSpec defines the desired state of GitLabSource
@@ -116,8 +117,18 @@ var gitLabSourceCondSet = apis.NewLivingConditionSet(
 	GitLabSourceConditionSecretProvided,
 	GitLabSourceConditionSinkProvided)
 
-func (s *GitLabSource) GetGroupVersionKind() schema.GroupVersionKind {
+func (*GitLabSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("GitLabSource")
+}
+
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*GitLabSource) GetConditionSet() apis.ConditionSet {
+	return gitLabSourceCondSet
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (g *GitLabSource) GetStatus() *duckv1.Status {
+	return &g.Status.Status
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
@@ -161,7 +172,7 @@ func (s *GitLabSourceStatus) MarkSecret() {
 }
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GitLabSource is the Schema for the gitlabsources API

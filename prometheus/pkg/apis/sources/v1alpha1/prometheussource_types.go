@@ -48,6 +48,9 @@ var _ runtime.Object = (*PrometheusSource)(nil)
 // Check that we can create OwnerReferences to a PrometheusSource.
 var _ kmeta.OwnerRefable = (*PrometheusSource)(nil)
 
+// Check that the type conforms to the duck Knative Resource shape.
+var _ duckv1.KRShaped = (*PrometheusSource)(nil)
+
 // Check that PrometheusSource implements the Conditions duck type.
 var _ = duck.VerifyType(&PrometheusSource{}, &duckv1.Conditions{})
 
@@ -95,8 +98,13 @@ type PrometheusSourceSpec struct {
 }
 
 // GetGroupVersionKind returns the GroupVersionKind.
-func (s *PrometheusSource) GetGroupVersionKind() schema.GroupVersionKind {
+func (*PrometheusSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("PrometheusSource")
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (p *PrometheusSource) GetStatus() *duckv1.Status {
+	return &p.Status.Status
 }
 
 // PrometheusSourceStatus defines the observed state of PrometheusSource

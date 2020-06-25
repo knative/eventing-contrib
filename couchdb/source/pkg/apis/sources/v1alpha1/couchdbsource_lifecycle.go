@@ -38,6 +38,11 @@ var CouchDbCondSet = apis.NewLivingConditionSet(
 	CouchDbConditionDeployed,
 )
 
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*CouchDbSource) GetConditionSet() apis.ConditionSet {
+	return CouchDbCondSet
+}
+
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (s *CouchDbSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return CouchDbCondSet.Manage(s).GetCondition(t)

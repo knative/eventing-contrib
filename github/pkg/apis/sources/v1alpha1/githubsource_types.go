@@ -34,6 +34,9 @@ var _ runtime.Object = (*GitHubSource)(nil)
 
 var _ resourcesemantics.GenericCRD = (*GitHubSource)(nil)
 
+// Check that the type conforms to the duck Knative Resource shape.
+var _ duckv1.KRShaped = (*GitHubSource)(nil)
+
 // GitHubSourceSpec defines the desired state of GitHubSource
 // +kubebuilder:categories=all,knative,eventing,sources
 type GitHubSourceSpec struct {
@@ -160,8 +163,18 @@ type GitHubSourceStatus struct {
 	WebhookIDKey string `json:"webhookIDKey,omitempty"`
 }
 
-func (s *GitHubSource) GetGroupVersionKind() schema.GroupVersionKind {
+func (*GitHubSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("GitHubSource")
+}
+
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*GitHubSource) GetConditionSet() apis.ConditionSet {
+	return gitHubSourceCondSet
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (g *GitHubSource) GetStatus() *duckv1.Status {
+	return &g.Status.Status
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.
@@ -225,7 +238,7 @@ func (s *GitHubSourceStatus) MarkWebhookNotConfigured(reason, messageFormat stri
 //}
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GitHubSource is the Schema for the githubsources API

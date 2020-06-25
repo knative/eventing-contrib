@@ -28,7 +28,7 @@ import (
 )
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // KafkaBinding is the Schema for the kafkasources API.
 // +k8s:openapi-gen=true
@@ -44,6 +44,7 @@ type KafkaBinding struct {
 var _ runtime.Object = (*KafkaBinding)(nil)
 var _ resourcesemantics.GenericCRD = (*KafkaBinding)(nil)
 var _ kmeta.OwnerRefable = (*KafkaBinding)(nil)
+var _ duckv1.KRShaped = (*KafkaBinding)(nil)
 
 type KafkaSASLSpec struct {
 	Enable bool `json:"enable,omitempty"`
@@ -115,4 +116,9 @@ type KafkaBindingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []KafkaBinding `json:"items"`
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (k *KafkaBinding) GetStatus() *duckv1.Status {
+	return &k.Status.Status
 }

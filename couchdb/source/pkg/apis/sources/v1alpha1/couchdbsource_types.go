@@ -27,7 +27,7 @@ import (
 )
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // CouchDbSource is the Schema for the githubsources API
@@ -45,6 +45,9 @@ var _ runtime.Object = (*CouchDbSource)(nil)
 
 // Check that we can create OwnerReferences to a Configuration.
 var _ kmeta.OwnerRefable = (*CouchDbSource)(nil)
+
+// Check that the type conforms to the duck Knative Resource shape.
+var _ duckv1.KRShaped = (*CouchDbSource)(nil)
 
 // Check that CouchDbSource implements the Conditions duck type.
 var _ = duck.VerifyType(&CouchDbSource{}, &duckv1.Conditions{})
@@ -122,4 +125,9 @@ type CouchDbSourceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []CouchDbSource `json:"items"`
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (c *CouchDbSource) GetStatus() *duckv1.Status {
+	return &c.Status.Status
 }

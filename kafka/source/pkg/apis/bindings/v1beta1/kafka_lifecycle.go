@@ -31,8 +31,13 @@ import (
 var kfbCondSet = apis.NewLivingConditionSet()
 
 // GetGroupVersionKind returns the GroupVersionKind.
-func (s *KafkaBinding) GetGroupVersionKind() schema.GroupVersionKind {
+func (*KafkaBinding) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("KafkaBinding")
+}
+
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*KafkaBinding) GetConditionSet() apis.ConditionSet {
+	return kfbCondSet
 }
 
 // GetUntypedSpec implements apis.HasSpec

@@ -41,6 +41,11 @@ var KafkaSourceCondSet = apis.NewLivingConditionSet(
 	KafkaConditionSinkProvided,
 	KafkaConditionDeployed)
 
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*KafkaSource) GetConditionSet() apis.ConditionSet {
+	return KafkaSourceCondSet
+}
+
 func (s *KafkaSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return KafkaSourceCondSet.Manage(s).GetCondition(t)
 }
