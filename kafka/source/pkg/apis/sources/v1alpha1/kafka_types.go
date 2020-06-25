@@ -30,7 +30,7 @@ import (
 )
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=false
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // KafkaSource is the Schema for the kafkasources API.
 // +k8s:openapi-gen=true
