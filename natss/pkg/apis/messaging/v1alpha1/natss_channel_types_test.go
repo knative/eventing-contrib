@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha1
 
 import (
 	"testing"
@@ -23,19 +23,19 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-func TestKafkaBinding_GetGroupVersionKind(t *testing.T) {
-	src := KafkaBinding{}
-	gvk := src.GetGroupVersionKind()
+func TestNatssChannel_GetGroupVersionKind(t *testing.T) {
+	chn := NatssChannel{}
+	gvk := chn.GetGroupVersionKind()
 
-	if gvk.Kind != "KafkaBinding" {
-		t.Errorf("Should be 'KafkaBinding'.")
+	if gvk.Kind != "NatssChannel" {
+		t.Errorf("Should be 'NatssChannel'.")
 	}
 }
 
-func TestKafkaBindingGetStatus(t *testing.T) {
+func TestNatssChannelGetStatus(t *testing.T) {
 	status := &duckv1.Status{}
-	config := KafkaBinding{
-		Status: KafkaBindingStatus{
+	config := NatssChannel{
+		Status: NatssChannelStatus{
 			Status: *status,
 		},
 	}

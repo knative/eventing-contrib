@@ -57,6 +57,14 @@ var ignoreAllButTypeAndStatus = cmpopts.IgnoreFields(
 	apis.Condition{},
 	"LastTransitionTime", "Message", "Reason", "Severity")
 
+func TestNatssChannelGetConditionSet(t *testing.T) {
+	r := &NatssChannel{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
 func TestChannelGetCondition(t *testing.T) {
 	tests := []struct {
 		name      string

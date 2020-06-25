@@ -22,8 +22,31 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
+	"knative.dev/pkg/apis"
 	duckapis "knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
+
+func TestCanelSourceGetConditionSet(t *testing.T) {
+	r := &CamelSource{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
+func TestCamelSourceSourceGetStatus(t *testing.T) {
+	status := &duckv1.Status{}
+	config := CamelSource{
+		Status: CamelSourceStatus{
+			Status: *status,
+		},
+	}
+
+	if !cmp.Equal(config.GetStatus(), status) {
+		t.Errorf("GetStatus did not retrieve status. Got=%v Want=%v", config.GetStatus(), status)
+	}
+}
 
 func TestCamelSourceStatusIsReady(t *testing.T) {
 	tests := []struct {

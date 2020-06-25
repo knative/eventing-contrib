@@ -30,6 +30,14 @@ import (
 	apistest "knative.dev/pkg/apis/testing"
 )
 
+func TestKafkaBindingGetConditionSet(t *testing.T) {
+	r := &KafkaBinding{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
 func TestKafkaBindingDuckTypes(t *testing.T) {
 	tests := []struct {
 		name string
