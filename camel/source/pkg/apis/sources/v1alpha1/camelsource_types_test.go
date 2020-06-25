@@ -27,7 +27,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-func TestCanelSourceGetConditionSet(t *testing.T) {
+func TestCamelSourceGetConditionSet(t *testing.T) {
 	r := &CamelSource{}
 
 	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
