@@ -63,19 +63,20 @@ func (source *KafkaSource) ConvertTo(ctx context.Context, obj apis.Convertible) 
 			Topics:        source.Spec.Topics,
 			ConsumerGroup: source.Spec.ConsumerGroup,
 		}
-		sink.Status = v1beta1.KafkaSourceStatus{
-			duckv1.SourceStatus{
-				Status:               source.Status.Status,
-				SinkURI:              source.Status.SinkURI,
-				CloudEventAttributes: source.Status.CloudEventAttributes,
-			},
-		}
+		sink.Status.Status = source.Status.Status
+		source.Status.Status.ConvertTo(ctx, &sink.Status.Status)
 		// Optionals
 		if source.Spec.Sink != nil {
 			sink.Spec.Sink = *source.Spec.Sink.DeepCopy()
 		}
 		if source.Status.SinkURI != nil {
 			sink.Status.SinkURI = source.Status.SinkURI.DeepCopy()
+		}
+		if source.Status.CloudEventAttributes != nil {
+			sink.Status.CloudEventAttributes = make([]duckv1.CloudEventAttributes, len(source.Status.CloudEventAttributes))
+			for i, cea := range source.Status.CloudEventAttributes {
+				sink.Status.CloudEventAttributes[i] = cea
+			}
 		}
 		return nil
 	default:
@@ -121,6 +122,18 @@ func (sink *KafkaSource) ConvertFrom(ctx context.Context, obj apis.Convertible) 
 		}
 		if reflect.DeepEqual(*sink.Spec.Sink, duckv1.Destination{}) {
 			sink.Spec.Sink = nil
+		}
+		sink.Status.Status = source.Status.Status
+		source.Status.Status.ConvertTo(ctx, &source.Status.Status)
+		// Optionals
+		if source.Status.SinkURI != nil {
+			sink.Status.SinkURI = source.Status.SinkURI.DeepCopy()
+		}
+		if source.Status.CloudEventAttributes != nil {
+			sink.Status.CloudEventAttributes = make([]duckv1.CloudEventAttributes, len(source.Status.CloudEventAttributes))
+			for i, cea := range source.Status.CloudEventAttributes {
+				sink.Status.CloudEventAttributes[i] = cea
+			}
 		}
 		return nil
 	default:
