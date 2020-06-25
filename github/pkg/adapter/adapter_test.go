@@ -27,15 +27,17 @@ import (
 	"testing"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/google/go-cmp/cmp"
+	"go.uber.org/zap"
+	gh "gopkg.in/go-playground/webhooks.v5/github"
+
 	"knative.dev/eventing/pkg/adapter/v2"
 	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
 
-	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/google/go-cmp/cmp"
-	"go.uber.org/zap"
-	gh "gopkg.in/go-playground/webhooks.v5/github"
+	"knative.dev/eventing-contrib/github/pkg/common"
 )
 
 const (
@@ -471,11 +473,8 @@ func TestServer(t *testing.T) {
 	for _, tc := range testCases {
 		ce := adaptertest.NewTestClient()
 		adapter := newTestAdapter(t, ce)
-		hook, err := gh.New()
-		if err != nil {
-			t.Fatal(err)
-		}
-		router := adapter.newRouter(hook)
+
+		router := adapter.newRouter()
 		server := httptest.NewServer(router)
 		defer server.Close()
 
@@ -495,8 +494,8 @@ func (tc *testCase) runner(t *testing.T, url string, ceClient *adaptertest.TestC
 			t.Fatal(err)
 		}
 
-		req.Header.Set(GHHeaderEvent, tc.eventType)
-		req.Header.Set(GHHeaderDelivery, eventID)
+		req.Header.Set(common.GHHeaderEvent, tc.eventType)
+		req.Header.Set(common.GHHeaderDelivery, eventID)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Error(err)

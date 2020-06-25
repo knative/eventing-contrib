@@ -40,20 +40,28 @@ import (
 	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
 	"knative.dev/eventing-contrib/github/pkg/reconciler/source/resources"
 
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
 	//knative.dev/pkg imports
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	pkgreconciler "knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
+	"knative.dev/pkg/tracker"
 
 	ghclient "github.com/google/go-github/v31/github"
 )
 
 const (
 	raImageEnvVar = "GH_RA_IMAGE"
+
+	// controllerAgentName is the string used by this controller to identify
+	// itself when creating events.
+	controllerAgentName = "github-source-controller"
+
+	// The name of the mt receive adapter
+	adapterName = "github-adapter"
 )
 
 // Reconciler reconciles a GitHubSource object
@@ -63,7 +71,12 @@ type Reconciler struct {
 	servingClientSet servingclientset.Interface
 	servingLister    servinglisters.ServiceLister
 
+	// Single-tenant receive adapter image.
+	// Empty when using multi-tenant adapter
 	receiveAdapterImage string
+
+	// tracking multi-tenant receive adapter changes
+	tracker tracker.Interface
 
 	sinkResolver *resolver.URIResolver
 
@@ -112,32 +125,24 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
 	}
+
 	source.Status.MarkSink(uri)
 
-	ksvc, err := r.getOwnedService(ctx, source)
-	if apierrors.IsNotFound(err) {
-		ksvc = resources.MakeService(&resources.ServiceArgs{
-			Source:              source,
-			ReceiveAdapterImage: r.receiveAdapterImage,
-		})
-		ksvc, err = r.servingClientSet.ServingV1().Services(source.Namespace).Create(ksvc)
-		if err != nil {
-			return err
-		}
-		controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
-		// TODO: Mark Deploying for the ksvc
-		// Wait for the Service to get a status
-	} else if err != nil {
-		// Error was something other than NotFound
+	ksvc, err := r.reconcileReceiveAdapter(ctx, source)
+	if err != nil {
+		source.Status.MarkWebhookNotConfigured("MissingReceiveAdapter", err.Error())
 		return err
-	} else if !metav1.IsControlledBy(ksvc, source) {
-		return fmt.Errorf("Service %q is not owned by GitHubSource %q", ksvc.Name, source.Name)
 	}
 
 	if ksvc.Status.GetCondition(apis.ConditionReady).IsTrue() && ksvc.Status.URL != nil {
+		withPath := *ksvc.Status.URL
+		if r.receiveAdapterImage == "" {
+			withPath.Path = fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
+		}
+
 		args := &webhookArgs{
 			source:                source,
-			url:                   ksvc.Status.URL,
+			url:                   &withPath,
 			accessToken:           accessToken,
 			secretToken:           secretToken,
 			alternateGitHubAPIURL: source.Spec.GitHubAPIURL,
@@ -207,6 +212,46 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		source.Status.WebhookIDKey = ""
 	}
 	return nil
+}
+
+func (r *Reconciler) reconcileReceiveAdapter(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*v1.Service, error) {
+	if r.receiveAdapterImage != "" {
+		// using single-tenant receive adapter
+		ksvc, err := r.getOwnedService(ctx, source)
+		if apierrors.IsNotFound(err) {
+			ksvc = resources.MakeService(&resources.ServiceArgs{
+				Source:              source,
+				ReceiveAdapterImage: r.receiveAdapterImage,
+			})
+			ksvc, err = r.servingClientSet.ServingV1().Services(source.Namespace).Create(ksvc)
+			if err != nil {
+				return nil, err
+			}
+			controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeNormal, "ServiceCreated", "Created Service %q", ksvc.Name)
+			// TODO: Mark Deploying for the ksvc
+			// Wait for the Service to get a status
+		} else if err != nil {
+			// Error was something other than NotFound
+			return nil, err
+		} else if !metav1.IsControlledBy(ksvc, source) {
+			return nil, fmt.Errorf("Service %q is not owned by GitHubSource %q", ksvc.Name, source.Name)
+		}
+		return ksvc, nil
+	}
+
+	ksvc, err := r.servingLister.Services(system.Namespace()).Get(adapterName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Tell tracker to reconcile this GitHubSource whenever the multi-tenant adapter changes
+	err = r.tracker.TrackReference(tracker.Reference{
+		APIVersion: "serving.knative.dev/v1",
+		Kind:       "Service",
+		Namespace:  ksvc.Namespace,
+		Name:       ksvc.Name,
+	}, source)
+	return ksvc, err
 }
 
 func (r *Reconciler) createWebhook(ctx context.Context, args *webhookArgs) (string, error) {
