@@ -95,8 +95,7 @@ func main() {
 	sharedmain.WebhookMainWithContext(ctx, "kafkachannel-webhook",
 		certificates.NewController,
 		NewDefaultingAdmissionController,
-		NewValidationAdmissionC
-	ontroller,
+		NewValidationAdmissionController,
 		// TODO(mattmoor): Support config validation in eventing-contrib.
 	)
 }
