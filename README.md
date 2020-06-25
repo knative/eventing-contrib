@@ -6,13 +6,18 @@
 [![LICENSE](https://img.shields.io/github/license/knative/eventing-contrib.svg)](https://github.com/knative/eventing-contrib/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://knative.slack.com)
 
-The Knative Eventing Contrib project provides source implementations that:
+The Knative Eventing Contrib project provides source and channel implementations
+that:
 
-- Integrate with GitHub
-- Integrate with Pub/Sub
+- Integrate with Apache Camel-K
+- Integrate with Apache CouchDB
 - Integrate with Apache Kafka
 - Integrate with AWS SQS
-- Integrate with Camel K
+- Integrate with Ceph
+- Integrate with GitHub
+- Integrate with GitLab
+- Integrate with NATS Streaming
+- Integrate with Prometheus
 - Integrate with Websockets
 - Expose an ingress
 

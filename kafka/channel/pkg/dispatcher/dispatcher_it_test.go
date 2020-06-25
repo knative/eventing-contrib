@@ -27,12 +27,11 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 	protocolhttp "github.com/cloudevents/sdk-go/v2/protocol/http"
+	"github.com/cloudevents/sdk-go/v2/test"
 	"go.uber.org/zap"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	"knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
@@ -78,7 +77,7 @@ func TestDispatcher(t *testing.T) {
 	// Start the dispatcher
 	go func() {
 		if err := dispatcher.Start(context.Background()); err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	}()
 
@@ -153,8 +152,7 @@ func TestDispatcher(t *testing.T) {
 				Name:      "channela",
 				HostName:  "channela.svc",
 				FanoutConfig: fanout.Config{
-					AsyncHandler:     false,
-					DispatcherConfig: channel.EventDispatcherConfig{},
+					AsyncHandler: false,
 					Subscriptions: []eventingduck.SubscriberSpec{{
 						UID:           "aaaa",
 						Generation:    1,
@@ -176,8 +174,7 @@ func TestDispatcher(t *testing.T) {
 				Name:      "channelb",
 				HostName:  "channelb.svc",
 				FanoutConfig: fanout.Config{
-					AsyncHandler:     false,
-					DispatcherConfig: channel.EventDispatcherConfig{},
+					AsyncHandler: false,
 					Subscriptions: []eventingduck.SubscriberSpec{{
 						UID:           "bbbb",
 						Generation:    1,
@@ -230,6 +227,20 @@ func TestDispatcher(t *testing.T) {
 	deadLetterWg.Wait()
 	transformationsWg.Wait()
 	receiverWg.Wait()
+
+	// Try to close consumer groups
+	err = dispatcher.UpdateHostToChannelMap(&multichannelfanout.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	failed, err = dispatcher.UpdateKafkaConsumers(&multichannelfanout.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(failed) != 0 {
+		t.Fatal(err)
+	}
 }
 
 func createReverseProxy(t *testing.T, host string) *httputil.ReverseProxy {

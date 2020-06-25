@@ -19,6 +19,8 @@
 
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
 
+export GO111MODULE=on
+
 # Yaml files to generate, and the source config dir for them.
 declare -A COMPONENTS
 COMPONENTS=(
@@ -28,10 +30,12 @@ COMPONENTS=(
   ["couchdb.yaml"]="couchdb/source/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["github.yaml"]="github/config"
+  ["gitlab.yaml"]="gitlab/config"
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
   ["natss-channel.yaml"]="natss/config"
   ["prometheus-source.yaml"]="prometheus/config"
+  ["websocket-source.yaml"]="config/tools/websocket-source"
 )
 readonly COMPONENTS
 

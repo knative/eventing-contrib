@@ -17,14 +17,12 @@
 package v1beta1
 
 import (
-	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 
-	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
+	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	pkgduckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 type testHelper struct{}
@@ -49,46 +47,76 @@ func (testHelper) FalseSubscriptionCondition() *apis.Condition {
 	}
 }
 
-func (testHelper) ReadyChannelStatus() *duckv1alpha1.ChannelableStatus {
-	cs := &duckv1alpha1.ChannelableStatus{
-		Status: duckv1.Status{},
-		AddressStatus: pkgduckv1alpha1.AddressStatus{
-			Address: &pkgduckv1alpha1.Addressable{
-				Addressable: duckv1beta1.Addressable{
-					URL: &apis.URL{Scheme: "http", Host: "foo"},
-				},
-				Hostname: "foo",
-			},
-		},
-		SubscribableTypeStatus: duckv1alpha1.SubscribableTypeStatus{}}
-	return cs
+func (testHelper) ReadySubscriptionStatus() *messagingv1beta1.SubscriptionStatus {
+	ss := &messagingv1beta1.SubscriptionStatus{}
+	ss.MarkChannelReady()
+	ss.MarkReferencesResolved()
+	ss.MarkAddedToChannel()
+	return ss
 }
 
 func (t testHelper) ReadyBrokerStatus() *BrokerStatus {
 	bs := &BrokerStatus{}
+	bs.PropagateIngressAvailability(t.AvailableEndpoints())
+	bs.PropagateTriggerChannelReadiness(t.ReadyChannelStatus())
+	bs.PropagateFilterAvailability(t.AvailableEndpoints())
 	bs.SetAddress(apis.HTTP("example.com"))
 	return bs
 }
 
-func (t testHelper) AvailableDeployment() *v1.Deployment {
-	d := &v1.Deployment{}
-	d.Name = "available"
-	d.Status.Conditions = []v1.DeploymentCondition{
-		{
-			Type:   v1.DeploymentAvailable,
-			Status: "True",
-		},
+func (testHelper) ReadyBrokerCondition() *apis.Condition {
+	return &apis.Condition{
+		Type:     apis.ConditionReady,
+		Status:   corev1.ConditionTrue,
+		Severity: apis.ConditionSeverityError,
 	}
-	return d
 }
 
-func (t testHelper) UnknownBrokerStatus() *BrokerStatus {
+func (testHelper) UnknownBrokerStatus() *BrokerStatus {
 	bs := &BrokerStatus{}
 	return bs
 }
 
-func (t testHelper) FalseBrokerStatus() *BrokerStatus {
+func (testHelper) FalseBrokerStatus() *BrokerStatus {
 	bs := &BrokerStatus{}
 	bs.SetAddress(nil)
 	return bs
+}
+
+func (testHelper) UnavailableEndpoints() *corev1.Endpoints {
+	ep := &corev1.Endpoints{}
+	ep.Name = "unavailable"
+	ep.Subsets = []corev1.EndpointSubset{{
+		NotReadyAddresses: []corev1.EndpointAddress{{
+			IP: "127.0.0.1",
+		}},
+	}}
+	return ep
+}
+
+func (testHelper) AvailableEndpoints() *corev1.Endpoints {
+	ep := &corev1.Endpoints{}
+	ep.Name = "available"
+	ep.Subsets = []corev1.EndpointSubset{{
+		Addresses: []corev1.EndpointAddress{{
+			IP: "127.0.0.1",
+		}},
+	}}
+	return ep
+}
+
+func (testHelper) ReadyChannelStatus() *duckv1beta1.ChannelableStatus {
+	cs := &duckv1beta1.ChannelableStatus{
+		Status: duckv1.Status{},
+		AddressStatus: duckv1.AddressStatus{
+			Address: &duckv1.Addressable{
+				URL: &apis.URL{Scheme: "http", Host: "foo"},
+			},
+		},
+		SubscribableStatus: duckv1beta1.SubscribableStatus{}}
+	return cs
+}
+
+func (t testHelper) NotReadyChannelStatus() *duckv1beta1.ChannelableStatus {
+	return &duckv1beta1.ChannelableStatus{}
 }

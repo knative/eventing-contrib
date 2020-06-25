@@ -19,23 +19,23 @@ package v1beta1
 import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
+	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/pkg/apis"
-	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-var pCondSet = apis.NewLivingConditionSet(SequenceConditionReady, SequenceConditionChannelsReady, SequenceConditionSubscriptionsReady, SequenceConditionAddressable)
+var sCondSet = apis.NewLivingConditionSet(SequenceConditionReady, SequenceConditionChannelsReady, SequenceConditionSubscriptionsReady, SequenceConditionAddressable)
 
 const (
 	// SequenceConditionReady has status True when all subconditions below have been set to True.
 	SequenceConditionReady = apis.ConditionReady
 
-	// SequenceChannelsReady has status True when all the channels created as part of
+	// SequenceConditionChannelsReady has status True when all the channels created as part of
 	// this sequence are ready.
 	SequenceConditionChannelsReady apis.ConditionType = "ChannelsReady"
 
-	// SequenceSubscriptionsReady has status True when all the subscriptions created as part of
+	// SequenceConditionSubscriptionsReady has status True when all the subscriptions created as part of
 	// this sequence are ready.
 	SequenceConditionSubscriptionsReady apis.ConditionType = "SubscriptionsReady"
 
@@ -44,8 +44,13 @@ const (
 	SequenceConditionAddressable apis.ConditionType = "Addressable"
 )
 
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*Sequence) GetConditionSet() apis.ConditionSet {
+	return sCondSet
+}
+
 // GetGroupVersionKind returns GroupVersionKind for InMemoryChannels
-func (p *Sequence) GetGroupVersionKind() schema.GroupVersionKind {
+func (*Sequence) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("Sequence")
 }
 
@@ -56,17 +61,17 @@ func (s *Sequence) GetUntypedSpec() interface{} {
 
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (ss *SequenceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
-	return pCondSet.Manage(ss).GetCondition(t)
+	return sCondSet.Manage(ss).GetCondition(t)
 }
 
 // IsReady returns true if the resource is ready overall.
 func (ss *SequenceStatus) IsReady() bool {
-	return pCondSet.Manage(ss).IsHappy()
+	return sCondSet.Manage(ss).IsHappy()
 }
 
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (ss *SequenceStatus) InitializeConditions() {
-	pCondSet.Manage(ss).InitializeConditions()
+	sCondSet.Manage(ss).InitializeConditions()
 }
 
 // PropagateSubscriptionStatuses sets the SubscriptionStatuses and SequenceConditionSubscriptionsReady based on
@@ -100,7 +105,7 @@ func (ss *SequenceStatus) PropagateSubscriptionStatuses(subscriptions []*messagi
 
 	}
 	if allReady {
-		pCondSet.Manage(ss).MarkTrue(SequenceConditionSubscriptionsReady)
+		sCondSet.Manage(ss).MarkTrue(SequenceConditionSubscriptionsReady)
 	} else {
 		ss.MarkSubscriptionsNotReady("SubscriptionsNotReady", "Subscriptions are not ready yet, or there are none")
 	}
@@ -108,7 +113,7 @@ func (ss *SequenceStatus) PropagateSubscriptionStatuses(subscriptions []*messagi
 
 // PropagateChannelStatuses sets the ChannelStatuses and SequenceConditionChannelsReady based on the
 // status of the incoming channels.
-func (ss *SequenceStatus) PropagateChannelStatuses(channels []*duckv1beta1.Channelable) {
+func (ss *SequenceStatus) PropagateChannelStatuses(channels []*eventingduckv1beta1.Channelable) {
 	ss.ChannelStatuses = make([]SequenceChannelStatus, len(channels))
 	allReady := true
 	// If there are no channels, treat that as a False case. Could go either way, but this seems right.
@@ -141,29 +146,29 @@ func (ss *SequenceStatus) PropagateChannelStatuses(channels []*duckv1beta1.Chann
 		}
 	}
 	if allReady {
-		pCondSet.Manage(ss).MarkTrue(SequenceConditionChannelsReady)
+		sCondSet.Manage(ss).MarkTrue(SequenceConditionChannelsReady)
 	} else {
 		ss.MarkChannelsNotReady("ChannelsNotReady", "Channels are not ready yet, or there are none")
 	}
 }
 
 func (ss *SequenceStatus) MarkChannelsNotReady(reason, messageFormat string, messageA ...interface{}) {
-	pCondSet.Manage(ss).MarkFalse(SequenceConditionChannelsReady, reason, messageFormat, messageA...)
+	sCondSet.Manage(ss).MarkFalse(SequenceConditionChannelsReady, reason, messageFormat, messageA...)
 }
 
 func (ss *SequenceStatus) MarkSubscriptionsNotReady(reason, messageFormat string, messageA ...interface{}) {
-	pCondSet.Manage(ss).MarkFalse(SequenceConditionSubscriptionsReady, reason, messageFormat, messageA...)
+	sCondSet.Manage(ss).MarkFalse(SequenceConditionSubscriptionsReady, reason, messageFormat, messageA...)
 }
 
 func (ss *SequenceStatus) MarkAddressableNotReady(reason, messageFormat string, messageA ...interface{}) {
-	pCondSet.Manage(ss).MarkFalse(SequenceConditionAddressable, reason, messageFormat, messageA...)
+	sCondSet.Manage(ss).MarkFalse(SequenceConditionAddressable, reason, messageFormat, messageA...)
 }
 
-func (ss *SequenceStatus) setAddress(address *pkgduckv1.Addressable) {
-	ss.Address = address
-	if address == nil {
-		pCondSet.Manage(ss).MarkFalse(SequenceConditionAddressable, "emptyAddress", "addressable is nil")
+func (ss *SequenceStatus) setAddress(address *duckv1.Addressable) {
+	if address == nil || address.URL == nil {
+		sCondSet.Manage(ss).MarkFalse(SequenceConditionAddressable, "emptyAddress", "addressable is nil")
 	} else {
-		pCondSet.Manage(ss).MarkTrue(SequenceConditionAddressable)
+		ss.AddressStatus.Address = &duckv1.Addressable{URL: address.URL}
+		sCondSet.Manage(ss).MarkTrue(SequenceConditionAddressable)
 	}
 }

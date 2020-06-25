@@ -43,6 +43,31 @@ rules:
   - update
   - patch
 
+
+- apiGroups:
+  - bindings.knative.dev
+  resources:
+  - kafkabindings
+  - kafkabindings/finalizers
+  verbs: &everything
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+
+- apiGroups:
+  - bindings.knative.dev
+  resources:
+  - kafkabindings/status
+  verbs:
+  - get
+  - update
+  - patch
+
+
 - apiGroups:
   - apps
   resources:
@@ -60,6 +85,19 @@ rules:
   - configmaps
   - secrets
   verbs: *everything
+
+# let the webhook label the appropriate namespace
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - create
+  - update
+  - list
+  - watch
+  - patch
 
 - apiGroups:
   - "coordination.k8s.io"
@@ -84,7 +122,7 @@ rules:
 
 ---
 # The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
-# See https://github.com/knative/eventing/blob/master/config/200-source-observer-clusterrole.yaml.
+# Ref: https://github.com/knative/eventing/tree/master/config/core/rolessource-observer-clusterrole.yaml.
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:

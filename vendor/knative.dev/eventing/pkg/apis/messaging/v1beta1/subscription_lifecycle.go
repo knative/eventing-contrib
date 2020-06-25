@@ -20,7 +20,7 @@ import (
 	"knative.dev/pkg/apis"
 )
 
-// subCondSet is a condition set with Ready as the happy condition and
+// SubCondSet is a condition set with Ready as the happy condition and
 // ReferencesResolved and ChannelReady as the dependent conditions.
 var SubCondSet = apis.NewLivingConditionSet(SubscriptionConditionReferencesResolved, SubscriptionConditionAddedToChannel, SubscriptionConditionChannelReady)
 
@@ -38,6 +38,11 @@ const (
 	// SubscriptionConditionChannelReady has status True when the channel has marked the subscriber as 'ready'
 	SubscriptionConditionChannelReady apis.ConditionType = "ChannelReady"
 )
+
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*Subscription) GetConditionSet() apis.ConditionSet {
+	return SubCondSet
+}
 
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (ss *SubscriptionStatus) GetCondition(t apis.ConditionType) *apis.Condition {
@@ -101,10 +106,10 @@ func (ss *SubscriptionStatus) MarkChannelFailed(reason, messageFormat string, me
 
 // MarkChannelUnknown sets the ChannelReady condition to Unknown state.
 func (ss *SubscriptionStatus) MarkChannelUnknown(reason, messageFormat string, messageA ...interface{}) {
-	SubCondSet.Manage(ss).MarkUnknown(SubscriptionConditionChannelReady, reason, messageFormat, messageA)
+	SubCondSet.Manage(ss).MarkUnknown(SubscriptionConditionChannelReady, reason, messageFormat, messageA...)
 }
 
 // MarkNotAddedToChannel sets the AddedToChannel condition to False state.
 func (ss *SubscriptionStatus) MarkNotAddedToChannel(reason, messageFormat string, messageA ...interface{}) {
-	SubCondSet.Manage(ss).MarkFalse(SubscriptionConditionAddedToChannel, reason, messageFormat, messageA)
+	SubCondSet.Manage(ss).MarkFalse(SubscriptionConditionAddedToChannel, reason, messageFormat, messageA...)
 }

@@ -17,7 +17,8 @@ limitations under the License.
 package main
 
 import (
-	gitlab "knative.dev/eventing-contrib/gitlab/pkg/reconciler"
+	gitlab "knative.dev/eventing-contrib/gitlab/pkg/reconciler/source"
+
 	"knative.dev/pkg/injection/sharedmain"
 )
 

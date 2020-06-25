@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/source"
 
@@ -44,7 +44,7 @@ func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
-		Transport: RoundTripFunc(fn),
+		Transport: fn,
 	}
 }
 
@@ -75,14 +75,12 @@ func BenchmarkHandle(b *testing.B) {
 	a := &Adapter{
 		config: &adapterConfig{
 			EnvConfig: adapter.EnvConfig{
-				SinkURI:   sinkUrl,
+				Sink:      sinkUrl,
 				Namespace: "test",
 			},
-			Topics:           "topic1,topic2",
-			BootstrapServers: "server1,server2",
-			ConsumerGroup:    "group",
-			Name:             "test",
-			Net:              AdapterNet{},
+			Topics:        []string{"topic1", "topic2"},
+			ConsumerGroup: "group",
+			Name:          "test",
 		},
 		httpMessageSender: &s,
 		logger:            zap.NewNop(),

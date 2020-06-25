@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"k8s.io/client-go/kubernetes"
+	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/controller"
 
 	"github.com/kelseyhightower/envconfig"
@@ -31,8 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	"knative.dev/eventing-contrib/prometheus/pkg/reconciler/resources"
 	"knative.dev/pkg/apis"
@@ -59,12 +58,11 @@ type envConfig struct {
 type Reconciler struct {
 	kubeClientSet kubernetes.Interface
 
-	receiveAdapterImage string
-
 	// listers index properties about resources
 	deploymentLister appsv1listers.DeploymentLister
 
 	sinkResolver *resolver.URIResolver
+	configs      *source.ConfigWatcher
 }
 
 var _ promreconciler.Interface = (*Reconciler)(nil)
@@ -127,11 +125,12 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Pro
 	}
 
 	adapterArgs := resources.ReceiveAdapterArgs{
-		EventSource: eventSource,
-		Image:       env.Image,
-		Source:      src,
-		Labels:      resources.Labels(src.Name),
-		SinkURI:     sinkURI.String(),
+		EventSource:    eventSource,
+		Image:          env.Image,
+		Source:         src,
+		Labels:         resources.Labels(src.Name),
+		SinkURI:        sinkURI.String(),
+		AdditionalEnvs: r.configs.ToEnvVars(),
 	}
 	expected := resources.MakeReceiveAdapter(&adapterArgs)
 
@@ -170,24 +169,6 @@ func (r *Reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1
 		}
 	}
 	return false
-}
-
-func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.PrometheusSource) (*appsv1.Deployment, error) {
-	dl, err := r.deploymentLister.Deployments(src.Namespace).List(r.getLabelSelector(src))
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to list deployments: %v", zap.Error(err))
-		return nil, err
-	}
-	for _, dep := range dl {
-		if metav1.IsControlledBy(dep, src) {
-			return dep, nil
-		}
-	}
-	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
-}
-
-func (r *Reconciler) getLabelSelector(src *v1alpha1.PrometheusSource) labels.Selector {
-	return labels.SelectorFromSet(resources.Labels(src.Name))
 }
 
 // makeEventSource computes the Cloud Event source attribute for the given source

@@ -142,6 +142,34 @@ func (g *reconcilerControllerGenerator) GenerateType(c *generator.Context, t *ty
 			Package: "context",
 			Name:    "Context",
 		}),
+		"reconcilerLeaderAwareFuncs": c.Universe.Type(types.Name{
+			Package: "knative.dev/pkg/reconciler",
+			Name:    "LeaderAwareFuncs",
+		}),
+		"reconcilerBucket": c.Universe.Type(types.Name{
+			Package: "knative.dev/pkg/reconciler",
+			Name:    "Bucket",
+		}),
+		"typesNamespacedName": c.Universe.Type(types.Name{
+			Package: "k8s.io/apimachinery/pkg/types",
+			Name:    "NamespacedName",
+		}),
+		"labelsEverything": c.Universe.Function(types.Name{
+			Package: "k8s.io/apimachinery/pkg/labels",
+			Name:    "Everything",
+		}),
+		"stringsReplaceAll": c.Universe.Function(types.Name{
+			Package: "strings",
+			Name:    "ReplaceAll",
+		}),
+		"reflectTypeOf": c.Universe.Function(types.Name{
+			Package: "reflect",
+			Name:    "TypeOf",
+		}),
+		"fmtSprintf": c.Universe.Function(types.Name{
+			Package: "fmt",
+			Name:    "Sprintf",
+		}),
 	}
 
 	sw.Do(reconcilerControllerNewImpl, m)
@@ -153,7 +181,6 @@ var reconcilerControllerNewImpl = `
 const (
 	defaultControllerAgentName = "{{.type|lowercaseSingular}}-controller"
 	defaultFinalizerName       = "{{.type|allLowercasePlural}}.{{.group}}"
-	defaultQueueName           = "{{.type|allLowercasePlural}}"
 	{{if .hasClass}}
 	// ClassAnnotationKey points to the annotation for the class of this resource.
 	ClassAnnotationKey = "{{ .class }}"
@@ -174,6 +201,60 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 
 	{{.type|lowercaseSingular}}Informer := {{.informerGet|raw}}(ctx)
 
+	lister := {{.type|lowercaseSingular}}Informer.Lister()
+
+	rec := &reconcilerImpl{
+		LeaderAwareFuncs: {{.reconcilerLeaderAwareFuncs|raw}}{
+			PromoteFunc: func(bkt {{.reconcilerBucket|raw}}, enq func({{.reconcilerBucket|raw}}, {{.typesNamespacedName|raw}})) error {
+				all, err := lister.List({{.labelsEverything|raw}}())
+				if err != nil {
+					return err
+				}
+				for _, elt := range all {
+					// TODO: Consider letting users specify a filter in options.
+					enq(bkt, {{.typesNamespacedName|raw}}{
+						Namespace: elt.GetNamespace(),
+						Name: elt.GetName(),
+					})
+				}
+				return nil
+			},
+		},
+		Client:  {{.clientGet|raw}}(ctx),
+		Lister:  lister,
+		reconciler:    r,
+		finalizerName: defaultFinalizerName,
+		{{if .hasClass}}classValue: classValue,{{end}}
+	}
+
+	t := {{.reflectTypeOf|raw}}(r).Elem()
+	queueName := {{.fmtSprintf|raw}}("%s.%s", {{.stringsReplaceAll|raw}}(t.PkgPath(), "/", "-"), t.Name())
+
+	impl := {{.controllerNewImpl|raw}}(rec, logger, queueName)
+	agentName := defaultControllerAgentName
+
+	// Pass impl to the options. Save any optional results.
+	for _, fn := range optionsFns {
+		opts := fn(impl)
+		if opts.ConfigStore != nil {
+			rec.configStore = opts.ConfigStore
+		}
+		if opts.FinalizerName != "" {
+			rec.finalizerName = opts.FinalizerName
+		}
+		if opts.AgentName != "" {
+			agentName = opts.AgentName
+		}
+	}
+
+	rec.Recorder = createRecorder(ctx, agentName)
+
+	return impl
+}
+
+func createRecorder(ctx context.Context, agentName string) record.EventRecorder {
+	logger := {{.loggingFromContext|raw}}(ctx)
+
 	recorder := {{.controllerGetEventRecorder|raw}}(ctx)
 	if recorder == nil {
 		// Create event broadcaster
@@ -184,7 +265,7 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 			eventBroadcaster.StartRecordingToSink(
 				&{{.typedcorev1EventSinkImpl|raw}}{Interface: {{.kubeclientGet|raw}}(ctx).CoreV1().Events("")}),
 		}
-		recorder = eventBroadcaster.NewRecorder({{.schemeScheme|raw}}, {{.corev1EventSource|raw}}{Component: defaultControllerAgentName})
+		recorder = eventBroadcaster.NewRecorder({{.schemeScheme|raw}}, {{.corev1EventSource|raw}}{Component: agentName})
 		go func() {
 			<-ctx.Done()
 			for _, w := range watches {
@@ -193,24 +274,7 @@ func NewImpl(ctx {{.contextContext|raw}}, r Interface{{if .hasClass}}, classValu
 		}()
 	}
 
-	rec := &reconcilerImpl{
-		Client:  {{.clientGet|raw}}(ctx),
-		Lister:  {{.type|lowercaseSingular}}Informer.Lister(),
-		Recorder: recorder,
-		reconciler:    r,
-		{{if .hasClass}}classValue: classValue,{{end}}
-	}
-	impl := {{.controllerNewImpl|raw}}(rec, logger, defaultQueueName)
-
-	// Pass impl to the options. Save any optional results.
-	for _, fn := range optionsFns {
-		opts := fn(impl)
-		if opts.ConfigStore != nil {
-			rec.configStore = opts.ConfigStore
-		}
-	}
-
-	return impl
+	return recorder
 }
 
 func init() {

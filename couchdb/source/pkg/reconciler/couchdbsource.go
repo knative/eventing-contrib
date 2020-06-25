@@ -31,11 +31,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	cdbreconciler "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/reconciler/sources/v1alpha1/couchdbsource"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -66,7 +63,6 @@ type Reconciler struct {
 	// listers index properties about resources
 
 	deploymentLister appsv1listers.DeploymentLister
-	eventTypeLister  eventinglisters.EventTypeLister
 
 	sinkResolver *resolver.URIResolver
 }
@@ -168,24 +164,6 @@ func (r *Reconciler) podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1
 		}
 	}
 	return false
-}
-
-func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.CouchDbSource) (*appsv1.Deployment, error) {
-	dl, err := r.deploymentLister.Deployments(src.Namespace).List(r.getLabelSelector(src))
-	if err != nil {
-		logging.FromContext(ctx).Error("Unable to list deployments: %v", zap.Error(err))
-		return nil, err
-	}
-	for _, dep := range dl {
-		if metav1.IsControlledBy(dep, src) {
-			return dep, nil
-		}
-	}
-	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
-}
-
-func (r *Reconciler) getLabelSelector(src *v1alpha1.CouchDbSource) labels.Selector {
-	return labels.SelectorFromSet(resources.Labels(src.Name))
 }
 
 // MakeEventSource computes the Cloud Event source attribute for the given source

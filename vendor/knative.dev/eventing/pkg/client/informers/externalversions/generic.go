@@ -24,11 +24,9 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "knative.dev/eventing/pkg/apis/configs/v1alpha1"
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	v1beta1 "knative.dev/eventing/pkg/apis/eventing/v1beta1"
-	flowsv1alpha1 "knative.dev/eventing/pkg/apis/flows/v1alpha1"
 	flowsv1beta1 "knative.dev/eventing/pkg/apis/flows/v1beta1"
-	messagingv1alpha1 "knative.dev/eventing/pkg/apis/messaging/v1alpha1"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	sourcesv1alpha1 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
 	v1alpha2 "knative.dev/eventing/pkg/apis/sources/v1alpha2"
@@ -64,13 +62,11 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1alpha1.SchemeGroupVersion.WithResource("configmappropagations"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Configs().V1alpha1().ConfigMapPropagations().Informer()}, nil
 
-		// Group=eventing.knative.dev, Version=v1alpha1
-	case eventingv1alpha1.SchemeGroupVersion.WithResource("brokers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1alpha1().Brokers().Informer()}, nil
-	case eventingv1alpha1.SchemeGroupVersion.WithResource("eventtypes"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1alpha1().EventTypes().Informer()}, nil
-	case eventingv1alpha1.SchemeGroupVersion.WithResource("triggers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1alpha1().Triggers().Informer()}, nil
+		// Group=eventing.knative.dev, Version=v1
+	case v1.SchemeGroupVersion.WithResource("brokers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1().Brokers().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("triggers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1().Triggers().Informer()}, nil
 
 		// Group=eventing.knative.dev, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("brokers"):
@@ -80,25 +76,11 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1beta1.SchemeGroupVersion.WithResource("triggers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1beta1().Triggers().Informer()}, nil
 
-		// Group=flows.knative.dev, Version=v1alpha1
-	case flowsv1alpha1.SchemeGroupVersion.WithResource("parallels"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Flows().V1alpha1().Parallels().Informer()}, nil
-	case flowsv1alpha1.SchemeGroupVersion.WithResource("sequences"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Flows().V1alpha1().Sequences().Informer()}, nil
-
 		// Group=flows.knative.dev, Version=v1beta1
 	case flowsv1beta1.SchemeGroupVersion.WithResource("parallels"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Flows().V1beta1().Parallels().Informer()}, nil
 	case flowsv1beta1.SchemeGroupVersion.WithResource("sequences"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Flows().V1beta1().Sequences().Informer()}, nil
-
-		// Group=messaging.knative.dev, Version=v1alpha1
-	case messagingv1alpha1.SchemeGroupVersion.WithResource("channels"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Messaging().V1alpha1().Channels().Informer()}, nil
-	case messagingv1alpha1.SchemeGroupVersion.WithResource("inmemorychannels"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Messaging().V1alpha1().InMemoryChannels().Informer()}, nil
-	case messagingv1alpha1.SchemeGroupVersion.WithResource("subscriptions"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Messaging().V1alpha1().Subscriptions().Informer()}, nil
 
 		// Group=messaging.knative.dev, Version=v1beta1
 	case messagingv1beta1.SchemeGroupVersion.WithResource("channels"):

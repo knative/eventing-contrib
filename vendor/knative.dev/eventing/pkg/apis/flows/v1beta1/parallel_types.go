@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -28,6 +29,7 @@ import (
 )
 
 // +genclient
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // Parallel defines conditional branches that will be wired in
 // series through Channels and Subscriptions.
@@ -60,6 +62,9 @@ var (
 
 	// Check that we can create OwnerReferences to a Parallel.
 	_ kmeta.OwnerRefable = (*Parallel)(nil)
+
+	// Check that the type conforms to the duck Knative Resource shape.
+	_ duckv1.KRShaped = (*Parallel)(nil)
 )
 
 type ParallelSpec struct {
@@ -89,6 +94,12 @@ type ParallelBranch struct {
 	// If not specified, sent the result to the Parallel Reply
 	// +optional
 	Reply *duckv1.Destination `json:"reply,omitempty"`
+
+	// Delivery is the delivery specification for events to the subscriber
+	// This includes things like retries, DLQ, etc.
+	// Needed for Roundtripping v1alpha1 <-> v1beta1.
+	// +optional
+	Delivery *eventingduckv1beta1.DeliverySpec `json:"delivery,omitempty"`
 }
 
 // ParallelStatus represents the current state of a Parallel.
@@ -147,4 +158,9 @@ type ParallelList struct {
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Parallel `json:"items"`
+}
+
+// GetStatus retrieves the status of the Parallel. Implements the KRShaped interface.
+func (p *Parallel) GetStatus() *duckv1.Status {
+	return &p.Status.Status
 }

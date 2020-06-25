@@ -20,27 +20,17 @@ import (
 	"context"
 	"testing"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
-	"knative.dev/eventing/pkg/adapter"
-	kncetesting "knative.dev/eventing/pkg/kncloudevents/testing"
+	"knative.dev/eventing/pkg/adapter/v2"
+	kncetesting "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/source"
 
-	"github.com/go-kivik/kivik/driver"
-	"github.com/go-kivik/kivikmock"
+	"github.com/go-kivik/kivik/v3/driver"
+	"github.com/go-kivik/kivikmock/v3"
 )
-
-type mockReporter struct {
-	eventCount int
-}
-
-func (r *mockReporter) ReportEventCount(args *source.ReportArgs, responseCode int) error {
-	r.eventCount += 1
-	return nil
-}
 
 func TestNewAdapter(t *testing.T) {
 	ce := kncetesting.NewTestClient()
@@ -72,13 +62,12 @@ func TestNewAdapter(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			r := &mockReporter{}
 			ctx, _ := pkgtesting.SetupFakeContext(t)
 			c, mock := kivikmock.NewT(t)
 
 			mock.ExpectDB()
 
-			a := newAdapter(ctx, &tc.opt, ce, r, c.DSN(), "kivikmock")
+			a := newAdapter(ctx, &tc.opt, ce, c.DSN(), "kivikmock")
 
 			got, ok := a.(*couchDbAdapter)
 			if !ok {
@@ -99,22 +88,22 @@ func TestNewAdapter(t *testing.T) {
 
 type adapterTestClient struct {
 	*kncetesting.TestCloudEventsClient
-	stopCh chan struct{}
+	cancel context.CancelFunc
 }
 
 var _ cloudevents.Client = (*adapterTestClient)(nil)
 
-func newAdapterTestClient() *adapterTestClient {
+func newAdapterTestClient(cancel context.CancelFunc) *adapterTestClient {
 	return &adapterTestClient{
 		kncetesting.NewTestClient(),
-		make(chan struct{}, 1),
+		cancel,
 	}
 }
 
-func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
-	retCtx, retEvent, retError := c.TestCloudEventsClient.Send(ctx, event)
-	c.stopCh <- struct{}{}
-	return retCtx, retEvent, retError
+func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) cloudevents.Result {
+	retError := c.TestCloudEventsClient.Send(ctx, event)
+	c.cancel()
+	return retError
 }
 
 func TestReceiveEventPoll(t *testing.T) {
@@ -131,7 +120,6 @@ func TestReceiveEventPoll(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ce := newAdapterTestClient()
 
 			env := envConfig{
 				EnvConfig: adapter.EnvConfig{
@@ -141,7 +129,6 @@ func TestReceiveEventPoll(t *testing.T) {
 				Database:    "testdb",
 				Feed:        tc.feed,
 			}
-			r := &mockReporter{}
 			ctx, _ := pkgtesting.SetupFakeContext(t)
 			logger := zap.NewExample().Sugar()
 			ctx = logging.WithLogger(ctx, logger)
@@ -156,11 +143,14 @@ func TestReceiveEventPoll(t *testing.T) {
 				Changes: driver.ChangedRevs{"arev"},
 			}))
 
-			a := newAdapter(ctx, &env, ce, r, c.DSN(), "kivikmock").(*couchDbAdapter)
+			ctx, cancel := context.WithCancel(context.Background())
+			ce := newAdapterTestClient(cancel)
+
+			a := newAdapter(ctx, &env, ce, c.DSN(), "kivikmock").(*couchDbAdapter)
 
 			done := make(chan struct{})
 			go func() {
-				err := a.Start(ce.stopCh)
+				err := a.Start(ctx)
 				if err != nil {
 					t.Errorf("expected no error, got %v", err)
 				}
@@ -178,7 +168,7 @@ func validateSent(t *testing.T, ce *adapterTestClient, wantData string) {
 		t.Errorf("Expected 1 event to be sent, got %d", got)
 	}
 
-	if got := ce.Sent()[0].Data; string(got.([]byte)) != wantData {
-		t.Errorf("Expected %q event to be sent, got %q", wantData, string(got.([]byte)))
+	if got := ce.Sent()[0].Data(); string(got) != wantData {
+		t.Errorf("Expected %q event to be sent, got %q", wantData, string(got))
 	}
 }

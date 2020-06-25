@@ -33,6 +33,7 @@ type Artifact struct {
 	ID       string `json:"id" yaml:"id"`
 	Location string `json:"location,omitempty" yaml:"location,omitempty"`
 	Target   string `json:"target,omitempty" yaml:"target,omitempty"`
+	Checksum string `json:"checksum,omitempty" yaml:"checksum,omitempty"`
 }
 
 // Failure --
@@ -88,16 +89,32 @@ type MavenArtifact struct {
 
 // RuntimeSpec --
 type RuntimeSpec struct {
-	Version          string            `json:"version" yaml:"version"`
-	Provider         RuntimeProvider   `json:"provider" yaml:"provider"`
-	ApplicationClass string            `json:"applicationClass" yaml:"applicationClass"`
-	Dependencies     []MavenArtifact   `json:"dependencies" yaml:"dependencies"`
-	Metadata         map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Version          string                `json:"version" yaml:"version"`
+	Provider         RuntimeProvider       `json:"provider" yaml:"provider"`
+	ApplicationClass string                `json:"applicationClass" yaml:"applicationClass"`
+	Dependencies     []MavenArtifact       `json:"dependencies" yaml:"dependencies"`
+	Metadata         map[string]string     `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Capabilities     map[string]Capability `json:"capabilities,omitempty" yaml:"capabilities,omitempty"`
+}
+
+// Capability --
+type Capability struct {
+	Dependencies []MavenArtifact   `json:"dependencies" yaml:"dependencies"`
+	Metadata     map[string]string `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 const (
 	// ServiceTypeUser --
 	ServiceTypeUser = "user"
+
+	// CapabilityRest --
+	CapabilityRest = "rest"
+	// CapabilityHealth --
+	CapabilityHealth = "health"
+	// CapabilityCron --
+	CapabilityCron = "cron"
+	// CapabilityPlatformHTTP --
+	CapabilityPlatformHTTP = "platform-http"
 )
 
 // ResourceCondition is a common type for all conditions

@@ -225,7 +225,7 @@ func (s *GitHubSourceStatus) MarkWebhookNotConfigured(reason, messageFormat stri
 //}
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=false
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GitHubSource is the Schema for the githubsources API

@@ -19,14 +19,22 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
-// Check that GitLabSource implements the Conditions duck type.
-var _ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
+var (
+
+	// Check that GitLabSource implements the Conditions duck type.
+	_ = duck.VerifyType(&GitLabSource{}, &duckv1.Conditions{})
+
+	_ apis.Validatable = (*GitLabSource)(nil)
+	_ apis.Defaultable = (*GitLabSource)(nil)
+	_ runtime.Object   = (*GitLabSource)(nil)
+)
 
 // GitLabSourceSpec defines the desired state of GitLabSource
 // +kubebuilder:categories=all,knative,eventing,sources
@@ -41,7 +49,7 @@ type GitLabSourceSpec struct {
 	// ProjectUrl is the url of the GitLab project for which we are interested
 	// to receive events from.
 	// Examples:
-	//   https://knative.dev/eventing-contrib/gitlab
+	//   https://gitlab.com/gitlab-org/gitlab-foss
 	// +kubebuilder:validation:MinLength=1
 	ProjectUrl string `json:"projectUrl"`
 
@@ -153,7 +161,7 @@ func (s *GitLabSourceStatus) MarkSecret() {
 }
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=false
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GitLabSource is the Schema for the gitlabsources API

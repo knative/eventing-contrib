@@ -20,47 +20,58 @@ import (
 	"fmt"
 	"testing"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	. "github.com/cloudevents/sdk-go/v2/test"
+	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"knative.dev/eventing/test/lib"
-	"knative.dev/eventing/test/lib/cloudevents"
+	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 )
 
 // EventTransformationForSubscriptionTestHelper is the helper function for channel_event_tranformation_test
 func EventTransformationForSubscriptionTestHelper(t *testing.T,
-	channelTestRunner lib.ChannelTestRunner,
-	options ...lib.SetupClientOption) {
+	channelTestRunner testlib.ComponentsTestRunner,
+	options ...testlib.SetupClientOption) {
 	senderName := "e2e-eventtransformation-sender"
 	channelNames := []string{"e2e-eventtransformation1", "e2e-eventtransformation2"}
+	eventSource := fmt.Sprintf("http://%s.svc/", senderName)
 	// subscriptionNames1 corresponds to Subscriptions on channelNames[0]
 	subscriptionNames1 := []string{"e2e-eventtransformation-subs11", "e2e-eventtransformation-subs12"}
 	// subscriptionNames2 corresponds to Subscriptions on channelNames[1]
 	subscriptionNames2 := []string{"e2e-eventtransformation-subs21", "e2e-eventtransformation-subs22"}
 	transformationPodName := "e2e-eventtransformation-transformation-pod"
-	loggerPodName := "e2e-eventtransformation-logger-pod"
+	recordEventsPodName := "e2e-eventtransformation-recordevents-pod"
 
-	channelTestRunner.RunTests(t, lib.FeatureBasic, func(st *testing.T, channel metav1.TypeMeta) {
-		client := lib.Setup(st, true, options...)
-		defer lib.TearDown(client)
+	channelTestRunner.RunTests(t, testlib.FeatureBasic, func(st *testing.T, channel metav1.TypeMeta) {
+		client := testlib.Setup(st, true, options...)
+		defer testlib.TearDown(client)
 
 		// create channels
 		client.CreateChannelsOrFail(channelNames, &channel)
 		client.WaitForResourcesReadyOrFail(&channel)
 
 		// create transformation pod and service
-		transformedEventBody := fmt.Sprintf("eventBody %s", uuid.NewUUID())
-		eventAfterTransformation := cloudevents.New(
-			fmt.Sprintf(`{"msg":%q}`, transformedEventBody),
-			cloudevents.WithSource(senderName),
+		eventAfterTransformation := cloudevents.NewEvent()
+		eventAfterTransformation.SetID("dummy-transformed")
+		eventAfterTransformation.SetSource(eventSource)
+		eventAfterTransformation.SetType(testlib.DefaultEventType)
+		transformedEventBody := fmt.Sprintf(`{"msg":"eventBody %s"}`, uuid.New().String())
+		if err := eventAfterTransformation.SetData(cloudevents.ApplicationJSON, []byte(transformedEventBody)); err != nil {
+			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+		}
+		transformationPod := resources.EventTransformationPod(
+			transformationPodName,
+			eventAfterTransformation.Type(),
+			eventAfterTransformation.Source(),
+			eventAfterTransformation.Data(),
 		)
-		transformationPod := resources.EventTransformationPod(transformationPodName, eventAfterTransformation)
-		client.CreatePodOrFail(transformationPod, lib.WithService(transformationPodName))
+		client.CreatePodOrFail(transformationPod, testlib.WithService(transformationPodName))
 
-		// create logger pod and service
-		loggerPod := resources.EventLoggerPod(loggerPodName)
-		client.CreatePodOrFail(loggerPod, lib.WithService(loggerPodName))
+		// create event logger pod and service as the subscriber
+		eventTracker, _ := recordevents.StartEventRecordOrFail(client, recordEventsPodName)
+		defer eventTracker.Cleanup()
 
 		// create subscriptions that subscribe the first channel, use the transformation service to transform the events and then forward the transformed events to the second channel
 		client.CreateSubscriptionsOrFail(
@@ -75,24 +86,27 @@ func EventTransformationForSubscriptionTestHelper(t *testing.T,
 			subscriptionNames2,
 			channelNames[1],
 			&channel,
-			resources.WithSubscriberForSubscription(loggerPodName),
+			resources.WithSubscriberForSubscription(recordEventsPodName),
 		)
 
 		// wait for all test resources to be ready, so that we can start sending events
 		client.WaitForAllTestResourcesReadyOrFail()
 
-		// send fake CloudEvent to the first channel
-		eventBody := fmt.Sprintf("TestEventTransformation %s", uuid.NewUUID())
-		eventToSend := cloudevents.New(
-			fmt.Sprintf(`{"msg":%q}`, eventBody),
-			cloudevents.WithSource(senderName),
-		)
-		client.SendFakeEventToAddressableOrFail(senderName, channelNames[0], &channel, eventToSend)
+		// send  CloudEvent to the first channel
+		eventToSend := cloudevents.NewEvent()
+		eventToSend.SetID("dummy")
+		eventToSend.SetSource(eventSource)
+		eventToSend.SetType(testlib.DefaultEventType)
+		eventBody := fmt.Sprintf(`{"msg":"TestEventTransformation %s"}`, uuid.New().String())
+		if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
+			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+		}
+		client.SendEventToAddressable(senderName, channelNames[0], &channel, eventToSend)
 
 		// check if the logging service receives the correct number of event messages
-		expectedContentCount := len(subscriptionNames1) * len(subscriptionNames2)
-		if err := client.CheckLog(loggerPodName, lib.CheckerContainsCount(transformedEventBody, expectedContentCount)); err != nil {
-			st.Fatalf("String %q does not appear %d times in logs of logger pod %q: %v", transformedEventBody, expectedContentCount, loggerPodName, err)
-		}
+		eventTracker.AssertAtLeast(len(subscriptionNames1)*len(subscriptionNames2), recordevents.MatchEvent(
+			HasSource(eventSource),
+			HasData([]byte(transformedEventBody)),
+		))
 	})
 }

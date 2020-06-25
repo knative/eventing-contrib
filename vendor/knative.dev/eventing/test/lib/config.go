@@ -17,6 +17,8 @@ limitations under the License.
 package lib
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/eventing/test/lib/resources"
@@ -37,7 +39,7 @@ var MessagingChannelTypeMeta = metav1.TypeMeta{
 	Kind:       resources.ChannelKind,
 }
 
-// ChannelFeatureMap saves the channel-features mapping.
+// ComponentFeatureMap saves the channel-features mapping.
 // Each pair means the channel support the list of features.
 var ChannelFeatureMap = map[metav1.TypeMeta][]Feature{
 	InMemoryChannelTypeMeta:  {FeatureBasic},
@@ -56,3 +58,17 @@ const (
 	// will persist and be retransmitted when the Pod restarts.
 	FeaturePersistence Feature = "persistence"
 )
+
+const (
+	// Default Event values
+	DefaultEventSource = "http://knative.test"
+	DefaultEventType   = "dev.knative.test.event"
+	// The interval and timeout used for polling pod logs.
+	interval = 1 * time.Second
+	timeout  = 4 * time.Minute
+)
+
+// InterestingHeaders is used by logging pods to decide interesting HTTP headers to log
+func InterestingHeaders() []string {
+	return []string{"Traceparent", "X-Custom-Header"}
+}

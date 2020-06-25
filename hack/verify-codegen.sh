@@ -18,6 +18,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+export GO111MODULE=on
+
 source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
 readonly TMP_DIFFROOT="$(mktemp -d ${REPO_ROOT_DIR}/tmpdiffroot.XXXXXX)"
@@ -34,7 +36,7 @@ cleanup
 mkdir -p "${TMP_DIFFROOT}"
 
 cp -aR \
-  "${REPO_ROOT_DIR}/Gopkg.lock" \
+  "${REPO_ROOT_DIR}/go.sum" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor" \
   "${TMP_DIFFROOT}"
@@ -44,9 +46,6 @@ echo "Diffing ${REPO_ROOT_DIR} against freshly generated codegen"
 ret=0
 
 diff -Naupr --no-dereference \
-  "${REPO_ROOT_DIR}/Gopkg.lock" "${TMP_DIFFROOT}/Gopkg.lock" || ret=1
-
-diff -Naupr --no-dereference \
   "${REPO_ROOT_DIR}/third_party" "${TMP_DIFFROOT}/third_party" || ret=1
 
 diff -Naupr --no-dereference \
@@ -54,7 +53,7 @@ diff -Naupr --no-dereference \
 
 # Restore working tree state
 rm -fr \
-  "${REPO_ROOT_DIR}/Gopkg.lock" \
+  "${REPO_ROOT_DIR}/go.sum" \
   "${REPO_ROOT_DIR}/third_party" \
   "${REPO_ROOT_DIR}/vendor"
 

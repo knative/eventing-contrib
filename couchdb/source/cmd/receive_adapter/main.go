@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 
 	couchdbadapter "knative.dev/eventing-contrib/couchdb/source/pkg/adapter"
 )

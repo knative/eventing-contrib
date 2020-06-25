@@ -24,7 +24,7 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
-	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
@@ -42,11 +42,11 @@ type Callback struct {
 	function func(ctx context.Context, unstructured *unstructured.Unstructured) error
 
 	// supportedVerbs are the verbs supported for the callback.
-	// The function will only be called on these acitons.
+	// The function will only be called on these actions.
 	supportedVerbs map[webhook.Operation]struct{}
 }
 
-// NewCallback creates a new callback function to be invoked on supported vebs.
+// NewCallback creates a new callback function to be invoked on supported verbs.
 func NewCallback(function func(context.Context, *unstructured.Unstructured) error, supportedVerbs ...webhook.Operation) Callback {
 	m := make(map[webhook.Operation]struct{})
 	for _, op := range supportedVerbs {
@@ -61,7 +61,7 @@ func NewCallback(function func(context.Context, *unstructured.Unstructured) erro
 var _ webhook.AdmissionController = (*reconciler)(nil)
 
 // Admit implements AdmissionController
-func (ac *reconciler) Admit(ctx context.Context, request *admissionv1beta1.AdmissionRequest) *admissionv1beta1.AdmissionResponse {
+func (ac *reconciler) Admit(ctx context.Context, request *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
 	if ac.withContext != nil {
 		ctx = ac.withContext(ctx)
 	}
@@ -86,14 +86,14 @@ func (ac *reconciler) Admit(ctx context.Context, request *admissionv1beta1.Admis
 		return webhook.MakeErrorStatus("validation callback failed: %v", err)
 	}
 
-	return &admissionv1beta1.AdmissionResponse{Allowed: true}
+	return &admissionv1.AdmissionResponse{Allowed: true}
 }
 
 // decodeRequestAndPrepareContext deserializes the old and new GenericCrds from the incoming request and sets up the context.
 // nil oldObj or newObj denote absence of `old` (create) or `new` (delete) objects.
 func (ac *reconciler) decodeRequestAndPrepareContext(
 	ctx context.Context,
-	req *admissionv1beta1.AdmissionRequest,
+	req *admissionv1.AdmissionRequest,
 	gvk schema.GroupVersionKind) (context.Context, resourcesemantics.GenericCRD, error) {
 
 	logger := logging.FromContext(ctx)
@@ -131,33 +131,38 @@ func (ac *reconciler) decodeRequestAndPrepareContext(
 		}
 	}
 
-	// Set up the context for validation
-	if oldObj != nil {
-		if req.SubResource == "" {
-			ctx = apis.WithinUpdate(ctx, oldObj)
-		} else {
-			ctx = apis.WithinSubResourceUpdate(ctx, oldObj, req.SubResource)
-		}
-	} else {
-		ctx = apis.WithinCreate(ctx)
-	}
 	ctx = apis.WithUserInfo(ctx, &req.UserInfo)
 	ctx = context.WithValue(ctx, kubeclient.Key{}, ac.client)
-
 	if req.DryRun != nil && *req.DryRun {
 		ctx = apis.WithDryRun(ctx)
+	}
+
+	if newObj != nil && oldObj != nil && req.SubResource == "" {
+		ctx = apis.WithinSubResourceUpdate(ctx, oldObj, req.SubResource)
+	}
+
+	switch req.Operation {
+	case admissionv1.Update:
+		ctx = apis.WithinUpdate(ctx, oldObj)
+	case admissionv1.Create:
+		ctx = apis.WithinCreate(ctx)
+	case admissionv1.Delete:
+		ctx = apis.WithinDelete(ctx)
+		return ctx, oldObj, nil
 	}
 
 	return ctx, newObj, nil
 }
 
-func validate(ctx context.Context, resource resourcesemantics.GenericCRD, req *admissionv1beta1.AdmissionRequest) error {
+func validate(ctx context.Context, resource resourcesemantics.GenericCRD, req *admissionv1.AdmissionRequest) error {
 	logger := logging.FromContext(ctx)
 
 	// Only run validation for supported create and update validaiton.
 	switch req.Operation {
-	case admissionv1beta1.Create, admissionv1beta1.Update:
+	case admissionv1.Create, admissionv1.Update:
 		// Supported verbs
+	case admissionv1.Delete:
+		return nil // Validation handled by optional Callback, but not validatable.
 	default:
 		logger.Infof("Unhandled webhook validation operation, letting it through %v", req.Operation)
 		return nil
@@ -179,9 +184,9 @@ func validate(ctx context.Context, resource resourcesemantics.GenericCRD, req *a
 }
 
 // callback runs optional callbacks on admission
-func (ac *reconciler) callback(ctx context.Context, req *admissionv1beta1.AdmissionRequest, gvk schema.GroupVersionKind) error {
+func (ac *reconciler) callback(ctx context.Context, req *admissionv1.AdmissionRequest, gvk schema.GroupVersionKind) error {
 	var toDecode []byte
-	if req.Operation == admissionv1beta1.Delete {
+	if req.Operation == admissionv1.Delete {
 		toDecode = req.OldObject.Raw
 	} else {
 		toDecode = req.Object.Raw

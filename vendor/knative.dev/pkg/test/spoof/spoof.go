@@ -20,7 +20,9 @@ package spoof
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -32,9 +34,9 @@ import (
 	"knative.dev/pkg/test/ingress"
 	"knative.dev/pkg/test/logging"
 	"knative.dev/pkg/test/zipkin"
+	"knative.dev/pkg/tracing/propagation/tracecontextb3"
 
 	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/plugin/ochttp/propagation/b3"
 	"go.opencensus.io/trace"
 )
 
@@ -109,7 +111,7 @@ func New(
 	opts ...TransportOption) (*SpoofingClient, error) {
 	endpoint, err := ResolveEndpoint(kubeClientset, domain, resolvable, endpointOverride)
 	if err != nil {
-		return nil, fmt.Errorf("failed get the cluster endpoint: %v", err)
+		return nil, fmt.Errorf("failed get the cluster endpoint: %w", err)
 	}
 
 	// Spoof the hostname at the resolver level
@@ -133,7 +135,7 @@ func New(
 	// Enable Zipkin tracing
 	roundTripper := &ochttp.Transport{
 		Base:        transport,
-		Propagation: &b3.HTTPFormat{},
+		Propagation: tracecontextb3.TraceContextEgress,
 	}
 
 	sc := SpoofingClient{
@@ -221,7 +223,7 @@ func (sc *SpoofingClient) Poll(req *http.Request, inState ResponseChecker, error
 			for _, checker := range errorRetryCheckers {
 				retry, newErr := checker(err)
 				if retry {
-					sc.Logf("Retrying %s: %v", req.URL, newErr)
+					sc.Logf("Retrying %s: %v", req.URL.String(), newErr)
 					return false, nil
 				}
 			}
@@ -244,18 +246,22 @@ func (sc *SpoofingClient) Poll(req *http.Request, inState ResponseChecker, error
 // DefaultErrorRetryChecker implements the defaults for retrying on error.
 func DefaultErrorRetryChecker(err error) (bool, error) {
 	if isTCPTimeout(err) {
-		return true, fmt.Errorf("Retrying for TCP timeout: %v", err)
+		return true, fmt.Errorf("retrying for TCP timeout: %w", err)
 	}
 	// Retrying on DNS error, since we may be using xip.io or nip.io in tests.
 	if isDNSError(err) {
-		return true, fmt.Errorf("Retrying for DNS error: %v", err)
+		return true, fmt.Errorf("retrying for DNS error: %w", err)
 	}
 	// Repeat the poll on `connection refused` errors, which are usually transient Istio errors.
 	if isConnectionRefused(err) {
-		return true, fmt.Errorf("Retrying for connection refused: %v", err)
+		return true, fmt.Errorf("retrying for connection refused: %w", err)
 	}
 	if isConnectionReset(err) {
-		return true, fmt.Errorf("Retrying for connection reset: %v", err)
+		return true, fmt.Errorf("retrying for connection reset: %w", err)
+	}
+	// Retry on connection/network errors.
+	if errors.Is(err, io.EOF) {
+		return true, fmt.Errorf("retrying for: %w", err)
 	}
 	return false, err
 }

@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-contrib/prometheus/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -50,6 +51,7 @@ func NewController(
 	r := &Reconciler{
 		kubeClientSet:    kubeclient.Get(ctx),
 		deploymentLister: deploymentInformer.Lister(),
+		configs:          source.WatchConfigurations(ctx, controllerAgentName, cmw),
 	}
 	impl := promreconciler.NewImpl(ctx, r)
 	r.sinkResolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
@@ -58,7 +60,7 @@ func NewController(
 	prometheusSourceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("PrometheusSource")),
+		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("PrometheusSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

@@ -57,6 +57,9 @@ var (
 
 	// Check that we can create OwnerReferences to a ConfigMapPropagation.
 	_ kmeta.OwnerRefable = (*ConfigMapPropagation)(nil)
+
+	// Check that the type conforms to the duck Knative Resource shape.
+	_ duckv1.KRShaped = (*ConfigMapPropagation)(nil)
 )
 
 type ConfigMapPropagationSpec struct {
@@ -121,4 +124,9 @@ func (cmp *ConfigMapPropagation) GetGroupVersionKind() schema.GroupVersionKind {
 // GetUntypedSpec returns the spec of the ConfigMapPropagation.
 func (cmp *ConfigMapPropagation) GetUntypedSpec() interface{} {
 	return cmp.Spec
+}
+
+// GetStatus retrieves the status of the ConfigMapPropagation. Implements the KRShaped interface.
+func (cmp *ConfigMapPropagation) GetStatus() *duckv1.Status {
+	return &cmp.Status.Status
 }

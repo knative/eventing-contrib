@@ -19,17 +19,18 @@ package v1alpha1
 import (
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/webhook/resourcesemantics"
 )
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=false
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // KafkaSource is the Schema for the kafkasources API.
 // +k8s:openapi-gen=true
@@ -45,43 +46,8 @@ type KafkaSource struct {
 var _ runtime.Object = (*KafkaSource)(nil)
 var _ resourcesemantics.GenericCRD = (*KafkaSource)(nil)
 var _ kmeta.OwnerRefable = (*KafkaSource)(nil)
-
-type KafkaSourceSASLSpec struct {
-	Enable bool `json:"enable,omitempty"`
-
-	// User is the Kubernetes secret containing the SASL username.
-	// +optional
-	User SecretValueFromSource `json:"user,omitempty"`
-
-	// Password is the Kubernetes secret containing the SASL password.
-	// +optional
-	Password SecretValueFromSource `json:"password,omitempty"`
-}
-
-type KafkaSourceTLSSpec struct {
-	Enable bool `json:"enable,omitempty"`
-
-	// Cert is the Kubernetes secret containing the client certificate.
-	// +optional
-	Cert SecretValueFromSource `json:"cert,omitempty"`
-	// Key is the Kubernetes secret containing the client key.
-	// +optional
-	Key SecretValueFromSource `json:"key,omitempty"`
-	// CACert is the Kubernetes secret containing the server CA cert.
-	// +optional
-	CACert SecretValueFromSource `json:"caCert,omitempty"`
-}
-
-// SecretValueFromSource represents the source of a secret value
-type SecretValueFromSource struct {
-	// The Secret key to select from.
-	SecretKeyRef *corev1.SecretKeySelector `json:"secretKeyRef,omitempty"`
-}
-
-type KafkaSourceNetSpec struct {
-	SASL KafkaSourceSASLSpec `json:"sasl,omitempty"`
-	TLS  KafkaSourceTLSSpec  `json:"tls,omitempty"`
-}
+var _ apis.Defaultable = (*KafkaSource)(nil)
+var _ apis.Validatable = (*KafkaSource)(nil)
 
 type KafkaRequestsSpec struct {
 	ResourceCPU    string `json:"cpu,omitempty"`
@@ -100,19 +66,15 @@ type KafkaResourceSpec struct {
 
 // KafkaSourceSpec defines the desired state of the KafkaSource.
 type KafkaSourceSpec struct {
-	// Bootstrap servers are the Kafka servers the consumer will connect to.
-	// +required
-	BootstrapServers string `json:"bootstrapServers"`
+	bindingsv1alpha1.KafkaAuthSpec `json:",inline"`
 
 	// Topic topics to consume messages from
 	// +required
-	Topics string `json:"topics"`
+	Topics []string `json:"topics"`
 
 	// ConsumerGroupID is the consumer group ID.
-	// +required
-	ConsumerGroup string `json:"consumerGroup"`
-
-	Net KafkaSourceNetSpec `json:"net,omitempty"`
+	// +optional
+	ConsumerGroup string `json:"consumerGroup,omitempty"`
 
 	// Sink is a reference to an object that will resolve to a domain name to use as the sink.
 	// +optional
@@ -120,9 +82,11 @@ type KafkaSourceSpec struct {
 
 	// ServiceAccoutName is the name of the ServiceAccount that will be used to run the Receive
 	// Adapter Deployment.
+	// Deprecated: v1beta1 drops this field.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Resource limits and Request specifications of the Receive Adapter Deployment
+	// Deprecated: v1beta1 drops this field.
 	Resources KafkaResourceSpec `json:"resources,omitempty"`
 }
 

@@ -75,6 +75,17 @@ rules:
   - list
   - watch
 
+# Namespace labelling for webhook
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+
 # Events admin
 - apiGroups:
   - ""
@@ -90,6 +101,18 @@ rules:
   - eventtypes
   verbs: *everything
 
+# For manipulating certs into secrets.
+- apiGroups:
+    - ""
+  resources:
+    - "secrets"
+  verbs:
+    - "get"
+    - "create"
+    - "update"
+    - "list"
+    - "watch"
+
 # For actually registering our webhook.
 - apiGroups:
   - "admissionregistration.k8s.io"
@@ -97,3 +120,34 @@ rules:
   - "mutatingwebhookconfigurations"
   - "validatingwebhookconfigurations"
   verbs: *everything
+
+# Bindings admin
+- apiGroups:
+  - bindings.knative.dev
+  resources:
+  - githubbindings
+  verbs: &everything
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+
+# Bindings finalizer
+- apiGroups:
+  - bindings.knative.dev
+  resources:
+  - githubbindings/finalizers
+  verbs: *everything
+
+# Source statuses update
+- apiGroups:
+  - bindings.knative.dev
+  resources:
+  - githubbindings/status
+  verbs:
+  - get
+  - update
+  - patch

@@ -92,9 +92,6 @@ func BenchmarkRequestFixedPayload(b *testing.B) {
 	const sizeRandomPayload = 100
 	const messageType = "testmessagetype"
 	const uuid = "7d446840-9dc0-11d1-b245-5ffdce74fad2"
-
-	// Note, these aren't currently encoded
-	const inputID = 90
 	inputTime := time.Unix(1600000000, 0)
 
 	requestFactory := JsonKafkaRequestFactory(sizeRandomPayload, messageType, true)
@@ -109,9 +106,6 @@ func BenchmarkRequestRandomPayload(b *testing.B) {
 	const sizeRandomPayload = 100
 	const messageType = "testmessagetype"
 	const uuid = "7d446840-9dc0-11d1-b245-5ffdce74fad2"
-
-	// Note, these aren't currently encoded
-	const inputID = 90
 	inputTime := time.Unix(1600000000, 0)
 
 	requestFactory := JsonKafkaRequestFactory(sizeRandomPayload, messageType, false)

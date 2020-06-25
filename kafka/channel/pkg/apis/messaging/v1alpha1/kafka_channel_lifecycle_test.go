@@ -34,34 +34,9 @@ var condReady = apis.Condition{
 	Status: corev1.ConditionTrue,
 }
 
-var condDispatcherReady = apis.Condition{
-	Type:   KafkaChannelConditionDispatcherReady,
-	Status: corev1.ConditionTrue,
-}
-
 var condDispatcherNotReady = apis.Condition{
 	Type:   KafkaChannelConditionDispatcherReady,
 	Status: corev1.ConditionFalse,
-}
-
-var condDispatcherServiceReady = apis.Condition{
-	Type:   KafkaChannelConditionServiceReady,
-	Status: corev1.ConditionTrue,
-}
-
-var condDispatcherEndpointsReady = apis.Condition{
-	Type:   KafkaChannelConditionEndpointsReady,
-	Status: corev1.ConditionTrue,
-}
-
-var condTopicReady = apis.Condition{
-	Type:   KafkaChannelConditionTopicReady,
-	Status: corev1.ConditionTrue,
-}
-
-var condDispatcherAddressable = apis.Condition{
-	Type:   KafkaChannelConditionAddressable,
-	Status: corev1.ConditionTrue,
 }
 
 var deploymentConditionReady = appsv1.DeploymentCondition{
@@ -80,8 +55,6 @@ var deploymentStatusNotReady = &appsv1.DeploymentStatus{Conditions: []appsv1.Dep
 var ignoreAllButTypeAndStatus = cmpopts.IgnoreFields(
 	apis.Condition{},
 	"LastTransitionTime", "Message", "Reason", "Severity")
-
-var ignoreLastTransitionTime = cmpopts.IgnoreFields(apis.Condition{}, "LastTransitionTime")
 
 func TestChannelGetCondition(t *testing.T) {
 	tests := []struct {

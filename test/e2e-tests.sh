@@ -36,8 +36,8 @@ if [ "$(uname)" == "Darwin" ]; then
 fi
 
 # Eventing main config path from HEAD.
-readonly EVENTING_CONFIG="${GOPATH}/src/knative.dev/eventing/config/"
-readonly EVENTING_CHANNEL_BROKER_CONFIG="${GOPATH}/src/knative.dev/eventing/config/brokers/channel-broker"
+readonly EVENTING_CONFIG="./config/"
+readonly EVENTING_MT_CHANNEL_BROKER_CONFIG="./config/brokers/mt-channel-broker"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -50,11 +50,11 @@ readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
 readonly NATSS_CRD_CONFIG_DIR="natss/config"
 
 # Strimzi installation config template used for starting up Kafka clusters.
-readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.17.0.yaml"
+readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-operator-0.18.0.yaml"
 # Strimzi installation config.
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp)"
 # Kafka cluster CR config file.
-readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-2.4.0.yaml"
+readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-2.5.0.yaml"
 readonly KAFKA_TOPIC_INSTALLATION_CONFIG="test/config/100-kafka-topic.yaml"
 # Kafka cluster URL for our installation
 readonly KAFKA_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka:9092"
@@ -82,10 +82,11 @@ function knative_setup() {
     pushd .
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
     git clone https://github.com/knative/eventing
-    popd
+    cd eventing
     ko apply -f ${EVENTING_CONFIG}
-    # Install Channel Based Broker
-    ko apply -f ${EVENTING_CHANNEL_BROKER_CONFIG}
+    # Install MT Channel Based Broker
+    ko apply -f ${EVENTING_MT_CHANNEL_BROKER_CONFIG}
+    popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
 
@@ -103,7 +104,7 @@ function knative_teardown() {
     kubectl delete -f ${KNATIVE_EVENTING_RELEASE}
   else
     echo ">> Uninstalling Knative Eventing from HEAD"
-    ko delete --ignore-not-found=true --now --timeout 60s -f ${EVENTING_CONFIG}
+    kubectl delete --ignore-not-found=true --now --timeout 60s -f ${EVENTING_CONFIG}
   fi
   wait_until_object_does_not_exist namespaces knative-eventing
 }
@@ -142,10 +143,10 @@ function test_setup() {
   add_trap "kill $kail_pid || true" EXIT
 
   # Publish test images.
-  echo ">> Publishing test images from vendor"
+  echo ">> Publishing test images from eventing"
   # We vendor test image code from eventing, in order to use ko to resolve them into Docker images, the
   # path has to be a GOPATH.
-  sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"/*/*.yaml
+  sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
   $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 }
@@ -241,9 +242,9 @@ function camel_teardown() {
 
 initialize $@ --skip-istio-addon
 
-# TODO: Figure out why kafka channels do not like parallel=12 (which it was)
-# https://github.com/knative/eventing-contrib/issues/917
-go_test_e2e -timeout=20m -parallel=1 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
+go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
+
+go_test_e2e -timeout=5m -parallel=12 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel -sources=sources.knative.dev/v1alpha1:CamelSource,sources.knative.dev/v1alpha1:KafkaSource || fail_test
 
 # If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands
 # trap - SIGINT SIGQUIT SIGTSTP EXIT

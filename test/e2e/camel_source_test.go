@@ -22,13 +22,14 @@ import (
 	"testing"
 	"time"
 
-	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
-
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
+	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
+	"github.com/cloudevents/sdk-go/v2/test"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
-	"knative.dev/eventing/test/lib"
+	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	knativeduck "knative.dev/pkg/apis/duck/v1beta1"
 )
@@ -41,12 +42,12 @@ func TestCamelSource(t *testing.T) {
 		body            = "Hello, world!"
 	)
 
-	client := lib.Setup(t, true)
-	defer lib.TearDown(client)
+	client := testlib.Setup(t, true)
+	defer testlib.TearDown(client)
 
-	t.Logf("Creating logger Pod")
-	pod := resources.EventLoggerPod(loggerPodName)
-	client.CreatePodOrFail(pod, lib.WithService(loggerPodName))
+	t.Logf("Creating event record")
+	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
+	defer eventTracker.Cleanup()
 
 	camelClient := getCamelKClient(client)
 
@@ -65,11 +66,17 @@ func TestCamelSource(t *testing.T) {
 			Source: v1alpha1.CamelSourceOriginSpec{
 				Flow: &v1alpha1.Flow{
 					"from": &map[string]interface{}{
-						"uri": "timer:tick?period=1s",
+						"uri": "timer:tick?period=1000",
 						"steps": []interface{}{
 							&map[string]interface{}{
 								"set-body": &map[string]interface{}{
 									"constant": body,
+								},
+							},
+							&map[string]interface{}{
+								"set-header": &map[string]interface{}{
+									"name":     "Content-Type",
+									"constant": "text/plain",
 								},
 							},
 						},
@@ -99,13 +106,13 @@ func TestCamelSource(t *testing.T) {
 	}
 	printPodLogs(t, client, pods.Items[0].Name, "integration")
 
-	if err := client.CheckLog(loggerPodName, lib.CheckerContains(body)); err != nil {
-		printPodLogs(t, client, pods.Items[0].Name, "integration")
-		t.Fatalf("Strings %q not found in logs of logger pod %q: %v", body, loggerPodName, err)
-	}
+	eventTracker.AssertAtLeast(1, recordevents.MatchEvent(test.AllOf(
+		test.HasData([]byte(body))),
+		test.HasType("org.apache.camel.event"),
+	))
 }
 
-func printPodLogs(t *testing.T, c *lib.Client, podName, containerName string) {
+func printPodLogs(t *testing.T, c *testlib.Client, podName, containerName string) {
 	logs, err := c.Kube.PodLogs(podName, containerName, c.Namespace)
 	if err == nil {
 		t.Log(string(logs))
@@ -113,7 +120,7 @@ func printPodLogs(t *testing.T, c *lib.Client, podName, containerName string) {
 	t.Logf("End of pod %s logs", podName)
 }
 
-func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
+func createCamelSourceOrFail(c *testlib.Client, camelSource *v1alpha1.CamelSource) {
 	camelSourceClientSet, err := camelsourceclient.NewForConfig(c.Config)
 	if err != nil {
 		c.T.Fatalf("Failed to create CamelSource client: %v", err)
@@ -127,7 +134,7 @@ func createCamelSourceOrFail(c *lib.Client, camelSource *v1alpha1.CamelSource) {
 	}
 }
 
-func createCamelPlatformOrFail(c *lib.Client, camelClient camelclientset.Interface, camelSourceName string) {
+func createCamelPlatformOrFail(c *testlib.Client, camelClient camelclientset.Interface, camelSourceName string) {
 	platform := camelv1.IntegrationPlatform{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "camel-k",
@@ -143,7 +150,7 @@ func createCamelPlatformOrFail(c *lib.Client, camelClient camelclientset.Interfa
 	}
 }
 
-func createCamelKitOrFail(c *lib.Client, camelClient camelclientset.Interface, camelSourceName string) {
+func createCamelKitOrFail(c *testlib.Client, camelClient camelclientset.Interface, camelSourceName string) {
 	// Creating this kit manually because the Camel K platform is not configured to do it on its own.
 	// Testing that Camel K works is not in scope for this test.
 	kit := camelv1.IntegrationKit{
@@ -169,8 +176,25 @@ func createCamelKitOrFail(c *lib.Client, camelClient camelclientset.Interface, c
 	if _, err := camelClient.CamelV1().IntegrationKits(c.Namespace).Create(&kit); err != nil {
 		c.T.Fatalf("Failed to create IntegrationKit for CamelSource %q: %v", camelSourceName, err)
 	}
+
+	// Wait for the kit to be "Ready" before creating other resources
+	var ik *camelv1.IntegrationKit
+	for i := 0; i < 30; i++ {
+		var err error
+		ik, err = camelClient.CamelV1().IntegrationKits(c.Namespace).Get(kit.Name, meta.GetOptions{})
+		if err != nil {
+			c.T.Fatalf("Failed to retrieve IntegrationKit %q: %v", kit.Name, err)
+		}
+		if ik.Status.Phase == camelv1.IntegrationKitPhaseReady {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if ik == nil || ik.Status.Phase != camelv1.IntegrationKitPhaseReady {
+		c.T.Fatalf("IntegrationKit %q is not ready", kit.Name)
+	}
 }
 
-func getCamelKClient(c *lib.Client) camelclientset.Interface {
+func getCamelKClient(c *testlib.Client) camelclientset.Interface {
 	return camelclientset.NewForConfigOrDie(c.Config)
 }

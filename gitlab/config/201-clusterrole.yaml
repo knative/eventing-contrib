@@ -62,6 +62,15 @@ rules:
   - get
   - list
   - watch
+  # Webhook controller needs it to update certs in secret
+  - update
+
+# Deployments admin
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs: *everything
 
 # Events admin
 - apiGroups:

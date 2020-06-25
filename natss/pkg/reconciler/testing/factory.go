@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/record"
@@ -28,13 +29,13 @@ import (
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	"knative.dev/eventing/pkg/reconciler"
 
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
+	"knative.dev/pkg/reconciler"
 	. "knative.dev/pkg/reconciler/testing"
 )
 
@@ -67,7 +68,6 @@ func MakeFactory(ctor Ctor) Factory {
 		ctx = controller.WithEventRecorder(ctx, eventRecorder)
 
 		// Set up our Controller from the fakes.
-
 		for _, reactor := range r.WithReactors {
 			kubeClient.PrependReactor("*", "*", reactor)
 			eventingClient.PrependReactor("*", "*", reactor)
@@ -86,14 +86,16 @@ func MakeFactory(ctor Ctor) Factory {
 		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
 		eventList := EventList{Recorder: eventRecorder}
 
-		statsReporter, _ := reconciler.NewStatsReporter("")
-		ctx = reconciler.WithStatsReporter(ctx, statsReporter)
-
 		if r.Ctx == nil {
 			r.Ctx = ctx
 		}
 
 		c := ctor(ctx, &ls)
+
+		// The Reconciler won't do any work until it becomes the leader.
+		if la, ok := c.(reconciler.LeaderAware); ok {
+			la.Promote(reconciler.UniversalBucket(), func(reconciler.Bucket, types.NamespacedName) {})
+		}
 
 		return c, actionRecorderList, eventList
 	}

@@ -95,7 +95,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 
 func makeEnv(eventSource, sinkURI string, spec *v1alpha1.CouchDbSourceSpec) []corev1.EnvVar {
 	return []corev1.EnvVar{{
-		Name:  "SINK_URI",
+		Name:  "K_SINK",
 		Value: sinkURI,
 	}, {
 		Name:  "EVENT_SOURCE",

@@ -21,7 +21,7 @@ import (
 	"path"
 	"sync"
 
-	"contrib.go.opencensus.io/exporter/stackdriver"
+	sd "contrib.go.opencensus.io/exporter/stackdriver"
 	"contrib.go.opencensus.io/exporter/stackdriver/monitoredresource"
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/stats/view"
@@ -60,7 +60,7 @@ var (
 	// In product usage, this is always set to function newOpencensusSDExporter.
 	// In unit tests this is set to a fake one to avoid calling actual Google API
 	// service.
-	newStackdriverExporterFunc func(stackdriver.Options) (view.Exporter, error)
+	newStackdriverExporterFunc func(sd.Options) (view.Exporter, error)
 
 	// kubeclient is the in-cluster Kubernetes kubeclient, which is lazy-initialized on first use.
 	kubeclient *kubernetes.Clientset
@@ -100,12 +100,15 @@ func init() {
 	kubeclientInitErr = nil
 }
 
-func newOpencensusSDExporter(o stackdriver.Options) (view.Exporter, error) {
-	e, err := stackdriver.NewExporter(o)
-	if err == nil {
-		// Start the exporter.
-		// TODO(https://github.com/knative/pkg/issues/866): Move this to an interface.
-		e.StartMetricsExporter()
+func newOpencensusSDExporter(o sd.Options) (view.Exporter, error) {
+	e, err := sd.NewExporter(o)
+	if err != nil {
+		return nil, err
+	}
+	// Start the exporter.
+	// TODO(https://github.com/knative/pkg/issues/866): Move this to an interface.
+	if err := e.StartMetricsExporter(); err != nil {
+		return nil, err
 	}
 	return e, nil
 }
@@ -115,12 +118,12 @@ func newOpencensusSDExporter(o stackdriver.Options) (view.Exporter, error) {
 func newStackdriverExporter(config *metricsConfig, logger *zap.SugaredLogger) (view.Exporter, error) {
 	gm := getMergedGCPMetadata(config)
 	mpf := getMetricPrefixFunc(config.stackdriverMetricTypePrefix, config.stackdriverCustomMetricTypePrefix)
-	co, err := getStackdriverExporterClientOptions(&config.stackdriverClientConfig)
+	co, err := getStackdriverExporterClientOptions(config)
 	if err != nil {
 		logger.Warnw("Issue configuring Stackdriver exporter client options, no additional client options will be used: ", zap.Error(err))
 	}
 	// Automatically fall back on Google application default credentials
-	e, err := newStackdriverExporterFunc(stackdriver.Options{
+	e, err := newStackdriverExporterFunc(sd.Options{
 		ProjectID:               gm.project,
 		Location:                gm.location,
 		MonitoringClientOptions: co,
@@ -128,7 +131,7 @@ func newStackdriverExporter(config *metricsConfig, logger *zap.SugaredLogger) (v
 		GetMetricPrefix:         mpf,
 		ResourceByDescriptor:    getResourceByDescriptorFunc(config.stackdriverMetricTypePrefix, gm),
 		ReportingInterval:       config.reportingPeriod,
-		DefaultMonitoringLabels: &stackdriver.Labels{},
+		DefaultMonitoringLabels: &sd.Labels{},
 	})
 	if err != nil {
 		logger.Errorw("Failed to create the Stackdriver exporter: ", zap.Error(err))
@@ -140,21 +143,21 @@ func newStackdriverExporter(config *metricsConfig, logger *zap.SugaredLogger) (v
 
 // getStackdriverExporterClientOptions creates client options for the opencensus Stackdriver exporter from the given stackdriverClientConfig.
 // On error, an empty array of client options is returned.
-func getStackdriverExporterClientOptions(sdconfig *StackdriverClientConfig) ([]option.ClientOption, error) {
+func getStackdriverExporterClientOptions(config *metricsConfig) ([]option.ClientOption, error) {
 	var co []option.ClientOption
-	if sdconfig.UseSecret && useStackdriverSecretEnabled {
-		secret, err := getStackdriverSecret(sdconfig)
-		if err != nil {
-			return co, err
+
+	// SetStackdriverSecretLocation must have been called by calling package for this to work.
+	if config.stackdriverClientConfig.UseSecret {
+		if config.secret == nil {
+			return co, fmt.Errorf("No secret provided for component %q; cannot use stackdriver-use-secret=true", config.component)
 		}
 
-		if opt, err := convertSecretToExporterOption(secret); err == nil {
+		if opt, err := convertSecretToExporterOption(config.secret); err == nil {
 			co = append(co, opt)
 		} else {
 			return co, err
 		}
 	}
-
 	return co, nil
 }
 
@@ -215,19 +218,31 @@ func getMetricPrefixFunc(metricTypePrefix, customMetricTypePrefix string) func(n
 }
 
 // getStackdriverSecret returns the Kubernetes Secret specified in the given config.
+// SetStackdriverSecretLocation must have been called by calling package for this to work.
 // TODO(anniefu): Update exporter if Secret changes (https://github.com/knative/pkg/issues/842)
-func getStackdriverSecret(sdconfig *StackdriverClientConfig) (*corev1.Secret, error) {
-	if err := ensureKubeclient(); err != nil {
-		return nil, err
-	}
-
+func getStackdriverSecret(secretFetcher SecretFetcher) (*corev1.Secret, error) {
 	stackdriverMtx.RLock()
 	defer stackdriverMtx.RUnlock()
 
-	sec, secErr := kubeclient.CoreV1().Secrets(secretNamespace).Get(secretName, metav1.GetOptions{})
+	if !useStackdriverSecretEnabled {
+		return nil, nil
+	}
+
+	var secErr error
+	var sec *corev1.Secret
+	if secretFetcher != nil {
+		sec, secErr = secretFetcher(fmt.Sprintf("%s/%s", secretNamespace, secretName))
+	} else {
+		// This else-block can be removed once UpdateExporterFromConfigMap is fully deprecated in favor of ConfigMapWatcher
+		if err := ensureKubeclient(); err != nil {
+			return nil, err
+		}
+
+		sec, secErr = kubeclient.CoreV1().Secrets(secretNamespace).Get(secretName, metav1.GetOptions{})
+	}
 
 	if secErr != nil {
-		return nil, fmt.Errorf("Error getting Secret [%v] in namespace [%v]: %v", secretName, secretNamespace, secErr)
+		return nil, fmt.Errorf("error getting Secret [%v] in namespace [%v]: %v", secretName, secretNamespace, secErr)
 	}
 
 	return sec, nil
@@ -238,7 +253,7 @@ func convertSecretToExporterOption(secret *corev1.Secret) (option.ClientOption, 
 	if data, ok := secret.Data[secretDataFieldKey]; ok {
 		return option.WithCredentialsJSON(data), nil
 	}
-	return nil, fmt.Errorf("Expected Secret to store key in data field named [%v]", secretDataFieldKey)
+	return nil, fmt.Errorf("Expected Secret to store key in data field named [%s]", secretDataFieldKey)
 }
 
 // ensureKubeclient is the lazy initializer for kubeclient.

@@ -57,7 +57,7 @@ func NewController(
 
 	_ = camelIntegrationInformer
 	camelIntegrationInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterGroupKind(v1alpha1.Kind("CamelSource")),
+		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("CamelSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

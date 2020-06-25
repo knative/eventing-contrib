@@ -23,6 +23,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+
 	"go.uber.org/zap"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -62,6 +64,8 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				OnFailedPollWaitSecs: 1,
 			}
 
+			ctx := cloudevents.ContextWithTarget(context.Background(), sinkServer.URL)
+
 			if err := a.initClient(); err != nil {
 				t.Errorf("failed to create cloudevent client, %v", err)
 			}
@@ -76,10 +80,12 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Body:       &body,
 				Attributes: attrs,
 			}
-			err := a.postMessage(context.TODO(), zap.S(), m)
+			err := a.postMessage(ctx, zap.S(), m)
 
 			if tc.error && err == nil {
 				t.Errorf("expected error, but got %v", err)
+			} else if !tc.error && err != nil {
+				t.Errorf("expected no error, but got %v", err)
 			}
 
 			if tc.reqBody != string(h.body) {

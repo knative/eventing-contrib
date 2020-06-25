@@ -64,26 +64,6 @@ rules:
   - get
   - update
   - patch
-- apiGroups:
-# TODO on these and the eventing ones that this should be replaced with
-# an aggregated role for watching Addressables.
-  - serving.knative.dev
-  resources:
-  - services
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-# TODO on these and the eventing ones that this should be replaced with
-# an aggregated role for watching Addressables.
-  - eventing.knative.dev
-  resources:
-  - channels
-  verbs:
-  - get
-  - list
-  - watch
 # Secrets & Services read
 - apiGroups:
   - ""
@@ -98,7 +78,7 @@ rules:
 
 ---
 # The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
-# See https://github.com/knative/eventing/blob/master/config/200-source-observer-clusterrole.yaml.
+# Ref: https://github.com/knative/eventing/tree/master/config/core/rolessource-observer-clusterrole.yaml.
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:

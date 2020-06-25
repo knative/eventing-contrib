@@ -161,6 +161,9 @@ application. This Go file should use the package `main` and include the function
 `main()`. It is a good practice to include a `readme` file as well. When
 uploading test images, `ko` will build an image from this folder.
 
+If you need to add a new test image imported from eventing, import it in
+`hack/tools.go`
+
 ## Flags
 
 Flags are similar to those in

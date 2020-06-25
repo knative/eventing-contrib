@@ -1,9 +1,12 @@
 /*
 Copyright 2019 The Knative Authors
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
+
     http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +21,7 @@ import (
 	"net/http"
 	"sync"
 
-	"contrib.go.opencensus.io/exporter/prometheus"
+	prom "contrib.go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
 	"go.uber.org/zap"
 )
@@ -29,7 +32,7 @@ var (
 )
 
 func newPrometheusExporter(config *metricsConfig, logger *zap.SugaredLogger) (view.Exporter, error) {
-	e, err := prometheus.NewExporter(prometheus.Options{Namespace: config.component})
+	e, err := prom.NewExporter(prom.Options{Namespace: config.component})
 	if err != nil {
 		logger.Errorw("Failed to create the Prometheus exporter.", zap.Error(err))
 		return nil, err
@@ -58,7 +61,7 @@ func resetCurPromSrv() {
 	}
 }
 
-func startNewPromSrv(e *prometheus.Exporter, port int) *http.Server {
+func startNewPromSrv(e *prom.Exporter, port int) *http.Server {
 	sm := http.NewServeMux()
 	sm.Handle("/metrics", e)
 	curPromSrvMux.Lock()

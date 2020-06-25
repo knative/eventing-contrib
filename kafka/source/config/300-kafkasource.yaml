@@ -61,14 +61,13 @@ spec:
         spec:
           properties:
             bootstrapServers:
-              type: string
+              type: array
               minLength: 1
             topics:
-              type: string
+              type: array
               minLength: 1
             consumerGroup:
               type: string
-              minLength: 1
             net:
               properties:
                 sasl:

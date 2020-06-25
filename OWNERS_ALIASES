@@ -1,6 +1,18 @@
 aliases:
+  toc:
+  - evankanderson
+  - grantr
+  - markusthoemmes
+  - mattmoor
+  - tcnghia
+
   # These aliases are for OWNERS of the various Source implementations. These
   # Are in addition to the repo level OWNERS.
+
+  awssqs-approvers:
+    - lberk
+  awssqs-reviewers:
+    - lberk
 
   camel-approvers:
     - nicolaferraro

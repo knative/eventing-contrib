@@ -24,27 +24,18 @@ import (
 	"strings"
 	"testing"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
-	"knative.dev/eventing/pkg/adapter"
-	kncetesting "knative.dev/eventing/pkg/kncloudevents/testing"
+	"knative.dev/eventing/pkg/adapter/v2"
+	adaptertest "knative.dev/eventing/pkg/adapter/v2/test"
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/source"
 )
 
-type mockReporter struct {
-	eventCount int
-}
-
-func (r *mockReporter) ReportEventCount(args *source.ReportArgs, responseCode int) error {
-	r.eventCount += 1
-	return nil
-}
-
 func TestNewAdaptor(t *testing.T) {
-	ce := kncetesting.NewTestClient()
+	ce := adaptertest.NewTestClient()
 
 	testCases := map[string]struct {
 		opt envConfig
@@ -66,12 +57,11 @@ func TestNewAdaptor(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			r := &mockReporter{}
 			ctx, _ := pkgtesting.SetupFakeContext(t)
 			logger := zap.NewExample().Sugar()
 			ctx = logging.WithLogger(ctx, logger)
 
-			a := NewAdapter(ctx, &tc.opt, ce, r)
+			a := NewAdapter(ctx, &tc.opt, ce)
 
 			got, ok := a.(*prometheusAdapter)
 			if !ok {
@@ -109,7 +99,7 @@ func TestNewAdaptor(t *testing.T) {
 }
 
 func TestStartAdaptor(t *testing.T) {
-	ce := kncetesting.NewTestClient()
+	ce := adaptertest.NewTestClient()
 
 	testCases := map[string]struct {
 		opt        envConfig
@@ -125,7 +115,7 @@ func TestStartAdaptor(t *testing.T) {
 				PromQL:      "prom-ql",
 				Schedule:    "bad_schedule",
 			},
-			wantErrMsg: "expected exactly 5 fields, found 1: [bad_schedule]",
+			wantErrMsg: "Expected exactly 5 fields, found 1: bad_schedule",
 		},
 		"no-schedule": {
 			opt: envConfig{
@@ -136,7 +126,7 @@ func TestStartAdaptor(t *testing.T) {
 				ServerURL:   "http://server.url",
 				PromQL:      "prom-ql",
 			},
-			wantErrMsg: "empty spec string",
+			wantErrMsg: "Empty spec string",
 		},
 		"bad-auth-token-file": {
 			opt: envConfig{
@@ -167,14 +157,12 @@ func TestStartAdaptor(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			r := &mockReporter{}
 			ctx, _ := pkgtesting.SetupFakeContext(t)
 			logger := zap.NewExample().Sugar()
 			ctx = logging.WithLogger(ctx, logger)
 
-			a := NewAdapter(ctx, &tc.opt, ce, r)
-			stopCh := make(chan struct{})
-			err := a.Start(stopCh)
+			a := NewAdapter(ctx, &tc.opt, ce)
+			err := a.Start(ctx)
 
 			if diff := cmp.Diff(tc.wantErrMsg, err.Error()); diff != "" {
 				t.Errorf("unexpected err diff (-want, +got) = %v", diff)
@@ -184,23 +172,23 @@ func TestStartAdaptor(t *testing.T) {
 }
 
 type adapterTestClient struct {
-	*kncetesting.TestCloudEventsClient
-	stopCh chan struct{}
+	*adaptertest.TestCloudEventsClient
+	cancel context.CancelFunc
 }
 
 var _ cloudevents.Client = (*adapterTestClient)(nil)
 
-func newAdapterTestClient() *adapterTestClient {
+func newAdapterTestClient(cancel context.CancelFunc) *adapterTestClient {
 	return &adapterTestClient{
-		kncetesting.NewTestClient(),
-		make(chan struct{}, 1),
+		adaptertest.NewTestClient(),
+		cancel,
 	}
 }
 
-func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
-	retCtx, retEvent, retError := c.TestCloudEventsClient.Send(ctx, event)
-	c.stopCh <- struct{}{}
-	return retCtx, retEvent, retError
+func (c *adapterTestClient) Send(ctx context.Context, event cloudevents.Event) protocol.Result {
+	result := c.TestCloudEventsClient.Send(ctx, event)
+	c.cancel()
+	return result
 }
 
 func TestReceiveEventPoll(t *testing.T) {
@@ -243,18 +231,19 @@ func TestReceiveEventPoll(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ce := newAdapterTestClient()
 
-			r := &mockReporter{}
 			ctx, _ := pkgtesting.SetupFakeContext(t)
 			logger := zap.NewExample().Sugar()
 			ctx = logging.WithLogger(ctx, logger)
 
-			a := NewAdapter(ctx, &tc.opt, ce, r)
+			ctx, cancel := context.WithCancel(ctx)
+			ce := newAdapterTestClient(cancel)
+
+			a := NewAdapter(ctx, &tc.opt, ce)
 
 			done := make(chan struct{})
 			go func() {
-				a.Start(ce.stopCh)
+				a.Start(ctx)
 				done <- struct{}{}
 			}()
 			<-done
@@ -269,7 +258,7 @@ func validateSent(t *testing.T, ce *adapterTestClient, wantData string) {
 		t.Errorf("Expected 1 event to be sent, got %d", got)
 	}
 
-	if got := ce.Sent()[0].Data; !strings.Contains(string(got.([]byte)), wantData) {
-		t.Errorf("Expected %q event to be sent, got %q", wantData, string(got.([]byte)))
+	if got := ce.Sent()[0].Data(); !strings.Contains(string(got), wantData) {
+		t.Errorf("Expected %q event to be sent, got %q", wantData, string(got))
 	}
 }

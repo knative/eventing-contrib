@@ -31,11 +31,12 @@ import (
 // ReceiveAdapterArgs are the arguments needed to create a Prometheus Receive Adapter.
 // Every field is required.
 type ReceiveAdapterArgs struct {
-	EventSource string
-	Image       string
-	Source      *v1alpha1.PrometheusSource
-	Labels      map[string]string
-	SinkURI     string
+	EventSource    string
+	Image          string
+	Source         *v1alpha1.PrometheusSource
+	Labels         map[string]string
+	SinkURI        string
+	AdditionalEnvs []corev1.EnvVar
 }
 
 // MakeReceiveAdapter generates (but does not insert into K8s) the Receive Adapter Deployment for
@@ -66,7 +67,10 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 						{
 							Name:  "receive-adapter",
 							Image: args.Image,
-							Env:   makeEnv(args.EventSource, args.SinkURI, &args.Source.Spec),
+							Env: append(
+								makeEnv(args.EventSource, args.SinkURI, &args.Source.Spec),
+								args.AdditionalEnvs...,
+							),
 						},
 					},
 				},
@@ -132,11 +136,5 @@ func makeEnv(eventSource, sinkURI string, spec *v1alpha1.PrometheusSourceSpec) [
 	}, {
 		Name:  "METRICS_DOMAIN",
 		Value: "knative.dev/eventing",
-	}, {
-		Name:  "K_METRICS_CONFIG",
-		Value: "",
-	}, {
-		Name:  "K_LOGGING_CONFIG",
-		Value: "",
 	}}
 }

@@ -93,7 +93,7 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(ctx context.Context, _ configmap.Watcher, cfg *rest.Config) *controller.Impl {
+func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 
 	logger := logging.FromContext(ctx)
 
@@ -108,8 +108,8 @@ func NewController(ctx context.Context, _ configmap.Watcher, cfg *rest.Config) *
 	}
 
 	connectionArgs := &kncloudevents.ConnectionArgs{
-		MaxIdleConns:        kafkaConfig.MaxIdleConns,
-		MaxIdleConnsPerHost: kafkaConfig.MaxIdleConnsPerHost,
+		MaxIdleConns:        int(kafkaConfig.MaxIdleConns),
+		MaxIdleConnsPerHost: int(kafkaConfig.MaxIdleConnsPerHost),
 	}
 
 	kafkaChannelInformer := kafkachannel.Get(ctx)
@@ -128,7 +128,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, cfg *rest.Config) *
 	logger.Info("Kafka broker configuration", zap.Strings(utils.BrokerConfigMapKey, kafkaConfig.Brokers))
 
 	r := &Reconciler{
-		recorder:             getRecorder(ctx, cfg),
+		recorder:             getRecorder(ctx, injection.GetConfig(ctx)),
 		kafkaDispatcher:      kafkaDispatcher,
 		kafkaClientSet:       kafkaclientsetinjection.Get(ctx),
 		kafkachannelLister:   kafkaChannelInformer.Lister(),
@@ -277,9 +277,9 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1
 	if subscribable == nil {
 		return nil
 	}
-	subscriberStatus := make([]eventingduckv1alpha1.SubscriberStatus, 0)
+	subscriberStatus := make([]eventingduckv1beta1.SubscriberStatus, 0)
 	for _, sub := range subscribable.Subscribers {
-		status := eventingduckv1alpha1.SubscriberStatus{
+		status := eventingduckv1beta1.SubscriberStatus{
 			UID:                sub.UID,
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,

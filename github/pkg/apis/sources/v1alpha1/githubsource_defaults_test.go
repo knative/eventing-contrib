@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCouchDbDefaults(t *testing.T) {
+func TestGithubSourceDefaults(t *testing.T) {
 	testCases := map[string]struct {
 		initial  GitHubSource
 		expected GitHubSource

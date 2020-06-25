@@ -51,6 +51,17 @@ spec:
           - containerPort: 9090
             name: metrics
         # TODO set proper resource limits.
+
+        readinessProbe: &probe
+          periodSeconds: 1
+          httpGet:
+            scheme: HTTPS
+            port: 8443
+            httpHeaders:
+            - name: k-kubelet-probe
+              value: "webhook"
+        livenessProbe: *probe
+
 ---
 apiVersion: v1
 kind: Service

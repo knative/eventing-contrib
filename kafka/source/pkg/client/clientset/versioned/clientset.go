@@ -24,24 +24,48 @@ import (
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
+	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/typed/bindings/v1alpha1"
+	bindingsv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/typed/bindings/v1beta1"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/typed/sources/v1alpha1"
+	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned/typed/sources/v1beta1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	BindingsV1alpha1() bindingsv1alpha1.BindingsV1alpha1Interface
+	BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface
 	SourcesV1alpha1() sourcesv1alpha1.SourcesV1alpha1Interface
+	SourcesV1beta1() sourcesv1beta1.SourcesV1beta1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	sourcesV1alpha1 *sourcesv1alpha1.SourcesV1alpha1Client
+	bindingsV1alpha1 *bindingsv1alpha1.BindingsV1alpha1Client
+	bindingsV1beta1  *bindingsv1beta1.BindingsV1beta1Client
+	sourcesV1alpha1  *sourcesv1alpha1.SourcesV1alpha1Client
+	sourcesV1beta1   *sourcesv1beta1.SourcesV1beta1Client
+}
+
+// BindingsV1alpha1 retrieves the BindingsV1alpha1Client
+func (c *Clientset) BindingsV1alpha1() bindingsv1alpha1.BindingsV1alpha1Interface {
+	return c.bindingsV1alpha1
+}
+
+// BindingsV1beta1 retrieves the BindingsV1beta1Client
+func (c *Clientset) BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface {
+	return c.bindingsV1beta1
 }
 
 // SourcesV1alpha1 retrieves the SourcesV1alpha1Client
 func (c *Clientset) SourcesV1alpha1() sourcesv1alpha1.SourcesV1alpha1Interface {
 	return c.sourcesV1alpha1
+}
+
+// SourcesV1beta1 retrieves the SourcesV1beta1Client
+func (c *Clientset) SourcesV1beta1() sourcesv1beta1.SourcesV1beta1Interface {
+	return c.sourcesV1beta1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -65,7 +89,19 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.bindingsV1alpha1, err = bindingsv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.bindingsV1beta1, err = bindingsv1beta1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.sourcesV1alpha1, err = sourcesv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
+	cs.sourcesV1beta1, err = sourcesv1beta1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +117,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.bindingsV1alpha1 = bindingsv1alpha1.NewForConfigOrDie(c)
+	cs.bindingsV1beta1 = bindingsv1beta1.NewForConfigOrDie(c)
 	cs.sourcesV1alpha1 = sourcesv1alpha1.NewForConfigOrDie(c)
+	cs.sourcesV1beta1 = sourcesv1beta1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -90,7 +129,10 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.bindingsV1alpha1 = bindingsv1alpha1.New(c)
+	cs.bindingsV1beta1 = bindingsv1beta1.New(c)
 	cs.sourcesV1alpha1 = sourcesv1alpha1.New(c)
+	cs.sourcesV1beta1 = sourcesv1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

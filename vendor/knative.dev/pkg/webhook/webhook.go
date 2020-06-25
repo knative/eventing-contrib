@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	// Injection stuff
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -29,10 +30,11 @@ import (
 
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 	certresources "knative.dev/pkg/webhook/certificates/resources"
 )
@@ -61,14 +63,14 @@ type Options struct {
 
 // Operation is the verb being operated on
 // it is aliasde in Validation from the k8s admission package
-type Operation = admissionv1beta1.Operation
+type Operation = admissionv1.Operation
 
 // Operation types
 const (
-	Create  Operation = admissionv1beta1.Create
-	Update  Operation = admissionv1beta1.Update
-	Delete  Operation = admissionv1beta1.Delete
-	Connect Operation = admissionv1beta1.Connect
+	Create  Operation = admissionv1.Create
+	Update  Operation = admissionv1.Update
+	Delete  Operation = admissionv1.Delete
+	Connect Operation = admissionv1.Connect
 )
 
 // Webhook implements the external webhook for validation of
@@ -80,6 +82,12 @@ type Webhook struct {
 
 	// synced is function that is called when the informers have been synced.
 	synced context.CancelFunc
+
+	// stopCh is closed when we should start failing readiness probes.
+	stopCh chan struct{}
+	// grace period is how long to wait after failing readiness probes
+	// before shutting down.
+	gracePeriod time.Duration
 
 	mux          http.ServeMux
 	secretlister corelisters.SecretLister
@@ -129,6 +137,8 @@ func New(
 		secretlister: secretInformer.Lister(),
 		Logger:       logger,
 		synced:       cancel,
+		stopCh:       make(chan struct{}),
+		gracePeriod:  network.DefaultDrainTimeout,
 	}
 
 	webhook.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -193,8 +203,6 @@ func (wh *Webhook) Run(stop <-chan struct{}) error {
 		},
 	}
 
-	logger.Info("Found certificates for webhook...")
-
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
@@ -206,16 +214,41 @@ func (wh *Webhook) Run(stop <-chan struct{}) error {
 
 	select {
 	case <-stop:
-		if err := server.Close(); err != nil {
-			return err
-		}
+		eg.Go(func() error {
+			// Start failing readiness probes immediately.
+			logger.Info("Starting to fail readiness probes...")
+			close(wh.stopCh)
+
+			// Wait for a grace period for the above to take effect and this Pod's
+			// endpoint to be removed from the webhook service's Endpoints.
+			// For this to be effective, it must be greater than the probe's
+			// periodSeconds times failureThreshold by a margin suitable to
+			// propagate the new Endpoints data across the cluster.
+			time.Sleep(wh.gracePeriod)
+
+			return server.Shutdown(context.Background())
+		})
+
+		// Wait for all outstanding go routined to terminate, including our new one.
 		return eg.Wait()
+
 	case <-ctx.Done():
-		return fmt.Errorf("webhook server bootstrap failed %v", ctx.Err())
+		return fmt.Errorf("webhook server bootstrap failed %w", ctx.Err())
 	}
 }
 
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Respond to probes regardless of path.
+	if network.IsKubeletProbe(r) {
+		select {
+		case <-wh.stopCh:
+			http.Error(w, "shutting down", http.StatusInternalServerError)
+		default:
+			w.WriteHeader(http.StatusOK)
+		}
+		return
+	}
+
 	// Verify the content type is accurate.
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {

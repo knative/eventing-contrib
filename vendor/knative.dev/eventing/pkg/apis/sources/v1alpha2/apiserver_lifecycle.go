@@ -18,11 +18,10 @@ package v1alpha2
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"knative.dev/pkg/apis"
-
-	"knative.dev/eventing/pkg/apis/duck"
 )
 
 const (
@@ -48,8 +47,13 @@ var apiserverCondSet = apis.NewLivingConditionSet(
 	ApiServerConditionSufficientPermissions,
 )
 
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*ApiServerSource) GetConditionSet() apis.ConditionSet {
+	return apiserverCondSet
+}
+
 // GetGroupVersionKind returns the GroupVersionKind.
-func (s *ApiServerSource) GetGroupVersionKind() schema.GroupVersionKind {
+func (*ApiServerSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("ApiServerSource")
 }
 
@@ -61,6 +65,11 @@ func (s *ApiServerSource) GetUntypedSpec() interface{} {
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (s *ApiServerSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return apiserverCondSet.Manage(s).GetCondition(t)
+}
+
+// GetTopLevelCondition returns the top level condition.
+func (s *ApiServerSourceStatus) GetTopLevelCondition() *apis.Condition {
+	return apiserverCondSet.Manage(s).GetTopLevelCondition()
 }
 
 // InitializeConditions sets relevant unset conditions to Unknown state.
@@ -86,12 +95,21 @@ func (s *ApiServerSourceStatus) MarkNoSink(reason, messageFormat string, message
 // PropagateDeploymentAvailability uses the availability of the provided Deployment to determine if
 // ApiServerConditionDeployed should be marked as true or false.
 func (s *ApiServerSourceStatus) PropagateDeploymentAvailability(d *appsv1.Deployment) {
-	if duck.DeploymentIsAvailable(&d.Status, false) {
-		apiserverCondSet.Manage(s).MarkTrue(ApiServerConditionDeployed)
-	} else {
-		// I don't know how to propagate the status well, so just give the name of the Deployment
-		// for now.
-		apiserverCondSet.Manage(s).MarkFalse(ApiServerConditionDeployed, "DeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
+	deploymentAvailableFound := false
+	for _, cond := range d.Status.Conditions {
+		if cond.Type == appsv1.DeploymentAvailable {
+			deploymentAvailableFound = true
+			if cond.Status == corev1.ConditionTrue {
+				apiserverCondSet.Manage(s).MarkTrue(ApiServerConditionDeployed)
+			} else if cond.Status == corev1.ConditionFalse {
+				apiserverCondSet.Manage(s).MarkFalse(ApiServerConditionDeployed, cond.Reason, cond.Message)
+			} else if cond.Status == corev1.ConditionUnknown {
+				apiserverCondSet.Manage(s).MarkUnknown(ApiServerConditionDeployed, cond.Reason, cond.Message)
+			}
+		}
+	}
+	if !deploymentAvailableFound {
+		PingSourceCondSet.Manage(s).MarkUnknown(PingSourceConditionDeployed, "DeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
 	}
 }
 

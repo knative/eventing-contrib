@@ -23,10 +23,11 @@ import (
 	"knative.dev/pkg/apis/duck"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/webhook/resourcesemantics"
 )
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=false
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // PrometheusSource is the Schema for the prometheussources API
@@ -38,6 +39,8 @@ type PrometheusSource struct {
 	Spec   PrometheusSourceSpec   `json:"spec,omitempty"`
 	Status PrometheusSourceStatus `json:"status,omitempty"`
 }
+
+var _ resourcesemantics.GenericCRD = (*PrometheusSource)(nil)
 
 // Check that Prometheus source can be validated and can be defaulted.
 var _ runtime.Object = (*PrometheusSource)(nil)

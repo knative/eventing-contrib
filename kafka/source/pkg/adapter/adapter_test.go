@@ -17,36 +17,28 @@ limitations under the License.
 package kafka
 
 import (
-	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/json"
-	"encoding/pem"
 	"io/ioutil"
-	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/google/go-cmp/cmp"
-	"knative.dev/eventing/pkg/adapter"
-	"knative.dev/pkg/source"
-
-	"go.uber.org/zap"
-
 	"github.com/Shopify/sarama"
+	"github.com/cloudevents/sdk-go/v2/types"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
+	"knative.dev/eventing/pkg/adapter/v2"
+	"knative.dev/pkg/source"
 
 	"knative.dev/eventing/pkg/kncloudevents"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
-func TestPostMessage_ServeHTTP(t *testing.T) {
+func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 	aTimestamp := time.Now()
 
 	testCases := map[string]struct {
@@ -68,12 +60,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "key",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "key",
 			},
 			expectedBody: `{"key":"value"}`,
 			error:        false,
@@ -89,12 +82,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "-16771305",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "-16771305",
 			},
 			expectedBody:  `{"key":"value"}`,
 			error:         false,
@@ -111,12 +105,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "0.00000000000000000000000000000000000002536316309005082",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "0.00000000000000000000000000000000000002536316309005082",
 			},
 			expectedBody:  `{"key":"value"}`,
 			error:         false,
@@ -133,12 +128,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "AQoXFw==",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "AQoXFw==",
 			},
 			expectedBody:  `{"key":"value"}`,
 			error:         false,
@@ -163,6 +159,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
+				"ce-specversion":      "1.0",
 				"ce-id":               makeEventId(1, 2),
 				"ce-time":             types.FormatTime(aTimestamp),
 				"ce-type":             sourcesv1alpha1.KafkaEventType,
@@ -194,6 +191,7 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
+				"ce-specversion":         "1.0",
 				"ce-id":                  makeEventId(1, 2),
 				"ce-time":                types.FormatTime(aTimestamp),
 				"ce-type":                sourcesv1alpha1.KafkaEventType,
@@ -234,24 +232,20 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				},
 				Timestamp: aTimestamp,
 			},
+			// Because we need to write the distributed tracing extension
 			expectedHeaders: map[string]string{
-				"content-type": "application/cloudevents+json; charset=UTF-8",
+				"ce-specversion":          "1.0",
+				"ce-id":                   "A234-1234-1234",
+				"ce-time":                 "2018-04-05T17:31:00Z",
+				"ce-type":                 "com.github.pull.create",
+				"ce-subject":              "123",
+				"ce-source":               "https://github.com/cloudevents/spec/pull",
+				"ce-comexampleextension1": "value",
+				"ce-comexampleothervalue": "5",
+				"content-type":            "application/json",
 			},
-			expectedBody: string(mustJsonMarshal(t, map[string]interface{}{
-				"specversion":          "1.0",
-				"type":                 "com.github.pull.create",
-				"source":               "https://github.com/cloudevents/spec/pull",
-				"subject":              "123",
-				"id":                   "A234-1234-1234",
-				"time":                 "2018-04-05T17:31:00Z",
-				"comexampleextension1": "value",
-				"comexampleothervalue": 5,
-				"datacontenttype":      "application/json",
-				"data": map[string]string{
-					"hello": "Francesco",
-				},
-			})),
-			error: false,
+			expectedBody: `{"hello":"Francesco"}`,
+			error:        false,
 		},
 		"accepted_binary": {
 			sink: sinkAccepted,
@@ -263,27 +257,25 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				}),
 				Partition: 0,
 				Offset:    0,
-				Headers: []*sarama.RecordHeader{
-					{
-						Key: []byte("content-type"), Value: []byte("application/json"),
-					}, {
-						Key: []byte("ce_specversion"), Value: []byte("1.0"),
-					}, {
-						Key: []byte("ce_type"), Value: []byte("com.github.pull.create"),
-					}, {
-						Key: []byte("ce_source"), Value: []byte("https://github.com/cloudevents/spec/pull"),
-					}, {
-						Key: []byte("ce_subject"), Value: []byte("123"),
-					}, {
-						Key: []byte("ce_id"), Value: []byte("A234-1234-1234"),
-					}, {
-						Key: []byte("ce_time"), Value: []byte("2018-04-05T17:31:00Z"),
-					}, {
-						Key: []byte("ce_comexampleextension1"), Value: []byte("value"),
-					}, {
-						Key: []byte("ce_comexampleothervalue"), Value: []byte("5"),
-					},
-				},
+				Headers: []*sarama.RecordHeader{{
+					Key: []byte("content-type"), Value: []byte("application/json"),
+				}, {
+					Key: []byte("ce_specversion"), Value: []byte("1.0"),
+				}, {
+					Key: []byte("ce_type"), Value: []byte("com.github.pull.create"),
+				}, {
+					Key: []byte("ce_source"), Value: []byte("https://github.com/cloudevents/spec/pull"),
+				}, {
+					Key: []byte("ce_subject"), Value: []byte("123"),
+				}, {
+					Key: []byte("ce_id"), Value: []byte("A234-1234-1234"),
+				}, {
+					Key: []byte("ce_time"), Value: []byte("2018-04-05T17:31:00Z"),
+				}, {
+					Key: []byte("ce_comexampleextension1"), Value: []byte("value"),
+				}, {
+					Key: []byte("ce_comexampleothervalue"), Value: []byte("5"),
+				}},
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
@@ -311,12 +303,13 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				Timestamp: aTimestamp,
 			},
 			expectedHeaders: map[string]string{
-				"ce-id":      makeEventId(1, 2),
-				"ce-time":    types.FormatTime(aTimestamp),
-				"ce-type":    sourcesv1alpha1.KafkaEventType,
-				"ce-source":  sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject": makeEventSubject(1, 2),
-				"ce-key":     "key",
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "key",
 			},
 			expectedBody: `{"key":"value"}`,
 			error:        true,
@@ -333,6 +326,15 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 
 			statsReporter, _ := source.NewStatsReporter()
 
+			// If you wanna test tracing using a local zipkin server, uncomment this
+			//tracing.SetupStaticPublishing(zap.L().Sugar(), "localhost", &tracingconfig.Config{
+			//	Backend:        tracingconfig.Zipkin,
+			//	Debug:          true,
+			//	SampleRate:     1.0,
+			//	ZipkinEndpoint: "http://localhost:9411/api/v2/spans",
+			//})
+			//defer time.Sleep(1 * time.Second)
+
 			s, err := kncloudevents.NewHttpMessageSender(nil, sinkServer.URL)
 			if err != nil {
 				t.Fatal(err)
@@ -341,14 +343,12 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 			a := &Adapter{
 				config: &adapterConfig{
 					EnvConfig: adapter.EnvConfig{
-						SinkURI:   sinkServer.URL,
+						Sink:      sinkServer.URL,
 						Namespace: "test",
 					},
-					Topics:           "topic1,topic2",
-					BootstrapServers: "server1,server2",
-					ConsumerGroup:    "group",
-					Name:             "test",
-					Net:              AdapterNet{},
+					Topics:        []string{"topic1", "topic2"},
+					ConsumerGroup: "group",
+					Name:          "test",
 				},
 				httpMessageSender: s,
 				logger:            zap.NewNop(),
@@ -362,12 +362,32 @@ func TestPostMessage_ServeHTTP(t *testing.T) {
 				t.Errorf("expected error, but got %v", err)
 			}
 
+			// Remove headers we aren't interested to test
+			h.header.Del("user-agent")
+			h.header.Del("accept-encoding")
+			h.header.Del("content-length")
+
 			// Check headers
 			for k, expected := range tc.expectedHeaders {
 				actual := h.header.Get(k)
 				if actual != expected {
 					t.Errorf("Expected header with key %s: '%q', but got '%q'", k, expected, actual)
 				}
+				h.header.Del(k)
+			}
+
+			// Check tracing headers
+			if h.header.Get("traceparent") == "" {
+				t.Errorf("Expected traceparent header")
+			}
+			h.header.Del("traceparent")
+			if h.header.Get("ce-traceparent") == "" {
+				t.Errorf("Expected ce-traceparent header")
+			}
+			h.header.Del("ce-traceparent")
+
+			if len(h.header) != 0 {
+				t.Errorf("Unexpected headers: %v", h.header)
 			}
 
 			// Check body
@@ -384,140 +404,6 @@ func mustJsonMarshal(t *testing.T, val interface{}) []byte {
 		t.Errorf("unexpected error, %v", err)
 	}
 	return data
-}
-
-func TestNewTLSConfig(t *testing.T) {
-	cert, key := generateCert(t)
-
-	for _, tt := range []struct {
-		name       string
-		cert       string
-		key        string
-		caCert     string
-		wantErr    bool
-		wantNil    bool
-		wantClient bool
-		wantServer bool
-	}{
-		{
-			name:    "all empty",
-			wantNil: true,
-		},
-		{
-			name:    "bad input",
-			cert:    "x",
-			key:     "y",
-			caCert:  "z",
-			wantErr: true,
-		},
-		{
-			name:    "only cert",
-			cert:    cert,
-			wantNil: true,
-		},
-		{
-			name:    "only key",
-			key:     key,
-			wantNil: true,
-		},
-		{
-			name:       "cert and key",
-			cert:       cert,
-			key:        key,
-			wantClient: true,
-		},
-		{
-			name:       "only caCert",
-			caCert:     cert,
-			wantServer: true,
-		},
-		{
-			name:       "cert, key, and caCert",
-			cert:       cert,
-			key:        key,
-			caCert:     cert,
-			wantClient: true,
-			wantServer: true,
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			c, err := newTLSConfig(tt.cert, tt.key, tt.caCert)
-			if tt.wantErr {
-				if err == nil {
-					t.Fatal("wanted error")
-				}
-				return
-			}
-
-			if tt.wantNil {
-				if c != nil {
-					t.Fatal("wanted non-nil config")
-				}
-				return
-			}
-
-			var wantCertificates int
-			if tt.wantClient {
-				wantCertificates = 1
-			} else {
-				wantCertificates = 0
-			}
-			if got, want := len(c.Certificates), wantCertificates; got != want {
-				t.Errorf("got %d Certificates, wanted %d", got, want)
-			}
-
-			if tt.wantServer {
-				if c.RootCAs == nil {
-					t.Error("wanted non-nil RootCAs")
-				}
-
-				if c.VerifyPeerCertificate == nil {
-					t.Error("wanted non-nil VerifyPeerCertificate")
-				}
-
-				if !c.InsecureSkipVerify {
-					t.Error("wanted InsecureSkipVerify")
-				}
-			} else {
-				if c.RootCAs != nil {
-					t.Error("wanted nil RootCAs")
-				}
-
-				if c.VerifyPeerCertificate != nil {
-					t.Error("wanted nil VerifyPeerCertificate")
-				}
-
-				if c.InsecureSkipVerify {
-					t.Error("wanted false InsecureSkipVerify")
-				}
-			}
-		})
-	}
-
-}
-
-func TestVerifyCertSkipHostname(t *testing.T) {
-	cert, _ := generateCert(t)
-	certPem, _ := pem.Decode([]byte(cert))
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM([]byte(cert))
-
-	v := verifyCertSkipHostname(caCertPool)
-
-	err := v([][]byte{certPem.Bytes}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cert2, _ := generateCert(t)
-	cert2Pem, _ := pem.Decode([]byte(cert2))
-
-	err = v([][]byte{cert2Pem.Bytes}, nil)
-	// Error expected as we're still verifying with the first cert.
-	if err == nil {
-		t.Fatal("wanted error")
-	}
 }
 
 type fakeHandler struct {
@@ -548,131 +434,16 @@ func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusRequestTimeout)
 }
 
-// Lifted from the RSA path of https://golang.org/src/crypto/tls/generate_cert.go.
-func generateCert(t *testing.T) (string, string) {
-	t.Helper()
+func TestAdapter_Start(t *testing.T) { // just increase code coverage
+	ctx, cancel := context.WithCancel(context.Background())
 
-	priv, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Increasing coverage
+	_ = os.Setenv("KAFKA_BOOTSTRAP_SERVERS", "my-cluster-kafka-bootstrap.my-kafka-namespace:9092")
 
-	notBefore := time.Now().Add(-5 * time.Minute)
-	notAfter := notBefore.Add(time.Hour)
+	a := NewAdapter(ctx, NewEnvConfig(), nil, nil)
+	require.Panics(t, func() {
+		_ = a.Start(ctx)
+	})
 
-	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-
-	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	template := x509.Certificate{
-		SerialNumber: serialNumber,
-		Subject: pkix.Name{
-			Organization: []string{"Acme Co"},
-		},
-		NotBefore:             notBefore,
-		NotAfter:              notAfter,
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
-	}
-
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var certOut bytes.Buffer
-	if err := pem.Encode(&certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		t.Fatal(err)
-	}
-
-	var keyOut bytes.Buffer
-	if err := pem.Encode(&keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
-		t.Fatal(err)
-	}
-
-	return certOut.String(), keyOut.String()
-}
-
-func TestAdapterStartFailure(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-
-	adapter := &Adapter{
-		config: &adapterConfig{
-			EnvConfig: adapter.EnvConfig{
-				SinkURI:   "example.com",
-				Namespace: "test",
-			},
-			Topics:           "topic1,topic2",
-			BootstrapServers: "server1,server2",
-			ConsumerGroup:    "group",
-			Name:             "test",
-			Net:              AdapterNet{},
-		},
-	}
-
-	_ = adapter.Start(make(chan struct{}))
-}
-
-func TestSplitOnCommas(t *testing.T) {
-	for _, tt := range []struct {
-		name             string
-		bootstrapServers string
-		want             []string
-	}{
-		{
-			"two commas, one url",
-			",my-cluster-kafka-bootstrap.kafka:9092,",
-			[]string{
-				"my-cluster-kafka-bootstrap.kafka:9092",
-			},
-		},
-		{
-			"two commas, two urls",
-			",url-one.kafka:9092,url-two.kafka:9092",
-			[]string{
-				"url-one.kafka:9092",
-				"url-two.kafka:9092",
-			},
-		},
-		{
-			"two commas, no url",
-			",,",
-			[]string{},
-		},
-		{
-			"two commas, three urls",
-			"url-one.kafka:9092,url-two.kafka:9092,url-three.kafka:9092",
-			[]string{
-				"url-one.kafka:9092",
-				"url-two.kafka:9092",
-				"url-three.kafka:9092",
-			},
-		},
-		{
-			"middle commas check",
-			",,url-one.kafka:9092,url-two.kafka:9092,,url-three.kafka:9092,url-four.kafka:9092,,",
-			[]string{
-				"url-one.kafka:9092",
-				"url-two.kafka:9092",
-				"url-three.kafka:9092",
-				"url-four.kafka:9092",
-			},
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			got := SplitOnCommas(tt.bootstrapServers)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("unexpected server list (-want, +got) = %v", diff)
-			}
-		})
-	}
+	cancel()
 }

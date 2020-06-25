@@ -12,6 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    contrib.eventing.knative.dev/release: devel
+    control-plane: gitlab-controller-manager
+  name: gitlab-controller-manager-service
+  namespace: knative-sources
+spec:
+  ports:
+  - name: https-gitlab
+    port: 443
+    targetPort: 8443
+  selector:
+    control-plane: gitlab-controller-manager
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,8 +67,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: SECRET_NAME
-          value: gitlabsource-webhook-server-secret
         image: ko://knative.dev/eventing-contrib/gitlab/cmd/controller
         imagePullPolicy: Always
         resources:
@@ -60,19 +76,4 @@ spec:
           requests:
             cpu: 100m
             memory: 20Mi
-        volumeMounts:
-        - mountPath: /tmp/cert
-          name: cert
-          readOnly: true
       terminationGracePeriodSeconds: 10
-      volumes:
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: gitlabsource-webhook-server-secret
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: gitlabsource-webhook-server-secret
-  namespace: knative-sources

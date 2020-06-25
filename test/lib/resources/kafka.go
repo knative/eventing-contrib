@@ -23,8 +23,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/test/lib/resources"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	pkgTest "knative.dev/pkg/test"
+	"knative.dev/pkg/tracker"
 
+	kafkabindingv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	kafkasourcev1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
@@ -75,15 +78,31 @@ func KafkaPerformanceImageSenderPod(pace string, warmup string, bootstrapUrl str
 	}
 }
 
-func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectReference) *kafkasourcev1alpha1.KafkaSource {
-	return &kafkasourcev1alpha1.KafkaSource{
+type KafkaSourceOption func(source *kafkasourcev1alpha1.KafkaSource)
+
+func WithName(name string) KafkaSourceOption {
+	return func(source *kafkasourcev1alpha1.KafkaSource) {
+		source.Name = name
+	}
+}
+
+func WithConsumerGroup(cg string) KafkaSourceOption {
+	return func(source *kafkasourcev1alpha1.KafkaSource) {
+		source.Spec.ConsumerGroup = cg
+	}
+}
+
+func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectReference, options ...KafkaSourceOption) *kafkasourcev1alpha1.KafkaSource {
+	source := &kafkasourcev1alpha1.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-kafka-source",
 		},
 		Spec: kafkasourcev1alpha1.KafkaSourceSpec{
-			BootstrapServers: bootstrapServer,
-			Topics:           topicName,
-			ConsumerGroup:    "test-consumer-group",
+			KafkaAuthSpec: kafkabindingv1alpha1.KafkaAuthSpec{
+				BootstrapServers: []string{bootstrapServer},
+			},
+			Topics:        []string{topicName},
+			ConsumerGroup: "test-consumer-group",
 			Sink: &duckv1.Destination{
 				Ref: &duckv1.KReference{
 					APIVersion: ref.APIVersion,
@@ -91,6 +110,28 @@ func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectRef
 					Name:       ref.Name,
 					Namespace:  ref.Namespace,
 				},
+			},
+		},
+	}
+
+	for _, opt := range options {
+		opt(source)
+	}
+
+	return source
+}
+
+func KafkaBinding(bootstrapServer string, ref *tracker.Reference) *kafkabindingv1alpha1.KafkaBinding {
+	return &kafkabindingv1alpha1.KafkaBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-kafka-binding",
+		},
+		Spec: kafkabindingv1alpha1.KafkaBindingSpec{
+			KafkaAuthSpec: kafkabindingv1alpha1.KafkaAuthSpec{
+				BootstrapServers: []string{bootstrapServer},
+			},
+			BindingSpec: duckv1alpha1.BindingSpec{
+				Subject: *ref,
 			},
 		},
 	}

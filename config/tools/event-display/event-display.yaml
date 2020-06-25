@@ -13,16 +13,14 @@
 # limitations under the License.
 
 # This is a very simple Knative Service that writes the incoming CloudEvent to its log.
-apiVersion: serving.knative.dev/v1alpha1
+apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: event-display
   labels:
     contrib.eventing.knative.dev/release: devel
 spec:
-  runLatest:
-    configuration:
-      revisionTemplate:
-        spec:
-          container:
-            image: ko://knative.dev/eventing-contrib/cmd/event_display
+  template:
+    spec:
+      containers:
+      - image: ko://knative.dev/eventing-contrib/cmd/event_display

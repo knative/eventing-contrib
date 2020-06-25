@@ -25,14 +25,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	cloudevents "github.com/cloudevents/sdk-go/v1"
-	ce_client "github.com/cloudevents/sdk-go/v1/cloudevents/client"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
-
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/awssqs/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/logging"
 )
 
@@ -54,7 +50,7 @@ type Adapter struct {
 	OnFailedPollWaitSecs time.Duration
 
 	// Client sends cloudevents to the target.
-	client ce_client.Client
+	client cloudevents.Client
 }
 
 // getRegion takes an AWS SQS URL and extracts the region from it
@@ -80,7 +76,7 @@ func getRegion(url string) (string, error) {
 func (a *Adapter) initClient() error {
 	if a.client == nil {
 		var err error
-		if a.client, err = kncloudevents.NewDefaultClient(a.SinkURI); err != nil {
+		if a.client, err = cloudevents.NewDefaultClient(); err != nil {
 			return err
 		}
 	}
@@ -167,6 +163,8 @@ func (a *Adapter) receiveMessage(ctx context.Context, m *sqs.Message, ack func()
 	logger := logging.FromContext(ctx).With(zap.Any("eventID", m.MessageId)).With(zap.Any("sink", a.SinkURI))
 	logger.Debugw("Received message from SQS:", zap.Any("message", m))
 
+	ctx = cloudevents.ContextWithTarget(ctx, a.SinkURI)
+
 	err := a.postMessage(ctx, logger, m)
 	if err != nil {
 		logger.Infof("Event delivery failed: %s", err)
@@ -188,10 +186,10 @@ func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	event.SetID(*m.MessageId)
 	event.SetType(sourcesv1alpha1.AwsSqsSourceEventType)
-	event.SetSource(types.ParseURIRef(a.QueueURL).String())
+	event.SetSource(cloudevents.ParseURIRef(a.QueueURL).String())
 	event.SetTime(time.Unix(0, timestamp))
 
-	if err := event.SetData(m); err != nil {
+	if err := event.SetData(cloudevents.ApplicationJSON, m); err != nil {
 		return nil, err
 	}
 	return &event, nil
@@ -199,16 +197,15 @@ func (a *Adapter) makeEvent(m *sqs.Message) (*cloudevents.Event, error) {
 
 // postMessage sends an SQS event to the SinkURI
 func (a *Adapter) postMessage(ctx context.Context, logger *zap.SugaredLogger, m *sqs.Message) error {
-
 	event, err := a.makeEvent(m)
 
 	if err != nil {
 		logger.Error("Cloud Event creation error", zap.Error(err))
 		return err
 	}
-	if _, _, err = a.client.Send(context.TODO(), *event); err != nil {
-		logger.Error("Cloud Event delivery error", zap.Error(err))
-		return err
+	if result := a.client.Send(ctx, *event); !cloudevents.IsACK(result) {
+		logger.Error("Cloud Event delivery error", zap.Error(result))
+		return result
 	}
 	return nil
 }

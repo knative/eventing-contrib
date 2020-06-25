@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"knative.dev/pkg/apis"
@@ -31,17 +32,36 @@ func getIntGE0(m map[string]string, k string) (int64, *apis.FieldError) {
 		return 0, nil
 	}
 	i, err := strconv.ParseInt(v, 10, 32)
-	if err != nil || i < 0 {
-		return 0, apis.ErrOutOfBoundsValue(v, 1, math.MaxInt32, k)
+	if err == nil && i < 0 {
+		return 0, apis.ErrOutOfBoundsValue(v, 0, math.MaxInt32, k)
 	}
+	if err != nil {
+		if nerr, ok := err.(*strconv.NumError); ok && nerr.Err == strconv.ErrRange {
+			return 0, apis.ErrOutOfBoundsValue(v, 0, math.MaxInt32, k)
+		}
+		return 0, apis.ErrInvalidValue(v, k)
+	}
+
 	return i, nil
 }
 
-func ValidateAnnotations(anns map[string]string) *apis.FieldError {
+// ValidateAnnotations verifies the autoscaling annotations.
+func ValidateAnnotations(allowInitScaleZero bool, anns map[string]string) *apis.FieldError {
 	if len(anns) == 0 {
 		return nil
 	}
-	return validateMinMaxScale(anns).Also(validateFloats(anns)).Also(validateWindows(anns).Also(validateMetric(anns)))
+	return validateClass(anns).Also(validateMinMaxScale(anns)).Also(validateFloats(anns)).
+		Also(validateWindow(anns).Also(validateLastPodRetention(anns)).
+			Also(validateMetric(anns).Also(validateInitialScale(allowInitScaleZero, anns))))
+}
+
+func validateClass(annotations map[string]string) *apis.FieldError {
+	if c, ok := annotations[ClassAnnotationKey]; ok {
+		if strings.HasSuffix(c, domain) && c != KPA && c != HPA {
+			return apis.ErrInvalidValue(c, ClassAnnotationKey)
+		}
+	}
+	return nil
 }
 
 func validateFloats(annotations map[string]string) *apis.FieldError {
@@ -58,8 +78,8 @@ func validateFloats(annotations map[string]string) *apis.FieldError {
 		if fv, err := strconv.ParseFloat(v, 64); err != nil {
 			errs = errs.Also(apis.ErrInvalidValue(v, PanicThresholdPercentageAnnotationKey))
 		} else if fv < PanicThresholdPercentageMin || fv > PanicThresholdPercentageMax {
-			errs = errs.Also(apis.ErrOutOfBoundsValue(v, PanicThresholdPercentageMin, PanicThresholdPercentageMax,
-				PanicThresholdPercentageAnnotationKey))
+			errs = errs.Also(apis.ErrOutOfBoundsValue(v, PanicThresholdPercentageMin,
+				PanicThresholdPercentageMax, PanicThresholdPercentageAnnotationKey))
 		}
 	}
 
@@ -85,14 +105,27 @@ func validateFloats(annotations map[string]string) *apis.FieldError {
 	return errs
 }
 
-func validateWindows(annotations map[string]string) *apis.FieldError {
+func validateLastPodRetention(annotations map[string]string) *apis.FieldError {
+	var errs *apis.FieldError
+	if w, ok := annotations[ScaleToZeroPodRetentionPeriodKey]; ok {
+		if d, err := time.ParseDuration(w); err != nil {
+			errs = apis.ErrInvalidValue(w, ScaleToZeroPodRetentionPeriodKey)
+		} else if d < 0 || d > WindowMax {
+			// Since we disallow windows longer than WindowMax, so we should limit this
+			// as well.
+			errs = apis.ErrOutOfBoundsValue(w, 0*time.Second, WindowMax, ScaleToZeroPodRetentionPeriodKey)
+		}
+	}
+	return errs
+}
+
+func validateWindow(annotations map[string]string) *apis.FieldError {
 	var errs *apis.FieldError
 	if w, ok := annotations[WindowAnnotationKey]; ok {
 		if annotations[ClassAnnotationKey] == HPA && annotations[MetricAnnotationKey] == CPU {
 			return apis.ErrInvalidKeyName(WindowAnnotationKey, fmt.Sprintf("%s for %s %s", HPA, MetricAnnotationKey, CPU))
 		}
-		d, err := time.ParseDuration(w)
-		if err != nil {
+		if d, err := time.ParseDuration(w); err != nil {
 			errs = apis.ErrInvalidValue(w, WindowAnnotationKey)
 		} else if d < WindowMin || d > WindowMax {
 			errs = apis.ErrOutOfBoundsValue(w, WindowMin, WindowMax, WindowAnnotationKey)
@@ -102,11 +135,7 @@ func validateWindows(annotations map[string]string) *apis.FieldError {
 }
 
 func validateMinMaxScale(annotations map[string]string) *apis.FieldError {
-	var errs *apis.FieldError
-
-	min, err := getIntGE0(annotations, MinScaleAnnotationKey)
-	errs = errs.Also(err)
-
+	min, errs := getIntGE0(annotations, MinScaleAnnotationKey)
 	max, err := getIntGE0(annotations, MaxScaleAnnotationKey)
 	errs = errs.Also(err)
 
@@ -133,7 +162,7 @@ func validateMetric(annotations map[string]string) *apis.FieldError {
 			}
 		case HPA:
 			switch metric {
-			case CPU, Concurrency, RPS:
+			case CPU:
 				return nil
 			}
 		default:
@@ -141,6 +170,16 @@ func validateMetric(annotations map[string]string) *apis.FieldError {
 			return nil
 		}
 		return apis.ErrInvalidValue(metric, MetricAnnotationKey)
+	}
+	return nil
+}
+
+func validateInitialScale(allowInitScaleZero bool, annotations map[string]string) *apis.FieldError {
+	if initialScale, ok := annotations[InitialScaleAnnotationKey]; ok {
+		initScaleInt, err := strconv.Atoi(initialScale)
+		if err != nil || initScaleInt < 0 || (!allowInitScaleZero && initScaleInt == 0) {
+			return apis.ErrInvalidValue(initialScale, InitialScaleAnnotationKey)
+		}
 	}
 	return nil
 }

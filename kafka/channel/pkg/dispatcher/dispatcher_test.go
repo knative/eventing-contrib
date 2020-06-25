@@ -19,7 +19,6 @@ package dispatcher
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -317,7 +316,6 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				topicFunc:            utils.TopicName,
 				logger:               zaptest.NewLogger(t),
 			}
-			d.setConfig(&multichannelfanout.Config{})
 			d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 
 			// Initialize using oldConfig
@@ -364,25 +362,6 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 
 		})
 	}
-}
-
-type dispatchTestHandler struct {
-	t       *testing.T
-	payload []byte
-	done    chan bool
-}
-
-func (h *dispatchTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		h.t.Error("Failed to read the request body")
-	}
-	if diff := cmp.Diff(h.payload, body); diff != "" {
-		h.t.Errorf("unexpected body (-want, +got) = %s", diff)
-	}
-	h.done <- true
 }
 
 func TestSubscribeError(t *testing.T) {

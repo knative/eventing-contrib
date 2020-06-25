@@ -17,19 +17,18 @@ limitations under the License.
 package kafka
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
-	"knative.dev/eventing/pkg/adapter"
+	"go.opencensus.io/trace"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/pkg/source"
 
 	"context"
 
+	kafkabinding "knative.dev/eventing-contrib/kafka"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 
 	"github.com/Shopify/sarama"
@@ -41,47 +40,17 @@ const (
 	resourceGroup = "kafkasources.sources.knative.dev"
 )
 
-type AdapterSASL struct {
-	Enable   bool   `envconfig:"KAFKA_NET_SASL_ENABLE" required:"false"`
-	User     string `envconfig:"KAFKA_NET_SASL_USER" required:"false"`
-	Password string `envconfig:"KAFKA_NET_SASL_PASSWORD" required:"false"`
-}
-
-type AdapterTLS struct {
-	Enable bool   `envconfig:"KAFKA_NET_TLS_ENABLE" required:"false"`
-	Cert   string `envconfig:"KAFKA_NET_TLS_CERT" required:"false"`
-	Key    string `envconfig:"KAFKA_NET_TLS_KEY" required:"false"`
-	CACert string `envconfig:"KAFKA_NET_TLS_CA_CERT" required:"false"`
-}
-
-type AdapterNet struct {
-	SASL AdapterSASL
-	TLS  AdapterTLS
-}
-
 type adapterConfig struct {
 	adapter.EnvConfig
 
-	BootstrapServers string `envconfig:"KAFKA_BOOTSTRAP_SERVERS" required:"true"`
-	Topics           string `envconfig:"KAFKA_TOPICS" required:"true"`
-	ConsumerGroup    string `envconfig:"KAFKA_CONSUMER_GROUP" required:"true"`
-	Name             string `envconfig:"NAME" required:"true"`
-	KeyType          string `envconfig:"KEY_TYPE" required:"false"`
-	Net              AdapterNet
+	Topics        []string `envconfig:"KAFKA_TOPICS" required:"true"`
+	ConsumerGroup string   `envconfig:"KAFKA_CONSUMER_GROUP" required:"true"`
+	Name          string   `envconfig:"NAME" required:"true"`
+	KeyType       string   `envconfig:"KEY_TYPE" required:"false"`
 }
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
 	return &adapterConfig{}
-}
-
-func SplitOnCommas(str string) []string {
-	items := []string{}
-	for _, item := range strings.Split(str, ",") {
-		if item != "" {
-			items = append(items, item)
-		}
-	}
-	return items
 }
 
 type Adapter struct {
@@ -108,54 +77,28 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMe
 	}
 }
 
-// --------------------------------------------------------------------
+func (a *Adapter) Start(ctx context.Context) error {
+	return a.start(ctx.Done())
+}
 
-func (a *Adapter) Start(stopCh <-chan struct{}) error {
+func (a *Adapter) start(stopCh <-chan struct{}) error {
 	a.logger.Info("Starting with config: ",
-		zap.String("BootstrapServers", a.config.BootstrapServers),
-		zap.String("Topics", a.config.Topics),
+		zap.String("Topics", strings.Join(a.config.Topics, ",")),
 		zap.String("ConsumerGroup", a.config.ConsumerGroup),
-		zap.String("SinkURI", a.config.SinkURI),
+		zap.String("SinkURI", a.config.Sink),
 		zap.String("Name", a.config.Name),
 		zap.String("Namespace", a.config.Namespace),
-		zap.Bool("SASL", a.config.Net.SASL.Enable),
-		zap.Bool("TLS", a.config.Net.TLS.Enable))
-
-	kafkaConfig := sarama.NewConfig()
-	kafkaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
-	kafkaConfig.Version = sarama.V2_0_0_0
-	kafkaConfig.Consumer.Return.Errors = true
-	kafkaConfig.Net.SASL.Enable = a.config.Net.SASL.Enable
-	kafkaConfig.Net.SASL.User = a.config.Net.SASL.User
-	kafkaConfig.Net.SASL.Password = a.config.Net.SASL.Password
-	kafkaConfig.Net.TLS.Enable = a.config.Net.TLS.Enable
-
-	if a.config.Net.TLS.Enable {
-		tlsConfig, err := newTLSConfig(a.config.Net.TLS.Cert, a.config.Net.TLS.Key, a.config.Net.TLS.CACert)
-		if err != nil {
-			panic(err)
-		}
-		kafkaConfig.Net.TLS.Config = tlsConfig
-	}
-
-	// Start with a ceClient
-	servers := SplitOnCommas(a.config.BootstrapServers)
-	if len(servers) == 0 {
-		panic(fmt.Errorf("No bootstrap servers specified in %q", a.config.BootstrapServers))
-	}
-	client, err := sarama.NewClient(servers, kafkaConfig)
-	if err != nil {
-		panic(err)
-	}
-	defer func() { _ = client.Close() }()
+	)
 
 	// init consumer group
-	consumerGroupFactory := kafka.NewConsumerGroupFactory(client)
-	topics := SplitOnCommas(a.config.Topics)
-	if len(topics) == 0 {
-		panic(fmt.Errorf("No topics specified in %q", a.config.Topics))
+	addrs, config, err := kafkabinding.NewConfig(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to create the config: %w", err)
 	}
-	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, topics, a.logger, a)
+	config.Consumer.Offsets.AutoCommit.Enable = false
+
+	consumerGroupFactory := kafka.NewConsumerGroupFactory(addrs, config)
+	group, err := consumerGroupFactory.StartConsumerGroup(a.config.ConsumerGroup, a.config.Topics, a.logger, a)
 	if err != nil {
 		panic(err)
 	}
@@ -168,25 +111,23 @@ func (a *Adapter) Start(stopCh <-chan struct{}) error {
 		}
 	}()
 
-	for {
-		select {
-		case <-stopCh:
-			a.logger.Info("Shutting down...")
-			return nil
-		}
-	}
+	<-stopCh
+	a.logger.Info("Shutting down...")
+	return nil
 }
 
-// --------------------------------------------------------------------
-
 func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool, error) {
+	ctx, span := trace.StartSpan(ctx, "kafka-source")
+	defer span.End()
+
 	req, err := a.httpMessageSender.NewCloudEventRequest(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	err = a.ConsumerMessageToHttpRequest(ctx, msg, req, a.logger)
+	err = a.ConsumerMessageToHttpRequest(ctx, span, msg, req, a.logger)
 	if err != nil {
+		a.logger.Debug("failed to create request", zap.Error(err))
 		return true, err
 	}
 
@@ -210,69 +151,4 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 
 	_ = a.reporter.ReportEventCount(reportArgs, res.StatusCode)
 	return true, nil
-}
-
-// newTLSConfig returns a *tls.Config using the given ceClient cert, ceClient key,
-// and CA certificate. If none are appropriate, a nil *tls.Config is returned.
-func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
-	valid := false
-
-	config := &tls.Config{}
-
-	if clientCert != "" && clientKey != "" {
-		cert, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
-		if err != nil {
-			return nil, err
-		}
-		config.Certificates = []tls.Certificate{cert}
-		config.BuildNameToCertificate()
-		valid = true
-	}
-
-	if caCert != "" {
-		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM([]byte(caCert))
-		config.RootCAs = caCertPool
-		// The CN of Heroku Kafka certs do not match the hostname of the
-		// broker, but Go's default TLS behavior requires that they do.
-		config.VerifyPeerCertificate = verifyCertSkipHostname(caCertPool)
-		config.InsecureSkipVerify = true
-		valid = true
-	}
-
-	if !valid {
-		config = nil
-	}
-
-	return config, nil
-}
-
-// verifyCertSkipHostname verifies certificates in the same way that the
-// default TLS handshake does, except it skips hostname verification. It must
-// be used with InsecureSkipVerify.
-func verifyCertSkipHostname(roots *x509.CertPool) func([][]byte, [][]*x509.Certificate) error {
-	return func(certs [][]byte, _ [][]*x509.Certificate) error {
-		opts := x509.VerifyOptions{
-			Roots:         roots,
-			CurrentTime:   time.Now(),
-			Intermediates: x509.NewCertPool(),
-		}
-
-		leaf, err := x509.ParseCertificate(certs[0])
-		if err != nil {
-			return err
-		}
-
-		for _, asn1Data := range certs[1:] {
-			cert, err := x509.ParseCertificate(asn1Data)
-			if err != nil {
-				return err
-			}
-
-			opts.Intermediates.AddCert(cert)
-		}
-
-		_, err = leaf.Verify(opts)
-		return err
-	}
 }

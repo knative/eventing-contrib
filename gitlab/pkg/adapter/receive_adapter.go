@@ -20,19 +20,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"gopkg.in/go-playground/webhooks.v5/gitlab"
-	"knative.dev/eventing/pkg/adapter"
+	"knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/source"
 )
 
 const (
-	glHeaderToken = "X-Gitlab-Token"
 	glHeaderEvent = "X-Gitlab-Event"
 )
 
@@ -61,7 +60,7 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 }
 
 // NewAdapter returns the instance of gitLabReceiveAdapter that implements adapter.Adapter interface
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client, reporter source.StatsReporter) adapter.Adapter {
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
 
@@ -74,8 +73,11 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 }
 
 // Start implements adapter.Adapter
-func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
-	done := make(chan bool, 1)
+func (ra *gitLabReceiveAdapter) Start(ctx context.Context) error {
+	return ra.start(ctx.Done())
+}
+
+func (ra *gitLabReceiveAdapter) start(stopCh <-chan struct{}) error {
 	hook, err := gitlab.New(gitlab.Options.Secret(ra.secretToken))
 	if err != nil {
 		return fmt.Errorf("cannot create gitlab hook: %v", err)
@@ -86,22 +88,29 @@ func (ra *gitLabReceiveAdapter) Start(stopCh <-chan struct{}) error {
 		Handler: ra.newRouter(hook),
 	}
 
-	go gracefullShutdown(server, ra.logger, stopCh, done)
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		gracefulShutdown(server, ra.logger, stopCh)
+	}()
 
 	ra.logger.Infof("Server is ready to handle requests at %s", server.Addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("could not listen on %s: %v", server.Addr, err)
 	}
 
-	<-done
+	wg.Wait()
 	ra.logger.Infof("Server stopped")
 	return nil
 }
 
-func gracefullShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-chan struct{}, done chan<- bool) {
+func gracefulShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-chan struct{}) {
 	<-stopCh
 	logger.Info("Server is shutting down...")
 
+	// Try to graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -109,7 +118,6 @@ func gracefullShutdown(server *http.Server, logger *zap.SugaredLogger, stopCh <-
 	if err := server.Shutdown(ctx); err != nil {
 		logger.Fatalf("Could not gracefully shutdown the server: %v", err)
 	}
-	close(done)
 }
 
 func (ra *gitLabReceiveAdapter) newRouter(hook *gitlab.Webhook) *http.ServeMux {
@@ -173,15 +181,20 @@ func (ra *gitLabReceiveAdapter) handleEvent(payload interface{}, header http.Hea
 
 func (ra *gitLabReceiveAdapter) postMessage(payload interface{}, source, eventType, eventID string,
 	extensions map[string]interface{}) error {
-	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	event.SetID(eventID)
 	event.SetType(eventType)
 	event.SetSource(source)
-	event.SetDataContentType(cloudevents.ApplicationJSON)
-	event.SetData(payload)
+	err := event.SetData(cloudevents.ApplicationJSON, payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal event data: %w", err)
+	}
 
-	_, _, err := ra.client.Send(context.Background(), event)
-	return err
+	result := ra.client.Send(context.Background(), event)
+	if !cloudevents.IsACK(result) {
+		return result
+	}
+	return nil
 }
 
 func sourceFromGitLabEvent(gitLabEvent gitlab.Event, payload interface{}) string {
