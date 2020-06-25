@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
@@ -65,7 +66,7 @@ func TestChannelGetCondition(t *testing.T) {
 	}{{
 		name: "single condition",
 		cs: &NatssChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{
 					condReady,
 				},
@@ -76,7 +77,7 @@ func TestChannelGetCondition(t *testing.T) {
 	}, {
 		name: "unknown condition",
 		cs: &NatssChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{
 					condReady,
 					condDispatcherNotReady,
@@ -105,7 +106,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 		name: "empty",
 		cs:   &NatssChannelStatus{},
 		want: &NatssChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   NatssChannelConditionAddressable,
 					Status: corev1.ConditionUnknown,
@@ -130,7 +131,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 	}, {
 		name: "one false",
 		cs: &NatssChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   NatssChannelConditionDispatcherReady,
 					Status: corev1.ConditionFalse,
@@ -138,7 +139,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 			},
 		},
 		want: &NatssChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   NatssChannelConditionAddressable,
 					Status: corev1.ConditionUnknown,
@@ -163,7 +164,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 	}, {
 		name: "one true",
 		cs: &NatssChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   NatssChannelConditionDispatcherReady,
 					Status: corev1.ConditionTrue,
@@ -171,7 +172,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 			},
 		},
 		want: &NatssChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   NatssChannelConditionAddressable,
 					Status: corev1.ConditionUnknown,
@@ -305,7 +306,7 @@ func TestNatssChannelStatus_SetAddressable(t *testing.T) {
 	}{
 		"empty string": {
 			want: &NatssChannelStatus{
-				Status: duckv1beta1.Status{
+				Status: duckv1.Status{
 					Conditions: []apis.Condition{
 						{
 							Type:   NatssChannelConditionAddressable,
@@ -337,7 +338,7 @@ func TestNatssChannelStatus_SetAddressable(t *testing.T) {
 						Hostname: "test-domain",
 					},
 				},
-				Status: duckv1beta1.Status{
+				Status: duckv1.Status{
 					Conditions: []apis.Condition{{
 						Type:   NatssChannelConditionAddressable,
 						Status: corev1.ConditionTrue,
