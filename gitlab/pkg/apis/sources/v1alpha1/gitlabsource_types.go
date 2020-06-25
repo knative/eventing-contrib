@@ -161,7 +161,7 @@ func (s *GitLabSourceStatus) MarkSecret() {
 }
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=false
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GitLabSource is the Schema for the gitlabsources API
