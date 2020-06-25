@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
 	bindingsv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/apis"
