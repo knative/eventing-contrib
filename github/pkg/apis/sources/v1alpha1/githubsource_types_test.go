@@ -29,6 +29,27 @@ import (
 
 var _ = duck.VerifyType(&GitHubSource{}, &duckv1.Conditions{})
 
+func TestGitHubSourceGetConditionSet(t *testing.T) {
+	r := &GitHubSource{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
+func TestGitHubSourceGetStatus(t *testing.T) {
+	status := &duckv1.Status{}
+	config := GitHubSource{
+		Status: GitHubSourceStatus{
+			SourceStatus: duckv1.SourceStatus{Status: *status},
+		},
+	}
+
+	if !cmp.Equal(config.GetStatus(), status) {
+		t.Errorf("GetStatus did not retrieve status. Got=%v Want=%v", config.GetStatus(), status)
+	}
+}
+
 func TestGitHubSourceStatusIsReady(t *testing.T) {
 	tests := []struct {
 		name string

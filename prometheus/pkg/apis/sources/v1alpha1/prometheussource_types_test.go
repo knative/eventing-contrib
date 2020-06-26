@@ -25,7 +25,21 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
+
+func TestPrometheusSourceSourceGetStatus(t *testing.T) {
+	status := &duckv1.Status{}
+	config := PrometheusSource{
+		Status: PrometheusSourceStatus{
+			duckv1.SourceStatus{Status: *status},
+		},
+	}
+
+	if !cmp.Equal(config.GetStatus(), status) {
+		t.Errorf("GetStatus did not retrieve status. Got=%v Want=%v", config.GetStatus(), status)
+	}
+}
 
 func TestPrometheusSourceStatusIsReady(t *testing.T) {
 	tests := []struct {

@@ -18,6 +18,9 @@ package v1alpha1
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func TestGroupVersionKind(t *testing.T) {
@@ -26,5 +29,18 @@ func TestGroupVersionKind(t *testing.T) {
 
 	if gvk.Kind != "CouchDbSource" {
 		t.Errorf("Should be CouchDbSource.")
+	}
+}
+
+func TestCouchDbSourceGetStatus(t *testing.T) {
+	status := &duckv1.Status{}
+	config := CouchDbSource{
+		Status: CouchDbSourceStatus{
+			SourceStatus: duckv1.SourceStatus{Status: *status},
+		},
+	}
+
+	if !cmp.Equal(config.GetStatus(), status) {
+		t.Errorf("GetStatus did not retrieve status. Got=%v Want=%v", config.GetStatus(), status)
 	}
 }

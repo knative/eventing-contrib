@@ -18,6 +18,9 @@ package v1alpha1
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func TestKafkaChannel_GetGroupVersionKind(t *testing.T) {
@@ -26,5 +29,18 @@ func TestKafkaChannel_GetGroupVersionKind(t *testing.T) {
 
 	if gvk.Kind != "KafkaChannel" {
 		t.Errorf("Should be 'KafkaChannel'.")
+	}
+}
+
+func TestKafkaChannelGetStatus(t *testing.T) {
+	status := &duckv1.Status{}
+	config := KafkaChannel{
+		Status: KafkaChannelStatus{
+			Status: *status,
+		},
+	}
+
+	if !cmp.Equal(config.GetStatus(), status) {
+		t.Errorf("GetStatus did not retrieve status. Got=%v Want=%v", config.GetStatus(), status)
 	}
 }

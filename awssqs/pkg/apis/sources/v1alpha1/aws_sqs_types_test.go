@@ -23,7 +23,29 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
+
+func TestAwsSqsSourceGetConditionSet(t *testing.T) {
+	r := &AwsSqsSource{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
+func TestAwsSqsSourceGetStatus(t *testing.T) {
+	status := &duckv1.Status{}
+	config := AwsSqsSource{
+		Status: AwsSqsSourceStatus{
+			SourceStatus: duckv1.SourceStatus{Status: *status},
+		},
+	}
+
+	if !cmp.Equal(config.GetStatus(), status) {
+		t.Errorf("GetStatus did not retrieve status. Got=%v Want=%v", config.GetStatus(), status)
+	}
+}
 
 func TestAwsSqsSourceStatusIsReady(t *testing.T) {
 	tests := []struct {

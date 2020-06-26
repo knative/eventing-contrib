@@ -41,6 +41,11 @@ var PrometheusCondSet = apis.NewLivingConditionSet(
 	PrometheusConditionDeployed,
 )
 
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*PrometheusSource) GetConditionSet() apis.ConditionSet {
+	return PrometheusCondSet
+}
+
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (s *PrometheusSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return PrometheusCondSet.Manage(s).GetCondition(t)

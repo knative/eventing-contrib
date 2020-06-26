@@ -66,6 +66,11 @@ const (
 	KafkaChannelConditionConfigReady apis.ConditionType = "ConfigurationReady"
 )
 
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*KafkaChannel) GetConditionSet() apis.ConditionSet {
+	return kc
+}
+
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (cs *KafkaChannelStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return kc.Manage(cs).GetCondition(t)

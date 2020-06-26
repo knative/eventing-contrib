@@ -22,12 +22,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // NatssChannel is a resource representing a NATSS Channel.
@@ -49,6 +49,7 @@ type NatssChannel struct {
 var _ apis.Validatable = (*NatssChannel)(nil)
 var _ apis.Defaultable = (*NatssChannel)(nil)
 var _ runtime.Object = (*NatssChannel)(nil)
+var _ duckv1.KRShaped = (*NatssChannel)(nil)
 
 // NatssChannelSpec defines the specification for a NatssChannel.
 type NatssChannelSpec struct {
@@ -58,10 +59,10 @@ type NatssChannelSpec struct {
 
 // NatssChannelStatus represents the current state of a NatssChannel.
 type NatssChannelStatus struct {
-	// inherits duck/v1beta1 Status, which currently provides:
+	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// NatssChannel is Addressable. It currently exposes the endpoint as a
 	// fully-qualified DNS name which will distribute traffic over the
@@ -85,6 +86,11 @@ type NatssChannelList struct {
 }
 
 // GetGroupVersionKind returns GroupVersionKind for NatssChannels
-func (c *NatssChannel) GetGroupVersionKind() schema.GroupVersionKind {
+func (*NatssChannel) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("NatssChannel")
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (n *NatssChannel) GetStatus() *duckv1.Status {
+	return &n.Status.Status
 }

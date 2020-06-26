@@ -30,7 +30,7 @@ import (
 )
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // CamelSource is the Schema for the camelsources API
@@ -46,6 +46,7 @@ type CamelSource struct {
 // Check that CamelSource can be validated and can be defaulted.
 var _ runtime.Object = (*CamelSource)(nil)
 var _ kmeta.OwnerRefable = (*CamelSource)(nil)
+var _ duckv1.KRShaped = (*CamelSource)(nil)
 
 // Check that CamelSource implements the Conditions duck type.
 var _ = duck.VerifyType(&CamelSource{}, &duckv1.Conditions{})
@@ -111,6 +112,16 @@ type CamelSourceStatus struct {
 	// SinkURI is the current active sink URI that has been configured for the CamelSource.
 	// +optional
 	SinkURI string `json:"sinkUri,omitempty"`
+}
+
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*CamelSource) GetConditionSet() apis.ConditionSet {
+	return camelCondSet
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (c *CamelSource) GetStatus() *duckv1.Status {
+	return &c.Status.Status
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.

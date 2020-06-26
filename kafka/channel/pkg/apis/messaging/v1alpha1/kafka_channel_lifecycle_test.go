@@ -25,6 +25,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
@@ -56,6 +57,14 @@ var ignoreAllButTypeAndStatus = cmpopts.IgnoreFields(
 	apis.Condition{},
 	"LastTransitionTime", "Message", "Reason", "Severity")
 
+func TestKafkaChannelGetConditionSet(t *testing.T) {
+	r := &KafkaChannel{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
 func TestChannelGetCondition(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -65,7 +74,7 @@ func TestChannelGetCondition(t *testing.T) {
 	}{{
 		name: "single condition",
 		cs: &KafkaChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{
 					condReady,
 				},
@@ -76,7 +85,7 @@ func TestChannelGetCondition(t *testing.T) {
 	}, {
 		name: "unknown condition",
 		cs: &KafkaChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{
 					condReady,
 					condDispatcherNotReady,
@@ -105,7 +114,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 		name: "empty",
 		cs:   &KafkaChannelStatus{},
 		want: &KafkaChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   KafkaChannelConditionAddressable,
 					Status: corev1.ConditionUnknown,
@@ -136,7 +145,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 	}, {
 		name: "one false",
 		cs: &KafkaChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   KafkaChannelConditionDispatcherReady,
 					Status: corev1.ConditionFalse,
@@ -144,7 +153,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 			},
 		},
 		want: &KafkaChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   KafkaChannelConditionAddressable,
 					Status: corev1.ConditionUnknown,
@@ -175,7 +184,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 	}, {
 		name: "one true",
 		cs: &KafkaChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   KafkaChannelConditionDispatcherReady,
 					Status: corev1.ConditionTrue,
@@ -183,7 +192,7 @@ func TestChannelInitializeConditions(t *testing.T) {
 			},
 		},
 		want: &KafkaChannelStatus{
-			Status: duckv1beta1.Status{
+			Status: duckv1.Status{
 				Conditions: []apis.Condition{{
 					Type:   KafkaChannelConditionAddressable,
 					Status: corev1.ConditionUnknown,
@@ -357,7 +366,7 @@ func TestKafkaChannelStatus_SetAddressable(t *testing.T) {
 	}{
 		"empty string": {
 			want: &KafkaChannelStatus{
-				Status: duckv1beta1.Status{
+				Status: duckv1.Status{
 					Conditions: []apis.Condition{
 						{
 							Type:   KafkaChannelConditionAddressable,
@@ -387,7 +396,7 @@ func TestKafkaChannelStatus_SetAddressable(t *testing.T) {
 						},
 						Hostname: "test-domain",
 					}},
-				Status: duckv1beta1.Status{
+				Status: duckv1.Status{
 					Conditions: []apis.Condition{{
 						Type:   KafkaChannelConditionAddressable,
 						Status: corev1.ConditionTrue,

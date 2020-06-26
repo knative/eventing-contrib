@@ -45,6 +45,14 @@ var (
 	}
 )
 
+func TestPrometheusSourceGetConditionSet(t *testing.T) {
+	r := &PrometheusSource{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
 func TestPrometheusGetCondition(t *testing.T) {
 	tests := []struct {
 		name      string

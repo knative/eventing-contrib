@@ -26,7 +26,7 @@ import (
 )
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AwsSqsSource is the Schema for the AWS SQS API
@@ -41,6 +41,9 @@ type AwsSqsSource struct {
 
 // Check that AwsSqsSource can be validated and can be defaulted.
 var _ runtime.Object = (*AwsSqsSource)(nil)
+
+// Check that the type conforms to the duck Knative Resource shape.
+var _ duckv1.KRShaped = (*AwsSqsSource)(nil)
 
 // AwsSqsSourceSpec defines the desired state of the source.
 type AwsSqsSourceSpec struct {
@@ -98,6 +101,16 @@ type AwsSqsSourceStatus struct {
 	// * SinkURI - the current active sink URI that has been configured for the
 	//   Source.
 	duckv1.SourceStatus `json:",inline"`
+}
+
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*AwsSqsSource) GetConditionSet() apis.ConditionSet {
+	return condSet
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (a *AwsSqsSource) GetStatus() *duckv1.Status {
+	return &a.Status.Status
 }
 
 // GetCondition returns the condition currently associated with the given type, or nil.

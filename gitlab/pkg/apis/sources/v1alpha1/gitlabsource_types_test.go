@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 var sinkURL *apis.URL
@@ -33,6 +34,27 @@ func init() {
 	sinkURL, err = apis.ParseURL("http://example.com")
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func TestGitLabSourceGetConditionSet(t *testing.T) {
+	r := &GitLabSource{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
+func TestGitLabSourceGetStatus(t *testing.T) {
+	status := &duckv1.Status{}
+	config := GitLabSource{
+		Status: GitLabSourceStatus{
+			SourceStatus: duckv1.SourceStatus{Status: *status},
+		},
+	}
+
+	if !cmp.Equal(config.GetStatus(), status) {
+		t.Errorf("GetStatus did not retrieve status. Got=%v Want=%v", config.GetStatus(), status)
 	}
 }
 

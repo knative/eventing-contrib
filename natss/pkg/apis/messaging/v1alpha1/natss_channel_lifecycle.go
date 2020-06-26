@@ -57,6 +57,11 @@ const (
 	NatssChannelConditionChannelServiceReady apis.ConditionType = "ChannelServiceReady"
 )
 
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
+func (*NatssChannel) GetConditionSet() apis.ConditionSet {
+	return nc
+}
+
 // GetCondition returns the condition currently associated with the given type, or nil.
 func (cs *NatssChannelStatus) GetCondition(t apis.ConditionType) *apis.Condition {
 	return nc.Manage(cs).GetCondition(t)

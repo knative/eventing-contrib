@@ -44,6 +44,14 @@ var (
 // Check that KafkaSource implements the Conditions duck type.
 var _ = duck.VerifyType(&KafkaSource{}, &duckv1.Conditions{})
 
+func TestKafkaSourceGetConditionSet(t *testing.T) {
+	r := &KafkaSource{}
+
+	if got, want := r.GetConditionSet().GetTopLevelConditionType(), apis.ConditionReady; got != want {
+		t.Errorf("GetTopLevelCondition=%v, want=%v", got, want)
+	}
+}
+
 func TestKafkaSourceStatusGetCondition(t *testing.T) {
 	tests := []struct {
 		name      string

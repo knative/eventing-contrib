@@ -22,12 +22,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // +genclient
-// +genreconciler:krshapedlogic=false
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // KafkaChannel is a resource representing a Kafka Channel.
@@ -49,6 +49,7 @@ type KafkaChannel struct {
 var _ apis.Validatable = (*KafkaChannel)(nil)
 var _ apis.Defaultable = (*KafkaChannel)(nil)
 var _ runtime.Object = (*KafkaChannel)(nil)
+var _ duckv1.KRShaped = (*KafkaChannel)(nil)
 
 // KafkaChannelSpec defines the specification for a KafkaChannel.
 type KafkaChannelSpec struct {
@@ -64,10 +65,10 @@ type KafkaChannelSpec struct {
 
 // KafkaChannelStatus represents the current state of a KafkaChannel.
 type KafkaChannelStatus struct {
-	// inherits duck/v1beta1 Status, which currently provides:
+	// inherits duck/v1 Status, which currently provides:
 	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
 	// * Conditions - the latest available observations of a resource's current state.
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// KafkaChannel is Addressable. It currently exposes the endpoint as a
 	// fully-qualified DNS name which will distribute traffic over the
@@ -93,4 +94,9 @@ type KafkaChannelList struct {
 // GetGroupVersionKind returns GroupVersionKind for KafkaChannels
 func (c *KafkaChannel) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("KafkaChannel")
+}
+
+// GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
+func (k *KafkaChannel) GetStatus() *duckv1.Status {
+	return &k.Status.Status
 }
