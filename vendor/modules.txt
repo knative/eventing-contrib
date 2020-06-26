@@ -100,7 +100,7 @@ github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2
 # github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.0 => github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
 ## explicit
 github.com/cloudevents/sdk-go/protocol/stan/v2
-# github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200608152019-2ab697c8fc0b => github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
+# github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200625144206-4e4657232c9e => github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
 ## explicit
 github.com/cloudevents/sdk-go/v2
 github.com/cloudevents/sdk-go/v2/binding
@@ -1098,7 +1098,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.15.1-0.20200625220028-1e3a03b620b6
+# knative.dev/eventing v0.15.1-0.20200626182228-00dabbcff918
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1209,11 +1209,11 @@ knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-# knative.dev/networking v0.0.0-20200624161427-341a83759c17
+# knative.dev/networking v0.0.0-20200625171028-5efff1e07309
 knative.dev/networking/pkg/apis/config
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200626022628-f1ee372577e1
+# knative.dev/pkg v0.0.0-20200626182828-bce16cf78661
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1301,7 +1301,7 @@ knative.dev/pkg/webhook/psbinding
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.15.1-0.20200626061427-ce9c1723e56a
+# knative.dev/serving v0.15.1-0.20200626170100-9ea8c16844a1
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1

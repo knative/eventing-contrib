@@ -24,12 +24,12 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgduckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingmessaging "knative.dev/eventing/pkg/apis/messaging"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 )
 
 // ConvertTo implements apis.Convertible
@@ -120,20 +120,26 @@ func (sink *KafkaChannel) ConvertFrom(ctx context.Context, obj apis.Convertible)
 
 // ConvertFrom helps implement apis.Convertible
 func (sink *KafkaChannelSpec) ConvertFrom(ctx context.Context, source v1beta1.KafkaChannelSpec) {
-	sink.Delivery = source.Delivery
+	sink.Delivery.ConvertTo(ctx,source.Delivery)
+
 	if len(source.Subscribers) > 0 {
 		sink.Subscribable = &eventingduck.Subscribable{
 			Subscribers: make([]eventingduck.SubscriberSpec, len(source.Subscribers)),
 		}
-
 		for i, s := range source.Subscribers {
-			sink.Subscribable.Subscribers[i] = eventingduck.SubscriberSpec{
-				UID:           s.UID,
-				Generation:    s.Generation,
-				SubscriberURI: s.SubscriberURI,
-				ReplyURI:      s.ReplyURI,
-				Delivery:      s.Delivery,
-			}
+			sink.Subscribable.Subscribers[i].ConvertFrom(ctx, s)
+			//sink.Subscribable.Subscribers[i] = eventingduck.SubscriberSpec{
+			//	UID:           s.UID,
+			//	Generation:    s.Generation,
+			//	SubscriberURI: s.SubscriberURI,
+			//	ReplyURI:      s.ReplyURI,
+			//	Delivery:      &duckv1beta1.DeliverySpec{
+			//		DeadLetterSink: s.Delivery.DeadLetterSink.DeepCopy(),
+			//		Retry:          s.Delivery.Retry,
+			//		BackoffPolicy:  *s.Delivery.BackoffPolicy,
+			//		BackoffDelay:   s.Delivery.BackoffDelay,
+			//	}, //s.Delivery,
+			//}
 		}
 	}
 }

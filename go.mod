@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.30.16
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.0
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.0
-	github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200608152019-2ab697c8fc0b
+	github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200625144206-4e4657232c9e
 	github.com/davecgh/go-spew v1.1.1
 	github.com/flimzy/diff v0.1.7 // indirect
 	github.com/go-kivik/couchdb/v3 v3.0.4
@@ -39,9 +39,9 @@ require (
 	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200124190032-861946025e34
-	knative.dev/eventing v0.15.1-0.20200625220028-1e3a03b620b6
-	knative.dev/pkg v0.0.0-20200626022628-f1ee372577e1
-	knative.dev/serving v0.15.1-0.20200626061427-ce9c1723e56a
+	knative.dev/eventing v0.15.1-0.20200626182228-00dabbcff918
+	knative.dev/pkg v0.0.0-20200626182828-bce16cf78661
+	knative.dev/serving v0.15.1-0.20200626170100-9ea8c16844a1
 	knative.dev/test-infra v0.0.0-20200625195728-62651036b559
 )
 
