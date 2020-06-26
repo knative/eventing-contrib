@@ -24,12 +24,12 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgduckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingmessaging "knative.dev/eventing/pkg/apis/messaging"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 )
 
 // ConvertTo implements apis.Convertible
@@ -51,7 +51,12 @@ func (source *KafkaChannel) ConvertTo(ctx context.Context, obj apis.Convertible)
 
 // ConvertTo helps implement apis.Convertible
 func (source *KafkaChannelSpec) ConvertTo(ctx context.Context, sink *v1beta1.KafkaChannelSpec) error {
-	sink.Delivery = source.Delivery
+	if source.Delivery != nil {
+		sink.Delivery = &eventingduckv1.DeliverySpec{}
+		if err := source.Delivery.ConvertTo(ctx, sink.Delivery); err != nil {
+			return err
+		}
+	}
 	if source.Subscribable != nil {
 		sink.Subscribers = make([]eventingduckv1.SubscriberSpec, len(source.Subscribable.Subscribers))
 		for i, s := range source.Subscribable.Subscribers {
@@ -64,7 +69,7 @@ func (source *KafkaChannelSpec) ConvertTo(ctx context.Context, sink *v1beta1.Kaf
 			}
 			// If the source has delivery, use it.
 			if s.Delivery != nil {
-				sink.Subscribers[i].Delivery = s.Delivery
+				sink.Subscribers[i].Delivery.ConvertTo(ctx, s.Delivery)
 			} else {
 				// If however, there's a Deprecated DeadLetterSinkURI, convert that up
 				// to DeliverySpec.
@@ -120,26 +125,24 @@ func (sink *KafkaChannel) ConvertFrom(ctx context.Context, obj apis.Convertible)
 
 // ConvertFrom helps implement apis.Convertible
 func (sink *KafkaChannelSpec) ConvertFrom(ctx context.Context, source v1beta1.KafkaChannelSpec) {
-	sink.Delivery.ConvertTo(ctx,source.Delivery)
+
+	if source.Delivery != nil {
+		sink.Delivery = &duckv1beta1.DeliverySpec{}
+		sink.Delivery.ConvertFrom(ctx, source.Delivery)
+	}
 
 	if len(source.Subscribers) > 0 {
 		sink.Subscribable = &eventingduck.Subscribable{
 			Subscribers: make([]eventingduck.SubscriberSpec, len(source.Subscribers)),
 		}
 		for i, s := range source.Subscribers {
-			sink.Subscribable.Subscribers[i].ConvertFrom(ctx, s)
-			//sink.Subscribable.Subscribers[i] = eventingduck.SubscriberSpec{
-			//	UID:           s.UID,
-			//	Generation:    s.Generation,
-			//	SubscriberURI: s.SubscriberURI,
-			//	ReplyURI:      s.ReplyURI,
-			//	Delivery:      &duckv1beta1.DeliverySpec{
-			//		DeadLetterSink: s.Delivery.DeadLetterSink.DeepCopy(),
-			//		Retry:          s.Delivery.Retry,
-			//		BackoffPolicy:  *s.Delivery.BackoffPolicy,
-			//		BackoffDelay:   s.Delivery.BackoffDelay,
-			//	}, //s.Delivery,
-			//}
+			sink.Subscribable.Subscribers[i] = eventingduck.SubscriberSpec{
+				UID:           s.UID,
+				Generation:    s.Generation,
+				SubscriberURI: s.SubscriberURI,
+				ReplyURI:      s.ReplyURI,
+			}
+			sink.Delivery.ConvertFrom(ctx, s.Delivery)
 		}
 	}
 }
