@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
+	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	bindingsv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
@@ -33,49 +33,31 @@ import (
 func (source *KafkaSource) ConvertTo(ctx context.Context, obj apis.Convertible) error {
 	switch sink := obj.(type) {
 	case *v1beta1.KafkaSource:
+		kafkaAuthSpec := bindingsv1beta1.KafkaAuthSpec{}
+		if err := source.Spec.KafkaAuthSpec.ConvertTo(ctx, &kafkaAuthSpec); err != nil {
+			return err
+		}
+
 		sink.ObjectMeta = source.ObjectMeta
 		sink.Spec = v1beta1.KafkaSourceSpec{
-			KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
-				BootstrapServers: source.Spec.KafkaAuthSpec.BootstrapServers,
-				Net: bindingsv1beta1.KafkaNetSpec{
-					SASL: bindingsv1beta1.KafkaSASLSpec{
-						Enable: source.Spec.KafkaAuthSpec.Net.SASL.Enable,
-						User: bindingsv1beta1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.SASL.User.SecretKeyRef,
-						},
-						Password: bindingsv1beta1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.SASL.Password.SecretKeyRef},
-					},
-					TLS: bindingsv1beta1.KafkaTLSSpec{
-						Enable: source.Spec.KafkaAuthSpec.Net.TLS.Enable,
-						Cert: bindingsv1beta1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.TLS.Cert.SecretKeyRef,
-						},
-						Key: bindingsv1beta1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.TLS.Key.SecretKeyRef,
-						},
-						CACert: bindingsv1beta1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.TLS.CACert.SecretKeyRef,
-						},
-					},
-				},
-			},
+			KafkaAuthSpec: kafkaAuthSpec,
 			Topics:        source.Spec.Topics,
 			ConsumerGroup: source.Spec.ConsumerGroup,
 		}
-		sink.Status = v1beta1.KafkaSourceStatus{
-			duckv1.SourceStatus{
-				Status:               source.Status.Status,
-				SinkURI:              source.Status.SinkURI,
-				CloudEventAttributes: source.Status.CloudEventAttributes,
-			},
-		}
+		sink.Status.Status = source.Status.Status
+		source.Status.Status.ConvertTo(ctx, &sink.Status.Status)
 		// Optionals
 		if source.Spec.Sink != nil {
 			sink.Spec.Sink = *source.Spec.Sink.DeepCopy()
 		}
 		if source.Status.SinkURI != nil {
 			sink.Status.SinkURI = source.Status.SinkURI.DeepCopy()
+		}
+		if source.Status.CloudEventAttributes != nil {
+			sink.Status.CloudEventAttributes = make([]duckv1.CloudEventAttributes, len(source.Status.CloudEventAttributes))
+			for i, cea := range source.Status.CloudEventAttributes {
+				sink.Status.CloudEventAttributes[i] = cea
+			}
 		}
 		return nil
 	default:
@@ -88,39 +70,32 @@ func (source *KafkaSource) ConvertTo(ctx context.Context, obj apis.Convertible) 
 func (sink *KafkaSource) ConvertFrom(ctx context.Context, obj apis.Convertible) error {
 	switch source := obj.(type) {
 	case *v1beta1.KafkaSource:
+		kafkaAuthSpec := bindingsv1alpha1.KafkaAuthSpec{}
+		if err := kafkaAuthSpec.ConvertFrom(ctx, &source.Spec.KafkaAuthSpec); err != nil {
+			return err
+		}
+
 		sink.ObjectMeta = source.ObjectMeta
 		sink.Spec = KafkaSourceSpec{
-			KafkaAuthSpec: v1alpha1.KafkaAuthSpec{
-				BootstrapServers: source.Spec.KafkaAuthSpec.BootstrapServers,
-				Net: v1alpha1.KafkaNetSpec{
-					SASL: v1alpha1.KafkaSASLSpec{
-						Enable: source.Spec.KafkaAuthSpec.Net.SASL.Enable,
-						User: v1alpha1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.SASL.User.SecretKeyRef,
-						},
-						Password: v1alpha1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.SASL.Password.SecretKeyRef},
-					},
-					TLS: v1alpha1.KafkaTLSSpec{
-						Enable: source.Spec.KafkaAuthSpec.Net.TLS.Enable,
-						Cert: v1alpha1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.TLS.Cert.SecretKeyRef,
-						},
-						Key: v1alpha1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.TLS.Key.SecretKeyRef,
-						},
-						CACert: v1alpha1.SecretValueFromSource{
-							SecretKeyRef: source.Spec.KafkaAuthSpec.Net.TLS.CACert.SecretKeyRef,
-						},
-					},
-				},
-			},
+			KafkaAuthSpec: kafkaAuthSpec,
 			Topics:        source.Spec.Topics,
 			ConsumerGroup: source.Spec.ConsumerGroup,
 			Sink:          source.Spec.Sink.DeepCopy(),
 		}
 		if reflect.DeepEqual(*sink.Spec.Sink, duckv1.Destination{}) {
 			sink.Spec.Sink = nil
+		}
+		sink.Status.Status = source.Status.Status
+		source.Status.Status.ConvertTo(ctx, &source.Status.Status)
+		// Optionals
+		if source.Status.SinkURI != nil {
+			sink.Status.SinkURI = source.Status.SinkURI.DeepCopy()
+		}
+		if source.Status.CloudEventAttributes != nil {
+			sink.Status.CloudEventAttributes = make([]duckv1.CloudEventAttributes, len(source.Status.CloudEventAttributes))
+			for i, cea := range source.Status.CloudEventAttributes {
+				sink.Status.CloudEventAttributes[i] = cea
+			}
 		}
 		return nil
 	default:
