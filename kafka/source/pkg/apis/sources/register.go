@@ -16,3 +16,17 @@ limitations under the License.
 
 // Package sources contains sources API versions
 package sources
+
+import "k8s.io/apimachinery/pkg/runtime/schema"
+
+const (
+	GroupName = "sources.knative.dev"
+)
+
+var (
+	// KafkaSourcesResource represents a KafkaSource
+	KafkaSourcesResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "kafkasources",
+	}
+)

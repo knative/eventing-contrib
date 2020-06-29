@@ -18,12 +18,17 @@ package main
 
 import (
 	"context"
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings"
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources"
+	"knative.dev/pkg/webhook/resourcesemantics/conversion"
 
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
+	bindingsv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/binding"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source"
 	"knative.dev/pkg/configmap"
@@ -44,9 +49,12 @@ const (
 )
 
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
-	// List the types to validate.
+	// v1alpha1
 	sourcesv1alpha1.SchemeGroupVersion.WithKind("KafkaSource"):   &sourcesv1alpha1.KafkaSource{},
 	bindingsv1alpha1.SchemeGroupVersion.WithKind("KafkaBinding"): &bindingsv1alpha1.KafkaBinding{},
+	// v1beta1
+	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"):   &sourcesv1beta1.KafkaSource{},
+	bindingsv1beta1.SchemeGroupVersion.WithKind("KafkaBinding"): &bindingsv1beta1.KafkaBinding{},
 }
 
 var callbacks = map[schema.GroupVersionKind]validation.Callback{}
@@ -126,6 +134,47 @@ func NewKafkaBindingWebhook(opts ...psbinding.ReconcilerOption) injection.Contro
 	}
 }
 
+func NewConversionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	var (
+		sourcesv1alpha1_  = sourcesv1alpha1.SchemeGroupVersion.Version
+		bindingsv1alpha1_ = bindingsv1alpha1.SchemeGroupVersion.Version
+		sourcesv1beta1_   = sourcesv1beta1.SchemeGroupVersion.Version
+		bindingsv1beta1_  = bindingsv1beta1.SchemeGroupVersion.Version
+	)
+
+	return conversion.NewConversionController(ctx,
+		// The path on which to serve the webhook
+		"/resource-conversion",
+
+		// Specify the types of custom resource definitions that should be converted
+		map[schema.GroupKind]conversion.GroupKindConversion{
+			// KafkaSource
+			sourcesv1beta1.Kind("KafkaSource"): {
+				DefinitionName: sources.KafkaSourcesResource.String(),
+				HubVersion:     sourcesv1alpha1_,
+				Zygotes: map[string]conversion.ConvertibleObject{
+					sourcesv1alpha1_: &sourcesv1alpha1.KafkaSource{},
+					sourcesv1beta1_:  &sourcesv1beta1.KafkaSource{},
+				},
+			},
+			// KafkaBinding
+			bindingsv1beta1.Kind("KafkaBinding"): {
+				DefinitionName: bindings.KafkaBindingsResource.String(),
+				HubVersion:     bindingsv1alpha1_,
+				Zygotes: map[string]conversion.ConvertibleObject{
+					bindingsv1alpha1_: &bindingsv1alpha1.KafkaBinding{},
+					bindingsv1beta1_:  &bindingsv1beta1.KafkaBinding{},
+				},
+			},
+		},
+
+		// A function that infuses the context passed to ConvertTo/ConvertFrom/SetDefaults with custom metadata.
+		func(ctx context.Context) context.Context {
+			return ctx
+		},
+	)
+}
+
 func main() {
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
 		ServiceName: "kafka-source-webhook",
@@ -142,6 +191,7 @@ func main() {
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewValidationAdmissionController,
+		NewConversionController,
 
 		// For each binding we have a controller and a binding webhook.
 		binding.NewController, NewKafkaBindingWebhook(kfkSelector),
