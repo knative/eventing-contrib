@@ -14,10 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package bindings contains bindings API versions
-package bindings
+// Package sources contains sources API versions
+package sources
+
+import "k8s.io/apimachinery/pkg/runtime/schema"
 
 const (
-	// TODO(mattmoor): Consider creating this under knative.dev/pkg/apis/bindings?
-	GroupName = "bindings.knative.dev"
+	GroupName = "sources.knative.dev"
+)
+
+var (
+	// KafkaSourcesResource represents a KafkaSource
+	KafkaSourcesResource = schema.GroupResource{
+		Group:    GroupName,
+		Resource: "kafkasources",
+	}
 )
