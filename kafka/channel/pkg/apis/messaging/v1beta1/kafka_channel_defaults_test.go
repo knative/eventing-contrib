@@ -15,8 +15,9 @@ package v1beta1
 
 import (
 	"context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 
