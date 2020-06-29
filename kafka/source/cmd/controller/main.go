@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources"
 	"knative.dev/pkg/webhook/resourcesemantics/conversion"
