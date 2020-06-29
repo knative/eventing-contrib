@@ -1104,7 +1104,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.15.1-0.20200625220028-1e3a03b620b6
+# knative.dev/eventing v0.15.1-0.20200629094829-28e6fb833a7b
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1215,11 +1215,11 @@ knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-# knative.dev/networking v0.0.0-20200624161427-341a83759c17
+# knative.dev/networking v0.0.0-20200625171028-5efff1e07309
 knative.dev/networking/pkg/apis/config
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200626022628-f1ee372577e1
+# knative.dev/pkg v0.0.0-20200627192328-fe0740d31f07
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1311,7 +1311,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.15.1-0.20200626061427-ce9c1723e56a
+# knative.dev/serving v0.15.1-0.20200629124629-e0c9a20d3cb1
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1342,7 +1342,7 @@ knative.dev/serving/pkg/client/listers/autoscaling/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1
 knative.dev/serving/pkg/client/listers/serving/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1beta1
-# knative.dev/test-infra v0.0.0-20200625195728-62651036b559
+# knative.dev/test-infra v0.0.0-20200626234928-7fb82ece3d02
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
