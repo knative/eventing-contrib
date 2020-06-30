@@ -210,6 +210,7 @@ github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.1.0 h1:ecoq4n3elNzGHrg
 github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.1.0/go.mod h1:1p3V+0isTvzNkzkOnqGjeE+UMc1O+txDRZ5lmlGwLqQ=
 github.com/cloudevents/sdk-go/protocol/stan/v2 v2.1.0 h1:OwhrLBnzadUQVqkYRok7jQpvsJ0PhTpfAO9/ngbSOaI=
 github.com/cloudevents/sdk-go/protocol/stan/v2 v2.1.0/go.mod h1:n1rHc4GzKxCNxAx2qwP6vso1B9nyLPKioHoVgnGbNJQ=
+github.com/cloudevents/sdk-go/v2 v2.0.1-0.20200630063327-b91da81265fe/go.mod h1:3CTrpB4+u7Iaj6fd7E2Xvm5IxMdRoaAhqaRVnOr2rCU=
 github.com/cloudevents/sdk-go/v2 v2.1.0 h1:bmgrU8k+K2ppZ+G/q5xEQx/Xk9HRtJmkrEO3qtDO2k0=
 github.com/cloudevents/sdk-go/v2 v2.1.0/go.mod h1:3CTrpB4+u7Iaj6fd7E2Xvm5IxMdRoaAhqaRVnOr2rCU=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
@@ -1576,8 +1577,8 @@ k8s.io/utils v0.0.0-20200124190032-861946025e34/go.mod h1:sZAwmy6armz5eXlNoLmJcl
 knative.dev/caching v0.0.0-20190719140829-2032732871ff/go.mod h1:dHXFU6CGlLlbzaWc32g80cR92iuBSpsslDNBWI8C7eg=
 knative.dev/caching v0.0.0-20200116200605-67bca2c83dfa/go.mod h1:dHXFU6CGlLlbzaWc32g80cR92iuBSpsslDNBWI8C7eg=
 knative.dev/caching v0.0.0-20200606210318-787aec80f71c/go.mod h1:rWD+0zSqcE7L//jJyt866xtXsOi9hCdB0FoD4w2Rygg=
-knative.dev/eventing v0.15.1-0.20200629094829-28e6fb833a7b h1:NZhsLDx3JgFjhsml3Naxsdtw/k0fwq6MXJv02O/DKYg=
-knative.dev/eventing v0.15.1-0.20200629094829-28e6fb833a7b/go.mod h1:JvsJ+uMncSC+Y01EJd60zx2FT17/J7+Vc60EW+GybE0=
+knative.dev/eventing v0.15.1-0.20200630184030-99080b2cecef h1:PBNaE639f+pdXRTZeQBgb6asJrkH7kgt3X3KJ2ExUs0=
+knative.dev/eventing v0.15.1-0.20200630184030-99080b2cecef/go.mod h1:yxZ/4jlJwqiZGzrtFx8QhSOJkUhjrSLXy6tipiLRh6o=
 knative.dev/eventing-contrib v0.6.1-0.20190723221543-5ce18048c08b/go.mod h1:SnXZgSGgMSMLNFTwTnpaOH7hXDzTFtw0J8OmHflNx3g=
 knative.dev/eventing-contrib v0.11.2/go.mod h1:SnXZgSGgMSMLNFTwTnpaOH7hXDzTFtw0J8OmHflNx3g=
 knative.dev/networking v0.0.0-20200625171028-5efff1e07309 h1:x0X9Eo1POQQxj3as2QbqqgJEgrWSWP5lNeffxmIjzis=
@@ -1598,8 +1599,8 @@ knative.dev/pkg v0.0.0-20200624210428-eb05e8dd5b5b h1:NFi5BVmuZ81bWigwn3s/NNaf+G
 knative.dev/pkg v0.0.0-20200624210428-eb05e8dd5b5b/go.mod h1:DquzK0hsLDcg2q63Sn+CngAyRwv4cKMpt5F19YzBfb0=
 knative.dev/pkg v0.0.0-20200626022628-f1ee372577e1 h1:4Fi/WnI7uwbop8gjebSfJbPdJd20XWt66ugzEYunlUA=
 knative.dev/pkg v0.0.0-20200626022628-f1ee372577e1/go.mod h1:DquzK0hsLDcg2q63Sn+CngAyRwv4cKMpt5F19YzBfb0=
-knative.dev/pkg v0.0.0-20200627192328-fe0740d31f07 h1:vV7irILASq3uYOE4R1pUtHYwQBd+A0zLs2E29jgsOnQ=
-knative.dev/pkg v0.0.0-20200627192328-fe0740d31f07/go.mod h1:DquzK0hsLDcg2q63Sn+CngAyRwv4cKMpt5F19YzBfb0=
+knative.dev/pkg v0.0.0-20200629195729-e16ecb840d88 h1:k+CKhEFTrpNFOvnGlcIK3tGjq1Spw7b9zJVASy/BbP8=
+knative.dev/pkg v0.0.0-20200629195729-e16ecb840d88/go.mod h1:DquzK0hsLDcg2q63Sn+CngAyRwv4cKMpt5F19YzBfb0=
 knative.dev/sample-controller v0.0.0-20200510050845-bf7c19498b7e/go.mod h1:D2ZDLrR9Dq9LiiVN7TatzI7WMcEPgk1MHbbhgBKE6W8=
 knative.dev/serving v0.15.1-0.20200629124629-e0c9a20d3cb1 h1:VsuX7XzmdA/nM5xjlbcJu56o4efyKzFepuy6Z9BxgZs=
 knative.dev/serving v0.15.1-0.20200629124629-e0c9a20d3cb1/go.mod h1:fyiNY2OwbCg23dzL4OfUAjJdrkzdLb09cJXCJGVWNUM=
@@ -1620,8 +1621,8 @@ knative.dev/test-infra v0.0.0-20200624184627-7eae2aae38e4 h1:eB6B7ER/QPKNC2bBtkW
 knative.dev/test-infra v0.0.0-20200624184627-7eae2aae38e4/go.mod h1:6w3uf0+KfozLkrysBm3QqONrEMC6Uo/oEgS2BCdHJXo=
 knative.dev/test-infra v0.0.0-20200625195728-62651036b559 h1:UnUP8ygaXWLi3LWSpoOvhLcHbOE/yf2De57/aBZIzTQ=
 knative.dev/test-infra v0.0.0-20200625195728-62651036b559/go.mod h1:HZw00KOJoOIzWOSF6tn+0jfJZHpXRCIZkHooc+hh7yg=
-knative.dev/test-infra v0.0.0-20200626234928-7fb82ece3d02 h1:2JWjcOrsB6bddxv9ecMFGkeJBnvZnR65vQIv5UWa8zU=
-knative.dev/test-infra v0.0.0-20200626234928-7fb82ece3d02/go.mod h1:HZw00KOJoOIzWOSF6tn+0jfJZHpXRCIZkHooc+hh7yg=
+knative.dev/test-infra v0.0.0-20200630000129-4b3a8597df67 h1:DStLV/qi8zvE/9qlunVXx9xyGMaA9THJybHu3t45GC8=
+knative.dev/test-infra v0.0.0-20200630000129-4b3a8597df67/go.mod h1:30tMsI1VXrG2m4ut7CFZbLg1VbcRsslPfGU+GWILm6E=
 modernc.org/cc v1.0.0/go.mod h1:1Sk4//wdnYJiUIxnW8ddKpaOJCF37yAdqYnkxUpaYxw=
 modernc.org/golex v1.0.0/go.mod h1:b/QX9oBD/LhixY6NDh+IdGv17hgB+51fET1i2kPSmvk=
 modernc.org/mathutil v1.0.0/go.mod h1:wU0vUrJsVWBZ4P6e7xtFJEhFSNsfRLJ8H458uRjg03k=

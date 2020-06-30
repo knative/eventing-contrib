@@ -23,6 +23,15 @@ import (
 	"knative.dev/eventing/test/e2e/helpers"
 )
 
-func TestEventTransformationForTrigger(t *testing.T) {
-	helpers.EventTransformationForTriggerTestHelper(t, "MTChannelBasedBroker" /*brokerClass*/, channelTestRunner)
+func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
+	helpers.EventTransformationForTriggerTestHelper(t, "MTChannelBasedBroker", "v1", "v1", channelTestRunner)
+}
+func TestEventTransformationForTriggerV1Beta1BrokerV1(t *testing.T) {
+	helpers.EventTransformationForTriggerTestHelper(t, "MTChannelBasedBroker", "v1", "v1beta1", channelTestRunner)
+}
+func TestEventTransformationForTriggerV1Beta1BrokerV1Beta1(t *testing.T) {
+	helpers.EventTransformationForTriggerTestHelper(t, "MTChannelBasedBroker", "v1beta1", "v1beta1", channelTestRunner)
+}
+func TestEventTransformationForTriggerV1BrokerV1Beta1(t *testing.T) {
+	helpers.EventTransformationForTriggerTestHelper(t, "MTChannelBasedBroker", "v1beta1", "v1", channelTestRunner)
 }
