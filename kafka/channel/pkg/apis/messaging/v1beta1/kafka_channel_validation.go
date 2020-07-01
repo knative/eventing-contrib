@@ -54,13 +54,11 @@ func (cs *KafkaChannelSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(fe)
 	}
 
-	if cs.Subscribable != nil {
-		for i, subscriber := range cs.Subscribable.Spec.Subscribers {
-			if subscriber.ReplyURI == nil && subscriber.SubscriberURI == nil {
-				fe := apis.ErrMissingField("replyURI", "subscriberURI")
-				fe.Details = "expected at least one of, got none"
-				errs = errs.Also(fe.ViaField(fmt.Sprintf("subscriber[%d]", i)).ViaField("subscribable"))
-			}
+	for i, subscriber := range cs.SubscribableSpec.Subscribers {
+		if subscriber.ReplyURI == nil && subscriber.SubscriberURI == nil {
+			fe := apis.ErrMissingField("replyURI", "subscriberURI")
+			fe.Details = "expected at least one of, got none"
+			errs = errs.Also(fe.ViaField(fmt.Sprintf("subscriber[%d]", i)).ViaField("subscribable"))
 		}
 	}
 	return errs

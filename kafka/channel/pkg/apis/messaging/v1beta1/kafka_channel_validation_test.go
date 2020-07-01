@@ -30,7 +30,6 @@ import (
 )
 
 func TestKafkaChannelValidation(t *testing.T) {
-	aURL, _ := apis.ParseURL("http://example.com/")
 
 	testCases := map[string]struct {
 		cr   resourcesemantics.GenericCRD
@@ -78,14 +77,14 @@ func TestKafkaChannelValidation(t *testing.T) {
 				Spec: KafkaChannelSpec{
 					NumPartitions:     1,
 					ReplicationFactor: 1,
-					Subscribable: &eventingduck.Subscribable{
-						Spec: eventingduck.SubscribableSpec{
+					ChannelableSpec: eventingduck.ChannelableSpec{
+						SubscribableSpec: eventingduck.SubscribableSpec{
 							Subscribers: []eventingduck.SubscriberSpec{{
-								SubscriberURI: aURL,
-								ReplyURI:      aURL,
+								SubscriberURI: apis.HTTP("subscriberendpoint"),
+								ReplyURI:      apis.HTTP("resultendpoint"),
 							}},
-						},
-					}},
+						}},
+				},
 			},
 			want: nil,
 		},
@@ -94,14 +93,14 @@ func TestKafkaChannelValidation(t *testing.T) {
 				Spec: KafkaChannelSpec{
 					NumPartitions:     1,
 					ReplicationFactor: 1,
-					Subscribable: &eventingduck.Subscribable{
-						Spec: eventingduck.SubscribableSpec{
+					ChannelableSpec: eventingduck.ChannelableSpec{
+						SubscribableSpec: eventingduck.SubscribableSpec{
 							Subscribers: []eventingduck.SubscriberSpec{{
-								SubscriberURI: aURL,
-								ReplyURI:      aURL,
+								SubscriberURI: apis.HTTP("subscriberendpoint"),
+								ReplyURI:      apis.HTTP("replyendpoint"),
 							}, {}},
-						},
-					}},
+						}},
+				},
 			},
 			want: func() *apis.FieldError {
 				fe := apis.ErrMissingField("spec.subscribable.subscriber[1].replyURI", "spec.subscribable.subscriber[1].subscriberURI")
@@ -114,8 +113,8 @@ func TestKafkaChannelValidation(t *testing.T) {
 				Spec: KafkaChannelSpec{
 					NumPartitions:     1,
 					ReplicationFactor: 1,
-					Subscribable: &eventingduck.Subscribable{
-						Spec: eventingduck.SubscribableSpec{
+					ChannelableSpec: eventingduck.ChannelableSpec{
+						SubscribableSpec: eventingduck.SubscribableSpec{
 							Subscribers: []eventingduck.SubscriberSpec{{}, {}},
 						},
 					},

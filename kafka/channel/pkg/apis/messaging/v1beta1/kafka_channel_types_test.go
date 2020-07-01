@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
@@ -36,7 +37,9 @@ func TestKafkaChannelGetStatus(t *testing.T) {
 	status := &duckv1.Status{}
 	config := KafkaChannel{
 		Status: KafkaChannelStatus{
-			Status: *status,
+			ChannelableStatus: eventingduck.ChannelableStatus{
+				Status: *status,
+			},
 		},
 	}
 
