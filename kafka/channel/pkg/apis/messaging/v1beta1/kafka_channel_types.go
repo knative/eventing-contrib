@@ -67,26 +67,14 @@ type KafkaChannelSpec struct {
 	// ReplicationFactor is the replication factor of a Kafka topic. By default, it is set to 1.
 	ReplicationFactor int16 `json:"replicationFactor"`
 
-	// KafkaChannel conforms to Duck type Subscribable.
-	Subscribable *eventingduck.Subscribable `json:"subscribable,omitempty"`
+	// Channel conforms to Duck type Channelable.
+	eventingduck.ChannelableSpec `json:",inline"`
 }
 
 // KafkaChannelStatus represents the current state of a KafkaChannel.
 type KafkaChannelStatus struct {
-	// inherits duck/v1 Status, which currently provides:
-	// * ObservedGeneration - the 'Generation' of the Service that was last processed by the controller.
-	// * Conditions - the latest available observations of a resource's current state.
-	duckv1.Status `json:",inline"`
-
-	// KafkaChannel is Addressable. It currently exposes the endpoint as a
-	// fully-qualified DNS name which will distribute traffic over the
-	// provided targets from inside the cluster.
-	//
-	// It generally has the form {channel}.{namespace}.svc.{cluster domain name}
-	duckv1.AddressStatus `json:",inline"`
-
-	// Subscribers is populated with the statuses of each of the Channelable's subscribers.
-	eventingduck.SubscribableStatus `json:",inline"`
+	// Channel conforms to Duck type Channelable.
+	eventingduck.ChannelableStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
