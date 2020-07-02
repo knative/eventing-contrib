@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
