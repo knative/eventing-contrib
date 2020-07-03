@@ -44,6 +44,9 @@ readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_imag
 # HEAD eventing test images.
 readonly HEAD_EVENTING_TEST_IMAGES="${GOPATH}/src/knative.dev/eventing/test/test_images/"
 
+# Config tracing config.
+readonly CONFIG_TRACING_CONFIG="test/config/config-tracing.yaml"
+
 # NATS Streaming installation config.
 readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
 # NATSS channel CRD config directory.
@@ -89,6 +92,9 @@ function knative_setup() {
     popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
+
+  # Setup config tracing for tracing tests
+  kubectl replace -f $CONFIG_TRACING_CONFIG
 
   # TODO install head if !is_release_branch
   echo "Installing Knative Monitoring"
@@ -152,6 +158,9 @@ function test_setup() {
   sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
   $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
+
+  # Setup config tracing for tracing tests
+  kubectl replace -f $CONFIG_TRACING_CONFIG
 }
 
 function test_teardown() {
