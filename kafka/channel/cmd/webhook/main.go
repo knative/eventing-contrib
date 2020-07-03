@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging"
 	"knative.dev/pkg/webhook/resourcesemantics/conversion"
 
