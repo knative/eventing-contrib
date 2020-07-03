@@ -22,9 +22,25 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/trace"
+	"go.opencensus.io/trace/tracestate"
 )
 
-func TestRoundtrip(t *testing.T) {
+var (
+	traceID             = trace.TraceID{75, 249, 47, 53, 119, 179, 77, 166, 163, 206, 146, 157, 14, 14, 71, 54}
+	spanID              = trace.SpanID{0, 240, 103, 170, 11, 169, 2, 183}
+	traceOpt            = trace.TraceOptions(1)
+	entry1              = tracestate.Entry{Key: "foo", Value: "bar"}
+	entry2              = tracestate.Entry{Key: "hello", Value: "world   example"}
+	sampleTracestate, _ = tracestate.New(nil, entry1, entry2)
+	sampleSpanContext   = trace.SpanContext{
+		TraceID:      traceID,
+		SpanID:       spanID,
+		TraceOptions: traceOpt,
+		Tracestate:   sampleTracestate,
+	}
+)
+
+func TestRoundtripWithNewSpan(t *testing.T) {
 	_, span := trace.StartSpan(context.TODO(), "aaa", trace.WithSpanKind(trace.SpanKindClient))
 	span.AddAttributes(trace.BoolAttribute("hello", true))
 	inSpanContext := span.SpanContext()
@@ -40,4 +56,18 @@ func TestRoundtrip(t *testing.T) {
 	outSpanContext, ok := parseSpanContext(headers)
 	require.True(t, ok)
 	require.Equal(t, inSpanContext, outSpanContext)
+}
+
+func TestRoundtrip(t *testing.T) {
+	serializedHeaders := serializeTrace(sampleSpanContext)
+
+	// Translate back to headers
+	headers := make(map[string][]byte)
+	for _, h := range serializedHeaders {
+		headers[string(h.Key)] = h.Value
+	}
+
+	outSpanContext, ok := parseSpanContext(headers)
+	require.True(t, ok)
+	require.Equal(t, sampleSpanContext, outSpanContext)
 }
