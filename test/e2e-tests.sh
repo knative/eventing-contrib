@@ -93,7 +93,11 @@ function knative_setup() {
   # TODO install head if !is_release_branch
   echo "Installing Knative Monitoring"
   kubectl create namespace istio-system
+  # Hack hack hack. Why is this namespace not created as part of monitoring release.
+  # https://github.com/knative/eventing/issues/3469
+  kubectl create ns knative-monitoring  
   kubectl apply --filename "${KNATIVE_MONITORING_RELEASE}" || return 1
+  wait_until_pods_running knative-monitoring || fail_test "Knative Monitoring did not come up"
   wait_until_pods_running istio-system || fail_test "Knative Monitoring did not come up"
 }
 
