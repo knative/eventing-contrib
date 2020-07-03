@@ -17,9 +17,12 @@ package main
 
 import (
 	"context"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging"
+	"knative.dev/pkg/webhook/resourcesemantics/conversion"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	messagingv1alpha1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing/pkg/logconfig"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -35,6 +38,7 @@ import (
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	// For group messaging.knative.dev
 	messagingv1alpha1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1alpha1.KafkaChannel{},
+	messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"):  &messagingv1beta1.KafkaChannel{},
 }
 
 var callbacks = map[schema.GroupVersionKind]validation.Callback{}
@@ -84,6 +88,36 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 	)
 }
 
+func NewConversionController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	var (
+		messagingv1alpha1_ = messagingv1alpha1.SchemeGroupVersion.Version
+		messagingv1beta1_  = messagingv1beta1.SchemeGroupVersion.Version
+	)
+
+	return conversion.NewConversionController(ctx,
+		// The path on which to serve the webhook
+		"/resource-conversion",
+
+		// Specify the types of custom resource definitions that should be converted
+		map[schema.GroupKind]conversion.GroupKindConversion{
+			// KafkaChannel
+			messagingv1beta1.Kind("KafkaChannel"): {
+				DefinitionName: messaging.KafkaChannelsResource.String(),
+				HubVersion:     messagingv1alpha1_,
+				Zygotes: map[string]conversion.ConvertibleObject{
+					messagingv1alpha1_: &messagingv1alpha1.KafkaChannel{},
+					messagingv1beta1_:  &messagingv1beta1.KafkaChannel{},
+				},
+			},
+		},
+
+		// A function that infuses the context passed to ConvertTo/ConvertFrom/SetDefaults with custom metadata.
+		func(ctx context.Context) context.Context {
+			return ctx
+		},
+	)
+}
+
 func main() {
 	// Set up a signal context with our webhook options
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
@@ -96,6 +130,7 @@ func main() {
 		certificates.NewController,
 		NewDefaultingAdmissionController,
 		NewValidationAdmissionController,
+		NewConversionController,
 		// TODO(mattmoor): Support config validation in eventing-contrib.
 	)
 }
