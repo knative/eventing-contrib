@@ -27,6 +27,7 @@ import (
 	"github.com/Shopify/sarama"
 	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
@@ -81,19 +82,6 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 	}
 	receiverFunc, err := eventingchannels.NewMessageReceiver(
 		func(ctx context.Context, channel eventingchannels.ChannelReference, message binding.Message, transformers []binding.Transformer, _ nethttp.Header) error {
-
-			// If we record the trace, we need to write the span info into the event
-			// using the distributed tracing extension.
-			// If the span is not recorded, we just don't send these info
-			// to avoid expensive computations
-			span := trace.FromContext(ctx)
-			if span.IsRecordingEvents() {
-				dte := extensions.FromSpanContext(span.SpanContext())
-				transformers = append(transformers, dte.WriteTransformer())
-				// Because on the other side we need to extract the span, we force binary mode of the event
-				ctx = binding.WithForceBinary(ctx)
-			}
-
 			kafkaProducerMessage := sarama.ProducerMessage{
 				Topic: dispatcher.topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
 			}
@@ -103,6 +91,8 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 			if err != nil {
 				return err
 			}
+
+			kafkaProducerMessage.Headers = append(kafkaProducerMessage.Headers, serializeTrace(trace.FromContext(ctx).SpanContext())...)
 
 			dispatcher.kafkaAsyncProducer.Input() <- &kafkaProducerMessage
 			return nil
@@ -165,13 +155,10 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		zap.String("sub", string(c.sub.UID)),
 	)
 
-	ctx, span, err := startTraceFromMessage(ctx, message, consumerMessage.Topic)
-	if err != nil {
-		return true, err
-	}
+	ctx, span := startTraceFromMessage(c.logger, ctx, message, consumerMessage.Topic)
 	defer span.End()
 
-	err = c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
+	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
 	return err == nil, err
 }
@@ -386,21 +373,12 @@ func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace st
 	}
 }
 
-func startTraceFromMessage(inCtx context.Context, message *protocolkafka.Message, topic string) (context.Context, *trace.Span, error) {
-	// Recording span are injected only and only if the initial span is recording
-	// If the span is recording, then the message is sent as binary mode
-	if message.ReadEncoding() == binding.EncodingBinary {
-		dte := extensions.DistributedTracingExtension{}
-		err := dte.ReadTransformer().Transform(message, nil)
-		if err != nil {
-			return nil, nil, err
-		}
-		// There is a span!
-		if dte.TraceParent != "" {
-			ctx, span := dte.StartChildSpan(inCtx, "kafkachannel-"+topic)
-			return ctx, span, nil
-		}
+func startTraceFromMessage(logger *zap.Logger, inCtx context.Context, message *protocolkafka.Message, topic string) (context.Context, *trace.Span) {
+	sc, ok := parseSpanContext(message.Headers)
+	if !ok {
+		logger.Warn("Cannot parse the spancontext, creating a new span")
+		return trace.StartSpan(inCtx, "kafkachannel-"+topic)
 	}
-	outCtx, s := trace.StartSpan(inCtx, "kafkachannel-"+topic, trace.WithSampler(trace.NeverSample()))
-	return outCtx, s, nil
+
+	return trace.StartSpanWithRemoteParent(inCtx, "kafkachannel-"+topic, sc)
 }
