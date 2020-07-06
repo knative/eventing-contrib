@@ -31,7 +31,7 @@ func TestGitHubSourceValidation(t *testing.T) {
 		cr   resourcesemantics.GenericCRD
 		want *apis.FieldError
 	}{
-		"missing sink": {
+		"empty sink": {
 			cr: &GitHubSource{
 				Spec: GitHubSourceSpec{},
 			},
