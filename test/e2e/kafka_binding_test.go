@@ -34,7 +34,7 @@ import (
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
-func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string]string, messagePayload string, expectedData string) {
+func testKafkaBinding(t *testing.T, version string, messageKey string, messageHeaders map[string]string, messagePayload string, expectedData string) {
 	client := testlib.Setup(t, true)
 
 	kafkaTopicName := uuid.New().String()
@@ -47,28 +47,54 @@ func testKafkaBinding(t *testing.T, messageKey string, messageHeaders map[string
 	t.Logf("Creating EventRecord")
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
 
-	t.Logf("Creating KafkaSource")
-	contribtestlib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
-		kafkaBootstrapUrl,
-		kafkaTopicName,
-		resources.ServiceRef(loggerPodName),
-	))
-
+	t.Logf("Creating KafkaSource %s", version)
+	switch version {
+	case "v1alpha1":
+		contribtestlib.CreateKafkaSourceV1Alpha1OrFail(client, contribresources.KafkaSourceV1Alpha1(
+			kafkaBootstrapUrl,
+			kafkaTopicName,
+			resources.ServiceRef(loggerPodName),
+		))
+	case "v1beta1":
+		contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
+			kafkaBootstrapUrl,
+			kafkaTopicName,
+			resources.ServiceRef(loggerPodName),
+		))
+	default:
+		t.Fatalf("Unknown KafkaSource version %s", version)
+	}
 	selector := map[string]string{
 		"topic": kafkaTopicName,
 	}
 
-	t.Logf("Creating KafkaBinding")
-	contribtestlib.CreateKafkaBindingOrFail(client, contribresources.KafkaBinding(
-		kafkaBootstrapUrl,
-		&tracker.Reference{
-			APIVersion: "batch/v1",
-			Kind:       "Job",
-			Selector: &metav1.LabelSelector{
-				MatchLabels: selector,
+	t.Logf("Creating KafkaBinding %s", version)
+	switch version {
+	case "v1alpha1":
+		contribtestlib.CreateKafkaBindingV1Alpha1OrFail(client, contribresources.KafkaBindingV1Alpha1(
+			kafkaBootstrapUrl,
+			&tracker.Reference{
+				APIVersion: "batch/v1",
+				Kind:       "Job",
+				Selector: &metav1.LabelSelector{
+					MatchLabels: selector,
+				},
 			},
-		},
-	))
+		))
+	case "v1beta1":
+		contribtestlib.CreateKafkaBindingV1Beta1OrFail(client, contribresources.KafkaBindingV1Beta1(
+			kafkaBootstrapUrl,
+			&tracker.Reference{
+				APIVersion: "batch/v1",
+				Kind:       "Job",
+				Selector: &metav1.LabelSelector{
+					MatchLabels: selector,
+				},
+			},
+		))
+	default:
+		t.Fatalf("Unknown KafkaSource version %s", version)
+	}
 
 	client.WaitForAllTestResourcesReadyOrFail()
 
@@ -116,8 +142,11 @@ func TestKafkaBinding(t *testing.T) {
 	}
 	for name, tc := range tests {
 		tc := tc
-		t.Run(name, func(t *testing.T) {
-			testKafkaBinding(t, tc.messageKey, tc.messageHeaders, tc.messagePayload, tc.expectedData)
+		t.Run(name+"-v1alpha1", func(t *testing.T) {
+			testKafkaBinding(t, "v1alpha1", tc.messageKey, tc.messageHeaders, tc.messagePayload, tc.expectedData)
+		})
+		t.Run(name+"-v1beta1", func(t *testing.T) {
+			testKafkaBinding(t, "v1beta1", tc.messageKey, tc.messageHeaders, tc.messagePayload, tc.expectedData)
 		})
 	}
 }
