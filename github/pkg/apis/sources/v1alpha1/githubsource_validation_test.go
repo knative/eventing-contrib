@@ -37,7 +37,8 @@ func TestGitHubSourceValidation(t *testing.T) {
 			},
 			want: func() *apis.FieldError {
 				var errs *apis.FieldError
-				errs = errs.Also(apis.ErrGeneric("expected at least one, got none", "ref", "uri").ViaField("spec.sink"))
+				fe := apis.ErrGeneric("expected at least one, got none", "ref", "uri").ViaField("spec.sink")
+				errs = errs.Also(fe)
 				return errs
 			}(),
 		},
