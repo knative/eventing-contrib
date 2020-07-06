@@ -28,7 +28,9 @@ import (
 	"knative.dev/pkg/tracker"
 
 	kafkabindingv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
+	kafkabindingv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
 	kafkasourcev1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	kafkasourcev1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 )
 
 func KafkaPerformanceImageSenderPod(pace string, warmup string, bootstrapUrl string, topicName string, aggregatorHostname string, additionalArgs ...string) *corev1.Pod {
@@ -78,21 +80,35 @@ func KafkaPerformanceImageSenderPod(pace string, warmup string, bootstrapUrl str
 	}
 }
 
-type KafkaSourceOption func(source *kafkasourcev1alpha1.KafkaSource)
+type KafkaSourceV1Alpha1Option func(source *kafkasourcev1alpha1.KafkaSource)
 
-func WithName(name string) KafkaSourceOption {
+type KafkaSourceV1Beta1Option func(source *kafkasourcev1beta1.KafkaSource)
+
+func WithNameV1Alpha1(name string) KafkaSourceV1Alpha1Option {
 	return func(source *kafkasourcev1alpha1.KafkaSource) {
 		source.Name = name
 	}
 }
 
-func WithConsumerGroup(cg string) KafkaSourceOption {
+func WithNameV1Beta1(name string) KafkaSourceV1Beta1Option {
+	return func(source *kafkasourcev1beta1.KafkaSource) {
+		source.Name = name
+	}
+}
+
+func WithConsumerGroupV1Alpha1(cg string) KafkaSourceV1Alpha1Option {
 	return func(source *kafkasourcev1alpha1.KafkaSource) {
 		source.Spec.ConsumerGroup = cg
 	}
 }
 
-func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectReference, options ...KafkaSourceOption) *kafkasourcev1alpha1.KafkaSource {
+func WithConsumerGroupV1Beta1(cg string) KafkaSourceV1Beta1Option {
+	return func(source *kafkasourcev1beta1.KafkaSource) {
+		source.Spec.ConsumerGroup = cg
+	}
+}
+
+func KafkaSourceV1Alpha1(bootstrapServer string, topicName string, ref *corev1.ObjectReference, options ...KafkaSourceV1Alpha1Option) *kafkasourcev1alpha1.KafkaSource {
 	source := &kafkasourcev1alpha1.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-kafka-source",
@@ -121,13 +137,60 @@ func KafkaSource(bootstrapServer string, topicName string, ref *corev1.ObjectRef
 	return source
 }
 
-func KafkaBinding(bootstrapServer string, ref *tracker.Reference) *kafkabindingv1alpha1.KafkaBinding {
+func KafkaSourceV1Beta1(bootstrapServer string, topicName string, ref *corev1.ObjectReference, options ...KafkaSourceV1Beta1Option) *kafkasourcev1beta1.KafkaSource {
+	source := &kafkasourcev1beta1.KafkaSource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-kafka-source",
+		},
+		Spec: kafkasourcev1beta1.KafkaSourceSpec{
+			KafkaAuthSpec: kafkabindingv1beta1.KafkaAuthSpec{
+				BootstrapServers: []string{bootstrapServer},
+			},
+			Topics:        []string{topicName},
+			ConsumerGroup: "test-consumer-group",
+			SourceSpec: duckv1.SourceSpec{
+				Sink: duckv1.Destination{
+					Ref: &duckv1.KReference{
+						APIVersion: ref.APIVersion,
+						Kind:       ref.Kind,
+						Name:       ref.Name,
+						Namespace:  ref.Namespace,
+					},
+				},
+			},
+		},
+	}
+
+	for _, opt := range options {
+		opt(source)
+	}
+
+	return source
+}
+
+func KafkaBindingV1Alpha1(bootstrapServer string, ref *tracker.Reference) *kafkabindingv1alpha1.KafkaBinding {
 	return &kafkabindingv1alpha1.KafkaBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-kafka-binding",
 		},
 		Spec: kafkabindingv1alpha1.KafkaBindingSpec{
 			KafkaAuthSpec: kafkabindingv1alpha1.KafkaAuthSpec{
+				BootstrapServers: []string{bootstrapServer},
+			},
+			BindingSpec: duckv1alpha1.BindingSpec{
+				Subject: *ref,
+			},
+		},
+	}
+}
+
+func KafkaBindingV1Beta1(bootstrapServer string, ref *tracker.Reference) *kafkabindingv1beta1.KafkaBinding {
+	return &kafkabindingv1beta1.KafkaBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-kafka-binding",
+		},
+		Spec: kafkabindingv1beta1.KafkaBindingSpec{
+			KafkaAuthSpec: kafkabindingv1beta1.KafkaAuthSpec{
 				BootstrapServers: []string{bootstrapServer},
 			},
 			BindingSpec: duckv1alpha1.BindingSpec{
