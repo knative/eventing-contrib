@@ -19,7 +19,7 @@ metadata:
   namespace: perf-eventing
 spec:
   channel:
-    apiVersion: messaging.knative.dev/v1alpha1
+    apiVersion: messaging.knative.dev/v1beta1
     kind: KafkaChannel
     name: kafka-channel-test-channel
   subscriber:
