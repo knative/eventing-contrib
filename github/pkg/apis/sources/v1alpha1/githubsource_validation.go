@@ -32,11 +32,7 @@ func (gs *GitHubSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 	// TODO: there are more requirements for GitHubSource. Add them here.
 
 	// Validate sink
-	if gs.Sink == nil {
-		fe := apis.ErrMissingField("sink")
-		errs = errs.Also(fe)
-	} else if fe := gs.Sink.Validate(ctx); fe != nil {
-		errs = errs.Also(fe.ViaField("sink"))
-	}
+	errs = errs.Also(gs.Sink.Validate(ctx).ViaField("sink"))
+
 	return errs
 }

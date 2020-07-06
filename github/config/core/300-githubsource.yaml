@@ -96,6 +96,9 @@ spec:
                 secretKeyRef:
                   type: object
               type: object
+            ceOverrides:
+              type: object
+              description: "Defines overrides to control modifications of the event sent to the sink."
             eventTypes:
               items:
                 enum:

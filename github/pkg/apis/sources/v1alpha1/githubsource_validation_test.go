@@ -31,13 +31,13 @@ func TestGitHubSourceValidation(t *testing.T) {
 		cr   resourcesemantics.GenericCRD
 		want *apis.FieldError
 	}{
-		"missing sink": {
+		"empty sink": {
 			cr: &GitHubSource{
 				Spec: GitHubSourceSpec{},
 			},
 			want: func() *apis.FieldError {
 				var errs *apis.FieldError
-				fe := apis.ErrMissingField("spec.sink")
+				fe := apis.ErrGeneric("expected at least one, got none", "ref", "uri").ViaField("spec.sink")
 				errs = errs.Also(fe)
 				return errs
 			}(),
