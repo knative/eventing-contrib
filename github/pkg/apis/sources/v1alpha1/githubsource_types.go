@@ -72,11 +72,6 @@ type GitHubSourceSpec struct {
 	// secret token
 	SecretToken SecretValueFromSource `json:"secretToken"`
 
-	// Sink is a reference to an object that will resolve to a domain
-	// name to use as the sink.
-	// +optional
-	Sink *duckv1.Destination `json:"sink,omitempty"`
-
 	// API URL if using github enterprise (default https://api.github.com)
 	// +optional
 	GitHubAPIURL string `json:"githubAPIURL,omitempty"`
@@ -87,6 +82,13 @@ type GitHubSourceSpec struct {
 	// do the right thing).
 	// +optional
 	Secure *bool `json:"secure,omitempty"`
+
+	// inherits duck/v1 SourceSpec, which currently provides:
+	// * Sink - a reference to an object that will resolve to a domain name or
+	//   a URI directly to use as the sink.
+	// * CloudEventOverrides - defines overrides to control the output format
+	//   and modifications of the event sent to the sink.
+	duckv1.SourceSpec `json:",inline"`
 }
 
 // SecretValueFromSource represents the source of a secret value
