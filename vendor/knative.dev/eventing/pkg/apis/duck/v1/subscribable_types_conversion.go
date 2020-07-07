@@ -32,3 +32,43 @@ func (source *Subscribable) ConvertTo(ctx context.Context, sink apis.Convertible
 func (sink *Subscribable) ConvertFrom(ctx context.Context, source apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", source)
 }
+
+// ConvertTo implements apis.Convertible
+func (source *SubscribableSpec) ConvertTo(ctx context.Context, sink apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", sink)
+}
+
+// ConvertFrom implements apis.Convertible
+func (sink *SubscribableSpec) ConvertFrom(ctx context.Context, source apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", source)
+}
+
+// ConvertTo implements apis.Convertible
+func (source *SubscribableStatus) ConvertTo(ctx context.Context, sink apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", sink)
+}
+
+// ConvertFrom implements apis.Convertible
+func (sink *SubscribableStatus) ConvertFrom(ctx context.Context, source apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", source)
+}
+
+// ConvertTo implements apis.Convertible
+func (source *SubscriberSpec) ConvertTo(ctx context.Context, sink apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", sink)
+}
+
+// ConvertFrom implements apis.Convertible
+func (sink *SubscriberSpec) ConvertFrom(ctx context.Context, source apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", source)
+}
+
+// ConvertTo implements apis.Convertible
+func (source *SubscriberStatus) ConvertTo(ctx context.Context, sink apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", sink)
+}
+
+// ConvertFrom implements apis.Convertible
+func (sink *SubscriberStatus) ConvertFrom(ctx context.Context, source apis.Convertible) error {
+	return fmt.Errorf("v1 is the highest known version, got: %T", source)
+}

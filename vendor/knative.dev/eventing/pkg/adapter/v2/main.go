@@ -27,7 +27,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"go.opencensus.io/stats/view"
 	"go.uber.org/zap"
-	"knative.dev/pkg/injection/sharedmain"
+	"knative.dev/eventing/pkg/leaderelection"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/profiling"
@@ -112,25 +113,23 @@ func MainWithContext(ctx context.Context, component string, ector EnvConfigConst
 	// Configuring the adapter
 	adapter := ctor(ctx, env, eventsClient)
 
-	run := func(ctx context.Context) {
-		logger.Info("Starting Receive Adapter", zap.Any("adapter", adapter))
-
-		if err := adapter.Start(ctx); err != nil {
-			logger.Warn("Start returned an error", zap.Error(err))
-		}
-	}
-
+	// Build the leader elector
 	leConfig, err := env.GetLeaderElectionConfig()
 	if err != nil {
 		logger.Error("Error loading the leader election configuration", zap.Error(err))
 	}
 
 	if leConfig.LeaderElect {
-		sharedmain.RunLeaderElected(ctx, logger, run, *leConfig)
-	} else {
-		logger.Infof("%v will not run in leader-elected mode", component)
-		run(ctx)
+		// Signal that we are executing in a context with leader election.
+		ctx = leaderelection.WithStandardLeaderElectorBuilder(ctx, kubeclient.Get(ctx), *leConfig)
 	}
+
+	elector, err := leaderelection.BuildAdapterElector(ctx, adapter)
+	if err != nil {
+		logger.Fatal("Error creating the adapter elector", zap.Error(err))
+	}
+
+	elector.Run(ctx)
 }
 
 func flush(logger *zap.SugaredLogger) {

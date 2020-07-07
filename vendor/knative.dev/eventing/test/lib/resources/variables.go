@@ -1,7 +1,5 @@
-//+build e2e
-
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,18 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package e2e
+package resources
 
-import (
-	"testing"
+import "os"
 
-	"knative.dev/eventing/test/e2e/helpers"
-)
+// SystemNamespace is the namespace where Eventing is installed, it's default to be knative-eventing.
+var SystemNamespace = getenv("TEST_EVENTING_NAMESPACE", "knative-eventing")
 
-func TestEventTransformationForSubscriptionV1Beta1(t *testing.T) {
-	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1beta1, channelTestRunner)
-}
-
-func TestEventTransformationForSubscriptionV1(t *testing.T) {
-	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1, channelTestRunner)
+func getenv(name, defaultValue string) string {
+	value, set := os.LookupEnv(name)
+	if !set {
+		value = defaultValue
+	}
+	return value
 }

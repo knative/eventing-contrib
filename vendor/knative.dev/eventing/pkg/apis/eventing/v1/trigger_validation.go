@@ -37,7 +37,12 @@ var (
 func (t *Trigger) Validate(ctx context.Context) *apis.FieldError {
 	errs := t.Spec.Validate(ctx).ViaField("spec")
 	errs = t.validateAnnotation(errs, DependencyAnnotation, t.validateDependencyAnnotation)
+	errs = t.validateAnnotation(errs, DeprecatedInjectionAnnotation, t.validateInjectionAnnotation)
 	errs = t.validateAnnotation(errs, InjectionAnnotation, t.validateInjectionAnnotation)
+	if apis.IsInUpdate(ctx) {
+		original := apis.GetBaseline(ctx).(*Trigger)
+		errs = errs.Also(t.CheckImmutableFields(ctx, original))
+	}
 	return errs
 }
 
@@ -139,9 +144,9 @@ func (t *Trigger) validateDependencyAnnotation(dependencyAnnotation string) *api
 }
 
 func (t *Trigger) validateInjectionAnnotation(injectionAnnotation string) *apis.FieldError {
-	if injectionAnnotation != "enabled" {
+	if injectionAnnotation != "enabled" && injectionAnnotation != "disabled" {
 		return &apis.FieldError{
-			Message: fmt.Sprintf(`The provided injection annotation value can only be "enabled", not %q`, injectionAnnotation),
+			Message: fmt.Sprintf(`The provided injection annotation value can only be "enabled" or "disabled", not %q`, injectionAnnotation),
 			Paths:   []string{""},
 		}
 	}
