@@ -262,7 +262,7 @@ func (r *Reconciler) reconcile(ctx context.Context, kc *v1alpha1.KafkaChannel) e
 	failedSubscriptionsv1alpha1 := make(map[eventingduckv1alpha1.SubscriberSpec]error, len(failedSubscriptionsv1beta1))
 	for k, v := range failedSubscriptionsv1beta1 {
 		newSub := eventingduckv1alpha1.SubscriberSpec{}
-		newSub.ConvertFrom(context.TODO(), k)
+		newSub.ConvertFrom(context.TODO(), &k)
 		failedSubscriptionsv1alpha1[newSub] = v
 	}
 	kc.Status.SubscribableTypeStatus.SubscribableStatus = r.createSubscribableStatus(kc.Spec.Subscribable, failedSubscriptionsv1alpha1)

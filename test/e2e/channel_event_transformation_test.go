@@ -24,6 +24,10 @@ import (
 	"knative.dev/eventing/test/e2e/helpers"
 )
 
-func TestEventTransformationForSubscription(t *testing.T) {
-	helpers.EventTransformationForSubscriptionTestHelper(t, channelTestRunner)
+func TestEventTransformationForSubscriptionV1Beta1(t *testing.T) {
+	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1beta1, channelTestRunner)
+}
+
+func TestEventTransformationForSubscriptionV1(t *testing.T) {
+	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1, channelTestRunner)
 }
