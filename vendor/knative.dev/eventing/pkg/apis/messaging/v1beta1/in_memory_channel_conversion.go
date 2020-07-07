@@ -47,14 +47,12 @@ func (source *InMemoryChannel) ConvertTo(ctx context.Context, obj apis.Convertib
 
 // ConvertTo helps implement apis.Convertible
 func (source *InMemoryChannelSpec) ConvertTo(ctx context.Context, sink *v1.InMemoryChannelSpec) error {
-	if source.Delivery != nil {
-		sink.Delivery = &eventingduckv1.DeliverySpec{}
-		if err := source.Delivery.ConvertTo(ctx, sink.Delivery); err != nil {
-			return err
-		}
-	}
 	sink.SubscribableSpec = eventingduckv1.SubscribableSpec{}
 	source.SubscribableSpec.ConvertTo(ctx, &sink.SubscribableSpec)
+	if source.Delivery != nil {
+		sink.Delivery = &eventingduckv1.DeliverySpec{}
+		return source.Delivery.ConvertTo(ctx, sink.Delivery)
+	}
 	return nil
 }
 
@@ -93,7 +91,7 @@ func (sink *InMemoryChannelSpec) ConvertFrom(ctx context.Context, source v1.InMe
 		}
 	}
 	sink.SubscribableSpec = eventingduckv1beta1.SubscribableSpec{}
-	sink.SubscribableSpec.ConvertFrom(ctx, source.SubscribableSpec)
+	sink.SubscribableSpec.ConvertFrom(ctx, &source.SubscribableSpec)
 	return nil
 }
 
@@ -102,5 +100,5 @@ func (sink *InMemoryChannelStatus) ConvertFrom(ctx context.Context, source v1.In
 	source.Status.ConvertTo(ctx, &sink.Status)
 	sink.AddressStatus = source.AddressStatus
 	sink.SubscribableStatus = eventingduckv1beta1.SubscribableStatus{}
-	sink.SubscribableStatus.ConvertFrom(ctx, source.SubscribableStatus)
+	sink.SubscribableStatus.ConvertFrom(ctx, &source.SubscribableStatus)
 }
