@@ -43,9 +43,9 @@ aliases:
     - matzew
 
   natss-approvers:
-    - Abd4llA
+    - devguyio
   natss-reviewers:
-    - Abd4llA
+    - devguyio
 
   couchdb-approvers:
     - lionelvillard
