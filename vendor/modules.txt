@@ -266,6 +266,9 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/lightstep/tracecontext.go v0.0.0-20181129014701-1757c391b1ac
 github.com/lightstep/tracecontext.go/traceparent
 github.com/lightstep/tracecontext.go/tracestate
+# github.com/linkedin/goavro/v2 v2.9.8
+## explicit
+github.com/linkedin/goavro/v2
 # github.com/mailru/easyjson v0.7.1-0.20191009090205-6c0755d89d1e
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer

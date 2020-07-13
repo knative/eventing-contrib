@@ -20,6 +20,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.1
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/linkedin/goavro/v2 v2.9.8
 	github.com/nats-io/stan.go v0.6.0
 	github.com/otiai10/copy v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1

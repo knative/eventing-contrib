@@ -18,7 +18,9 @@ package kafka
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -28,6 +30,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/v2/types"
+	"github.com/linkedin/goavro/v2"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/adapter/v2"
@@ -48,6 +51,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 		expectedHeaders map[string]string
 		expectedBody    string
 		error           bool
+		avro            bool
 	}{
 		"accepted_simple": {
 			sink: sinkAccepted,
@@ -314,6 +318,52 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 			expectedBody: `{"key":"value"}`,
 			error:        true,
 		},
+		"avro_simple": {
+			sink: sinkAccepted,
+			message: &sarama.ConsumerMessage{
+				Key:       []byte("key"),
+				Topic:     "topic1",
+				Value:     encodedMsg(map[string]interface{}{"Username": "muru"}),
+				Partition: 1,
+				Offset:    2,
+				Timestamp: aTimestamp,
+			},
+			expectedHeaders: map[string]string{
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "key",
+			},
+			expectedBody: `{"Username":"muru"}`,
+			error:        false,
+			avro:         true,
+		},
+		"avro_unencoded": {
+			sink: sinkAccepted,
+			message: &sarama.ConsumerMessage{
+				Key:       []byte("key"),
+				Topic:     "topic1",
+				Value:     mustJsonMarshal(t, map[string]string{"key": "value"}),
+				Partition: 1,
+				Offset:    2,
+				Timestamp: aTimestamp,
+			},
+			expectedHeaders: map[string]string{
+				"ce-specversion": "1.0",
+				"ce-id":          makeEventId(1, 2),
+				"ce-time":        types.FormatTime(aTimestamp),
+				"ce-type":        sourcesv1alpha1.KafkaEventType,
+				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-subject":     makeEventSubject(1, 2),
+				"ce-key":         "key",
+			},
+			expectedBody: `{"key":"value"}`,
+			error:        false,
+			avro:         true,
+		},
 	}
 
 	for n, tc := range testCases {
@@ -321,8 +371,19 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 			h := &fakeHandler{
 				handler: tc.sink,
 			}
+
 			sinkServer := httptest.NewServer(h)
 			defer sinkServer.Close()
+
+			var avroURL string
+			if tc.avro {
+				ah := &fakeHandler{
+					handler: avroSchema,
+				}
+				avroServer := httptest.NewServer(ah)
+				defer avroServer.Close()
+				avroURL = avroServer.URL
+			}
 
 			statsReporter, _ := source.NewStatsReporter()
 
@@ -354,6 +415,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 				logger:            zap.NewNop(),
 				reporter:          statsReporter,
 				keyTypeMapper:     getKeyTypeMapper(tc.keyTypeMapper),
+				avroDecoder:       getAvroDecoder(avroURL),
 			}
 
 			_, err = a.Handle(context.TODO(), tc.message)
@@ -434,6 +496,10 @@ func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusRequestTimeout)
 }
 
+func avroSchema(writer http.ResponseWriter, _ *http.Request) {
+	fmt.Fprint(writer, `{"schema": {"type": "record", "name": "LoginEvent", "fields": [{"name": "Username", "type": "string"}]}}`)
+}
+
 func TestAdapter_Start(t *testing.T) { // just increase code coverage
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -446,4 +512,19 @@ func TestAdapter_Start(t *testing.T) { // just increase code coverage
 	})
 
 	cancel()
+}
+
+func encodedMsg(m map[string]interface{}) []byte {
+	loginEventAvroSchema := `{"type": "record", "name": "LoginEvent", "fields": [{"name": "Username", "type": "string"}]}`
+	schemaIDBytes := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIDBytes, uint32(1234))
+	codec, _ := goavro.NewCodec(loginEventAvroSchema)
+
+	binary, _ := codec.BinaryFromNative(nil, m)
+
+	var msg []byte
+	msg = append(msg, byte(0))
+	msg = append(msg, schemaIDBytes...)
+	msg = append(msg, binary...)
+	return msg
 }

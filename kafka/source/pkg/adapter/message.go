@@ -18,11 +18,15 @@ package kafka
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"math"
 	nethttp "net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/Shopify/sarama"
 	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
@@ -30,11 +34,18 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/extensions"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
+	"github.com/linkedin/goavro/v2"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
+
+type AvroDecoder struct {
+	schemaURL string
+	codecMap  map[int]*goavro.Codec
+	mutex     sync.RWMutex
+}
 
 func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
 	msg := protocolkafka.NewMessageFromConsumerMessage(cm)
@@ -56,6 +67,10 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.
 
 	a.logger.Debug("Message is not a CloudEvent -> We need to translate it to a valid CloudEvent")
 	kafkaMsg := msg
+
+	if a.avroDecoder != nil {
+		a.avroDecoder.decode(kafkaMsg, logger)
+	}
 
 	event := cloudevents.NewEvent()
 
@@ -160,4 +175,80 @@ func getKeyTypeMapper(keyType string) func([]byte) interface{} {
 		}
 	}
 	return keyTypeMapper
+}
+
+func getAvroDecoder(schemaURL string) *AvroDecoder {
+	if schemaURL != "" {
+		return &AvroDecoder{
+			schemaURL: schemaURL,
+			codecMap:  make(map[int]*goavro.Codec),
+		}
+	}
+	return nil
+}
+
+func (decoder *AvroDecoder) getCodec(schemaID int) (*goavro.Codec, error) {
+	decoder.mutex.RLock()
+	if decoder.codecMap[schemaID] != nil {
+		return decoder.codecMap[schemaID], nil
+	}
+	decoder.mutex.RUnlock()
+
+	resp, err := nethttp.Get(fmt.Sprintf("%s/schemas/ids/%d", decoder.schemaURL, schemaID))
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var schemaResp map[string]interface{}
+	if err := json.Unmarshal(body, &schemaResp); err != nil {
+		return nil, err
+	}
+
+	schema, err := json.Marshal(schemaResp["schema"])
+	if err != nil {
+		return nil, err
+	}
+
+	codec, err := goavro.NewCodec(string(schema))
+	if err != nil {
+		return nil, err
+	}
+
+	decoder.mutex.Lock()
+	decoder.codecMap[schemaID] = codec
+	decoder.mutex.Unlock()
+	return codec, nil
+}
+
+func (decoder *AvroDecoder) decode(msg *protocolkafka.Message, logger *zap.Logger) {
+	schemaID := binary.BigEndian.Uint32(msg.Value[1:5])
+	if schemaID == 0 {
+		logger.Warn("Error getting the schema id", zap.Int("schema id", int(schemaID)))
+		return
+	}
+	codec, err := decoder.getCodec(int(schemaID))
+	if err != nil {
+		logger.Warn("Error getting the schema", zap.Error(err))
+		return
+	}
+	native, _, err := codec.NativeFromBinary(msg.Value[5:])
+	if err != nil {
+		logger.Warn("Error decoding message", zap.Error(err))
+		return
+	}
+	value, err := codec.TextualFromNative(nil, native)
+	if err != nil {
+		logger.Warn("Error decoding message", zap.Error(err))
+		return
+	}
+	msg.Value = value
 }
