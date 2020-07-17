@@ -65,14 +65,21 @@ func (source *KafkaChannel) ConvertTo(ctx context.Context, obj apis.Convertible)
 			subscribableSpec.Subscribers = make([]eventingduckv1.SubscriberSpec, len(source.Spec.Subscribable.Subscribers))
 			for i, ss := range source.Spec.Subscribable.Subscribers {
 				delivery := &eventingduckv1.DeliverySpec{}
-				if err := ss.Delivery.ConvertTo(ctx, delivery); err != nil {
-					return err
+				if ss.Delivery != nil {
+					if err := ss.Delivery.ConvertTo(ctx, delivery); err != nil {
+						return err
+					}
+				}
+
+				var subscriberURI *apis.URL
+				if ss.SubscriberURI != nil {
+					subscriberURI = ss.SubscriberURI.DeepCopy()
 				}
 
 				subscribableSpec.Subscribers[i] = eventingduckv1.SubscriberSpec{
 					UID:           ss.UID,
 					Generation:    ss.Generation,
-					SubscriberURI: ss.SubscriberURI.DeepCopy(),
+					SubscriberURI: subscriberURI,
 					ReplyURI:      ss.ReplyURI,
 					Delivery:      delivery,
 				}
@@ -141,8 +148,15 @@ func (sink *KafkaChannel) ConvertFrom(ctx context.Context, obj apis.Convertible)
 			subscribableSpec.Subscribers = make([]eventingduckv1alpha1.SubscriberSpec, len(source.Spec.SubscribableSpec.Subscribers))
 			for i, ss := range source.Spec.SubscribableSpec.Subscribers {
 				delivery := &eventingduckv1beta1.DeliverySpec{}
-				if err := delivery.ConvertFrom(ctx, ss.Delivery); err != nil {
-					return err
+				if ss.Delivery != nil {
+					if err := delivery.ConvertFrom(ctx, ss.Delivery); err != nil {
+						return err
+					}
+				}
+
+				var deadLetterSinkURI *apis.URL
+				if ss.Delivery != nil && ss.Delivery.DeadLetterSink != nil && ss.Delivery.DeadLetterSink.URI != nil {
+					deadLetterSinkURI = ss.Delivery.DeadLetterSink.URI.DeepCopy()
 				}
 
 				subscribableSpec.Subscribers[i] = eventingduckv1alpha1.SubscriberSpec{
@@ -150,7 +164,7 @@ func (sink *KafkaChannel) ConvertFrom(ctx context.Context, obj apis.Convertible)
 					Generation:        ss.Generation,
 					SubscriberURI:     ss.SubscriberURI.DeepCopy(),
 					ReplyURI:          ss.ReplyURI,
-					DeadLetterSinkURI: ss.Delivery.DeadLetterSink.URI.DeepCopy(),
+					DeadLetterSinkURI: deadLetterSinkURI,
 					Delivery:          delivery,
 				}
 			}
