@@ -18,16 +18,16 @@ limitations under the License.
 
 package e2e
 
-import (
-	"testing"
-
-	"knative.dev/eventing/test/e2e/helpers"
-)
-
-func TestEventTransformationForSubscriptionV1Beta1(t *testing.T) {
-	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1beta1, channelTestRunner)
-}
-
-func TestEventTransformationForSubscriptionV1(t *testing.T) {
-	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1, channelTestRunner)
-}
+//import (
+//	"testing"
+//
+//	"knative.dev/eventing/test/e2e/helpers"
+//)
+//
+//func TestEventTransformationForSubscriptionV1Beta1(t *testing.T) {
+//	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1beta1, channelTestRunner)
+//}
+//
+//func TestEventTransformationForSubscriptionV1(t *testing.T) {
+//	helpers.EventTransformationForSubscriptionTestHelper(t, helpers.SubscriptionV1, channelTestRunner)
+//}
