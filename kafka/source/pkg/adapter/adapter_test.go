@@ -41,6 +41,10 @@ import (
 	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
 )
 
+const (
+	loginEventAvroSchema = `{"type": "record", "name": "LoginEvent", "fields": [{"name": "Username", "type": "string"}]}`
+)
+
 func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 	aTimestamp := time.Now()
 
@@ -341,29 +345,6 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 			error:        false,
 			avro:         true,
 		},
-		"avro_unencoded": {
-			sink: sinkAccepted,
-			message: &sarama.ConsumerMessage{
-				Key:       []byte("key"),
-				Topic:     "topic1",
-				Value:     mustJsonMarshal(t, map[string]string{"key": "value"}),
-				Partition: 1,
-				Offset:    2,
-				Timestamp: aTimestamp,
-			},
-			expectedHeaders: map[string]string{
-				"ce-specversion": "1.0",
-				"ce-id":          makeEventId(1, 2),
-				"ce-time":        types.FormatTime(aTimestamp),
-				"ce-type":        sourcesv1alpha1.KafkaEventType,
-				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
-				"ce-subject":     makeEventSubject(1, 2),
-				"ce-key":         "key",
-			},
-			expectedBody: `{"key":"value"}`,
-			error:        false,
-			avro:         true,
-		},
 	}
 
 	for n, tc := range testCases {
@@ -497,7 +478,7 @@ func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
 }
 
 func avroSchema(writer http.ResponseWriter, _ *http.Request) {
-	fmt.Fprint(writer, `{"schema": {"type": "record", "name": "LoginEvent", "fields": [{"name": "Username", "type": "string"}]}}`)
+	fmt.Fprint(writer, fmt.Sprintf("{\"schema\": %s}", loginEventAvroSchema))
 }
 
 func TestAdapter_Start(t *testing.T) { // just increase code coverage
@@ -515,7 +496,6 @@ func TestAdapter_Start(t *testing.T) { // just increase code coverage
 }
 
 func encodedMsg(m map[string]interface{}) []byte {
-	loginEventAvroSchema := `{"type": "record", "name": "LoginEvent", "fields": [{"name": "Username", "type": "string"}]}`
 	schemaIDBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIDBytes, uint32(1234))
 	codec, _ := goavro.NewCodec(loginEventAvroSchema)

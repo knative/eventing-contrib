@@ -69,7 +69,11 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.
 	kafkaMsg := msg
 
 	if a.avroDecoder != nil {
-		a.avroDecoder.decode(kafkaMsg, logger)
+		decodedMsg, err := a.avroDecoder.decode(kafkaMsg, logger)
+		if err != nil {
+			return err
+		}
+		kafkaMsg.Value = decodedMsg
 	}
 
 	event := cloudevents.NewEvent()
@@ -229,26 +233,30 @@ func (decoder *AvroDecoder) getCodec(schemaID int) (*goavro.Codec, error) {
 	return codec, nil
 }
 
-func (decoder *AvroDecoder) decode(msg *protocolkafka.Message, logger *zap.Logger) {
+func (decoder *AvroDecoder) decode(msg *protocolkafka.Message, logger *zap.Logger) ([]byte, error) {
+	if len(msg.Value) < 5 {
+		logger.Warn("Invalid message to decode")
+		return msg.Value, nil
+	}
 	schemaID := binary.BigEndian.Uint32(msg.Value[1:5])
 	if schemaID == 0 {
 		logger.Warn("Error getting the schema id", zap.Int("schema id", int(schemaID)))
-		return
+		return msg.Value, nil
 	}
 	codec, err := decoder.getCodec(int(schemaID))
 	if err != nil {
 		logger.Warn("Error getting the schema", zap.Error(err))
-		return
+		return msg.Value, nil
 	}
 	native, _, err := codec.NativeFromBinary(msg.Value[5:])
 	if err != nil {
-		logger.Warn("Error decoding message", zap.Error(err))
-		return
+		logger.Error("Error decoding message", zap.Error(err))
+		return nil, err
 	}
 	value, err := codec.TextualFromNative(nil, native)
 	if err != nil {
-		logger.Warn("Error decoding message", zap.Error(err))
-		return
+		logger.Error("Error decoding message", zap.Error(err))
+		return nil, err
 	}
-	msg.Value = value
+	return value, nil
 }
