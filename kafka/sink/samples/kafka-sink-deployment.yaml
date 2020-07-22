@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-sink
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &labels
+      app: kafka-sink
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: kafka-sink
+          # Source code: https://github.com/knative/eventing-contrib/tree/master/kafka/sink/cms/receive_adapter
+          #image: gcr.io/knative-releases/knative.dev/eventing-contrib/cmd/kafka/sink/cms/receive_adapter
+          #image: aslom/receive_adapter-e1b9f0da1df39ff0b2252942b7d14bee:latest
+          image: ko://knative.dev/eventing-contrib/kafka/sink/cmd/receive_adapter
+          env:
+            - name: KAFKA_SERVER
+              value: my-cluster-kafka-bootstrap.kafka:9092
+            - name: KAFKA_TOPIC
+              value: knative-sink-topic

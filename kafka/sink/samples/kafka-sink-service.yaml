@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: kafka-sink
+spec:
+  selector:
+    app: kafka-sink
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+
