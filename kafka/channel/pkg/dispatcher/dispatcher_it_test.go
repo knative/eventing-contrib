@@ -39,6 +39,8 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	tracingconfig "knative.dev/pkg/tracing/config"
+
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
 
@@ -58,7 +60,12 @@ func TestDispatcher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tracing.SetupStaticPublishing(logger.Sugar(), "localhost", tracing.AlwaysSample)
+	tracing.SetupStaticPublishing(logger.Sugar(), "localhost", &tracingconfig.Config{
+		Backend:        tracingconfig.Zipkin,
+		Debug:          true,
+		SampleRate:     1.0,
+		ZipkinEndpoint: "http://localhost:9411/api/v2/spans",
+	})
 
 	dispatcherArgs := KafkaDispatcherArgs{
 		KnCEConnectionArgs: nil,

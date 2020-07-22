@@ -22,6 +22,7 @@ import (
 	"reflect"
 
 	"go.uber.org/zap"
+	"knative.dev/eventing/pkg/tracing"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -93,9 +94,13 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 
 // NewController initializes the controller and is called by the generated code.
 // Registers event handlers to enqueue events.
-func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
-
+func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
 	logger := logging.FromContext(ctx)
+
+	err := tracing.SetupDynamicPublishing(logger.Sugar(), cmw.(*configmap.InformedWatcher), "kafka-ch-dispatcher", "config-tracing")
+	if err != nil {
+		logger.Fatal("unable to setup tracing", zap.Error(err))
+	}
 
 	configMap, err := configmap.Load("/etc/config-kafka")
 	if err != nil {
