@@ -36,7 +36,6 @@ import (
 	"knative.dev/pkg/logging"
 	pkgtesting "knative.dev/pkg/reconciler/testing"
 
-	"knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
 	"knative.dev/eventing-contrib/github/pkg/common"
 
 	// Fake injection informers
@@ -44,14 +43,8 @@ import (
 )
 
 const (
-	testSubject   = "1234"
-	testOwnerRepo = "test-user/test-repo"
-	secretToken   = "gitHubsecret"
-	eventID       = "12345"
-)
-
-var (
-	testSource = v1alpha1.GitHubEventSource(testOwnerRepo)
+	testSubject = "1234"
+	eventID     = "12345"
 )
 
 // testCase holds a single row of our GitHubSource table tests

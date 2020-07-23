@@ -126,7 +126,3 @@ var (
 func sinkAccepted(writer http.ResponseWriter, req *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 }
-
-func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
-	writer.WriteHeader(http.StatusRequestTimeout)
-}
