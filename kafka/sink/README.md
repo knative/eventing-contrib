@@ -108,10 +108,13 @@ RUn Kafka Sink receive adapter from command line:
 ```
 export KAFKA_SERVER=localhost:9092
 export KAFKA_TOPIC= test-topic
+export NAMESPACE=test
+export K_LOGGING_CONFIG=""
+export K_METRICS_CONFIG=""
 go run cmd/receive_adapter/main.go
 ```
 
-Send cloud event to Kafka Sink:
+And send an event to Kafka Sink:
 
 ```
 curl -v "http://localhost:8080" \
@@ -124,3 +127,19 @@ curl -v "http://localhost:8080" \
   -d '{"msg":"Hello Kafka Sink!"}'
 ```
 
+Expected output:
+
+```
+{"level":"info","ts":"2020-07-23T16:25:09.138-0400","caller":"logging/config.go:110","msg":"Successfully created the logger."}
+{"level":"info","ts":"2020-07-23T16:25:09.138-0400","caller":"logging/config.go:111","msg":"Logging level set to info"}
+{"level":"info","ts":"2020-07-23T16:25:09.138-0400","caller":"logging/config.go:78","msg":"Fetch GitHub commit ID from kodata failed","error":"\"KO_DATA_PATH\" does not exist or is empty"}
+{"level":"error","ts":"2020-07-23T16:25:09.139-0400","logger":"kafkasink","caller":"v2/main.go:71","msg":"failed to process metrics options{error 25 0  json options string is empty}","stacktrace":"knative.dev/eventing/pkg/adapter/v2.MainWithContext\n\t/Users/aslom/Documents/awsm/go/src/knative.dev/eventing-contrib/vendor/knative.dev/eventing/pkg/adapter/v2/main.go:71\nknative.dev/eventing/pkg/adapter/v2.Main\n\t/Users/aslom/Documents/awsm/go/src/knative.dev/eventing-contrib/vendor/knative.dev/eventing/pkg/adapter/v2/main.go:46\nmain.main\n\t/Users/aslom/Documents/awsm/go/src/knative.dev/eventing-contrib/kafka/sink/cmd/receive_adapter/main.go:26\nruntime.main\n\t/usr/local/Cellar/go/1.14/libexec/src/runtime/proc.go:203"}
+{"level":"warn","ts":"2020-07-23T16:25:09.139-0400","logger":"kafkasink","caller":"v2/config.go:163","msg":"Tracing configuration is invalid, using the no-op default{error 25 0  empty json tracing config}"}
+{"level":"info","ts":"2020-07-23T16:25:09.139-0400","logger":"kafkasink","caller":"adapter/adapter.go:84","msg":"Using HTTP PORT=%d8080"}
+{"level":"info","ts":"2020-07-23T16:25:09.139-0400","logger":"kafkasink","caller":"adapter/adapter.go:95","msg":"Sinking from HTTP to KAFKA_SERVER=%s KAFKA_TOPIC=%slocalhost:9092test-topic"}
+{"level":"info","ts":"2020-07-23T16:25:09.144-0400","logger":"kafkasink","caller":"adapter/adapter.go:131","msg":"Server is ready to handle requests."}
+{"level":"info","ts":"2020-07-23T16:25:09.144-0400","logger":"kafkasink","caller":"adapter/adapter.go:106","msg":"Ready to receive"}
+{"level":"info","ts":"2020-07-23T16:25:16.286-0400","logger":"kafkasink","caller":"adapter/adapter.go:109","msg":"Received message"}
+{"level":"info","ts":"2020-07-23T16:25:16.286-0400","logger":"kafkasink","caller":"adapter/adapter.go:116","msg":"Sending message to Kafka"}
+{"level":"info","ts":"2020-07-23T16:25:16.291-0400","logger":"kafkasink","caller":"adapter/adapter.go:106","msg":"Ready to receive"}
+```

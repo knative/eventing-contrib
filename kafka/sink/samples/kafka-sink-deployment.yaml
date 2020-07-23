@@ -22,3 +22,9 @@ spec:
               value: my-cluster-kafka-bootstrap.kafka:9092
             - name: KAFKA_TOPIC
               value: knative-sink-topic
+            - name: NAMESPACE
+              value: ignore
+            - name: K_LOGGING_CONFIG
+              value: ""
+            - name: K_METRICS_CONFIG
+              value: ""
