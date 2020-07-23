@@ -97,7 +97,7 @@ func makeEventSubject(partition int32, offset int64) string {
 var replaceBadCharacters = regexp.MustCompile(`[^a-zA-Z0-9]`).ReplaceAllString
 
 func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, key []byte, msg *protocolkafka.Message) {
-	if key != nil && len(key) > 0 {
+	if len(key) > 0 {
 		event.SetExtension("key", keyTypeMapper(key))
 	}
 	for k, v := range msg.Headers {
