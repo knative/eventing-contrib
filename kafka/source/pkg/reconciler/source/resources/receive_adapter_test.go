@@ -36,9 +36,8 @@ func TestMakeReceiveAdapter(t *testing.T) {
 			Namespace: "source-namespace",
 		},
 		Spec: v1beta1.KafkaSourceSpec{
-			ServiceAccountName: "source-svc-acct",
-			Topics:             []string{"topic1,topic2"},
-			ConsumerGroup:      "group",
+			Topics:        []string{"topic1,topic2"},
+			ConsumerGroup: "group",
 			KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
 				BootstrapServers: []string{"server1,server2"},
 				Net: bindingsv1beta1.KafkaNetSpec{
@@ -255,8 +254,7 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 			Namespace: "source-namespace",
 		},
 		Spec: v1beta1.KafkaSourceSpec{
-			ServiceAccountName: "source-svc-acct",
-			Topics:             []string{"topic1,topic2"},
+			Topics: []string{"topic1,topic2"},
 			KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
 				BootstrapServers: []string{"server1,server2"},
 			},
@@ -361,16 +359,6 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 
 	if diff, err := kmp.SafeDiff(want, got); err != nil {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
-	}
-	src.Spec.Resources = v1beta1.KafkaResourceSpec{
-		Requests: v1beta1.KafkaRequestsSpec{
-			ResourceCPU:    "101m",
-			ResourceMemory: "200Mi",
-		},
-		Limits: v1beta1.KafkaLimitsSpec{
-			ResourceCPU:    "102m",
-			ResourceMemory: "500Mi",
-		},
 	}
 	want.Spec.Template.Spec.Containers = []corev1.Container{
 		{
@@ -485,8 +473,7 @@ func TestMakeReceiveAdapterKeyType(t *testing.T) {
 			},
 		},
 		Spec: v1beta1.KafkaSourceSpec{
-			ServiceAccountName: "source-svc-acct",
-			Topics:             []string{"topic1,topic2"},
+			Topics: []string{"topic1,topic2"},
 			KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
 				BootstrapServers: []string{"server1,server2"},
 			},

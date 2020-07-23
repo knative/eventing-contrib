@@ -23,7 +23,6 @@ import (
 
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing/pkg/utils"
@@ -80,34 +79,6 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_KEY", args.Source.Spec.Net.TLS.Key.SecretKeyRef)
 	env = appendEnvFromSecretKeyRef(env, "KAFKA_NET_TLS_CA_CERT", args.Source.Spec.Net.TLS.CACert.SecretKeyRef)
 
-	RequestResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceCPU)
-	if err != nil {
-		RequestResourceCPU = resource.MustParse("250m")
-	}
-	RequestResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Requests.ResourceMemory)
-	if err != nil {
-		RequestResourceMemory = resource.MustParse("512Mi")
-	}
-	LimitResourceCPU, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceCPU)
-	if err != nil {
-		LimitResourceCPU = resource.MustParse("250m")
-	}
-	LimitResourceMemory, err := resource.ParseQuantity(args.Source.Spec.Resources.Limits.ResourceMemory)
-	if err != nil {
-		LimitResourceMemory = resource.MustParse("512Mi")
-	}
-
-	res := corev1.ResourceRequirements{
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    RequestResourceCPU,
-			corev1.ResourceMemory: RequestResourceMemory,
-		},
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    LimitResourceCPU,
-			corev1.ResourceMemory: LimitResourceMemory,
-		},
-	}
-
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      utils.GenerateFixedName(args.Source, fmt.Sprintf("kafkasource-%s", args.Source.Name)),
@@ -130,13 +101,11 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 					Labels: args.Labels,
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: args.Source.Spec.ServiceAccountName,
 					Containers: []corev1.Container{
 						{
-							Name:      "receive-adapter",
-							Image:     args.Image,
-							Env:       env,
-							Resources: res,
+							Name:  "receive-adapter",
+							Image: args.Image,
+							Env:   env,
 						},
 					},
 				},

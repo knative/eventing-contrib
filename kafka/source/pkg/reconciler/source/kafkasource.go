@@ -27,7 +27,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/apis"
@@ -96,7 +95,7 @@ var _ reconcilerkafkasource.Interface = (*Reconciler)(nil)
 func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1beta1.KafkaSource) pkgreconciler.Event {
 	src.Status.InitializeConditions()
 
-	if src.Spec.Sink == nil {
+	if (src.Spec.Sink == duckv1.Destination{}) {
 		src.Status.MarkNoSink("SinkMissing", "")
 		return fmt.Errorf("spec.sink missing")
 	}
@@ -125,9 +124,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1beta1.KafkaSource
 			}
 		}
 		if !found {
-			src.Status.MarkResourcesIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1beta1.KafkaKeyTypeLabel, val, v1beta1.KafkaKeyTypeAllowed)
+			src.Status.MarkKeyTypeIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1beta1.KafkaKeyTypeLabel, val, v1beta1.KafkaKeyTypeAllowed)
 			logging.FromContext(ctx).Errorf("Invalid value for %s: %s. Allowed: %v", v1beta1.KafkaKeyTypeLabel, val, v1beta1.KafkaKeyTypeAllowed)
 			return errors.New("IncorrectKafkaKeyTypeLabel")
+		} else {
+			src.Status.MarkKeyTypeCorrect()
 		}
 	}
 
@@ -151,40 +152,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1beta1.KafkaSource
 	return nil
 }
 
-func checkResourcesStatus(src *v1beta1.KafkaSource) error {
-	for _, rsrc := range []struct {
-		key   string
-		field string
-	}{{
-		key:   "Request.CPU",
-		field: src.Spec.Resources.Requests.ResourceCPU,
-	}, {
-		key:   "Request.Memory",
-		field: src.Spec.Resources.Requests.ResourceMemory,
-	}, {
-		key:   "Limit.CPU",
-		field: src.Spec.Resources.Limits.ResourceCPU,
-	}, {
-		key:   "Limit.Memory",
-		field: src.Spec.Resources.Limits.ResourceMemory,
-	}} {
-		// In the event the field isn't specified, we assign a default in the receive_adapter
-		if rsrc.field != "" {
-			if _, err := resource.ParseQuantity(rsrc.field); err != nil {
-				src.Status.MarkResourcesIncorrect("Incorrect Resource", "%s: %s, Error: %s", rsrc.key, rsrc.field, err)
-				return err
-			}
-		}
-	}
-	src.Status.MarkResourcesCorrect()
-	return nil
-}
-
 func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
-	if err := checkResourcesStatus(src); err != nil {
-		return nil, err
-	}
-
 	raArgs := resources.ReceiveAdapterArgs{
 		Image:          r.receiveAdapterImage,
 		Source:         src,
@@ -195,7 +163,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 	expected := resources.MakeReceiveAdapter(&raArgs)
 
 	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
 		if err != nil {
 			return nil, newDeploymentFailed(ra.Namespace, ra.Name, err)
