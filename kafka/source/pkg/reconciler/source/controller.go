@@ -22,7 +22,7 @@ import (
 
 	"k8s.io/client-go/tools/cache"
 
-	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing/pkg/reconciler/source"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -33,8 +33,8 @@ import (
 	"knative.dev/pkg/resolver"
 
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client"
-	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource"
-	"knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
+	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1beta1/kafkasource"
+	"knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 )
 
 func NewController(
@@ -69,7 +69,7 @@ func NewController(
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterControllerGK(v1alpha1.Kind("KafkaSource")),
+		FilterFunc: controller.FilterControllerGK(v1beta1.Kind("KafkaSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 

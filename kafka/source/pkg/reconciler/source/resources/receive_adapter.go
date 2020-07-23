@@ -25,14 +25,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/kmeta"
 )
 
 type ReceiveAdapterArgs struct {
 	Image          string
-	Source         *v1alpha1.KafkaSource
+	Source         *v1beta1.KafkaSource
 	Labels         map[string]string
 	SinkURI        string
 	AdditionalEnvs []corev1.EnvVar
@@ -67,7 +67,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		Value: args.Source.Namespace,
 	}}, args.AdditionalEnvs...)
 
-	if val, ok := args.Source.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
+	if val, ok := args.Source.GetLabels()[v1beta1.KafkaKeyTypeLabel]; ok {
 		env = append(env, corev1.EnvVar{
 			Name:  "KEY_TYPE",
 			Value: val,

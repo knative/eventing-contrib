@@ -19,7 +19,7 @@ package binding
 import (
 	"context"
 
-	kfkinformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/bindings/v1alpha1/kafkabinding"
+	kfkinformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/bindings/v1beta1/kafkabinding"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/podspecable"
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/namespace"
 	"knative.dev/pkg/reconciler"
@@ -30,7 +30,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/apis/duck"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -72,7 +72,7 @@ func NewController(
 				return nil
 			},
 		},
-		GVR: v1alpha1.SchemeGroupVersion.WithResource("kafkabindings"),
+		GVR: v1beta1.SchemeGroupVersion.WithResource("kafkabindings"),
 		Get: func(namespace string, name string) (psbinding.Bindable, error) {
 			return kfkInformer.Lister().KafkaBindings(namespace).Get(name)
 		},

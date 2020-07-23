@@ -24,27 +24,27 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	bindingsv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/kmp"
 )
 
 func TestMakeReceiveAdapter(t *testing.T) {
-	src := &v1alpha1.KafkaSource{
+	src := &v1beta1.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "source-name",
 			Namespace: "source-namespace",
 		},
-		Spec: v1alpha1.KafkaSourceSpec{
+		Spec: v1beta1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
 			Topics:             []string{"topic1,topic2"},
 			ConsumerGroup:      "group",
-			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+			KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
 				BootstrapServers: []string{"server1,server2"},
-				Net: bindingsv1alpha1.KafkaNetSpec{
-					SASL: bindingsv1alpha1.KafkaSASLSpec{
+				Net: bindingsv1beta1.KafkaNetSpec{
+					SASL: bindingsv1beta1.KafkaSASLSpec{
 						Enable: true,
-						User: bindingsv1alpha1.SecretValueFromSource{
+						User: bindingsv1beta1.SecretValueFromSource{
 							SecretKeyRef: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "the-user-secret",
@@ -52,7 +52,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 								Key: "user",
 							},
 						},
-						Password: bindingsv1alpha1.SecretValueFromSource{
+						Password: bindingsv1beta1.SecretValueFromSource{
 							SecretKeyRef: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "the-password-secret",
@@ -61,9 +61,9 @@ func TestMakeReceiveAdapter(t *testing.T) {
 							},
 						},
 					},
-					TLS: bindingsv1alpha1.KafkaTLSSpec{
+					TLS: bindingsv1beta1.KafkaTLSSpec{
 						Enable: true,
-						Cert: bindingsv1alpha1.SecretValueFromSource{
+						Cert: bindingsv1beta1.SecretValueFromSource{
 							SecretKeyRef: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "the-cert-secret",
@@ -71,7 +71,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 								Key: "tls.crt",
 							},
 						},
-						Key: bindingsv1alpha1.SecretValueFromSource{
+						Key: bindingsv1beta1.SecretValueFromSource{
 							SecretKeyRef: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "the-key-secret",
@@ -79,7 +79,7 @@ func TestMakeReceiveAdapter(t *testing.T) {
 								Key: "tls.key",
 							},
 						},
-						CACert: bindingsv1alpha1.SecretValueFromSource{
+						CACert: bindingsv1beta1.SecretValueFromSource{
 							SecretKeyRef: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "the-ca-cert-secret",
@@ -249,15 +249,15 @@ func TestMakeReceiveAdapter(t *testing.T) {
 }
 
 func TestMakeReceiveAdapterNoNet(t *testing.T) {
-	src := &v1alpha1.KafkaSource{
+	src := &v1beta1.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "source-name",
 			Namespace: "source-namespace",
 		},
-		Spec: v1alpha1.KafkaSourceSpec{
+		Spec: v1beta1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
 			Topics:             []string{"topic1,topic2"},
-			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+			KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
 				BootstrapServers: []string{"server1,server2"},
 			},
 			ConsumerGroup: "group",
@@ -362,12 +362,12 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 	if diff, err := kmp.SafeDiff(want, got); err != nil {
 		t.Errorf("unexpected deploy (-want, +got) = %v", diff)
 	}
-	src.Spec.Resources = v1alpha1.KafkaResourceSpec{
-		Requests: v1alpha1.KafkaRequestsSpec{
+	src.Spec.Resources = v1beta1.KafkaResourceSpec{
+		Requests: v1beta1.KafkaRequestsSpec{
 			ResourceCPU:    "101m",
 			ResourceMemory: "200Mi",
 		},
-		Limits: v1alpha1.KafkaLimitsSpec{
+		Limits: v1beta1.KafkaLimitsSpec{
 			ResourceCPU:    "102m",
 			ResourceMemory: "500Mi",
 		},
@@ -476,18 +476,18 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 }
 
 func TestMakeReceiveAdapterKeyType(t *testing.T) {
-	src := &v1alpha1.KafkaSource{
+	src := &v1beta1.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "source-name",
 			Namespace: "source-namespace",
 			Labels: map[string]string{
-				v1alpha1.KafkaKeyTypeLabel: "int",
+				v1beta1.KafkaKeyTypeLabel: "int",
 			},
 		},
-		Spec: v1alpha1.KafkaSourceSpec{
+		Spec: v1beta1.KafkaSourceSpec{
 			ServiceAccountName: "source-svc-acct",
 			Topics:             []string{"topic1,topic2"},
-			KafkaAuthSpec: bindingsv1alpha1.KafkaAuthSpec{
+			KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
 				BootstrapServers: []string{"server1,server2"},
 			},
 			ConsumerGroup: "group",

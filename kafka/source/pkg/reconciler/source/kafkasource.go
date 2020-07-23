@@ -33,7 +33,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source/resources"
 
 	"k8s.io/client-go/kubernetes"
@@ -43,8 +43,8 @@ import (
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
-	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
-	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
+	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
+	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1beta1"
 )
 
 const (
@@ -93,7 +93,7 @@ type Reconciler struct {
 // Check that our Reconciler implements Interface
 var _ reconcilerkafkasource.Interface = (*Reconciler)(nil)
 
-func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSource) pkgreconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1beta1.KafkaSource) pkgreconciler.Event {
 	src.Status.InitializeConditions()
 
 	if src.Spec.Sink == nil {
@@ -117,16 +117,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 	}
 	src.Status.MarkSink(sinkURI)
 
-	if val, ok := src.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
+	if val, ok := src.GetLabels()[v1beta1.KafkaKeyTypeLabel]; ok {
 		found := false
-		for _, allowed := range v1alpha1.KafkaKeyTypeAllowed {
+		for _, allowed := range v1beta1.KafkaKeyTypeAllowed {
 			if allowed == val {
 				found = true
 			}
 		}
 		if !found {
-			src.Status.MarkResourcesIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
-			logging.FromContext(ctx).Errorf("Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
+			src.Status.MarkResourcesIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1beta1.KafkaKeyTypeLabel, val, v1beta1.KafkaKeyTypeAllowed)
+			logging.FromContext(ctx).Errorf("Invalid value for %s: %s. Allowed: %v", v1beta1.KafkaKeyTypeLabel, val, v1beta1.KafkaKeyTypeAllowed)
 			return errors.New("IncorrectKafkaKeyTypeLabel")
 		}
 	}
@@ -151,7 +151,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 	return nil
 }
 
-func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
+func checkResourcesStatus(src *v1beta1.KafkaSource) error {
 	for _, rsrc := range []struct {
 		key   string
 		field string
@@ -180,7 +180,7 @@ func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
 	return nil
 }
 
-func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
+func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
 	if err := checkResourcesStatus(src); err != nil {
 		return nil, err
 	}
@@ -233,14 +233,14 @@ func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
 	return false
 }
 
-func (r *Reconciler) createCloudEventAttributes(src *v1alpha1.KafkaSource) []duckv1.CloudEventAttributes {
+func (r *Reconciler) createCloudEventAttributes(src *v1beta1.KafkaSource) []duckv1.CloudEventAttributes {
 	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(src.Spec.Topics))
 	for i := range src.Spec.Topics {
 		topics := strings.Split(src.Spec.Topics[i], ",")
 		for _, topic := range topics {
 			ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
-				Type:   v1alpha1.KafkaEventType,
-				Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
+				Type:   v1beta1.KafkaEventType,
+				Source: v1beta1.KafkaEventSource(src.Namespace, src.Name, topic),
 			})
 		}
 	}

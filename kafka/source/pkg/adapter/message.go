@@ -33,7 +33,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
-	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 )
 
 func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
@@ -61,8 +61,8 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.
 
 	event.SetID(makeEventId(cm.Partition, cm.Offset))
 	event.SetTime(cm.Timestamp)
-	event.SetType(sourcesv1alpha1.KafkaEventType)
-	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, cm.Topic))
+	event.SetType(sourcesv1beta1.KafkaEventType)
+	event.SetSource(sourcesv1beta1.KafkaEventSource(a.config.Namespace, a.config.Name, cm.Topic))
 	event.SetSubject(makeEventSubject(cm.Partition, cm.Offset))
 
 	dumpKafkaMetaToEvent(&event, a.keyTypeMapper, cm.Key, kafkaMsg)
