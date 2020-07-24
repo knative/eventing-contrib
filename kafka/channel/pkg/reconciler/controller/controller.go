@@ -40,8 +40,8 @@ import (
 	"knative.dev/pkg/system"
 
 	kafkaChannelClient "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
-	kafkaChannelReconciler "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1alpha1/kafkachannel"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
+	kafkaChannelReconciler "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 	eventingClient "knative.dev/eventing/pkg/client/injection/client"
 )
 

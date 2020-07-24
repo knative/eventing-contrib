@@ -42,7 +42,7 @@ topics.
 1. Create the `KafkaChannel` custom objects:
 
    ```yaml
-   apiVersion: messaging.knative.dev/v1alpha1
+   apiVersion: messaging.knative.dev/v1beta1
    kind: KafkaChannel
    metadata:
      name: my-kafka-channel
@@ -119,7 +119,7 @@ data:
 Then create a KafkaChannel:
 
 ```yaml
-apiVersion: messaging.knative.dev/v1alpha1
+apiVersion: messaging.knative.dev/v1beta1
 kind: KafkaChannel
 metadata:
   name: my-kafka-channel

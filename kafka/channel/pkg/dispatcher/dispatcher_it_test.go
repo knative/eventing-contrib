@@ -31,7 +31,7 @@ import (
 	protocolhttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/cloudevents/sdk-go/v2/test"
 	"go.uber.org/zap"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/apis"

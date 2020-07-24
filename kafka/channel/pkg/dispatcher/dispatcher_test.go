@@ -33,7 +33,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	_ "knative.dev/pkg/system/testing"
 

@@ -30,7 +30,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
 	"knative.dev/eventing/pkg/kncloudevents"
 
