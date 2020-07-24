@@ -61,7 +61,7 @@ type kafkaSinkAdapter struct {
 	topic       string
 }
 
-// NewAdapter returns the instance of gitHubReceiveAdapter that implements adapter.Adapter interface
+// NewAdapter returns the instance of kafkaSinkAdapter that implements adapter.Adapter interface
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClient cloudevents.Client) adapter.Adapter {
 	logger := logging.FromContext(ctx)
 	env := processed.(*envConfig)
@@ -78,8 +78,6 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 func (a *kafkaSinkAdapter) Start(ctx context.Context) error {
 	saramaConfig := sarama.NewConfig()
 	saramaConfig.Version = sarama.V2_0_0_0
-
-	//done := make(chan bool, 1)
 
 	a.logger.Info("Using HTTP PORT=%d", a.port)
 	port, err := strconv.Atoi(a.port)

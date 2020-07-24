@@ -95,7 +95,8 @@ k logs -f kafka-sink-694fd8f689-smwq4
 {"level":"info","ts":"2020-07-23T16:25:09.144-0400","logger":"kafkasink","caller":"adapter/adapter.go:106","msg":"Ready to receive"}
 {"level":"info","ts":"2020-07-23T16:25:16.286-0400","logger":"kafkasink","caller":"adapter/adapter.go:109","msg":"Received message"}
 {"level":"info","ts":"2020-07-23T16:25:16.286-0400","logger":"kafkasink","caller":"adapter/adapter.go:116","msg":"Sending message to Kafka"}
-{"level":"info","ts":"2020-07-23T16:25:16.291-0400","logger":"kafkasink","caller":"adapter/adapter.go:106","msg":"Ready to receive"}```
+{"level":"info","ts":"2020-07-23T16:25:16.291-0400","logger":"kafkasink","caller":"adapter/adapter.go:106","msg":"Ready to receive"}
+```
 
 And verify that event was received by Kafka, for example
 
