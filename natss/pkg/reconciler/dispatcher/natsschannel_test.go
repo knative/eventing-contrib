@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -39,6 +40,7 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/client/injection/client"
 	fakeclientset "knative.dev/eventing-contrib/natss/pkg/client/injection/client/fake"
 	_ "knative.dev/eventing-contrib/natss/pkg/client/injection/informers/messaging/v1alpha1/natsschannel/fake"
+	natsschannelreconciler "knative.dev/eventing-contrib/natss/pkg/client/injection/reconciler/messaging/v1alpha1/natsschannel"
 	"knative.dev/eventing-contrib/natss/pkg/dispatcher"
 	dispatchertesting "knative.dev/eventing-contrib/natss/pkg/dispatcher/testing"
 	reconciletesting "knative.dev/eventing-contrib/natss/pkg/reconciler/testing"
@@ -49,6 +51,14 @@ import (
 const (
 	testNS = "test-namespace"
 	ncName = "test-nc"
+)
+
+var (
+	finalizerUpdatedEvent = Eventf(
+		corev1.EventTypeNormal,
+		"FinalizerUpdate",
+		fmt.Sprintf(`Updated %q finalizers`, ncName),
+	)
 )
 
 func TestAllCases(t *testing.T) {
@@ -74,37 +84,20 @@ func TestAllCases(t *testing.T) {
 			WantPatches: []clientgotesting.PatchActionImpl{
 				makeFinalizerPatch(testNS, ncName),
 			},
-			WantErr: false,
-		},
-		{
-			Name: "reconcile error: channel not ready",
-			Key:  ncKey,
-			Objects: []runtime.Object{
-				reconciletesting.NewNatssChannel(ncName, testNS,
-					reconciletesting.WithNotReady("ups", ""),
-				),
-			},
-			WantErr: true,
-		},
-		{
-			Name: "remove finalizer even though channel is not ready",
-			Key:  ncKey,
-			Objects: []runtime.Object{
-				reconciletesting.NewNatssChannel(ncName, testNS,
-					// the finalizer should get removed
-					reconciletesting.WithNatssChannelFinalizer,
-					// make sure that finalizer can get removed even if channel is not ready
-					reconciletesting.WithNotReady("ups", ""),
-					reconciletesting.WithNatssChannelDeleted),
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 			WantErr: false,
-			WantUpdates: []clientgotesting.UpdateActionImpl{
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: reconciletesting.NewNatssChannel(ncName, testNS,
-						// finalizer is removed
-						// make sure that finalizer can get removed even if channel is not ready
-						reconciletesting.WithNotReady("ups", ""),
-						reconciletesting.WithNatssChannelDeleted),
+						reconciletesting.WithNatssChannelChannelServiceReady(),
+						reconciletesting.WithNatssChannelServiceReady(),
+						reconciletesting.WithNatssChannelEndpointsReady(),
+						reconciletesting.WithNatssChannelDeploymentReady(),
+						reconciletesting.Addressable(),
+						reconciletesting.WithReady,
+					),
 				},
 			},
 		},
@@ -157,15 +150,29 @@ func TestFailedNatssSubscription(t *testing.T) {
 			Name: "a failed natss subscription is reflected in Status.SubscribableStatus",
 			Objects: []runtime.Object{
 				reconciletesting.NewNatssChannel(ncName, testNS,
+					reconciletesting.WithNatssChannelChannelServiceReady(),
+					reconciletesting.WithNatssChannelServiceReady(),
+					reconciletesting.WithNatssChannelEndpointsReady(),
+					reconciletesting.WithNatssChannelDeploymentReady(),
+					reconciletesting.Addressable(),
 					reconciletesting.WithReady,
 					// add subscriber for channel
 					reconciletesting.WithNatssChannelSubscribers(t, "http://dummy.org"),
 				),
 			},
 			Key: ncKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(corev1.EventTypeWarning, "InternalError", "\nups"),
+			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: reconciletesting.NewNatssChannel(ncName, testNS,
+						reconciletesting.WithNatssChannelChannelServiceReady(),
+						reconciletesting.WithNatssChannelServiceReady(),
+						reconciletesting.WithNatssChannelEndpointsReady(),
+						reconciletesting.WithNatssChannelDeploymentReady(),
+						reconciletesting.Addressable(),
 						reconciletesting.WithReady,
 						// add subscriber for channel
 						reconciletesting.WithNatssChannelSubscribers(t, "http://dummy.org"),
@@ -204,9 +211,19 @@ func createReconciler(
 	dispatcherFactory func() dispatcher.NatssDispatcher,
 ) controller.Reconciler {
 
-	return &Reconciler{
-		natssDispatcher:    dispatcherFactory(),
-		natsschannelLister: listers.GetNatssChannelLister(),
-		natssClientSet:     client.Get(ctx),
-	}
+	return natsschannelreconciler.NewReconciler(
+		ctx,
+		logging.FromContext(ctx),
+		client.Get(ctx),
+		listers.GetNatssChannelLister(),
+		controller.GetEventRecorder(ctx),
+		&Reconciler{
+			natssDispatcher:    dispatcherFactory(),
+			natsschannelLister: listers.GetNatssChannelLister(),
+			natssClientSet:     client.Get(ctx),
+		},
+		controller.Options{
+			FinalizerName: finalizerName,
+		},
+	)
 }

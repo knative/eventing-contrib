@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"flag"
 	"os"
 
 	controller "knative.dev/eventing-contrib/natss/pkg/reconciler/dispatcher"
@@ -28,18 +27,14 @@ import (
 	"knative.dev/pkg/signals"
 )
 
-const component = "natsschannel_dispatcher"
+const component = "natsschannel-dispatcher"
 
 func main() {
-	flag.Parse()
 	ctx := signals.NewContext()
 	ns := os.Getenv("NAMESPACE")
 	if ns != "" {
 		ctx = injection.WithNamespaceScope(ctx, ns)
 	}
-
-	config := sharedmain.ParseAndGetConfigOrDie()
-	ctx = injection.WithConfig(ctx, config)
 
 	sharedmain.MainWithContext(ctx, component, controller.NewController)
 }

@@ -30,7 +30,7 @@ import (
 	"knative.dev/eventing-contrib/natss/pkg/reconciler/controller"
 )
 
-const component = "natsschannel_controller"
+const component = "natsschannel-controller"
 
 func main() {
 	flag.Parse()
