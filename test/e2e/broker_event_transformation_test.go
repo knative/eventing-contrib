@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing/pkg/apis/eventing"
 
 	"knative.dev/eventing/test/e2e/helpers"
 	"knative.dev/eventing/test/lib"
@@ -47,7 +48,7 @@ func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
 			t,
 			brokerVersion,
 			triggerVersion,
-			helpers.ChannelBasedBrokerCreator(component, brokerClass),
+			helpers.ChannelBasedBrokerCreator(component, eventing.MTChannelBrokerClassValue),
 		)
 	})
 }
