@@ -38,5 +38,8 @@ func main() {
 		ctx = injection.WithNamespaceScope(ctx, ns)
 	}
 
+	config := sharedmain.ParseAndGetConfigOrDie()
+	ctx = injection.WithConfig(ctx, config)
+
 	sharedmain.MainWithContext(ctx, component, controller.NewController)
 }
