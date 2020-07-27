@@ -47,9 +47,15 @@ spec:
             value: knative.dev/eventing
           - name: WEBHOOK_NAME
             value: kafka-webhook
+          - name: WEBHOOK_PORT
+            value: "8443"
         ports:
-          - containerPort: 9090
-            name: metrics
+          - name: https-webhook
+            containerPort: 8443
+          - name: metrics
+            containerPort: 9090
+          - name: profiling
+            containerPort: 8008
         # TODO set proper resource limits.
 
         readinessProbe: &probe
@@ -61,3 +67,8 @@ spec:
             - name: k-kubelet-probe
               value: "webhook"
         livenessProbe: *probe
+
+      # Our webhook should gracefully terminate by lame ducking first, set this to a sufficiently
+      # high value that we respect whatever value it has configured for the lame duck grace period.
+      terminationGracePeriodSeconds: 300
+
