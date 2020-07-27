@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
+	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 
@@ -159,6 +160,7 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	defer span.End()
 
 	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
+
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
 	return err == nil, err
 }
@@ -166,7 +168,7 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 var _ kafka.KafkaConsumerHandler = (*consumerMessageHandler)(nil)
 
 type subscription struct {
-	eventingduck.SubscriberSpec
+	fanout.Subscription
 	Namespace string
 	Name      string
 }
@@ -203,7 +205,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 				// only subscribe when not exists in channel-subscriptions map
 				// do not need to resubscribe every time channel fanout config is updated
 				if err := d.subscribe(channelRef, sub); err != nil {
-					failedToSubscribe[subSpec] = err
+					failedToSubscribe[subSpec.SubscriberSpec] = err
 				}
 			}
 		}
@@ -365,11 +367,11 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 	return cr, nil
 }
 
-func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace string) subscription {
+func newSubscription(sub fanout.Subscription, name string, namespace string) subscription {
 	return subscription{
-		SubscriberSpec: spec,
-		Name:           name,
-		Namespace:      namespace,
+		Subscription: sub,
+		Name:         name,
+		Namespace:    namespace,
 	}
 }
 

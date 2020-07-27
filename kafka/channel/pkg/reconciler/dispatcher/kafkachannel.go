@@ -22,6 +22,7 @@ import (
 	"reflect"
 
 	"go.uber.org/zap"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/tracing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -229,11 +230,24 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 		HostName:  c.Status.Address.Hostname,
 	}
 	if c.Spec.Subscribable != nil {
-		newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(c.Spec.Subscribable.Subscribers))
+		newSubs := make([]fanout.Subscription, len(c.Spec.Subscribable.Subscribers))
 		for i, source := range c.Spec.Subscribable.Subscribers {
-			source.ConvertTo(context.TODO(), &newSubs[i])
-			fmt.Printf("Converted \n%+v\n To\n%+v\n", source, newSubs[i])
-			fmt.Printf("Delivery converted \n%+v\nto\n%+v\n", source.Delivery, newSubs[i].Delivery)
+
+			_ = source.ConvertTo(context.TODO(), &newSubs[i])
+
+			// Extract retry configuration
+			retryConfig := kncloudevents.NoRetries()
+			if source.Delivery != nil {
+				delivery := &eventingduckv1.DeliverySpec{}
+				_ = source.Delivery.ConvertTo(context.TODO(), delivery)
+
+				_retryConfig, err := kncloudevents.RetryConfigFromDeliverySpec(*delivery)
+				if err == nil {
+					retryConfig = _retryConfig
+				}
+			}
+			newSubs[i].RetryConfig = retryConfig
+
 		}
 		channelConfig.FanoutConfig = fanout.Config{
 			AsyncHandler:  true,

@@ -128,6 +128,7 @@ type IssueEvent struct {
 	ObjectKind string `json:"object_kind"`
 	User       *User  `json:"user"`
 	Project    struct {
+		ID                int             `json:"id"`
 		Name              string          `json:"name"`
 		Description       string          `json:"description"`
 		AvatarURL         string          `json:"avatar_url"`
@@ -442,8 +443,8 @@ type IssueCommentEvent struct {
 		TimeEstimate        int      `json:"time_estimate"`
 		Confidential        bool     `json:"confidential"`
 		TotalTimeSpent      int      `json:"total_time_spent"`
-		HumanTotalTimeSpent int      `json:"human_total_time_spent"`
-		HumanTimeEstimate   int      `json:"human_time_estimate"`
+		HumanTotalTimeSpent string   `json:"human_total_time_spent"`
+		HumanTimeEstimate   string   `json:"human_time_estimate"`
 		AssigneeIDs         []int    `json:"assignee_ids"`
 		AssigneeID          int      `json:"assignee_id"`
 	} `json:"issue"`

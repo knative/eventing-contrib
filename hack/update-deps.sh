@@ -24,7 +24,7 @@ source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
 
 cd ${REPO_ROOT_DIR}
 
-VERSION="release-0.16"
+VERSION="master"
 
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.

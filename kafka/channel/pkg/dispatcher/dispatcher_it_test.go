@@ -160,20 +160,27 @@ func TestDispatcher(t *testing.T) {
 				HostName:  "channela.svc",
 				FanoutConfig: fanout.Config{
 					AsyncHandler: false,
-					Subscriptions: []eventingduck.SubscriberSpec{{
-						UID:           "aaaa",
-						Generation:    1,
-						SubscriberURI: mustParseUrl(t, transformationsServer.URL),
-						ReplyURI:      mustParseUrl(t, channelBProxy.URL),
-					}, {
-						UID:           "cccc",
-						Generation:    1,
-						SubscriberURI: mustParseUrl(t, transformationsFailureServer.URL),
-						ReplyURI:      mustParseUrl(t, channelBProxy.URL),
-						Delivery: &eventingduck.DeliverySpec{
-							DeadLetterSink: &duckv1.Destination{URI: mustParseUrl(t, deadLetterServer.URL)},
+					Subscriptions: []fanout.Subscription{
+						{
+							SubscriberSpec: eventingduck.SubscriberSpec{
+								UID:           "aaaa",
+								Generation:    1,
+								SubscriberURI: mustParseUrl(t, transformationsServer.URL),
+								ReplyURI:      mustParseUrl(t, channelBProxy.URL),
+							},
 						},
-					}},
+						{
+							SubscriberSpec: eventingduck.SubscriberSpec{
+								UID:           "cccc",
+								Generation:    1,
+								SubscriberURI: mustParseUrl(t, transformationsFailureServer.URL),
+								ReplyURI:      mustParseUrl(t, channelBProxy.URL),
+								Delivery: &eventingduck.DeliverySpec{
+									DeadLetterSink: &duckv1.Destination{URI: mustParseUrl(t, deadLetterServer.URL)},
+								},
+							},
+						},
+					},
 				},
 			},
 			{
@@ -182,11 +189,15 @@ func TestDispatcher(t *testing.T) {
 				HostName:  "channelb.svc",
 				FanoutConfig: fanout.Config{
 					AsyncHandler: false,
-					Subscriptions: []eventingduck.SubscriberSpec{{
-						UID:           "bbbb",
-						Generation:    1,
-						SubscriberURI: mustParseUrl(t, receiverServer.URL),
-					}},
+					Subscriptions: []fanout.Subscription{
+						{
+							SubscriberSpec: eventingduck.SubscriberSpec{
+								UID:           "bbbb",
+								Generation:    1,
+								SubscriberURI: mustParseUrl(t, receiverServer.URL),
+							},
+						},
+					},
 				},
 			},
 		},
