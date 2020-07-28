@@ -58,20 +58,6 @@ func init() {
 	_ = kafkaScheme.AddToScheme(scheme.Scheme)
 }
 
-const (
-	// ReconcilerName is the name of the reconciler.
-	ReconcilerName = "KafkaChannels"
-
-	// controllerAgentName is the string used by this controller to identify
-	// itself when creating events.
-	controllerAgentName = "kafka-ch-dispatcher"
-
-	// Name of the corev1.Events emitted from the reconciliation process.
-	channelReconciled         = "ChannelReconciled"
-	channelReconcileFailed    = "ChannelReconcileFailed"
-	channelUpdateStatusFailed = "ChannelUpdateStatusFailed"
-)
-
 // Reconciler reconciles Kafka Channels.
 type Reconciler struct {
 	kafkaDispatcher *dispatcher.KafkaDispatcher
@@ -233,21 +219,16 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 		newSubs := make([]fanout.Subscription, len(c.Spec.Subscribable.Subscribers))
 		for i, source := range c.Spec.Subscribable.Subscribers {
 
-			_ = source.ConvertTo(context.TODO(), &newSubs[i])
-
 			// Extract retry configuration
-			retryConfig := kncloudevents.NoRetries()
 			if source.Delivery != nil {
 				delivery := &eventingduckv1.DeliverySpec{}
 				_ = source.Delivery.ConvertTo(context.TODO(), delivery)
 
 				_retryConfig, err := kncloudevents.RetryConfigFromDeliverySpec(*delivery)
 				if err == nil {
-					retryConfig = _retryConfig
+					newSubs[i].RetryConfig = &_retryConfig
 				}
 			}
-			newSubs[i].RetryConfig = retryConfig
-
 		}
 		channelConfig.FanoutConfig = fanout.Config{
 			AsyncHandler:  true,
@@ -255,6 +236,9 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 		}
 	}
 	return &channelConfig
+}
+
+type Config struct {
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.

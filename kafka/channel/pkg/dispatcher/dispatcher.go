@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	nethttp "net/http"
-	"net/url"
 	"sync"
 	"sync/atomic"
 
@@ -130,7 +129,6 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		if r := recover(); r != nil {
 			c.logger.Warn("Panic happened while handling a message",
 				zap.String("topic", consumerMessage.Topic),
-				zap.String("sub", string(c.sub.UID)),
 				zap.Any("panic value", r),
 			)
 		}
@@ -139,27 +137,18 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	if message.ReadEncoding() == binding.EncodingUnknown {
 		return false, errors.New("received a message with unknown encoding")
 	}
-	var destination *url.URL
-	if !c.sub.SubscriberURI.IsEmpty() {
-		destination = c.sub.SubscriberURI.URL()
-	}
-	var reply *url.URL
-	if !c.sub.ReplyURI.IsEmpty() {
-		reply = c.sub.ReplyURI.URL()
-	}
-	var deadLetter *url.URL
-	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && !c.sub.Delivery.DeadLetterSink.URI.IsEmpty() {
-		deadLetter = c.sub.Delivery.DeadLetterSink.URI.URL()
-	}
+
 	c.logger.Debug("Going to dispatch the message",
 		zap.String("topic", consumerMessage.Topic),
-		zap.String("sub", string(c.sub.UID)),
+		zap.Any("destination", c.sub.Subscriber),
+		zap.Any("reply", c.sub.Reply),
+		zap.Any("deadLetter", c.sub.DeadLetter),
 	)
 
 	ctx, span := startTraceFromMessage(c.logger, ctx, message, consumerMessage.Topic)
 	defer span.End()
 
-	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
+	err := c.dispatcher.DispatchMessage(ctx, message, nil, c.sub.Subscriber, c.sub.Reply, c.sub.DeadLetter)
 
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
 	return err == nil, err
@@ -299,7 +288,7 @@ func (d *KafkaDispatcher) Start(ctx context.Context) error {
 // subscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
 // subscribe must be called under updateLock.
 func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference, sub subscription) error {
-	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
+	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub.SubscriberSpec))
 
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
 	groupID := fmt.Sprintf("kafka.%s.%s.%s", sub.Namespace, channelRef.Name, sub.Name)
