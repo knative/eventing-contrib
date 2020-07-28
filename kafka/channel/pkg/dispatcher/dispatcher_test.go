@@ -23,27 +23,25 @@ import (
 	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap/zaptest"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"knative.dev/pkg/apis"
 
 	"github.com/Shopify/sarama"
-	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
-	"knative.dev/eventing/pkg/channel/fanout"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	_ "knative.dev/pkg/system/testing"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
 )
 
-//----- Mocks
+// ----- Mocks
 
 type mockKafkaConsumerFactory struct {
 	// createErr will return an error when creating a consumer
@@ -76,10 +74,10 @@ func (m mockConsumerGroup) Close() error {
 
 var _ sarama.ConsumerGroup = (*mockConsumerGroup)(nil)
 
-//----- Tests
+// ----- Tests
 
 // test util for various config checks
-func (d *KafkaDispatcher) checkConfigAndUpdate(config *multichannelfanout.Config) error {
+func (d *KafkaDispatcher) checkConfigAndUpdate(config *Config) error {
 	if config == nil {
 		return errors.New("nil config")
 	}
@@ -100,8 +98,8 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 
 	testCases := []struct {
 		name             string
-		oldConfig        *multichannelfanout.Config
-		newConfig        *multichannelfanout.Config
+		oldConfig        *Config
+		newConfig        *Config
 		subscribes       []string
 		unsubscribes     []string
 		createErr        string
@@ -110,7 +108,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 	}{
 		{
 			name:             "nil config",
-			oldConfig:        &multichannelfanout.Config{},
+			oldConfig:        &Config{},
 			newConfig:        nil,
 			createErr:        "nil config",
 			oldHostToChanMap: map[string]eventingchannels.ChannelReference{},
@@ -118,16 +116,16 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		},
 		{
 			name:             "same config",
-			oldConfig:        &multichannelfanout.Config{},
-			newConfig:        &multichannelfanout.Config{},
+			oldConfig:        &Config{},
+			newConfig:        &Config{},
 			oldHostToChanMap: map[string]eventingchannels.ChannelReference{},
 			newHostToChanMap: map[string]eventingchannels.ChannelReference{},
 		},
 		{
 			name:      "config with no subscription",
-			oldConfig: &multichannelfanout.Config{},
-			newConfig: &multichannelfanout.Config{
-				ChannelConfigs: []multichannelfanout.ChannelConfig{
+			oldConfig: &Config{},
+			newConfig: &Config{
+				ChannelConfigs: []ChannelConfig{
 					{
 						Namespace: "default",
 						Name:      "test-channel",
@@ -142,20 +140,22 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		},
 		{
 			name:      "single channel w/ new subscriptions",
-			oldConfig: &multichannelfanout.Config{},
-			newConfig: &multichannelfanout.Config{
-				ChannelConfigs: []multichannelfanout.ChannelConfig{
+			oldConfig: &Config{},
+			newConfig: &Config{
+				ChannelConfigs: []ChannelConfig{
 					{
 						Namespace: "default",
 						Name:      "test-channel",
 						HostName:  "a.b.c.d",
-						FanoutConfig: fanout.Config{
-							Subscriptions: []eventingduck.SubscriberSpec{
-								{
+						Subscriptions: []Subscription{
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-1",
 									SubscriberURI: subscriber,
 								},
-								{
+							},
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-2",
 									SubscriberURI: subscriber,
 								},
@@ -172,36 +172,44 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		},
 		{
 			name: "single channel w/ existing subscriptions",
-			oldConfig: &multichannelfanout.Config{
-				ChannelConfigs: []multichannelfanout.ChannelConfig{
+			oldConfig: &Config{
+				ChannelConfigs: []ChannelConfig{
 					{
 						Namespace: "default",
 						Name:      "test-channel",
 						HostName:  "a.b.c.d",
-						FanoutConfig: fanout.Config{
-							Subscriptions: []eventingduck.SubscriberSpec{
-								{
+						Subscriptions: []Subscription{
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-1",
 									SubscriberURI: subscriber,
 								},
-								{
+							},
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-2",
 									SubscriberURI: subscriber,
-								}}}}},
+								},
+							},
+						},
+					},
+				},
 			},
-			newConfig: &multichannelfanout.Config{
-				ChannelConfigs: []multichannelfanout.ChannelConfig{
+			newConfig: &Config{
+				ChannelConfigs: []ChannelConfig{
 					{
 						Namespace: "default",
 						Name:      "test-channel",
 						HostName:  "a.b.c.d",
-						FanoutConfig: fanout.Config{
-							Subscriptions: []eventingduck.SubscriberSpec{
-								{
+						Subscriptions: []Subscription{
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-2",
 									SubscriberURI: subscriber,
 								},
-								{
+							},
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-3",
 									SubscriberURI: subscriber,
 								},
@@ -221,33 +229,38 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		},
 		{
 			name: "multi channel w/old and new subscriptions",
-			oldConfig: &multichannelfanout.Config{
-				ChannelConfigs: []multichannelfanout.ChannelConfig{
+			oldConfig: &Config{
+				ChannelConfigs: []ChannelConfig{
 					{
 						Namespace: "default",
 						Name:      "test-channel-1",
 						HostName:  "a.b.c.d",
-						FanoutConfig: fanout.Config{
-							Subscriptions: []eventingduck.SubscriberSpec{
-								{
+						Subscriptions: []Subscription{
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-1",
 									SubscriberURI: subscriber,
 								},
-								{
+							},
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-2",
 									SubscriberURI: subscriber,
 								},
 							},
-						}}}},
-			newConfig: &multichannelfanout.Config{
-				ChannelConfigs: []multichannelfanout.ChannelConfig{
+						},
+					},
+				},
+			},
+			newConfig: &Config{
+				ChannelConfigs: []ChannelConfig{
 					{
 						Namespace: "default",
 						Name:      "test-channel-1",
 						HostName:  "a.b.c.d",
-						FanoutConfig: fanout.Config{
-							Subscriptions: []eventingduck.SubscriberSpec{
-								{
+						Subscriptions: []Subscription{
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-1",
 									SubscriberURI: subscriber,
 								},
@@ -258,13 +271,15 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 						Namespace: "default",
 						Name:      "test-channel-2",
 						HostName:  "e.f.g.h",
-						FanoutConfig: fanout.Config{
-							Subscriptions: []eventingduck.SubscriberSpec{
-								{
+						Subscriptions: []Subscription{
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-3",
 									SubscriberURI: subscriber,
 								},
-								{
+							},
+							{
+								SubscriberSpec: eventingduck.SubscriberSpec{
 									UID:           "subscription-4",
 									SubscriberURI: subscriber,
 								},
@@ -285,9 +300,9 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 		},
 		{
 			name:      "Duplicate hostnames",
-			oldConfig: &multichannelfanout.Config{},
-			newConfig: &multichannelfanout.Config{
-				ChannelConfigs: []multichannelfanout.ChannelConfig{
+			oldConfig: &Config{},
+			newConfig: &Config{
+				ChannelConfigs: []ChannelConfig{
 					{
 						Namespace: "default",
 						Name:      "test-channel-1",
@@ -378,8 +393,10 @@ func TestSubscribeError(t *testing.T) {
 	}
 
 	subRef := subscription{
-		SubscriberSpec: eventingduck.SubscriberSpec{
-			UID: "test-sub",
+		Subscription: Subscription{
+			SubscriberSpec: eventingduck.SubscriberSpec{
+				UID: "test-sub",
+			},
 		},
 	}
 	err := d.subscribe(channelRef, subRef)
@@ -401,8 +418,10 @@ func TestUnsubscribeUnknownSub(t *testing.T) {
 	}
 
 	subRef := subscription{
-		SubscriberSpec: eventingduck.SubscriberSpec{
-			UID: "test-sub",
+		Subscription: Subscription{
+			SubscriberSpec: eventingduck.SubscriberSpec{
+				UID: "test-sub",
+			},
 		},
 	}
 	if err := d.unsubscribe(channelRef, subRef); err != nil {

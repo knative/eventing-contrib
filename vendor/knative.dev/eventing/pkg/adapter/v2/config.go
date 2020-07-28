@@ -17,6 +17,7 @@ package adapter
 
 import (
 	"encoding/json"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -51,7 +52,7 @@ type EnvConfig struct {
 	Component string `envconfig:"K_COMPONENT"`
 
 	// Environment variable containing the namespace of the adapter.
-	Namespace string `envconfig:"NAMESPACE" required:"true"`
+	Namespace string `envconfig:"NAMESPACE"`
 
 	// Environment variable containing the name of the adapter.
 	Name string `envconfig:"NAME" default:"adapter"`
@@ -69,12 +70,12 @@ type EnvConfig struct {
 	// This is used to configure the metrics exporter options,
 	// the config is stored in a config map inside the controllers
 	// namespace and copied here.
-	MetricsConfigJson string `envconfig:"K_METRICS_CONFIG" required:"true"`
+	MetricsConfigJson string `envconfig:"K_METRICS_CONFIG" default:"{}"`
 
 	// LoggingConfigJson is a json string of logging.Config.
 	// This is used to configure the logging config, the config is stored in
 	// a config map inside the controllers namespace and copied here.
-	LoggingConfigJson string `envconfig:"K_LOGGING_CONFIG" required:"true"`
+	LoggingConfigJson string `envconfig:"K_LOGGING_CONFIG" default:"{}"`
 
 	// TracingConfigJson is a json string of tracing.Config.
 	// This is used to configure the tracing config, the config is stored in
@@ -190,6 +191,9 @@ func (e *EnvConfig) GetLeaderElectionConfig() (*kle.ComponentConfig, error) {
 
 func defaultLeaderElectionConfig() *kle.ComponentConfig {
 	return &kle.ComponentConfig{
-		LeaderElect: false,
+		Buckets:       1,
+		LeaseDuration: 15 * time.Second,
+		RenewDeadline: 10 * time.Second,
+		RetryPeriod:   2 * time.Second,
 	}
 }

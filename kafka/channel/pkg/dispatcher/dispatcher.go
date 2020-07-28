@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
@@ -129,7 +128,6 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		if r := recover(); r != nil {
 			c.logger.Warn("Panic happened while handling a message",
 				zap.String("topic", consumerMessage.Topic),
-				zap.String("sub", string(c.sub.UID)),
 				zap.Any("panic value", r),
 			)
 		}
@@ -138,41 +136,61 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 	if message.ReadEncoding() == binding.EncodingUnknown {
 		return false, errors.New("received a message with unknown encoding")
 	}
-	var destination *url.URL
-	if !c.sub.SubscriberURI.IsEmpty() {
-		destination = c.sub.SubscriberURI.URL()
-	}
-	var reply *url.URL
-	if !c.sub.ReplyURI.IsEmpty() {
-		reply = c.sub.ReplyURI.URL()
-	}
-	var deadLetter *url.URL
-	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && !c.sub.Delivery.DeadLetterSink.URI.IsEmpty() {
-		deadLetter = c.sub.Delivery.DeadLetterSink.URI.URL()
-	}
+
 	c.logger.Debug("Going to dispatch the message",
 		zap.String("topic", consumerMessage.Topic),
-		zap.String("sub", string(c.sub.UID)),
+		zap.Any("destination", c.sub.SubscriberURI),
+		zap.Any("reply", c.sub.ReplyURI),
+		zap.Any("delivery", c.sub.Delivery),
 	)
 
 	ctx, span := startTraceFromMessage(c.logger, ctx, message, consumerMessage.Topic)
 	defer span.End()
 
-	err := c.dispatcher.DispatchMessage(ctx, message, nil, destination, reply, deadLetter)
+	var DLS *url.URL
+	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && c.sub.Delivery.DeadLetterSink.URI != nil {
+		DLS = (*url.URL)(c.sub.Delivery.DeadLetterSink.URI)
+	}
+
+	err := c.dispatcher.DispatchMessage(ctx,
+		message,
+		nil,
+		(*url.URL)(c.sub.SubscriberURI),
+		(*url.URL)(c.sub.ReplyURI),
+		DLS,
+	)
+
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
 	return err == nil, err
 }
 
 var _ kafka.KafkaConsumerHandler = (*consumerMessageHandler)(nil)
 
-type subscription struct {
+type Config struct {
+	// The configuration of each channel in this handler.
+	ChannelConfigs []ChannelConfig
+}
+
+type ChannelConfig struct {
+	Namespace     string
+	Name          string
+	HostName      string
+	Subscriptions []Subscription
+}
+
+type Subscription struct {
 	eventingduck.SubscriberSpec
+	RetryConfig *kncloudevents.RetryConfig
+}
+
+type subscription struct {
+	Subscription
 	Namespace string
 	Name      string
 }
 
 // UpdateKafkaConsumers will be called by new CRD based kafka channel dispatcher controller.
-func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config) (map[eventingduck.SubscriberSpec]error, error) {
+func (d *KafkaDispatcher) UpdateKafkaConsumers(config *Config) (map[eventingduck.SubscriberSpec]error, error) {
 	if config == nil {
 		return nil, fmt.Errorf("nil config")
 	}
@@ -187,7 +205,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 			Name:      cc.Name,
 			Namespace: cc.Namespace,
 		}
-		for _, subSpec := range cc.FanoutConfig.Subscriptions {
+		for _, subSpec := range cc.Subscriptions {
 			sub := newSubscription(subSpec, string(subSpec.UID), cc.Namespace)
 			newSubs = append(newSubs, sub.UID)
 
@@ -203,7 +221,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 				// only subscribe when not exists in channel-subscriptions map
 				// do not need to resubscribe every time channel fanout config is updated
 				if err := d.subscribe(channelRef, sub); err != nil {
-					failedToSubscribe[subSpec] = err
+					failedToSubscribe[subSpec.SubscriberSpec] = err
 				}
 			}
 		}
@@ -234,7 +252,7 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *multichannelfanout.Config
 }
 
 // UpdateHostToChannelMap will be called by new CRD based kafka channel dispatcher controller.
-func (d *KafkaDispatcher) UpdateHostToChannelMap(config *multichannelfanout.Config) error {
+func (d *KafkaDispatcher) UpdateHostToChannelMap(config *Config) error {
 	if config == nil {
 		return errors.New("nil config")
 	}
@@ -251,7 +269,7 @@ func (d *KafkaDispatcher) UpdateHostToChannelMap(config *multichannelfanout.Conf
 	return nil
 }
 
-func createHostToChannelMap(config *multichannelfanout.Config) (map[string]eventingchannels.ChannelReference, error) {
+func createHostToChannelMap(config *Config) (map[string]eventingchannels.ChannelReference, error) {
 	hcMap := make(map[string]eventingchannels.ChannelReference, len(config.ChannelConfigs))
 	for _, cConfig := range config.ChannelConfigs {
 		if cr, ok := hcMap[cConfig.HostName]; ok {
@@ -365,11 +383,11 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 	return cr, nil
 }
 
-func newSubscription(spec eventingduck.SubscriberSpec, name string, namespace string) subscription {
+func newSubscription(sub Subscription, name string, namespace string) subscription {
 	return subscription{
-		SubscriberSpec: spec,
-		Name:           name,
-		Namespace:      namespace,
+		Subscription: sub,
+		Name:         name,
+		Namespace:    namespace,
 	}
 }
 

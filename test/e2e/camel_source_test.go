@@ -1,4 +1,4 @@
-//+build e2e
+// +build e2e
 
 /*
 Copyright 2020 The Knative Authors
@@ -35,6 +35,7 @@ import (
 )
 
 func TestCamelSource(t *testing.T) {
+	t.Skip("https://github.com/knative/eventing-contrib/issues/1414")
 
 	const (
 		camelSourceName = "e2e-camelsource"

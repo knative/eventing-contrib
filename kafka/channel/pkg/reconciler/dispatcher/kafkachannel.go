@@ -22,19 +22,17 @@ import (
 	"reflect"
 
 	"go.uber.org/zap"
-	"knative.dev/eventing/pkg/tracing"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/apis/eventing"
-	"knative.dev/eventing/pkg/channel/fanout"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
+	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
@@ -56,20 +54,6 @@ func init() {
 	// logged for run types.
 	_ = kafkaScheme.AddToScheme(scheme.Scheme)
 }
-
-const (
-	// ReconcilerName is the name of the reconciler.
-	ReconcilerName = "KafkaChannels"
-
-	// controllerAgentName is the string used by this controller to identify
-	// itself when creating events.
-	controllerAgentName = "kafka-ch-dispatcher"
-
-	// Name of the corev1.Events emitted from the reconciliation process.
-	channelReconciled         = "ChannelReconciled"
-	channelReconcileFailed    = "ChannelReconcileFailed"
-	channelUpdateStatusFailed = "ChannelUpdateStatusFailed"
-)
 
 // Reconciler reconciles Kafka Channels.
 type Reconciler struct {
@@ -222,35 +206,50 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) *multichannelfanout.ChannelConfig {
-	channelConfig := multichannelfanout.ChannelConfig{
+func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) *dispatcher.ChannelConfig {
+	channelConfig := dispatcher.ChannelConfig{
 		Namespace: c.Namespace,
 		Name:      c.Name,
 		HostName:  c.Status.Address.Hostname,
 	}
 	if c.Spec.Subscribable != nil {
-		newSubs := make([]eventingduckv1beta1.SubscriberSpec, len(c.Spec.Subscribable.Subscribers))
-		for i, source := range c.Spec.Subscribable.Subscribers {
-			source.ConvertTo(context.TODO(), &newSubs[i])
-			fmt.Printf("Converted \n%+v\n To\n%+v\n", source, newSubs[i])
-			fmt.Printf("Delivery converted \n%+v\nto\n%+v\n", source.Delivery, newSubs[i].Delivery)
+		newSubs := make([]dispatcher.Subscription, 0, len(c.Spec.Subscribable.Subscribers))
+		for _, source := range c.Spec.Subscribable.Subscribers {
+
+			// Extract retry configuration
+			var retryConfig *kncloudevents.RetryConfig
+			if source.Delivery != nil {
+				delivery := &eventingduckv1.DeliverySpec{}
+				_ = source.Delivery.ConvertTo(context.TODO(), delivery)
+
+				_retryConfig, err := kncloudevents.RetryConfigFromDeliverySpec(*delivery)
+				if err == nil {
+					retryConfig = &_retryConfig
+				}
+			}
+
+			subSpec := &eventingduckv1beta1.SubscriberSpec{}
+			_ = source.ConvertTo(context.TODO(), subSpec)
+
+			newSubs = append(newSubs, dispatcher.Subscription{
+				SubscriberSpec: *subSpec,
+				RetryConfig:    retryConfig,
+			})
 		}
-		channelConfig.FanoutConfig = fanout.Config{
-			AsyncHandler:  true,
-			Subscriptions: newSubs,
-		}
+		channelConfig.Subscriptions = newSubs
 	}
+
 	return &channelConfig
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1alpha1.KafkaChannel) *multichannelfanout.Config {
-	cc := make([]multichannelfanout.ChannelConfig, 0)
+func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1alpha1.KafkaChannel) *dispatcher.Config {
+	cc := make([]dispatcher.ChannelConfig, 0)
 	for _, c := range channels {
 		channelConfig := r.newChannelConfigFromKafkaChannel(c)
 		cc = append(cc, *channelConfig)
 	}
-	return &multichannelfanout.Config{
+	return &dispatcher.Config{
 		ChannelConfigs: cc,
 	}
 }
