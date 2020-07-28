@@ -22,20 +22,17 @@ import (
 	"reflect"
 
 	"go.uber.org/zap"
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
-	"knative.dev/eventing/pkg/tracing"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/apis/eventing"
-	"knative.dev/eventing/pkg/channel/fanout"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
+	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
@@ -209,46 +206,50 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) *multichannelfanout.ChannelConfig {
-	channelConfig := multichannelfanout.ChannelConfig{
+func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) *dispatcher.ChannelConfig {
+	channelConfig := dispatcher.ChannelConfig{
 		Namespace: c.Namespace,
 		Name:      c.Name,
 		HostName:  c.Status.Address.Hostname,
 	}
 	if c.Spec.Subscribable != nil {
-		newSubs := make([]fanout.Subscription, len(c.Spec.Subscribable.Subscribers))
-		for i, source := range c.Spec.Subscribable.Subscribers {
+		newSubs := make([]dispatcher.Subscription, 0, len(c.Spec.Subscribable.Subscribers))
+		for _, source := range c.Spec.Subscribable.Subscribers {
 
 			// Extract retry configuration
+			var retryConfig *kncloudevents.RetryConfig
 			if source.Delivery != nil {
 				delivery := &eventingduckv1.DeliverySpec{}
 				_ = source.Delivery.ConvertTo(context.TODO(), delivery)
 
 				_retryConfig, err := kncloudevents.RetryConfigFromDeliverySpec(*delivery)
 				if err == nil {
-					newSubs[i].RetryConfig = &_retryConfig
+					retryConfig = &_retryConfig
 				}
 			}
+
+			subSpec := &eventingduckv1beta1.SubscriberSpec{}
+			_ = source.ConvertTo(context.TODO(), subSpec)
+
+			newSubs = append(newSubs, dispatcher.Subscription{
+				SubscriberSpec: *subSpec,
+				RetryConfig:    retryConfig,
+			})
 		}
-		channelConfig.FanoutConfig = fanout.Config{
-			AsyncHandler:  true,
-			Subscriptions: newSubs,
-		}
+		channelConfig.Subscriptions = newSubs
 	}
+
 	return &channelConfig
 }
 
-type Config struct {
-}
-
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1alpha1.KafkaChannel) *multichannelfanout.Config {
-	cc := make([]multichannelfanout.ChannelConfig, 0)
+func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1alpha1.KafkaChannel) *dispatcher.Config {
+	cc := make([]dispatcher.ChannelConfig, 0)
 	for _, c := range channels {
 		channelConfig := r.newChannelConfigFromKafkaChannel(c)
 		cc = append(cc, *channelConfig)
 	}
-	return &multichannelfanout.Config{
+	return &dispatcher.Config{
 		ChannelConfigs: cc,
 	}
 }

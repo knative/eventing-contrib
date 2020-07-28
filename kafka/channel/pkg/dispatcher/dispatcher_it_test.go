@@ -32,8 +32,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/test"
 	"go.uber.org/zap"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
-	"knative.dev/eventing/pkg/channel/fanout"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/apis"
@@ -152,32 +150,29 @@ func TestDispatcher(t *testing.T) {
 	)
 
 	// send -> channela -> sub with transformationServer and reply to channelb -> channelb -> sub with receiver -> receiver
-	config := multichannelfanout.Config{
-		ChannelConfigs: []multichannelfanout.ChannelConfig{
+	config := Config{
+		ChannelConfigs: []ChannelConfig{
 			{
 				Namespace: "default",
 				Name:      "channela",
 				HostName:  "channela.svc",
-				FanoutConfig: fanout.Config{
-					AsyncHandler: false,
-					Subscriptions: []fanout.Subscription{
-						{
-							SubscriberSpec: eventingduck.SubscriberSpec{
-								UID:           "aaaa",
-								Generation:    1,
-								SubscriberURI: mustParseUrl(t, transformationsServer.URL),
-								ReplyURI:      mustParseUrl(t, channelBProxy.URL),
-							},
+				Subscriptions: []Subscription{
+					{
+						SubscriberSpec: eventingduck.SubscriberSpec{
+							UID:           "aaaa",
+							Generation:    1,
+							SubscriberURI: mustParseUrl(t, transformationsServer.URL),
+							ReplyURI:      mustParseUrl(t, channelBProxy.URL),
 						},
-						{
-							SubscriberSpec: eventingduck.SubscriberSpec{
-								UID:           "cccc",
-								Generation:    1,
-								SubscriberURI: mustParseUrl(t, transformationsFailureServer.URL),
-								ReplyURI:      mustParseUrl(t, channelBProxy.URL),
-								Delivery: &eventingduck.DeliverySpec{
-									DeadLetterSink: &duckv1.Destination{URI: mustParseUrl(t, deadLetterServer.URL)},
-								},
+					},
+					{
+						SubscriberSpec: eventingduck.SubscriberSpec{
+							UID:           "cccc",
+							Generation:    1,
+							SubscriberURI: mustParseUrl(t, transformationsFailureServer.URL),
+							ReplyURI:      mustParseUrl(t, channelBProxy.URL),
+							Delivery: &eventingduck.DeliverySpec{
+								DeadLetterSink: &duckv1.Destination{URI: mustParseUrl(t, deadLetterServer.URL)},
 							},
 						},
 					},
@@ -187,15 +182,12 @@ func TestDispatcher(t *testing.T) {
 				Namespace: "default",
 				Name:      "channelb",
 				HostName:  "channelb.svc",
-				FanoutConfig: fanout.Config{
-					AsyncHandler: false,
-					Subscriptions: []fanout.Subscription{
-						{
-							SubscriberSpec: eventingduck.SubscriberSpec{
-								UID:           "bbbb",
-								Generation:    1,
-								SubscriberURI: mustParseUrl(t, receiverServer.URL),
-							},
+				Subscriptions: []Subscription{
+					{
+						SubscriberSpec: eventingduck.SubscriberSpec{
+							UID:           "bbbb",
+							Generation:    1,
+							SubscriberURI: mustParseUrl(t, receiverServer.URL),
 						},
 					},
 				},
@@ -247,12 +239,12 @@ func TestDispatcher(t *testing.T) {
 	receiverWg.Wait()
 
 	// Try to close consumer groups
-	err = dispatcher.UpdateHostToChannelMap(&multichannelfanout.Config{})
+	err = dispatcher.UpdateHostToChannelMap(&Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	failed, err = dispatcher.UpdateKafkaConsumers(&multichannelfanout.Config{})
+	failed, err = dispatcher.UpdateKafkaConsumers(&Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
