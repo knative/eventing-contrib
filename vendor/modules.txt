@@ -107,7 +107,6 @@ github.com/cloudevents/sdk-go/protocol/stan/v2
 ## explicit
 github.com/cloudevents/sdk-go/v2
 github.com/cloudevents/sdk-go/v2/binding
-github.com/cloudevents/sdk-go/v2/binding/buffering
 github.com/cloudevents/sdk-go/v2/binding/format
 github.com/cloudevents/sdk-go/v2/binding/spec
 github.com/cloudevents/sdk-go/v2/binding/transformer
@@ -367,8 +366,6 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tsenart/vegeta v12.7.1-0.20190725001342-b5f4fca92137+incompatible
 github.com/tsenart/vegeta/lib
-# github.com/valyala/bytebufferpool v1.0.0
-github.com/valyala/bytebufferpool
 # github.com/xanzy/go-gitlab v0.32.0
 ## explicit
 github.com/xanzy/go-gitlab
@@ -1118,8 +1115,6 @@ knative.dev/eventing/pkg/apis/sources/v1alpha1
 knative.dev/eventing/pkg/apis/sources/v1alpha2
 knative.dev/eventing/pkg/apis/sources/v1beta1
 knative.dev/eventing/pkg/channel
-knative.dev/eventing/pkg/channel/fanout
-knative.dev/eventing/pkg/channel/multichannelfanout
 knative.dev/eventing/pkg/client/clientset/versioned
 knative.dev/eventing/pkg/client/clientset/versioned/fake
 knative.dev/eventing/pkg/client/clientset/versioned/scheme
