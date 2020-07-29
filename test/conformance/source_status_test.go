@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2020 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,11 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package test
+package conformance
 
-// Kind for messaging resources.
-const (
-	KafkaChannelKind string = "KafkaChannel"
-	NatssChannelKind string = "NatssChannel"
-	KafkaSourceKind  string = "KafkaSource"
+import (
+	"testing"
+
+	srchelpers "knative.dev/eventing/test/conformance/helpers/sources"
+	testlib "knative.dev/eventing/test/lib"
 )
+
+func TestSourceStatus(t *testing.T) {
+	srchelpers.SourceStatusTestHelperWithComponentsTestRunner(t,
+		sourcesTestRunner, testlib.SetupClientOptionNoop)
+}

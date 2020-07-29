@@ -38,3 +38,12 @@ var ChannelFeatureMap = map[metav1.TypeMeta][]testlib.Feature{
 		testlib.FeaturePersistence,
 	},
 }
+
+var KafkaSourceTypeMeta = metav1.TypeMeta{
+	APIVersion: resources.SourcesV1B1APIVersion,
+	Kind:       KafkaSourceKind,
+}
+
+var SourcesFeatureMap = map[metav1.TypeMeta][]testlib.Feature{
+	KafkaSourceTypeMeta: {testlib.FeatureBasic, testlib.FeatureLongLiving},
+}
