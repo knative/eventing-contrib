@@ -34,7 +34,7 @@ var ChannelFeatureMap = map[metav1.TypeMeta][]testlib.Feature{
 		Kind:       NatssChannelKind,
 	}: {
 		testlib.FeatureBasic,
-		testlib.FeatureRedelivery,
+		// testlib.FeatureRedelivery,
 		testlib.FeaturePersistence,
 	},
 }

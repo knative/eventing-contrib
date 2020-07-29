@@ -152,12 +152,14 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 		DLS = (*url.URL)(c.sub.Delivery.DeadLetterSink.URI)
 	}
 
-	err := c.dispatcher.DispatchMessage(ctx,
+	err := c.dispatcher.DispatchMessageWithRetries(
+		ctx,
 		message,
 		nil,
 		(*url.URL)(c.sub.SubscriberURI),
 		(*url.URL)(c.sub.ReplyURI),
 		DLS,
+		c.sub.RetryConfig,
 	)
 
 	// NOTE: only return `true` here if DispatchMessage actually delivered the message.
