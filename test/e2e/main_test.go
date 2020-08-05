@@ -1,4 +1,4 @@
-//+build e2e
+// +build e2e
 
 /*
 Copyright 2019 The Knative Authors
@@ -24,6 +24,7 @@ import (
 	"knative.dev/eventing-contrib/test"
 	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/resources"
 )
 
 var channelTestRunner testlib.ComponentsTestRunner
@@ -34,5 +35,9 @@ func TestMain(m *testing.M) {
 		ComponentFeatureMap: test.ChannelFeatureMap,
 		ComponentsToTest:    eventingTest.EventingFlags.Channels,
 	}
-	os.Exit(m.Run())
+	os.Exit(func() int {
+		defer testlib.ExportLogs(testlib.SystemLogsDir, resources.SystemNamespace)
+
+		return m.Run()
+	}())
 }
