@@ -30,19 +30,19 @@ require (
 	gitlab.com/flimzy/testy v0.2.1 // indirect
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
-	go.uber.org/zap v1.14.1
+	go.uber.org/zap v1.15.0
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.18.1
-	k8s.io/apimachinery v0.18.6
+	k8s.io/api v0.18.7-rc.0
+	k8s.io/apimachinery v0.18.7-rc.0
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	k8s.io/utils v0.0.0-20200124190032-861946025e34
-	knative.dev/eventing v0.16.1-0.20200803090001-4cd17b80636f
-	knative.dev/pkg v0.0.0-20200731005101-694087017879
-	knative.dev/serving v0.16.1-0.20200803111101-9278b3110e97
-	knative.dev/test-infra v0.0.0-20200731141600-8bb2015c65e2
+	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
+	knative.dev/eventing v0.16.1-0.20200805125228-0b129d3eca14
+	knative.dev/pkg v0.0.0-20200805045628-bb91a15b1a18
+	knative.dev/serving v0.16.1-0.20200805123829-d1889a3bb339
+	knative.dev/test-infra v0.0.0-20200803175002-5efff0c4bd0a
 )
 
 replace (
