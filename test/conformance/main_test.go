@@ -62,7 +62,7 @@ func TestMain(m *testing.M) {
 
 func addSourcesInitializers() {
 	sourcesTestRunner.AddComponentSetupClientOption(test.KafkaSourceTypeMeta,
-		setupclientoptions.KafkaSourceV1B1ClientSetupOption("conf-kafka-source",
+		setupclientoptions.KafkaSourceV1B1ClientSetupOption("kafkasource",
 			kafkaClusterName,
 			kafkaClusterNamespace,
 			kafkaBootstrapUrl,
