@@ -28,9 +28,9 @@ import (
 	fakeeventsclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 
-	messagingv1alpha1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 	fakemessagingclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/fake"
-	messaginglisters "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
+	messaginglisters "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1beta1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
@@ -97,7 +97,7 @@ func (l *Listers) GetEndpointsLister() corev1listers.EndpointsLister {
 }
 
 func (l *Listers) GetKafkaChannelLister() messaginglisters.KafkaChannelLister {
-	return messaginglisters.NewKafkaChannelLister(l.indexerFor(&messagingv1alpha1.KafkaChannel{}))
+	return messaginglisters.NewKafkaChannelLister(l.indexerFor(&messagingv1beta1.KafkaChannel{}))
 }
 
 func (l *Listers) GetDeploymentLister() appsv1listers.DeploymentLister {

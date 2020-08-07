@@ -24,11 +24,12 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/channel/fanout"
+
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/logging"
@@ -38,13 +39,13 @@ import (
 	"knative.dev/pkg/injection"
 	pkgreconciler "knative.dev/pkg/reconciler"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 	kafkaclientset "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned"
 	kafkaScheme "knative.dev/eventing-contrib/kafka/channel/pkg/client/clientset/versioned/scheme"
 	kafkaclientsetinjection "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1alpha1/kafkachannel"
-	kafkachannelreconciler "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1alpha1/kafkachannel"
-	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
+	kafkachannelreconciler "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	listers "knative.dev/eventing-contrib/kafka/channel/pkg/client/listers/messaging/v1beta1"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/dispatcher"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
@@ -142,7 +143,7 @@ func filterWithAnnotation(namespaced bool) func(obj interface{}) bool {
 	return pkgreconciler.AnnotationFilterFunc(eventing.ScopeAnnotationKey, "cluster", true)
 }
 
-func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1alpha1.KafkaChannel) pkgreconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel) pkgreconciler.Event {
 	channels, err := r.kafkachannelLister.List(labels.Everything())
 	if err != nil {
 		logging.FromContext(ctx).Error("Error listing kafka channels")
@@ -152,7 +153,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1alpha1.KafkaChanne
 	// TODO: revisit this code. Instead of reading all channels and updating consumers and hostToChannel map for all
 	// why not just reconcile the current channel. With this the UpdateKafkaConsumers can now return SubscribableStatus
 	// for the subscriptions on the channel that is being reconciled.
-	kafkaChannels := make([]*v1alpha1.KafkaChannel, 0)
+	kafkaChannels := make([]*v1beta1.KafkaChannel, 0)
 	for _, channel := range channels {
 		if channel.Status.IsReady() {
 			kafkaChannels = append(kafkaChannels, channel)
@@ -164,76 +165,56 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1alpha1.KafkaChanne
 		return err
 	}
 
-	failedSubscriptionsv1beta1, err := r.kafkaDispatcher.UpdateKafkaConsumers(config)
+	failedSubscriptions, err := r.kafkaDispatcher.UpdateKafkaConsumers(config)
 	if err != nil {
 		logging.FromContext(ctx).Error("Error updating kafka consumers in dispatcher")
 		return err
 	}
-	failedSubscriptionsv1alpha1 := make(map[eventingduckv1alpha1.SubscriberSpec]error, len(failedSubscriptionsv1beta1))
-	for k, v := range failedSubscriptionsv1beta1 {
-		newSub := eventingduckv1alpha1.SubscriberSpec{}
-		newSub.ConvertFrom(context.TODO(), &k)
-		failedSubscriptionsv1alpha1[newSub] = v
-	}
-	kc.Status.SubscribableTypeStatus.SubscribableStatus = r.createSubscribableStatus(kc.Spec.Subscribable, failedSubscriptionsv1alpha1)
-	if len(failedSubscriptionsv1alpha1) > 0 {
+	kc.Status.SubscribableStatus = r.createSubscribableStatus(&kc.Spec.SubscribableSpec, failedSubscriptions)
+	if len(failedSubscriptions) > 0 {
 		logging.FromContext(ctx).Error("Some kafka subscriptions failed to subscribe")
 		return fmt.Errorf("Some kafka subscriptions failed to subscribe")
 	}
 	return nil
 }
 
-func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1alpha1.Subscribable, failedSubscriptions map[eventingduckv1alpha1.SubscriberSpec]error) *eventingduckv1alpha1.SubscribableStatus {
+func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1.SubscribableSpec, failedSubscriptions map[types.UID]error) eventingduckv1.SubscribableStatus {
 	if subscribable == nil {
-		return nil
+		return eventingduckv1.SubscribableStatus{}
 	}
-	subscriberStatus := make([]eventingduckv1beta1.SubscriberStatus, 0)
+	subscriberStatus := make([]eventingduckv1.SubscriberStatus, 0)
 	for _, sub := range subscribable.Subscribers {
-		status := eventingduckv1beta1.SubscriberStatus{
+		status := eventingduckv1.SubscriberStatus{
 			UID:                sub.UID,
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,
 		}
-		if err, ok := failedSubscriptions[sub]; ok {
+		if err, ok := failedSubscriptions[sub.UID]; ok {
 			status.Ready = corev1.ConditionFalse
 			status.Message = err.Error()
 		}
 		subscriberStatus = append(subscriberStatus, status)
 	}
-	return &eventingduckv1alpha1.SubscribableStatus{
+	return eventingduckv1.SubscribableStatus{
 		Subscribers: subscriberStatus,
 	}
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) *dispatcher.ChannelConfig {
+func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1beta1.KafkaChannel) *dispatcher.ChannelConfig {
 	channelConfig := dispatcher.ChannelConfig{
 		Namespace: c.Namespace,
 		Name:      c.Name,
-		HostName:  c.Status.Address.Hostname,
+		HostName:  c.Status.Address.URL.Host,
 	}
-	if c.Spec.Subscribable != nil {
-		newSubs := make([]dispatcher.Subscription, 0, len(c.Spec.Subscribable.Subscribers))
-		for _, source := range c.Spec.Subscribable.Subscribers {
-
-			// Extract retry configuration
-			var retryConfig *kncloudevents.RetryConfig
-			if source.Delivery != nil {
-				delivery := &eventingduckv1.DeliverySpec{}
-				_ = source.Delivery.ConvertTo(context.TODO(), delivery)
-
-				_retryConfig, err := kncloudevents.RetryConfigFromDeliverySpec(*delivery)
-				if err == nil {
-					retryConfig = &_retryConfig
-				}
-			}
-
-			subSpec := &eventingduckv1beta1.SubscriberSpec{}
-			_ = source.ConvertTo(context.TODO(), subSpec)
+	if c.Spec.SubscribableSpec.Subscribers != nil {
+		newSubs := make([]dispatcher.Subscription, 0, len(c.Spec.SubscribableSpec.Subscribers))
+		for _, source := range c.Spec.SubscribableSpec.Subscribers {
+			innerSub, _ := fanout.SubscriberSpecToFanoutConfig(source)
 
 			newSubs = append(newSubs, dispatcher.Subscription{
-				SubscriberSpec: *subSpec,
-				RetryConfig:    retryConfig,
+				Subscription: *innerSub,
+				UID:          source.UID,
 			})
 		}
 		channelConfig.Subscriptions = newSubs
@@ -243,7 +224,7 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1alpha1.KafkaChannel) 
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
-func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1alpha1.KafkaChannel) *dispatcher.Config {
+func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1beta1.KafkaChannel) *dispatcher.Config {
 	cc := make([]dispatcher.ChannelConfig, 0)
 	for _, c := range channels {
 		channelConfig := r.newChannelConfigFromKafkaChannel(c)
@@ -253,7 +234,7 @@ func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1alpha1.KafkaChanne
 		ChannelConfigs: cc,
 	}
 }
-func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaChannel) (*v1alpha1.KafkaChannel, error) {
+func (r *Reconciler) updateStatus(ctx context.Context, desired *v1beta1.KafkaChannel) (*v1beta1.KafkaChannel, error) {
 	kc, err := r.kafkachannelLister.KafkaChannels(desired.Namespace).Get(desired.Name)
 	if err != nil {
 		return nil, err
@@ -267,6 +248,6 @@ func (r *Reconciler) updateStatus(ctx context.Context, desired *v1alpha1.KafkaCh
 	existing := kc.DeepCopy()
 	existing.Status = desired.Status
 
-	new, err := r.kafkaClientSet.MessagingV1alpha1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
+	new, err := r.kafkaClientSet.MessagingV1beta1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
 	return new, err
 }
