@@ -25,10 +25,18 @@ import (
 	"knative.dev/eventing/test/e2e/helpers"
 )
 
-func TestSingleBinaryEventForChannel(t *testing.T) {
-	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingBinary, "v1alpha1", "", channelTestRunner)
+func TestSingleBinaryEventForChannelV1Beta1(t *testing.T) {
+	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingBinary, helpers.SubscriptionV1beta1, "", channelTestRunner)
 }
 
-func TestSingleStructuredEventForChannel(t *testing.T) {
-	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingStructured, "v1alpha1", "", channelTestRunner)
+func TestSingleStructuredEventForChannelV1Beta1(t *testing.T) {
+	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingStructured, helpers.SubscriptionV1beta1, "", channelTestRunner)
+}
+
+func TestSingleBinaryEventForChannelV1(t *testing.T) {
+	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingBinary, helpers.SubscriptionV1, "", channelTestRunner)
+}
+
+func TestSingleStructuredEventForChannelV1(t *testing.T) {
+	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingStructured, helpers.SubscriptionV1, "", channelTestRunner)
 }
