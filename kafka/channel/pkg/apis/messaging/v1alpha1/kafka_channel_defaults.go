@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"context"
+
 	"knative.dev/eventing/pkg/apis/messaging"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
