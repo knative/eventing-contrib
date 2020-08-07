@@ -254,7 +254,7 @@ function camel_teardown() {
 
 initialize $@ --skip-istio-addon
 
-go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
+go_test_e2e -timeout=30m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
 
 go_test_e2e -timeout=5m -parallel=12 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1beta1:KafkaChannel -sources=sources.knative.dev/v1alpha1:CamelSource,sources.knative.dev/v1beta1:KafkaSource || fail_test
 
