@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 	nethttp "net/http"
-	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -30,8 +30,8 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingchannels "knative.dev/eventing/pkg/channel"
+	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
@@ -49,13 +49,37 @@ type KafkaDispatcher struct {
 	kafkaAsyncProducer   sarama.AsyncProducer
 	channelSubscriptions map[eventingchannels.ChannelReference][]types.UID
 	subsConsumerGroups   map[types.UID]sarama.ConsumerGroup
-	subscriptions        map[types.UID]subscription
+	subscriptions        map[types.UID]Subscription
 	// consumerUpdateLock must be used to update kafkaConsumers
 	consumerUpdateLock   sync.Mutex
 	kafkaConsumerFactory kafka.KafkaConsumerGroupFactory
 
 	topicFunc TopicFunc
 	logger    *zap.Logger
+}
+
+type Subscription struct {
+	UID types.UID
+	fanout.Subscription
+}
+
+func (sub Subscription) String() string {
+	var s strings.Builder
+	s.WriteString("UID: " + string(sub.UID))
+	s.WriteRune('\n')
+	if sub.Subscriber != nil {
+		s.WriteString("Subscriber: " + sub.Subscriber.String())
+		s.WriteRune('\n')
+	}
+	if sub.Reply != nil {
+		s.WriteString("Reply: " + sub.Reply.String())
+		s.WriteRune('\n')
+	}
+	if sub.DeadLetter != nil {
+		s.WriteString("DeadLetter: " + sub.DeadLetter.String())
+		s.WriteRune('\n')
+	}
+	return s.String()
 }
 
 func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispatcher, error) {
@@ -74,7 +98,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(args.Brokers, conf),
 		channelSubscriptions: make(map[eventingchannels.ChannelReference][]types.UID),
 		subsConsumerGroups:   make(map[types.UID]sarama.ConsumerGroup),
-		subscriptions:        make(map[types.UID]subscription),
+		subscriptions:        make(map[types.UID]Subscription),
 		kafkaAsyncProducer:   producer,
 		logger:               args.Logger,
 		topicFunc:            args.TopicFunc,
@@ -119,7 +143,7 @@ type KafkaDispatcherArgs struct {
 
 type consumerMessageHandler struct {
 	logger     *zap.Logger
-	sub        subscription
+	sub        Subscription
 	dispatcher *eventingchannels.MessageDispatcherImpl
 }
 
@@ -139,26 +163,19 @@ func (c consumerMessageHandler) Handle(ctx context.Context, consumerMessage *sar
 
 	c.logger.Debug("Going to dispatch the message",
 		zap.String("topic", consumerMessage.Topic),
-		zap.Any("destination", c.sub.SubscriberURI),
-		zap.Any("reply", c.sub.ReplyURI),
-		zap.Any("delivery", c.sub.Delivery),
+		zap.String("subscription", c.sub.String()),
 	)
 
 	ctx, span := startTraceFromMessage(c.logger, ctx, message, consumerMessage.Topic)
 	defer span.End()
 
-	var DLS *url.URL
-	if c.sub.Delivery != nil && c.sub.Delivery.DeadLetterSink != nil && c.sub.Delivery.DeadLetterSink.URI != nil {
-		DLS = (*url.URL)(c.sub.Delivery.DeadLetterSink.URI)
-	}
-
 	err := c.dispatcher.DispatchMessageWithRetries(
 		ctx,
 		message,
 		nil,
-		(*url.URL)(c.sub.SubscriberURI),
-		(*url.URL)(c.sub.ReplyURI),
-		DLS,
+		c.sub.Subscriber,
+		c.sub.Reply,
+		c.sub.DeadLetter,
 		c.sub.RetryConfig,
 	)
 
@@ -180,19 +197,8 @@ type ChannelConfig struct {
 	Subscriptions []Subscription
 }
 
-type Subscription struct {
-	eventingduck.SubscriberSpec
-	RetryConfig *kncloudevents.RetryConfig
-}
-
-type subscription struct {
-	Subscription
-	Namespace string
-	Name      string
-}
-
 // UpdateKafkaConsumers will be called by new CRD based kafka channel dispatcher controller.
-func (d *KafkaDispatcher) UpdateKafkaConsumers(config *Config) (map[eventingduck.SubscriberSpec]error, error) {
+func (d *KafkaDispatcher) UpdateKafkaConsumers(config *Config) (map[types.UID]error, error) {
 	if config == nil {
 		return nil, fmt.Errorf("nil config")
 	}
@@ -201,20 +207,19 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *Config) (map[eventingduck
 	defer d.consumerUpdateLock.Unlock()
 
 	var newSubs []types.UID
-	failedToSubscribe := make(map[eventingduck.SubscriberSpec]error)
+	failedToSubscribe := make(map[types.UID]error)
 	for _, cc := range config.ChannelConfigs {
 		channelRef := eventingchannels.ChannelReference{
 			Name:      cc.Name,
 			Namespace: cc.Namespace,
 		}
 		for _, subSpec := range cc.Subscriptions {
-			sub := newSubscription(subSpec, string(subSpec.UID), cc.Namespace)
-			newSubs = append(newSubs, sub.UID)
+			newSubs = append(newSubs, subSpec.UID)
 
 			// Check if sub already exists
 			exists := false
 			for _, s := range d.channelSubscriptions[channelRef] {
-				if s == sub.UID {
+				if s == subSpec.UID {
 					exists = true
 				}
 			}
@@ -222,8 +227,8 @@ func (d *KafkaDispatcher) UpdateKafkaConsumers(config *Config) (map[eventingduck
 			if !exists {
 				// only subscribe when not exists in channel-subscriptions map
 				// do not need to resubscribe every time channel fanout config is updated
-				if err := d.subscribe(channelRef, sub); err != nil {
-					failedToSubscribe[subSpec.SubscriberSpec] = err
+				if err := d.subscribe(channelRef, subSpec); err != nil {
+					failedToSubscribe[subSpec.UID] = err
 				}
 			}
 		}
@@ -316,11 +321,11 @@ func (d *KafkaDispatcher) Start(ctx context.Context) error {
 
 // subscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
 // subscribe must be called under updateLock.
-func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference, sub subscription) error {
-	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub))
+func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference, sub Subscription) error {
+	d.logger.Info("Subscribing", zap.Any("channelRef", channelRef), zap.Any("subscription", sub.UID))
 
 	topicName := d.topicFunc(utils.KafkaChannelSeparator, channelRef.Namespace, channelRef.Name)
-	groupID := fmt.Sprintf("kafka.%s.%s.%s", sub.Namespace, channelRef.Name, sub.Name)
+	groupID := fmt.Sprintf("kafka.%s.%s.%s", channelRef.Namespace, channelRef.Name, string(sub.UID))
 
 	handler := &consumerMessageHandler{d.logger, sub, d.dispatcher}
 
@@ -349,8 +354,8 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 
 // unsubscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
 // unsubscribe must be called under updateLock.
-func (d *KafkaDispatcher) unsubscribe(channel eventingchannels.ChannelReference, sub subscription) error {
-	d.logger.Info("Unsubscribing from channel", zap.Any("channel", channel), zap.Any("subscription", sub))
+func (d *KafkaDispatcher) unsubscribe(channel eventingchannels.ChannelReference, sub Subscription) error {
+	d.logger.Info("Unsubscribing from channel", zap.Any("channel", channel), zap.String("subscription", sub.String()))
 	delete(d.subscriptions, sub.UID)
 	if subsSlice, ok := d.channelSubscriptions[channel]; ok {
 		var newSlice []types.UID
@@ -383,14 +388,6 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 		return cr, eventingchannels.UnknownHostError(host)
 	}
 	return cr, nil
-}
-
-func newSubscription(sub Subscription, name string, namespace string) subscription {
-	return subscription{
-		Subscription: sub,
-		Name:         name,
-		Namespace:    namespace,
-	}
 }
 
 func startTraceFromMessage(logger *zap.Logger, inCtx context.Context, message *protocolkafka.Message, topic string) (context.Context, *trace.Span) {

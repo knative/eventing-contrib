@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"net/url"
 	"os"
 	"sync"
 	"testing"
@@ -31,12 +32,10 @@ import (
 	protocolhttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/cloudevents/sdk-go/v2/test"
 	"go.uber.org/zap"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
 	tracingconfig "knative.dev/pkg/tracing/config"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
@@ -158,22 +157,18 @@ func TestDispatcher(t *testing.T) {
 				HostName:  "channela.svc",
 				Subscriptions: []Subscription{
 					{
-						SubscriberSpec: eventingduck.SubscriberSpec{
-							UID:           "aaaa",
-							Generation:    1,
-							SubscriberURI: mustParseUrl(t, transformationsServer.URL),
-							ReplyURI:      mustParseUrl(t, channelBProxy.URL),
+						UID: "aaaa",
+						Subscription: fanout.Subscription{
+							Subscriber: mustParseUrl(t, transformationsServer.URL),
+							Reply:      mustParseUrl(t, channelBProxy.URL),
 						},
 					},
 					{
-						SubscriberSpec: eventingduck.SubscriberSpec{
-							UID:           "cccc",
-							Generation:    1,
-							SubscriberURI: mustParseUrl(t, transformationsFailureServer.URL),
-							ReplyURI:      mustParseUrl(t, channelBProxy.URL),
-							Delivery: &eventingduck.DeliverySpec{
-								DeadLetterSink: &duckv1.Destination{URI: mustParseUrl(t, deadLetterServer.URL)},
-							},
+						UID: "cccc",
+						Subscription: fanout.Subscription{
+							Subscriber: mustParseUrl(t, transformationsFailureServer.URL),
+							Reply:      mustParseUrl(t, channelBProxy.URL),
+							DeadLetter: mustParseUrl(t, deadLetterServer.URL),
 						},
 					},
 				},
@@ -184,10 +179,9 @@ func TestDispatcher(t *testing.T) {
 				HostName:  "channelb.svc",
 				Subscriptions: []Subscription{
 					{
-						SubscriberSpec: eventingduck.SubscriberSpec{
-							UID:           "bbbb",
-							Generation:    1,
-							SubscriberURI: mustParseUrl(t, receiverServer.URL),
+						UID: "bbbb",
+						Subscription: fanout.Subscription{
+							Subscriber: mustParseUrl(t, receiverServer.URL),
 						},
 					},
 				},
@@ -264,10 +258,10 @@ func createReverseProxy(t *testing.T, host string) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{Director: director}
 }
 
-func mustParseUrl(t *testing.T, str string) *apis.URL {
+func mustParseUrl(t *testing.T, str string) *url.URL {
 	url, err := apis.ParseURL(str)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return url
+	return url.URL()
 }

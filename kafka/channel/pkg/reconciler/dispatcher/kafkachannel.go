@@ -24,8 +24,10 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/channel/fanout"
 
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/eventing"
@@ -176,7 +178,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel
 	return nil
 }
 
-func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1.SubscribableSpec, failedSubscriptions map[eventingduckv1.SubscriberSpec]error) eventingduckv1.SubscribableStatus {
+func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1.SubscribableSpec, failedSubscriptions map[types.UID]error) eventingduckv1.SubscribableStatus {
 	if subscribable == nil {
 		return eventingduckv1.SubscribableStatus{}
 	}
@@ -187,7 +189,7 @@ func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1.Subsc
 			ObservedGeneration: sub.Generation,
 			Ready:              corev1.ConditionTrue,
 		}
-		if err, ok := failedSubscriptions[sub]; ok {
+		if err, ok := failedSubscriptions[sub.UID]; ok {
 			status.Ready = corev1.ConditionFalse
 			status.Message = err.Error()
 		}
@@ -208,25 +210,11 @@ func (r *Reconciler) newChannelConfigFromKafkaChannel(c *v1beta1.KafkaChannel) *
 	if c.Spec.SubscribableSpec.Subscribers != nil {
 		newSubs := make([]dispatcher.Subscription, 0, len(c.Spec.SubscribableSpec.Subscribers))
 		for _, source := range c.Spec.SubscribableSpec.Subscribers {
-
-			// Extract retry configuration
-			var retryConfig *kncloudevents.RetryConfig
-			if source.Delivery != nil {
-				delivery := &eventingduckv1.DeliverySpec{}
-				_ = source.Delivery.ConvertTo(context.TODO(), delivery)
-
-				_retryConfig, err := kncloudevents.RetryConfigFromDeliverySpec(*delivery)
-				if err == nil {
-					retryConfig = &_retryConfig
-				}
-			}
-
-			subSpec := &eventingduckv1.SubscriberSpec{}
-			_ = source.ConvertTo(context.TODO(), subSpec)
+			innerSub, _ := fanout.SubscriberSpecToFanoutConfig(source)
 
 			newSubs = append(newSubs, dispatcher.Subscription{
-				SubscriberSpec: *subSpec,
-				RetryConfig:    retryConfig,
+				Subscription: *innerSub,
+				UID:          source.UID,
 			})
 		}
 		channelConfig.Subscriptions = newSubs
