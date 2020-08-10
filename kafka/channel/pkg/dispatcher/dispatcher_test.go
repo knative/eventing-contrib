@@ -19,10 +19,11 @@ package dispatcher
 import (
 	"context"
 	"errors"
-	"knative.dev/eventing/pkg/channel/fanout"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"knative.dev/eventing/pkg/channel/fanout"
 
 	"github.com/Shopify/sarama"
 	"github.com/cloudevents/sdk-go/v2/binding"
