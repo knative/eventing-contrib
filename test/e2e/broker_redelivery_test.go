@@ -60,8 +60,6 @@ func ChannelBasedBrokerCreator(channel metav1.TypeMeta, brokerClass string) help
 }
 
 func TestBrokerRedelivery(t *testing.T) {
-	t.Skip("Skipping because flaky https://github.com/knative/eventing-contrib/issues/1433")
-
 	channelTestRunner.RunTests(t, testlib.FeatureRedelivery, func(t *testing.T, component metav1.TypeMeta) {
 
 		brokerCreator := ChannelBasedBrokerCreator(component, eventing.MTChannelBrokerClassValue)

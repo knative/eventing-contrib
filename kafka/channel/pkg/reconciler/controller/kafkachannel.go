@@ -74,10 +74,6 @@ const (
 	dispatcherName = "kafka-ch-dispatcher"
 )
 
-func newReconciledNormal(namespace, name string) pkgreconciler.Event {
-	return pkgreconciler.NewEvent(corev1.EventTypeNormal, "KafkaChannelReconciled", "KafkaChannel reconciled: \"%s/%s\"", namespace, name)
-}
-
 func newDeploymentWarn(err error) pkgreconciler.Event {
 	return pkgreconciler.NewEvent(corev1.EventTypeWarning, "DispatcherDeploymentFailed", "Reconciling dispatcher Deployment failed with: %s", err)
 }
@@ -244,7 +240,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel
 
 	// Ok, so now the Dispatcher Deployment & Service have been created, we're golden since the
 	// dispatcher watches the Channel and where it needs to dispatch events to.
-	return newReconciledNormal(kc.Namespace, kc.Name)
+	return nil
 }
 
 func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, dispatcherNamespace string, kc *v1beta1.KafkaChannel) (*appsv1.Deployment, error) {
@@ -496,5 +492,5 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, kc *v1beta1.KafkaChannel)
 			return err
 		}
 	}
-	return newReconciledNormal(kc.Namespace, kc.Name) //ok to remove finalizer
+	return nil // ok to remove finalizer
 }
