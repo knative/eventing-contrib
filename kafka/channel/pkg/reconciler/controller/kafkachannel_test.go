@@ -91,9 +91,6 @@ func TestAllCases(t *testing.T) {
 					reconcilekafkatesting.WithInitKafkaChannelConditions,
 					reconcilekafkatesting.WithKafkaChannelDeleted)},
 			WantErr: false,
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
-			},
 		}, {
 			Name: "deployment does not exist, automatically created and patching finalizers",
 			Key:  kcKey,
@@ -226,9 +223,6 @@ func TestAllCases(t *testing.T) {
 					reconcilekafkatesting.WithKafkaChannelAddress(channelServiceAddress),
 				),
 			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
-			},
 		}, {
 			Name: "Works, channel exists",
 			Key:  kcKey,
@@ -254,9 +248,6 @@ func TestAllCases(t *testing.T) {
 					reconcilekafkatesting.WithKafkaChannelAddress(channelServiceAddress),
 				),
 			}},
-			WantEvents: []string{
-				Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
-			},
 		}, {
 			Name: "channel exists, not owned by us",
 			Key:  kcKey,
@@ -373,9 +364,6 @@ func TestTopicExists(t *testing.T) {
 				reconcilekafkatesting.WithKafkaChannelAddress(channelServiceAddress),
 			),
 		}},
-		WantEvents: []string{
-			Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
-		},
 	}
 	defer logtesting.ClearAll()
 
@@ -444,7 +432,6 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 		}},
 		WantEvents: []string{
 			Eventf(corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated"),
-			Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
 		},
 	}
 	defer logtesting.ClearAll()
