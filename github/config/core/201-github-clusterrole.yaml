@@ -57,11 +57,13 @@ rules:
   - deployments
   verbs: *everything
 
-# Knative Services admin
+# Knative Services and KIngress admin
 - apiGroups:
   - serving.knative.dev
+  - networking.internal.knative.dev
   resources:
   - services
+  - ingresses
   verbs: *everything
 
 # Secrets read

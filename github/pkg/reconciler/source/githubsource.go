@@ -23,24 +23,15 @@ import (
 	"net/http"
 	"strings"
 
-	//k8s.io imports
+	ghclient "github.com/google/go-github/v31/github"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 
-	//knative.dev/serving imports
-	v1 "knative.dev/serving/pkg/apis/serving/v1"
-	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
-	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
-
-	//knative.dev/eventing-contrib imports
-	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
-	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
-	"knative.dev/eventing-contrib/github/pkg/reconciler/source/resources"
-
-	//knative.dev/pkg imports
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
@@ -50,20 +41,40 @@ import (
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/tracker"
 
-	ghclient "github.com/google/go-github/v31/github"
+	networkingv1alpha1 "knative.dev/networking/pkg/apis/networking/v1alpha1"
+	networkingclientset "knative.dev/networking/pkg/client/clientset/versioned"
+	networkinglisters "knative.dev/networking/pkg/client/listers/networking/v1alpha1"
+
+	v1 "knative.dev/serving/pkg/apis/serving/v1"
+	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
+	servinglisters "knative.dev/serving/pkg/client/listers/serving/v1"
+	"knative.dev/serving/pkg/reconciler/route/domains"
+
+	sourcesv1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
+	ghreconciler "knative.dev/eventing-contrib/github/pkg/client/injection/reconciler/sources/v1alpha1/githubsource"
+	"knative.dev/eventing-contrib/github/pkg/reconciler/source/resources"
 )
 
 const (
 	// The name of the mt receive adapter
 	adapterName = "github-adapter"
+
+	// The default domain template to use for vanity URL
+	defaultDomainTemplate = "{{.Name}}.{{.Namespace}}.{{.Domain}}"
+
+	// Name of the corev1.Events emitted from the reconciliation process
+	kingressCreated = "KIngressCreated"
+	kingressUpdated = "KIngressUpdated"
 )
 
 // Reconciler reconciles a GitHubSource object
 type Reconciler struct {
 	kubeClientSet kubernetes.Interface
 
-	servingClientSet servingclientset.Interface
-	servingLister    servinglisters.ServiceLister
+	servingClientSet    servingclientset.Interface
+	servingLister       servinglisters.ServiceLister
+	networkingLister    networkinglisters.IngressLister
+	networkingClientSet networkingclientset.Interface
 
 	// Single-tenant receive adapter image.
 	// Empty when using multi-tenant adapter
@@ -75,6 +86,9 @@ type Reconciler struct {
 	sinkResolver *resolver.URIResolver
 
 	webhookClient webhookClient
+
+	// enableVanityURL indicates to generate configurable (aka vanity) URLs
+	enableVanityURL bool
 }
 
 var _ ghreconciler.Interface = (*Reconciler)(nil)
@@ -129,9 +143,22 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	}
 
 	if ksvc.Status.GetCondition(apis.ConditionReady).IsTrue() && ksvc.Status.URL != nil {
-		withPath := *ksvc.Status.URL
+		withPath := *ksvc.Status.URL // copy
 		if r.receiveAdapterImage == "" {
-			withPath.Path = fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
+			if r.enableVanityURL {
+				// Generate a new URL and redirect to multi-tenant adapter
+
+				ki, err := r.reconcileKIngress(ctx, source)
+				if err != nil {
+					// TODO: update condition
+					return err
+				}
+
+				withPath = *apis.HTTP(ki.Spec.Rules[0].Hosts[0])
+			} else {
+				// Append path to existing Knative service URL
+				withPath.Path = fmt.Sprintf("/%s/%s", source.Namespace, source.Name)
+			}
 		}
 
 		args := &webhookArgs{
@@ -246,6 +273,42 @@ func (r *Reconciler) reconcileReceiveAdapter(ctx context.Context, source *source
 		Name:       ksvc.Name,
 	}, source)
 	return ksvc, err
+}
+
+func (r *Reconciler) reconcileKIngress(ctx context.Context, source *sourcesv1alpha1.GitHubSource) (*networkingv1alpha1.Ingress, error) {
+	host, err := domains.DomainNameFromTemplate(ctx, source.ObjectMeta, source.Name)
+	if err != nil {
+		logging.FromContext(ctx).Error("Error creating domain name from template", zap.Error(err))
+		return nil, err
+	}
+
+	expected := resources.MakeKIngress(source, host, adapterName)
+
+	ki, err := r.networkingLister.Ingresses(source.Namespace).Get(expected.Name)
+	if apierrors.IsNotFound(err) {
+		ki, err = r.networkingClientSet.NetworkingV1alpha1().Ingresses(source.Namespace).Create(expected)
+		if err != nil {
+			return nil, fmt.Errorf("creating new SinkBinding: %v", err)
+		}
+		controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeNormal, kingressCreated, "KIngress created %q", ki.Name)
+	} else if err != nil {
+		return nil, fmt.Errorf("getting KIngress: %v", err)
+	} else if !metav1.IsControlledBy(ki, source) {
+		return nil, fmt.Errorf("KIngress %q is not owned by GitHubSource %q", ki.Name, source.Name)
+	} else if !equality.Semantic.DeepDerivative(&ki.Spec, &expected.Spec) {
+		ki.Spec = expected.Spec
+		ki, err = r.networkingClientSet.NetworkingV1alpha1().Ingresses(source.Namespace).Update(ki)
+		if err != nil {
+			return nil, fmt.Errorf("updating SinkBinding: %v", err)
+		}
+		controller.GetEventRecorder(ctx).Eventf(source, corev1.EventTypeNormal, kingressUpdated, "KIngress updated %q", ki.Name)
+	} else {
+		logging.FromContext(ctx).Debug("Reusing existing KIngress", zap.Any("KIngress", ki))
+	}
+
+	// TODO
+	// source.Status.PropagateKInressStatus(&ki.Status)
+	return ki, nil
 }
 
 func (r *Reconciler) createWebhook(ctx context.Context, args *webhookArgs) (string, error) {

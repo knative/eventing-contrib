@@ -21,6 +21,8 @@ metadata:
     contrib.eventing.knative.dev/release: devel
     sources.knative.dev/role:    adapter
     eventing.knative.dev/source: github-source-controller
+    # Add this line when the vanity URL experimental feature is enabled.
+    # serving.knative.dev/visibility: cluster-local
 spec:
   template:
     spec:
@@ -38,3 +40,5 @@ spec:
           value: "{}"
         - name: K_TRACING_CONFIG
           value: "{}"
+        - name: ENABLE_VANITY_URL
+          value: "false"

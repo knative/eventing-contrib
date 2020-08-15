@@ -36,6 +36,8 @@ type envConfig struct {
 
 	// Environment variable containing the HTTP port
 	EnvPort string `envconfig:"PORT" default:"8080"`
+
+	EnableVanityURL bool `envconfig:"ENABLE_VANITY_URL"`
 }
 
 // New EnvConfig function reads env variables defined in envConfig structure and
@@ -62,6 +64,10 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, ceClie
 	// Setting up the server receiving GitHubEvent
 	lister := githubsourceinformer.Get(ctx).Lister()
 	router := NewRouter(logger, lister, ceClient)
+
+	if env.EnableVanityURL {
+		router.EnableVanityURL()
+	}
 
 	return &gitHubAdapter{
 		logger: logger,

@@ -46,6 +46,10 @@ spec:
           value: config-leader-election-github
         - name: METRICS_DOMAIN
           value: knative.dev/sources
+        - name: ENABLE_VANITY_URL
+          value: "false"
+        - name: SERVING_NAMESPACE
+          value: knative-serving
         resources:
           requests:
             cpu: 100m
