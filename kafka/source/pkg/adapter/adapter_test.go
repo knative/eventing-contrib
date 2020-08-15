@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -465,10 +464,6 @@ func sinkAccepted(writer http.ResponseWriter, req *http.Request) {
 
 func sinkRejected(writer http.ResponseWriter, _ *http.Request) {
 	writer.WriteHeader(http.StatusRequestTimeout)
-}
-
-func avroSchema(writer http.ResponseWriter, _ *http.Request) {
-	fmt.Fprint(writer, fmt.Sprintf("{\"schema\": %s}", loginEventAvroSchema))
 }
 
 func TestAdapter_Start(t *testing.T) { // just increase code coverage
