@@ -77,9 +77,9 @@ type KafkaSourceSpec struct {
 	// +optional
 	ConsumerGroup string `json:"consumerGroup,omitempty"`
 
-	// AvroSchemaURL is the URL where AVRO schema is located.
+	// AvroSchema is the AVRO schema used to decode the message.
 	// +optional
-	AvroSchemaURL string `json:"avroSchemaURL,omitempty"`
+	AvroSchema string `json:"avroSchema,omitempty"`
 
 	// inherits duck/v1 SourceSpec, which currently provides:
 	// * Sink - a reference to an object that will resolve to a domain name or

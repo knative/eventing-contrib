@@ -55,7 +55,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 		expectedHeaders map[string]string
 		expectedBody    string
 		error           bool
-		avro            bool
+		avro            string
 	}{
 		"accepted_simple": {
 			sink: sinkAccepted,
@@ -336,14 +336,14 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 				"ce-specversion": "1.0",
 				"ce-id":          makeEventId(1, 2),
 				"ce-time":        types.FormatTime(aTimestamp),
-				"ce-type":        sourcesv1alpha1.KafkaEventType,
-				"ce-source":      sourcesv1alpha1.KafkaEventSource("test", "test", "topic1"),
+				"ce-type":        sourcesv1beta1.KafkaEventType,
+				"ce-source":      sourcesv1beta1.KafkaEventSource("test", "test", "topic1"),
 				"ce-subject":     makeEventSubject(1, 2),
 				"ce-key":         "key",
 			},
 			expectedBody: `{"Username":"muru"}`,
 			error:        false,
-			avro:         true,
+			avro:         loginEventAvroSchema,
 		},
 	}
 
@@ -355,16 +355,6 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 
 			sinkServer := httptest.NewServer(h)
 			defer sinkServer.Close()
-
-			var avroURL string
-			if tc.avro {
-				ah := &fakeHandler{
-					handler: avroSchema,
-				}
-				avroServer := httptest.NewServer(ah)
-				defer avroServer.Close()
-				avroURL = avroServer.URL
-			}
 
 			statsReporter, _ := source.NewStatsReporter()
 
@@ -396,7 +386,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 				logger:            zap.NewNop(),
 				reporter:          statsReporter,
 				keyTypeMapper:     getKeyTypeMapper(tc.keyTypeMapper),
-				avroDecoder:       getAvroDecoder(avroURL),
+				avroDecoder:       getAvroDecoder(tc.avro, zap.NewNop()),
 			}
 
 			_, err = a.Handle(context.TODO(), tc.message)

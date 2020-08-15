@@ -50,8 +50,8 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 		Name:  "KAFKA_CONSUMER_GROUP",
 		Value: args.Source.Spec.ConsumerGroup,
 	}, {
-		Name:  "AVRO_SCHEMA_URL",
-		Value: args.Source.Spec.AvroSchemaURL,
+		Name:  "AVRO_SCHEMA",
+		Value: args.Source.Spec.AvroSchema,
 	}, {
 		Name:  "KAFKA_NET_SASL_ENABLE",
 		Value: strconv.FormatBool(args.Source.Spec.Net.SASL.Enable),

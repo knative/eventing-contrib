@@ -47,7 +47,7 @@ type adapterConfig struct {
 	ConsumerGroup string   `envconfig:"KAFKA_CONSUMER_GROUP" required:"true"`
 	Name          string   `envconfig:"NAME" required:"true"`
 	KeyType       string   `envconfig:"KEY_TYPE" required:"false"`
-	AvroSchemaURL string   `envconfig:"AVRO_SCHEMA_URL" required:"false"`
+	AvroSchema    string   `envconfig:"AVRO_SCHEMA" required:"false"`
 }
 
 func NewEnvConfig() adapter.EnvConfigAccessor {
@@ -60,7 +60,7 @@ type Adapter struct {
 	reporter          source.StatsReporter
 	logger            *zap.Logger
 	keyTypeMapper     func([]byte) interface{}
-	avroDecoder       *AvroDecoder
+	avroDecoder       *avroDecoder
 }
 
 var _ adapter.MessageAdapter = (*Adapter)(nil)
@@ -76,7 +76,7 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMe
 		reporter:          reporter,
 		logger:            logger,
 		keyTypeMapper:     getKeyTypeMapper(config.KeyType),
-		avroDecoder:       getAvroDecoder(config.AvroSchemaURL),
+		avroDecoder:       getAvroDecoder(config.AvroSchema, logger),
 	}
 }
 
@@ -91,7 +91,7 @@ func (a *Adapter) start(stopCh <-chan struct{}) error {
 		zap.String("SinkURI", a.config.Sink),
 		zap.String("Name", a.config.Name),
 		zap.String("Namespace", a.config.Namespace),
-		zap.String("AvroSchemaURL", a.config.AvroSchemaURL),
+		zap.String("AvroSchema", a.config.AvroSchema),
 	)
 
 	// init consumer group
