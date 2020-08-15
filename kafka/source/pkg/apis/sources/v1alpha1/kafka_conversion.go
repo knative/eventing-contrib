@@ -55,9 +55,7 @@ func (source *KafkaSource) ConvertTo(ctx context.Context, obj apis.Convertible) 
 		}
 		if source.Status.CloudEventAttributes != nil {
 			sink.Status.CloudEventAttributes = make([]duckv1.CloudEventAttributes, len(source.Status.CloudEventAttributes))
-			for i, cea := range source.Status.CloudEventAttributes {
-				sink.Status.CloudEventAttributes[i] = cea
-			}
+			copy(sink.Status.CloudEventAttributes, source.Status.CloudEventAttributes)
 		}
 		return nil
 	default:
@@ -93,9 +91,7 @@ func (sink *KafkaSource) ConvertFrom(ctx context.Context, obj apis.Convertible) 
 		}
 		if source.Status.CloudEventAttributes != nil {
 			sink.Status.CloudEventAttributes = make([]duckv1.CloudEventAttributes, len(source.Status.CloudEventAttributes))
-			for i, cea := range source.Status.CloudEventAttributes {
-				sink.Status.CloudEventAttributes[i] = cea
-			}
+			copy(sink.Status.CloudEventAttributes, source.Status.CloudEventAttributes)
 		}
 		return nil
 	default:

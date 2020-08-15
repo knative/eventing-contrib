@@ -20,4 +20,5 @@ package test
 const (
 	KafkaChannelKind string = "KafkaChannel"
 	NatssChannelKind string = "NatssChannel"
+	KafkaSourceKind  string = "KafkaSource"
 )

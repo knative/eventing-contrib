@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"net/url"
 	"os"
 	"sync"
 	"testing"
@@ -31,13 +32,11 @@ import (
 	protocolhttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/cloudevents/sdk-go/v2/test"
 	"go.uber.org/zap"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	"knative.dev/eventing/pkg/channel/fanout"
-	"knative.dev/eventing/pkg/channel/multichannelfanout"
 	"knative.dev/eventing/pkg/kncloudevents"
 	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
+	tracingconfig "knative.dev/pkg/tracing/config"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 )
@@ -58,7 +57,12 @@ func TestDispatcher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tracing.SetupStaticPublishing(logger.Sugar(), "localhost", tracing.AlwaysSample)
+	tracing.SetupStaticPublishing(logger.Sugar(), "localhost", &tracingconfig.Config{
+		Backend:        tracingconfig.Zipkin,
+		Debug:          true,
+		SampleRate:     1.0,
+		ZipkinEndpoint: "http://localhost:9411/api/v2/spans",
+	})
 
 	dispatcherArgs := KafkaDispatcherArgs{
 		KnCEConnectionArgs: nil,
@@ -145,41 +149,41 @@ func TestDispatcher(t *testing.T) {
 	)
 
 	// send -> channela -> sub with transformationServer and reply to channelb -> channelb -> sub with receiver -> receiver
-	config := multichannelfanout.Config{
-		ChannelConfigs: []multichannelfanout.ChannelConfig{
+	config := Config{
+		ChannelConfigs: []ChannelConfig{
 			{
 				Namespace: "default",
 				Name:      "channela",
 				HostName:  "channela.svc",
-				FanoutConfig: fanout.Config{
-					AsyncHandler: false,
-					Subscriptions: []eventingduck.SubscriberSpec{{
-						UID:           "aaaa",
-						Generation:    1,
-						SubscriberURI: mustParseUrl(t, transformationsServer.URL),
-						ReplyURI:      mustParseUrl(t, channelBProxy.URL),
-					}, {
-						UID:           "cccc",
-						Generation:    1,
-						SubscriberURI: mustParseUrl(t, transformationsFailureServer.URL),
-						ReplyURI:      mustParseUrl(t, channelBProxy.URL),
-						Delivery: &eventingduck.DeliverySpec{
-							DeadLetterSink: &duckv1.Destination{URI: mustParseUrl(t, deadLetterServer.URL)},
+				Subscriptions: []Subscription{
+					{
+						UID: "aaaa",
+						Subscription: fanout.Subscription{
+							Subscriber: mustParseUrl(t, transformationsServer.URL),
+							Reply:      mustParseUrl(t, channelBProxy.URL),
 						},
-					}},
+					},
+					{
+						UID: "cccc",
+						Subscription: fanout.Subscription{
+							Subscriber: mustParseUrl(t, transformationsFailureServer.URL),
+							Reply:      mustParseUrl(t, channelBProxy.URL),
+							DeadLetter: mustParseUrl(t, deadLetterServer.URL),
+						},
+					},
 				},
 			},
 			{
 				Namespace: "default",
 				Name:      "channelb",
 				HostName:  "channelb.svc",
-				FanoutConfig: fanout.Config{
-					AsyncHandler: false,
-					Subscriptions: []eventingduck.SubscriberSpec{{
-						UID:           "bbbb",
-						Generation:    1,
-						SubscriberURI: mustParseUrl(t, receiverServer.URL),
-					}},
+				Subscriptions: []Subscription{
+					{
+						UID: "bbbb",
+						Subscription: fanout.Subscription{
+							Subscriber: mustParseUrl(t, receiverServer.URL),
+						},
+					},
 				},
 			},
 		},
@@ -229,12 +233,12 @@ func TestDispatcher(t *testing.T) {
 	receiverWg.Wait()
 
 	// Try to close consumer groups
-	err = dispatcher.UpdateHostToChannelMap(&multichannelfanout.Config{})
+	err = dispatcher.UpdateHostToChannelMap(&Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	failed, err = dispatcher.UpdateKafkaConsumers(&multichannelfanout.Config{})
+	failed, err = dispatcher.UpdateKafkaConsumers(&Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -254,10 +258,10 @@ func createReverseProxy(t *testing.T, host string) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{Director: director}
 }
 
-func mustParseUrl(t *testing.T, str string) *apis.URL {
+func mustParseUrl(t *testing.T, str string) *url.URL {
 	url, err := apis.ParseURL(str)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return url
+	return url.URL()
 }

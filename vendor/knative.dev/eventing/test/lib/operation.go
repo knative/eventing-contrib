@@ -26,6 +26,7 @@ import (
 
 	"knative.dev/eventing/test/lib/duck"
 	"knative.dev/eventing/test/lib/resources"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // LabelNamespace labels the given namespace with the labels map.
@@ -63,6 +64,13 @@ func (c *Client) WaitForResourceReadyOrFail(name string, typemeta *metav1.TypeMe
 	namespace := c.Namespace
 	metaResource := resources.NewMetaResource(name, namespace, typemeta)
 	if err := duck.WaitForResourceReady(c.Dynamic, metaResource); err != nil {
+		untyped, err := duck.GetGenericObject(c.Dynamic, metaResource, &duckv1beta1.KResource{})
+		if err != nil {
+			c.T.Errorf("Failed to get the object %v-%s when dumping error state: %v", *typemeta, name, err)
+		}
+		if untyped != nil {
+			c.T.Errorf("Object that did not become ready %v-%s when dumping error state: %+v", *typemeta, name, untyped)
+		}
 		c.T.Fatalf("Failed to get %v-%s ready: %+v", *typemeta, name, errors.WithStack(err))
 	}
 }
@@ -80,7 +88,14 @@ func (c *Client) WaitForResourcesReadyOrFail(typemeta *metav1.TypeMeta) {
 // WaitForAllTestResourcesReady waits until all test resources in the namespace are Ready.
 func (c *Client) WaitForAllTestResourcesReady() error {
 	// wait for all Knative resources created in this test to become ready.
-	if err := c.Tracker.WaitForKResourcesReady(); err != nil {
+	err := c.RetryWebhookErrors(func(attempts int) (err error) {
+		e := c.Tracker.WaitForKResourcesReady()
+		if e != nil {
+			c.T.Logf("Failed to get all KResources ready %v", e)
+		}
+		return e
+	})
+	if err != nil {
 		return err
 	}
 	// Explicitly wait for all pods that were created directly by this test to become ready.

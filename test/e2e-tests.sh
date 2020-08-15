@@ -44,6 +44,9 @@ readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_imag
 # HEAD eventing test images.
 readonly HEAD_EVENTING_TEST_IMAGES="${GOPATH}/src/knative.dev/eventing/test/test_images/"
 
+# Config tracing config.
+readonly CONFIG_TRACING_CONFIG="test/config/config-tracing.yaml"
+
 # NATS Streaming installation config.
 readonly NATSS_INSTALLATION_CONFIG="natss/config/broker/natss.yaml"
 # NATSS channel CRD config directory.
@@ -89,6 +92,9 @@ function knative_setup() {
     popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
+
+  # Setup config tracing for tracing tests
+  kubectl replace -f $CONFIG_TRACING_CONFIG
 
   # TODO install head if !is_release_branch
   echo "Installing Knative Monitoring"
@@ -152,6 +158,9 @@ function test_setup() {
   sed -i 's@knative.dev/eventing/test/test_images@knative.dev/eventing-contrib/vendor/knative.dev/eventing/test/test_images@g' "${VENDOR_EVENTING_TEST_IMAGES}"*/*.yaml
   $(dirname $0)/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
   $(dirname $0)/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
+
+  # Setup config tracing for tracing tests
+  kubectl replace -f $CONFIG_TRACING_CONFIG
 }
 
 function test_teardown() {
@@ -245,9 +254,9 @@ function camel_teardown() {
 
 initialize $@ --skip-istio-addon
 
-go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel  || fail_test
+go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
 
-go_test_e2e -timeout=5m -parallel=12 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel -sources=sources.knative.dev/v1alpha1:CamelSource,sources.knative.dev/v1alpha1:KafkaSource || fail_test
+go_test_e2e -timeout=5m -parallel=12 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1beta1:KafkaChannel -sources=sources.knative.dev/v1alpha1:CamelSource,sources.knative.dev/v1beta1:KafkaSource || fail_test
 
 # If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands
 # trap - SIGINT SIGQUIT SIGTSTP EXIT

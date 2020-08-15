@@ -27,13 +27,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source/resources"
 
 	"k8s.io/client-go/kubernetes"
@@ -43,8 +42,8 @@ import (
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
-	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
-	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1alpha1"
+	reconcilerkafkasource "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
+	listers "knative.dev/eventing-contrib/kafka/source/pkg/client/listers/sources/v1beta1"
 )
 
 const (
@@ -93,10 +92,10 @@ type Reconciler struct {
 // Check that our Reconciler implements Interface
 var _ reconcilerkafkasource.Interface = (*Reconciler)(nil)
 
-func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSource) pkgreconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1beta1.KafkaSource) pkgreconciler.Event {
 	src.Status.InitializeConditions()
 
-	if src.Spec.Sink == nil {
+	if (src.Spec.Sink == duckv1.Destination{}) {
 		src.Status.MarkNoSink("SinkMissing", "")
 		return fmt.Errorf("spec.sink missing")
 	}
@@ -117,17 +116,19 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 	}
 	src.Status.MarkSink(sinkURI)
 
-	if val, ok := src.GetLabels()[v1alpha1.KafkaKeyTypeLabel]; ok {
+	if val, ok := src.GetLabels()[v1beta1.KafkaKeyTypeLabel]; ok {
 		found := false
-		for _, allowed := range v1alpha1.KafkaKeyTypeAllowed {
+		for _, allowed := range v1beta1.KafkaKeyTypeAllowed {
 			if allowed == val {
 				found = true
 			}
 		}
 		if !found {
-			src.Status.MarkResourcesIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
-			logging.FromContext(ctx).Errorf("Invalid value for %s: %s. Allowed: %v", v1alpha1.KafkaKeyTypeLabel, val, v1alpha1.KafkaKeyTypeAllowed)
+			src.Status.MarkKeyTypeIncorrect("IncorrectKafkaKeyTypeLabel", "Invalid value for %s: %s. Allowed: %v", v1beta1.KafkaKeyTypeLabel, val, v1beta1.KafkaKeyTypeAllowed)
+			logging.FromContext(ctx).Errorf("Invalid value for %s: %s. Allowed: %v", v1beta1.KafkaKeyTypeLabel, val, v1beta1.KafkaKeyTypeAllowed)
 			return errors.New("IncorrectKafkaKeyTypeLabel")
+		} else {
+			src.Status.MarkKeyTypeCorrect()
 		}
 	}
 
@@ -151,40 +152,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.KafkaSourc
 	return nil
 }
 
-func checkResourcesStatus(src *v1alpha1.KafkaSource) error {
-	for _, rsrc := range []struct {
-		key   string
-		field string
-	}{{
-		key:   "Request.CPU",
-		field: src.Spec.Resources.Requests.ResourceCPU,
-	}, {
-		key:   "Request.Memory",
-		field: src.Spec.Resources.Requests.ResourceMemory,
-	}, {
-		key:   "Limit.CPU",
-		field: src.Spec.Resources.Limits.ResourceCPU,
-	}, {
-		key:   "Limit.Memory",
-		field: src.Spec.Resources.Limits.ResourceMemory,
-	}} {
-		// In the event the field isn't specified, we assign a default in the receive_adapter
-		if rsrc.field != "" {
-			if _, err := resource.ParseQuantity(rsrc.field); err != nil {
-				src.Status.MarkResourcesIncorrect("Incorrect Resource", "%s: %s, Error: %s", rsrc.key, rsrc.field, err)
-				return err
-			}
-		}
-	}
-	src.Status.MarkResourcesCorrect()
-	return nil
-}
-
-func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.KafkaSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
-	if err := checkResourcesStatus(src); err != nil {
-		return nil, err
-	}
-
+func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource, sinkURI *apis.URL) (*appsv1.Deployment, error) {
 	raArgs := resources.ReceiveAdapterArgs{
 		Image:          r.receiveAdapterImage,
 		Source:         src,
@@ -195,7 +163,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Kaf
 	expected := resources.MakeReceiveAdapter(&raArgs)
 
 	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
 		if err != nil {
 			return nil, newDeploymentFailed(ra.Namespace, ra.Name, err)
@@ -233,14 +201,14 @@ func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {
 	return false
 }
 
-func (r *Reconciler) createCloudEventAttributes(src *v1alpha1.KafkaSource) []duckv1.CloudEventAttributes {
+func (r *Reconciler) createCloudEventAttributes(src *v1beta1.KafkaSource) []duckv1.CloudEventAttributes {
 	ceAttributes := make([]duckv1.CloudEventAttributes, 0, len(src.Spec.Topics))
 	for i := range src.Spec.Topics {
 		topics := strings.Split(src.Spec.Topics[i], ",")
 		for _, topic := range topics {
 			ceAttributes = append(ceAttributes, duckv1.CloudEventAttributes{
-				Type:   v1alpha1.KafkaEventType,
-				Source: v1alpha1.KafkaEventSource(src.Namespace, src.Name, topic),
+				Type:   v1beta1.KafkaEventType,
+				Source: v1beta1.KafkaEventSource(src.Namespace, src.Name, topic),
 			})
 		}
 	}

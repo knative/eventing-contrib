@@ -66,3 +66,10 @@ spec:
   - name: v1beta1
     served: true
     storage: false
+  conversion:
+    strategy: Webhook
+    conversionReviewVersions: ["v1beta1", "v1alpha1"]
+    webhookClientConfig:
+      service:
+        name: kafka-webhook
+        namespace: knative-eventing

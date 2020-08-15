@@ -167,3 +167,9 @@ func WithNatssChannelAddress(a string) NatssChannelOption {
 		})
 	}
 }
+
+func Addressable() NatssChannelOption {
+	return func(channel *v1alpha1.NatssChannel) {
+		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(v1alpha1.NatssChannelConditionAddressable)
+	}
+}

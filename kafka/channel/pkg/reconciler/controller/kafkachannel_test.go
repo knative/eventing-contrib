@@ -35,7 +35,7 @@ import (
 	eventingClient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/eventing/pkg/utils"
 
-	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -44,9 +44,9 @@ import (
 	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 	fakekafkaclient "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client/fake"
-	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1alpha1/kafkachannel"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/controller/resources"
 	reconcilekafkatesting "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/testing"
 	reconcilertesting "knative.dev/eventing-contrib/kafka/channel/pkg/reconciler/testing"
@@ -68,8 +68,8 @@ var (
 
 func init() {
 	// Add types to scheme
-	_ = v1alpha1.AddToScheme(scheme.Scheme)
-	_ = duckv1alpha1.AddToScheme(scheme.Scheme)
+	_ = v1beta1.AddToScheme(scheme.Scheme)
+	_ = duckv1.AddToScheme(scheme.Scheme)
 }
 
 func TestAllCases(t *testing.T) {
@@ -595,7 +595,7 @@ func makeService() *corev1.Service {
 	return resources.MakeDispatcherService(testNS)
 }
 
-func makeChannelService(nc *v1alpha1.KafkaChannel) *corev1.Service {
+func makeChannelService(nc *v1beta1.KafkaChannel) *corev1.Service {
 	return &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

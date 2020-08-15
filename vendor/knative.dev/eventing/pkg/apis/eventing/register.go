@@ -55,6 +55,25 @@ const (
 	// EventTypesAnnotationKey is the annotation key to specify
 	// if a Source has event types defines in its CRD.
 	EventTypesAnnotationKey = "registry.knative.dev/eventTypes"
+
+	// BrokerChannelAddressStatusAnnotationKey is the broker status
+	// annotation key used to specify the address of its channel.
+	BrokerChannelAddressStatusAnnotationKey = "knative.dev/channelAddress"
+
+	// BrokerChannelAPIVersionStatusAnnotationKey is the broker status
+	// annotation key used to specify the APIVersion of the channel for
+	// the triggers to subscribe to.
+	BrokerChannelAPIVersionStatusAnnotationKey = "knative.dev/channelAPIVersion"
+
+	// BrokerChannelKindStatusAnnotationKey is the broker status
+	// annotation key used to specify the Kind of the channel for
+	// the triggers to subscribe to.
+	BrokerChannelKindStatusAnnotationKey = "knative.dev/channelKind"
+
+	// BrokerChannelNameStatusAnnotationKey is the broker status
+	// annotation key used to specify the name of the channel for
+	// the triggers to subscribe to.
+	BrokerChannelNameStatusAnnotationKey = "knative.dev/channelName"
 )
 
 var (

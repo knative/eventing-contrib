@@ -38,7 +38,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
-	sourcesv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1alpha1"
+	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 )
 
 type AvroDecoder struct {
@@ -80,8 +80,8 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.
 
 	event.SetID(makeEventId(cm.Partition, cm.Offset))
 	event.SetTime(cm.Timestamp)
-	event.SetType(sourcesv1alpha1.KafkaEventType)
-	event.SetSource(sourcesv1alpha1.KafkaEventSource(a.config.Namespace, a.config.Name, cm.Topic))
+	event.SetType(sourcesv1beta1.KafkaEventType)
+	event.SetSource(sourcesv1beta1.KafkaEventSource(a.config.Namespace, a.config.Name, cm.Topic))
 	event.SetSubject(makeEventSubject(cm.Partition, cm.Offset))
 
 	dumpKafkaMetaToEvent(&event, a.keyTypeMapper, cm.Key, kafkaMsg)
@@ -116,7 +116,7 @@ func makeEventSubject(partition int32, offset int64) string {
 var replaceBadCharacters = regexp.MustCompile(`[^a-zA-Z0-9]`).ReplaceAllString
 
 func dumpKafkaMetaToEvent(event *cloudevents.Event, keyTypeMapper func([]byte) interface{}, key []byte, msg *protocolkafka.Message) {
-	if key != nil && len(key) > 0 {
+	if len(key) > 0 {
 		event.SetExtension("key", keyTypeMapper(key))
 	}
 	for k, v := range msg.Headers {

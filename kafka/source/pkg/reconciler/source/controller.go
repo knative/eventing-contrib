@@ -33,8 +33,8 @@ import (
 	"knative.dev/pkg/resolver"
 
 	kafkaclient "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/client"
-	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1alpha1/kafkasource"
-	"knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1alpha1/kafkasource"
+	kafkainformer "knative.dev/eventing-contrib/kafka/source/pkg/client/injection/informers/sources/v1beta1/kafkasource"
+	"knative.dev/eventing-contrib/kafka/source/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 )
 
 func NewController(

@@ -1,4 +1,4 @@
-//+build e2e
+// +build e2e
 
 /*
 Copyright 2020 The Knative Authors
@@ -26,15 +26,17 @@ import (
 	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
 	"github.com/cloudevents/sdk-go/v2/test"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
-	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	knativeduck "knative.dev/pkg/apis/duck/v1beta1"
+
+	"knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
+	camelsourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned"
 )
 
 func TestCamelSource(t *testing.T) {
+	t.Skip("https://github.com/knative/eventing-contrib/issues/1414")
 
 	const (
 		camelSourceName = "e2e-camelsource"
@@ -47,7 +49,6 @@ func TestCamelSource(t *testing.T) {
 
 	t.Logf("Creating event record")
 	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
-	defer eventTracker.Cleanup()
 
 	camelClient := getCamelKClient(client)
 

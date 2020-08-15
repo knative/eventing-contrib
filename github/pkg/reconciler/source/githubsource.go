@@ -54,12 +54,6 @@ import (
 )
 
 const (
-	raImageEnvVar = "GH_RA_IMAGE"
-
-	// controllerAgentName is the string used by this controller to identify
-	// itself when creating events.
-	controllerAgentName = "github-source-controller"
-
 	// The name of the mt receive adapter
 	adapterName = "github-adapter"
 )

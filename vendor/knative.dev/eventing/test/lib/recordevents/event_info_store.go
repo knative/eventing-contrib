@@ -93,13 +93,16 @@ func NewEventInfoStore(client *testlib.Client, podName string) (*EventInfoStore,
 	ei := newTestableEventInfoStore(egi, -1, -1)
 	ei.podName = podName
 	ei.tb = client.T
+	client.T.Cleanup(ei.cleanup)
 	return ei, nil
 }
 
+type EventRecordOption = func(*corev1.Pod, *testlib.Client) error
+
 // Deploys a new recordevents pod and start the associated EventInfoStore
-func StartEventRecordOrFail(client *testlib.Client, podName string) (*EventInfoStore, *corev1.Pod) {
+func StartEventRecordOrFail(client *testlib.Client, podName string, options ...EventRecordOption) (*EventInfoStore, *corev1.Pod) {
 	eventRecordPod := resources.EventRecordPod(podName)
-	client.CreatePodOrFail(eventRecordPod, testlib.WithService(podName))
+	client.CreatePodOrFail(eventRecordPod, append(options, testlib.WithService(podName))...)
 	err := pkgTest.WaitForPodRunning(client.Kube, podName, client.Namespace)
 	if err != nil {
 		client.T.Fatalf("Failed to start the recordevent pod '%s': %v", podName, errors.WithStack(err))
@@ -171,9 +174,13 @@ func (ei *EventInfoStore) doRetrieveData() error {
 
 // Clean up any background resources used by the store.  Must be called exactly once after
 // the last use.
-func (ei *EventInfoStore) Cleanup() {
+func (ei *EventInfoStore) cleanup() {
 	close(ei.closeCh)
 }
+
+//TODO remove it, this is not useful anymore
+// Deprecated: you can remove the manual cleanup of the event getter, since now it's done at test tear down automatically
+func (ei *EventInfoStore) Cleanup() {}
 
 // Called internally by functions wanting the current list of all
 // known events.  This calls for an update from the REST server and

@@ -32,17 +32,17 @@ import (
 type Realm struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object's metadata.
-	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec is the desired state of the Realm.
-	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
 	Spec RealmSpec `json:"spec,omitempty"`
 
 	// Status is the current state of the Realm.
-	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
 	Status RealmStatus `json:"status,omitempty"`
 }
@@ -66,7 +66,7 @@ var (
 type RealmList struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object metadata.
-	// More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata
+	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
 
@@ -87,13 +87,13 @@ type RealmSpec struct {
 	// originating from outside of the cluster.  Could be omitted for a Realm without
 	// external access.
 	// +optional
-	External string
+	External string `json:"external,omitempty"`
 
-	// Cluster contains the name of the Domain resource corresponding with traffic
+	// Internal contains the name of the Domain resource corresponding with traffic
 	// originating from inside of the cluster.  Could be omitted for a Realm without
 	// internal access.
 	// +optional
-	Cluster string
+	Internal string `json:"internal,omitempty"`
 }
 
 // RealmStatus will reflect Ready=True if the implementation accepts the Realm data

@@ -17,23 +17,24 @@ limitations under the License.
 package source
 
 import (
+	"context"
 	"testing"
 )
 
 func TestNewFakeWebhookClient(t *testing.T) {
 	client := NewFakeWebhookClient()
 
-	_, err := client.Create(nil, nil, "")
+	_, err := client.Create(context.Background(), nil, "")
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}
 
-	err = client.Reconcile(nil, nil, "", "")
+	err = client.Reconcile(context.Background(), nil, "", "")
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}
 
-	err = client.Delete(nil, nil, "", "")
+	err = client.Delete(context.Background(), nil, "", "")
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}
