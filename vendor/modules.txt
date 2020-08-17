@@ -1271,13 +1271,7 @@ knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-<<<<<<< HEAD
 # knative.dev/networking v0.0.0-20200812200006-4d518e76538a
-knative.dev/networking/pkg/apis/networking
-knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200812224206-44c860147a87
-=======
-# knative.dev/networking v0.0.0-20200811174006-3b1fd29485ee
 ## explicit
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
@@ -1293,8 +1287,7 @@ knative.dev/networking/pkg/client/injection/client
 knative.dev/networking/pkg/client/injection/informers/factory
 knative.dev/networking/pkg/client/injection/informers/networking/v1alpha1/ingress
 knative.dev/networking/pkg/client/listers/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200811233205-6b7eccba3b9c
->>>>>>> add vanity url experimental feature
+# knative.dev/pkg v0.0.0-20200812224206-44c860147a87
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1419,15 +1412,11 @@ knative.dev/serving/pkg/client/listers/autoscaling/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1
 knative.dev/serving/pkg/client/listers/serving/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1beta1
-<<<<<<< HEAD
-# knative.dev/test-infra v0.0.0-20200813220834-388e55a496cf
-=======
 knative.dev/serving/pkg/gc
 knative.dev/serving/pkg/reconciler/route/config
 knative.dev/serving/pkg/reconciler/route/domains
 knative.dev/serving/pkg/reconciler/route/resources/labels
-# knative.dev/test-infra v0.0.0-20200811195106-afcd1747545f
->>>>>>> add vanity url experimental feature
+# knative.dev/test-infra v0.0.0-20200813220834-388e55a496cf
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
