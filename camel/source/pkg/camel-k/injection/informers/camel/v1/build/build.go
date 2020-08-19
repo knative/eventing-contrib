@@ -21,7 +21,7 @@ package build
 import (
 	context "context"
 
-	v1 "github.com/apache/camel-k/pkg/client/informers/externalversions/camel/v1"
+	v1 "github.com/apache/camel-k/pkg/client/camel/informers/externalversions/camel/v1"
 	factory "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/informers/factory"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
@@ -46,7 +46,7 @@ func Get(ctx context.Context) v1.BuildInformer {
 	untyped := ctx.Value(Key{})
 	if untyped == nil {
 		logging.FromContext(ctx).Panic(
-			"Unable to fetch github.com/apache/camel-k/pkg/client/informers/externalversions/camel/v1.BuildInformer from context.")
+			"Unable to fetch github.com/apache/camel-k/pkg/client/camel/informers/externalversions/camel/v1.BuildInformer from context.")
 	}
 	return untyped.(v1.BuildInformer)
 }

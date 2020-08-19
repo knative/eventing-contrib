@@ -28,6 +28,7 @@ import (
 type IntegrationSpec struct {
 	Replicas           *int32               `json:"replicas,omitempty"`
 	Sources            []SourceSpec         `json:"sources,omitempty"`
+	Flows              []Flow               `json:"flows,omitempty"`
 	Resources          []ResourceSpec       `json:"resources,omitempty"`
 	Kit                string               `json:"kit,omitempty"`
 	Dependencies       []string             `json:"dependencies,omitempty"`
@@ -56,14 +57,21 @@ type IntegrationStatus struct {
 	Conditions         []IntegrationCondition `json:"conditions,omitempty"`
 	Version            string                 `json:"version,omitempty"`
 	Replicas           *int32                 `json:"replicas,omitempty"`
+	Selector           string                 `json:"selector,omitempty"`
 	Capabilities       []string               `json:"capabilities,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// Integration is the Schema for the integrations API
 // +k8s:openapi-gen=true
 // +genclient
+// +kubebuilder:resource:path=integrations,scope=Namespaced,shortName=it,categories=kamel;camel
+// +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`,description="The integration phase"
+// +kubebuilder:printcolumn:name="Kit",type=string,JSONPath=`.status.kit`,description="The integration kit"
+// +kubebuilder:printcolumn:name="Replicas",type=integer,JSONPath=`.status.replicas`,description="The number of pods"
+
+// Integration is the Schema for the integrations API
 type Integration struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -95,7 +103,7 @@ type ResourceType string
 
 // ResourceSpec --
 type ResourceSpec struct {
-	DataSpec
+	DataSpec  `json:",inline"`
 	Type      ResourceType `json:"type,omitempty"`
 	MountPath string       `json:"mountPath,omitempty"`
 }
@@ -109,7 +117,7 @@ const (
 
 // SourceSpec --
 type SourceSpec struct {
-	DataSpec
+	DataSpec `json:",inline"`
 	Language Language `json:"language,omitempty"`
 	// Loader is an optional id of the org.apache.camel.k.RoutesLoader that will
 	// interpret this source at runtime
@@ -171,6 +179,8 @@ const (
 	IntegrationPhaseDeploying IntegrationPhase = "Deploying"
 	// IntegrationPhaseRunning --
 	IntegrationPhaseRunning IntegrationPhase = "Running"
+	// IntegrationPhaseUpdating is a phase where the operator is not supposed to interact with the resource
+	IntegrationPhaseUpdating IntegrationPhase = "Updating"
 	// IntegrationPhaseError --
 	IntegrationPhaseError IntegrationPhase = "Error"
 
@@ -194,6 +204,8 @@ const (
 	IntegrationConditionJolokiaAvailable IntegrationConditionType = "JolokiaAvailable"
 	// IntegrationConditionProbesAvailable --
 	IntegrationConditionProbesAvailable IntegrationConditionType = "ProbesAvailable"
+	// IntegrationConditionReady --
+	IntegrationConditionReady IntegrationConditionType = "Ready"
 
 	// IntegrationConditionKitAvailableReason --
 	IntegrationConditionKitAvailableReason string = "IntegrationKitAvailable"
@@ -231,6 +243,14 @@ const (
 	IntegrationConditionJolokiaAvailableReason string = "JolokiaAvailable"
 	// IntegrationConditionProbesAvailableReason --
 	IntegrationConditionProbesAvailableReason string = "ProbesAvailable"
+	// IntegrationConditionErrorReason --
+	IntegrationConditionErrorReason string = "Error"
+	// IntegrationConditionCronJobCreatedReason --
+	IntegrationConditionCronJobCreatedReason string = "CronJobCreated"
+	// IntegrationConditionReplicaSetReadyReason --
+	IntegrationConditionReplicaSetReadyReason string = "ReplicaSetReady"
+	// IntegrationConditionReplicaSetNotReadyReason --
+	IntegrationConditionReplicaSetNotReadyReason string = "ReplicaSetNotReady"
 )
 
 // IntegrationCondition describes the state of a resource at a certain point.

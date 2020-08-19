@@ -18,6 +18,8 @@ limitations under the License.
 package v1
 
 import (
+	"encoding/json"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -45,14 +47,22 @@ type Failure struct {
 
 // FailureRecovery --
 type FailureRecovery struct {
-	Attempt     int         `json:"attempt"`
-	AttemptMax  int         `json:"attemptMax"`
+	Attempt    int `json:"attempt"`
+	AttemptMax int `json:"attemptMax"`
+	// +optional
 	AttemptTime metav1.Time `json:"attemptTime"`
 }
 
 // A TraitSpec contains the configuration of a trait
 type TraitSpec struct {
-	Configuration map[string]string `json:"configuration,omitempty"`
+	Configuration TraitConfiguration `json:"configuration"`
+}
+
+// +kubebuilder:validation:Type=object
+
+// TraitConfiguration --
+type TraitConfiguration struct {
+	json.RawMessage `json:",inline"`
 }
 
 // Configurable --
@@ -115,6 +125,10 @@ const (
 	CapabilityCron = "cron"
 	// CapabilityPlatformHTTP --
 	CapabilityPlatformHTTP = "platform-http"
+	// CapabilityCircuitBreaker
+	CapabilityCircuitBreaker = "circuit-breaker"
+	// CapabilityTracing --
+	CapabilityTracing = "tracing"
 )
 
 // ResourceCondition is a common type for all conditions
@@ -125,4 +139,10 @@ type ResourceCondition interface {
 	GetLastTransitionTime() metav1.Time
 	GetReason() string
 	GetMessage() string
+}
+
+// Flow is an unstructured object representing a Camel Flow in YAML/JSON DSL
+// +kubebuilder:validation:Type=object
+type Flow struct {
+	json.RawMessage `json:",inline"`
 }

@@ -4,7 +4,8 @@ go 1.14
 
 require (
 	github.com/Shopify/sarama v1.26.4
-	github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
+	github.com/apache/camel-k/pkg/apis/camel v1.1.0
+	github.com/apache/camel-k/pkg/client/camel v1.1.0
 	github.com/aws/aws-sdk-go v1.31.12
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.2.0

@@ -17,6 +17,7 @@ limitations under the License.
 package resources
 
 import (
+	"encoding/json"
 	"testing"
 
 	"knative.dev/pkg/ptr"
@@ -69,6 +70,14 @@ func TestMakeDeployment_sink(t *testing.T) {
 		t.Error(err)
 	}
 
+	config := map[string]string{
+		"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","ce.override.ce-a":"b","ce.override.ce-source":"camel-source:test-namespace/test-name","knative.apiVersion":"","knative.kind":""}}]}`,
+	}
+	jsonConfig, err := json.Marshal(config)
+	if err != nil {
+		t.Error(err)
+	}
+
 	want := &camelv1.Integration{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "camel.apache.org/v1",
@@ -91,7 +100,7 @@ func TestMakeDeployment_sink(t *testing.T) {
 			Kit:                "test-kit",
 			Sources: []camelv1.SourceSpec{
 				{
-					Loader: "knative-source",
+					Interceptors: []string{"knative-source"},
 					DataSpec: camelv1.DataSpec{
 						Name:    "flow.yaml",
 						Content: "- from:\n    uri: timer:tick\n",
@@ -110,8 +119,8 @@ func TestMakeDeployment_sink(t *testing.T) {
 			},
 			Traits: map[string]camelv1.TraitSpec{
 				"knative": {
-					Configuration: map[string]string{
-						"configuration": `{"services":[{"type":"endpoint","name":"sink","host":"test-sink","port":80,"metadata":{"camel.endpoint.kind":"sink","ce.override.ce-a":"b","ce.override.ce-source":"camel-source:test-namespace/test-name","knative.apiVersion":"","knative.kind":""}}]}`,
+					Configuration: camelv1.TraitConfiguration{
+						RawMessage: json.RawMessage(jsonConfig),
 					},
 				},
 			},

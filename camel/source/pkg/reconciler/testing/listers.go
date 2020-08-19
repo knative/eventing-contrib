@@ -26,8 +26,8 @@ import (
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 
-	fakecamelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned/fake"
-	camellisters "github.com/apache/camel-k/pkg/client/listers/camel/v1"
+	fakecamelclientset "github.com/apache/camel-k/pkg/client/camel/clientset/versioned/fake"
+	camellisters "github.com/apache/camel-k/pkg/client/camel/listers/camel/v1"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	fakesourcesclientset "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned/fake"
 	sourceslisters "knative.dev/eventing-contrib/camel/source/pkg/client/listers/sources/v1alpha1"

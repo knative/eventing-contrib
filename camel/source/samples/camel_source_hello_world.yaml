@@ -12,7 +12,7 @@ spec:
       from:
         uri: timer:tick
         parameters:
-          period: 3s
+          period: 3000
         steps:
           - set-header:
               name: Content-Type
@@ -24,6 +24,6 @@ spec:
       kind: hello-world
   sink:
     ref:
-      apiVersion: messaging.knative.dev/v1alpha1
+      apiVersion: messaging.knative.dev/v1beta1
       kind: InMemoryChannel
       name: camel-test
