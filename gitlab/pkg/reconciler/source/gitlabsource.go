@@ -245,6 +245,9 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 		}, {
 			Name:  "METRICS_DOMAIN",
 			Value: "knative.dev/eventing",
+		}, {
+			Name:  "METRICS_PROMETHEUS_PORT",
+			Value: "9092",
 		}},
 		r.configs.ToEnvVars()...)
 	return &servingv1.Service{
