@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	component = "gitlab_controller"
+	component = "gitlab-controller"
 )
 
 func main() {

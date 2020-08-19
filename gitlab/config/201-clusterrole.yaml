@@ -80,6 +80,23 @@ rules:
   - configmaps
   verbs: *everything
 
+# Acquire leases for leader election
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+- apiGroups:
+  - coordination.k8s.io
+  resourceNames:
+  - gitlab-controller.knative.dev-eventing-contrib-gitlab-pkg-reconciler-source.reconciler.00-of-01
+  resources:
+  - leases
+  verbs:
+  - get
+  - update
+
 ---
 # The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
 # See https://knative.dev/eventing/blob/master/config/200-source-observer-clusterrole.yaml.
