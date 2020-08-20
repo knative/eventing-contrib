@@ -130,7 +130,7 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkNoReceiveAdapter("Testing", "")
+			s.MarkNotDeployed("Testing", "")
 			s.MarkSecret()
 			return s
 		}(),
@@ -142,7 +142,7 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 			s.InitializeConditions()
 			s.MarkSecret()
 			s.MarkSink(sinkURL)
-			s.MarkReceiveAdapter()
+			s.MarkDeployed()
 			s.MarkNoWebhook("Testing", "")
 			s.MarkWebhook()
 			return s
@@ -154,7 +154,7 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink(&apis.URL{})
-			s.MarkReceiveAdapter()
+			s.MarkDeployed()
 			s.MarkWebhook()
 			s.MarkSecret()
 			s.MarkSink(sinkURL)
@@ -239,7 +239,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 			s.MarkSink(sinkURL)
 			s.MarkSecret()
-			s.MarkNoReceiveAdapter("Testing", "hi")
+			s.MarkNotDeployed("Testing", "hi")
 			return s
 		}(),
 		condQuery: GitLabSourceConditionReady,
@@ -256,7 +256,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 			s.MarkSink(sinkURL)
 			s.MarkSecret()
-			s.MarkReceiveAdapter()
+			s.MarkDeployed()
 			s.MarkNoWebhook("Testing", "hi")
 			return s
 		}(),
@@ -274,7 +274,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 			s.InitializeConditions()
 			s.MarkSink(sinkURL)
 			s.MarkSecret()
-			s.MarkReceiveAdapter()
+			s.MarkDeployed()
 			s.MarkWebhook()
 			return s
 		}(),
@@ -338,7 +338,7 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
-			s.MarkReceiveAdapter()
+			s.MarkDeployed()
 			s.MarkWebhook()
 			s.MarkSink(&apis.URL{})
 			s.MarkSecret()
