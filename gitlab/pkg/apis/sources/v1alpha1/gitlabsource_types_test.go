@@ -126,11 +126,36 @@ func TestGitLabSourceStatusIsReady(t *testing.T) {
 		}(),
 		want: false,
 	}, {
+		name: "mark receive adaper empty and secrets",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkNoReceiveAdapter("Testing", "")
+			s.MarkSecret()
+			return s
+		}(),
+		want: false,
+	}, {
+		name: "mark everything and switch webhook",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSecret()
+			s.MarkSink(sinkURL)
+			s.MarkReceiveAdapter()
+			s.MarkNoWebhook("Testing", "")
+			s.MarkWebhook()
+			return s
+		}(),
+		want: true,
+	}, {
 		name: "mark sink empty, secrets, then sink",
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink(&apis.URL{})
+			s.MarkReceiveAdapter()
+			s.MarkWebhook()
 			s.MarkSecret()
 			s.MarkSink(sinkURL)
 			return s
@@ -208,12 +233,49 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 			Status: corev1.ConditionUnknown,
 		},
 	}, {
-		name: "mark sink, secrets",
+		name: "mark sink, secrets, empty RA",
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
 			s.MarkSink(sinkURL)
 			s.MarkSecret()
+			s.MarkNoReceiveAdapter("Testing", "hi")
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:    GitLabSourceConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink, secrets, RA, empty WH",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink(sinkURL)
+			s.MarkSecret()
+			s.MarkReceiveAdapter()
+			s.MarkNoWebhook("Testing", "hi")
+			return s
+		}(),
+		condQuery: GitLabSourceConditionReady,
+		want: &apis.Condition{
+			Type:    GitLabSourceConditionReady,
+			Status:  corev1.ConditionFalse,
+			Reason:  "Testing",
+			Message: "hi",
+		},
+	}, {
+		name: "mark sink, secrets, webhook, RA",
+		s: func() *GitLabSourceStatus {
+			s := &GitLabSourceStatus{}
+			s.InitializeConditions()
+			s.MarkSink(sinkURL)
+			s.MarkSecret()
+			s.MarkReceiveAdapter()
+			s.MarkWebhook()
 			return s
 		}(),
 		condQuery: GitLabSourceConditionReady,
@@ -272,10 +334,12 @@ func TestGitLabSourceStatusGetCondition(t *testing.T) {
 			Message: "Sink has resolved to empty.",
 		},
 	}, {
-		name: "mark sink empty, secrets, then sink",
+		name: "mark sink empty, RA, webhook, secrets, then sink",
 		s: func() *GitLabSourceStatus {
 			s := &GitLabSourceStatus{}
 			s.InitializeConditions()
+			s.MarkReceiveAdapter()
+			s.MarkWebhook()
 			s.MarkSink(&apis.URL{})
 			s.MarkSecret()
 			s.MarkSink(sinkURL)
