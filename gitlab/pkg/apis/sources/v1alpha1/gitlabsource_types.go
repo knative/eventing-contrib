@@ -111,12 +111,23 @@ const (
 	// GitLabSourceConditionSecretProvided has status True when the
 	// GitlabSource can read secret with gitlab tokens.
 	GitLabSourceConditionSecretProvided apis.ConditionType = "SecretProvided"
+
+	// GitLabSourceConditionWebhookConfigured has a status True when the
+	// GitLabSource has been configured with a webhook.
+	GitLabSourceConditionWebhookConfigured apis.ConditionType = "WebhookConfigured"
+
+	// GitLabSourceConditionReceiveAdapterConfigured has status True when the
+	// GitLabSource has successfully created receive adapter Knative Service.
+	GitLabSourceConditionReceiveAdapterConfigured apis.ConditionType = "ReceiveAdapterConfigured"
 )
 
 var gitLabSourceCondSet = apis.NewLivingConditionSet(
 	GitLabSourceConditionSecretProvided,
-	GitLabSourceConditionSinkProvided)
+	GitLabSourceConditionSinkProvided,
+	GitLabSourceConditionWebhookConfigured,
+	GitLabSourceConditionReceiveAdapterConfigured)
 
+// GetGroupVersionKind returns GitlabSource GVK
 func (*GitLabSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("GitLabSource")
 }
@@ -169,6 +180,26 @@ func (s *GitLabSourceStatus) MarkNoSecret(reason, messageFormat string, messageA
 // MarkSecret sets the condition that the source have a gitlab secret.
 func (s *GitLabSourceStatus) MarkSecret() {
 	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionSecretProvided)
+}
+
+// MarkWebhook sets the condition that the source has set its webhook configured.
+func (s *GitLabSourceStatus) MarkWebhook() {
+	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionWebhookConfigured)
+}
+
+// MarkNoWebhook sets the condition that the source does not have its webhook configured.
+func (s *GitLabSourceStatus) MarkNoWebhook(reason, messageFormat string, messageA ...interface{}) {
+	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionWebhookConfigured, reason, messageFormat, messageA...)
+}
+
+// MarkReceiveAdapter sets the condition that the source has its Receive Adapter service ready.
+func (s *GitLabSourceStatus) MarkReceiveAdapter() {
+	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionReceiveAdapterConfigured)
+}
+
+// MarkNoReceiveAdapter sets the condition that the source doesn't have its Receive Adapter service ready.
+func (s *GitLabSourceStatus) MarkNoReceiveAdapter(reason, messageFormat string, messageA ...interface{}) {
+	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionReceiveAdapterConfigured, reason, messageFormat, messageA...)
 }
 
 // +genclient
