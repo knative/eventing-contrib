@@ -36,8 +36,6 @@ import (
 )
 
 func TestCamelSource(t *testing.T) {
-	t.Skip("https://github.com/knative/eventing-contrib/issues/1414")
-
 	const (
 		camelSourceName = "e2e-camelsource"
 		loggerPodName   = "e2e-camelsource-logger-pod"
