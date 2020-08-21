@@ -54,7 +54,7 @@ type GitLabSourceSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	ProjectUrl string `json:"projectUrl"`
 
-	// EventType is the type of event to receive from Gitlab. These
+	// EventType is the type of event to receive from GitLab. These
 	// correspond to supported events to the add project hook
 	// https://docs.gitlab.com/ee/api/projects.html#add-project-hook
 	// +kubebuilder:validation:MinItems=1
@@ -105,29 +105,29 @@ const (
 	GitLabSourceConditionReady = apis.ConditionReady
 
 	// GitLabSourceConditionSinkProvided has status True when the
-	// GitlabSource has been configured with a sink target.
+	// GitLabSource has been configured with a sink target.
 	GitLabSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
 
 	// GitLabSourceConditionSecretProvided has status True when the
-	// GitlabSource can read secret with gitlab tokens.
+	// GitLabSource can read the secret containing GitLab tokens.
 	GitLabSourceConditionSecretProvided apis.ConditionType = "SecretProvided"
 
 	// GitLabSourceConditionWebhookConfigured has a status True when the
 	// GitLabSource has been configured with a webhook.
 	GitLabSourceConditionWebhookConfigured apis.ConditionType = "WebhookConfigured"
 
-	// GitLabSourceConditionReceiveAdapterConfigured has status True when the
-	// GitLabSource has successfully created receive adapter Knative Service.
-	GitLabSourceConditionReceiveAdapterConfigured apis.ConditionType = "ReceiveAdapterConfigured"
+	// GitLabSourceConditionDeployed has status True when the
+	// GitLabSource's receive adapter has been successfully deployed.
+	GitLabSourceConditionDeployed apis.ConditionType = "Deployed"
 )
 
 var gitLabSourceCondSet = apis.NewLivingConditionSet(
 	GitLabSourceConditionSecretProvided,
 	GitLabSourceConditionSinkProvided,
 	GitLabSourceConditionWebhookConfigured,
-	GitLabSourceConditionReceiveAdapterConfigured)
+	GitLabSourceConditionDeployed)
 
-// GetGroupVersionKind returns GitlabSource GVK
+// GetGroupVersionKind returns a GitLabSource GVK.
 func (*GitLabSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("GitLabSource")
 }
@@ -157,7 +157,7 @@ func (s *GitLabSourceStatus) InitializeConditions() {
 	gitLabSourceCondSet.Manage(s).InitializeConditions()
 }
 
-// MarkSink sets the condition that the source has a sink configured.
+// MarkSink sets the SinkProvided condition to True.
 func (s *GitLabSourceStatus) MarkSink(uri *apis.URL) {
 	s.SinkURI = uri
 	if uri.IsEmpty() {
@@ -167,39 +167,39 @@ func (s *GitLabSourceStatus) MarkSink(uri *apis.URL) {
 	}
 }
 
-// MarkNoSink sets the condition that the source does not have a sink configured.
+// MarkNoSink sets the SinkProvided condition to False with the given reason and message.
 func (s *GitLabSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
 	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
-// MarkNoSecret sets the condition that the source does not have a gitlab secret created.
-func (s *GitLabSourceStatus) MarkNoSecret(reason, messageFormat string, messageA ...interface{}) {
-	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionSecretProvided, reason, messageFormat, messageA...)
-}
-
-// MarkSecret sets the condition that the source have a gitlab secret.
+// MarkSecret sets the SecretProvided condition to True.
 func (s *GitLabSourceStatus) MarkSecret() {
 	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionSecretProvided)
 }
 
-// MarkWebhook sets the condition that the source has set its webhook configured.
+// MarkNoSecret sets the SecretProvided condition to False with the given reason and message.
+func (s *GitLabSourceStatus) MarkNoSecret(reason, messageFormat string, messageA ...interface{}) {
+	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionSecretProvided, reason, messageFormat, messageA...)
+}
+
+// MarkWebhook sets the WebhookConfigured condition to True.
 func (s *GitLabSourceStatus) MarkWebhook() {
 	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionWebhookConfigured)
 }
 
-// MarkNoWebhook sets the condition that the source does not have its webhook configured.
+// MarkNoWebhook sets the WebhookConfigured condition to False with the given reason and message.
 func (s *GitLabSourceStatus) MarkNoWebhook(reason, messageFormat string, messageA ...interface{}) {
 	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionWebhookConfigured, reason, messageFormat, messageA...)
 }
 
-// MarkReceiveAdapter sets the condition that the source has its Receive Adapter service ready.
-func (s *GitLabSourceStatus) MarkReceiveAdapter() {
-	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionReceiveAdapterConfigured)
+// MarkWebhook sets the Deployed condition to True.
+func (s *GitLabSourceStatus) MarkDeployed() {
+	gitLabSourceCondSet.Manage(s).MarkTrue(GitLabSourceConditionDeployed)
 }
 
-// MarkNoReceiveAdapter sets the condition that the source doesn't have its Receive Adapter service ready.
-func (s *GitLabSourceStatus) MarkNoReceiveAdapter(reason, messageFormat string, messageA ...interface{}) {
-	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionReceiveAdapterConfigured, reason, messageFormat, messageA...)
+// MarkNotDeployed sets the Deployed condition to False with the given reason and message.
+func (s *GitLabSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
+	gitLabSourceCondSet.Manage(s).MarkFalse(GitLabSourceConditionDeployed, reason, messageFormat, messageA...)
 }
 
 // +genclient
