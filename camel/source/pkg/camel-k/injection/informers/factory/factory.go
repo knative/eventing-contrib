@@ -21,7 +21,7 @@ package factory
 import (
 	context "context"
 
-	externalversions "github.com/apache/camel-k/pkg/client/informers/externalversions"
+	externalversions "github.com/apache/camel-k/pkg/client/camel/informers/externalversions"
 	client "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/client"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
@@ -50,7 +50,7 @@ func Get(ctx context.Context) externalversions.SharedInformerFactory {
 	untyped := ctx.Value(Key{})
 	if untyped == nil {
 		logging.FromContext(ctx).Panic(
-			"Unable to fetch github.com/apache/camel-k/pkg/client/informers/externalversions.SharedInformerFactory from context.")
+			"Unable to fetch github.com/apache/camel-k/pkg/client/camel/informers/externalversions.SharedInformerFactory from context.")
 	}
 	return untyped.(externalversions.SharedInformerFactory)
 }

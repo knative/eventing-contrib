@@ -62,6 +62,12 @@ rules:
   - patch
 
 - apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - leases
+  verbs: *everything
+
+- apiGroups:
   - camel.apache.org
   resources:
   - '*'
