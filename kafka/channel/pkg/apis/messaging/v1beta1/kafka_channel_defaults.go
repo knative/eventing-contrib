@@ -34,7 +34,7 @@ func (c *KafkaChannel) SetDefaults(ctx context.Context) {
 		c.Annotations = make(map[string]string)
 	}
 	if _, ok := c.Annotations[messaging.SubscribableDuckVersionAnnotation]; !ok {
-		c.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1"
+		c.Annotations[messaging.SubscribableDuckVersionAnnotation] = "v1beta1"
 	}
 
 	c.Spec.SetDefaults(ctx)
