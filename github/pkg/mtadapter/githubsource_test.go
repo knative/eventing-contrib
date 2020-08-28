@@ -24,7 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/apis"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/reconciler"
@@ -76,7 +76,7 @@ func TestGitHubSource(t *testing.T) {
 
 			reconciler := Reconciler{
 				kubeClientSet: kubeClient,
-				router:        NewRouter(logging.FromContext(ctx).Sugar(), nil, nil),
+				router:        NewRouter(logging.FromContext(ctx), nil, nil),
 			}
 
 			event := reconciler.ReconcileKind(ctx, test.source)

@@ -37,13 +37,13 @@ type SaramaConsumerHandler struct {
 	// The user message handler
 	handler KafkaConsumerHandler
 
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 	// Errors channel
 	closeErrors sync.Once
 	errors      chan error
 }
 
-func NewConsumerHandler(logger *zap.Logger, handler KafkaConsumerHandler) SaramaConsumerHandler {
+func NewConsumerHandler(logger *zap.SugaredLogger, handler KafkaConsumerHandler) SaramaConsumerHandler {
 	return SaramaConsumerHandler{
 		logger:  logger,
 		handler: handler,
@@ -73,26 +73,26 @@ func (consumer *SaramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 	// The `ConsumeClaim` itself is called within a goroutine, see:
 	// https://github.com/Shopify/sarama/blob/master/consumer_group.go#L27-L29
 	for message := range claim.Messages() {
-		if ce := consumer.logger.Check(zap.DebugLevel, "debugging"); ce != nil {
-			consumer.logger.Debug("Message claimed", zap.String("topic", message.Topic), zap.Binary("value", message.Value))
+		if ce := consumer.logger.Desugar().Check(zap.DebugLevel, "debugging"); ce != nil {
+			consumer.logger.Debugw("Message claimed", zap.String("topic", message.Topic), zap.Binary("value", message.Value))
 		}
 
 		mustMark, err := consumer.handler.Handle(session.Context(), message)
 
 		if err != nil {
-			consumer.logger.Info("Failure while handling a message", zap.String("topic", message.Topic), zap.Int32("partition", message.Partition), zap.Int64("offset", message.Offset), zap.Error(err))
+			consumer.logger.Infow("Failure while handling a message", zap.String("topic", message.Topic), zap.Int32("partition", message.Partition), zap.Int64("offset", message.Offset), zap.Error(err))
 			consumer.errors <- err
 		}
 		if mustMark {
 			session.MarkMessage(message, "") // Mark kafka message as processed
-			if ce := consumer.logger.Check(zap.DebugLevel, "debugging"); ce != nil {
-				consumer.logger.Debug("Message marked", zap.String("topic", message.Topic), zap.Binary("value", message.Value))
+			if ce := consumer.logger.Desugar().Check(zap.DebugLevel, "debugging"); ce != nil {
+				consumer.logger.Debugw("Message marked", zap.String("topic", message.Topic), zap.Binary("value", message.Value))
 			}
 		}
 
 	}
 
-	consumer.logger.Info(fmt.Sprintf("Stopping partition consumer, topic: %s, partition: %d", claim.Topic(), claim.Partition()))
+	consumer.logger.Infof("Stopping partition consumer, topic: %s, partition: %d", claim.Topic(), claim.Partition())
 	return nil
 }
 

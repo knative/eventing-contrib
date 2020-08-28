@@ -36,13 +36,13 @@ import (
 	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 )
 
-func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
+func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request) error {
 	msg := protocolkafka.NewMessageFromConsumerMessage(cm)
 
 	defer func() {
 		err := msg.Finish(nil)
 		if err != nil {
-			logger.Warn("Something went wrong while trying to finalizing the message", zap.Error(err))
+			a.logger.Warnw("Something went wrong while trying to finalizing the message", zap.Error(err))
 		}
 	}()
 

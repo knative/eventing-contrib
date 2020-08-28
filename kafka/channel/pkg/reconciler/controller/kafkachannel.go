@@ -41,7 +41,7 @@ import (
 
 	"knative.dev/eventing/pkg/apis/eventing"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler/names"
 
 	"knative.dev/pkg/apis"
@@ -146,7 +146,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel
 	// Verify channel is valid.
 	kc.SetDefaults(ctx)
 	if err := kc.Validate(ctx); err != nil {
-		logger.Error("Invalid kafka channel", zap.String("channel", kc.Name), zap.Error(err))
+		logger.Errorw("Invalid kafka channel", zap.String("channel", kc.Name), zap.Error(err))
 		return err
 	}
 
@@ -210,14 +210,14 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel
 		if apierrs.IsNotFound(err) {
 			kc.Status.MarkEndpointsFailed("DispatcherEndpointsDoesNotExist", "Dispatcher Endpoints does not exist")
 		} else {
-			logger.Error("Unable to get the dispatcher endpoints", zap.Error(err))
+			logger.Errorw("Unable to get the dispatcher endpoints", zap.Error(err))
 			kc.Status.MarkEndpointsFailed("DispatcherEndpointsGetFailed", "Failed to get dispatcher endpoints")
 		}
 		return err
 	}
 
 	if len(e.Subsets) == 0 {
-		logger.Error("No endpoints found for Dispatcher service", zap.Error(err))
+		logger.Errorw("No endpoints found for Dispatcher service", zap.Error(err))
 		kc.Status.MarkEndpointsFailed("DispatcherEndpointsNotReady", "There are no endpoints ready for Dispatcher service")
 		return fmt.Errorf("there are no endpoints ready for Dispatcher service %s", dispatcherName)
 	}
@@ -238,7 +238,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel
 	// close the connection
 	err = kafkaClusterAdmin.Close()
 	if err != nil {
-		logger.Error("Error closing the connection", zap.Error(err))
+		logger.Errorw("Error closing the connection", zap.Error(err))
 		return err
 	}
 
@@ -291,11 +291,11 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 			}
 		}
 
-		logging.FromContext(ctx).Error("Unable to get the dispatcher deployment", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Unable to get the dispatcher deployment", zap.Error(err))
 		kc.Status.MarkDispatcherUnknown("DispatcherDeploymentFailed", "Failed to get dispatcher deployment: %v", err)
 		return nil, err
 	} else if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image) {
-		logging.FromContext(ctx).Sugar().Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
+		logging.FromContext(ctx).Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
 		d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
 		if err == nil {
 			controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
@@ -363,7 +363,7 @@ func (r *Reconciler) reconcileDispatcherService(ctx context.Context, dispatcherN
 				controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherServiceCreated, "Dispatcher service created")
 				kc.Status.MarkServiceTrue()
 			} else {
-				logging.FromContext(ctx).Error("Unable to create the dispatcher service", zap.Error(err))
+				logging.FromContext(ctx).Errorw("Unable to create the dispatcher service", zap.Error(err))
 				controller.GetEventRecorder(ctx).Eventf(kc, corev1.EventTypeWarning, dispatcherServiceFailed, "Failed to create the dispatcher service: %v", err)
 				kc.Status.MarkServiceFailed("DispatcherServiceFailed", "Failed to create the dispatcher service: %v", err)
 				return svc, err
@@ -388,7 +388,7 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, dispatcherName
 	// We may change this name later, so we have to ensure we use proper addressable when resolving these.
 	expected, err := resources.MakeK8sService(channel, resources.ExternalService(dispatcherNamespace, dispatcherName))
 	if err != nil {
-		logging.FromContext(ctx).Error("failed to create the channel service object", zap.Error(err))
+		logger.Errorw("failed to create the channel service object", zap.Error(err))
 		channel.Status.MarkChannelServiceFailed("ChannelServiceFailed", fmt.Sprintf("Channel Service failed: %s", err))
 		return nil, err
 	}
@@ -398,13 +398,13 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, dispatcherName
 		if apierrs.IsNotFound(err) {
 			svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Create(expected)
 			if err != nil {
-				logging.FromContext(ctx).Error("failed to create the channel service object", zap.Error(err))
+				logger.Errorw("failed to create the channel service object", zap.Error(err))
 				channel.Status.MarkChannelServiceFailed("ChannelServiceFailed", fmt.Sprintf("Channel Service failed: %s", err))
 				return nil, err
 			}
 			return svc, nil
 		}
-		logger.Error("Unable to get the channel service", zap.Error(err))
+		logger.Errorw("Unable to get the channel service", zap.Error(err))
 		return nil, err
 	} else if !equality.Semantic.DeepEqual(svc.Spec, expected.Spec) {
 		svc = svc.DeepCopy()
@@ -412,14 +412,14 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, dispatcherName
 
 		svc, err = r.KubeClientSet.CoreV1().Services(channel.Namespace).Update(svc)
 		if err != nil {
-			logging.FromContext(ctx).Error("Failed to update the channel service", zap.Error(err))
+			logger.Errorw("Failed to update the channel service", zap.Error(err))
 			return nil, err
 		}
 	}
 	// Check to make sure that the KafkaChannel owns this service and if not, complain.
 	if !metav1.IsControlledBy(svc, channel) {
 		err := fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
-		channel.Status.MarkChannelServiceFailed("ChannelServiceFailed", fmt.Sprintf("Channel Service failed: %s", err))
+		channel.Status.MarkChannelServiceFailed("ChannelServiceFailed", "Channel Service failed: %s", err)
 		return nil, err
 	}
 	return svc, nil
@@ -445,7 +445,7 @@ func (r *Reconciler) createTopic(ctx context.Context, channel *v1beta1.KafkaChan
 	logger := logging.FromContext(ctx)
 
 	topicName := utils.TopicName(utils.KafkaChannelSeparator, channel.Namespace, channel.Name)
-	logger.Info("Creating topic on Kafka cluster", zap.String("topic", topicName))
+	logger.Infow("Creating topic on Kafka cluster", zap.String("topic", topicName))
 	err := kafkaClusterAdmin.CreateTopic(topicName, &sarama.TopicDetail{
 		ReplicationFactor: channel.Spec.ReplicationFactor,
 		NumPartitions:     channel.Spec.NumPartitions,
@@ -453,9 +453,9 @@ func (r *Reconciler) createTopic(ctx context.Context, channel *v1beta1.KafkaChan
 	if e, ok := err.(*sarama.TopicError); ok && e.Err == sarama.ErrTopicAlreadyExists {
 		return nil
 	} else if err != nil {
-		logger.Error("Error creating topic", zap.String("topic", topicName), zap.Error(err))
+		logger.Errorw("Error creating topic", zap.String("topic", topicName), zap.Error(err))
 	} else {
-		logger.Info("Successfully created topic", zap.String("topic", topicName))
+		logger.Infow("Successfully created topic", zap.String("topic", topicName))
 	}
 	return err
 }
@@ -464,14 +464,14 @@ func (r *Reconciler) deleteTopic(ctx context.Context, channel *v1beta1.KafkaChan
 	logger := logging.FromContext(ctx)
 
 	topicName := utils.TopicName(utils.KafkaChannelSeparator, channel.Namespace, channel.Name)
-	logger.Info("Deleting topic on Kafka Cluster", zap.String("topic", topicName))
+	logger.Infow("Deleting topic on Kafka Cluster", zap.String("topic", topicName))
 	err := kafkaClusterAdmin.DeleteTopic(topicName)
 	if err == sarama.ErrUnknownTopicOrPartition {
 		return nil
 	} else if err != nil {
-		logger.Error("Error deleting topic", zap.String("topic", topicName), zap.Error(err))
+		logger.Errorw("Error deleting topic", zap.String("topic", topicName), zap.Error(err))
 	} else {
-		logger.Info("Successfully deleted topic", zap.String("topic", topicName))
+		logger.Infow("Successfully deleted topic", zap.String("topic", topicName))
 	}
 	return err
 }
@@ -480,7 +480,7 @@ func (r *Reconciler) updateKafkaConfig(ctx context.Context, configMap *corev1.Co
 	logging.FromContext(ctx).Info("Reloading Kafka configuration")
 	kafkaConfig, err := utils.GetKafkaConfig(configMap.Data)
 	if err != nil {
-		logging.FromContext(ctx).Error("Error reading Kafka configuration", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Error reading Kafka configuration", zap.Error(err))
 	}
 	// For now just override the previous config.
 	// Eventually the previous config should be snapshotted to delete Kafka topics

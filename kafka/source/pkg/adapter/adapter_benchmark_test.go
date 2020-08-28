@@ -83,7 +83,7 @@ func BenchmarkHandle(b *testing.B) {
 			Name:          "test",
 		},
 		httpMessageSender: &s,
-		logger:            zap.NewNop(),
+		logger:            zap.NewNop().Sugar(),
 		keyTypeMapper:     getKeyTypeMapper(""),
 		reporter:          statsReporter,
 	}

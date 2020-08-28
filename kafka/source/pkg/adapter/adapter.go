@@ -57,7 +57,7 @@ type Adapter struct {
 	config            *adapterConfig
 	httpMessageSender *kncloudevents.HttpMessageSender
 	reporter          source.StatsReporter
-	logger            *zap.Logger
+	logger            *zap.SugaredLogger
 	keyTypeMapper     func([]byte) interface{}
 }
 
@@ -65,7 +65,7 @@ var _ adapter.MessageAdapter = (*Adapter)(nil)
 var _ adapter.MessageAdapterConstructor = NewAdapter
 
 func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMessageSender *kncloudevents.HttpMessageSender, reporter source.StatsReporter) adapter.MessageAdapter {
-	logger := logging.FromContext(ctx).Desugar()
+	logger := logging.FromContext(ctx)
 	config := processed.(*adapterConfig)
 
 	return &Adapter{
@@ -82,7 +82,7 @@ func (a *Adapter) Start(ctx context.Context) error {
 }
 
 func (a *Adapter) start(stopCh <-chan struct{}) error {
-	a.logger.Info("Starting with config: ",
+	a.logger.Infow("Starting with config: ",
 		zap.String("Topics", strings.Join(a.config.Topics, ",")),
 		zap.String("ConsumerGroup", a.config.ConsumerGroup),
 		zap.String("SinkURI", a.config.Sink),
@@ -107,7 +107,7 @@ func (a *Adapter) start(stopCh <-chan struct{}) error {
 	// Track errors
 	go func() {
 		for err := range group.Errors() {
-			a.logger.Error("An error has occurred while consuming messages occurred: ", zap.Error(err))
+			a.logger.Errorw("An error has occurred while consuming messages occurred: ", zap.Error(err))
 		}
 	}()
 
@@ -125,7 +125,7 @@ func (a *Adapter) Handle(ctx context.Context, msg *sarama.ConsumerMessage) (bool
 		return false, err
 	}
 
-	err = a.ConsumerMessageToHttpRequest(ctx, span, msg, req, a.logger)
+	err = a.ConsumerMessageToHttpRequest(ctx, span, msg, req)
 	if err != nil {
 		a.logger.Debug("failed to create request", zap.Error(err))
 		return true, err

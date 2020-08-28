@@ -351,7 +351,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 					Name:          "test",
 				},
 				httpMessageSender: s,
-				logger:            zap.NewNop(),
+				logger:            zap.NewNop().Sugar(),
 				reporter:          statsReporter,
 				keyTypeMapper:     getKeyTypeMapper(tc.keyTypeMapper),
 			}
