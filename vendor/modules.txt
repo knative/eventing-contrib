@@ -28,7 +28,7 @@ github.com/BurntSushi/toml
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
-# github.com/Shopify/sarama v1.26.4
+# github.com/Shopify/sarama v1.27.0
 ## explicit
 github.com/Shopify/sarama
 # github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -268,7 +268,7 @@ github.com/jstemmer/go-junit-report/parser
 # github.com/kelseyhightower/envconfig v1.4.0
 ## explicit
 github.com/kelseyhightower/envconfig
-# github.com/klauspost/compress v1.10.2
+# github.com/klauspost/compress v1.10.10
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/snappy
@@ -365,7 +365,7 @@ github.com/slinkydeveloper/loadastic/common
 github.com/slinkydeveloper/loadastic/kafka
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.0
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
@@ -726,6 +726,8 @@ gopkg.in/jcmturner/rpc.v1/ndr
 # gopkg.in/yaml.v2 v2.3.0
 ## explicit
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200601152816-913338de1bd2
+gopkg.in/yaml.v3
 # honnef.co/go/tools v0.0.1-2020.1.4
 honnef.co/go/tools/arg
 honnef.co/go/tools/cmd/staticcheck

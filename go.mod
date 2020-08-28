@@ -3,7 +3,7 @@ module knative.dev/eventing-contrib
 go 1.14
 
 require (
-	github.com/Shopify/sarama v1.26.4
+	github.com/Shopify/sarama v1.27.0
 	github.com/apache/camel-k/pkg/apis/camel v1.1.0
 	github.com/apache/camel-k/pkg/client/camel v1.1.0
 	github.com/aws/aws-sdk-go v1.31.12
@@ -26,7 +26,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/slinkydeveloper/loadastic v0.0.0-20191203132749-9afe5a010a57
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.0
 	github.com/xanzy/go-gitlab v0.32.0
 	gitlab.com/flimzy/testy v0.2.1 // indirect
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
