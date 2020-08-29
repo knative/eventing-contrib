@@ -84,8 +84,11 @@ function knative_setup() {
     echo ">> Install Knative Eventing from HEAD"
     pushd .
     cd ${GOPATH} && mkdir -p src/knative.dev && cd src/knative.dev
-    git clone https://github.com/knative/eventing
+    # TODO(pierDipi) DO NOT SUBMIT
+    git clone https://github.com/pierDipi/eventing.git
     cd eventing
+    git checkout enqueue-triggers-on-br-changes
+
     ko apply -f ${EVENTING_CONFIG}
     # Install MT Channel Based Broker
     ko apply -f ${EVENTING_MT_CHANNEL_BROKER_CONFIG}
