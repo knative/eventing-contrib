@@ -96,7 +96,7 @@ func TestErrorPropagationCustomConsumerGroup(t *testing.T) {
 		addrs:  []string{"b1", "b2"},
 	}
 
-	consumerGroup, err := factory.StartConsumerGroup("bla", []string{}, zap.NewNop(), nil)
+	consumerGroup, err := factory.StartConsumerGroup("bla", []string{}, zap.NewNop().Sugar(), nil)
 	if err != nil {
 		t.Errorf("Should not throw error %v", err)
 	}
@@ -132,7 +132,7 @@ func TestErrorWhileCreatingNewConsumerGroup(t *testing.T) {
 		config: sarama.NewConfig(),
 		addrs:  []string{"b1", "b2"},
 	}
-	_, err := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
+	_, err := factory.StartConsumerGroup("bla", []string{}, zap.L().Sugar(), nil)
 
 	if err == nil || err.Error() != "failed" {
 		t.Errorf("Should contain an error with message failed. Got %v", err)
@@ -147,7 +147,7 @@ func TestErrorWhileNewConsumerGroup(t *testing.T) {
 		config: sarama.NewConfig(),
 		addrs:  []string{"b1", "b2"},
 	}
-	cg, _ := factory.StartConsumerGroup("bla", []string{}, zap.L(), nil)
+	cg, _ := factory.StartConsumerGroup("bla", []string{}, zap.L().Sugar(), nil)
 
 	err := <-cg.Errors()
 
