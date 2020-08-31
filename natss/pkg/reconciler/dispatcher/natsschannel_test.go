@@ -32,7 +32,6 @@ import (
 	"knative.dev/pkg/injection"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/logging"
-	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
 	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
@@ -102,7 +101,6 @@ func TestAllCases(t *testing.T) {
 			},
 		},
 	}
-	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {
@@ -187,7 +185,6 @@ func TestFailedNatssSubscription(t *testing.T) {
 			WantErr: true,
 		},
 	}
-	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		return createReconciler(ctx, listers, func() dispatcher.NatssDispatcher {

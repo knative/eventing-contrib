@@ -21,16 +21,6 @@ import (
 	"fmt"
 	"testing"
 
-	clientgotesting "k8s.io/client-go/testing"
-	fakesourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/injection/client/fake"
-	"knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
-	reconcilertesting "knative.dev/eventing-contrib/camel/source/pkg/reconciler/testing"
-	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
-	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
-	logtesting "knative.dev/pkg/logging/testing"
-
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/apps/v1"
@@ -40,12 +30,20 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	clientgotesting "k8s.io/client-go/testing"
 	sourcesv1alpha1 "knative.dev/eventing-contrib/camel/source/pkg/apis/sources/v1alpha1"
 	fakecamelclient "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/client/fake"
+	fakesourceclient "knative.dev/eventing-contrib/camel/source/pkg/client/injection/client/fake"
+	"knative.dev/eventing-contrib/camel/source/pkg/client/injection/reconciler/sources/v1alpha1/camelsource"
 	"knative.dev/eventing-contrib/camel/source/pkg/reconciler/resources"
+	reconcilertesting "knative.dev/eventing-contrib/camel/source/pkg/reconciler/testing"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	duckv1alpha1 "knative.dev/pkg/apis/duck/v1alpha1"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
+	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	. "knative.dev/eventing-contrib/camel/source/pkg/reconciler/testing"
@@ -282,8 +280,6 @@ func TestReconcile(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "CamelSourceReconciled", `CamelSource reconciled: "testnamespace/test-camel-source"`),
 		},
 	}}
-
-	defer logtesting.ClearAll()
 
 	table.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		ctx = addressable.WithDuck(ctx)
