@@ -55,7 +55,7 @@ type KafkaDispatcher struct {
 	kafkaConsumerFactory kafka.KafkaConsumerGroupFactory
 
 	topicFunc TopicFunc
-	logger    *zap.Logger
+	logger    *zap.SugaredLogger
 }
 
 type Subscription struct {
@@ -94,7 +94,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 	}
 
 	dispatcher := &KafkaDispatcher{
-		dispatcher:           eventingchannels.NewMessageDispatcher(args.Logger),
+		dispatcher:           eventingchannels.NewMessageDispatcher(args.Logger.Desugar()),
 		kafkaConsumerFactory: kafka.NewConsumerGroupFactory(args.Brokers, conf),
 		channelSubscriptions: make(map[eventingchannels.ChannelReference][]types.UID),
 		subsConsumerGroups:   make(map[types.UID]sarama.ConsumerGroup),
@@ -109,7 +109,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 				Topic: dispatcher.topicFunc(utils.KafkaChannelSeparator, channel.Namespace, channel.Name),
 			}
 
-			dispatcher.logger.Debug("Received a new message from MessageReceiver, dispatching to Kafka", zap.Any("channel", channel))
+			dispatcher.logger.Debugw("Received a new message from MessageReceiver, dispatching to Kafka", zap.Any("channel", channel))
 			err := protocolkafka.WriteProducerMessage(ctx, message, &kafkaProducerMessage, transformers...)
 			if err != nil {
 				return err
@@ -120,7 +120,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 			dispatcher.kafkaAsyncProducer.Input() <- &kafkaProducerMessage
 			return nil
 		},
-		args.Logger,
+		args.Logger.Desugar(),
 		eventingchannels.ResolveMessageChannelFromHostHeader(dispatcher.getChannelReferenceFromHost))
 	if err != nil {
 		return nil, err
@@ -138,11 +138,11 @@ type KafkaDispatcherArgs struct {
 	ClientID           string
 	Brokers            []string
 	TopicFunc          TopicFunc
-	Logger             *zap.Logger
+	Logger             *zap.SugaredLogger
 }
 
 type consumerMessageHandler struct {
-	logger     *zap.Logger
+	logger     *zap.SugaredLogger
 	sub        Subscription
 	dispatcher *eventingchannels.MessageDispatcherImpl
 }
@@ -333,7 +333,7 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 
 	if err != nil {
 		// we can not create a consumer - logging that, with reason
-		d.logger.Info("Could not create proper consumer", zap.Error(err))
+		d.logger.Infow("Could not create proper consumer", zap.Error(err))
 		return err
 	}
 
@@ -341,7 +341,7 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 	// this goroutine logs errors incoming
 	go func() {
 		for err = range consumerGroup.Errors() {
-			d.logger.Warn("Error in consumer group", zap.Error(err))
+			d.logger.Warnw("Error in consumer group", zap.Error(err))
 		}
 	}()
 
@@ -355,7 +355,7 @@ func (d *KafkaDispatcher) subscribe(channelRef eventingchannels.ChannelReference
 // unsubscribe reads kafkaConsumers which gets updated in UpdateConfig in a separate go-routine.
 // unsubscribe must be called under updateLock.
 func (d *KafkaDispatcher) unsubscribe(channel eventingchannels.ChannelReference, sub Subscription) error {
-	d.logger.Info("Unsubscribing from channel", zap.Any("channel", channel), zap.String("subscription", sub.String()))
+	d.logger.Infow("Unsubscribing from channel", zap.Any("channel", channel), zap.String("subscription", sub.String()))
 	delete(d.subscriptions, sub.UID)
 	if subsSlice, ok := d.channelSubscriptions[channel]; ok {
 		var newSlice []types.UID
@@ -390,7 +390,7 @@ func (d *KafkaDispatcher) getChannelReferenceFromHost(host string) (eventingchan
 	return cr, nil
 }
 
-func startTraceFromMessage(logger *zap.Logger, inCtx context.Context, message *protocolkafka.Message, topic string) (context.Context, *trace.Span) {
+func startTraceFromMessage(logger *zap.SugaredLogger, inCtx context.Context, message *protocolkafka.Message, topic string) (context.Context, *trace.Span) {
 	sc, ok := parseSpanContext(message.Headers)
 	if !ok {
 		logger.Warn("Cannot parse the spancontext, creating a new span")

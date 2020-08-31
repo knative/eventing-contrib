@@ -23,7 +23,7 @@ import (
 	"time"
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
-	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
+	camelclientset "github.com/apache/camel-k/pkg/client/camel/clientset/versioned"
 	"github.com/cloudevents/sdk-go/v2/test"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testlib "knative.dev/eventing/test/lib"
@@ -36,8 +36,6 @@ import (
 )
 
 func TestCamelSource(t *testing.T) {
-	t.Skip("https://github.com/knative/eventing-contrib/issues/1414")
-
 	const (
 		camelSourceName = "e2e-camelsource"
 		loggerPodName   = "e2e-camelsource-logger-pod"
@@ -164,13 +162,15 @@ func createCamelKitOrFail(c *testlib.Client, camelClient camelclientset.Interfac
 		},
 		Spec: camelv1.IntegrationKitSpec{
 			Dependencies: []string{
+				"camel:core-languages",
 				"camel:timer",
-				"mvn:org.apache.camel.k/camel-k-loader-knative",
 				"mvn:org.apache.camel.k/camel-k-loader-yaml",
+				"mvn:org.apache.camel.k/camel-k-runtime-http",
 				"mvn:org.apache.camel.k/camel-k-runtime-knative",
 				"mvn:org.apache.camel.k/camel-k-runtime-main",
+				"mvn:org.apache.camel.k/camel-knative",
 			},
-			Image: "docker.io/testcamelk/camel-k-kit-knative-timer:1.0.0-RC2",
+			Image: "docker.io/testcamelk/camel-k-kit-knative-timer:1.1.0",
 		},
 	}
 

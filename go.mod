@@ -3,8 +3,9 @@ module knative.dev/eventing-contrib
 go 1.14
 
 require (
-	github.com/Shopify/sarama v1.26.4
-	github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
+	github.com/Shopify/sarama v1.27.0
+	github.com/apache/camel-k/pkg/apis/camel v1.1.0
+	github.com/apache/camel-k/pkg/client/camel v1.1.0
 	github.com/aws/aws-sdk-go v1.31.12
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.2.0
@@ -26,7 +27,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/slinkydeveloper/loadastic v0.0.0-20191203132749-9afe5a010a57
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.0
 	github.com/xanzy/go-gitlab v0.32.0
 	gitlab.com/flimzy/testy v0.2.1 // indirect
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
@@ -40,10 +41,10 @@ require (
 	k8s.io/apimachinery v0.18.7-rc.0
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.16.1-0.20200812122105-4dd7183c99ad
-	knative.dev/pkg v0.0.0-20200811233205-6b7eccba3b9c
-	knative.dev/serving v0.16.1-0.20200812111505-f043ccaca806
-	knative.dev/test-infra v0.0.0-20200811195106-afcd1747545f
+	knative.dev/eventing v0.17.1-0.20200831082508-0be90fa810b3
+	knative.dev/pkg v0.0.0-20200831094608-e9da10bc8a18
+	knative.dev/serving v0.17.1-0.20200830163107-4c2ae6597b07
+	knative.dev/test-infra v0.0.0-20200828211307-9d4372c9b1c7
 )
 
 replace (

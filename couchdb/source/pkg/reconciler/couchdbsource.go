@@ -33,7 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
 	cdbreconciler "knative.dev/eventing-contrib/couchdb/source/pkg/client/injection/reconciler/sources/v1alpha1/couchdbsource"
-	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgreconciler "knative.dev/pkg/reconciler"
@@ -97,7 +97,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.CouchDb
 
 	ra, err := r.createReceiveAdapter(ctx, source, sinkURI)
 	if err != nil {
-		logging.FromContext(ctx).Error("Unable to create the receive adapter", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Unable to create the receive adapter", zap.Error(err))
 		return err
 	}
 	// Update source status// Update source status
@@ -105,7 +105,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.CouchDb
 
 	ceSource, err := r.makeEventSource(ctx, source)
 	if err != nil {
-		logging.FromContext(ctx).Error("Unable to create the CloudEvents source", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Unable to create the CloudEvents source", zap.Error(err))
 		return err
 	}
 
@@ -118,7 +118,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 	if err != nil {
 		return nil, err
 	}
-	logging.FromContext(ctx).Debug("event source", zap.Any("source", eventSource))
+	logging.FromContext(ctx).Debugw("event source", zap.Any("source", eventSource))
 
 	adapterArgs := resources.ReceiveAdapterArgs{
 		EventSource: eventSource,
@@ -146,7 +146,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, couchdbsourceDeploymentUpdated, "Deployment updated")
 		return ra, nil
 	} else {
-		logging.FromContext(ctx).Debug("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
+		logging.FromContext(ctx).Debugw("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 	}
 	return ra, nil
 }
@@ -175,12 +175,12 @@ func (r *Reconciler) makeEventSource(ctx context.Context, src *v1alpha1.CouchDbS
 
 	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(src.Spec.CouchDbCredentials.Name, metav1.GetOptions{})
 	if err != nil {
-		logging.FromContext(ctx).Error("Unable to read CouchDB credentials secret", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Unable to read CouchDB credentials secret", zap.Error(err))
 		return "", err
 	}
 	rawurl, ok := secret.Data["url"]
 	if !ok {
-		logging.FromContext(ctx).Error("Unable to get CouchDB url field", zap.Any("secretName", secret.Name), zap.Any("secretNamespace", secret.Namespace))
+		logging.FromContext(ctx).Errorw("Unable to get CouchDB url field", zap.Any("secretName", secret.Name), zap.Any("secretNamespace", secret.Namespace))
 		return "", err
 	}
 

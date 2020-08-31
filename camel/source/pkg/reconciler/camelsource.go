@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	camelv1 "github.com/apache/camel-k/pkg/apis/camel/v1"
-	camelclientset "github.com/apache/camel-k/pkg/client/clientset/versioned"
+	camelclientset "github.com/apache/camel-k/pkg/client/camel/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"

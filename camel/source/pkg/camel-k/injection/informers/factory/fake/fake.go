@@ -21,7 +21,7 @@ package fake
 import (
 	context "context"
 
-	externalversions "github.com/apache/camel-k/pkg/client/informers/externalversions"
+	externalversions "github.com/apache/camel-k/pkg/client/camel/informers/externalversions"
 	fake "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/client/fake"
 	factory "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/informers/factory"
 	controller "knative.dev/pkg/controller"

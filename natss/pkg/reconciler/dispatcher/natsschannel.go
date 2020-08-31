@@ -33,7 +33,7 @@ import (
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 
@@ -84,7 +84,7 @@ func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 			MaxIdleConns:        natssConfig.MaxIdleConns,
 			MaxIdleConnsPerHost: natssConfig.MaxIdleConnsPerHost,
 		},
-		Logger: logger,
+		Logger: logger.Desugar(),
 	}
 	natssDispatcher, err := dispatcher.NewDispatcher(dispatcherArgs)
 	if err != nil {
@@ -110,7 +110,7 @@ func NewController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 	logger.Info("Starting dispatcher.")
 	go func() {
 		if err := natssDispatcher.Start(ctx); err != nil {
-			logger.Error("Cannot start dispatcher", zap.Error(err))
+			logger.Errorw("Cannot start dispatcher", zap.Error(err))
 		}
 	}()
 	return r.impl
@@ -127,7 +127,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, natssChannel *v1alpha1.N
 	// Try to subscribe.
 	failedSubscriptions, err := r.natssDispatcher.UpdateSubscriptions(ctx, c, false)
 	if err != nil {
-		logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
+		logging.FromContext(ctx).Errorw("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
 		return err
 	}
 
@@ -157,7 +157,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, natssChannel *v1alpha1.N
 	}
 
 	if err := r.natssDispatcher.ProcessChannels(ctx, channels); err != nil {
-		logging.FromContext(ctx).Error("Error updating host to channel map", zap.Error(err))
+		logging.FromContext(ctx).Errorw("Error updating host to channel map", zap.Error(err))
 		return err
 	}
 
@@ -167,7 +167,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, natssChannel *v1alpha1.N
 func (r *Reconciler) FinalizeKind(ctx context.Context, c *v1alpha1.NatssChannel) pkgreconciler.Event {
 
 	if _, err := r.natssDispatcher.UpdateSubscriptions(ctx, toChannel(c), true); err != nil {
-		logging.FromContext(ctx).Error("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
+		logging.FromContext(ctx).Errorw("Error updating subscriptions", zap.Any("channel", c), zap.Error(err))
 		return err
 	}
 	return nil

@@ -42,6 +42,10 @@ type mockConsumerGroupSession struct {
 	marked bool
 }
 
+func (m *mockConsumerGroupSession) Commit() {
+	panic("implement me")
+}
+
 func (m *mockConsumerGroupSession) Claims() map[string][]int32 {
 	return nil
 }
@@ -129,7 +133,7 @@ func Test(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("shouldErr: %v, shouldMark: %v", test.shouldErr, test.shouldMark), func(t *testing.T) {
-			cgh := NewConsumerHandler(zap.NewNop(), test)
+			cgh := NewConsumerHandler(zap.NewNop().Sugar(), test)
 
 			session := mockConsumerGroupSession{}
 			claim := mockConsumerGroupClaim{msg: &mockMessage}

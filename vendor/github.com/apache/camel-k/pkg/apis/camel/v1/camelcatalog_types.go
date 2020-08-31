@@ -43,11 +43,11 @@ type CamelArtifactDependency struct {
 // CamelArtifact --
 type CamelArtifact struct {
 	CamelArtifactDependency `json:",inline" yaml:",inline"`
-	Schemes                 []CamelScheme   `json:"schemes,omitempty" yaml:"schemes,omitempty"`
-	Languages               []string        `json:"languages,omitempty" yaml:"languages,omitempty"`
-	DataFormats             []string        `json:"dataformats,omitempty" yaml:"dataformats,omitempty"`
-	Dependencies            []CamelArtifact `json:"dependencies,omitempty" yaml:"dependencies,omitempty"`
-	JavaTypes               []string        `json:"javaTypes,omitempty" yaml:"javaTypes,omitempty"`
+	Schemes                 []CamelScheme             `json:"schemes,omitempty" yaml:"schemes,omitempty"`
+	Languages               []string                  `json:"languages,omitempty" yaml:"languages,omitempty"`
+	DataFormats             []string                  `json:"dataformats,omitempty" yaml:"dataformats,omitempty"`
+	Dependencies            []CamelArtifactDependency `json:"dependencies,omitempty" yaml:"dependencies,omitempty"`
+	JavaTypes               []string                  `json:"javaTypes,omitempty" yaml:"javaTypes,omitempty"`
 }
 
 // CamelLoader --
@@ -69,9 +69,14 @@ type CamelCatalogStatus struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
+// +genclient
+// +kubebuilder:resource:path=camelcatalogs,scope=Namespaced,shortName=cc,categories=kamel;camel
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Runtime Version",type=string,JSONPath=`.spec.runtime.version`,description="The Camel K Runtime version"
+// +kubebuilder:printcolumn:name="Runtime Provider",type=string,JSONPath=`.spec.runtime.provider`,description="The Camel K Runtime provider"
 
 // CamelCatalog is the Schema for the camelcatalogs API
-// +k8s:openapi-gen=true
 type CamelCatalog struct {
 	metav1.TypeMeta   `json:",inline" yaml:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty"`

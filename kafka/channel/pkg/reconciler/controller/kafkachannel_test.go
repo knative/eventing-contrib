@@ -41,7 +41,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
-	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
@@ -319,7 +318,6 @@ func TestAllCases(t *testing.T) {
 			// TODO add UTs for topic creation and deletion.
 		},
 	}
-	defer logtesting.ClearAll()
 
 	table.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
@@ -377,7 +375,6 @@ func TestTopicExists(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
 		},
 	}
-	defer logtesting.ClearAll()
 
 	row.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 
@@ -447,7 +444,6 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 			Eventf(corev1.EventTypeNormal, "KafkaChannelReconciled", `KafkaChannel reconciled: "test-namespace/test-kc"`),
 		},
 	}
-	defer logtesting.ClearAll()
 
 	row.Test(t, reconcilertesting.MakeFactory(func(ctx context.Context, listers *reconcilekafkatesting.Listers, cmw configmap.Watcher) controller.Reconciler {
 

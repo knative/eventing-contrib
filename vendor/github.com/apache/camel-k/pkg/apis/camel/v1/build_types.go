@@ -65,7 +65,9 @@ type ImageTask struct {
 
 // BuilderTask --
 type BuilderTask struct {
-	BaseTask     `json:",inline"`
+	BaseTask `json:",inline"`
+	// This is required until https://github.com/kubernetes-sigs/controller-tools/pull/395 gets merged
+	// +kubebuilder:pruning:PreserveUnknownFields
 	Meta         metav1.ObjectMeta `json:"meta,omitempty"`
 	Image        string            `json:"image,omitempty"`
 	BaseImage    string            `json:"baseImage,omitempty"`
@@ -89,7 +91,7 @@ type BuildStatus struct {
 	Artifacts  []Artifact       `json:"artifacts,omitempty"`
 	Error      string           `json:"error,omitempty"`
 	Failure    *Failure         `json:"failure,omitempty"`
-	StartedAt  metav1.Time      `json:"startedAt,omitempty"`
+	StartedAt  *metav1.Time     `json:"startedAt,omitempty"`
 	Platform   string           `json:"platform,omitempty"`
 	Conditions []BuildCondition `json:"conditions,omitempty"`
 	// Change to Duration / ISO 8601 when CRD uses OpenAPI spec v3
@@ -135,10 +137,18 @@ const (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// Build is the Schema for the builds API
 // +k8s:openapi-gen=true
 // +genclient
+// +kubebuilder:resource:path=builds,scope=Namespaced,shortName=ikb,categories=kamel;camel
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`,description="The build phase"
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`,description="The time at which the build was created"
+// +kubebuilder:printcolumn:name="Started",type=date,JSONPath=`.status.startedAt`,description="The time at which the build was last (re-)started"
+// Change format to 'duration' when CRD uses OpenAPI spec v3 (https://github.com/OAI/OpenAPI-Specification/issues/845)
+// +kubebuilder:printcolumn:name="Duration",type=string,JSONPath=`.status.duration`,description="The build last execution duration"
+// +kubebuilder:printcolumn:name="Attempts",type=integer,JSONPath=`.status.failure.recovery.attempt`,description="The number of execution attempts"
+
+// Build is the Schema for the builds API
 type Build struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
