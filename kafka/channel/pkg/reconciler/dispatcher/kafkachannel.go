@@ -27,12 +27,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing/pkg/channel/fanout"
 
+	"knative.dev/eventing/pkg/channel/fanout"
+	"knative.dev/pkg/logging"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/eventing/pkg/logging"
 	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -74,19 +74,19 @@ var _ kafkachannelreconciler.Interface = (*Reconciler)(nil)
 func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
-	err := tracing.SetupDynamicPublishing(logger.Sugar(), cmw.(*configmap.InformedWatcher), "kafka-ch-dispatcher", "config-tracing")
+	err := tracing.SetupDynamicPublishing(logger, cmw.(*configmap.InformedWatcher), "kafka-ch-dispatcher", "config-tracing")
 	if err != nil {
-		logger.Fatal("unable to setup tracing", zap.Error(err))
+		logger.Fatalw("unable to setup tracing", zap.Error(err))
 	}
 
 	configMap, err := configmap.Load("/etc/config-kafka")
 	if err != nil {
-		logger.Fatal("error loading configuration", zap.Error(err))
+		logger.Fatalw("error loading configuration", zap.Error(err))
 	}
 
 	kafkaConfig, err := utils.GetKafkaConfig(configMap)
 	if err != nil {
-		logger.Fatal("Error loading kafka config", zap.Error(err))
+		logger.Fatalw("Error loading kafka config", zap.Error(err))
 	}
 
 	connectionArgs := &kncloudevents.ConnectionArgs{
@@ -104,10 +104,10 @@ func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl 
 	}
 	kafkaDispatcher, err := dispatcher.NewDispatcher(ctx, args)
 	if err != nil {
-		logger.Fatal("Unable to create kafka dispatcher", zap.Error(err))
+		logger.Fatalw("Unable to create kafka dispatcher", zap.Error(err))
 	}
 	logger.Info("Starting the Kafka dispatcher")
-	logger.Info("Kafka broker configuration", zap.Strings(utils.BrokerConfigMapKey, kafkaConfig.Brokers))
+	logger.Infow("Kafka broker configuration", zap.Strings(utils.BrokerConfigMapKey, kafkaConfig.Brokers))
 
 	r := &Reconciler{
 		kafkaDispatcher:      kafkaDispatcher,
@@ -129,7 +129,7 @@ func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl 
 	logger.Info("Starting dispatcher.")
 	go func() {
 		if err := kafkaDispatcher.Start(ctx); err != nil {
-			logger.Error("Cannot start dispatcher", zap.Error(err))
+			logger.Errorw("Cannot start dispatcher", zap.Error(err))
 		}
 	}()
 

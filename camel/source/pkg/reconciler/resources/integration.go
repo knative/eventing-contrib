@@ -17,6 +17,7 @@ limitations under the License.
 package resources
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -59,7 +60,7 @@ func MakeIntegration(args *CamelArguments) (*camelv1.Integration, error) {
 			return nil, err
 		}
 		spec.Sources = append(spec.Sources, camelv1.SourceSpec{
-			Loader: "knative-source",
+			Interceptors: []string{"knative-source"},
 			DataSpec: camelv1.DataSpec{
 				Name:    "flow.yaml",
 				Content: flowData,
@@ -70,9 +71,16 @@ func MakeIntegration(args *CamelArguments) (*camelv1.Integration, error) {
 	if spec.Traits == nil {
 		spec.Traits = make(map[string]camelv1.TraitSpec)
 	}
+	config := map[string]string{
+		"configuration": environment,
+	}
+	jsonConfig, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
 	spec.Traits["knative"] = camelv1.TraitSpec{
-		Configuration: map[string]string{
-			"configuration": environment,
+		Configuration: camelv1.TraitConfiguration{
+			RawMessage: json.RawMessage(jsonConfig),
 		},
 	}
 

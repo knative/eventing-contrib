@@ -41,13 +41,13 @@ type avroDecoder struct {
 	codec *goavro.Codec
 }
 
-func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request, logger *zap.Logger) error {
+func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request) error {
 	msg := protocolkafka.NewMessageFromConsumerMessage(cm)
 
 	defer func() {
 		err := msg.Finish(nil)
 		if err != nil {
-			logger.Warn("Something went wrong while trying to finalizing the message", zap.Error(err))
+			a.logger.Warnw("Something went wrong while trying to finalizing the message", zap.Error(err))
 		}
 	}()
 
@@ -63,7 +63,7 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.
 	kafkaMsg := msg
 
 	if a.avroDecoder != nil {
-		decodedMsg, err := a.avroDecoder.decode(kafkaMsg, logger)
+		decodedMsg, err := a.avroDecoder.decode(kafkaMsg, a.logger)
 		if err != nil {
 			return err
 		}
@@ -175,7 +175,7 @@ func getKeyTypeMapper(keyType string) func([]byte) interface{} {
 	return keyTypeMapper
 }
 
-func getAvroDecoder(schema string, logger *zap.Logger) *avroDecoder {
+func getAvroDecoder(schema string, logger *zap.SugaredLogger) *avroDecoder {
 	if schema != "" {
 		c, err := goavro.NewCodec(schema)
 		if err != nil {
@@ -189,7 +189,7 @@ func getAvroDecoder(schema string, logger *zap.Logger) *avroDecoder {
 	return nil
 }
 
-func (decoder *avroDecoder) decode(msg *protocolkafka.Message, logger *zap.Logger) ([]byte, error) {
+func (decoder *avroDecoder) decode(msg *protocolkafka.Message, logger *zap.SugaredLogger) ([]byte, error) {
 	native, _, err := decoder.codec.NativeFromBinary(msg.Value[5:])
 	if err != nil {
 		logger.Error("Error decoding message", zap.Error(err))

@@ -21,7 +21,7 @@ package fake
 import (
 	context "context"
 
-	fake "github.com/apache/camel-k/pkg/client/clientset/versioned/fake"
+	fake "github.com/apache/camel-k/pkg/client/camel/clientset/versioned/fake"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	rest "k8s.io/client-go/rest"
 	client "knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection/client"
@@ -48,7 +48,7 @@ func Get(ctx context.Context) *fake.Clientset {
 	untyped := ctx.Value(client.Key{})
 	if untyped == nil {
 		logging.FromContext(ctx).Panic(
-			"Unable to fetch github.com/apache/camel-k/pkg/client/clientset/versioned/fake.Clientset from context.")
+			"Unable to fetch github.com/apache/camel-k/pkg/client/camel/clientset/versioned/fake.Clientset from context.")
 	}
 	return untyped.(*fake.Clientset)
 }

@@ -38,8 +38,8 @@ chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 (
   # External Camel API
   OUTPUT_PKG="knative.dev/eventing-contrib/camel/source/pkg/camel-k/injection" \
-  VERSIONED_CLIENTSET_PKG="github.com/apache/camel-k/pkg/client/clientset/versioned" \
-  EXTERNAL_INFORMER_PKG="github.com/apache/camel-k/pkg/client/informers/externalversions" \
+  VERSIONED_CLIENTSET_PKG="github.com/apache/camel-k/pkg/client/camel/clientset/versioned" \
+  EXTERNAL_INFORMER_PKG="github.com/apache/camel-k/pkg/client/camel/informers/externalversions" \
     ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
       "knative.dev/eventing-contrib/camel/source/pkg/client/camel" "github.com/apache/camel-k/pkg/apis" \
       "camel:v1" \

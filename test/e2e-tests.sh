@@ -71,7 +71,7 @@ readonly KAFKA_CRD_CONFIG_DIR="$(mktemp -d)"
 readonly KAFKA_SOURCE_CRD_CONFIG_DIR="kafka/source/config"
 
 # CamelK installation
-readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.0.0-RC2.yaml"
+readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.1.0.yaml"
 # Camel source CRD config template directory
 readonly CAMEL_SOURCE_CRD_CONFIG_DIR="camel/source/config"
 
@@ -254,7 +254,7 @@ function camel_teardown() {
 
 initialize $@ --skip-istio-addon
 
-go_test_e2e -timeout=20m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
+go_test_e2e -timeout=30m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
 
 go_test_e2e -timeout=5m -parallel=12 ./test/conformance -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1beta1:KafkaChannel -sources=sources.knative.dev/v1alpha1:CamelSource,sources.knative.dev/v1beta1:KafkaSource || fail_test
 

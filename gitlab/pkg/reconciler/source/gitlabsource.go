@@ -140,12 +140,20 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 			ksvc = r.generateKnativeServiceObject(source, r.receiveAdapterImage)
 			ksvc, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ksvc)
 			if err != nil {
+				source.Status.MarkNotDeployed("ReceiveAdapterCreationError", "%s", err)
 				return err
 			}
 		} else {
+			source.Status.MarkNotDeployed("ReceiveAdapterNotOwned", "%s", err)
 			return fmt.Errorf("Failed to verify if knative service is created for the gitlabsource: %v", err)
 		}
 	}
+	if !ksvc.IsReady() {
+		source.Status.MarkNotDeployed("ReceiveAdapterNotReady", "Receive adapter Service is not ready")
+		return nil
+	}
+	source.Status.MarkDeployed()
+
 	if ksvc.Status.URL == nil {
 		return nil
 	}
@@ -160,8 +168,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 	gitlabClient := gitlabHookClient{}
 	hookID, err := gitlabClient.Create(baseURL, &hookOptions)
 	if err != nil {
+		source.Status.MarkNoWebhook("WebhookNotConfigured", "%s", err)
 		return fmt.Errorf("Failed to create project hook: %v", err)
 	}
+	source.Status.MarkWebhook()
 	source.Status.Id = hookID
 	return nil
 }
@@ -245,6 +255,9 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 		}, {
 			Name:  "METRICS_DOMAIN",
 			Value: "knative.dev/eventing",
+		}, {
+			Name:  "METRICS_PROMETHEUS_PORT",
+			Value: "9092",
 		}},
 		r.configs.ToEnvVars()...)
 	return &servingv1.Service{

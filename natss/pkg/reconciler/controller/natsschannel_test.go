@@ -28,7 +28,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
-	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -292,7 +291,6 @@ func TestAllCases(t *testing.T) {
 			},
 		},
 	}
-	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		r := &Reconciler{

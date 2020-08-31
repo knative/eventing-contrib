@@ -34,7 +34,7 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
 	"knative.dev/pkg/client/injection/kube/informers/rbac/v1/rolebinding"
 
-	"knative.dev/eventing/pkg/logging"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/system"
@@ -75,7 +75,7 @@ func NewController(
 
 	env := &envConfig{}
 	if err := envconfig.Process("", env); err != nil {
-		logging.FromContext(ctx).Sugar().Panicf("unable to process Kafka channel's required environment variables: %v", err)
+		logging.FromContext(ctx).Panicf("unable to process Kafka channel's required environment variables: %v", err)
 	}
 
 	if env.Image == "" {

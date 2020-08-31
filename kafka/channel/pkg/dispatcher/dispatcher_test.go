@@ -48,7 +48,7 @@ type mockKafkaConsumerFactory struct {
 	createErr bool
 }
 
-func (c mockKafkaConsumerFactory) StartConsumerGroup(groupID string, topics []string, logger *zap.Logger, handler kafka.KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
+func (c mockKafkaConsumerFactory) StartConsumerGroup(groupID string, topics []string, logger *zap.SugaredLogger, handler kafka.KafkaConsumerHandler) (sarama.ConsumerGroup, error) {
 	if c.createErr {
 		return nil, errors.New("error creating consumer")
 	}
@@ -329,7 +329,7 @@ func TestDispatcher_UpdateConfig(t *testing.T) {
 				subsConsumerGroups:   make(map[types.UID]sarama.ConsumerGroup),
 				subscriptions:        make(map[types.UID]Subscription),
 				topicFunc:            utils.TopicName,
-				logger:               zaptest.NewLogger(t),
+				logger:               zaptest.NewLogger(t).Sugar(),
 			}
 			d.setHostToChannelMap(map[string]eventingchannels.ChannelReference{})
 
@@ -383,7 +383,7 @@ func TestSubscribeError(t *testing.T) {
 	cf := &mockKafkaConsumerFactory{createErr: true}
 	d := &KafkaDispatcher{
 		kafkaConsumerFactory: cf,
-		logger:               zap.NewNop(),
+		logger:               zap.NewNop().Sugar(),
 		topicFunc:            utils.TopicName,
 	}
 
@@ -406,7 +406,7 @@ func TestUnsubscribeUnknownSub(t *testing.T) {
 	cf := &mockKafkaConsumerFactory{createErr: true}
 	d := &KafkaDispatcher{
 		kafkaConsumerFactory: cf,
-		logger:               zap.NewNop(),
+		logger:               zap.NewNop().Sugar(),
 	}
 
 	channelRef := eventingchannels.ChannelReference{

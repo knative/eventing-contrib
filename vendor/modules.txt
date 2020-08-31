@@ -28,7 +28,7 @@ github.com/BurntSushi/toml
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
-# github.com/Shopify/sarama v1.26.4
+# github.com/Shopify/sarama v1.27.0
 ## explicit
 github.com/Shopify/sarama
 # github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -36,20 +36,22 @@ github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d
 github.com/alecthomas/units
-# github.com/apache/camel-k v0.0.0-20200430164844-778ae8a2bd63
+# github.com/apache/camel-k/pkg/apis/camel v1.1.0
 ## explicit
 github.com/apache/camel-k/pkg/apis/camel/v1
 github.com/apache/camel-k/pkg/apis/camel/v1/knative
-github.com/apache/camel-k/pkg/client/clientset/versioned
-github.com/apache/camel-k/pkg/client/clientset/versioned/fake
-github.com/apache/camel-k/pkg/client/clientset/versioned/scheme
-github.com/apache/camel-k/pkg/client/clientset/versioned/typed/camel/v1
-github.com/apache/camel-k/pkg/client/clientset/versioned/typed/camel/v1/fake
-github.com/apache/camel-k/pkg/client/informers/externalversions
-github.com/apache/camel-k/pkg/client/informers/externalversions/camel
-github.com/apache/camel-k/pkg/client/informers/externalversions/camel/v1
-github.com/apache/camel-k/pkg/client/informers/externalversions/internalinterfaces
-github.com/apache/camel-k/pkg/client/listers/camel/v1
+# github.com/apache/camel-k/pkg/client/camel v1.1.0
+## explicit
+github.com/apache/camel-k/pkg/client/camel/clientset/versioned
+github.com/apache/camel-k/pkg/client/camel/clientset/versioned/fake
+github.com/apache/camel-k/pkg/client/camel/clientset/versioned/scheme
+github.com/apache/camel-k/pkg/client/camel/clientset/versioned/typed/camel/v1
+github.com/apache/camel-k/pkg/client/camel/clientset/versioned/typed/camel/v1/fake
+github.com/apache/camel-k/pkg/client/camel/informers/externalversions
+github.com/apache/camel-k/pkg/client/camel/informers/externalversions/camel
+github.com/apache/camel-k/pkg/client/camel/informers/externalversions/camel/v1
+github.com/apache/camel-k/pkg/client/camel/informers/externalversions/internalinterfaces
+github.com/apache/camel-k/pkg/client/camel/listers/camel/v1
 # github.com/aws/aws-sdk-go v1.31.12
 ## explicit
 github.com/aws/aws-sdk-go/aws
@@ -266,7 +268,7 @@ github.com/jstemmer/go-junit-report/parser
 # github.com/kelseyhightower/envconfig v1.4.0
 ## explicit
 github.com/kelseyhightower/envconfig
-# github.com/klauspost/compress v1.10.2
+# github.com/klauspost/compress v1.10.10
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/snappy
@@ -366,7 +368,7 @@ github.com/slinkydeveloper/loadastic/common
 github.com/slinkydeveloper/loadastic/kafka
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.0
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
@@ -727,6 +729,8 @@ gopkg.in/jcmturner/rpc.v1/ndr
 # gopkg.in/yaml.v2 v2.3.0
 ## explicit
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200601152816-913338de1bd2
+gopkg.in/yaml.v3
 # honnef.co/go/tools v0.0.1-2020.1.4
 honnef.co/go/tools/arg
 honnef.co/go/tools/cmd/staticcheck
@@ -1147,7 +1151,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.16.1-0.20200812122105-4dd7183c99ad
+# knative.dev/eventing v0.17.1-0.20200831082508-0be90fa810b3
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1236,7 +1240,6 @@ knative.dev/eventing/pkg/configmap
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/leaderelection
 knative.dev/eventing/pkg/logconfig
-knative.dev/eventing/pkg/logging
 knative.dev/eventing/pkg/reconciler/names
 knative.dev/eventing/pkg/reconciler/source
 knative.dev/eventing/pkg/reconciler/sugar
@@ -1274,10 +1277,10 @@ knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-# knative.dev/networking v0.0.0-20200811174006-3b1fd29485ee
+# knative.dev/networking v0.0.0-20200828035206-7f8093fa206d
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200811233205-6b7eccba3b9c
+# knative.dev/pkg v0.0.0-20200831094608-e9da10bc8a18
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1371,7 +1374,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.16.1-0.20200812111505-f043ccaca806
+# knative.dev/serving v0.17.1-0.20200830163107-4c2ae6597b07
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1402,7 +1405,7 @@ knative.dev/serving/pkg/client/listers/autoscaling/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1
 knative.dev/serving/pkg/client/listers/serving/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1beta1
-# knative.dev/test-infra v0.0.0-20200811195106-afcd1747545f
+# knative.dev/test-infra v0.0.0-20200828211307-9d4372c9b1c7
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
