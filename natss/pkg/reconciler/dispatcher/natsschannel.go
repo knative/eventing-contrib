@@ -33,9 +33,9 @@ import (
 	eventingduckv1beta1 "knative.dev/eventing/pkg/apis/duck/v1beta1"
 	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 
 	"knative.dev/eventing-contrib/natss/pkg/apis/messaging/v1alpha1"
 	clientset "knative.dev/eventing-contrib/natss/pkg/client/clientset/versioned"
