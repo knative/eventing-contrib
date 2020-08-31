@@ -34,9 +34,9 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
 	"knative.dev/pkg/client/injection/kube/informers/rbac/v1/rolebinding"
 
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/system"
 
 	kafkaChannelClient "knative.dev/eventing-contrib/kafka/channel/pkg/client/injection/client"

@@ -41,8 +41,8 @@ import (
 
 	"knative.dev/eventing/pkg/apis/eventing"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	"knative.dev/pkg/logging"
 	"knative.dev/eventing/pkg/reconciler/names"
+	"knative.dev/pkg/logging"
 
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/controller"
