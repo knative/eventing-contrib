@@ -30,16 +30,11 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/extensions"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
-	"github.com/linkedin/goavro/v2"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
 	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 )
-
-type avroDecoder struct {
-	codec *goavro.Codec
-}
 
 func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.Span, cm *sarama.ConsumerMessage, req *nethttp.Request) error {
 	msg := protocolkafka.NewMessageFromConsumerMessage(cm)
@@ -63,7 +58,7 @@ func (a *Adapter) ConsumerMessageToHttpRequest(ctx context.Context, span *trace.
 	kafkaMsg := msg
 
 	if a.avroDecoder != nil {
-		decodedMsg, err := a.avroDecoder.decode(kafkaMsg, a.logger)
+		decodedMsg, err := a.avroDecoder.Decode(kafkaMsg, a.logger)
 		if err != nil {
 			return err
 		}
@@ -173,32 +168,4 @@ func getKeyTypeMapper(keyType string) func([]byte) interface{} {
 		}
 	}
 	return keyTypeMapper
-}
-
-func getAvroDecoder(schema string, logger *zap.SugaredLogger) *avroDecoder {
-	if schema != "" {
-		c, err := goavro.NewCodec(schema)
-		if err != nil {
-			logger.Error("Unable to get codec from schema", zap.Error(err))
-			return nil
-		}
-		return &avroDecoder{
-			codec: c,
-		}
-	}
-	return nil
-}
-
-func (decoder *avroDecoder) decode(msg *protocolkafka.Message, logger *zap.SugaredLogger) ([]byte, error) {
-	native, _, err := decoder.codec.NativeFromBinary(msg.Value[5:])
-	if err != nil {
-		logger.Error("Error decoding message", zap.Error(err))
-		return nil, err
-	}
-	value, err := decoder.codec.TextualFromNative(nil, native)
-	if err != nil {
-		logger.Error("Error decoding message", zap.Error(err))
-		return nil, err
-	}
-	return value, nil
 }

@@ -30,6 +30,7 @@ import (
 
 	kafkabinding "knative.dev/eventing-contrib/kafka"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
+	"knative.dev/eventing-contrib/kafka/source/pkg/adapter/datacodec"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -60,7 +61,7 @@ type Adapter struct {
 	reporter          source.StatsReporter
 	logger            *zap.SugaredLogger
 	keyTypeMapper     func([]byte) interface{}
-	avroDecoder       *avroDecoder
+	avroDecoder       *datacodec.AvroDecoder
 }
 
 var _ adapter.MessageAdapter = (*Adapter)(nil)
@@ -76,7 +77,7 @@ func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMe
 		reporter:          reporter,
 		logger:            logger,
 		keyTypeMapper:     getKeyTypeMapper(config.KeyType),
-		avroDecoder:       getAvroDecoder(config.AvroSchema, logger),
+		avroDecoder:       datacodec.GetAvroDecoder(config.AvroSchema, logger),
 	}
 }
 

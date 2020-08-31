@@ -37,6 +37,7 @@ import (
 
 	"knative.dev/eventing/pkg/kncloudevents"
 
+	"knative.dev/eventing-contrib/kafka/source/pkg/adapter/datacodec"
 	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 )
 
@@ -326,7 +327,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 			message: &sarama.ConsumerMessage{
 				Key:       []byte("key"),
 				Topic:     "topic1",
-				Value:     encodedMsg(map[string]interface{}{"Username": "muru"}),
+				Value:     mustEncodeAvroMsg(t, map[string]interface{}{"Username": "muru"}),
 				Partition: 1,
 				Offset:    2,
 				Timestamp: aTimestamp,
@@ -385,7 +386,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 				logger:            zap.NewNop().Sugar(),
 				reporter:          statsReporter,
 				keyTypeMapper:     getKeyTypeMapper(tc.keyTypeMapper),
-				avroDecoder:       getAvroDecoder(tc.avro, zap.NewNop().Sugar()),
+				avroDecoder:       datacodec.GetAvroDecoder(tc.avro, zap.NewNop().Sugar()),
 			}
 
 			_, err = a.Handle(context.TODO(), tc.message)
@@ -480,12 +481,18 @@ func TestAdapter_Start(t *testing.T) { // just increase code coverage
 	cancel()
 }
 
-func encodedMsg(m map[string]interface{}) []byte {
+func mustEncodeAvroMsg(t *testing.T, m map[string]interface{}) []byte {
 	schemaIDBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIDBytes, uint32(1234))
-	codec, _ := goavro.NewCodec(loginEventAvroSchema)
+	codec, err := goavro.NewCodec(loginEventAvroSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	binary, _ := codec.BinaryFromNative(nil, m)
+	binary, err := codec.BinaryFromNative(nil, m)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	var msg []byte
 	msg = append(msg, byte(0))
