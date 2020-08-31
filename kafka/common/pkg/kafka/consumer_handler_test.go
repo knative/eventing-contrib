@@ -42,6 +42,10 @@ type mockConsumerGroupSession struct {
 	marked bool
 }
 
+func (m *mockConsumerGroupSession) Commit() {
+	panic("implement me")
+}
+
 func (m *mockConsumerGroupSession) Claims() map[string][]int32 {
 	return nil
 }
