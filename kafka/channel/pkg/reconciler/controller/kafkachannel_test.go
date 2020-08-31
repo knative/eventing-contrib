@@ -41,7 +41,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
-	logtesting "knative.dev/pkg/logging/testing"
 	. "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
