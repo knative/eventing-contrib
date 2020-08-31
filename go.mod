@@ -15,7 +15,7 @@ require (
 	github.com/go-kivik/kivik/v3 v3.0.2
 	github.com/go-kivik/kivikmock/v3 v3.0.0
 	github.com/golang/protobuf v1.4.2
-	github.com/google/go-cmp v0.5.1
+	github.com/google/go-cmp v0.5.2
 	github.com/google/go-github/v31 v31.0.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.2
@@ -31,18 +31,18 @@ require (
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.7-rc.0
-	k8s.io/apimachinery v0.18.7-rc.0
+	k8s.io/apimachinery v0.19.0
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.17.3-0.20200828121106-eaba55373ae3
+	knative.dev/eventing v0.17.3-0.20200831120208-4051c5d96eda
 	knative.dev/pkg v0.0.0-20200824160247-5343c1d19369
 	knative.dev/serving v0.17.1
-	knative.dev/test-infra v0.0.0-20200813220834-388e55a496cf
+	knative.dev/test-infra v0.0.0-20200828171708-f68cb78c80a9
 )
 
 replace (
