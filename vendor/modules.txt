@@ -1148,7 +1148,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.17.1-0.20200828101406-f361af68b906
+# knative.dev/eventing v0.17.1-0.20200831082508-0be90fa810b3
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1237,7 +1237,6 @@ knative.dev/eventing/pkg/configmap
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/leaderelection
 knative.dev/eventing/pkg/logconfig
-knative.dev/eventing/pkg/logging
 knative.dev/eventing/pkg/reconciler/names
 knative.dev/eventing/pkg/reconciler/source
 knative.dev/eventing/pkg/reconciler/sugar
@@ -1275,10 +1274,10 @@ knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-# knative.dev/networking v0.0.0-20200826161907-8bdce480830a
+# knative.dev/networking v0.0.0-20200828035206-7f8093fa206d
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200827231407-8d478d55c0e6
+# knative.dev/pkg v0.0.0-20200831094608-e9da10bc8a18
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1372,7 +1371,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.17.1-0.20200828034206-a4249c02c2d0
+# knative.dev/serving v0.17.1-0.20200830163107-4c2ae6597b07
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1403,7 +1402,7 @@ knative.dev/serving/pkg/client/listers/autoscaling/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1
 knative.dev/serving/pkg/client/listers/serving/v1alpha1
 knative.dev/serving/pkg/client/listers/serving/v1beta1
-# knative.dev/test-infra v0.0.0-20200828024406-bf34ea55d769
+# knative.dev/test-infra v0.0.0-20200828211307-9d4372c9b1c7
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
