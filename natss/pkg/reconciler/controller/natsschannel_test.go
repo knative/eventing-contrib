@@ -292,7 +292,6 @@ func TestAllCases(t *testing.T) {
 			},
 		},
 	}
-	defer logtesting.ClearAll()
 
 	table.Test(t, reconciletesting.MakeFactory(func(ctx context.Context, listers *reconciletesting.Listers) controller.Reconciler {
 		r := &Reconciler{
