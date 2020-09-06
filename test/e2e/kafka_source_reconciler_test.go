@@ -133,7 +133,7 @@ func createSink(c *testlib.Client) {
 
 func createSequence(c *testlib.Client) {
 	steps := []flowsv1.SequenceStep{
-		flowsv1.SequenceStep{
+		{
 			Destination: duckv1.Destination{
 				Ref: resources.KnativeRefForService(RTSeqStepperPodName, c.Namespace),
 			}},
