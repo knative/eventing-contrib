@@ -24,6 +24,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
@@ -37,6 +38,7 @@ import (
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 	flowsv1 "knative.dev/eventing/pkg/apis/flows/v1"
 	eventingtesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
 )
 
 const (
@@ -145,6 +147,12 @@ func createSequence(c *testlib.Client) {
 		RTSequenceName,
 		c.Namespace,
 		eventingtesting.WithSequenceSteps(steps),
+		eventingtesting.WithSequenceChannelTemplateSpec(&messagingv1.ChannelTemplateSpec{
+			TypeMeta: 	metav1.TypeMeta{
+				APIVersion: resources.MessagingAPIVersion,
+				Kind:       "KafkaChannel",
+			},
+		}),
 	)
 	c.CreateFlowsSequenceV1OrFail(sequence)
 }
