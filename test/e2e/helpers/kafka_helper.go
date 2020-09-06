@@ -43,17 +43,13 @@ const (
 	strimziApiGroup      = "kafka.strimzi.io"
 	strimziApiVersion    = "v1beta1"
 	strimziTopicResource = "kafkatopics"
-	FlowsGroup           = "flows.knative.dev"
-	FlowsVersion         = "v1"
-	FlowsResource        = "sequences"
-	FlowsKind            = "Sequence"
 	interval             = 3 * time.Second
 	timeout              = 30 * time.Second
 )
 
 var (
-	topicGVR    = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
-	SequenceGVR = schema.GroupVersionResource{Group: FlowsGroup, Version: FlowsVersion, Resource: FlowsResource}
+	topicGVR        = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
+	KafkaChannelGVR = schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1beta1", Resource: "kafkachannels"}
 )
 
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {

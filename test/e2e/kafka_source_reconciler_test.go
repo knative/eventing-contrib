@@ -19,7 +19,6 @@ limitations under the License.
 package e2e
 
 import (
-	"fmt"
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -29,25 +28,20 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgTest "knative.dev/pkg/test"
 
 	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
 	contribtestlib "knative.dev/eventing-contrib/test/lib"
+	"knative.dev/eventing-contrib/test"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
-	flowsv1 "knative.dev/eventing/pkg/apis/flows/v1"
-	eventingtesting "knative.dev/eventing/pkg/reconciler/testing/v1"
-	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
 )
 
 const (
-	RTSeqStepperPodName  = "e2e-rt-stepperpod"
-	RTKafkaSourceName    = "e2e-rt-kafka-source"
-	RTSequenceName       = "e2e-rt-sequence"
-	RTKafkaConsumerGroup = "e2e-rt-cg"
-	RTStepMessage        = "only step"
-	RTKafkaTopicName     = "e2e-rt-topic"
+	rtKafkaSourceName    = "e2e-rt-kafka-source"
+	rtChannelName       = "e2e-rt-channel"
+	rtKafkaConsumerGroup = "e2e-rt-cg"
+	rtKafkaTopicName     = "e2e-rt-topic"
 )
 
 //TestKafkaSourceReconciler tests various kafka source reconciler statuses
@@ -66,26 +60,22 @@ func TestKafkaSourceReconciler(t *testing.T) {
 		createKafkaSourceWithSinkMissing,
 		sets.NewString("NotFound"),
 		0,
-	},
-		{
+	},{
 			"create_sink",
-			createSink,
+			createChannel,
 			sets.NewString(""),
 			1,
-		},
-		{
-			"delete_sequence",
-			deleteSequence,
+	},{
+			"delete_sink",
+			deleteChannel,
 			sets.NewString("NotFound"),
 			0,
-		},
-		{
-			"create_sequence",
-			createSequence,
+	},{
+			"create_sink_after_delete",
+			createChannel,
 			sets.NewString(""),
 			1,
-		},
-	} {
+	}} {
 		t.Run(test.name, func(t *testing.T) {
 			testKafkaSourceReconciler(client, test.name, test.action, test.expectedStatuses, test.wantRADepCount)
 		})
@@ -95,7 +85,7 @@ func TestKafkaSourceReconciler(t *testing.T) {
 func testKafkaSourceReconciler(c *testlib.Client, name string, doAction func(c *testlib.Client), expectedStatuses sets.String, wantRADepCount int) {
 	doAction(c)
 
-	if err := helpers.CheckKafkaSourceState(c, RTKafkaSourceName, func(ks *sourcesv1beta1.KafkaSource) (bool, error) {
+	if err := helpers.CheckKafkaSourceState(c, rtKafkaSourceName, func(ks *sourcesv1beta1.KafkaSource) (bool, error) {
 		ready := ks.Status.GetCondition(apis.ConditionReady)
 		if ready != nil {
 			if expectedStatuses.Has(ready.Reason) {
@@ -107,7 +97,7 @@ func testKafkaSourceReconciler(c *testlib.Client, name string, doAction func(c *
 		c.T.Fatalf("Failed to validate kafkasource state, expected status : %v, err : %v", expectedStatuses.UnsortedList(), err)
 	}
 
-	if err := helpers.CheckRADeployment(c, RTKafkaSourceName, func(deps *appsv1.DeploymentList) (bool, error) {
+	if err := helpers.CheckRADeployment(c, rtKafkaSourceName, func(deps *appsv1.DeploymentList) (bool, error) {
 		if len(deps.Items) == wantRADepCount {
 			return true, nil
 		}
@@ -118,45 +108,24 @@ func testKafkaSourceReconciler(c *testlib.Client, name string, doAction func(c *
 }
 
 func createKafkaSourceWithSinkMissing(c *testlib.Client) {
-	helpers.MustCreateTopic(c, kafkaClusterName, kafkaClusterNamespace, RTKafkaTopicName)
+	helpers.MustCreateTopic(c, kafkaClusterName, kafkaClusterNamespace, rtKafkaTopicName)
 
 	contribtestlib.CreateKafkaSourceV1Beta1OrFail(c, contribresources.KafkaSourceV1Beta1(
 		kafkaBootstrapUrl,
-		RTKafkaTopicName,
-		pkgTest.CoreV1ObjectReference(helpers.FlowsKind, fmt.Sprintf("%s/%s", helpers.FlowsGroup, helpers.FlowsVersion), RTSequenceName),
-		contribresources.WithNameV1Beta1(RTKafkaSourceName),
-		contribresources.WithConsumerGroupV1Beta1(RTKafkaConsumerGroup),
+		rtKafkaTopicName,
+		pkgTest.CoreV1ObjectReference(test.KafkaChannelKind, resources.MessagingAPIVersion, rtChannelName),
+		contribresources.WithNameV1Beta1(rtKafkaSourceName),
+		contribresources.WithConsumerGroupV1Beta1(rtKafkaConsumerGroup),
 	))
 }
 
-func createSink(c *testlib.Client) {
-	stepperPod := resources.SequenceStepperPod(RTSeqStepperPodName, RTStepMessage)
-	c.CreatePodOrFail(stepperPod, testlib.WithService(RTSeqStepperPodName))
-	createSequence(c)
-}
-
-func createSequence(c *testlib.Client) {
-	steps := []flowsv1.SequenceStep{
-		{
-			Destination: duckv1.Destination{
-				Ref: resources.KnativeRefForService(RTSeqStepperPodName, c.Namespace),
-			}},
-	}
-	// create the sequence object
-	sequence := eventingtesting.NewSequence(
-		RTSequenceName,
-		c.Namespace,
-		eventingtesting.WithSequenceSteps(steps),
-		eventingtesting.WithSequenceChannelTemplateSpec(&messagingv1.ChannelTemplateSpec{
-			TypeMeta: 	metav1.TypeMeta{
+func createChannel(c *testlib.Client) {
+	c.CreateChannelOrFail(rtChannelName, &metav1.TypeMeta{
 				APIVersion: resources.MessagingAPIVersion,
-				Kind:       "KafkaChannel",
-			},
-		}),
-	)
-	c.CreateFlowsSequenceV1OrFail(sequence)
+				Kind:       test.KafkaChannelKind,
+	})
 }
 
-func deleteSequence(c *testlib.Client) {
-	contribtestlib.DeleteResourceOrFail(c, RTSequenceName, helpers.SequenceGVR)
+func deleteChannel(c *testlib.Client) {
+	contribtestlib.DeleteResourceOrFail(c, rtChannelName, helpers.KafkaChannelGVR)
 }
