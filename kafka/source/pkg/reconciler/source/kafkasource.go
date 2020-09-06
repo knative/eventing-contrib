@@ -31,6 +31,7 @@ import (
 	"knative.dev/eventing/pkg/reconciler/source"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/utils"
 
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source/resources"
