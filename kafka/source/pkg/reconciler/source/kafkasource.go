@@ -29,9 +29,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/reconciler/source"
+	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/eventing/pkg/utils"
 
 	"knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-contrib/kafka/source/pkg/reconciler/source/resources"
@@ -193,7 +193,9 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 func (r *Reconciler) deleteReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource) {
 	name := utils.GenerateFixedName(src, fmt.Sprintf("kafkasource-%s", src.Name))
 
-	r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(name, &metav1.DeleteOptions{})
+	if err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(name, &metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
+		logging.FromContext(ctx).Error("Unable to delete existing receiver adapter", zap.Error(err))
+	}
 }
 
 func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {

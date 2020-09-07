@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
@@ -31,15 +31,15 @@ import (
 	pkgTest "knative.dev/pkg/test"
 
 	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-contrib/test"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
 	contribtestlib "knative.dev/eventing-contrib/test/lib"
-	"knative.dev/eventing-contrib/test"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
 const (
 	rtKafkaSourceName    = "e2e-rt-kafka-source"
-	rtChannelName       = "e2e-rt-channel"
+	rtChannelName        = "e2e-rt-channel"
 	rtKafkaConsumerGroup = "e2e-rt-cg"
 	rtKafkaTopicName     = "e2e-rt-topic"
 )
@@ -60,21 +60,21 @@ func TestKafkaSourceReconciler(t *testing.T) {
 		createKafkaSourceWithSinkMissing,
 		sets.NewString("NotFound"),
 		0,
-	},{
-			"create_sink",
-			createChannel,
-			sets.NewString(""),
-			1,
-	},{
-			"delete_sink",
-			deleteChannel,
-			sets.NewString("NotFound"),
-			0,
-	},{
-			"create_sink_after_delete",
-			createChannel,
-			sets.NewString(""),
-			1,
+	}, {
+		"create_sink",
+		createChannel,
+		sets.NewString(""),
+		1,
+	}, {
+		"delete_sink",
+		deleteChannel,
+		sets.NewString("NotFound"),
+		0,
+	}, {
+		"create_sink_after_delete",
+		createChannel,
+		sets.NewString(""),
+		1,
 	}} {
 		t.Run(test.name, func(t *testing.T) {
 			testKafkaSourceReconciler(client, test.name, test.action, test.expectedStatuses, test.wantRADepCount)
@@ -121,8 +121,8 @@ func createKafkaSourceWithSinkMissing(c *testlib.Client) {
 
 func createChannel(c *testlib.Client) {
 	c.CreateChannelOrFail(rtChannelName, &metav1.TypeMeta{
-				APIVersion: resources.MessagingAPIVersion,
-				Kind:       test.KafkaChannelKind,
+		APIVersion: resources.MessagingAPIVersion,
+		Kind:       test.KafkaChannelKind,
 	})
 }
 
