@@ -31,7 +31,6 @@ import (
 	pkgTest "knative.dev/pkg/test"
 
 	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
-	"knative.dev/eventing-contrib/test"
 	"knative.dev/eventing-contrib/test/e2e/helpers"
 	contribtestlib "knative.dev/eventing-contrib/test/lib"
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
@@ -113,7 +112,7 @@ func createKafkaSourceWithSinkMissing(c *testlib.Client) {
 	contribtestlib.CreateKafkaSourceV1Beta1OrFail(c, contribresources.KafkaSourceV1Beta1(
 		kafkaBootstrapUrl,
 		rtKafkaTopicName,
-		pkgTest.CoreV1ObjectReference(test.KafkaChannelKind, resources.MessagingAPIVersion, rtChannelName),
+		pkgTest.CoreV1ObjectReference(resources.InMemoryChannelKind, resources.MessagingAPIVersion, rtChannelName),
 		contribresources.WithNameV1Beta1(rtKafkaSourceName),
 		contribresources.WithConsumerGroupV1Beta1(rtKafkaConsumerGroup),
 	))
