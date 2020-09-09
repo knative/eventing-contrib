@@ -337,8 +337,8 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 				return d, nil
 			} else {
 				kc.Status.MarkServiceFailed("DispatcherDeploymentUpdateFailed", "Failed to update the dispatcher deployment: %v", err)
+				return d, newDeploymentWarn(err)
 			}
-			return d, newDeploymentWarn(err)
 		}
 	}
 
