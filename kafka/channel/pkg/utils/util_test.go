@@ -17,6 +17,8 @@ limitations under the License.
 package utils
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -162,6 +164,77 @@ func TestGetKafkaConfig(t *testing.T) {
 				t.Errorf("unexpected Config (-want, +got) = %v", diff)
 			}
 
+		})
+	}
+
+}
+
+func TestFindContainer(t *testing.T) {
+	testCases := []struct {
+		name          string
+		deployment    *appsv1.Deployment
+		containerName string
+		expected      *corev1.Container
+	}{
+		{
+			name: "no containers in deployment",
+			deployment: &appsv1.Deployment{Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{},
+					},
+				},
+			}},
+			containerName: "foo",
+			expected:      nil,
+		},
+		{
+			name: "no container found",
+			deployment: &appsv1.Deployment{Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{
+							Name:  "foo",
+							Image: "example.registry.com/foo",
+						}},
+					},
+				},
+			}},
+			containerName: "bar",
+			expected:      nil,
+		},
+		{
+			name: "container found",
+			deployment: &appsv1.Deployment{Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{
+							Name:  "bar",
+							Image: "example.registry.com/bar",
+						}, {
+							Name:  "foo",
+							Image: "example.registry.com/foo",
+						}},
+					},
+				},
+			}},
+			containerName: "foo",
+			expected: &corev1.Container{
+				Name:  "foo",
+				Image: "example.registry.com/foo",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Logf("Running %s", t.Name())
+
+			got := FindContainer(tc.deployment, tc.containerName)
+
+			if diff := cmp.Diff(tc.expected, got); diff != "" {
+				t.Errorf("unexpected container found (-want, +got) = %v", diff)
+			}
 		})
 	}
 
