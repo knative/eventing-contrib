@@ -294,17 +294,28 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 		logging.FromContext(ctx).Errorw("Unable to get the dispatcher deployment", zap.Error(err))
 		kc.Status.MarkDispatcherUnknown("DispatcherDeploymentFailed", "Failed to get dispatcher deployment: %v", err)
 		return nil, err
-	} else if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image) {
-		logging.FromContext(ctx).Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
-		d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
-		if err == nil {
-			controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
-			kc.Status.PropagateDispatcherStatus(&d.Status)
-			return d, nil
-		} else {
-			kc.Status.MarkServiceFailed("DispatcherDeploymentUpdateFailed", "Failed to update the dispatcher deployment: %v", err)
+	} else {
+		needsUpdate := false
+
+		if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image) {
+			logging.FromContext(ctx).Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
+			needsUpdate = true
+		} else if !reflect.DeepEqual(expected.Spec.Replicas, d.Spec.Replicas) {
+			logging.FromContext(ctx).Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
+			needsUpdate = true
 		}
-		return d, newDeploymentWarn(err)
+
+		if needsUpdate {
+			d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
+			if err == nil {
+				controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
+				kc.Status.PropagateDispatcherStatus(&d.Status)
+				return d, nil
+			} else {
+				kc.Status.MarkServiceFailed("DispatcherDeploymentUpdateFailed", "Failed to update the dispatcher deployment: %v", err)
+			}
+			return d, newDeploymentWarn(err)
+		}
 	}
 
 	kc.Status.PropagateDispatcherStatus(&d.Status)
