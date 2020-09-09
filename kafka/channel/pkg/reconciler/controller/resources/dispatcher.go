@@ -24,6 +24,8 @@ import (
 	"knative.dev/pkg/system"
 )
 
+const DispatcherContainerName = "dispatcher"
+
 var (
 	serviceAccountName = "kafka-ch-dispatcher"
 	dispatcherName     = "kafka-ch-dispatcher"
@@ -65,7 +67,7 @@ func MakeDispatcher(args DispatcherArgs) *v1.Deployment {
 					ServiceAccountName: serviceAccountName,
 					Containers: []corev1.Container{
 						{
-							Name:  "dispatcher",
+							Name:  DispatcherContainerName,
 							Image: args.Image,
 							Env:   makeEnv(args),
 							Ports: []corev1.ContainerPort{{
