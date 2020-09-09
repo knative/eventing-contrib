@@ -93,7 +93,7 @@ func TopicName(separator, namespace, name string) string {
 }
 
 func FindContainer(d *appsv1.Deployment, containerName string) *corev1.Container {
-	for i, _ := range d.Spec.Template.Spec.Containers {
+	for i := range d.Spec.Template.Spec.Containers {
 		if d.Spec.Template.Spec.Containers[i].Name == containerName {
 			return &d.Spec.Template.Spec.Containers[i]
 		}
