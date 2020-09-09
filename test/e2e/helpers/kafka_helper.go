@@ -49,7 +49,7 @@ const (
 
 var (
 	topicGVR        = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
-	KafkaChannelGVR = schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1beta1", Resource: "kafkachannels"}
+	ImcGVR = schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1beta1", Resource: "inmemorychannels"}
 )
 
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {

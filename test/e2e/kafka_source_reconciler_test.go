@@ -122,10 +122,11 @@ func createKafkaSourceWithSinkMissing(c *testlib.Client) {
 func createChannel(c *testlib.Client) {
 	c.CreateChannelOrFail(rtChannelName, &metav1.TypeMeta{
 		APIVersion: resources.MessagingAPIVersion,
-		Kind:       test.KafkaChannelKind,
+		Kind:       resources.InMemoryChannelKind,
 	})
+	c.WaitForAllTestResourcesReadyOrFail()
 }
 
 func deleteChannel(c *testlib.Client) {
-	contribtestlib.DeleteResourceOrFail(c, rtChannelName, helpers.KafkaChannelGVR)
+	contribtestlib.DeleteResourceOrFail(c, rtChannelName, helpers.ImcGVR)
 }
