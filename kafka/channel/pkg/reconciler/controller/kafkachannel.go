@@ -275,6 +275,7 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 		DispatcherScope:     scope,
 		DispatcherNamespace: dispatcherNamespace,
 		Image:               r.dispatcherImage,
+		Replicas:            1,
 	}
 
 	expected := resources.MakeDispatcher(args)

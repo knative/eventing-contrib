@@ -39,11 +39,12 @@ type DispatcherArgs struct {
 	DispatcherScope     string
 	DispatcherNamespace string
 	Image               string
+	Replicas            int32
 }
 
 // MakeDispatcher generates the dispatcher deployment for the KafKa channel
 func MakeDispatcher(args DispatcherArgs) *v1.Deployment {
-	replicas := int32(1)
+	replicas := args.Replicas
 
 	return &v1.Deployment{
 		TypeMeta: metav1.TypeMeta{

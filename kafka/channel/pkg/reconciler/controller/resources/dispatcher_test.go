@@ -38,6 +38,7 @@ func TestNewDispatcher(t *testing.T) {
 		DispatcherScope:     "cluster",
 		DispatcherNamespace: testNS,
 		Image:               imageName,
+		Replicas:            1,
 	}
 
 	replicas := int32(1)
@@ -120,6 +121,7 @@ func TestNewNamespaceDispatcher(t *testing.T) {
 		DispatcherScope:     "namespace",
 		DispatcherNamespace: testNS,
 		Image:               imageName,
+		Replicas:            1,
 	}
 
 	replicas := int32(1)
