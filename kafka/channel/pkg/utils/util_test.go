@@ -17,9 +17,10 @@ limitations under the License.
 package utils
 
 import (
+	"testing"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	_ "knative.dev/pkg/system/testing"
