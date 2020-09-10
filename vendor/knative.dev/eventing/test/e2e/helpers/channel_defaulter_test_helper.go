@@ -17,6 +17,7 @@ limitations under the License.
 package helpers
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -161,7 +162,7 @@ func updateDefaultChannelCM(client *testlib.Client, updateConfig func(config *co
 
 	err := reconciler.RetryUpdateConflicts(func(attempts int) (err error) {
 		// get the defaultchannel configmap
-		configMap, err := cmInterface.Get(configMapName, metav1.GetOptions{})
+		configMap, err := cmInterface.Get(context.Background(), configMapName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -182,7 +183,7 @@ func updateDefaultChannelCM(client *testlib.Client, updateConfig func(config *co
 		}
 		// update the defaultchannel configmap
 		configMap.Data[channelDefaulterKey] = string(configBytes)
-		_, err = cmInterface.Update(configMap)
+		_, err = cmInterface.Update(context.Background(), configMap, metav1.UpdateOptions{})
 		return err
 	})
 	if err != nil {

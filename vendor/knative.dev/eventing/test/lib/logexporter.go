@@ -17,6 +17,7 @@ limitations under the License.
 package lib
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -41,7 +42,7 @@ func exportLogs(kubeClient *test.KubeClient, namespace, dir string, logFunc func
 		return fmt.Errorf("error creating directory %q: %w", namespace, err)
 	}
 
-	pods, err := kubeClient.Kube.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	pods, err := kubeClient.Kube.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("error listing pods in namespace %q: %w", namespace, err)
 	}

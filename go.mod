@@ -36,24 +36,27 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.18.7-rc.0
-	k8s.io/apimachinery v0.18.7-rc.0
+	k8s.io/api v0.18.8
+	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0
-	knative.dev/pkg v0.0.0-20200910143251-0761d6b47e4d
 	knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb
 	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
+	knative.dev/pkg 2d4efecc6bc1bd495166100917fe52fd7d738fb0
 )
 
 replace (
 	github.com/Azure/go-autorest/autorest => github.com/Azure/go-autorest/autorest v0.9.6
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.3.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
-	k8s.io/api => k8s.io/api v0.17.6
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.6
-	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
-	k8s.io/apiserver => k8s.io/apiserver v0.17.6
-	k8s.io/client-go => k8s.io/client-go v0.17.6
-	k8s.io/code-generator => k8s.io/code-generator v0.17.6
+	k8s.io/api => k8s.io/api v0.18.8
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.8
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.8
+	k8s.io/apiserver => k8s.io/apiserver v0.18.8
+	k8s.io/client-go => k8s.io/client-go v0.18.8
+	k8s.io/code-generator => k8s.io/code-generator v0.18.8
+	// TODO(vaikas): DO NOT SUBMIT
+	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200824120738-2b97ca8b85d0
+	knative.dev/serving => github.com/mattmoor/serving e38be9dd86ea8b08e416030f6826ab7305bf323b
 )

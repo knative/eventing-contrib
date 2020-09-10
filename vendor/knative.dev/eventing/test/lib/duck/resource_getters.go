@@ -19,39 +19,17 @@ limitations under the License.
 package duck
 
 import (
-	"fmt"
-	"strings"
+	"context"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/apis/duck"
 
 	"knative.dev/eventing/test/lib/resources"
 )
-
-// This is a workaround for https://github.com/knative/pkg/issues/1509
-// Because tests currently fail immediately on any creation failure, this
-// is problematic. On the reconcilers it's not an issue because they recover,
-// but tests need this retry.
-//
-// https://github.com/knative/eventing/issues/3681
-func isWebhookError(err error) bool {
-	return strings.Contains(err.Error(), "eventing-webhook.knative-eventing")
-}
-
-func RetryWebhookErrors(updater func(int) error) error {
-	attempts := 0
-	return retry.OnError(retry.DefaultRetry, isWebhookError, func() error {
-		err := updater(attempts)
-		attempts++
-		return err
-	})
-}
 
 // GetGenericObject returns a generic object representing a Kubernetes resource.
 // Callers can cast this returned object to other objects that implement the corresponding duck-type.
@@ -62,16 +40,7 @@ func GetGenericObject(
 ) (runtime.Object, error) {
 	// get the resource's namespace and gvr
 	gvr, _ := meta.UnsafeGuessKindToResource(obj.GroupVersionKind())
-	var u *unstructured.Unstructured
-	err := RetryWebhookErrors(func(attempts int) (err error) {
-		var e error
-		u, e = dynamicClient.Resource(gvr).Namespace(obj.Namespace).Get(obj.Name, metav1.GetOptions{})
-		if e != nil {
-			// TODO: Plumb some sort of logging here
-			fmt.Printf("Failed to get %s/%s: %v", obj.Namespace, obj.Name, e)
-		}
-		return e
-	})
+	u, err := dynamicClient.Resource(gvr).Namespace(obj.Namespace).Get(context.Background(), obj.Name, metav1.GetOptions{})
 
 	if err != nil {
 		return nil, err
@@ -93,7 +62,7 @@ func GetGenericObjectList(
 ) ([]runtime.Object, error) {
 	// get the resource's namespace and gvr
 	gvr, _ := meta.UnsafeGuessKindToResource(objList.GroupVersionKind())
-	ul, err := dynamicClient.Resource(gvr).Namespace(objList.Namespace).List(metav1.ListOptions{})
+	ul, err := dynamicClient.Resource(gvr).Namespace(objList.Namespace).List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
 		return nil, err

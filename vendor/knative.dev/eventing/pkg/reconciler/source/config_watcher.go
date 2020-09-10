@@ -24,8 +24,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"knative.dev/eventing/pkg/logging"
 	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/logging"
+	pkglogging "knative.dev/pkg/logging"
 	"knative.dev/pkg/metrics"
 	tracingconfig "knative.dev/pkg/tracing/config"
 )
@@ -38,7 +39,7 @@ const (
 
 type ConfigAccessor interface {
 	ToEnvVars() []corev1.EnvVar
-	LoggingConfig() *logging.Config
+	LoggingConfig() *pkglogging.Config
 	MetricsConfig() *metrics.ExporterOptions
 	TracingConfig() *tracingconfig.Config
 }
@@ -48,12 +49,12 @@ var _ ConfigAccessor = (*ConfigWatcher)(nil)
 // ConfigWatcher keeps track of logging, metrics and tracing configurations by
 // watching corresponding ConfigMaps.
 type ConfigWatcher struct {
-	logger *zap.SugaredLogger
+	logger *zap.Logger
 
 	component string
 
 	// configurations remain nil if disabled
-	loggingCfg *logging.Config
+	loggingCfg *pkglogging.Config
 	metricsCfg *metrics.ExporterOptions
 	tracingCfg *tracingconfig.Config
 }
@@ -88,8 +89,8 @@ func WatchConfigurations(loggingCtx context.Context, component string,
 
 // WithLogging observes a logging ConfigMap.
 func WithLogging(cw *ConfigWatcher, cmw configmap.Watcher) {
-	cw.loggingCfg = &logging.Config{}
-	watchConfigMap(cmw, logging.ConfigMapName(), cw.updateFromLoggingConfigMap)
+	cw.loggingCfg = &pkglogging.Config{}
+	watchConfigMap(cmw, pkglogging.ConfigMapName(), cw.updateFromLoggingConfigMap)
 }
 
 // WithMetrics observes a metrics ConfigMap.
@@ -117,7 +118,7 @@ func watchConfigMap(cmw configmap.Watcher, cmName string, obs configmap.Observer
 }
 
 // LoggingConfig returns the logging configuration from the ConfigWatcher.
-func (cw *ConfigWatcher) LoggingConfig() *logging.Config {
+func (cw *ConfigWatcher) LoggingConfig() *pkglogging.Config {
 	if cw == nil {
 		return nil
 	}
@@ -147,15 +148,15 @@ func (cw *ConfigWatcher) updateFromLoggingConfigMap(cfg *corev1.ConfigMap) {
 
 	delete(cfg.Data, "_example")
 
-	loggingCfg, err := logging.NewConfigFromConfigMap(cfg)
+	loggingCfg, err := pkglogging.NewConfigFromConfigMap(cfg)
 	if err != nil {
-		cw.logger.Warnw("failed to create logging config from ConfigMap", zap.String("cfg.Name", cfg.Name))
+		cw.logger.Warn("failed to create logging config from ConfigMap", zap.String("cfg.Name", cfg.Name))
 		return
 	}
 
 	cw.loggingCfg = loggingCfg
 
-	cw.logger.Debugw("Updated logging config from ConfigMap", zap.Any("ConfigMap", cfg))
+	cw.logger.Debug("Updated logging config from ConfigMap", zap.Any("ConfigMap", cfg))
 }
 
 func (cw *ConfigWatcher) updateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
@@ -171,7 +172,7 @@ func (cw *ConfigWatcher) updateFromMetricsConfigMap(cfg *corev1.ConfigMap) {
 		ConfigMap: cfg.Data,
 	}
 
-	cw.logger.Debugw("Updated metrics config from ConfigMap", zap.Any("ConfigMap", cfg))
+	cw.logger.Debug("Updated metrics config from ConfigMap", zap.Any("ConfigMap", cfg))
 }
 
 func (cw *ConfigWatcher) updateFromTracingConfigMap(cfg *corev1.ConfigMap) {
@@ -183,13 +184,13 @@ func (cw *ConfigWatcher) updateFromTracingConfigMap(cfg *corev1.ConfigMap) {
 
 	tracingCfg, err := tracingconfig.NewTracingConfigFromMap(cfg.Data)
 	if err != nil {
-		cw.logger.Warnw("failed to create tracing config from ConfigMap", zap.String("cfg.Name", cfg.Name))
+		cw.logger.Warn("failed to create tracing config from ConfigMap", zap.String("cfg.Name", cfg.Name))
 		return
 	}
 
 	cw.tracingCfg = tracingCfg
 
-	cw.logger.Debugw("Updated tracing config from ConfigMap", zap.Any("ConfigMap", cfg))
+	cw.logger.Debug("Updated tracing config from ConfigMap", zap.Any("ConfigMap", cfg))
 }
 
 // ToEnvVars serializes the contents of the ConfigWatcher to individual
@@ -216,9 +217,9 @@ func maybeAppendEnvVar(envs []corev1.EnvVar, env corev1.EnvVar, cond bool) []cor
 // loggingConfigEnvVar returns an EnvVar containing the serialized logging
 // configuration from the ConfigWatcher.
 func (cw *ConfigWatcher) loggingConfigEnvVar() corev1.EnvVar {
-	cfg, err := logging.LoggingConfigToJson(cw.LoggingConfig())
+	cfg, err := pkglogging.LoggingConfigToJson(cw.LoggingConfig())
 	if err != nil {
-		cw.logger.Warnw("Error while serializing logging config", zap.Error(err))
+		cw.logger.Warn("Error while serializing logging config", zap.Error(err))
 	}
 
 	return corev1.EnvVar{
@@ -232,7 +233,7 @@ func (cw *ConfigWatcher) loggingConfigEnvVar() corev1.EnvVar {
 func (cw *ConfigWatcher) metricsConfigEnvVar() corev1.EnvVar {
 	cfg, err := metrics.MetricsOptionsToJson(cw.MetricsConfig())
 	if err != nil {
-		cw.logger.Warnw("Error while serializing metrics config", zap.Error(err))
+		cw.logger.Warn("Error while serializing metrics config", zap.Error(err))
 	}
 
 	return corev1.EnvVar{
@@ -246,7 +247,7 @@ func (cw *ConfigWatcher) metricsConfigEnvVar() corev1.EnvVar {
 func (cw *ConfigWatcher) tracingConfigEnvVar() corev1.EnvVar {
 	cfg, err := tracingconfig.TracingConfigToJson(cw.TracingConfig())
 	if err != nil {
-		cw.logger.Warnw("Error while serializing tracing config", zap.Error(err))
+		cw.logger.Warn("Error while serializing tracing config", zap.Error(err))
 	}
 
 	return corev1.EnvVar{
@@ -268,7 +269,7 @@ func (g *EmptyVarsGenerator) ToEnvVars() []corev1.EnvVar {
 	}
 }
 
-func (*EmptyVarsGenerator) LoggingConfig() *logging.Config {
+func (*EmptyVarsGenerator) LoggingConfig() *pkglogging.Config {
 	return nil
 }
 

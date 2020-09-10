@@ -17,6 +17,7 @@ limitations under the License.
 package helpers
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"sort"
@@ -246,7 +247,7 @@ func TestBrokerWithManyTriggers(t *testing.T, brokerCreator BrokerCreator, shoul
 
 			if shouldLabelNamespace {
 				// Test if namespace reconciler would recreate broker once broker was deleted.
-				if err := client.Eventing.EventingV1beta1().Brokers(client.Namespace).Delete(brokerName, &metav1.DeleteOptions{}); err != nil {
+				if err := client.Eventing.EventingV1beta1().Brokers(client.Namespace).Delete(context.Background(), brokerName, metav1.DeleteOptions{}); err != nil {
 					t.Fatalf("Can't delete default broker in namespace: %v", client.Namespace)
 				}
 				client.WaitForResourceReadyOrFail(brokerName, testlib.BrokerTypeMeta)

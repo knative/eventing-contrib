@@ -19,10 +19,9 @@ package tracing
 import (
 	"testing"
 
-	"knative.dev/pkg/test/zipkin"
-
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/resources"
+	"knative.dev/pkg/test/zipkin"
 )
 
 // Setup sets up port forwarding to Zipkin.

@@ -17,6 +17,7 @@ limitations under the License.
 package lib
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -32,7 +33,7 @@ import (
 // LabelNamespace labels the given namespace with the labels map.
 func (c *Client) LabelNamespace(labels map[string]string) error {
 	namespace := c.Namespace
-	nsSpec, err := c.Kube.Kube.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+	nsSpec, err := c.Kube.Kube.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func (c *Client) LabelNamespace(labels map[string]string) error {
 	for k, v := range labels {
 		nsSpec.Labels[k] = v
 	}
-	_, err = c.Kube.Kube.CoreV1().Namespaces().Update(nsSpec)
+	_, err = c.Kube.Kube.CoreV1().Namespaces().Update(context.Background(), nsSpec, metav1.UpdateOptions{})
 	return err
 }
 

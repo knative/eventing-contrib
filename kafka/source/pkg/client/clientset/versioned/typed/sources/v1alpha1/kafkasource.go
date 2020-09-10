@@ -19,6 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,15 +38,15 @@ type KafkaSourcesGetter interface {
 
 // KafkaSourceInterface has methods to work with KafkaSource resources.
 type KafkaSourceInterface interface {
-	Create(*v1alpha1.KafkaSource) (*v1alpha1.KafkaSource, error)
-	Update(*v1alpha1.KafkaSource) (*v1alpha1.KafkaSource, error)
-	UpdateStatus(*v1alpha1.KafkaSource) (*v1alpha1.KafkaSource, error)
-	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.KafkaSource, error)
-	List(opts v1.ListOptions) (*v1alpha1.KafkaSourceList, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.KafkaSource, err error)
+	Create(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.CreateOptions) (*v1alpha1.KafkaSource, error)
+	Update(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.UpdateOptions) (*v1alpha1.KafkaSource, error)
+	UpdateStatus(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.UpdateOptions) (*v1alpha1.KafkaSource, error)
+	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.KafkaSource, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.KafkaSourceList, error)
+	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.KafkaSource, err error)
 	KafkaSourceExpansion
 }
 
@@ -64,20 +65,20 @@ func newKafkaSources(c *SourcesV1alpha1Client, namespace string) *kafkaSources {
 }
 
 // Get takes name of the kafkaSource, and returns the corresponding kafkaSource object, and an error if there is any.
-func (c *kafkaSources) Get(name string, options v1.GetOptions) (result *v1alpha1.KafkaSource, err error) {
+func (c *kafkaSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.KafkaSource, err error) {
 	result = &v1alpha1.KafkaSource{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("kafkasources").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of KafkaSources that match those selectors.
-func (c *kafkaSources) List(opts v1.ListOptions) (result *v1alpha1.KafkaSourceList, err error) {
+func (c *kafkaSources) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.KafkaSourceList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -88,13 +89,13 @@ func (c *kafkaSources) List(opts v1.ListOptions) (result *v1alpha1.KafkaSourceLi
 		Resource("kafkasources").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested kafkaSources.
-func (c *kafkaSources) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *kafkaSources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -105,87 +106,90 @@ func (c *kafkaSources) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Resource("kafkasources").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a kafkaSource and creates it.  Returns the server's representation of the kafkaSource, and an error, if there is any.
-func (c *kafkaSources) Create(kafkaSource *v1alpha1.KafkaSource) (result *v1alpha1.KafkaSource, err error) {
+func (c *kafkaSources) Create(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.CreateOptions) (result *v1alpha1.KafkaSource, err error) {
 	result = &v1alpha1.KafkaSource{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("kafkasources").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(kafkaSource).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Update takes the representation of a kafkaSource and updates it. Returns the server's representation of the kafkaSource, and an error, if there is any.
-func (c *kafkaSources) Update(kafkaSource *v1alpha1.KafkaSource) (result *v1alpha1.KafkaSource, err error) {
+func (c *kafkaSources) Update(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.UpdateOptions) (result *v1alpha1.KafkaSource, err error) {
 	result = &v1alpha1.KafkaSource{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("kafkasources").
 		Name(kafkaSource.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(kafkaSource).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *kafkaSources) UpdateStatus(kafkaSource *v1alpha1.KafkaSource) (result *v1alpha1.KafkaSource, err error) {
+func (c *kafkaSources) UpdateStatus(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.UpdateOptions) (result *v1alpha1.KafkaSource, err error) {
 	result = &v1alpha1.KafkaSource{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("kafkasources").
 		Name(kafkaSource.Name).
 		SubResource("status").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(kafkaSource).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Delete takes name of the kafkaSource and deletes it. Returns an error if one occurs.
-func (c *kafkaSources) Delete(name string, options *v1.DeleteOptions) error {
+func (c *kafkaSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("kafkasources").
 		Name(name).
-		Body(options).
-		Do().
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *kafkaSources) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *kafkaSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
-	if listOptions.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	if listOpts.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("kafkasources").
-		VersionedParams(&listOptions, scheme.ParameterCodec).
+		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(options).
-		Do().
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched kafkaSource.
-func (c *kafkaSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.KafkaSource, err error) {
+func (c *kafkaSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.KafkaSource, err error) {
 	result = &v1alpha1.KafkaSource{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("kafkasources").
-		SubResource(subresources...).
 		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }

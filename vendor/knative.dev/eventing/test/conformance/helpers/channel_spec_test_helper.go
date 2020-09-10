@@ -17,6 +17,7 @@ limitations under the License.
 package helpers
 
 import (
+	"context"
 	"testing"
 
 	"encoding/json"
@@ -66,7 +67,7 @@ func channelSpecAllowsSubscribersArray(st *testing.T, client *testlib.Client, ch
 		client.CreateChannelOrFail(channelName, &channel)
 		client.WaitForResourceReadyOrFail(channelName, &channel)
 
-		sampleUrl := apis.HTTP("example.com")
+		sampleUrl, _ := apis.ParseURL("http://example.com")
 		gvr, _ := meta.UnsafeGuessKindToResource(channel.GroupVersionKind())
 
 		var ch interface{}
@@ -119,13 +120,7 @@ func channelSpecAllowsSubscribersArray(st *testing.T, client *testlib.Client, ch
 			st.Fatalf("Error unmarshaling %s: %s", u, err)
 		}
 
-		err = client.RetryWebhookErrors(func(attempt int) error {
-			_, e := client.Dynamic.Resource(gvr).Namespace(client.Namespace).Update(u, metav1.UpdateOptions{})
-			if e != nil {
-				client.T.Logf("Failed to update channel spec at attempt %d %q %q: %v", attempt, channel.Kind, channelName, e)
-			}
-			return e
-		})
+		_, err = client.Dynamic.Resource(gvr).Namespace(client.Namespace).Update(context.Background(), u, metav1.UpdateOptions{})
 		return err
 	})
 	if err != nil {

@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,7 +41,7 @@ var camelsourcesResource = schema.GroupVersionResource{Group: "sources.knative.d
 var camelsourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "CamelSource"}
 
 // Get takes name of the camelSource, and returns the corresponding camelSource object, and an error if there is any.
-func (c *FakeCamelSources) Get(name string, options v1.GetOptions) (result *v1alpha1.CamelSource, err error) {
+func (c *FakeCamelSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.CamelSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(camelsourcesResource, c.ns, name), &v1alpha1.CamelSource{})
 
@@ -50,7 +52,7 @@ func (c *FakeCamelSources) Get(name string, options v1.GetOptions) (result *v1al
 }
 
 // List takes label and field selectors, and returns the list of CamelSources that match those selectors.
-func (c *FakeCamelSources) List(opts v1.ListOptions) (result *v1alpha1.CamelSourceList, err error) {
+func (c *FakeCamelSources) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.CamelSourceList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(camelsourcesResource, camelsourcesKind, c.ns, opts), &v1alpha1.CamelSourceList{})
 
@@ -72,14 +74,14 @@ func (c *FakeCamelSources) List(opts v1.ListOptions) (result *v1alpha1.CamelSour
 }
 
 // Watch returns a watch.Interface that watches the requested camelSources.
-func (c *FakeCamelSources) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeCamelSources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(camelsourcesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a camelSource and creates it.  Returns the server's representation of the camelSource, and an error, if there is any.
-func (c *FakeCamelSources) Create(camelSource *v1alpha1.CamelSource) (result *v1alpha1.CamelSource, err error) {
+func (c *FakeCamelSources) Create(ctx context.Context, camelSource *v1alpha1.CamelSource, opts v1.CreateOptions) (result *v1alpha1.CamelSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(camelsourcesResource, c.ns, camelSource), &v1alpha1.CamelSource{})
 
@@ -90,7 +92,7 @@ func (c *FakeCamelSources) Create(camelSource *v1alpha1.CamelSource) (result *v1
 }
 
 // Update takes the representation of a camelSource and updates it. Returns the server's representation of the camelSource, and an error, if there is any.
-func (c *FakeCamelSources) Update(camelSource *v1alpha1.CamelSource) (result *v1alpha1.CamelSource, err error) {
+func (c *FakeCamelSources) Update(ctx context.Context, camelSource *v1alpha1.CamelSource, opts v1.UpdateOptions) (result *v1alpha1.CamelSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(camelsourcesResource, c.ns, camelSource), &v1alpha1.CamelSource{})
 
@@ -102,7 +104,7 @@ func (c *FakeCamelSources) Update(camelSource *v1alpha1.CamelSource) (result *v1
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeCamelSources) UpdateStatus(camelSource *v1alpha1.CamelSource) (*v1alpha1.CamelSource, error) {
+func (c *FakeCamelSources) UpdateStatus(ctx context.Context, camelSource *v1alpha1.CamelSource, opts v1.UpdateOptions) (*v1alpha1.CamelSource, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(camelsourcesResource, "status", c.ns, camelSource), &v1alpha1.CamelSource{})
 
@@ -113,7 +115,7 @@ func (c *FakeCamelSources) UpdateStatus(camelSource *v1alpha1.CamelSource) (*v1a
 }
 
 // Delete takes name of the camelSource and deletes it. Returns an error if one occurs.
-func (c *FakeCamelSources) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeCamelSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(camelsourcesResource, c.ns, name), &v1alpha1.CamelSource{})
 
@@ -121,15 +123,15 @@ func (c *FakeCamelSources) Delete(name string, options *v1.DeleteOptions) error 
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeCamelSources) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(camelsourcesResource, c.ns, listOptions)
+func (c *FakeCamelSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(camelsourcesResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.CamelSourceList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched camelSource.
-func (c *FakeCamelSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.CamelSource, err error) {
+func (c *FakeCamelSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.CamelSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(camelsourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.CamelSource{})
 

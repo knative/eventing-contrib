@@ -17,6 +17,7 @@ limitations under the License.
 package helpers
 
 import (
+	"context"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -121,12 +122,12 @@ func triggerV1Beta1ReadyBrokerReadyHelper(triggerName, brokerName string, client
 
 func triggerV1Beta1ReadyAfterBrokerIncludesSubURI(t *testing.T, triggerName, brokerName string, client *testlib.Client) {
 	err := reconciler.RetryUpdateConflicts(func(attempts int) (err error) {
-		tr, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get(triggerName, metav1.GetOptions{})
+		tr, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get(context.Background(), triggerName, metav1.GetOptions{})
 		if err != nil {
 			t.Fatalf("Error: Could not get trigger %s: %v", triggerName, err)
 		}
 		tr.Spec.Broker = brokerName
-		_, e := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Update(tr)
+		_, e := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Update(context.Background(), tr, metav1.UpdateOptions{})
 		return e
 	})
 	if err != nil {
@@ -135,7 +136,7 @@ func triggerV1Beta1ReadyAfterBrokerIncludesSubURI(t *testing.T, triggerName, bro
 
 	client.WaitForResourceReadyOrFail(triggerName, testlib.TriggerTypeMeta)
 
-	tr, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get(triggerName, metav1.GetOptions{})
+	tr, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get(context.Background(), triggerName, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Error: Could not get trigger %s: %v", triggerName, err)
 	}
@@ -146,7 +147,7 @@ func triggerV1Beta1ReadyAfterBrokerIncludesSubURI(t *testing.T, triggerName, bro
 
 func triggerV1Beta1ReadyIncludesSubURI(t *testing.T, triggerName string, client *testlib.Client) {
 	client.WaitForResourceReadyOrFail(triggerName, testlib.TriggerTypeMeta)
-	tr, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get(triggerName, metav1.GetOptions{})
+	tr, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get(context.Background(), triggerName, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Error: Could not get trigger %s: %v", triggerName, err)
 	}

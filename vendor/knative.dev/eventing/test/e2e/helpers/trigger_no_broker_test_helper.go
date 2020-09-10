@@ -17,6 +17,7 @@ limitations under the License.
 package helpers
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func TestTriggerNoBroker(t *testing.T, channel string, brokerCreator BrokerCreat
 
 	// Then make sure the trigger is marked as not ready since there's no broker.
 	err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		trigger, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get("testtrigger", metav1.GetOptions{})
+		trigger, err := client.Eventing.EventingV1beta1().Triggers(client.Namespace).Get(context.Background(), "testtrigger", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
