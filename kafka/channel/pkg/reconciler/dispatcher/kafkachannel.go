@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -233,21 +232,4 @@ func (r *Reconciler) newConfigFromKafkaChannels(channels []*v1beta1.KafkaChannel
 	return &dispatcher.Config{
 		ChannelConfigs: cc,
 	}
-}
-func (r *Reconciler) updateStatus(ctx context.Context, desired *v1beta1.KafkaChannel) (*v1beta1.KafkaChannel, error) {
-	kc, err := r.kafkachannelLister.KafkaChannels(desired.Namespace).Get(desired.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	if reflect.DeepEqual(kc.Status, desired.Status) {
-		return kc, nil
-	}
-
-	// Don't modify the informers copy.
-	existing := kc.DeepCopy()
-	existing.Status = desired.Status
-
-	new, err := r.kafkaClientSet.MessagingV1beta1().KafkaChannels(desired.Namespace).UpdateStatus(existing)
-	return new, err
 }

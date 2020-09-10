@@ -313,7 +313,7 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 
 		expectedContainer := utils.FindContainer(expected, resources.DispatcherContainerName)
 		if expectedContainer == nil {
-			return nil, errors.New(fmt.Sprintf("Container %s does not exist in expected dispatcher deployment. Cannot check if the deployment needs an update.", resources.DispatcherContainerName))
+			return nil, fmt.Errorf("container %s does not exist in expected dispatcher deployment. Cannot check if the deployment needs an update", resources.DispatcherContainerName)
 		}
 
 		needsUpdate := false
