@@ -151,3 +151,10 @@ rules:
   - get
   - update
   - patch
+
+# For leader election
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - "leases"
+  verbs: *everything
