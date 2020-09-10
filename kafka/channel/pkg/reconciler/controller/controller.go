@@ -87,7 +87,7 @@ func NewController(
 	impl := kafkaChannelReconciler.NewImpl(ctx, r)
 
 	// Get and Watch the Kakfa config map and dynamically update Kafka configuration.
-	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get("config-kafka", metav1.GetOptions{}); err == nil {
+	if _, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, "config-kafka", metav1.GetOptions{}); err == nil {
 		cmw.Watch("config-kafka", func(configMap *v1.ConfigMap) {
 			r.updateKafkaConfig(ctx, configMap)
 		})

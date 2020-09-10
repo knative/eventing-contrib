@@ -110,7 +110,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1beta1.KafkaSource
 			dest.Ref.Namespace = src.GetNamespace()
 		}
 	}
-	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, src)
+	sinkURI, err := r.sinkResolver.URIFromDestinationV1(ctx, *dest, src)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
 		//delete adapter deployment if sink not found
@@ -167,9 +167,9 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 	}
 	expected := resources.MakeReceiveAdapter(&raArgs)
 
-	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
+	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
-		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
+		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 		if err != nil {
 			return nil, newDeploymentFailed(ra.Namespace, ra.Name, err)
 		}
@@ -181,7 +181,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 		return nil, fmt.Errorf("deployment %q is not owned by KafkaSource %q", ra.Name, src.Name)
 	} else if podSpecChanged(ra.Spec.Template.Spec, expected.Spec.Template.Spec) {
 		ra.Spec.Template.Spec = expected.Spec.Template.Spec
-		if ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
+		if ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Update(ctx, ra, metav1.UpdateOptions{}); err != nil {
 			return ra, err
 		}
 		return ra, deploymentUpdated(ra.Namespace, ra.Name)

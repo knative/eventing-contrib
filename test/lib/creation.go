@@ -17,7 +17,11 @@ limitations under the License.
 package lib
 
 import (
+	"context"
+
 	testlib "knative.dev/eventing/test/lib"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	bindingsv1alpha1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1alpha1"
 	bindingsv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/bindings/v1beta1"
@@ -33,7 +37,7 @@ func CreateKafkaSourceV1Alpha1OrFail(c *testlib.Client, kafkaSource *sourcesv1al
 	}
 
 	kSources := kafkaSourceClientSet.SourcesV1alpha1().KafkaSources(c.Namespace)
-	if createdKafkaSource, err := kSources.Create(kafkaSource); err != nil {
+	if createdKafkaSource, err := kSources.Create(context.Background(), kafkaSource, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create v1alpha1 KafkaSource %q: %v", kafkaSource.Name, err)
 	} else {
 		c.Tracker.AddObj(createdKafkaSource)
@@ -47,7 +51,7 @@ func CreateKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource *sourcesv1bet
 	}
 
 	kSources := kafkaSourceClientSet.SourcesV1beta1().KafkaSources(c.Namespace)
-	if createdKafkaSource, err := kSources.Create(kafkaSource); err != nil {
+	if createdKafkaSource, err := kSources.Create(context.Background(), kafkaSource, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create v1beta1 KafkaSource %q: %v", kafkaSource.Name, err)
 	} else {
 		c.Tracker.AddObj(createdKafkaSource)
@@ -61,7 +65,7 @@ func CreateKafkaBindingV1Alpha1OrFail(c *testlib.Client, kafkaBinding *bindingsv
 	}
 
 	kBindings := kafkaBindingClientSet.BindingsV1alpha1().KafkaBindings(c.Namespace)
-	if createdKafkaBinding, err := kBindings.Create(kafkaBinding); err != nil {
+	if createdKafkaBinding, err := kBindings.Create(context.Background(), kafkaBinding, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create v1alpha1 KafkaBinding %q: %v", kafkaBinding.Name, err)
 	} else {
 		c.Tracker.AddObj(createdKafkaBinding)
@@ -75,7 +79,7 @@ func CreateKafkaBindingV1Beta1OrFail(c *testlib.Client, kafkaBinding *bindingsv1
 	}
 
 	kBindings := kafkaBindingClientSet.BindingsV1beta1().KafkaBindings(c.Namespace)
-	if createdKafkaBinding, err := kBindings.Create(kafkaBinding); err != nil {
+	if createdKafkaBinding, err := kBindings.Create(context.Background(), kafkaBinding, metav1.CreateOptions{}); err != nil {
 		c.T.Fatalf("Failed to create v1beta1 KafkaBinding %q: %v", kafkaBinding.Name, err)
 	} else {
 		c.Tracker.AddObj(createdKafkaBinding)
