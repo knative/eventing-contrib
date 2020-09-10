@@ -56,6 +56,8 @@ replace (
 	k8s.io/apiserver => k8s.io/apiserver v0.18.8
 	k8s.io/client-go => k8s.io/client-go v0.18.8
 	k8s.io/code-generator => k8s.io/code-generator v0.18.8
+	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718
+
 	// TODO(vaikas): DO NOT SUBMIT
 	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200824120738-2b97ca8b85d0
 	knative.dev/serving => github.com/mattmoor/serving e38be9dd86ea8b08e416030f6826ab7305bf323b

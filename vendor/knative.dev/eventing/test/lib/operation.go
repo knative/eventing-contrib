@@ -87,7 +87,7 @@ func (c *Client) WaitForResourcesReadyOrFail(typemeta *metav1.TypeMeta) {
 }
 
 // WaitForAllTestResourcesReady waits until all test resources in the namespace are Ready.
-func (c *Client) WaitForAllTestResourcesReady() error {
+func (c *Client) WaitForAllTestResourcesReady(ctx context.Context) error {
 	// wait for all Knative resources created in this test to become ready.
 	err := c.RetryWebhookErrors(func(attempts int) (err error) {
 		e := c.Tracker.WaitForKResourcesReady()
@@ -101,7 +101,7 @@ func (c *Client) WaitForAllTestResourcesReady() error {
 	}
 	// Explicitly wait for all pods that were created directly by this test to become ready.
 	for _, n := range c.podsCreated {
-		if err := pkgTest.WaitForPodRunning(c.Kube, n, c.Namespace); err != nil {
+		if err := pkgTest.WaitForPodRunning(ctx, c.Kube, n, c.Namespace); err != nil {
 			return fmt.Errorf("created Pod %q did not become ready: %+v", n, errors.WithStack(err))
 		}
 	}
@@ -111,15 +111,15 @@ func (c *Client) WaitForAllTestResourcesReady() error {
 	return nil
 }
 
-func (c *Client) WaitForAllTestResourcesReadyOrFail() {
-	if err := c.WaitForAllTestResourcesReady(); err != nil {
+func (c *Client) WaitForAllTestResourcesReadyOrFail(ctx context.Context) {
+	if err := c.WaitForAllTestResourcesReady(ctx); err != nil {
 		c.T.Fatalf("Failed to get all test resources ready: %+v", errors.WithStack(err))
 	}
 }
 
-func (c *Client) WaitForServiceEndpointsOrFail(svcName string, numberOfExpectedEndpoints int) {
+func (c *Client) WaitForServiceEndpointsOrFail(ctx context.Context, svcName string, numberOfExpectedEndpoints int) {
 	c.T.Logf("Waiting for %d endpoints in service %s", numberOfExpectedEndpoints, svcName)
-	if err := pkgTest.WaitForServiceEndpoints(c.Kube, svcName, c.Namespace, numberOfExpectedEndpoints); err != nil {
+	if err := pkgTest.WaitForServiceEndpoints(ctx, c.Kube, svcName, c.Namespace, numberOfExpectedEndpoints); err != nil {
 		c.T.Fatalf("Failed while waiting for %d endpoints in service %s: %+v", numberOfExpectedEndpoints, svcName, errors.WithStack(err))
 	}
 }

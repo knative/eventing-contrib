@@ -56,7 +56,7 @@ func exportLogs(kubeClient *test.KubeClient, namespace, dir string, logFunc func
 			if err != nil {
 				errs = append(errs, fmt.Errorf("error creating file %q: %w", fn, err))
 			}
-			log, err := kubeClient.PodLogs(pod.Name, ct.Name, pod.Namespace)
+			log, err := kubeClient.PodLogs(context.Background(), pod.Name, ct.Name, pod.Namespace)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("error getting logs for pod %q container %q: %w", pod.Name, ct.Name, err))
 			}

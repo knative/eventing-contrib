@@ -78,7 +78,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1alpha1.AwsSqsSour
 				APIVersion: src.Spec.Sink.APIVersion,
 			},
 		}
-		sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, src)
+		sinkURI, err := r.sinkResolver.URIFromDestinationV1(ctx, *dest, src)
 		if err != nil {
 			src.Status.MarkNoSink("NotFound", "")
 			return err
@@ -123,13 +123,13 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Aws
 		SinkURI: src.Status.SinkURI.String(),
 	})
 
-	ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
+	ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 	logging.FromContext(ctx).Desugar().Info("Receive Adapter created.", zap.Error(err), zap.Any("receiveAdapter", ra))
 	return ra, err
 }
 
 func (r *Reconciler) getReceiveAdapter(ctx context.Context, src *v1alpha1.AwsSqsSource) (*appsv1.Deployment, error) {
-	dl, err := r.kubeClientSet.AppsV1().Deployments(src.Namespace).List(metav1.ListOptions{
+	dl, err := r.kubeClientSet.AppsV1().Deployments(src.Namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: r.getLabelSelector(src).String(),
 	})
 

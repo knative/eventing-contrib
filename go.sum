@@ -1218,8 +1218,8 @@ github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43/go.mod h1:aX5oPXxHm3bOH+xeAttToC8pqch2ScQN/JoXYupl6xs=
 github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPSUX/bi6SeDMUh6brw0nXpxHnc96TguQh0+r/ssA=
 github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
-github.com/zroubalik/eventing v0.15.1-0.20200824120738-2b97ca8b85d0 h1:Xk47WLxV+IDX2XjRX9JU/d24StEzOd1QtjRxT739mFE=
-github.com/zroubalik/eventing v0.15.1-0.20200824120738-2b97ca8b85d0/go.mod h1:rkB/DZnXRdAK/teSwEs6VKwmbQFijVk2oTMXGDaJa9k=
+github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718 h1:AivLkwYXinlb9Z/APxJ4paLEfN/PUTbjzUYhuHCvYd4=
+github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718/go.mod h1:Oin4XouKeVDMqL9b7fz5G/PI5M9qRF9cHsFxfsH1YuQ=
 github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b h1:0mVAKJMV7denyufBZFGrchDrnUWxoOuMl1C/2jm8JIU=
 github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b/go.mod h1:igZfLQk2QpRo+cxbH4NfsgbdavqsXr1rMr818/xVu3c=
 gitlab.com/flimzy/testy v0.0.0-20190816103046-aca1ef5ffe7e/go.mod h1:MQwjgAyueIbBZv+qSYAMs6LaZwsJysPs0BK/niv9JiI=
@@ -1920,6 +1920,15 @@ knative.dev/networking v0.0.0-20200907215832-c4397a77657e/go.mod h1:XWL/3cPOuat9
 knative.dev/serving v0.17.1-0.20200908232550-482b183b99db h1:mu6qgr4Kcii5g41mXnq8EC3l2EvUaWghCQ1BLOGJhvI=
 knative.dev/serving v0.17.1-0.20200908232550-482b183b99db/go.mod h1:Nv/IMkuDkUQIyAmt5pwYjGNOsql9Ga7sXhvEGeLi5Nw=
 knative.dev/test-infra v0.0.0-20200820231346-543fe3e80c03/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
+knative.dev/test-infra v0.0.0-20200820231346-543fe3e80c03/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
+knative.dev/test-infra v0.0.0-20200828211307-9d4372c9b1c7 h1:yIzao6i9Hu51SCdpyqBEnhpt7G12FqFrxHK6ZnQnu8o=
+knative.dev/test-infra v0.0.0-20200828211307-9d4372c9b1c7/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
+knative.dev/test-infra v0.0.0-20200831235415-fac473dda98b h1:jafH61XDC6EkogEyR70h/sjYLx2Nf3qKVzPP2MCqEQ4=
+knative.dev/test-infra v0.0.0-20200831235415-fac473dda98b/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
+knative.dev/test-infra v0.0.0-20200905234932-1d8a4814fd68 h1:LAnw774lO1Cg9NOef/9X1xacmmiV366HVIIk5FQypNg=
+knative.dev/test-infra v0.0.0-20200905234932-1d8a4814fd68/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
+knative.dev/test-infra v0.0.0-20200909211651-72eb6ae3c773 h1:R/kYdvSoein2a6BwY1FSZH8wk0aHQ9gN3GQf94AGqcs=
+knative.dev/test-infra v0.0.0-20200909211651-72eb6ae3c773/go.mod h1:Pmg2c7Z7q7BGFUV/GOpU5BlrD3ePJft4MPqx8AYBplc=
 mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed/go.mod h1:Xkxe497xwlCKkIaQYRfC7CSLworTXY9RMqwhhCm+8Nc=
 mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jCoyKnw3vv5biOc3JnIcYfL4=
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=
