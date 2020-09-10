@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"flag"
 	"log"
 
 	"knative.dev/pkg/controller"
@@ -30,18 +29,8 @@ import (
 	"knative.dev/pkg/injection/sharedmain"
 )
 
-var (
-	masterURL = flag.String("master", "",
-		"The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
-	kubeconfig = flag.String("kubeconfig", "",
-		"Path to a kubeconfig. Only required if out-of-cluster.")
-)
-
 func main() {
-	cfg, err := sharedmain.GetConfig(*masterURL, *kubeconfig)
-	if err != nil {
-		log.Fatalf("Error building kubeconfig: %v", err)
-	}
+	cfg := sharedmain.ParseAndGetConfigOrDie()
 
 	ctx := signals.NewContext()
 	ctx, informers := injection.Default.SetupInformers(ctx, cfg)
