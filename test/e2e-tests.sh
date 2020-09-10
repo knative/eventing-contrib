@@ -38,6 +38,7 @@ fi
 # Eventing main config path from HEAD.
 readonly EVENTING_CONFIG="./config/"
 readonly EVENTING_MT_CHANNEL_BROKER_CONFIG="./config/brokers/mt-channel-broker"
+readonly EVENTING_IN_MEMORY_CHANNEL_CONFIG="./config/channels/in-memory-channel"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -75,6 +76,8 @@ readonly CAMELK_INSTALLATION_CONFIG="test/config/100-camel-k-1.1.0.yaml"
 # Camel source CRD config template directory
 readonly CAMEL_SOURCE_CRD_CONFIG_DIR="camel/source/config"
 
+# In-memory channel CRD config.
+readonly IN_MEMORY_CHANNEL_CRD_CONFIG_DIR="config/channels/in-memory-channel"
 
 function knative_setup() {
   if is_release_branch; then
@@ -89,6 +92,8 @@ function knative_setup() {
     ko apply -f ${EVENTING_CONFIG}
     # Install MT Channel Based Broker
     ko apply -f ${EVENTING_MT_CHANNEL_BROKER_CONFIG}
+    # Install IMC
+    ko apply -f ${EVENTING_IN_MEMORY_CHANNEL_CONFIG}
     popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"
@@ -172,7 +177,7 @@ function test_teardown() {
   uninstall_sources_crds
 }
 
-function install_channel_crds() {
+function install_channel_crds() { 
   echo "Installing NATSS Channel CRD"
   ko apply -f ${NATSS_CRD_CONFIG_DIR} || return 1
   wait_until_pods_running knative-eventing || fail_test "Failed to install the NATSS Channel CRD"
