@@ -325,7 +325,7 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 		}
 
 		if *d.Spec.Replicas == 0 {
-			logging.FromContext(ctx).Infof("Dispatcher deployment has 0 replicas. Scaling up deployment to 1 replicas")
+			logging.FromContext(ctx).Infof("Dispatcher deployment has 0 replica. Scaling up deployment to 1 replica")
 			d.Spec.Replicas = pointer.Int32Ptr(1)
 			needsUpdate = true
 		}
