@@ -19,6 +19,8 @@ package utils
 import (
 	"errors"
 	"fmt"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"strings"
 
 	"knative.dev/pkg/configmap"
@@ -88,4 +90,14 @@ func GetKafkaConfig(configMap map[string]string) (*KafkaConfig, error) {
 func TopicName(separator, namespace, name string) string {
 	topic := []string{knativeKafkaTopicPrefix, namespace, name}
 	return strings.Join(topic, separator)
+}
+
+func FindContainer(d *appsv1.Deployment, containerName string) *corev1.Container {
+	for i := range d.Spec.Template.Spec.Containers {
+		if d.Spec.Template.Spec.Containers[i].Name == containerName {
+			return &d.Spec.Template.Spec.Containers[i]
+		}
+	}
+
+	return nil
 }

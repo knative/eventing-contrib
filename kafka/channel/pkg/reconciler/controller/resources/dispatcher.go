@@ -24,6 +24,8 @@ import (
 	"knative.dev/pkg/system"
 )
 
+const DispatcherContainerName = "dispatcher"
+
 var (
 	serviceAccountName = "kafka-ch-dispatcher"
 	dispatcherName     = "kafka-ch-dispatcher"
@@ -37,11 +39,12 @@ type DispatcherArgs struct {
 	DispatcherScope     string
 	DispatcherNamespace string
 	Image               string
+	Replicas            int32
 }
 
 // MakeDispatcher generates the dispatcher deployment for the KafKa channel
 func MakeDispatcher(args DispatcherArgs) *v1.Deployment {
-	replicas := int32(1)
+	replicas := args.Replicas
 
 	return &v1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -65,7 +68,7 @@ func MakeDispatcher(args DispatcherArgs) *v1.Deployment {
 					ServiceAccountName: serviceAccountName,
 					Containers: []corev1.Container{
 						{
-							Name:  "dispatcher",
+							Name:  DispatcherContainerName,
 							Image: args.Image,
 							Env:   makeEnv(args),
 							Ports: []corev1.ContainerPort{{

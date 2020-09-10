@@ -20,7 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
+
+	"k8s.io/utils/pointer"
 
 	"github.com/Shopify/sarama"
 
@@ -274,6 +275,7 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 		DispatcherScope:     scope,
 		DispatcherNamespace: dispatcherNamespace,
 		Image:               r.dispatcherImage,
+		Replicas:            1,
 	}
 
 	expected := resources.MakeDispatcher(args)
@@ -294,17 +296,51 @@ func (r *Reconciler) reconcileDispatcher(ctx context.Context, scope string, disp
 		logging.FromContext(ctx).Errorw("Unable to get the dispatcher deployment", zap.Error(err))
 		kc.Status.MarkDispatcherUnknown("DispatcherDeploymentFailed", "Failed to get dispatcher deployment: %v", err)
 		return nil, err
-	} else if !reflect.DeepEqual(expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image) {
-		logging.FromContext(ctx).Infof("Deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
-		d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
-		if err == nil {
-			controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
-			kc.Status.PropagateDispatcherStatus(&d.Status)
-			return d, nil
-		} else {
-			kc.Status.MarkServiceFailed("DispatcherDeploymentUpdateFailed", "Failed to update the dispatcher deployment: %v", err)
+	} else {
+		existing := utils.FindContainer(d, resources.DispatcherContainerName)
+		if existing == nil {
+			logging.FromContext(ctx).Errorw("Container %s does not exist in existing dispatcher deployment. Updating the deployment", resources.DispatcherContainerName)
+			d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(expected)
+			if err == nil {
+				controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
+				kc.Status.PropagateDispatcherStatus(&d.Status)
+				return d, nil
+			} else {
+				kc.Status.MarkServiceFailed("DispatcherDeploymentUpdateFailed", "Failed to update the dispatcher deployment: %v", err)
+			}
+			return d, newDeploymentWarn(err)
 		}
-		return d, newDeploymentWarn(err)
+
+		expectedContainer := utils.FindContainer(expected, resources.DispatcherContainerName)
+		if expectedContainer == nil {
+			return nil, errors.New(fmt.Sprintf("Container %s does not exist in expected dispatcher deployment. Cannot check if the deployment needs an update.", resources.DispatcherContainerName))
+		}
+
+		needsUpdate := false
+
+		if existing.Image != expectedContainer.Image {
+			logging.FromContext(ctx).Infof("Dispatcher deployment image is not what we expect it to be, updating Deployment Got: %q Expect: %q", expected.Spec.Template.Spec.Containers[0].Image, d.Spec.Template.Spec.Containers[0].Image)
+			existing.Image = expectedContainer.Image
+			needsUpdate = true
+		}
+
+		if *d.Spec.Replicas == 0 {
+			logging.FromContext(ctx).Infof("Dispatcher deployment has 0 replicas. Scaling up deployment to 1 replicas")
+			d.Spec.Replicas = pointer.Int32Ptr(1)
+			needsUpdate = true
+		}
+
+		if needsUpdate {
+			d, err := r.KubeClientSet.AppsV1().Deployments(dispatcherNamespace).Update(d)
+			if err == nil {
+				controller.GetEventRecorder(ctx).Event(kc, corev1.EventTypeNormal, dispatcherDeploymentUpdated, "Dispatcher deployment updated")
+				kc.Status.PropagateDispatcherStatus(&d.Status)
+				return d, nil
+			} else {
+				kc.Status.MarkServiceFailed("DispatcherDeploymentUpdateFailed", "Failed to update the dispatcher deployment: %v", err)
+				return d, newDeploymentWarn(err)
+			}
+		}
 	}
 
 	kc.Status.PropagateDispatcherStatus(&d.Status)

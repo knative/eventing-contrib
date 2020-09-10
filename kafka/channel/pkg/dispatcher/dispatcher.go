@@ -90,7 +90,7 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 
 	producer, err := sarama.NewAsyncProducer(args.Brokers, conf)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create kafka producer: %v", err)
+		return nil, fmt.Errorf("unable to create kafka producer against Kafka bootstrap servers %v : %v", args.Brokers, err)
 	}
 
 	dispatcher := &KafkaDispatcher{
