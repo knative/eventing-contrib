@@ -114,7 +114,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		}
 	}
 
-	uri, err := r.sinkResolver.URIFromDestinationV1(*dest, source)
+	uri, err := r.sinkResolver.URIFromDestinationV1(ctx, *dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
@@ -217,7 +217,7 @@ func (r *Reconciler) reconcileReceiveAdapter(ctx context.Context, source *source
 				Source:              source,
 				ReceiveAdapterImage: r.receiveAdapterImage,
 			})
-			ksvc, err = r.servingClientSet.ServingV1().Services(source.Namespace).Create(ksvc)
+			ksvc, err = r.servingClientSet.ServingV1().Services(source.Namespace).Create(ctx, ksvc, metav1.CreateOptions{})
 			if err != nil {
 				return nil, err
 			}
@@ -349,7 +349,7 @@ func (r *Reconciler) deleteWebhook(ctx context.Context, args *webhookArgs) error
 }
 
 func (r *Reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
-	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
+	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(ctx, secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

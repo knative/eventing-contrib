@@ -55,7 +55,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.GitHubS
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.GitHubSource) error {
-	secretToken, err := common.SecretFrom(r.kubeClientSet, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	secretToken, err := common.SecretFrom(ctx, r.kubeClientSet, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
 	if err != nil {
 		return err
 	}

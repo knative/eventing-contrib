@@ -44,6 +44,10 @@ require (
 	knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb
 	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
 	knative.dev/pkg 2d4efecc6bc1bd495166100917fe52fd7d738fb0
+	knative.dev/eventing v0.17.1-0.20200908151032-5fdaa0605d87
+	knative.dev/pkg v0.0.0-20200910010051-a79a813ce123
+	knative.dev/serving v0.17.1-0.20200908232550-482b183b99db
+	knative.dev/test-infra v0.0.0-20200909211651-72eb6ae3c773
 )
 
 replace (
@@ -59,6 +63,6 @@ replace (
 	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718
 
 	// TODO(vaikas): DO NOT SUBMIT
-	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200824120738-2b97ca8b85d0
-	knative.dev/serving => github.com/mattmoor/serving e38be9dd86ea8b08e416030f6826ab7305bf323b
+	knative.dev/pkg => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
+	knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200910224537-1d7dbc21eb39
 )

@@ -17,6 +17,7 @@ limitations under the License.
 package common
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -25,12 +26,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func SecretFrom(kubeClientSet kubernetes.Interface, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
+func SecretFrom(ctx context.Context, kubeClientSet kubernetes.Interface, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
 	if secretKeySelector == nil {
 		return "", errors.New("missing secret key selector")
 	}
 
-	secret, err := kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
+	secret, err := kubeClientSet.CoreV1().Secrets(namespace).Get(ctx, secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

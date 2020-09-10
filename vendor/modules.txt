@@ -1249,7 +1249,7 @@ knative.dev/eventing/test/test_images/transformevents
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200908235250-56fba14ba7df => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
+# knative.dev/pkg v0.0.0-20200910010051-a79a813ce123 => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1343,7 +1343,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb
+# knative.dev/serving v0.17.1-0.20200908232550-482b183b99db => github.com/mattmoor/serving v0.1.1-0.20200910224537-1d7dbc21eb39
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1392,3 +1392,4 @@ sigs.k8s.io/yaml
 # k8s.io/code-generator => k8s.io/code-generator v0.18.8
 # knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718
 # knative.dev/pkg => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
+# knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200910224537-1d7dbc21eb39

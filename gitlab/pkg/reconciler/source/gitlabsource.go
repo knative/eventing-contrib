@@ -103,12 +103,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 			hookOptions.NoteEvents = true
 		}
 	}
-	hookOptions.accessToken, err = r.secretFrom(source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+	hookOptions.accessToken, err = r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 	if err != nil {
 		source.Status.MarkNoSecret("NotFound", "%s", err)
 		return err
 	}
-	hookOptions.secretToken, err = r.secretFrom(source.Namespace, source.Spec.SecretToken.SecretKeyRef)
+	hookOptions.secretToken, err = r.secretFrom(ctx, source.Namespace, source.Spec.SecretToken.SecretKeyRef)
 	if err != nil {
 		source.Status.MarkNoSecret("NotFound", "%s", err)
 		return err
@@ -127,18 +127,18 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *sourcesv1alpha1.
 		}
 	}
 
-	uri, err := r.sinkResolver.URIFromDestinationV1(*sink, source)
+	uri, err := r.sinkResolver.URIFromDestinationV1(ctx, *sink, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "%s", err)
 		return err
 	}
 	source.Status.MarkSink(uri)
 
-	ksvc, err := r.getOwnedKnativeService(source)
+	ksvc, err := r.getOwnedKnativeService(ctx, source)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			ksvc = r.generateKnativeServiceObject(source, r.receiveAdapterImage)
-			ksvc, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ksvc)
+			ksvc, err = r.servingClientSet.ServingV1().Services(ksvc.GetNamespace()).Create(ctx, ksvc, metav1.CreateOptions{})
 			if err != nil {
 				source.Status.MarkNotDeployed("ReceiveAdapterCreationError", "%s", err)
 				return err
@@ -185,7 +185,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, source *sourcesv1alpha1.G
 		}
 		hookOptions.project = projectName
 		hookOptions.id = source.Status.Id
-		hookOptions.accessToken, err = r.secretFrom(source.Namespace, source.Spec.AccessToken.SecretKeyRef)
+		hookOptions.accessToken, err = r.secretFrom(ctx, source.Namespace, source.Spec.AccessToken.SecretKeyRef)
 		if err != nil {
 			return err
 		}
@@ -222,8 +222,8 @@ func getProjectName(projectUrl string) (string, error) {
 	return projectName, nil
 }
 
-func (r *Reconciler) secretFrom(namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
-	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(secretKeySelector.Name, metav1.GetOptions{})
+func (r *Reconciler) secretFrom(ctx context.Context, namespace string, secretKeySelector *corev1.SecretKeySelector) (string, error) {
+	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(ctx, secretKeySelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -289,8 +289,8 @@ func (r *Reconciler) generateKnativeServiceObject(source *sourcesv1alpha1.GitLab
 	}
 }
 
-func (r *Reconciler) getOwnedKnativeService(source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
-	list, err := r.servingClientSet.ServingV1().Services(source.GetNamespace()).List(metav1.ListOptions{
+func (r *Reconciler) getOwnedKnativeService(ctx context.Context, source *sourcesv1alpha1.GitLabSource) (*servingv1.Service, error) {
+	list, err := r.servingClientSet.ServingV1().Services(source.GetNamespace()).List(ctx, metav1.ListOptions{
 		LabelSelector: labels.Everything().String(),
 	})
 
