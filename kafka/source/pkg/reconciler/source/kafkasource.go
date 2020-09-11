@@ -195,7 +195,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 func (r *Reconciler) deleteReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource) error {
 	name := utils.GenerateFixedName(src, fmt.Sprintf("kafkasource-%s", src.Name))
 
-	return r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(name, &metav1.DeleteOptions{})
+	return r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }
 
 func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {

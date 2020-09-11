@@ -243,7 +243,7 @@ func MustCreateTopic(client *testlib.Client, clusterName string, clusterNamespac
 
 //CheckKafkaSourceState waits for specified kafka source resource state
 //On timeout reports error
-func CheckKafkaSourceState(c *testlib.Client, name string, inState func(ks *sourcesv1beta1.KafkaSource) (bool, error)) error {
+func CheckKafkaSourceState(ctx context.Context, c *testlib.Client, name string, inState func(ks *sourcesv1beta1.KafkaSource) (bool, error)) error {
 	kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
 	if err != nil {
 		return err
@@ -252,7 +252,7 @@ func CheckKafkaSourceState(c *testlib.Client, name string, inState func(ks *sour
 	var lastState *sourcesv1beta1.KafkaSource
 	waitErr := wait.PollImmediate(interval, timeout, func() (bool, error) {
 		var err error
-		lastState, err = kSources.Get(name, metav1.GetOptions{})
+		lastState, err = kSources.Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -266,7 +266,7 @@ func CheckKafkaSourceState(c *testlib.Client, name string, inState func(ks *sour
 
 //CheckRADeployment waits for desired state of receiver adapter
 //On timeout reports error
-func CheckRADeployment(c *testlib.Client, name string, inState func(deps *appsv1.DeploymentList) (bool, error)) error {
+func CheckRADeployment(ctx context.Context, c *testlib.Client, name string, inState func(deps *appsv1.DeploymentList) (bool, error)) error {
 	listOptions := metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", "eventing.knative.dev/SourceName", name),
 	}
@@ -274,7 +274,7 @@ func CheckRADeployment(c *testlib.Client, name string, inState func(deps *appsv1
 	var lastState *appsv1.DeploymentList
 	waitErr := wait.PollImmediate(interval, timeout, func() (bool, error) {
 		var err error
-		lastState, err = kDeps.List(listOptions)
+		lastState, err = kDeps.List(ctx, listOptions)
 		if err != nil {
 			return true, err
 		}
