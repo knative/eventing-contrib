@@ -19,6 +19,7 @@ limitations under the License.
 package conformance
 
 import (
+	"context"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,7 +32,7 @@ import (
 
 func TestChannelTracingWithReply(t *testing.T) {
 	// Enable this test only for Kafka
-	helpers.ChannelTracingTestHelperWithChannelTestRunner(t, testlib.ComponentsTestRunner{
+	helpers.ChannelTracingTestHelperWithChannelTestRunner(context.Background(), t, testlib.ComponentsTestRunner{
 		ComponentFeatureMap: map[metav1.TypeMeta][]testlib.Feature{
 			{
 				APIVersion: resources.MessagingAPIVersion,
