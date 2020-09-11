@@ -892,8 +892,6 @@ github.com/markbates/inflect v1.0.4/go.mod h1:1fR9+pO2KHEO9ZRtto13gDwwZaAKstQzfe
 github.com/marstr/guid v1.1.0/go.mod h1:74gB1z2wpxxInTG6yaqA7KrtM0NZ+RbrcqDvYHefzho=
 github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb/go.mod h1:1BELzlh859Sh1c6+90blK8lbYy0kwQf1bYlBhBysy1s=
 github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a/go.mod h1:M1qoD/MqPgTZIk0EWKB38wE28ACRfVcn+cU08jyArI0=
-github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea h1:5zKNIWSjeXh/k4+pkGg9l3Ci5AFYVbY5UQLI7GieZ9Y=
-github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea/go.mod h1:AAAGuCEbJjbxvR9CmyxMu/cLFIa9eTRhbOgOaPk+aSk=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcnceauSikq3lYCQ=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
@@ -2015,6 +2013,8 @@ knative.dev/pkg v0.0.0-20200528142800-1c6815d7e4c9/go.mod h1:QgNZTxnwpB/oSpNcfnL
 knative.dev/pkg v0.0.0-20200711004937-22502028e31a/go.mod h1:AqAJV6rYi8IGikDjJ/9ZQd9qKdkXVlesVnVjwx62YB8=
 knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1 h1:YO9A5F0xo6sTeJZyrV9/IIeVNfKqNz9udsWsofe9eQk=
 knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1/go.mod h1:igZfLQk2QpRo+cxbH4NfsgbdavqsXr1rMr818/xVu3c=
+knative.dev/serving v0.17.1-0.20200911183800-3e7b71d67f00 h1:pUe8g6tXbxDYLQoppCTWmfuMGvKUY+HYj6LD4YKcvcE=
+knative.dev/serving v0.17.1-0.20200911183800-3e7b71d67f00/go.mod h1:AAAGuCEbJjbxvR9CmyxMu/cLFIa9eTRhbOgOaPk+aSk=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
 knative.dev/test-infra v0.0.0-20200505052144-5ea2f705bb55/go.mod h1:WqF1Azka+FxPZ20keR2zCNtiQA1MP9ZB4BH4HuI+SIU=
 knative.dev/test-infra v0.0.0-20200513011557-d03429a76034/go.mod h1:aMif0KXL4g19YCYwsy4Ocjjz5xgPlseYV+B95Oo4JGE=

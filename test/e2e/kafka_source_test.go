@@ -19,6 +19,7 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -61,7 +62,7 @@ func testKafkaSource(t *testing.T, name string, version string, messageKey strin
 
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
-	eventTracker, _ := recordevents.StartEventRecordOrFail(client, recordEventPodName)
+	eventTracker, _ := recordevents.StartEventRecordOrFail(context.Background(), client, recordEventPodName)
 
 	var (
 		cloudEventsSourceName string
@@ -94,7 +95,7 @@ func testKafkaSource(t *testing.T, name string, version string, messageKey strin
 		t.Fatalf("Unknown KafkaSource version %s", version)
 	}
 
-	client.WaitForAllTestResourcesReadyOrFail()
+	client.WaitForAllTestResourcesReadyOrFail(context.Background())
 
 	helpers.MustPublishKafkaMessage(client, kafkaBootstrapUrl, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 

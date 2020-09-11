@@ -39,7 +39,7 @@ require (
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0
 	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
-	knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb
+	knative.dev/serving v0.17.1-0.20200911183800-3e7b71d67f00
 	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
 )
 
@@ -56,5 +56,4 @@ replace (
 
 	// TODO(vaikas): DO NOT SUBMIT
 	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
-	knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea
 )

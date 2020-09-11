@@ -1331,7 +1331,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb => github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea
+# knative.dev/serving v0.17.1-0.20200911183800-3e7b71d67f00
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1379,4 +1379,3 @@ sigs.k8s.io/yaml
 # k8s.io/client-go => k8s.io/client-go v0.18.8
 # k8s.io/code-generator => k8s.io/code-generator v0.18.8
 # knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
-# knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea

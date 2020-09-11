@@ -19,6 +19,7 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -26,17 +27,17 @@ import (
 )
 
 func TestSingleBinaryEventForChannelV1Beta1(t *testing.T) {
-	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingBinary, helpers.SubscriptionV1beta1, "", channelTestRunner)
+	helpers.SingleEventForChannelTestHelper(context.Background(), t, cloudevents.EncodingBinary, helpers.SubscriptionV1beta1, "", channelTestRunner)
 }
 
 func TestSingleStructuredEventForChannelV1Beta1(t *testing.T) {
-	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingStructured, helpers.SubscriptionV1beta1, "", channelTestRunner)
+	helpers.SingleEventForChannelTestHelper(context.Background(), t, cloudevents.EncodingStructured, helpers.SubscriptionV1beta1, "", channelTestRunner)
 }
 
 func TestSingleBinaryEventForChannelV1(t *testing.T) {
-	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingBinary, helpers.SubscriptionV1, "", channelTestRunner)
+	helpers.SingleEventForChannelTestHelper(context.Background(), t, cloudevents.EncodingBinary, helpers.SubscriptionV1, "", channelTestRunner)
 }
 
 func TestSingleStructuredEventForChannelV1(t *testing.T) {
-	helpers.SingleEventForChannelTestHelper(t, cloudevents.EncodingStructured, helpers.SubscriptionV1, "", channelTestRunner)
+	helpers.SingleEventForChannelTestHelper(context.Background(), t, cloudevents.EncodingStructured, helpers.SubscriptionV1, "", channelTestRunner)
 }
