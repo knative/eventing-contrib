@@ -167,7 +167,7 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.19.7
 github.com/go-openapi/swag
-# github.com/gobuffalo/envy v1.6.5
+# github.com/gobuffalo/envy v1.7.1
 github.com/gobuffalo/envy
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/gogoproto
@@ -228,7 +228,7 @@ github.com/google/mako/spec/proto/mako_go_proto
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
-# github.com/googleapis/gnostic v0.3.1 => github.com/googleapis/gnostic v0.3.1
+# github.com/googleapis/gnostic v0.4.0 => github.com/googleapis/gnostic v0.3.1
 github.com/googleapis/gnostic/OpenAPIv2
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
@@ -353,6 +353,10 @@ github.com/robfig/cron
 github.com/robfig/cron/v3
 # github.com/rogpeppe/fastuuid v1.2.0
 github.com/rogpeppe/fastuuid
+# github.com/rogpeppe/go-internal v1.5.2
+github.com/rogpeppe/go-internal/modfile
+github.com/rogpeppe/go-internal/module
+github.com/rogpeppe/go-internal/semver
 # github.com/sirupsen/logrus v1.6.0
 github.com/sirupsen/logrus
 # github.com/slinkydeveloper/loadastic v0.0.0-20191203132749-9afe5a010a57
@@ -1249,7 +1253,7 @@ knative.dev/eventing/test/test_images/transformevents
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
-# knative.dev/pkg v0.0.0-20200910010051-a79a813ce123 => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
+# knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -1391,5 +1395,4 @@ sigs.k8s.io/yaml
 # k8s.io/client-go => k8s.io/client-go v0.18.8
 # k8s.io/code-generator => k8s.io/code-generator v0.18.8
 # knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718
-# knative.dev/pkg => github.com/zroubalik/pkg v0.0.0-20200910185112-efc05700095b
 # knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200910224537-1d7dbc21eb39
