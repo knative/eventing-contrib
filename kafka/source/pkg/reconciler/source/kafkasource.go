@@ -191,7 +191,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 	return ra, nil
 }
 
-//deleteReceiveAdapter deletes the reciever adapter deployment if any
+//deleteReceiveAdapter deletes the receiver adapter deployment if any
 func (r *Reconciler) deleteReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource) error {
 	name := utils.GenerateFixedName(src, fmt.Sprintf("kafkasource-%s", src.Name))
 
