@@ -87,7 +87,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, source *v1alpha1.CouchDb
 		}
 	}
 
-	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, source)
+	sinkURI, err := r.sinkResolver.URIFromDestinationV1(ctx, *dest, source)
 	if err != nil {
 		source.Status.MarkNoSink("NotFound", "")
 		return fmt.Errorf("getting sink URI: %v", err)
@@ -129,9 +129,9 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 	}
 	expected := resources.MakeReceiveAdapter(&adapterArgs)
 
-	ra, err := r.kubeClientSet.AppsV1().Deployments(src.Namespace).Get(expected.Name, metav1.GetOptions{})
+	ra, err := r.kubeClientSet.AppsV1().Deployments(src.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Create(expected)
+		ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, couchdbsourceDeploymentCreated, "Deployment created, error: %v", err)
 		return ra, err
 	} else if err != nil {
@@ -140,7 +140,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1alpha1.Cou
 		return nil, fmt.Errorf("deployment %q is not owned by CouchDbSource %q", ra.Name, src.Name)
 	} else if r.podSpecChanged(ra.Spec.Template.Spec, expected.Spec.Template.Spec) {
 		ra.Spec.Template.Spec = expected.Spec.Template.Spec
-		if ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Update(ra); err != nil {
+		if ra, err = r.kubeClientSet.AppsV1().Deployments(src.Namespace).Update(ctx, ra, metav1.UpdateOptions{}); err != nil {
 			return ra, err
 		}
 		controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, couchdbsourceDeploymentUpdated, "Deployment updated")
@@ -173,7 +173,7 @@ func (r *Reconciler) makeEventSource(ctx context.Context, src *v1alpha1.CouchDbS
 		namespace = src.Namespace
 	}
 
-	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(src.Spec.CouchDbCredentials.Name, metav1.GetOptions{})
+	secret, err := r.kubeClientSet.CoreV1().Secrets(namespace).Get(ctx, src.Spec.CouchDbCredentials.Name, metav1.GetOptions{})
 	if err != nil {
 		logging.FromContext(ctx).Errorw("Unable to read CouchDB credentials secret", zap.Error(err))
 		return "", err

@@ -4,8 +4,6 @@ go 1.14
 
 require (
 	github.com/Shopify/sarama v1.27.0
-	github.com/apache/camel-k/pkg/apis/camel v1.1.0
-	github.com/apache/camel-k/pkg/client/camel v1.1.0
 	github.com/aws/aws-sdk-go v1.31.12
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.2.0
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.2.0
@@ -32,17 +30,16 @@ require (
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
-	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.18.7-rc.0
-	k8s.io/apimachinery v0.18.7-rc.0
+	k8s.io/api v0.18.8
+	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0
-	knative.dev/pkg v0.0.0-20200910143251-0761d6b47e4d
-	knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb
+	knative.dev/eventing v0.17.1-0.20200911202500-2a052dbdc2fb
+	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
+	knative.dev/serving v0.17.1-0.20200911183800-3e7b71d67f00
 	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
 )
 
@@ -50,10 +47,10 @@ replace (
 	github.com/Azure/go-autorest/autorest => github.com/Azure/go-autorest/autorest v0.9.6
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.3.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
-	k8s.io/api => k8s.io/api v0.17.6
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.6
-	k8s.io/apimachinery => k8s.io/apimachinery v0.17.6
-	k8s.io/apiserver => k8s.io/apiserver v0.17.6
-	k8s.io/client-go => k8s.io/client-go v0.17.6
-	k8s.io/code-generator => k8s.io/code-generator v0.17.6
+	k8s.io/api => k8s.io/api v0.18.8
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.8
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.8
+	k8s.io/apiserver => k8s.io/apiserver v0.18.8
+	k8s.io/client-go => k8s.io/client-go v0.18.8
+	k8s.io/code-generator => k8s.io/code-generator v0.18.8
 )

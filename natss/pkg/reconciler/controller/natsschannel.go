@@ -174,7 +174,7 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *v1alp
 				logger.Error("Failed to create the channel service object", zap.Error(err))
 				return nil, err
 			}
-			svc, err = r.kubeClientSet.CoreV1().Services(channel.Namespace).Create(svc)
+			svc, err = r.kubeClientSet.CoreV1().Services(channel.Namespace).Create(ctx, svc, metav1.CreateOptions{})
 			if err != nil {
 				logger.Error("Failed to create the channel service", zap.Error(err))
 				return nil, err

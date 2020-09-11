@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,7 +41,7 @@ var githubbindingsResource = schema.GroupVersionResource{Group: "bindings.knativ
 var githubbindingsKind = schema.GroupVersionKind{Group: "bindings.knative.dev", Version: "v1alpha1", Kind: "GitHubBinding"}
 
 // Get takes name of the gitHubBinding, and returns the corresponding gitHubBinding object, and an error if there is any.
-func (c *FakeGitHubBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.GitHubBinding, err error) {
+func (c *FakeGitHubBindings) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GitHubBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(githubbindingsResource, c.ns, name), &v1alpha1.GitHubBinding{})
 
@@ -50,7 +52,7 @@ func (c *FakeGitHubBindings) Get(name string, options v1.GetOptions) (result *v1
 }
 
 // List takes label and field selectors, and returns the list of GitHubBindings that match those selectors.
-func (c *FakeGitHubBindings) List(opts v1.ListOptions) (result *v1alpha1.GitHubBindingList, err error) {
+func (c *FakeGitHubBindings) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GitHubBindingList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(githubbindingsResource, githubbindingsKind, c.ns, opts), &v1alpha1.GitHubBindingList{})
 
@@ -72,14 +74,14 @@ func (c *FakeGitHubBindings) List(opts v1.ListOptions) (result *v1alpha1.GitHubB
 }
 
 // Watch returns a watch.Interface that watches the requested gitHubBindings.
-func (c *FakeGitHubBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeGitHubBindings) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(githubbindingsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gitHubBinding and creates it.  Returns the server's representation of the gitHubBinding, and an error, if there is any.
-func (c *FakeGitHubBindings) Create(gitHubBinding *v1alpha1.GitHubBinding) (result *v1alpha1.GitHubBinding, err error) {
+func (c *FakeGitHubBindings) Create(ctx context.Context, gitHubBinding *v1alpha1.GitHubBinding, opts v1.CreateOptions) (result *v1alpha1.GitHubBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(githubbindingsResource, c.ns, gitHubBinding), &v1alpha1.GitHubBinding{})
 
@@ -90,7 +92,7 @@ func (c *FakeGitHubBindings) Create(gitHubBinding *v1alpha1.GitHubBinding) (resu
 }
 
 // Update takes the representation of a gitHubBinding and updates it. Returns the server's representation of the gitHubBinding, and an error, if there is any.
-func (c *FakeGitHubBindings) Update(gitHubBinding *v1alpha1.GitHubBinding) (result *v1alpha1.GitHubBinding, err error) {
+func (c *FakeGitHubBindings) Update(ctx context.Context, gitHubBinding *v1alpha1.GitHubBinding, opts v1.UpdateOptions) (result *v1alpha1.GitHubBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(githubbindingsResource, c.ns, gitHubBinding), &v1alpha1.GitHubBinding{})
 
@@ -102,7 +104,7 @@ func (c *FakeGitHubBindings) Update(gitHubBinding *v1alpha1.GitHubBinding) (resu
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGitHubBindings) UpdateStatus(gitHubBinding *v1alpha1.GitHubBinding) (*v1alpha1.GitHubBinding, error) {
+func (c *FakeGitHubBindings) UpdateStatus(ctx context.Context, gitHubBinding *v1alpha1.GitHubBinding, opts v1.UpdateOptions) (*v1alpha1.GitHubBinding, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(githubbindingsResource, "status", c.ns, gitHubBinding), &v1alpha1.GitHubBinding{})
 
@@ -113,7 +115,7 @@ func (c *FakeGitHubBindings) UpdateStatus(gitHubBinding *v1alpha1.GitHubBinding)
 }
 
 // Delete takes name of the gitHubBinding and deletes it. Returns an error if one occurs.
-func (c *FakeGitHubBindings) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeGitHubBindings) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(githubbindingsResource, c.ns, name), &v1alpha1.GitHubBinding{})
 
@@ -121,15 +123,15 @@ func (c *FakeGitHubBindings) Delete(name string, options *v1.DeleteOptions) erro
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeGitHubBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(githubbindingsResource, c.ns, listOptions)
+func (c *FakeGitHubBindings) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(githubbindingsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.GitHubBindingList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gitHubBinding.
-func (c *FakeGitHubBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GitHubBinding, err error) {
+func (c *FakeGitHubBindings) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GitHubBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(githubbindingsResource, c.ns, name, pt, data, subresources...), &v1alpha1.GitHubBinding{})
 

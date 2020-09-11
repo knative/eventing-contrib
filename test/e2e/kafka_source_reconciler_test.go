@@ -19,6 +19,7 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -84,7 +85,7 @@ func TestKafkaSourceReconciler(t *testing.T) {
 func testKafkaSourceReconciler(c *testlib.Client, name string, doAction func(c *testlib.Client), expectedStatuses sets.String, wantRADepCount int) {
 	doAction(c)
 
-	if err := helpers.CheckKafkaSourceState(c, rtKafkaSourceName, func(ks *sourcesv1beta1.KafkaSource) (bool, error) {
+	if err := helpers.CheckKafkaSourceState(context.Background(), c, rtKafkaSourceName, func(ks *sourcesv1beta1.KafkaSource) (bool, error) {
 		ready := ks.Status.GetCondition(apis.ConditionReady)
 		if ready != nil {
 			if expectedStatuses.Has(ready.Reason) {
@@ -96,7 +97,7 @@ func testKafkaSourceReconciler(c *testlib.Client, name string, doAction func(c *
 		c.T.Fatalf("Failed to validate kafkasource state, expected status : %v, err : %v", expectedStatuses.UnsortedList(), err)
 	}
 
-	if err := helpers.CheckRADeployment(c, rtKafkaSourceName, func(deps *appsv1.DeploymentList) (bool, error) {
+	if err := helpers.CheckRADeployment(context.Background(), c, rtKafkaSourceName, func(deps *appsv1.DeploymentList) (bool, error) {
 		if len(deps.Items) == wantRADepCount {
 			return true, nil
 		}
@@ -123,9 +124,9 @@ func createChannel(c *testlib.Client) {
 		APIVersion: resources.MessagingAPIVersion,
 		Kind:       resources.InMemoryChannelKind,
 	})
-	c.WaitForAllTestResourcesReadyOrFail()
+	c.WaitForAllTestResourcesReadyOrFail(context.Background())
 }
 
 func deleteChannel(c *testlib.Client) {
-	contribtestlib.DeleteResourceOrFail(c, rtChannelName, helpers.ImcGVR)
+	contribtestlib.DeleteResourceOrFail(context.Background(), c, rtChannelName, helpers.ImcGVR)
 }

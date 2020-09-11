@@ -17,6 +17,8 @@ limitations under the License.
 package setupclientoptions
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 
 	"knative.dev/eventing-contrib/test/e2e/helpers"
@@ -42,7 +44,7 @@ func KafkaSourceV1B1ClientSetupOption(name string, kafkaClusterName string, kafk
 
 		helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
-		recordevents.StartEventRecordOrFail(client, recordEventsPodName)
+		recordevents.StartEventRecordOrFail(context.Background(), client, recordEventsPodName)
 
 		contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
 			kafkaBootstrapUrl,
@@ -52,6 +54,6 @@ func KafkaSourceV1B1ClientSetupOption(name string, kafkaClusterName string, kafk
 			contribresources.WithConsumerGroupV1Beta1(consumerGroup),
 		))
 
-		client.WaitForAllTestResourcesReadyOrFail()
+		client.WaitForAllTestResourcesReadyOrFail(context.Background())
 	}
 }

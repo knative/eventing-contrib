@@ -19,6 +19,7 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
 	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/test"
@@ -45,7 +46,7 @@ func testKafkaBinding(t *testing.T, version string, messageKey string, messageHe
 	helpers.MustCreateTopic(client, kafkaClusterName, kafkaClusterNamespace, kafkaTopicName)
 
 	t.Logf("Creating EventRecord")
-	eventTracker, _ := recordevents.StartEventRecordOrFail(client, loggerPodName)
+	eventTracker, _ := recordevents.StartEventRecordOrFail(context.Background(), client, loggerPodName)
 
 	t.Logf("Creating KafkaSource %s", version)
 	switch version {
@@ -96,7 +97,7 @@ func testKafkaBinding(t *testing.T, version string, messageKey string, messageHe
 		t.Fatalf("Unknown KafkaSource version %s", version)
 	}
 
-	client.WaitForAllTestResourcesReadyOrFail()
+	client.WaitForAllTestResourcesReadyOrFail(context.Background())
 
 	helpers.MustPublishKafkaMessageViaBinding(client, selector, kafkaTopicName, messageKey, messageHeaders, messagePayload)
 

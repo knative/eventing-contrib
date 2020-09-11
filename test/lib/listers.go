@@ -20,7 +20,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
-	fakesourcesclientset "knative.dev/eventing-contrib/camel/source/pkg/client/clientset/versioned/fake"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 
@@ -76,13 +75,8 @@ func (l Listers) GetEventingObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
 }
 
-func (l Listers) GetSourcesObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakesourcesclientset.AddToScheme)
-}
-
 func (l Listers) GetAllObjects() []runtime.Object {
-	all := l.GetSourcesObjects()
-	all = append(all, l.GetEventingObjects()...)
+	all := l.GetEventingObjects()
 	all = append(all, l.GetKubeObjects()...)
 	return all
 }

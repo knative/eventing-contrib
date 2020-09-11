@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,7 +41,7 @@ var kafkasourcesResource = schema.GroupVersionResource{Group: "sources.knative.d
 var kafkasourcesKind = schema.GroupVersionKind{Group: "sources.knative.dev", Version: "v1alpha1", Kind: "KafkaSource"}
 
 // Get takes name of the kafkaSource, and returns the corresponding kafkaSource object, and an error if there is any.
-func (c *FakeKafkaSources) Get(name string, options v1.GetOptions) (result *v1alpha1.KafkaSource, err error) {
+func (c *FakeKafkaSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.KafkaSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(kafkasourcesResource, c.ns, name), &v1alpha1.KafkaSource{})
 
@@ -50,7 +52,7 @@ func (c *FakeKafkaSources) Get(name string, options v1.GetOptions) (result *v1al
 }
 
 // List takes label and field selectors, and returns the list of KafkaSources that match those selectors.
-func (c *FakeKafkaSources) List(opts v1.ListOptions) (result *v1alpha1.KafkaSourceList, err error) {
+func (c *FakeKafkaSources) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.KafkaSourceList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(kafkasourcesResource, kafkasourcesKind, c.ns, opts), &v1alpha1.KafkaSourceList{})
 
@@ -72,14 +74,14 @@ func (c *FakeKafkaSources) List(opts v1.ListOptions) (result *v1alpha1.KafkaSour
 }
 
 // Watch returns a watch.Interface that watches the requested kafkaSources.
-func (c *FakeKafkaSources) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeKafkaSources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(kafkasourcesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a kafkaSource and creates it.  Returns the server's representation of the kafkaSource, and an error, if there is any.
-func (c *FakeKafkaSources) Create(kafkaSource *v1alpha1.KafkaSource) (result *v1alpha1.KafkaSource, err error) {
+func (c *FakeKafkaSources) Create(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.CreateOptions) (result *v1alpha1.KafkaSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(kafkasourcesResource, c.ns, kafkaSource), &v1alpha1.KafkaSource{})
 
@@ -90,7 +92,7 @@ func (c *FakeKafkaSources) Create(kafkaSource *v1alpha1.KafkaSource) (result *v1
 }
 
 // Update takes the representation of a kafkaSource and updates it. Returns the server's representation of the kafkaSource, and an error, if there is any.
-func (c *FakeKafkaSources) Update(kafkaSource *v1alpha1.KafkaSource) (result *v1alpha1.KafkaSource, err error) {
+func (c *FakeKafkaSources) Update(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.UpdateOptions) (result *v1alpha1.KafkaSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(kafkasourcesResource, c.ns, kafkaSource), &v1alpha1.KafkaSource{})
 
@@ -102,7 +104,7 @@ func (c *FakeKafkaSources) Update(kafkaSource *v1alpha1.KafkaSource) (result *v1
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeKafkaSources) UpdateStatus(kafkaSource *v1alpha1.KafkaSource) (*v1alpha1.KafkaSource, error) {
+func (c *FakeKafkaSources) UpdateStatus(ctx context.Context, kafkaSource *v1alpha1.KafkaSource, opts v1.UpdateOptions) (*v1alpha1.KafkaSource, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(kafkasourcesResource, "status", c.ns, kafkaSource), &v1alpha1.KafkaSource{})
 
@@ -113,7 +115,7 @@ func (c *FakeKafkaSources) UpdateStatus(kafkaSource *v1alpha1.KafkaSource) (*v1a
 }
 
 // Delete takes name of the kafkaSource and deletes it. Returns an error if one occurs.
-func (c *FakeKafkaSources) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeKafkaSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(kafkasourcesResource, c.ns, name), &v1alpha1.KafkaSource{})
 
@@ -121,15 +123,15 @@ func (c *FakeKafkaSources) Delete(name string, options *v1.DeleteOptions) error 
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeKafkaSources) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(kafkasourcesResource, c.ns, listOptions)
+func (c *FakeKafkaSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(kafkasourcesResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.KafkaSourceList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched kafkaSource.
-func (c *FakeKafkaSources) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.KafkaSource, err error) {
+func (c *FakeKafkaSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.KafkaSource, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(kafkasourcesResource, c.ns, name, pt, data, subresources...), &v1alpha1.KafkaSource{})
 

@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,7 +41,7 @@ var gitlabbindingsResource = schema.GroupVersionResource{Group: "bindings.knativ
 var gitlabbindingsKind = schema.GroupVersionKind{Group: "bindings.knative.dev", Version: "v1alpha1", Kind: "GitLabBinding"}
 
 // Get takes name of the gitLabBinding, and returns the corresponding gitLabBinding object, and an error if there is any.
-func (c *FakeGitLabBindings) Get(name string, options v1.GetOptions) (result *v1alpha1.GitLabBinding, err error) {
+func (c *FakeGitLabBindings) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GitLabBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(gitlabbindingsResource, c.ns, name), &v1alpha1.GitLabBinding{})
 
@@ -50,7 +52,7 @@ func (c *FakeGitLabBindings) Get(name string, options v1.GetOptions) (result *v1
 }
 
 // List takes label and field selectors, and returns the list of GitLabBindings that match those selectors.
-func (c *FakeGitLabBindings) List(opts v1.ListOptions) (result *v1alpha1.GitLabBindingList, err error) {
+func (c *FakeGitLabBindings) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GitLabBindingList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(gitlabbindingsResource, gitlabbindingsKind, c.ns, opts), &v1alpha1.GitLabBindingList{})
 
@@ -72,14 +74,14 @@ func (c *FakeGitLabBindings) List(opts v1.ListOptions) (result *v1alpha1.GitLabB
 }
 
 // Watch returns a watch.Interface that watches the requested gitLabBindings.
-func (c *FakeGitLabBindings) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeGitLabBindings) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(gitlabbindingsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gitLabBinding and creates it.  Returns the server's representation of the gitLabBinding, and an error, if there is any.
-func (c *FakeGitLabBindings) Create(gitLabBinding *v1alpha1.GitLabBinding) (result *v1alpha1.GitLabBinding, err error) {
+func (c *FakeGitLabBindings) Create(ctx context.Context, gitLabBinding *v1alpha1.GitLabBinding, opts v1.CreateOptions) (result *v1alpha1.GitLabBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(gitlabbindingsResource, c.ns, gitLabBinding), &v1alpha1.GitLabBinding{})
 
@@ -90,7 +92,7 @@ func (c *FakeGitLabBindings) Create(gitLabBinding *v1alpha1.GitLabBinding) (resu
 }
 
 // Update takes the representation of a gitLabBinding and updates it. Returns the server's representation of the gitLabBinding, and an error, if there is any.
-func (c *FakeGitLabBindings) Update(gitLabBinding *v1alpha1.GitLabBinding) (result *v1alpha1.GitLabBinding, err error) {
+func (c *FakeGitLabBindings) Update(ctx context.Context, gitLabBinding *v1alpha1.GitLabBinding, opts v1.UpdateOptions) (result *v1alpha1.GitLabBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(gitlabbindingsResource, c.ns, gitLabBinding), &v1alpha1.GitLabBinding{})
 
@@ -102,7 +104,7 @@ func (c *FakeGitLabBindings) Update(gitLabBinding *v1alpha1.GitLabBinding) (resu
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGitLabBindings) UpdateStatus(gitLabBinding *v1alpha1.GitLabBinding) (*v1alpha1.GitLabBinding, error) {
+func (c *FakeGitLabBindings) UpdateStatus(ctx context.Context, gitLabBinding *v1alpha1.GitLabBinding, opts v1.UpdateOptions) (*v1alpha1.GitLabBinding, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(gitlabbindingsResource, "status", c.ns, gitLabBinding), &v1alpha1.GitLabBinding{})
 
@@ -113,7 +115,7 @@ func (c *FakeGitLabBindings) UpdateStatus(gitLabBinding *v1alpha1.GitLabBinding)
 }
 
 // Delete takes name of the gitLabBinding and deletes it. Returns an error if one occurs.
-func (c *FakeGitLabBindings) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeGitLabBindings) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(gitlabbindingsResource, c.ns, name), &v1alpha1.GitLabBinding{})
 
@@ -121,15 +123,15 @@ func (c *FakeGitLabBindings) Delete(name string, options *v1.DeleteOptions) erro
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeGitLabBindings) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(gitlabbindingsResource, c.ns, listOptions)
+func (c *FakeGitLabBindings) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(gitlabbindingsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.GitLabBindingList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gitLabBinding.
-func (c *FakeGitLabBindings) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GitLabBinding, err error) {
+func (c *FakeGitLabBindings) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GitLabBinding, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(gitlabbindingsResource, c.ns, name, pt, data, subresources...), &v1alpha1.GitLabBinding{})
 
