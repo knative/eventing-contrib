@@ -87,12 +87,6 @@ func addToScheme(funcs ...func(*runtime.Scheme) error) {
 
 func TestReconcile(t *testing.T) {
 	key := testNS + "/" + sourceName
-	sink := &corev1.ObjectReference{
-		Kind:       addressableKind,
-		Namespace:  testNS,
-		Name:       addressableName,
-		APIVersion: addressableAPIVersion,
-	}
 
 	table := TableTest{{
 		Name: "bad workqueue key",
