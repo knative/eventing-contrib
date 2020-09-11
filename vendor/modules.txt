@@ -36,22 +36,6 @@ github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d
 github.com/alecthomas/units
-# github.com/apache/camel-k/pkg/apis/camel v1.1.0
-## explicit
-github.com/apache/camel-k/pkg/apis/camel/v1
-github.com/apache/camel-k/pkg/apis/camel/v1/knative
-# github.com/apache/camel-k/pkg/client/camel v1.1.0
-## explicit
-github.com/apache/camel-k/pkg/client/camel/clientset/versioned
-github.com/apache/camel-k/pkg/client/camel/clientset/versioned/fake
-github.com/apache/camel-k/pkg/client/camel/clientset/versioned/scheme
-github.com/apache/camel-k/pkg/client/camel/clientset/versioned/typed/camel/v1
-github.com/apache/camel-k/pkg/client/camel/clientset/versioned/typed/camel/v1/fake
-github.com/apache/camel-k/pkg/client/camel/informers/externalversions
-github.com/apache/camel-k/pkg/client/camel/informers/externalversions/camel
-github.com/apache/camel-k/pkg/client/camel/informers/externalversions/camel/v1
-github.com/apache/camel-k/pkg/client/camel/informers/externalversions/internalinterfaces
-github.com/apache/camel-k/pkg/client/camel/listers/camel/v1
 # github.com/aws/aws-sdk-go v1.31.12
 ## explicit
 github.com/aws/aws-sdk-go/aws
@@ -699,7 +683,6 @@ gopkg.in/jcmturner/gokrb5.v7/types
 gopkg.in/jcmturner/rpc.v1/mstypes
 gopkg.in/jcmturner/rpc.v1/ndr
 # gopkg.in/yaml.v2 v2.3.0
-## explicit
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20200601152816-913338de1bd2
 gopkg.in/yaml.v3
