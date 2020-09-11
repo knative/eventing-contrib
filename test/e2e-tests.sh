@@ -38,6 +38,7 @@ fi
 # Eventing main config path from HEAD.
 readonly EVENTING_CONFIG="./config/"
 readonly EVENTING_MT_CHANNEL_BROKER_CONFIG="./config/brokers/mt-channel-broker"
+readonly EVENTING_IN_MEMORY_CHANNEL_CONFIG="./config/channels/in-memory-channel"
 
 # Vendored eventing test iamges.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -89,6 +90,8 @@ function knative_setup() {
     ko apply -f ${EVENTING_CONFIG}
     # Install MT Channel Based Broker
     ko apply -f ${EVENTING_MT_CHANNEL_BROKER_CONFIG}
+    # Install IMC
+    ko apply -f ${EVENTING_IN_MEMORY_CHANNEL_CONFIG}
     popd
   fi
   wait_until_pods_running knative-eventing || fail_test "Knative Eventing did not come up"

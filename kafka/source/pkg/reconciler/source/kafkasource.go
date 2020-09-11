@@ -29,6 +29,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/reconciler/source"
+	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -112,6 +113,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, src *v1beta1.KafkaSource
 	sinkURI, err := r.sinkResolver.URIFromDestinationV1(*dest, src)
 	if err != nil {
 		src.Status.MarkNoSink("NotFound", "")
+		//delete adapter deployment if sink not found
+		if err := r.deleteReceiveAdapter(ctx, src); err != nil && !apierrors.IsNotFound(err) {
+			logging.FromContext(ctx).Error("Unable to delete receiver adapter when sink is missing", zap.Error(err))
+		}
 		return fmt.Errorf("getting sink URI: %v", err)
 	}
 	src.Status.MarkSink(sinkURI)
@@ -184,6 +189,13 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 		logging.FromContext(ctx).Debug("Reusing existing receive adapter", zap.Any("receiveAdapter", ra))
 	}
 	return ra, nil
+}
+
+//deleteReceiveAdapter deletes the reciever adapter deployment if any
+func (r *Reconciler) deleteReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource) error {
+	name := utils.GenerateFixedName(src, fmt.Sprintf("kafkasource-%s", src.Name))
+
+	return r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(name, &metav1.DeleteOptions{})
 }
 
 func podSpecChanged(oldPodSpec corev1.PodSpec, newPodSpec corev1.PodSpec) bool {

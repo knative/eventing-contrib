@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/davecgh/go-spew/spew"
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -33,16 +34,22 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	testlib "knative.dev/eventing/test/lib"
 	pkgtest "knative.dev/pkg/test"
+
+	sourcesv1beta1 "knative.dev/eventing-contrib/kafka/source/pkg/apis/sources/v1beta1"
+	kafkaclientset "knative.dev/eventing-contrib/kafka/source/pkg/client/clientset/versioned"
 )
 
 const (
 	strimziApiGroup      = "kafka.strimzi.io"
 	strimziApiVersion    = "v1beta1"
 	strimziTopicResource = "kafkatopics"
+	interval             = 3 * time.Second
+	timeout              = 30 * time.Second
 )
 
 var (
 	topicGVR = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
+	ImcGVR   = schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1beta1", Resource: "inmemorychannels"}
 )
 
 func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {
@@ -231,4 +238,49 @@ func MustCreateTopic(client *testlib.Client, clusterName string, clusterNamespac
 	}
 
 	client.Tracker.Add(topicGVR.Group, topicGVR.Version, topicGVR.Resource, clusterNamespace, topicName)
+}
+
+//CheckKafkaSourceState waits for specified kafka source resource state
+//On timeout reports error
+func CheckKafkaSourceState(c *testlib.Client, name string, inState func(ks *sourcesv1beta1.KafkaSource) (bool, error)) error {
+	kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
+	if err != nil {
+		return err
+	}
+	kSources := kafkaSourceClientSet.SourcesV1beta1().KafkaSources(c.Namespace)
+	var lastState *sourcesv1beta1.KafkaSource
+	waitErr := wait.PollImmediate(interval, timeout, func() (bool, error) {
+		var err error
+		lastState, err = kSources.Get(name, metav1.GetOptions{})
+		if err != nil {
+			return true, err
+		}
+		return inState(lastState)
+	})
+	if waitErr != nil {
+		return fmt.Errorf("kafkasource %q is not in desired state, got: %+v: %w", name, lastState, waitErr)
+	}
+	return nil
+}
+
+//CheckRADeployment waits for desired state of receiver adapter
+//On timeout reports error
+func CheckRADeployment(c *testlib.Client, name string, inState func(deps *appsv1.DeploymentList) (bool, error)) error {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", "eventing.knative.dev/SourceName", name),
+	}
+	kDeps := c.Kube.Kube.AppsV1().Deployments(c.Namespace)
+	var lastState *appsv1.DeploymentList
+	waitErr := wait.PollImmediate(interval, timeout, func() (bool, error) {
+		var err error
+		lastState, err = kDeps.List(listOptions)
+		if err != nil {
+			return true, err
+		}
+		return inState(lastState)
+	})
+	if waitErr != nil {
+		return fmt.Errorf("receiver adapter deployments %q is not in desired state, got: %+v: %w", name, lastState, waitErr)
+	}
+	return nil
 }
