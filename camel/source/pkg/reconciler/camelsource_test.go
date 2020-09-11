@@ -87,12 +87,6 @@ func addToScheme(funcs ...func(*runtime.Scheme) error) {
 
 func TestReconcile(t *testing.T) {
 	key := testNS + "/" + sourceName
-	sink := &corev1.ObjectReference{
-		Kind:       addressableKind,
-		Namespace:  testNS,
-		Name:       addressableName,
-		APIVersion: addressableAPIVersion,
-	}
 
 	table := TableTest{{
 		Name: "bad workqueue key",
@@ -123,7 +117,7 @@ func TestReconcile(t *testing.T) {
 		}},
 		WantErr: true,
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "InternalError", `failed to get ref %s: addressables.duck.knative.dev "testsink" not found`, sink),
+			Eventf(corev1.EventTypeWarning, "InternalError", `addressables.duck.knative.dev "testsink" not found`),
 		},
 	}, {
 		Name: "Creating integration",
