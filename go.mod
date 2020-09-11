@@ -37,7 +37,7 @@ require (
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0
+	knative.dev/eventing v0.17.1-0.20200911202500-2a052dbdc2fb
 	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
 	knative.dev/serving v0.17.1-0.20200911183800-3e7b71d67f00
 	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
@@ -53,7 +53,4 @@ replace (
 	k8s.io/apiserver => k8s.io/apiserver v0.18.8
 	k8s.io/client-go => k8s.io/client-go v0.18.8
 	k8s.io/code-generator => k8s.io/code-generator v0.18.8
-
-	// TODO(vaikas): DO NOT SUBMIT
-	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
 )

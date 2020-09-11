@@ -1302,8 +1302,6 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43/go.mod h1:aX5oPXxHm3bOH+xeAttToC8pqch2ScQN/JoXYupl6xs=
 github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPSUX/bi6SeDMUh6brw0nXpxHnc96TguQh0+r/ssA=
 github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
-github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2 h1:rO2MLLX86TMcoYds7S71MT1QLxXYMCENNRgnZ8XfL7M=
-github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2/go.mod h1:pxbDBeBHhF2o5UINkB45nL0ECx29h5RklkKlHCWeel8=
 gitlab.com/flimzy/testy v0.0.0-20190816103046-aca1ef5ffe7e/go.mod h1:MQwjgAyueIbBZv+qSYAMs6LaZwsJysPs0BK/niv9JiI=
 gitlab.com/flimzy/testy v0.0.2/go.mod h1:YObF4cq711ubd/3U0ydRQQVz7Cnq/ChgJpVwNr/AJac=
 gitlab.com/flimzy/testy v0.0.3/go.mod h1:YObF4cq711ubd/3U0ydRQQVz7Cnq/ChgJpVwNr/AJac=
@@ -1997,6 +1995,8 @@ k8s.io/utils v0.0.0-20200603063816-c1c6865ac451/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 knative.dev/caching v0.0.0-20190719140829-2032732871ff/go.mod h1:dHXFU6CGlLlbzaWc32g80cR92iuBSpsslDNBWI8C7eg=
 knative.dev/caching v0.0.0-20200116200605-67bca2c83dfa/go.mod h1:dHXFU6CGlLlbzaWc32g80cR92iuBSpsslDNBWI8C7eg=
 knative.dev/caching v0.0.0-20200911153201-58627457dc58/go.mod h1:P5WXVMZ8HDtt1mTmtlT8/tULj/v4JPZGaz7v5PKl7vc=
+knative.dev/eventing v0.17.1-0.20200911202500-2a052dbdc2fb h1:1BlehML3J2zMgeE5TA5IrIc1adKTOOD1/fht6kyTNSA=
+knative.dev/eventing v0.17.1-0.20200911202500-2a052dbdc2fb/go.mod h1:aa/wrnpX6Xa+sdVUso9K//0j8rvrAjURSkMzvvt4Vuo=
 knative.dev/eventing-contrib v0.6.1-0.20190723221543-5ce18048c08b/go.mod h1:SnXZgSGgMSMLNFTwTnpaOH7hXDzTFtw0J8OmHflNx3g=
 knative.dev/eventing-contrib v0.6.1-0.20190723221543-5ce18048c08b/go.mod h1:SnXZgSGgMSMLNFTwTnpaOH7hXDzTFtw0J8OmHflNx3g=
 knative.dev/eventing-contrib v0.6.1-0.20190723221543-5ce18048c08b/go.mod h1:SnXZgSGgMSMLNFTwTnpaOH7hXDzTFtw0J8OmHflNx3g=

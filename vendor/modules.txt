@@ -1107,7 +1107,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0 => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
+# knative.dev/eventing v0.17.1-0.20200911202500-2a052dbdc2fb
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1378,4 +1378,3 @@ sigs.k8s.io/yaml
 # k8s.io/apiserver => k8s.io/apiserver v0.18.8
 # k8s.io/client-go => k8s.io/client-go v0.18.8
 # k8s.io/code-generator => k8s.io/code-generator v0.18.8
-# knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
