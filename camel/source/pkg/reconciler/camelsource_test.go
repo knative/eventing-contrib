@@ -123,7 +123,7 @@ func TestReconcile(t *testing.T) {
 		}},
 		WantErr: true,
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "InternalError", `failed to get ref %s: addressables.duck.knative.dev "testsink" not found`, sink),
+			Eventf(corev1.EventTypeWarning, "InternalError", `addressables.duck.knative.dev "testsink" not found`),
 		},
 	}, {
 		Name: "Creating integration",
