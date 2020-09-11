@@ -187,7 +187,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-containerregistry v0.1.2-0.20200717224239-a84993334b27
+# github.com/google/go-containerregistry v0.1.3-0.20200910230023-d42b6a2ddfd1
 github.com/google/go-containerregistry/pkg/name
 # github.com/google/go-github/v27 v27.0.6
 github.com/google/go-github/v27/github
@@ -427,7 +427,7 @@ golang.org/x/lint/golint
 # golang.org/x/mod v0.3.0
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20200707034311-ab3426394381
+# golang.org/x/net v0.0.0-20200822124328-c89045814202
 ## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -465,7 +465,7 @@ golang.org/x/text/unicode/norm
 golang.org/x/text/width
 # golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20200731060945-b5fad4ed8dd6
+# golang.org/x/tools v0.0.0-20200910222312-571a207697e7
 golang.org/x/tools/cmd/goimports
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/inspect
@@ -490,9 +490,10 @@ golang.org/x/tools/internal/fastwalk
 golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
+golang.org/x/tools/internal/lsp/fuzzy
 golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/typesinternal
-# golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
 # gomodules.xyz/jsonpatch/v2 v2.1.0
@@ -686,7 +687,7 @@ gopkg.in/jcmturner/rpc.v1/ndr
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20200601152816-913338de1bd2
 gopkg.in/yaml.v3
-# honnef.co/go/tools v0.0.1-2020.1.4
+# honnef.co/go/tools v0.0.1-2020.1.5
 honnef.co/go/tools/arg
 honnef.co/go/tools/cmd/staticcheck
 honnef.co/go/tools/code
@@ -1106,7 +1107,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.17.1-0.20200908151032-5fdaa0605d87 => github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718
+# knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0 => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
 ## explicit
 knative.dev/eventing/pkg/adapter/v2
 knative.dev/eventing/pkg/adapter/v2/test
@@ -1232,7 +1233,7 @@ knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
 knative.dev/eventing/test/test_images/sequencestepper
 knative.dev/eventing/test/test_images/transformevents
-# knative.dev/networking v0.0.0-20200910005051-91f8ce8c55f7
+# knative.dev/networking v0.0.0-20200911160100-731bfc03416d
 knative.dev/networking/pkg
 knative.dev/networking/pkg/apis/networking
 knative.dev/networking/pkg/apis/networking/v1alpha1
@@ -1330,7 +1331,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/serving v0.17.1-0.20200908232550-482b183b99db => github.com/mattmoor/serving v0.1.1-0.20200910224537-1d7dbc21eb39
+# knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb => github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea
 ## explicit
 knative.dev/serving/pkg/apis/autoscaling
 knative.dev/serving/pkg/apis/autoscaling/v1alpha1
@@ -1377,5 +1378,5 @@ sigs.k8s.io/yaml
 # k8s.io/apiserver => k8s.io/apiserver v0.18.8
 # k8s.io/client-go => k8s.io/client-go v0.18.8
 # k8s.io/code-generator => k8s.io/code-generator v0.18.8
-# knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718
-# knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200910224537-1d7dbc21eb39
+# knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
+# knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea

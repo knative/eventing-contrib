@@ -30,7 +30,7 @@ require (
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	k8s.io/api v0.18.8
@@ -38,13 +38,9 @@ require (
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
 	knative.dev/eventing v0.17.1-0.20200911130100-1fec6b5212c0
+	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
 	knative.dev/serving v0.17.1-0.20200910185451-e82b666ecbbb
 	knative.dev/test-infra v0.0.0-20200910231400-cfba2288403d
-	knative.dev/pkg 2d4efecc6bc1bd495166100917fe52fd7d738fb0
-	knative.dev/eventing v0.17.1-0.20200908151032-5fdaa0605d87
-	knative.dev/pkg v0.0.0-20200911145400-2d4efecc6bc1
-	knative.dev/serving v0.17.1-0.20200908232550-482b183b99db
-	knative.dev/test-infra v0.0.0-20200909211651-72eb6ae3c773
 )
 
 replace (
@@ -57,8 +53,8 @@ replace (
 	k8s.io/apiserver => k8s.io/apiserver v0.18.8
 	k8s.io/client-go => k8s.io/client-go v0.18.8
 	k8s.io/code-generator => k8s.io/code-generator v0.18.8
-	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200910120552-38c9fe3cb718
 
 	// TODO(vaikas): DO NOT SUBMIT
-	knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200910224537-1d7dbc21eb39
+	knative.dev/eventing => github.com/zroubalik/eventing v0.15.1-0.20200911181407-b43add2031b2
+	knative.dev/serving => github.com/mattmoor/serving v0.1.1-0.20200911163540-e38be9dd86ea
 )

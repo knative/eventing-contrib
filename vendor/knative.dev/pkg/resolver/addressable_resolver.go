@@ -163,9 +163,7 @@ func (r *URIResolver) URIFromObjectReference(ctx context.Context, ref *corev1.Ob
 		return url, nil
 	}
 
-	gvr, _ := meta.UnsafeGuessKindToResource(ref.GroupVersionKind())
 	_, lister, err := r.informerFactory.Get(ctx, gvr)
-
 	if err != nil {
 		return nil, apierrs.NewNotFound(gvr.GroupResource(), "Lister")
 	}
