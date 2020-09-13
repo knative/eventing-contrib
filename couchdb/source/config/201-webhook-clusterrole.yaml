@@ -58,7 +58,7 @@ rules:
       - "admissionregistration.k8s.io"
     resources:
       - "mutatingwebhookconfigurations"
-    verbs:
+    verbs: &everything
       - "get"
       - "list"
       - "create"
@@ -77,3 +77,10 @@ rules:
       - "get"
       - "list"
       - "watch"
+
+  # For leader election
+  - apiGroups:
+      - "coordination.k8s.io"
+    resources:
+      - "leases"
+    verbs: *everything
