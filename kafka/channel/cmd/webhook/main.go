@@ -18,12 +18,11 @@ package main
 import (
 	"context"
 
-	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging"
 	"knative.dev/pkg/webhook/resourcesemantics/conversion"
 
+	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	messagingv1alpha1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
-	messagingv1beta1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing/pkg/logconfig"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -34,6 +33,9 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
+
+	messagingv1alpha1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
 )
 
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
@@ -123,7 +125,7 @@ func main() {
 	// Set up a signal context with our webhook options
 	ctx := webhook.WithOptions(signals.NewContext(), webhook.Options{
 		ServiceName: logconfig.WebhookName(),
-		Port:        8443,
+		Port:        webhook.PortFromEnv(8443),
 		SecretName:  "messaging-webhook-certs",
 	})
 
