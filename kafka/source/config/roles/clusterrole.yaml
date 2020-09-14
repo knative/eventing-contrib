@@ -99,6 +99,7 @@ rules:
   - watch
   - patch
 
+  # For leader election
 - apiGroups:
   - "coordination.k8s.io"
   resources:
