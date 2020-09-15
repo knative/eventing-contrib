@@ -80,7 +80,6 @@ rules:
   - pods
   - services
   - endpoints
-  - persistentvolumeclaims
   - events
   - configmaps
   - secrets
