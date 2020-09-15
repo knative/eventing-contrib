@@ -191,9 +191,6 @@ github.com/google/go-cmp/cmp/internal/value
 github.com/google/go-containerregistry/pkg/name
 # github.com/google/go-github/v27 v27.0.6
 github.com/google/go-github/v27/github
-# github.com/google/go-github/v31 v31.0.0
-## explicit
-github.com/google/go-github/v31/github
 # github.com/google/go-querystring v1.0.0
 github.com/google/go-querystring/query
 # github.com/google/gofuzz v1.1.0
@@ -442,7 +439,6 @@ golang.org/x/net/proxy
 golang.org/x/net/publicsuffix
 golang.org/x/net/trace
 # golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-## explicit
 golang.org/x/oauth2
 golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
@@ -641,7 +637,6 @@ google.golang.org/protobuf/types/pluginpb
 gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/go-playground/webhooks.v5 v5.13.0
 ## explicit
-gopkg.in/go-playground/webhooks.v5/github
 gopkg.in/go-playground/webhooks.v5/gitlab
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
