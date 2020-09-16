@@ -40,7 +40,6 @@ import (
 	contribresources "knative.dev/eventing-contrib/test/lib/resources"
 )
 
-// This test take for granted that the kafka cluster already exists together with the test-topic topic
 const (
 	kafkaBootstrapUrl     = "my-cluster-kafka-bootstrap.kafka.svc:9092"
 	kafkaClusterName      = "my-cluster"
