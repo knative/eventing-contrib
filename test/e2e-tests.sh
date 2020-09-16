@@ -59,7 +59,6 @@ readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-o
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp)"
 # Kafka cluster CR config file.
 readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-2.5.0.yaml"
-readonly KAFKA_TOPIC_INSTALLATION_CONFIG="test/config/100-kafka-topic.yaml"
 # Kafka cluster URL for our installation
 readonly KAFKA_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka:9092"
 # Kafka channel CRD config template directory.
@@ -219,13 +218,11 @@ function kafka_setup() {
   sed 's/namespace: .*/namespace: kafka/' ${STRIMZI_INSTALLATION_CONFIG_TEMPLATE} > ${STRIMZI_INSTALLATION_CONFIG}
   kubectl apply -f "${STRIMZI_INSTALLATION_CONFIG}" -n kafka
   kubectl apply -f ${KAFKA_INSTALLATION_CONFIG} -n kafka
-  # kubectl apply -f ${KAFKA_TOPIC_INSTALLATION_CONFIG} -n kafka
   wait_until_pods_running kafka || fail_test "Failed to start up a Kafka cluster"
 }
 
 function kafka_teardown() {
   echo "Uninstalling Kafka cluster"
-  kubectl delete -f ${KAFKA_TOPIC_INSTALLATION_CONFIG} -n kafka
   kubectl delete -f ${KAFKA_INSTALLATION_CONFIG} -n kafka
   kubectl delete -f "${STRIMZI_INSTALLATION_CONFIG}" -n kafka
   kubectl delete namespace kafka
