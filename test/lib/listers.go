@@ -22,16 +22,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
-
-	githubsourcev1alpha1 "knative.dev/eventing-contrib/github/pkg/apis/sources/v1alpha1"
-	fakegithubclientset "knative.dev/eventing-contrib/github/pkg/client/clientset/versioned/fake"
-	githubsourcev1alpha1listers "knative.dev/eventing-contrib/github/pkg/client/listers/sources/v1alpha1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakeeventingclientset.AddToScheme,
-	fakegithubclientset.AddToScheme,
 }
 
 type Listers struct {
@@ -79,8 +74,4 @@ func (l Listers) GetAllObjects() []runtime.Object {
 	all := l.GetEventingObjects()
 	all = append(all, l.GetKubeObjects()...)
 	return all
-}
-
-func (l Listers) GetGithubSourceLister() githubsourcev1alpha1listers.GitHubSourceLister {
-	return githubsourcev1alpha1listers.NewGitHubSourceLister(l.indexerFor(&githubsourcev1alpha1.GitHubSource{}))
 }
