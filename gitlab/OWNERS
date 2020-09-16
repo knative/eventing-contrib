@@ -1,9 +1,0 @@
-approvers:
-  - gitlab-approvers
-
-reviewers:
-  - gitlab-reviewers
-
-labels:
-  - area/Gitlab
-
