@@ -17,7 +17,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.2
 	github.com/google/go-github/v31 v31.0.0
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nats-io/stan.go v0.6.0
@@ -31,18 +31,18 @@ require (
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200822124328-c89045814202
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73
+	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.7-rc.0
-	k8s.io/apimachinery v0.19.0
+	k8s.io/apimachinery v0.19.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.17.3-0.20200831120208-4051c5d96eda
-	knative.dev/pkg v0.0.0-20200824160247-5343c1d19369
-	knative.dev/serving v0.17.1
-	knative.dev/test-infra v0.0.0-20200828171708-f68cb78c80a9
+	knative.dev/eventing v0.17.4-0.20200914133002-34de810dc5a7
+	knative.dev/pkg v0.0.0-20200831162708-14fb2347fb77
+	knative.dev/serving v0.17.2
+	knative.dev/test-infra v0.0.0-20200915193842-f4d4232c1f04
 )
 
 replace (
