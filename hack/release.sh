@@ -31,7 +31,6 @@ COMPONENTS=(
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
   ["natss-channel.yaml"]="natss/config"
-  ["prometheus-source.yaml"]="prometheus/config"
   ["websocket-source.yaml"]="config/tools/websocket-source"
 )
 readonly COMPONENTS

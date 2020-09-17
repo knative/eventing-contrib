@@ -16,7 +16,6 @@ that:
 - Integrate with GitHub
 - Integrate with GitLab
 - Integrate with NATS Streaming
-- Integrate with Prometheus
 - Integrate with Websockets
 - Expose an ingress
 
