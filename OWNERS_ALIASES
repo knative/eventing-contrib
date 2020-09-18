@@ -16,13 +16,6 @@ aliases:
     - nicolaferraro
     - matzew
 
-  github-approvers:
-    - lberk
-    - mattmoor
-  github-reviewers:
-    - lberk
-    - rootfs
-
   gitlab-approvers:
     - sebgoa
     - tzununbekov
@@ -41,11 +34,6 @@ aliases:
     - devguyio
   natss-reviewers:
     - devguyio
-
-  couchdb-approvers:
-    - lionelvillard
-  couchdb-reviewers:
-    - lionelvillard
 
   prometheus-approvers:
     - syedriko

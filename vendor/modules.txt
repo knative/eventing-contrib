@@ -124,21 +124,8 @@ github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
 # github.com/evanphx/json-patch v4.5.0+incompatible
 github.com/evanphx/json-patch
-# github.com/flimzy/diff v0.1.7
-## explicit
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
-# github.com/go-kivik/couchdb/v3 v3.0.4
-## explicit
-github.com/go-kivik/couchdb/v3
-github.com/go-kivik/couchdb/v3/chttp
-# github.com/go-kivik/kivik/v3 v3.0.2
-## explicit
-github.com/go-kivik/kivik/v3
-github.com/go-kivik/kivik/v3/driver
-# github.com/go-kivik/kivikmock/v3 v3.0.0
-## explicit
-github.com/go-kivik/kivikmock/v3
 # github.com/go-logr/logr v0.1.0
 github.com/go-logr/logr
 # github.com/go-openapi/jsonpointer v0.19.3
@@ -291,8 +278,6 @@ github.com/openzipkin/zipkin-go/model
 github.com/openzipkin/zipkin-go/propagation
 github.com/openzipkin/zipkin-go/reporter
 github.com/openzipkin/zipkin-go/reporter/http
-# github.com/otiai10/copy v1.2.0
-## explicit
 # github.com/pierrec/lz4 v2.5.2+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
@@ -355,8 +340,6 @@ github.com/valyala/bytebufferpool
 # github.com/xanzy/go-gitlab v0.32.0
 ## explicit
 github.com/xanzy/go-gitlab
-# gitlab.com/flimzy/testy v0.2.1
-## explicit
 # go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 ## explicit
 go.opencensus.io
@@ -423,7 +406,6 @@ golang.org/x/lint/golint
 golang.org/x/mod/module
 golang.org/x/mod/semver
 # golang.org/x/net v0.0.0-20200822124328-c89045814202
-## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/http/httpguts
@@ -434,7 +416,6 @@ golang.org/x/net/idna
 golang.org/x/net/internal/socks
 golang.org/x/net/internal/timeseries
 golang.org/x/net/proxy
-golang.org/x/net/publicsuffix
 golang.org/x/net/trace
 # golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 golang.org/x/oauth2
@@ -1282,7 +1263,6 @@ knative.dev/pkg/logging/logkey
 knative.dev/pkg/logging/testing
 knative.dev/pkg/metrics
 knative.dev/pkg/metrics/metricskey
-knative.dev/pkg/metrics/testing
 knative.dev/pkg/network
 knative.dev/pkg/network/handlers
 knative.dev/pkg/profiling

@@ -1,9 +1,0 @@
-approvers:
-  - couchdb-approvers
-
-reviewers:
-  - couchdb-reviewers
-
-labels:
-  - area/Couchdb
-

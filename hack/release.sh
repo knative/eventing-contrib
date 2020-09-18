@@ -27,7 +27,6 @@ COMPONENTS=(
   ["appender.yaml"]="config/tools/appender"
   ["awssqs.yaml"]="awssqs/config"
   ["camel.yaml"]="camel/source/config"
-  ["couchdb.yaml"]="couchdb/source/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["gitlab.yaml"]="gitlab/config"
   ["kafka-source.yaml"]="kafka/source/config"
