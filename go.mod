@@ -22,7 +22,6 @@ require (
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200822124328-c89045814202
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	k8s.io/api v0.18.8
 	k8s.io/apimachinery v0.18.8
