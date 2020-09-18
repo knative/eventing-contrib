@@ -16,13 +16,6 @@ aliases:
     - nicolaferraro
     - matzew
 
-  gitlab-approvers:
-    - sebgoa
-    - tzununbekov
-  gitlab-reviewers:
-    - sebgoa
-    - tzununbekov
-
   kafka-approvers:
     - lberk
     - matzew

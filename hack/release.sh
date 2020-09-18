@@ -28,7 +28,6 @@ COMPONENTS=(
   ["awssqs.yaml"]="awssqs/config"
   ["camel.yaml"]="camel/source/config"
   ["event-display.yaml"]="config/tools/event-display"
-  ["gitlab.yaml"]="gitlab/config"
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
   ["natss-channel.yaml"]="natss/config"

@@ -75,26 +75,6 @@ for DIR in "${API_DIRS_SOURCES_AND_BINDINGS[@]}"; do
     --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 done
 
-# Sources and Bindings
-API_DIRS_SOURCES_AND_BINDINGS=(gitlab/pkg )
-
-for DIR in "${API_DIRS_SOURCES_AND_BINDINGS[@]}"; do
-  # generate the code with:
-  # --output-base    because this script should also be able to run inside the vendor dir of
-  #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
-  #                  instead of the $GOPATH directly. For normal projects this can be dropped.
-  ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "sources:v1alpha1 bindings:v1alpha1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-
-  # Knative Injection
-  ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "sources:v1alpha1 bindings:v1alpha1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-done
-
 # NatssChannel
 API_DIRS_CHANNELS=(natss/pkg)
 
@@ -139,8 +119,7 @@ done
 ${GOPATH}/bin/deepcopy-gen \
   -O zz_generated.deepcopy \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt \
-  -i knative.dev/eventing-contrib/prometheus/pkg/apis \
-  -i knative.dev/eventing-contrib/gitlab/pkg/apis
+  -i knative.dev/eventing-contrib/prometheus/pkg/apis
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
