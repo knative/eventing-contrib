@@ -1,8 +1,0 @@
-approvers:
-  - prometheus-approvers
-
-reviewers:
-  - prometheus-reviewers
-
-labels:
-  - area/prometheus-source
