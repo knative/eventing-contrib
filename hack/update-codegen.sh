@@ -119,13 +119,7 @@ done
 ${GOPATH}/bin/deepcopy-gen \
   -O zz_generated.deepcopy \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt \
-  -i knative.dev/eventing-contrib/prometheus/pkg/apis \
-<<<<<<< HEAD
-  -i knative.dev/eventing-contrib/gitlab/pkg/apis
-=======
-  -i knative.dev/eventing-contrib/awssqs/pkg/apis \
-  -i knative.dev/eventing-contrib/couchdb/source/pkg/apis
->>>>>>> remove gitlab
+  -i knative.dev/eventing-contrib/prometheus/pkg/apis
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh
