@@ -26,7 +26,6 @@ declare -A COMPONENTS
 COMPONENTS=(
   ["appender.yaml"]="config/tools/appender"
   ["awssqs.yaml"]="awssqs/config"
-  ["camel.yaml"]="camel/source/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
