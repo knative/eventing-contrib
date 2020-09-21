@@ -19,6 +19,5 @@ package test
 // Kind for messaging resources.
 const (
 	KafkaChannelKind string = "KafkaChannel"
-	NatssChannelKind string = "NatssChannel"
 	KafkaSourceKind  string = "KafkaSource"
 )
