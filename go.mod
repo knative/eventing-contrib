@@ -14,7 +14,6 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/influxdata/tdigest v0.0.1 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/nats-io/stan.go v0.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/slinkydeveloper/loadastic v0.0.0-20191203132749-9afe5a010a57
 	github.com/stretchr/testify v1.6.0

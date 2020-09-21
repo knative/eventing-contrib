@@ -23,11 +23,6 @@ aliases:
     - lberk
     - matzew
 
-  natss-approvers:
-    - devguyio
-  natss-reviewers:
-    - devguyio
-
   prometheus-approvers:
     - syedriko
     - matzew
