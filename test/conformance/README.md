@@ -14,5 +14,5 @@ Run test with e2e tag and optionally select conformance test
 ```bash
 go test -v -tags=e2e -count=1 ./test/conformance/...
 
-go test -v -timeout 30s -tags e2e knative.dev/eventing/test/conformance -run ^TestChannelStatus$ -channels=messaging.knative.dev/v1alpha1:NatssChannel,messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel
+go test -v -timeout 30s -tags e2e knative.dev/eventing/test/conformance -run ^TestChannelStatus$ -channels=messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel
 ```

@@ -55,26 +55,6 @@ for DIR in "${API_DIRS_SOURCES_AND_BINDINGS[@]}"; do
     --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 done
 
-# NatssChannel
-API_DIRS_CHANNELS=(natss/pkg)
-
-for DIR in "${API_DIRS_CHANNELS[@]}"; do
-  # generate the code with:
-  # --output-base    because this script should also be able to run inside the vendor dir of
-  #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
-  #                  instead of the $GOPATH directly. For normal projects this can be dropped.
-  ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "messaging:v1alpha1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-
-  # Knative Injection
-  ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "messaging:v1alpha1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-done
-
 # KafkaChannel
 API_DIRS_CHANNELS=(kafka/channel/pkg)
 
