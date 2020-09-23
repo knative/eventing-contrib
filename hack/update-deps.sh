@@ -29,10 +29,10 @@ VERSION="master"
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
 FLOATING_DEPS=(
-  "knative.dev/pkg@${VERSION}"
+  "knative.dev/pkg@release-0.18"
   "knative.dev/eventing@${VERSION}"
   "knative.dev/serving@${VERSION}"
-  "knative.dev/test-infra@${VERSION}"
+  "knative.dev/test-infra@release-0.18"
 )
 
 # Parse flags to determine any we should pass to dep.
