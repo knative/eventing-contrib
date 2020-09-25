@@ -27,7 +27,7 @@ jobs:
     name: Verify Deps and Codegen
     strategy:
       matrix:
-        go-version: [1.14.x]
+        go-version: [1.15.x]
         platform: [ubuntu-latest]
 
     runs-on: ${{ matrix.platform }}
@@ -57,7 +57,7 @@ jobs:
       shell: bash
       run: |
         pushd ./src/knative.dev/${{ github.event.repository.name }}
-        ./hack/update-codegen.sh
+        [[ ! -f hack/update-codegen.sh ]] || ./hack/update-codegen.sh
         popd
 
     - name: Verify
