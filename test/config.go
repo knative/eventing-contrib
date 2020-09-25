@@ -37,6 +37,14 @@ var ChannelFeatureMap = map[metav1.TypeMeta][]testlib.Feature{
 		// testlib.FeatureRedelivery,
 		testlib.FeaturePersistence,
 	},
+	{
+		APIVersion: "messaging.knative.dev/v1alpha1",
+		Kind:       NatssChannelKind,
+	}: {
+		testlib.FeatureBasic,
+		// testlib.FeatureRedelivery,
+		testlib.FeaturePersistence,
+	},
 }
 
 var KafkaSourceTypeMeta = metav1.TypeMeta{
