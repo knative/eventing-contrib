@@ -150,6 +150,8 @@ func RetryConfigFromDeliverySpec(spec duckv1.DeliverySpec) (RetryConfig, error) 
 
 	retryConfig := NoRetries()
 
+	retryConfig.CheckRetry = checkRetry
+
 	if spec.Retry != nil {
 		retryConfig.RetryMax = int(*spec.Retry)
 	}
@@ -165,7 +167,7 @@ func RetryConfigFromDeliverySpec(spec duckv1.DeliverySpec) (RetryConfig, error) 
 		switch *spec.BackoffPolicy {
 		case duckv1.BackoffPolicyExponential:
 			retryConfig.Backoff = func(attemptNum int, resp *nethttp.Response) time.Duration {
-				return time.Duration(math.Pow(float64(delayDuration*2), float64(attemptNum)))
+				return delayDuration * time.Duration(math.Exp2(float64(attemptNum)))
 			}
 		case duckv1.BackoffPolicyLinear:
 			retryConfig.Backoff = func(attemptNum int, resp *nethttp.Response) time.Duration {
@@ -175,4 +177,8 @@ func RetryConfigFromDeliverySpec(spec duckv1.DeliverySpec) (RetryConfig, error) 
 	}
 
 	return retryConfig, nil
+}
+
+func checkRetry(_ context.Context, resp *nethttp.Response, _ error) (bool, error) {
+	return resp != nil && resp.StatusCode >= 300, nil
 }
