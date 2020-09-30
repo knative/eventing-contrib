@@ -25,7 +25,6 @@ export GO111MODULE=on
 declare -A COMPONENTS
 COMPONENTS=(
   ["appender.yaml"]="config/tools/appender"
-  ["awssqs.yaml"]="awssqs/config"
   ["event-display.yaml"]="config/tools/event-display"
   ["kafka-source.yaml"]="kafka/source/config"
   ["kafka-channel.yaml"]="kafka/channel/config"
