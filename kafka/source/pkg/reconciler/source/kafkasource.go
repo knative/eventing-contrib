@@ -22,6 +22,10 @@ import (
 	"fmt"
 	"strings"
 
+	"knative.dev/eventing/pkg/utils"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/kmeta"
+
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +33,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/reconciler/source"
-	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -51,6 +54,7 @@ const (
 	raImageEnvVar                = "KAFKA_RA_IMAGE"
 	kafkaSourceDeploymentCreated = "KafkaSourceDeploymentCreated"
 	kafkaSourceDeploymentUpdated = "KafkaSourceDeploymentUpdated"
+	kafkaSourceDeploymentDeleted = "KafkaSourceDeploymentDeleted"
 	kafkaSourceDeploymentFailed  = "KafkaSourceDeploymentUpdated"
 	component                    = "kafkasource"
 )
@@ -169,6 +173,15 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 
 	ra, err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Get(ctx, expected.Name, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
+		// Issue eventing#2842: Adater deployment name uses kmeta.ChildName. If a deployment by the previous name pattern is found, it should
+		// be deleted. This might cause temporary downtime.
+		if deprecatedName := utils.GenerateFixedName(raArgs.Source, fmt.Sprintf("apiserversource-%s", raArgs.Source.Name)); deprecatedName != expected.Name {
+			if err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(ctx, deprecatedName, metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
+				return nil, fmt.Errorf("error deleting deprecated named deployment: %v", err)
+			}
+			controller.GetEventRecorder(ctx).Eventf(src, corev1.EventTypeNormal, kafkaSourceDeploymentDeleted, "Deprecated deployment removed: \"%s/%s\"", src.Namespace, deprecatedName)
+		}
+
 		ra, err = r.KubeClientSet.AppsV1().Deployments(src.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 		if err != nil {
 			return nil, newDeploymentFailed(ra.Namespace, ra.Name, err)
@@ -193,7 +206,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 
 //deleteReceiveAdapter deletes the receiver adapter deployment if any
 func (r *Reconciler) deleteReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource) error {
-	name := utils.GenerateFixedName(src, fmt.Sprintf("kafkasource-%s", src.Name))
+	name := kmeta.ChildName(string(src.GetUID()), fmt.Sprintf("kafkasource-%s", src.Name))
 
 	return r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }
