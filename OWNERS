@@ -11,6 +11,7 @@ approvers:
 - lionelvillard
 - slinkydeveloper
 - lberk
+- pierDipi
 - aliok
 
 # Reviewers are suggested from the reviewers list first, then the approvers
@@ -26,7 +27,9 @@ reviewers:
 - lionelvillard
 - slinkydeveloper
 - lberk
+- pierDipi
 - aliok
+
 # Add reviewers below
 - aslom
 
