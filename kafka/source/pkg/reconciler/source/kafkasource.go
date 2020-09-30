@@ -175,7 +175,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 	if err != nil && apierrors.IsNotFound(err) {
 		// Issue eventing#2842: Adater deployment name uses kmeta.ChildName. If a deployment by the previous name pattern is found, it should
 		// be deleted. This might cause temporary downtime.
-		if deprecatedName := utils.GenerateFixedName(raArgs.Source, fmt.Sprintf("apiserversource-%s", raArgs.Source.Name)); deprecatedName != expected.Name {
+		if deprecatedName := utils.GenerateFixedName(raArgs.Source, fmt.Sprintf("kafkasource-%s", raArgs.Source.Name)); deprecatedName != expected.Name {
 			if err := r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(ctx, deprecatedName, metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
 				return nil, fmt.Errorf("error deleting deprecated named deployment: %v", err)
 			}
