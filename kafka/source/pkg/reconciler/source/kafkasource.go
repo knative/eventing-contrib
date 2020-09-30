@@ -206,7 +206,7 @@ func (r *Reconciler) createReceiveAdapter(ctx context.Context, src *v1beta1.Kafk
 
 //deleteReceiveAdapter deletes the receiver adapter deployment if any
 func (r *Reconciler) deleteReceiveAdapter(ctx context.Context, src *v1beta1.KafkaSource) error {
-	name := kmeta.ChildName(string(src.GetUID()), fmt.Sprintf("kafkasource-%s", src.Name))
+	name := kmeta.ChildName(fmt.Sprintf("kafkasource-%s-", src.Name), string(src.GetUID()))
 
 	return r.KubeClientSet.AppsV1().Deployments(src.Namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }

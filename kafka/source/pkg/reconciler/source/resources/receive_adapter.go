@@ -80,7 +80,7 @@ func MakeReceiveAdapter(args *ReceiveAdapterArgs) *v1.Deployment {
 
 	return &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kmeta.ChildName(string(args.Source.GetUID()), fmt.Sprintf("kafkasource-%s", args.Source.Name)),
+			Name:      kmeta.ChildName(fmt.Sprintf("kafkasource-%s-", args.Source.Name), string(args.Source.GetUID())),
 			Namespace: args.Source.Namespace,
 			Labels:    args.Labels,
 			OwnerReferences: []metav1.OwnerReference{
