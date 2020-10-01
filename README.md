@@ -1,23 +1,16 @@
 # Knative Eventing Contrib
 
-[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/knative/eventing-contrib)
-[![Go Report Card](https://goreportcard.com/badge/knative/eventing-contrib)](https://goreportcard.com/report/knative/eventing-contrib)
-[![Releases](https://img.shields.io/github/release-pre/knative/eventing-contrib.svg)](https://github.com/knative/eventing-contrib/releases)
-[![LICENSE](https://img.shields.io/github/license/knative/eventing-contrib.svg)](https://github.com/knative/eventing-contrib/blob/master/LICENSE)
-[![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://knative.slack.com)
+This repository has been replaced by a few separate repos where the development of the individual components are being developed:
 
-The Knative Eventing Contrib project provides source and channel implementations
-that:
-
-- Integrate with Apache Camel-K
-- Integrate with Apache CouchDB
-- Integrate with Apache Kafka
-- Integrate with AWS SQS
-- Integrate with GitHub
-- Integrate with GitLab
-- Integrate with NATS Streaming
-- Integrate with Websockets
-- Expose an ingress
+* [Integrate with Apache Camel-K](https://github.com/knative-sandbox/eventing-camel)
+* [Integrate with Apache CouchDB](https://github.com/knative-sandbox/eventing-couchdb)
+* [Integrate with Apache Kafka](https://github.com/knative-sandbox/eventing-kafka)
+* [Integrate with AWS SQS](https://github.com/knative-sandbox/eventing-awssqs)
+* [Integrate with Ceph](https://github.com/knative-sandbox/eventing-ceph)
+* [Integrate with GitHub](https://github.com/knative-sandbox/eventing-github)
+* [Integrate with GitLab](https://github.com/knative-sandbox/eventing-gitlab)
+* [Integrate with NATS Streaming](https://github.com/knative-sandbox/eventing-natss)
+* [Integrate with Prometheus](https://github.com/knative-sandbox/eventing-prometheus)
 
 For complete documentation about Knative Eventing, see the following repos:
 
