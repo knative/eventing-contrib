@@ -1,9 +1,0 @@
-apiVersion: messaging.knative.dev/v1alpha1
-kind: Channel
-metadata:
-  name: cj-1
-  namespace: default
-spec:
-  channelTemplate:
-    apiVersion: messaging.knative.dev/v1alpha1
-    kind: InMemoryChannel
