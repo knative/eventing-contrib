@@ -18,7 +18,7 @@ metadata:
   name: kafka-ch-dispatcher
   namespace: knative-eventing
   labels:
-    eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
 spec:
   # this deployment is going to be scaled up by the
   # controller when the very first KafkaChannel is created
@@ -32,7 +32,7 @@ spec:
       labels:
         messaging.knative.dev/channel: kafka-channel
         messaging.knative.dev/role: dispatcher
-        eventing.knative.dev/release: devel
+        contrib.eventing.knative.dev/release: devel
     spec:
       containers:
         - name: dispatcher
