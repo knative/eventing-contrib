@@ -143,7 +143,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: eventing-contrib-kafka-source-observer
   labels:
-    eventing.knative.dev/release: devel
+    contrib.eventing.knative.dev/release: devel
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
