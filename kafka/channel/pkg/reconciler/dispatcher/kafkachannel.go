@@ -115,7 +115,9 @@ func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl 
 		kafkachannelLister:   kafkaChannelInformer.Lister(),
 		kafkachannelInformer: kafkaChannelInformer.Informer(),
 	}
-	r.impl = kafkachannelreconciler.NewImpl(ctx, r)
+	r.impl = kafkachannelreconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		return controller.Options{SkipStatusUpdates: true}
+	})
 
 	logger.Info("Setting up event handlers")
 
