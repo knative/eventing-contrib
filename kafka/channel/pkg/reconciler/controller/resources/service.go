@@ -19,10 +19,11 @@ package resources
 import (
 	"fmt"
 
+	"knative.dev/pkg/network"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
-	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -37,7 +38,7 @@ const (
 type ServiceOption func(*corev1.Service) error
 
 func MakeExternalServiceAddress(namespace, service string) string {
-	return fmt.Sprintf("%s.%s.svc.%s", service, namespace, utils.GetClusterDomainName())
+	return fmt.Sprintf("%s.%s.svc.%s", service, namespace, network.GetClusterDomainName())
 }
 
 func MakeChannelServiceName(name string) string {

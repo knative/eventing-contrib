@@ -22,8 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"knative.dev/pkg/system"
-
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	. "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/ghodss/yaml"
@@ -66,7 +64,7 @@ func ChannelClusterDefaulterTestHelper(
 		if err := updateDefaultChannelCM(client, func(conf *config.ChannelDefaults) {
 			setClusterDefaultChannel(conf, channel)
 		}); err != nil {
-			st.Fatal("Failed to update the defaultchannel configmap:", err)
+			st.Fatalf("Failed to update the defaultchannel configmap: %v", err)
 		}
 
 		defaultChannelTestHelper(ctx, st, client, channel)
@@ -88,7 +86,7 @@ func ChannelNamespaceDefaulterTestHelper(
 		if err := updateDefaultChannelCM(client, func(conf *config.ChannelDefaults) {
 			setNamespaceDefaultChannel(conf, client.Namespace, channel)
 		}); err != nil {
-			st.Fatal("Failed to update the defaultchannel configmap:", err)
+			st.Fatalf("Failed to update the defaultchannel configmap: %v", err)
 		}
 
 		defaultChannelTestHelper(ctx, st, client, channel)
@@ -121,7 +119,7 @@ func defaultChannelTestHelper(ctx context.Context, t *testing.T, client *testlib
 	metaResourceList := resources.NewMetaResourceList(client.Namespace, &expectedChannel)
 	objs, err := duck.GetGenericObjectList(client.Dynamic, metaResourceList, &eventingduck.SubscribableType{})
 	if err != nil {
-		t.Fatal("Failed to list the underlying channels:", err)
+		t.Fatalf("Failed to list the underlying channels: %v", err)
 	}
 
 	// Note that since by default MT ChannelBroker creates a Broker in each namespace, there's
@@ -140,7 +138,7 @@ func defaultChannelTestHelper(ctx context.Context, t *testing.T, client *testlib
 		for i, ec := range filteredObjs {
 			t.Logf("Extra channels: %d : %+v", i, ec)
 		}
-		t.Fatal("The defaultchannel is expected to create 1 underlying channel, but got", len(filteredObjs))
+		t.Fatalf("The defaultchannel is expected to create 1 underlying channel, but got %d", len(filteredObjs))
 	}
 
 	// send CloudEvent to the channel
@@ -151,7 +149,7 @@ func defaultChannelTestHelper(ctx context.Context, t *testing.T, client *testlib
 	event.SetType(testlib.DefaultEventType)
 	body := fmt.Sprintf(`{"msg":"TestSingleEvent %s"}`, uuid.New().String())
 	if err := event.SetData(cloudevents.ApplicationJSON, []byte(body)); err != nil {
-		t.Fatal("Cannot set the payload of the event:", err.Error())
+		t.Fatalf("Cannot set the payload of the event: %s", err.Error())
 	}
 	client.SendEventToAddressable(ctx, senderName, channelName, testlib.ChannelTypeMeta, event)
 
@@ -164,7 +162,7 @@ func defaultChannelTestHelper(ctx context.Context, t *testing.T, client *testlib
 
 // updateDefaultChannelCM will update the default channel configmap
 func updateDefaultChannelCM(client *testlib.Client, updateConfig func(config *config.ChannelDefaults)) error {
-	cmInterface := client.Kube.CoreV1().ConfigMaps(system.Namespace())
+	cmInterface := client.Kube.Kube.CoreV1().ConfigMaps(resources.SystemNamespace)
 
 	err := reconciler.RetryUpdateConflicts(func(attempts int) (err error) {
 		// get the defaultchannel configmap

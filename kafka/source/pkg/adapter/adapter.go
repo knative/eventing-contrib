@@ -55,7 +55,7 @@ func NewEnvConfig() adapter.EnvConfigAccessor {
 
 type Adapter struct {
 	config            *adapterConfig
-	httpMessageSender *kncloudevents.HttpMessageSender
+	httpMessageSender *kncloudevents.HTTPMessageSender
 	reporter          source.StatsReporter
 	logger            *zap.SugaredLogger
 	keyTypeMapper     func([]byte) interface{}
@@ -64,7 +64,7 @@ type Adapter struct {
 var _ adapter.MessageAdapter = (*Adapter)(nil)
 var _ adapter.MessageAdapterConstructor = NewAdapter
 
-func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMessageSender *kncloudevents.HttpMessageSender, reporter source.StatsReporter) adapter.MessageAdapter {
+func NewAdapter(ctx context.Context, processed adapter.EnvConfigAccessor, httpMessageSender *kncloudevents.HTTPMessageSender, reporter source.StatsReporter) adapter.MessageAdapter {
 	logger := logging.FromContext(ctx)
 	config := processed.(*adapterConfig)
 

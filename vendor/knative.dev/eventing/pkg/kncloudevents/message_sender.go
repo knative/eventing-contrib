@@ -63,12 +63,12 @@ func (ca *ConnectionArgs) ConfigureTransport(transport *nethttp.Transport) {
 	transport.MaxIdleConnsPerHost = ca.MaxIdleConnsPerHost
 }
 
-type HTTPMessageSender struct {
+type HttpMessageSender struct {
 	Client *nethttp.Client
 	Target string
 }
 
-func NewHTTPMessageSender(connectionArgs *ConnectionArgs, target string) (*HTTPMessageSender, error) {
+func NewHttpMessageSender(connectionArgs *ConnectionArgs, target string) (*HttpMessageSender, error) {
 	// Add connection options to the default transport.
 	var base = nethttp.DefaultTransport.(*nethttp.Transport).Clone()
 	connectionArgs.ConfigureTransport(base)
@@ -80,18 +80,18 @@ func NewHTTPMessageSender(connectionArgs *ConnectionArgs, target string) (*HTTPM
 		},
 	}
 
-	return &HTTPMessageSender{Client: client, Target: target}, nil
+	return &HttpMessageSender{Client: client, Target: target}, nil
 }
 
-func (s *HTTPMessageSender) NewCloudEventRequest(ctx context.Context) (*nethttp.Request, error) {
+func (s *HttpMessageSender) NewCloudEventRequest(ctx context.Context) (*nethttp.Request, error) {
 	return nethttp.NewRequestWithContext(ctx, "POST", s.Target, nil)
 }
 
-func (s *HTTPMessageSender) NewCloudEventRequestWithTarget(ctx context.Context, target string) (*nethttp.Request, error) {
+func (s *HttpMessageSender) NewCloudEventRequestWithTarget(ctx context.Context, target string) (*nethttp.Request, error) {
 	return nethttp.NewRequestWithContext(ctx, "POST", target, nil)
 }
 
-func (s *HTTPMessageSender) Send(req *nethttp.Request) (*nethttp.Response, error) {
+func (s *HttpMessageSender) Send(req *nethttp.Request) (*nethttp.Response, error) {
 	return s.Client.Do(req)
 }
 
@@ -111,6 +111,7 @@ type CheckRetry func(ctx context.Context, resp *nethttp.Response, err error) (bo
 type Backoff func(attemptNum int, resp *nethttp.Response) time.Duration
 
 type RetryConfig struct {
+
 	// Maximum number of retries
 	RetryMax int
 
@@ -119,7 +120,7 @@ type RetryConfig struct {
 	Backoff Backoff
 }
 
-func (s *HTTPMessageSender) SendWithRetries(req *nethttp.Request, config *RetryConfig) (*nethttp.Response, error) {
+func (s *HttpMessageSender) SendWithRetries(req *nethttp.Request, config *RetryConfig) (*nethttp.Response, error) {
 	if config == nil {
 		return s.Send(req)
 	}
@@ -138,7 +139,12 @@ func (s *HTTPMessageSender) SendWithRetries(req *nethttp.Request, config *RetryC
 		},
 	}
 
-	return retryableClient.Do(&retryablehttp.Request{Request: req})
+	retryableReq, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return retryableClient.Do(retryableReq)
 }
 
 func NoRetries() RetryConfig {
@@ -170,7 +176,7 @@ func RetryConfigFromDeliverySpec(spec duckv1.DeliverySpec) (RetryConfig, error) 
 			}
 		case duckv1.BackoffPolicyLinear:
 			retryConfig.Backoff = func(attemptNum int, resp *nethttp.Response) time.Duration {
-				return delayDuration * time.Duration(attemptNum)
+				return delayDuration
 			}
 		}
 	}

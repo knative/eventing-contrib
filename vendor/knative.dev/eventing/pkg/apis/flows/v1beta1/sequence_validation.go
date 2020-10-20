@@ -19,7 +19,6 @@ package v1beta1
 import (
 	"context"
 
-	messagingv1beta1 "knative.dev/eventing/pkg/apis/messaging/v1beta1"
 	"knative.dev/pkg/apis"
 )
 
@@ -42,10 +41,15 @@ func (ps *SequenceSpec) Validate(ctx context.Context) *apis.FieldError {
 
 	if ps.ChannelTemplate == nil {
 		errs = errs.Also(apis.ErrMissingField("channelTemplate"))
-	} else {
-		if ce := messagingv1beta1.IsValidChannelTemplate(ps.ChannelTemplate); ce != nil {
-			errs = errs.Also(ce.ViaField("channelTemplate"))
-		}
+		return errs
+	}
+
+	if len(ps.ChannelTemplate.APIVersion) == 0 {
+		errs = errs.Also(apis.ErrMissingField("channelTemplate.apiVersion"))
+	}
+
+	if len(ps.ChannelTemplate.Kind) == 0 {
+		errs = errs.Also(apis.ErrMissingField("channelTemplate.kind"))
 	}
 
 	if err := ps.Reply.Validate(ctx); err != nil {

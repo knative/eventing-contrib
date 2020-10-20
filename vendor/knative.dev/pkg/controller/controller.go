@@ -207,7 +207,7 @@ type Impl struct {
 
 // ControllerOptions encapsulates options for creating a new controller,
 // including throttling and stats behavior.
-type ControllerOptions struct { //nolint for backcompat.
+type ControllerOptions struct { //nolint // for backcompat.
 	WorkQueueName string
 	Logger        *zap.SugaredLogger
 	Reporter      StatsReporter
@@ -582,6 +582,7 @@ func IsPermanentError(err error) bool {
 // Is implements the Is() interface of error. It returns whether the target
 // error can be treated as equivalent to a permanentError.
 func (permanentError) Is(target error) bool {
+	//nolint: errorlint // This check is actually fine.
 	_, ok := target.(permanentError)
 	return ok
 }

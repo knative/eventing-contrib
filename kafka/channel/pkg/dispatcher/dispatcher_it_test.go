@@ -34,8 +34,8 @@ import (
 	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/tracing"
 	tracingconfig "knative.dev/pkg/tracing/config"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
@@ -205,7 +205,7 @@ func TestDispatcher(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	// Ok now everything should be ready to send the event
-	httpsender, err := kncloudevents.NewHttpMessageSender(nil, channelAProxy.URL)
+	httpsender, err := kncloudevents.NewHTTPMessageSender(nil, channelAProxy.URL)
 	if err != nil {
 		t.Fatal(err)
 	}

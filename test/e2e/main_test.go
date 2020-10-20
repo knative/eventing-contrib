@@ -21,10 +21,11 @@ import (
 	"os"
 	"testing"
 
+	"knative.dev/pkg/system"
+
 	"knative.dev/eventing-contrib/test"
 	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/eventing/test/lib/resources"
 )
 
 var channelTestRunner testlib.ComponentsTestRunner
@@ -36,7 +37,7 @@ func TestMain(m *testing.M) {
 		ComponentsToTest:    eventingTest.EventingFlags.Channels,
 	}
 	os.Exit(func() int {
-		defer testlib.ExportLogs(testlib.SystemLogsDir, resources.SystemNamespace)
+		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
 
 		return m.Run()
 	}())

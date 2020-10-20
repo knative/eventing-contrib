@@ -63,7 +63,7 @@ func TestTriggerNoBroker(ctx context.Context, t *testing.T, channel string, brok
 		return false, nil
 	})
 	if err != nil {
-		t.Fatal("Trigger status did not get marked as BrokerDoesNotExist:", err)
+		t.Fatalf("Trigger status did not get marked as BrokerDoesNotExist: %s", err)
 	}
 
 	// Then create the Broker and just make sure they both come ready.

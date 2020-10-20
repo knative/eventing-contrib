@@ -33,7 +33,6 @@ import (
 	clientgotesting "k8s.io/client-go/testing"
 
 	eventingClient "knative.dev/eventing/pkg/client/injection/client"
-	"knative.dev/eventing/pkg/utils"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -41,6 +40,7 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/apis/messaging/v1beta1"
@@ -745,7 +745,7 @@ func makeChannelService(nc *v1beta1.KafkaChannel) *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherName, testNS, utils.GetClusterDomainName()),
+			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherName, testNS, network.GetClusterDomainName()),
 		},
 	}
 }
@@ -765,7 +765,7 @@ func makeChannelServiceNotOwnedByUs() *corev1.Service {
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherName, testNS, utils.GetClusterDomainName()),
+			ExternalName: fmt.Sprintf("%s.%s.svc.%s", dispatcherName, testNS, network.GetClusterDomainName()),
 		},
 	}
 }

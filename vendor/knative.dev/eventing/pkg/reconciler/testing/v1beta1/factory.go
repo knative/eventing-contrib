@@ -121,23 +121,23 @@ func ToUnstructured(t *testing.T, objs []runtime.Object) (us []runtime.Object) {
 		// Determine and set the TypeMeta for this object based on our test scheme.
 		gvks, _, err := sch.ObjectKinds(obj)
 		if err != nil {
-			t.Fatal("Unable to determine kind for type:", err)
+			t.Fatalf("Unable to determine kind for type: %v", err)
 		}
 		apiv, k := gvks[0].ToAPIVersionAndKind()
 		ta, err := meta.TypeAccessor(obj)
 		if err != nil {
-			t.Fatal("Unable to create type accessor:", err)
+			t.Fatalf("Unable to create type accessor: %v", err)
 		}
 		ta.SetAPIVersion(apiv)
 		ta.SetKind(k)
 
 		b, err := json.Marshal(obj)
 		if err != nil {
-			t.Fatal("Unable to marshal:", err)
+			t.Fatalf("Unable to marshal: %v", err)
 		}
 		u := &unstructured.Unstructured{}
 		if err := json.Unmarshal(b, u); err != nil {
-			t.Fatal("Unable to unmarshal:", err)
+			t.Fatalf("Unable to unmarshal: %v", err)
 		}
 		us = append(us, u)
 	}

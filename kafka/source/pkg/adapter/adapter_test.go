@@ -335,7 +335,7 @@ func TestPostMessage_ServeHTTP_binary_mode(t *testing.T) {
 			//})
 			//defer time.Sleep(1 * time.Second)
 
-			s, err := kncloudevents.NewHttpMessageSender(nil, sinkServer.URL)
+			s, err := kncloudevents.NewHTTPMessageSender(nil, sinkServer.URL)
 			if err != nil {
 				t.Fatal(err)
 			}

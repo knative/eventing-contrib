@@ -70,13 +70,13 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 			"payload": payload,
 		},
 	}
-	_, err := client.Kube.Kube.CoreV1().ConfigMaps(client.Namespace).Create(context.Background(), cm, metav1.CreateOptions{})
+	_, err := client.Kube.CoreV1().ConfigMaps(client.Namespace).Create(context.Background(), cm, metav1.CreateOptions{})
 	if err != nil {
 		if !apierrs.IsAlreadyExists(err) {
 			client.T.Fatalf("Failed to create configmap %q: %v", cgName, err)
 			return
 		}
-		if _, err = client.Kube.Kube.CoreV1().ConfigMaps(client.Namespace).Update(context.Background(), cm, metav1.UpdateOptions{}); err != nil {
+		if _, err = client.Kube.CoreV1().ConfigMaps(client.Namespace).Update(context.Background(), cm, metav1.UpdateOptions{}); err != nil {
 			client.T.Fatalf("failed to update configmap: %q: %v", cgName, err)
 		}
 	}
@@ -177,9 +177,9 @@ func MustPublishKafkaMessageViaBinding(client *testlib.Client, selector map[stri
 	}
 
 	pkgtest.CleanupOnInterrupt(func() {
-		client.Kube.Kube.BatchV1().Jobs(job.Namespace).Delete(context.Background(), job.Name, metav1.DeleteOptions{})
+		client.Kube.BatchV1().Jobs(job.Namespace).Delete(context.Background(), job.Name, metav1.DeleteOptions{})
 	}, client.T.Logf)
-	job, err := client.Kube.Kube.BatchV1().Jobs(job.Namespace).Create(context.Background(), job, metav1.CreateOptions{})
+	job, err := client.Kube.BatchV1().Jobs(job.Namespace).Create(context.Background(), job, metav1.CreateOptions{})
 	if err != nil {
 		client.T.Fatalf("Error creating Job: %v", err)
 	}
@@ -189,7 +189,7 @@ func MustPublishKafkaMessageViaBinding(client *testlib.Client, selector map[stri
 	client.T.Log("", "job", spew.Sprint(job))
 
 	defer func() {
-		err := client.Kube.Kube.BatchV1().Jobs(job.Namespace).Delete(context.Background(), job.Name, metav1.DeleteOptions{})
+		err := client.Kube.BatchV1().Jobs(job.Namespace).Delete(context.Background(), job.Name, metav1.DeleteOptions{})
 		if err != nil {
 			client.T.Errorf("Error cleaning up Job %s", job.Name)
 		}
@@ -197,7 +197,7 @@ func MustPublishKafkaMessageViaBinding(client *testlib.Client, selector map[stri
 
 	// Wait for the Job to report a successful execution.
 	waitErr := wait.PollImmediate(1*time.Second, 2*time.Minute, func() (bool, error) {
-		js, err := client.Kube.Kube.BatchV1().Jobs(job.Namespace).Get(context.Background(), job.Name, metav1.GetOptions{})
+		js, err := client.Kube.BatchV1().Jobs(job.Namespace).Get(context.Background(), job.Name, metav1.GetOptions{})
 		if apierrs.IsNotFound(err) {
 			return false, nil
 		} else if err != nil {
@@ -270,7 +270,7 @@ func CheckRADeployment(ctx context.Context, c *testlib.Client, name string, inSt
 	listOptions := metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", "eventing.knative.dev/SourceName", name),
 	}
-	kDeps := c.Kube.Kube.AppsV1().Deployments(c.Namespace)
+	kDeps := c.Kube.AppsV1().Deployments(c.Namespace)
 	var lastState *appsv1.DeploymentList
 	waitErr := wait.PollImmediate(interval, timeout, func() (bool, error) {
 		var err error

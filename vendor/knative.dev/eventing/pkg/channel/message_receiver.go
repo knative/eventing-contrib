@@ -40,20 +40,20 @@ type UnknownChannelError struct {
 }
 
 func (e *UnknownChannelError) Error() string {
-	return fmt.Sprint("unknown channel: ", e.c)
+	return fmt.Sprintf("unknown channel: %v", e.c)
 }
 
 // UnknownHostError represents the error when a ResolveMessageChannelFromHostHeader func cannot resolve an host
 type UnknownHostError string
 
 func (e UnknownHostError) Error() string {
-	return "cannot map host to channel: " + string(e)
+	return fmt.Sprintf("cannot map host to channel: %s", string(e))
 }
 
 // MessageReceiver starts a server to receive new events for the channel dispatcher. The new
 // event is emitted via the receiver function.
 type MessageReceiver struct {
-	httpBindingsReceiver *kncloudevents.HTTPMessageReceiver
+	httpBindingsReceiver *kncloudevents.HttpMessageReceiver
 	receiverFunc         UnbufferedMessageReceiverFunc
 	logger               *zap.Logger
 	hostToChannelFunc    ResolveChannelFromHostFunc
@@ -85,7 +85,7 @@ func ResolveMessageChannelFromHostHeader(hostToChannelFunc ResolveChannelFromHos
 // NewMessageReceiver creates an event receiver passing new events to the
 // receiverFunc.
 func NewMessageReceiver(receiverFunc UnbufferedMessageReceiverFunc, logger *zap.Logger, opts ...MessageReceiverOptions) (*MessageReceiver, error) {
-	bindingsReceiver := kncloudevents.NewHTTPMessageReceiver(8080)
+	bindingsReceiver := kncloudevents.NewHttpMessageReceiver(8080)
 	receiver := &MessageReceiver{
 		httpBindingsReceiver: bindingsReceiver,
 		receiverFunc:         receiverFunc,

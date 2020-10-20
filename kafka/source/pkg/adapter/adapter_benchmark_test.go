@@ -56,7 +56,7 @@ func BenchmarkHandle(b *testing.B) {
 		b.Errorf("unexpected error, %v", err)
 	}
 
-	s := kncloudevents.HttpMessageSender{
+	s := kncloudevents.HTTPMessageSender{
 		Client: NewTestClient(func(req *http.Request) *http.Response {
 			return &http.Response{
 				StatusCode: 202,

@@ -21,8 +21,6 @@ import (
 	"errors"
 	"fmt"
 
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
-
 	"github.com/ghodss/yaml"
 
 	corev1 "k8s.io/api/core/v1"
@@ -72,42 +70,34 @@ func NewDefaultsConfigFromConfigMap(config *corev1.ConfigMap) (*Defaults, error)
 type Defaults struct {
 	// NamespaceDefaultsConfig are the default Broker Configs for each namespace.
 	// Namespace is the key, the value is the KReference to the config.
-	NamespaceDefaultsConfig map[string]*ClassAndBrokerConfig `json:"namespaceDefaults,omitempty"`
+	NamespaceDefaultsConfig map[string]*ClassAndKRef `json:"namespaceDefaults,omitempty"`
 
 	// ClusterDefaultBrokerConfig is the default broker config for all the namespaces that
 	// are not in NamespaceDefaultBrokerConfigs.
-	ClusterDefault *ClassAndBrokerConfig `json:"clusterDefault,omitempty"`
+	ClusterDefault *ClassAndKRef `json:"clusterDefault,omitempty"`
 }
 
-// ClassAndBrokerConfig contains configuration for a given namespace for broker. Allows
-// configuring the Class of the Broker, the reference to the
-// config it should use and it's delivery.
-type ClassAndBrokerConfig struct {
-	BrokerClass   string `json:"brokerClass,omitempty"`
-	*BrokerConfig `json:",inline"`
-}
-
-// BrokerConfig contains configuration for a given namespace for broker. Allows
-// configuring the reference to the
-// config it should use and it's delivery.
-type BrokerConfig struct {
+// ClassAndKRef contains configuration for a given namespace for broker. Allows
+// configuring both the Class of the Broker as well as the reference to the
+// config it should use
+type ClassAndKRef struct {
+	BrokerClass        string `json:"brokerClass,omitempty"`
 	*duckv1.KReference `json:",inline"`
-	Delivery           *eventingduckv1.DeliverySpec `json:"delivery,omitempty"`
 }
 
 // GetBrokerConfig returns a namespace specific Broker Configuration, and if
 // that doesn't exist, return a Cluster Default and if that doesn't exist
 // return an error.
-func (d *Defaults) GetBrokerConfig(ns string) (*BrokerConfig, error) {
+func (d *Defaults) GetBrokerConfig(ns string) (*duckv1.KReference, error) {
 	if d == nil {
 		return nil, errors.New("Defaults are nil")
 	}
 	value, present := d.NamespaceDefaultsConfig[ns]
-	if present && value.BrokerConfig != nil {
-		return value.BrokerConfig, nil
+	if present && value.KReference != nil {
+		return value.KReference, nil
 	}
-	if d.ClusterDefault != nil && d.ClusterDefault.BrokerConfig != nil {
-		return d.ClusterDefault.BrokerConfig, nil
+	if d.ClusterDefault != nil && d.ClusterDefault.KReference != nil {
+		return d.ClusterDefault.KReference, nil
 	}
 	return nil, errors.New("Defaults for Broker Configurations have not been set up.")
 }

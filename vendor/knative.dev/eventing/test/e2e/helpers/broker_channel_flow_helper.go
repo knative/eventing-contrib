@@ -45,7 +45,7 @@ EventSource ---> Broker ---> Trigger1 -------> Service(Transformation)
                    |-------> Trigger3 -------> Channel --------> Subscription --------> Service(Logger2)
 
 Explanation:
-Trigger1 filters the orignal event and transforms it to a new event,
+Trigger1 filters the orignal event and tranforms it to a new event,
 Trigger2 logs all events,
 Trigger3 filters the transformed event and sends it to Channel.
 
@@ -103,7 +103,7 @@ func BrokerChannelFlowWithTransformation(
 		eventToSend.SetType(eventType)
 		eventToSend.SetSource(eventSource)
 		if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-			t.Fatal("Cannot set the payload of the event:", err.Error())
+			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
 		}
 
 		// create the transformation service for trigger1

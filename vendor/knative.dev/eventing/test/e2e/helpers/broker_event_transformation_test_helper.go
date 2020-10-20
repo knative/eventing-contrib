@@ -129,7 +129,7 @@ func EventTransformationForTriggerTestHelper(
 	eventToSend.SetType(eventType)
 	eventToSend.SetSource(eventSource)
 	if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-		t.Fatal("Cannot set the payload of the event:", err.Error())
+		t.Fatalf("Cannot set the payload of the event: %s", err.Error())
 	}
 	client.SendEventToAddressable(ctx, senderName, brokerName, testlib.BrokerTypeMeta, eventToSend)
 
