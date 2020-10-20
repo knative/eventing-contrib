@@ -31,7 +31,7 @@ import (
 	"knative.dev/eventing/test/lib/resources"
 )
 
-// EventTransformationForSubscriptionTestHelper is the helper function for channel_event_tranformation_test
+// EventTransformationForSubscriptionTestHelper is the helper function for channel_event_transformation_test
 func EventTransformationForSubscriptionTestHelper(
 	ctx context.Context,
 	t *testing.T,
@@ -63,15 +63,18 @@ func EventTransformationForSubscriptionTestHelper(
 		eventAfterTransformation.SetType(testlib.DefaultEventType)
 		transformedEventBody := fmt.Sprintf(`{"msg":"eventBody %s"}`, uuid.New().String())
 		if err := eventAfterTransformation.SetData(cloudevents.ApplicationJSON, []byte(transformedEventBody)); err != nil {
-			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+			t.Fatal("Cannot set the payload of the event:", err.Error())
 		}
-		transformationPod := resources.EventTransformationPod(
+		recordevents.DeployEventRecordOrFail(
+			ctx,
+			client,
 			transformationPodName,
-			eventAfterTransformation.Type(),
-			eventAfterTransformation.Source(),
-			eventAfterTransformation.Data(),
+			recordevents.ReplyWithTransformedEvent(
+				eventAfterTransformation.Type(),
+				eventAfterTransformation.Source(),
+				string(eventAfterTransformation.Data()),
+			),
 		)
-		client.CreatePodOrFail(transformationPod, testlib.WithService(transformationPodName))
 
 		// create event logger pod and service as the subscriber
 		eventTracker, _ := recordevents.StartEventRecordOrFail(ctx, client, recordEventsPodName)
@@ -123,7 +126,7 @@ func EventTransformationForSubscriptionTestHelper(
 		eventToSend.SetType(testlib.DefaultEventType)
 		eventBody := fmt.Sprintf(`{"msg":"TestEventTransformation %s"}`, uuid.New().String())
 		if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+			t.Fatal("Cannot set the payload of the event:", err.Error())
 		}
 		client.SendEventToAddressable(ctx, senderName, channelNames[0], &channel, eventToSend)
 

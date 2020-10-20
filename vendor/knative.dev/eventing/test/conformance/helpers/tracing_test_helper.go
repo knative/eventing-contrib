@@ -42,6 +42,7 @@ type SetupTracingTestInfrastructureFunc func(
 	client *testlib.Client,
 	loggerPodName string,
 	senderPublishTrace bool,
+	clusterDomain string,
 ) (tracinghelper.TestSpanTree, cetest.EventMatcher)
 
 // tracingTest bootstraps the test and then executes the assertions on the received event and on the spans
@@ -62,14 +63,15 @@ func tracingTest(
 	// Do NOT call zipkin.CleanupZipkinTracingSetup. That will be called exactly once in
 	// TestMain.
 	tracinghelper.Setup(t, client)
+	clusterDomain := tracinghelper.GetClusterDomain(t, client)
 
 	// Setup the test infrastructure
-	expectedTestSpan, eventMatcher := setupInfrastructure(ctx, t, &channel, client, recordEventsPodName, true)
+	expectedTestSpan, eventMatcher := setupInfrastructure(ctx, t, &channel, client, recordEventsPodName, true, clusterDomain)
 
 	// Start the event info store and assert the event was received correctly
-	targetTracker, err := recordevents.NewEventInfoStore(client, recordEventsPodName)
+	targetTracker, err := recordevents.NewEventInfoStore(client, recordEventsPodName, client.Namespace)
 	if err != nil {
-		t.Fatalf("Pod tracker failed: %v", err)
+		t.Fatal("Pod tracker failed:", err)
 	}
 	matches := targetTracker.AssertAtLeast(1, recordevents.MatchEvent(eventMatcher))
 
@@ -107,6 +109,6 @@ func getTraceIDHeader(t *testing.T, evInfos []recordevents.EventInfo) string {
 			}
 		}
 	}
-	t.Fatalf("FAIL: No traceid in %d messages: (%s)", len(evInfos), evInfos)
+	t.Fatalf("FAIL: No traceid in %d messages: (%v)", len(evInfos), evInfos)
 	return ""
 }

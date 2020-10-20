@@ -27,9 +27,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/eventing/pkg/apis/eventing/v1beta1"
-	"knative.dev/eventing/pkg/utils"
 	tracinghelper "knative.dev/eventing/test/conformance/helpers/tracing"
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 	"knative.dev/eventing/test/lib/sender"
 )
@@ -55,7 +55,7 @@ func BrokerTracingTestHelperWithChannelTestRunner(
 // 4. Sender Pod which sends a 'foo' event.
 // It returns a string that is expected to be sent by the SendEvents Pod and should be present in
 // the LogEvents Pod logs.
-func setupBrokerTracing(ctx context.Context, brokerClass string) SetupTracingTestInfrastructureFunc {
+func setupBrokerTracing(_ context.Context, brokerClass string) SetupTracingTestInfrastructureFunc {
 	const (
 		etTransformer = "transformer"
 		etLogger      = "logger"
@@ -70,6 +70,7 @@ func setupBrokerTracing(ctx context.Context, brokerClass string) SetupTracingTes
 		client *testlib.Client,
 		loggerPodName string,
 		senderPublishTrace bool,
+		clusterDomain string,
 	) (tracinghelper.TestSpanTree, cetest.EventMatcher) {
 		// Create a configmap used by the broker.
 		client.CreateBrokerConfigMapOrFail("br", channel)
@@ -81,8 +82,7 @@ func setupBrokerTracing(ctx context.Context, brokerClass string) SetupTracingTes
 		)
 
 		// Create a logger (EventRecord) Pod and a K8s Service that points to it.
-		logPod := resources.EventRecordPod(loggerPodName)
-		client.CreatePodOrFail(logPod, testlib.WithService(loggerPodName))
+		_ = recordevents.DeployEventRecordOrFail(ctx, client, loggerPodName)
 
 		// Create a Trigger that receives events (type=bar) and sends them to the logger Pod.
 		loggerTrigger := client.CreateTriggerOrFailV1Beta1(
@@ -92,15 +92,18 @@ func setupBrokerTracing(ctx context.Context, brokerClass string) SetupTracingTes
 			resources.WithSubscriberServiceRefForTriggerV1Beta1(loggerPodName),
 		)
 
-		// Create a transformer (EventTransfrmer) Pod that replies with the same event as the input,
+		// Create a transformer Pod (recordevents with transform reply) that replies with the same event as the input,
 		// except the reply's event's type is changed to bar.
-		eventTransformerPod := resources.EventTransformationPod(
+		eventTransformerPod := recordevents.DeployEventRecordOrFail(
+			ctx,
+			client,
 			"transformer",
-			etLogger,
-			senderName,
-			[]byte(eventBody),
+			recordevents.ReplyWithTransformedEvent(
+				etLogger,
+				senderName,
+				eventBody,
+			),
 		)
-		client.CreatePodOrFail(eventTransformerPod, testlib.WithService(eventTransformerPod.Name))
 
 		// Create a Trigger that receives events (type=foo) and sends them to the transformer Pod.
 		transformerTrigger := client.CreateTriggerOrFailV1Beta1(
@@ -119,7 +122,7 @@ func setupBrokerTracing(ctx context.Context, brokerClass string) SetupTracingTes
 		event.SetSource(senderName)
 		event.SetType(etTransformer)
 		if err := event.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-			t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+			t.Fatal("Cannot set the payload of the event:", err.Error())
 		}
 
 		// Send the CloudEvent (either with or without tracing inside the SendEvents Pod).
@@ -128,8 +131,6 @@ func setupBrokerTracing(ctx context.Context, brokerClass string) SetupTracingTes
 		} else {
 			client.SendEventToAddressable(ctx, senderName, broker.Name, testlib.BrokerTypeMeta, event)
 		}
-
-		domain := utils.GetClusterDomainName()
 
 		// We expect the following spans:
 		// 1. Send pod sends event to the Broker Ingress (only if the sending pod generates a span).
@@ -140,8 +141,8 @@ func setupBrokerTracing(ctx context.Context, brokerClass string) SetupTracingTes
 		// 6. Logger pod receives the event from the Broker Filter for the "logger" trigger.
 
 		// Useful constants we will use below.
-		loggerSVCHost := k8sServiceHost(domain, client.Namespace, loggerPodName)
-		transformerSVCHost := k8sServiceHost(domain, client.Namespace, eventTransformerPod.Name)
+		loggerSVCHost := k8sServiceHost(clusterDomain, client.Namespace, loggerPodName)
+		transformerSVCHost := k8sServiceHost(clusterDomain, client.Namespace, eventTransformerPod.Name)
 
 		transformerEventSentFromTrChannelToTransformer := tracinghelper.TestSpanTree{
 			Note: "3. Broker Filter for the 'transformer' trigger sends the event to the transformer pod.",

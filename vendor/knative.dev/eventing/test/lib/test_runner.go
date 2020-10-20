@@ -155,7 +155,7 @@ func Setup(t *testing.T, runInParallel bool, options ...SetupClientOption) *Clie
 		namespace,
 		t)
 	if err != nil {
-		t.Fatalf("Couldn't initialize clients: %v", err)
+		t.Fatal("Couldn't initialize clients:", err)
 	}
 
 	CreateNamespaceIfNeeded(t, client, namespace)
@@ -188,7 +188,7 @@ func TearDown(client *Client) {
 	}
 
 	// Dump the events in the namespace
-	el, err := client.Kube.Kube.CoreV1().Events(client.Namespace).List(context.Background(), metav1.ListOptions{})
+	el, err := client.Kube.CoreV1().Events(client.Namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		client.T.Logf("Could not list events in the namespace %q: %v", client.Namespace, err)
 	} else {
@@ -215,11 +215,11 @@ func TearDown(client *Client) {
 
 // CreateNamespaceIfNeeded creates a new namespace if it does not exist.
 func CreateNamespaceIfNeeded(t *testing.T, client *Client, namespace string) {
-	_, err := client.Kube.Kube.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	_, err := client.Kube.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
 
 	if err != nil && apierrs.IsNotFound(err) {
 		nsSpec := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
-		_, err = client.Kube.Kube.CoreV1().Namespaces().Create(context.Background(), nsSpec, metav1.CreateOptions{})
+		_, err = client.Kube.CoreV1().Namespaces().Create(context.Background(), nsSpec, metav1.CreateOptions{})
 
 		if err != nil {
 			t.Fatalf("Failed to create Namespace: %s; %v", namespace, err)
@@ -229,14 +229,14 @@ func CreateNamespaceIfNeeded(t *testing.T, client *Client, namespace string) {
 		// We can only start creating pods after the default ServiceAccount is created by the kube-controller-manager.
 		err = waitForServiceAccountExists(client, "default", namespace)
 		if err != nil {
-			t.Fatalf("The default ServiceAccount was not created for the Namespace: %s", namespace)
+			t.Fatal("The default ServiceAccount was not created for the Namespace:", namespace)
 		}
 
 		// If the "default" Namespace has a secret called
 		// "kn-eventing-test-pull-secret" then use that as the ImagePullSecret
 		// on the "default" ServiceAccount in this new Namespace.
 		// This is needed for cases where the images are in a private registry.
-		_, err := utils.CopySecret(client.Kube.Kube.CoreV1(), "default", testPullSecretName, namespace, "default")
+		_, err := utils.CopySecret(client.Kube.CoreV1(), "default", testPullSecretName, namespace, "default")
 		if err != nil && !apierrs.IsNotFound(err) {
 			t.Fatalf("error copying the secret into ns %q: %s", namespace, err)
 		}
@@ -246,7 +246,7 @@ func CreateNamespaceIfNeeded(t *testing.T, client *Client, namespace string) {
 // waitForServiceAccountExists waits until the ServiceAccount exists.
 func waitForServiceAccountExists(client *Client, name, namespace string) error {
 	return wait.PollImmediate(1*time.Second, 2*time.Minute, func() (bool, error) {
-		sas := client.Kube.Kube.CoreV1().ServiceAccounts(namespace)
+		sas := client.Kube.CoreV1().ServiceAccounts(namespace)
 		if _, err := sas.Get(context.Background(), name, metav1.GetOptions{}); err == nil {
 			return true, nil
 		}
@@ -256,9 +256,9 @@ func waitForServiceAccountExists(client *Client, name, namespace string) error {
 
 // DeleteNameSpace deletes the namespace that has the given name.
 func DeleteNameSpace(client *Client) error {
-	_, err := client.Kube.Kube.CoreV1().Namespaces().Get(context.Background(), client.Namespace, metav1.GetOptions{})
+	_, err := client.Kube.CoreV1().Namespaces().Get(context.Background(), client.Namespace, metav1.GetOptions{})
 	if err == nil || !apierrs.IsNotFound(err) {
-		return client.Kube.Kube.CoreV1().Namespaces().Delete(context.Background(), client.Namespace, metav1.DeleteOptions{})
+		return client.Kube.CoreV1().Namespaces().Delete(context.Background(), client.Namespace, metav1.DeleteOptions{})
 	}
 	return err
 }

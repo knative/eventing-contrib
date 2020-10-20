@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"testing"
 
-	"knative.dev/eventing/test/lib/resources"
+	"knative.dev/pkg/system"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -47,6 +47,8 @@ type Client struct {
 	Apiextensions *apiextensionsv1beta1.ApiextensionsV1beta1Client
 	Dynamic       dynamic.Interface
 	Config        *rest.Config
+
+	EventListener *EventListener
 
 	Namespace string
 	T         *testing.T
@@ -93,7 +95,11 @@ func NewClient(configPath string, clusterName string, namespace string, t *testi
 	client.T = t
 	client.Tracker = NewTracker(t, client.Dynamic)
 
-	client.tracingEnv, err = getTracingConfig(client.Kube.Kube)
+	// Start informer
+	client.EventListener = NewEventListener(client.Kube, client.Namespace, client.T.Logf)
+	client.Cleanup(client.EventListener.Stop)
+
+	client.tracingEnv, err = getTracingConfig(client.Kube)
 	if err != nil {
 		return nil, err
 	}
@@ -126,20 +132,20 @@ func (c *Client) runCleanup() (err error) {
 	return nil
 }
 
-func getTracingConfig(c *kubernetes.Clientset) (corev1.EnvVar, error) {
-	cm, err := c.CoreV1().ConfigMaps(resources.SystemNamespace).Get(context.Background(), "config-tracing", metav1.GetOptions{})
+func getTracingConfig(c kubernetes.Interface) (corev1.EnvVar, error) {
+	cm, err := c.CoreV1().ConfigMaps(system.Namespace()).Get(context.Background(), configtracing.ConfigName, metav1.GetOptions{})
 	if err != nil {
-		return corev1.EnvVar{}, fmt.Errorf("error while retrieving the config-tracing config map: %+v", errors.WithStack(err))
+		return corev1.EnvVar{}, fmt.Errorf("error while retrieving the %s config map: %+v", configtracing.ConfigName, errors.WithStack(err))
 	}
 
 	config, err := configtracing.NewTracingConfigFromConfigMap(cm)
 	if err != nil {
-		return corev1.EnvVar{}, fmt.Errorf("error while parsing the config-tracing config map: %+v", errors.WithStack(err))
+		return corev1.EnvVar{}, fmt.Errorf("error while parsing the %s config map: %+v", configtracing.ConfigName, errors.WithStack(err))
 	}
 
 	configSerialized, err := configtracing.TracingConfigToJson(config)
 	if err != nil {
-		return corev1.EnvVar{}, fmt.Errorf("error while serializing the config-tracing config map: %+v", errors.WithStack(err))
+		return corev1.EnvVar{}, fmt.Errorf("error while serializing the %s config map: %+v", configtracing.ConfigName, errors.WithStack(err))
 	}
 
 	return corev1.EnvVar{Name: test_images.ConfigTracingEnv, Value: configSerialized}, nil

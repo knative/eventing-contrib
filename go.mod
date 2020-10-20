@@ -19,15 +19,14 @@ require (
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.15.0
-	golang.org/x/tools v0.0.0-20200916195026-c9a70fc28ce3 // indirect
-	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	k8s.io/api v0.18.8
+	k8s.io/apiextensions-apiserver v0.18.8 // indirect
 	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/utils v0.0.0-20200603063816-c1c6865ac451
-	knative.dev/eventing v0.18.0
-	knative.dev/pkg v0.0.0-20200922164940-4bf40ad82aab
-	knative.dev/test-infra v0.0.0-20200921012245-37f1a12adbd3
+	knative.dev/eventing v0.18.1-0.20201019170558-b391b9cee8de
+	knative.dev/pkg v0.0.0-20201020033659-eafc8c6f72a7
+	knative.dev/test-infra v0.0.0-20201015231956-d236fb0ea9ff
 )
 
 replace (

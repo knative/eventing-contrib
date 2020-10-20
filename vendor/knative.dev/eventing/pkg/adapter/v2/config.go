@@ -17,6 +17,8 @@ package adapter
 
 import (
 	"encoding/json"
+	"os"
+	"strconv"
 	"time"
 
 	"go.uber.org/zap"
@@ -25,9 +27,8 @@ import (
 	kle "knative.dev/pkg/leaderelection"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/metrics"
+	"knative.dev/pkg/tracing"
 	tracingconfig "knative.dev/pkg/tracing/config"
-
-	"knative.dev/eventing/pkg/tracing"
 )
 
 type EnvConfigConstructor func() EnvConfigAccessor
@@ -43,6 +44,7 @@ const (
 	EnvConfigLoggingConfig        = "K_LOGGING_CONFIG"
 	EnvConfigTracingConfig        = "K_TRACING_CONFIG"
 	EnvConfigLeaderElectionConfig = "K_LEADER_ELECTION_CONFIG"
+	EnvSinkTimeout                = "K_SINK_TIMEOUT"
 )
 
 // EnvConfig is the minimal set of configuration parameters
@@ -85,6 +87,12 @@ type EnvConfig struct {
 
 	// LeaderElectionConfigJson is the leader election component configuration.
 	LeaderElectionConfigJson string `envconfig:"K_LEADER_ELECTION_CONFIG"`
+
+	// Time in seconds to wait for sink to respond
+	EnvSinkTimeout string `envconfig:"K_SINK_TIMEOUT"`
+
+	// cached zap logger
+	logger *zap.SugaredLogger
 }
 
 // EnvConfigAccessor defines accessors for the minimal
@@ -114,6 +122,9 @@ type EnvConfigAccessor interface {
 
 	// GetLeaderElectionConfig returns leader election configuration.
 	GetLeaderElectionConfig() (*kle.ComponentConfig, error)
+
+	// Get the timeout to apply on a request to a sink
+	GetSinktimeout() int
 }
 
 var _ EnvConfigAccessor = (*EnvConfig)(nil)
@@ -132,18 +143,20 @@ func (e *EnvConfig) GetMetricsConfig() (*metrics.ExporterOptions, error) {
 }
 
 func (e *EnvConfig) GetLogger() *zap.SugaredLogger {
-	loggingConfig, err := logging.JsonToLoggingConfig(e.LoggingConfigJson)
-	if err != nil {
-		// Use default logging config.
-		if loggingConfig, err = logging.NewConfigFromMap(map[string]string{}); err != nil {
-			// If this fails, there is no recovering.
-			panic(err)
+	if e.logger == nil {
+		loggingConfig, err := logging.JsonToLoggingConfig(e.LoggingConfigJson)
+		if err != nil {
+			// Use default logging config.
+			if loggingConfig, err = logging.NewConfigFromMap(map[string]string{}); err != nil {
+				// If this fails, there is no recovering.
+				panic(err)
+			}
 		}
+
+		logger, _ := logging.NewLoggerFromConfig(loggingConfig, e.Component)
+		e.logger = logger
 	}
-
-	logger, _ := logging.NewLoggerFromConfig(loggingConfig, e.Component)
-
-	return logger
+	return e.logger
 }
 
 func (e *EnvConfig) GetSink() string {
@@ -156,6 +169,14 @@ func (e *EnvConfig) GetNamespace() string {
 
 func (e *EnvConfig) GetName() string {
 	return e.Name
+}
+
+func (e *EnvConfig) GetSinktimeout() int {
+	if duration, err := strconv.Atoi(e.EnvSinkTimeout); err == nil {
+		return duration
+	}
+	e.GetLogger().Warn("Sink timeout configuration is invalid, default to -1 (no timeout)")
+	return -1
 }
 
 func (e *EnvConfig) SetupTracing(logger *zap.SugaredLogger) error {
@@ -208,4 +229,20 @@ func LeaderElectionComponentConfigToJson(cfg *kle.ComponentConfig) (string, erro
 
 	jsonCfg, err := json.Marshal(cfg)
 	return string(jsonCfg), err
+}
+
+func GetSinkTimeout(logger *zap.SugaredLogger) int {
+	str := os.Getenv(EnvSinkTimeout)
+	if str != "" {
+		var err error
+		duration, err := strconv.Atoi(str)
+		if err != nil || duration < 0 {
+			if logger != nil {
+				logger.Errorf("%s environment value is invalid. It must be a integer greater than zero. (got %s)", EnvSinkTimeout, str)
+			}
+			return -1
+		}
+		return duration
+	}
+	return -1
 }

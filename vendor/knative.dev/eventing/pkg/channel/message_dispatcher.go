@@ -30,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"knative.dev/eventing/pkg/kncloudevents"
-	"knative.dev/eventing/pkg/tracing"
 	"knative.dev/eventing/pkg/utils"
 )
 
@@ -51,7 +50,7 @@ var _ MessageDispatcher = &MessageDispatcherImpl{}
 
 // MessageDispatcherImpl dispatches events to a destination over HTTP.
 type MessageDispatcherImpl struct {
-	sender           *kncloudevents.HttpMessageSender
+	sender           *kncloudevents.HTTPMessageSender
 	supportedSchemes sets.String
 
 	logger *zap.Logger
@@ -65,7 +64,7 @@ func NewMessageDispatcher(logger *zap.Logger) *MessageDispatcherImpl {
 
 // NewMessageDispatcherFromConfig creates a new Message dispatcher based on config.
 func NewMessageDispatcherFromConfig(logger *zap.Logger, config EventDispatcherConfig) *MessageDispatcherImpl {
-	sender, err := kncloudevents.NewHttpMessageSender(&config.ConnectionArgs, "")
+	sender, err := kncloudevents.NewHTTPMessageSender(&config.ConnectionArgs, "")
 	if err != nil {
 		logger.Fatal("Unable to create cloudevents binding sender", zap.Error(err))
 	}
@@ -73,7 +72,7 @@ func NewMessageDispatcherFromConfig(logger *zap.Logger, config EventDispatcherCo
 }
 
 // NewMessageDispatcherFromConfig creates a new event dispatcher.
-func NewMessageDispatcherFromSender(logger *zap.Logger, sender *kncloudevents.HttpMessageSender) *MessageDispatcherImpl {
+func NewMessageDispatcherFromSender(logger *zap.Logger, sender *kncloudevents.HTTPMessageSender) *MessageDispatcherImpl {
 	return &MessageDispatcherImpl{
 		sender:           sender,
 		supportedSchemes: sets.NewString("http", "https"),
@@ -183,9 +182,9 @@ func (d *MessageDispatcherImpl) executeRequest(ctx context.Context, url *url.URL
 	}
 
 	if span.IsRecordingEvents() {
-		err = kncloudevents.WriteHttpRequestWithAdditionalHeaders(ctx, message, req, additionalHeaders, tracing.PopulateSpan(span))
+		err = kncloudevents.WriteHTTPRequestWithAdditionalHeaders(ctx, message, req, additionalHeaders, kncloudevents.PopulateSpan(span))
 	} else {
-		err = kncloudevents.WriteHttpRequestWithAdditionalHeaders(ctx, message, req, additionalHeaders)
+		err = kncloudevents.WriteHTTPRequestWithAdditionalHeaders(ctx, message, req, additionalHeaders)
 	}
 	if err != nil {
 		return ctx, nil, nil, err

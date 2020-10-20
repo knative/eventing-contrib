@@ -73,13 +73,16 @@ func EventTransformationForTriggerTestHelper(
 	client.WaitForResourceReadyOrFail(brokerName, testlib.BrokerTypeMeta)
 
 	// create the transformation service
-	transformationPod := resources.EventTransformationPod(
+	recordevents.DeployEventRecordOrFail(
+		ctx,
+		client,
 		transformationPodName,
-		transformedEventType,
-		transformedEventSource,
-		[]byte(transformedBody),
+		recordevents.ReplyWithTransformedEvent(
+			transformedEventType,
+			transformedEventSource,
+			transformedBody,
+		),
 	)
-	client.CreatePodOrFail(transformationPod, testlib.WithService(transformationPodName))
 
 	// create trigger1 for event transformation
 	if triggerVersion == "v1" {
@@ -126,7 +129,7 @@ func EventTransformationForTriggerTestHelper(
 	eventToSend.SetType(eventType)
 	eventToSend.SetSource(eventSource)
 	if err := eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody)); err != nil {
-		t.Fatalf("Cannot set the payload of the event: %s", err.Error())
+		t.Fatal("Cannot set the payload of the event:", err.Error())
 	}
 	client.SendEventToAddressable(ctx, senderName, brokerName, testlib.BrokerTypeMeta, eventToSend)
 
