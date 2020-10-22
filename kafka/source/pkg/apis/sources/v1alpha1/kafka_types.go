@@ -89,6 +89,12 @@ type KafkaSourceSpec struct {
 	// Resource limits and Request specifications of the Receive Adapter Deployment
 	// Deprecated: v1beta1 drops this field.
 	Resources KafkaResourceSpec `json:"resources,omitempty"`
+
+	// CloudEventOverrides defines overrides to control the output format and
+	// modifications of the event sent to the sink.
+	// +optional
+	// Needed for supporting round-tripping
+	CloudEventOverrides *duckv1.CloudEventOverrides `json:"ceOverrides,omitempty"`
 }
 
 const (
