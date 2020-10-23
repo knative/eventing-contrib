@@ -19,7 +19,6 @@ package lib
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/tools/cache"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
 )
@@ -56,10 +55,6 @@ func NewListers(objs []runtime.Object) Listers {
 	ls.sorter.AddObjects(objs...)
 
 	return ls
-}
-
-func (l Listers) indexerFor(obj runtime.Object) cache.Indexer {
-	return l.sorter.IndexerForObjectType(obj)
 }
 
 func (l Listers) GetKubeObjects() []runtime.Object {
