@@ -40,8 +40,7 @@ func (source *KafkaBinding) ConvertTo(ctx context.Context, obj apis.Convertible)
 			BindingSpec:   source.Spec.BindingSpec,
 			KafkaAuthSpec: kafkaAuthSpec,
 		}
-		sink.Status.Status = source.Status.Status
-		source.Status.Status.ConvertTo(ctx, &sink.Status.Status)
+		source.Status.Status.DeepCopyInto(&sink.Status.Status)
 		return nil
 	default:
 		return fmt.Errorf("Unknown conversion, got: %T", sink)
@@ -63,8 +62,7 @@ func (sink *KafkaBinding) ConvertFrom(ctx context.Context, obj apis.Convertible)
 			BindingSpec:   source.Spec.BindingSpec,
 			KafkaAuthSpec: kafkaAuthSpec,
 		}
-		sink.Status.Status = source.Status.Status
-		source.Status.Status.ConvertTo(ctx, &source.Status.Status)
+		source.Status.Status.DeepCopyInto(&sink.Status.Status)
 		return nil
 	default:
 		return fmt.Errorf("Unknown conversion, got: %T", source)
