@@ -163,6 +163,9 @@ func TestKafkaSourceConversionRoundTripV1alpha1(t *testing.T) {
 						Conditions: duckv1.Conditions{{
 							Type:   "Ready",
 							Status: "True",
+						}, {
+							Type:   "SinkProvided",
+							Status: "True",
 						}},
 						Annotations: map[string]string{
 							"foo": "bar",
@@ -326,6 +329,9 @@ func TestKafkaSourceConversionRoundTripV1beta1(t *testing.T) {
 						ObservedGeneration: 1,
 						Conditions: duckv1.Conditions{{
 							Type:   "Ready",
+							Status: "True",
+						}, {
+							Type:   "SinkProvided",
 							Status: "True",
 						}},
 						Annotations: map[string]string{
