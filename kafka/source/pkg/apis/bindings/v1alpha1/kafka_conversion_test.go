@@ -147,6 +147,9 @@ func TestKafkaBindingConversionRoundTripV1alpha1(t *testing.T) {
 					Conditions: duckv1.Conditions{{
 						Type:   "Ready",
 						Status: "True",
+					}, {
+						Type:   "DoesNotReallyExistButHereItIsForTestingStatusCopy",
+						Status: "False",
 					}},
 					Annotations: map[string]string{
 						"foo": "bar",
@@ -285,6 +288,9 @@ func TestKafkaBindingConversionRoundTripV1beta1(t *testing.T) {
 					Conditions: duckv1.Conditions{{
 						Type:   "Ready",
 						Status: "True",
+					}, {
+						Type:   "DoesNotReallyExistButHereItIsForTestingStatusCopy",
+						Status: "False",
 					}},
 					Annotations: map[string]string{
 						"foo": "bar",
