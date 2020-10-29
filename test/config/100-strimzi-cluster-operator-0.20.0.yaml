@@ -9302,7 +9302,7 @@ spec:
                                 type: string
                               optional:
                                 type: boolean
-                            description: Refernce to a key in a ConfigMap.
+                            description: Reference to a key in a ConfigMap.
                           secretKeyRef:
                             type: object
                             properties:
@@ -12114,7 +12114,7 @@ spec:
                                 type: string
                               optional:
                                 type: boolean
-                            description: Refernce to a key in a ConfigMap.
+                            description: Reference to a key in a ConfigMap.
                           secretKeyRef:
                             type: object
                             properties:
@@ -13499,7 +13499,7 @@ spec:
                                 type: string
                               optional:
                                 type: boolean
-                            description: Refernce to a key in a ConfigMap.
+                            description: Reference to a key in a ConfigMap.
                           secretKeyRef:
                             type: object
                             properties:
