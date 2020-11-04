@@ -18,11 +18,22 @@ package resources
 
 import (
 	"github.com/Shopify/sarama"
+	"knative.dev/eventing-contrib/kafka"
 )
 
-func MakeClient(clientID string, bootstrapServers []string) (sarama.ClusterAdmin, error) {
+func MakeClient(clientID string, tlscfg map[string]string, bootstrapServers []string) (sarama.ClusterAdmin, error) {
 	saramaConf := sarama.NewConfig()
-	saramaConf.Version = sarama.V1_1_0_0
+	saramaConf.Version = sarama.V2_0_0_0
 	saramaConf.ClientID = clientID
+
+	// we have some TLS
+	if tlscfg !=nil {
+		saramaConf.Net.TLS.Enable = true
+		tlsConfig, err := kafka.NewTLSConfig(tlscfg["Usercert"], tlscfg["Userkey"], tlscfg["Cacert"])
+		if err != nil {
+			return nil, err
+		}
+		saramaConf.Net.TLS.Config = tlsConfig
+	}
 	return sarama.NewClusterAdmin(bootstrapServers, saramaConf)
 }

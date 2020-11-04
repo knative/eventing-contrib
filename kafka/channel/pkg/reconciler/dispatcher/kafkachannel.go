@@ -78,6 +78,10 @@ func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl 
 		logger.Fatalw("unable to setup tracing", zap.Error(err))
 	}
 
+	if err != nil {
+		logger.Errorf("Secret 'kafka-broker-tls' not found")
+	}
+
 	configMap, err := configmap.Load("/etc/config-kafka")
 	if err != nil {
 		logger.Fatalw("error loading configuration", zap.Error(err))

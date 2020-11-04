@@ -68,7 +68,7 @@ func NewConfig(ctx context.Context) ([]string, *sarama.Config, error) {
 
 	if env.Net.TLS.Enable {
 		cfg.Net.TLS.Enable = true
-		tlsConfig, err := newTLSConfig(env.Net.TLS.Cert, env.Net.TLS.Key, env.Net.TLS.CACert)
+		tlsConfig, err := NewTLSConfig(env.Net.TLS.Cert, env.Net.TLS.Key, env.Net.TLS.CACert)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -93,7 +93,7 @@ func NewProducer(ctx context.Context) (sarama.Client, error) {
 
 // newTLSConfig returns a *tls.Config using the given ceClient cert, ceClient key,
 // and CA certificate. If none are appropriate, a nil *tls.Config is returned.
-func newTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
+func NewTLSConfig(clientCert, clientKey, caCert string) (*tls.Config, error) {
 	valid := false
 
 	config := &tls.Config{}

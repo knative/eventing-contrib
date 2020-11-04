@@ -61,6 +61,12 @@ var (
 
 // KafkaChannelSpec defines the specification for a KafkaChannel.
 type KafkaChannelSpec struct {
+	// Auth is a KReference to the configuration that specifies
+	// configuration options for this Channel. For example, this could be
+	// a pointer to a Secret.
+	// +optional
+	Auth *duckv1.KReference `json:"auth,omitempty"`
+
 	// NumPartitions is the number of partitions of a Kafka topic. By default, it is set to 1.
 	NumPartitions int32 `json:"numPartitions"`
 

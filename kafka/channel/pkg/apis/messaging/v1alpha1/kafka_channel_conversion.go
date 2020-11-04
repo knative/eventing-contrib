@@ -89,6 +89,7 @@ func (source *KafkaChannel) ConvertTo(ctx context.Context, obj apis.Convertible)
 		sink.Spec = v1beta1.KafkaChannelSpec{
 			NumPartitions:     source.Spec.NumPartitions,
 			ReplicationFactor: source.Spec.ReplicationFactor,
+			Auth:              source.Spec.Auth,
 			ChannelableSpec: eventingduckv1.ChannelableSpec{
 				SubscribableSpec: subscribableSpec,
 				// no delivery in v1alpha1
@@ -173,6 +174,7 @@ func (sink *KafkaChannel) ConvertFrom(ctx context.Context, obj apis.Convertible)
 		sink.Spec = KafkaChannelSpec{
 			NumPartitions:     source.Spec.NumPartitions,
 			ReplicationFactor: source.Spec.ReplicationFactor,
+			Auth:              source.Spec.Auth,
 			Subscribable:      &subscribableSpec,
 		}
 		sink.Status = KafkaChannelStatus{

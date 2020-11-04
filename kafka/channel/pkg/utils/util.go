@@ -17,12 +17,16 @@ limitations under the License.
 package utils
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"knative.dev/pkg/configmap"
 )
@@ -31,6 +35,7 @@ const (
 	BrokerConfigMapKey           = "bootstrapServers"
 	MaxIdleConnectionsKey        = "maxIdleConns"
 	MaxIdleConnectionsPerHostKey = "maxIdleConnsPerHost"
+	KafkaAuthSecretName          = "kafka-broker-tls"
 
 	KafkaChannelSeparator = "."
 
@@ -101,4 +106,39 @@ func FindContainer(d *appsv1.Deployment, containerName string) *corev1.Container
 	}
 
 	return nil
+}
+
+// borrowed from eventing/pkg/util
+func CopySecret(corev1Input clientcorev1.CoreV1Interface, srcNS string, srcSecretName string, tgtNS string) (*corev1.Secret, error) {
+	srcSecrets := corev1Input.Secrets(srcNS)
+	tgtNamespaceSecrets := corev1Input.Secrets(tgtNS)
+
+	// First try to find the secret we're supposed to copy
+	srcSecret, err := srcSecrets.Get(context.Background(), srcSecretName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// check for nil source secret
+	if srcSecret == nil {
+		return nil, errors.New("error copying secret; there is no error but secret is nil")
+	}
+
+	// Found the secret, so now make a copy in our new namespace
+	newSecret, err := tgtNamespaceSecrets.Create(
+		context.Background(),
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: KafkaAuthSecretName,
+			},
+			Data: srcSecret.Data,
+			Type: srcSecret.Type,
+		},
+		metav1.CreateOptions{})
+
+	// If the secret already exists then that's ok - may have already been created
+	if err != nil && !apierrs.IsAlreadyExists(err) {
+		return nil, fmt.Errorf("error copying the Secret: %s", err)
+	}
+	return newSecret, nil
 }

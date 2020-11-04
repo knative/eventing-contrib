@@ -111,6 +111,7 @@ type Reconciler struct {
 	dispatcherImage string
 
 	kafkaConfig      *utils.KafkaConfig
+	kafkaTls         map[string]string
 	kafkaConfigError error
 	kafkaClientSet   kafkaclientset.Interface
 
@@ -150,6 +151,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel
 		logger.Errorw("Invalid kafka channel", zap.String("channel", kc.Name), zap.Error(err))
 		return err
 	}
+
+	// look if we have a duck/secret, and copy it to knative-eventing
+	// get KafkaAuthConfig, if present
+	//	r.kafkaTlsConfig, _ = r.getKafkaAuthData(ctx, kc)
+
+	//if (kc.Spec.Auth != nil) {}
 
 	if r.kafkaConfig == nil {
 		if r.kafkaConfigError == nil {
@@ -462,6 +469,9 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, dispatcherName
 }
 
 func (r *Reconciler) createClient(ctx context.Context, kc *v1beta1.KafkaChannel) (sarama.ClusterAdmin, error) {
+
+	tlsConfig, _ := r.GetKafkaAuthData(ctx, kc)
+
 	// We don't currently initialize r.kafkaClusterAdmin, hence we end up creating the cluster admin client every time.
 	// This is because of an issue with Shopify/sarama. See https://github.com/Shopify/sarama/issues/1162.
 	// Once the issue is fixed we should use a shared cluster admin client. Also, r.kafkaClusterAdmin is currently
@@ -469,7 +479,7 @@ func (r *Reconciler) createClient(ctx context.Context, kc *v1beta1.KafkaChannel)
 	kafkaClusterAdmin := r.kafkaClusterAdmin
 	if kafkaClusterAdmin == nil {
 		var err error
-		kafkaClusterAdmin, err = resources.MakeClient(controllerAgentName, r.kafkaConfig.Brokers)
+		kafkaClusterAdmin, err = resources.MakeClient(controllerAgentName, r.kafkaTls, r.kafkaConfig.Brokers)
 		if err != nil {
 			return nil, err
 		}
@@ -505,6 +515,7 @@ func (r *Reconciler) deleteTopic(ctx context.Context, channel *v1beta1.KafkaChan
 	if err == sarama.ErrUnknownTopicOrPartition {
 		return nil
 	} else if err != nil {
+
 		logger.Errorw("Error deleting topic", zap.String("topic", topicName), zap.Error(err))
 	} else {
 		logger.Infow("Successfully deleted topic", zap.String("topic", topicName))

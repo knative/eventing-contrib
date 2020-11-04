@@ -54,6 +54,13 @@ func (cs *KafkaChannelSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(fe)
 	}
 
+	// Validate the Auth Config
+	if cs.Auth != nil {
+		if ce := cs.Auth.Validate(ctx); ce != nil {
+			errs = errs.Also(ce.ViaField("auth"))
+		}
+	}
+
 	for i, subscriber := range cs.SubscribableSpec.Subscribers {
 		if subscriber.ReplyURI == nil && subscriber.SubscriberURI == nil {
 			fe := apis.ErrMissingField("replyURI", "subscriberURI")

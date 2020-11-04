@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	nethttp "net/http"
 	"strings"
 	"sync"
@@ -31,8 +33,12 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
 	eventingchannels "knative.dev/eventing/pkg/channel"
+	kafkaclient "knative.dev/eventing-contrib/kafka"
+
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/kncloudevents"
+
+	"knative.dev/pkg/logging"
 
 	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
 	"knative.dev/eventing-contrib/kafka/common/pkg/kafka"
@@ -87,6 +93,29 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 	conf.Version = sarama.V2_0_0_0
 	conf.ClientID = args.ClientID
 	conf.Consumer.Return.Errors = true // Returns the errors in ConsumerGroup#Errors() https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
+
+
+	k8sClient := kubeclient.Get(ctx)
+	secret, err := k8sClient.CoreV1().Secrets("knative-eventing").Get(ctx, "kafka-broker-tls", metav1.GetOptions{})
+
+	if err != nil {
+		logging.FromContext(ctx).Errorf("Secret 'kafka-broker-tls' not found")
+	}
+
+	tlsConfig := make(map[string]string)
+	tlsConfig["Cacert"] = string(secret.Data["ca.crt"])
+	tlsConfig["Usercert"] = string(secret.Data["user.crt"])
+	tlsConfig["Userkey"] = string(secret.Data["user.key"])
+
+	// we have some TLS
+	if tlsConfig !=nil {
+		conf.Net.TLS.Enable = true
+		tlsConfig, err := kafkaclient.NewTLSConfig(tlsConfig["Usercert"], tlsConfig["Userkey"], tlsConfig["Cacert"])
+		if err != nil {
+			return nil, err
+		}
+		conf.Net.TLS.Config = tlsConfig
+	}
 
 	producer, err := sarama.NewAsyncProducer(args.Brokers, conf)
 	if err != nil {
