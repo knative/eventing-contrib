@@ -39,6 +39,7 @@ spec:
           image: ko://knative.dev/eventing-contrib/kafka/channel/cmd/channel_dispatcher
           env:
             - name: SYSTEM_NAMESPACE
+              value: ''
               valueFrom:
                 fieldRef:
                   apiVersion: v1
