@@ -78,8 +78,7 @@ func TestNewDispatcher(t *testing.T) {
 							}, {
 								Name:  "CONFIG_LEADERELECTION_NAME",
 								Value: "config-leader-election-kafka",
-							},
-							},
+							}},
 							Ports: []corev1.ContainerPort{{
 								Name:          "metrics",
 								ContainerPort: 9090,
@@ -168,6 +167,16 @@ func TestNewNamespaceDispatcher(t *testing.T) {
 										FieldPath: "metadata.namespace",
 									},
 								},
+							}, {
+								Name: "POD_NAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "metadata.name",
+									},
+								},
+							}, {
+								Name:  "CONTAINER_NAME",
+								Value: "dispatcher",
 							}},
 							Ports: []corev1.ContainerPort{{
 								Name:          "metrics",
