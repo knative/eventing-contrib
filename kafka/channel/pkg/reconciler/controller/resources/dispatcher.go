@@ -20,7 +20,6 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"knative.dev/pkg/system"
 )
 
@@ -124,6 +123,16 @@ func makeEnv(args DispatcherArgs) []corev1.EnvVar {
 					FieldPath: "metadata.namespace",
 				},
 			},
+		}, corev1.EnvVar{
+			Name: "POD_NAME",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		}, corev1.EnvVar{
+			Name:  "CONTAINER_NAME",
+			Value: "dispatcher",
 		})
 	}
 
