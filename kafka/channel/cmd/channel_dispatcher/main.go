@@ -35,5 +35,8 @@ func main() {
 		ctx = injection.WithNamespaceScope(ctx, ns)
 	}
 
+	// Do not run the dispatcher in leader-election mode
+	ctx = sharedmain.WithHADisabled(ctx)
+
 	sharedmain.MainWithContext(ctx, component, controller.NewController)
 }
