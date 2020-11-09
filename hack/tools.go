@@ -29,4 +29,3 @@ import (
 	_ "knative.dev/eventing/test/test_images/print"
 	_ "knative.dev/eventing/test/test_images/recordevents"
 )
-
