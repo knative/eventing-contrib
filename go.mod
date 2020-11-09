@@ -10,10 +10,10 @@ require (
 	github.com/stretchr/testify v1.6.0 // indirect
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200601152816-913338de1bd2 // indirect
-	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	knative.dev/eventing v0.17.1-0.20200925222044-b313bac67b1c
-	knative.dev/pkg v0.0.0-20200922164940-4bf40ad82aab
-	knative.dev/test-infra v0.0.0-20201105204307-4868a0509f64
+	knative.dev/hack v0.0.0-20201027221733-0d7f2f064b7b // indirect
+	knative.dev/pkg v0.0.0-20201027223833-826303ca0653
+	knative.dev/test-infra v0.0.0-20200921012245-37f1a12adbd3
 )
 
 replace (

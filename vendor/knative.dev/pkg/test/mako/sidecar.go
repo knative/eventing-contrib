@@ -44,7 +44,7 @@ const (
 	// assorted preprocessing.
 	sidecarAddress = "localhost:9813"
 
-	// org is the orgnization name that is used by Github client
+	// org is the organization name that is used by Github client
 	org = "knative"
 
 	// slackUserName is the slack user name that is used by Slack client
@@ -85,7 +85,7 @@ func EscapeTag(tag string) string {
 }
 
 // SetupHelper sets up the mako client for the provided benchmarkKey.
-// It will add a few common tags and allow each benchmark to add custm tags as well.
+// It will add a few common tags and allow each benchmark to add custom tags as well.
 // It returns the mako client handle to store metrics, a method to close the connection
 // to mako server once done and error in case of failures.
 func SetupHelper(ctx context.Context, benchmarkKey *string, benchmarkName *string, extraTags ...string) (*Client, error) {
@@ -123,17 +123,17 @@ func SetupHelper(ctx context.Context, benchmarkKey *string, benchmarkName *strin
 
 	// Decorate GCP metadata as tags (when we're running on GCP).
 	if projectID, err := metadata.ProjectID(); err != nil {
-		log.Printf("GCP project ID is not available: %v", err)
+		log.Print("GCP project ID is not available: ", err)
 	} else {
 		tags = append(tags, "project-id="+EscapeTag(projectID))
 	}
 	if zone, err := metadata.Zone(); err != nil {
-		log.Printf("GCP zone is not available: %v", err)
+		log.Print("GCP zone is not available: ", err)
 	} else {
 		tags = append(tags, "zone="+EscapeTag(zone))
 	}
 	if machineType, err := metadata.Get("instance/machine-type"); err != nil {
-		log.Printf("GCP machine type is not available: %v", err)
+		log.Print("GCP machine type is not available: ", err)
 	} else if parts := strings.Split(machineType, "/"); len(parts) != 4 {
 		tags = append(tags, "instanceType="+EscapeTag(parts[3]))
 	}

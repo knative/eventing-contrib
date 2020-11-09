@@ -17,7 +17,7 @@
 # Documentation about this script and how to use it can be found
 # at https://github.com/knative/test-infra/tree/master/ci
 
-source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
+source $(dirname $0)/../vendor/knative.dev/hack/release.sh
 
 export GO111MODULE=on
 
