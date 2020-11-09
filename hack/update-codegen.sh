@@ -26,7 +26,7 @@ if [ -z "${GOPATH:-}" ]; then
   export GOPATH=$(go env GOPATH)
 fi
 
-source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/library.sh
+source $(dirname $0)/../vendor/knative.dev/hack/library.sh
 
 CODEGEN_PKG=${CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dirname $0)/../vendor/k8s.io/code-generator 2>/dev/null || echo ../../../k8s.io/code-generator)}
 
@@ -34,51 +34,6 @@ KNATIVE_CODEGEN_PKG=${KNATIVE_CODEGEN_PKG:-$(cd ${REPO_ROOT_DIR}; ls -d -1 $(dir
 
 chmod +x ${CODEGEN_PKG}/generate-groups.sh
 chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
-
-# Apache Kafka Sources and Bindings
-API_DIRS_SOURCES_AND_BINDINGS=(kafka/source/pkg )
-
-for DIR in "${API_DIRS_SOURCES_AND_BINDINGS[@]}"; do
-  # generate the code with:
-  # --output-base    because this script should also be able to run inside the vendor dir of
-  #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
-  #                  instead of the $GOPATH directly. For normal projects this can be dropped.
-  ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "sources:v1alpha1 sources:v1beta1 bindings:v1alpha1 bindings:v1beta1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-
-  # Knative Injection
-  ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "sources:v1alpha1 sources:v1beta1 bindings:v1alpha1 bindings:v1beta1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-done
-
-# KafkaChannel
-API_DIRS_CHANNELS=(kafka/channel/pkg)
-
-for DIR in "${API_DIRS_CHANNELS[@]}"; do
-  # generate the code with:
-  # --output-base    because this script should also be able to run inside the vendor dir of
-  #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
-  #                  instead of the $GOPATH directly. For normal projects this can be dropped.
-  ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "messaging:v1alpha1 messaging:v1beta1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-
-  # Knative Injection
-  ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
-    "knative.dev/eventing-contrib/${DIR}/client" "knative.dev/eventing-contrib/${DIR}/apis" \
-    "messaging:v1alpha1 messaging:v1beta1" \
-    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
-done
-
-# Depends on generate-groups.sh to install bin/deepcopy-gen
-${GOPATH}/bin/deepcopy-gen \
-  -O zz_generated.deepcopy \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate.go.txt
 
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT_DIR}/hack/update-deps.sh

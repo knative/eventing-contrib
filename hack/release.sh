@@ -17,7 +17,7 @@
 # Documentation about this script and how to use it can be found
 # at https://github.com/knative/test-infra/tree/master/ci
 
-source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/release.sh
+source $(dirname $0)/../vendor/knative.dev/hack/release.sh
 
 export GO111MODULE=on
 
@@ -25,10 +25,7 @@ export GO111MODULE=on
 declare -A COMPONENTS
 COMPONENTS=(
   ["appender.yaml"]="config/tools/appender"
-  ["awssqs.yaml"]="awssqs/config"
   ["event-display.yaml"]="config/tools/event-display"
-  ["kafka-source.yaml"]="kafka/source/config"
-  ["kafka-channel.yaml"]="kafka/channel/config"
   ["websocket-source.yaml"]="config/tools/websocket-source"
 )
 readonly COMPONENTS
