@@ -11,9 +11,8 @@ require (
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200601152816-913338de1bd2 // indirect
 	knative.dev/eventing v0.17.1-0.20200925222044-b313bac67b1c
-	knative.dev/hack v0.0.0-20201027221733-0d7f2f064b7b // indirect
+	knative.dev/hack v0.0.0-20201027221733-0d7f2f064b7b
 	knative.dev/pkg v0.0.0-20201027223833-826303ca0653
-	knative.dev/test-infra v0.0.0-20200921012245-37f1a12adbd3
 )
 
 replace (

@@ -886,13 +886,10 @@ knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
 knative.dev/eventing/test/test_images
 knative.dev/eventing/test/test_images/event-sender
-knative.dev/eventing/test/test_images/filterevents
 knative.dev/eventing/test/test_images/heartbeats
 knative.dev/eventing/test/test_images/performance
 knative.dev/eventing/test/test_images/print
 knative.dev/eventing/test/test_images/recordevents
-knative.dev/eventing/test/test_images/sequencestepper
-knative.dev/eventing/test/test_images/transformevents
 # knative.dev/hack v0.0.0-20201027221733-0d7f2f064b7b
 ## explicit
 knative.dev/hack
@@ -949,9 +946,6 @@ knative.dev/pkg/tracing/config
 knative.dev/pkg/tracing/propagation
 knative.dev/pkg/tracing/propagation/tracecontextb3
 knative.dev/pkg/tracker
-# knative.dev/test-infra v0.0.0-20200921012245-37f1a12adbd3
-## explicit
-knative.dev/test-infra/scripts
 # sigs.k8s.io/structured-merge-diff/v3 v3.0.1-0.20200706213357-43c19bbb7fba
 sigs.k8s.io/structured-merge-diff/v3/value
 # sigs.k8s.io/yaml v1.2.0
