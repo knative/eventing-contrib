@@ -22,8 +22,8 @@ data:
   # Common configuration for all Knative codebase
   zap-logger-config: |
     {
-      "level": "debug",
-      "development": true,
+      "level": "info",
+      "development": false,
       "outputPaths": ["stdout"],
       "errorOutputPaths": ["stderr"],
       "encoding": "json",
