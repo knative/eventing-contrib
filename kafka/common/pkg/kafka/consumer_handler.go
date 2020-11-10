@@ -26,7 +26,7 @@ import (
 )
 
 type KafkaConsumerHandler interface {
-	// When this function returns true, the consumer group offset is committed.
+	// When this function returns true, the consumer group offset is marked as consumed.
 	// The returned error is enqueued in errors channel.
 	Handle(context context.Context, message *sarama.ConsumerMessage) (bool, error)
 }
@@ -77,7 +77,9 @@ func (consumer *SaramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 			consumer.logger.Debugw("Message claimed", zap.String("topic", message.Topic), zap.Binary("value", message.Value))
 		}
 
-		mustMark, err := consumer.handler.Handle(session.Context(), message)
+		// Don't use the session context since it is closed before messages are drained.
+		// Handle must finish before the session timeout.
+		mustMark, err := consumer.handler.Handle(context.Background(), message)
 
 		if err != nil {
 			consumer.logger.Infow("Failure while handling a message", zap.String("topic", message.Topic), zap.Int32("partition", message.Partition), zap.Int64("offset", message.Offset), zap.Error(err))
