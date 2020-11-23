@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	source "knative.dev/eventing-contrib/kafka"
+
 	"k8s.io/utils/pointer"
 
 	"github.com/Shopify/sarama"
@@ -111,6 +113,7 @@ type Reconciler struct {
 	dispatcherImage string
 
 	kafkaConfig      *utils.KafkaConfig
+	kafkaAuthConfig  *utils.KafkaAuthConfig
 	kafkaConfigError error
 	kafkaClientSet   kafkaclientset.Interface
 
@@ -469,7 +472,7 @@ func (r *Reconciler) createClient(ctx context.Context, kc *v1beta1.KafkaChannel)
 	kafkaClusterAdmin := r.kafkaClusterAdmin
 	if kafkaClusterAdmin == nil {
 		var err error
-		kafkaClusterAdmin, err = resources.MakeClient(controllerAgentName, r.kafkaConfig.Brokers)
+		kafkaClusterAdmin, err = source.MakeAdminClient(controllerAgentName, r.kafkaAuthConfig, r.kafkaConfig.Brokers)
 		if err != nil {
 			return nil, err
 		}
@@ -517,6 +520,11 @@ func (r *Reconciler) updateKafkaConfig(ctx context.Context, configMap *corev1.Co
 	kafkaConfig, err := utils.GetKafkaConfig(configMap.Data)
 	if err != nil {
 		logging.FromContext(ctx).Errorw("Error reading Kafka configuration", zap.Error(err))
+	}
+
+	if kafkaConfig.AuthSecretName != "" {
+		kafkaAuthConfig := utils.GetKafkaAuthData(ctx, kafkaConfig.AuthSecretName, kafkaConfig.AuthSecretNamespace)
+		r.kafkaAuthConfig = kafkaAuthConfig
 	}
 	// For now just override the previous config.
 	// Eventually the previous config should be snapshotted to delete Kafka topics

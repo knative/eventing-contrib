@@ -21,3 +21,5 @@ data:
   # Broker URL. Replace this with the URLs for your kafka cluster,
   # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
   bootstrapServers: REPLACE_WITH_CLUSTER_URL
+  #authSecretName: name-of-your-secret-for-kafka-auth
+  #authSecretNamespace: namespace-of-your-secret-for-kafka-auth

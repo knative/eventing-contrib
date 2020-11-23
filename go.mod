@@ -16,6 +16,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/slinkydeveloper/loadastic v0.0.0-20191203132749-9afe5a010a57
 	github.com/stretchr/testify v1.6.0
+	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
 	go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 	go.opentelemetry.io/otel v0.4.2 // indirect
 	go.uber.org/zap v1.15.0

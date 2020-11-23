@@ -1,0 +1,89 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaUser
+metadata:
+  name: my-tls-user
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      # Example ACL rules for consuming from knative-messaging-kafka using consumer group my-group
+      - resource:
+          type: topic
+          name: "*"
+        operation: Read
+        host: "*"
+      - resource:
+          type: topic
+          name: "*"
+        operation: Describe
+        host: "*"
+      - resource:
+          type: group
+          name: "*"
+        operation: Read
+        host: "*"
+      # Example ACL rules for producing to topic knative-messaging-kafka
+      - resource:
+          type: topic
+          name: "*"
+        operation: Write
+        host: "*"
+      - resource:
+          type: topic
+          name: "*"
+        operation: Create
+        host: "*"
+      - resource:
+          type: topic
+          name: "*"
+        operation: Describe
+        host: "*"
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaUser
+metadata:
+  name: my-sasl-user
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      # Example ACL rules for consuming from knative-messaging-kafka using consumer group my-group
+      - resource:
+          type: topic
+          name: "*"
+        operation: Read
+        host: "*"
+      - resource:
+          type: topic
+          name: "*"
+        operation: Describe
+        host: "*"
+      - resource:
+          type: group
+          name: "*"
+        operation: Read
+        host: "*"
+      # Example ACL rules for producing to topic knative-messaging-kafka
+      - resource:
+          type: topic
+          name: "*"
+        operation: Write
+        host: "*"
+      - resource:
+          type: topic
+          name: "*"
+        operation: Create
+        host: "*"
+      - resource:
+          type: topic
+          name: "*"
+        operation: Describe
+        host: "*"

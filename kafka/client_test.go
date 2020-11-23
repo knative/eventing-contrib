@@ -29,8 +29,132 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
+	"knative.dev/eventing-contrib/kafka/channel/pkg/utils"
+
 	"github.com/stretchr/testify/require"
 )
+
+func TestUpdateSaramaConfigWithKafkaAuthConfig(t *testing.T) {
+
+	cert, key := generateCert(t)
+
+	testCases := map[string]struct {
+		kafkaAuthCfg  *utils.KafkaAuthConfig
+		enabledTLS    bool
+		enabledSASL   bool
+		salsMechanism string
+	}{
+		"No Auth": {
+			enabledTLS:  false,
+			enabledSASL: false,
+		},
+		"Only SASL-PLAIN Auth": {
+			kafkaAuthCfg: &utils.KafkaAuthConfig{
+				SASL: &utils.KafkaSaslConfig{
+					User:     "my-user",
+					Password: "super-secret",
+					SaslType: sarama.SASLTypePlaintext,
+				},
+			},
+			enabledTLS:    false,
+			enabledSASL:   true,
+			salsMechanism: sarama.SASLTypePlaintext,
+		},
+		"Only SASL-PLAIN Auth (not specified, defaulted)": {
+			kafkaAuthCfg: &utils.KafkaAuthConfig{
+				SASL: &utils.KafkaSaslConfig{
+					User:     "my-user",
+					Password: "super-secret",
+				},
+			},
+			enabledTLS:    false,
+			enabledSASL:   true,
+			salsMechanism: sarama.SASLTypePlaintext,
+		},
+		"Only SASL-SCRAM-SHA-256 Auth": {
+			kafkaAuthCfg: &utils.KafkaAuthConfig{
+				SASL: &utils.KafkaSaslConfig{
+					User:     "my-user",
+					Password: "super-secret",
+					SaslType: sarama.SASLTypeSCRAMSHA256,
+				},
+			},
+			enabledTLS:    false,
+			enabledSASL:   true,
+			salsMechanism: sarama.SASLTypeSCRAMSHA256,
+		},
+		"Only SASL-SCRAM-SHA-512 Auth": {
+			kafkaAuthCfg: &utils.KafkaAuthConfig{
+				SASL: &utils.KafkaSaslConfig{
+					User:     "my-user",
+					Password: "super-secret",
+					SaslType: sarama.SASLTypeSCRAMSHA512,
+				},
+			},
+			enabledTLS:    false,
+			enabledSASL:   true,
+			salsMechanism: sarama.SASLTypeSCRAMSHA512,
+		},
+		"Only TLS Auth": {
+			kafkaAuthCfg: &utils.KafkaAuthConfig{
+				TLS: &utils.KafkaTlsConfig{
+					Cacert:   cert,
+					Usercert: cert,
+					Userkey:  key,
+				},
+			},
+			enabledTLS:  true,
+			enabledSASL: false,
+		},
+		"SASL and TLS Auth": {
+			kafkaAuthCfg: &utils.KafkaAuthConfig{
+				SASL: &utils.KafkaSaslConfig{
+					User:     "my-user",
+					Password: "super-secret",
+					SaslType: sarama.SASLTypeSCRAMSHA512,
+				},
+				TLS: &utils.KafkaTlsConfig{
+					Cacert:   cert,
+					Usercert: cert,
+					Userkey:  key,
+				},
+			},
+			enabledTLS:    true,
+			enabledSASL:   true,
+			salsMechanism: sarama.SASLTypeSCRAMSHA512,
+		},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			// Perform The Test
+			config := sarama.NewConfig()
+			UpdateSaramaConfigWithKafkaAuthConfig(config, tc.kafkaAuthCfg)
+
+			saslEnabled := config.Net.SASL.Enable
+			if saslEnabled != tc.enabledSASL {
+				t.Errorf("SASL config is wrong")
+			}
+			if saslEnabled {
+				if tc.salsMechanism != string(config.Net.SASL.Mechanism) {
+					t.Errorf("SASL Mechanism is wrong, want: %s vs got %s", tc.salsMechanism, string(config.Net.SASL.Mechanism))
+				}
+			}
+
+			tlsEnabled := config.Net.TLS.Enable
+			if tlsEnabled != tc.enabledTLS {
+				t.Errorf("TLS config is wrong")
+			}
+			if tlsEnabled {
+				if config.Net.TLS.Config == nil {
+					t.Errorf("TLS config is wrong")
+				}
+			}
+		})
+	}
+}
 
 func TestNewTLSConfig(t *testing.T) {
 	cert, key := generateCert(t)
@@ -79,7 +203,7 @@ func TestNewTLSConfig(t *testing.T) {
 		wantServer: true,
 	}} {
 		t.Run(tt.name, func(t *testing.T) {
-			c, err := newTLSConfig(tt.cert, tt.key, tt.caCert)
+			c, err := NewTLSConfig(tt.cert, tt.key, tt.caCert)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("wanted error")
@@ -219,4 +343,25 @@ func TestNewConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, config)
 	require.Equal(t, []string{"my-cluster-kafka-bootstrap.my-kafka-namespace:9092"}, servers)
+}
+
+func TestAdminClient(t *testing.T) {
+
+	seedBroker := sarama.NewMockBroker(t, 1)
+	defer seedBroker.Close()
+
+	seedBroker.SetHandlerByMap(map[string]sarama.MockResponse{
+		"MetadataRequest": sarama.NewMockMetadataResponse(t).
+			SetController(seedBroker.BrokerID()).
+			SetBroker(seedBroker.Addr(), seedBroker.BrokerID()),
+	})
+
+	// mock broker does not support TLS ...
+	admin, err := MakeAdminClient("test-client", nil, []string{seedBroker.Addr()})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.NoError(t, err)
+	require.NotNil(t, admin)
 }
