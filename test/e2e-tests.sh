@@ -54,8 +54,25 @@ readonly STRIMZI_INSTALLATION_CONFIG_TEMPLATE="test/config/100-strimzi-cluster-o
 readonly STRIMZI_INSTALLATION_CONFIG="$(mktemp)"
 # Kafka cluster CR config file.
 readonly KAFKA_INSTALLATION_CONFIG="test/config/100-kafka-ephemeral-triple-2.6.0.yaml"
-# Kafka cluster URL for our installation
-readonly KAFKA_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka:9092"
+
+# Kafka TLS ConfigMap.
+readonly KAFKA_TLS_CONFIG="test/config/config-kafka-tls.yaml"
+# Kafka SASL ConfigMap.
+readonly KAFKA_SASL_CONFIG="test/config/config-kafka-sasl.yaml"
+# Kafka Users CR config file.
+readonly KAFKA_USERS_CONFIG="test/config/100-strimzi-users-0.20.0.yaml"
+# Kafka PLAIN cluster URL
+readonly KAFKA_PLAIN_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+# Kafka TLS cluster URL
+readonly KAFKA_TLS_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9093"
+# Kafka SASL cluster URL
+readonly KAFKA_SASL_CLUSTER_URL="my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9094"
+# Kafka cluster URL for our installation, during tests
+KAFKA_CLUSTER_URL=${KAFKA_PLAIN_CLUSTER_URL}
+
+
+
+
 # Kafka channel CRD config template directory.
 readonly KAFKA_CRD_CONFIG_TEMPLATE_DIR="kafka/channel/config"
 # Kafka channel CRD config template file. It needs to be modified to be the real config file.
@@ -126,9 +143,6 @@ function add_trap() {
 function test_setup() {
   kafka_setup || return 1
 
-  install_channel_crds || return 1
-  install_sources_crds || return 1
-
   # Install kail if needed.
   if ! which kail > /dev/null; then
     bash <( curl -sfL https://raw.githubusercontent.com/boz/kail/master/godownloader.sh) -b "$GOPATH/bin"
@@ -154,9 +168,6 @@ function test_setup() {
 
 function test_teardown() {
   kafka_teardown
-
-  uninstall_channel_crds
-  uninstall_sources_crds
 }
 
 function install_channel_crds() {
@@ -191,6 +202,8 @@ function kafka_setup() {
   kubectl apply -f "${STRIMZI_INSTALLATION_CONFIG}" -n kafka
   kubectl apply -f ${KAFKA_INSTALLATION_CONFIG} -n kafka
   wait_until_pods_running kafka || fail_test "Failed to start up a Kafka cluster"
+  # Create some Strimzi Kafka Users
+  kubectl apply -f "${KAFKA_USERS_CONFIG}" -n kafka
 }
 
 function kafka_teardown() {
@@ -200,11 +213,80 @@ function kafka_teardown() {
   kubectl delete namespace kafka
 }
 
+function create_tls_secrets() {
+  echo "Creating TLS Kafka secret"
+  STRIMZI_CRT=$(kubectl -n kafka get secret my-cluster-cluster-ca-cert --template='{{index .data "ca.crt"}}' | base64 --decode )
+  TLSUSER_CRT=$(kubectl -n kafka get secret my-tls-user --template='{{index .data "user.crt"}}' | base64 --decode )
+  TLSUSER_KEY=$(kubectl -n kafka get secret my-tls-user --template='{{index .data "user.key"}}' | base64 --decode )
+
+  kubectl create secret --namespace knative-eventing generic strimzi-tls-secret \
+    --from-literal=ca.crt="$STRIMZI_CRT" \
+    --from-literal=user.crt="$TLSUSER_CRT" \
+    --from-literal=user.key="$TLSUSER_KEY"
+}
+
+function create_sasl_secrets() {
+  echo "Creating SASL Kafka secret"
+  STRIMZI_CRT=$(kubectl -n kafka get secret my-cluster-cluster-ca-cert --template='{{index .data "ca.crt"}}' | base64 --decode )
+  SASL_PASSWD=$(kubectl -n kafka get secret my-sasl-user --template='{{index .data "password"}}' | base64 --decode )
+
+  kubectl create secret --namespace knative-eventing generic strimzi-sasl-secret \
+    --from-literal=ca.crt="$STRIMZI_CRT" \
+    --from-literal=password="$SASL_PASSWD" \
+    --from-literal=saslType="SCRAM-SHA-512" \
+    --from-literal=user="my-sasl-user"
+}
+
+# Installs the resources necessary to test the consolidated channel, runs those tests, and then cleans up those resources
+function test_channel_plain() {
+  # Test the consolidated channel with no auth
+  echo "Testing the consolidated channel and source"
+  install_channel_crds || return 1
+  install_sources_crds || return 1
+
+
+  go_test_e2e -tags=e2e,source -timeout=30m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
+  go_test_e2e -tags=e2e,source -timeout=5m -parallel=12 ./test/conformance -channels=messaging.knative.dev/v1beta1:KafkaChannel -sources=sources.knative.dev/v1beta1:KafkaSource || fail_test
+
+  uninstall_sources_crds || return 1
+  uninstall_channel_crds || return 1
+}
+
+function test_channel_tls() {
+  # Test the consolidated channel with TLS
+  echo "Testing the consolidated channel with TLS"
+  # Set the URL to the TLS listeners config
+  cp ${KAFKA_TLS_CONFIG} "${KAFKA_CRD_CONFIG_TEMPLATE_DIR}/configmaps/kafka-config.yaml"
+  KAFKA_CLUSTER_URL=${KAFKA_TLS_CLUSTER_URL}
+
+  install_channel_crds || return 1
+
+  go_test_e2e -tags=e2e -timeout=30m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
+
+  uninstall_channel_crds || return 1
+}
+
+function test_channel_sasl() {
+  # Test the consolidated channel with SASL
+  echo "Testing the consolidated channel with SASL"
+  # Set the URL to the SASL listeners config
+  cp ${KAFKA_SASL_CONFIG} "${KAFKA_CRD_CONFIG_TEMPLATE_DIR}/configmaps/kafka-config.yaml"
+  KAFKA_CLUSTER_URL=${KAFKA_SASL_CLUSTER_URL}
+
+  install_channel_crds || return 1
+
+  go_test_e2e -tags=e2e -timeout=30m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
+
+  uninstall_channel_crds || return 1
+}
+
 initialize $@ --skip-istio-addon
 
-go_test_e2e -timeout=30m -parallel=12 ./test/e2e -channels=messaging.knative.dev/v1alpha1:KafkaChannel,messaging.knative.dev/v1beta1:KafkaChannel  || fail_test
-
-go_test_e2e -timeout=5m -parallel=12 ./test/conformance -channels=messaging.knative.dev/v1beta1:KafkaChannel -sources=sources.knative.dev/v1beta1:KafkaSource || fail_test
+test_channel_plain || fail_test
+create_tls_secrets
+test_channel_tls || fail_test
+create_sasl_secrets
+test_channel_sasl || fail_test
 
 # If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands
 # trap - SIGINT SIGQUIT SIGTSTP EXIT

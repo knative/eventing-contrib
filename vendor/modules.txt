@@ -312,6 +312,11 @@ github.com/stretchr/testify/require
 github.com/tsenart/vegeta/lib
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool
+# github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
+## explicit
+github.com/xdg/scram
+# github.com/xdg/stringprep v1.0.0
+github.com/xdg/stringprep
 # go.opencensus.io v0.22.5-0.20200716030834-3456e1d174b2
 ## explicit
 go.opencensus.io

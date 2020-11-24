@@ -24,6 +24,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	source "knative.dev/eventing-contrib/kafka"
+
 	"github.com/Shopify/sarama"
 	protocolkafka "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -89,6 +91,12 @@ func NewDispatcher(ctx context.Context, args *KafkaDispatcherArgs) (*KafkaDispat
 	conf.Consumer.Return.Errors = true    // Returns the errors in ConsumerGroup#Errors() https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
 	conf.Producer.Return.Successes = true // Must be enabled for sync producer
 
+	// append the auth info:
+	err := source.UpdateSaramaConfigWithKafkaAuthConfig(conf, args.KafkaAuthConfig)
+	if err != nil {
+		return nil, fmt.Errorf("Error updating the Sarama Auth config: %w", err)
+	}
+
 	producer, err := sarama.NewSyncProducer(args.Brokers, conf)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create kafka producer against Kafka bootstrap servers %v : %v", args.Brokers, err)
@@ -145,6 +153,7 @@ type KafkaDispatcherArgs struct {
 	KnCEConnectionArgs *kncloudevents.ConnectionArgs
 	ClientID           string
 	Brokers            []string
+	KafkaAuthConfig    *utils.KafkaAuthConfig
 	TopicFunc          TopicFunc
 	Logger             *zap.SugaredLogger
 }
