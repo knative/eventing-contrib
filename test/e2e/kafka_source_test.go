@@ -192,13 +192,13 @@ func testKafkaSource(t *testing.T, name string, version string, messageKey strin
 	defer testlib.TearDown(client)
 
 	if auth.SASLEnabled {
-		_, err := utils.CopySecret(client.Kube.CoreV1(), "knative-eventing", kafkaSASLSecret, client.Namespace, "default")
+		_, err := utils.CopySecret(client.Kube.Kube.CoreV1(), "knative-eventing", kafkaSASLSecret, client.Namespace, "default")
 		if err != nil {
 			t.Fatalf("could not copy SASL secret(%s): %v", kafkaSASLSecret, err)
 		}
 	}
 	if auth.TLSEnabled {
-		_, err := utils.CopySecret(client.Kube.CoreV1(), "knative-eventing", kafkaTLSSecret, client.Namespace, "default")
+		_, err := utils.CopySecret(client.Kube.Kube.CoreV1(), "knative-eventing", kafkaTLSSecret, client.Namespace, "default")
 		if err != nil {
 			t.Fatalf("could not copy secret(%s): %v", kafkaTLSSecret, err)
 		}
