@@ -33,6 +33,7 @@ type AdapterSASL struct {
 	Enable   bool   `envconfig:"KAFKA_NET_SASL_ENABLE" required:"false"`
 	User     string `envconfig:"KAFKA_NET_SASL_USER" required:"false"`
 	Password string `envconfig:"KAFKA_NET_SASL_PASSWORD" required:"false"`
+	Type     string `envconfig:"KAFKA_NET_SASL_TYPE" required:"false"`
 }
 
 type AdapterTLS struct {
@@ -65,8 +66,22 @@ func NewConfig(ctx context.Context) ([]string, *sarama.Config, error) {
 
 	if env.Net.SASL.Enable {
 		cfg.Net.SASL.Enable = true
+		cfg.Net.SASL.Handshake = true
 		cfg.Net.SASL.User = env.Net.SASL.User
 		cfg.Net.SASL.Password = env.Net.SASL.Password
+
+		// We default to plain sasl type
+		cfg.Net.SASL.Mechanism = sarama.SASLTypePlaintext
+
+		if env.Net.SASL.Type == sarama.SASLTypeSCRAMSHA256 {
+			cfg.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA256} }
+			cfg.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA256
+		}
+
+		if env.Net.SASL.Type == sarama.SASLTypeSCRAMSHA512 {
+			cfg.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA512} }
+			cfg.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
+		}
 	}
 
 	if env.Net.TLS.Enable {

@@ -53,13 +53,13 @@ func testKafkaBinding(t *testing.T, version string, messageKey string, messageHe
 	switch version {
 	case "v1alpha1":
 		contribtestlib.CreateKafkaSourceV1Alpha1OrFail(client, contribresources.KafkaSourceV1Alpha1(
-			kafkaBootstrapUrl,
+			kafkaBootstrapUrlPlain,
 			kafkaTopicName,
 			resources.ServiceRef(loggerPodName),
 		))
 	case "v1beta1":
 		contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
-			kafkaBootstrapUrl,
+			kafkaBootstrapUrlPlain,
 			kafkaTopicName,
 			resources.ServiceRef(loggerPodName),
 		))
@@ -74,7 +74,7 @@ func testKafkaBinding(t *testing.T, version string, messageKey string, messageHe
 	switch version {
 	case "v1alpha1":
 		contribtestlib.CreateKafkaBindingV1Alpha1OrFail(client, contribresources.KafkaBindingV1Alpha1(
-			kafkaBootstrapUrl,
+			kafkaBootstrapUrlPlain,
 			&tracker.Reference{
 				APIVersion: "batch/v1",
 				Kind:       "Job",
@@ -85,7 +85,7 @@ func testKafkaBinding(t *testing.T, version string, messageKey string, messageHe
 		))
 	case "v1beta1":
 		contribtestlib.CreateKafkaBindingV1Beta1OrFail(client, contribresources.KafkaBindingV1Beta1(
-			kafkaBootstrapUrl,
+			kafkaBootstrapUrlPlain,
 			&tracker.Reference{
 				APIVersion: "batch/v1",
 				Kind:       "Job",

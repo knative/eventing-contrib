@@ -107,6 +107,15 @@ func TestKafkaBindingConversionRoundTripV1alpha1(t *testing.T) {
 									Optional: pointer.BoolPtr(true),
 								},
 							},
+							Type: SecretValueFromSource{
+								SecretKeyRef: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "sasl-type-secret-local-obj-ref",
+									},
+									Key:      "sasl-type-secret-key",
+									Optional: pointer.BoolPtr(true),
+								},
+							},
 						},
 						TLS: KafkaTLSSpec{
 							Enable: true,
@@ -245,6 +254,15 @@ func TestKafkaBindingConversionRoundTripV1beta1(t *testing.T) {
 										Name: "sasl-password-secret-local-obj-ref",
 									},
 									Key:      "sasl-password-secret-key",
+									Optional: pointer.BoolPtr(true),
+								},
+							},
+							Type: v1beta1.SecretValueFromSource{
+								SecretKeyRef: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "sasl-type-secret-local-obj-ref",
+									},
+									Key:      "sasl-type-secret-key",
 									Optional: pointer.BoolPtr(true),
 								},
 							},

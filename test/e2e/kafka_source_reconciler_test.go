@@ -112,7 +112,7 @@ func createKafkaSourceWithSinkMissing(c *testlib.Client) {
 	helpers.MustCreateTopic(c, kafkaClusterName, kafkaClusterNamespace, rtKafkaTopicName)
 
 	contribtestlib.CreateKafkaSourceV1Beta1OrFail(c, contribresources.KafkaSourceV1Beta1(
-		kafkaBootstrapUrl,
+		kafkaBootstrapUrlPlain,
 		rtKafkaTopicName,
 		pkgTest.CoreV1ObjectReference(resources.InMemoryChannelKind, resources.MessagingAPIVersion, rtChannelName),
 		contribresources.WithNameV1Beta1(rtKafkaSourceName),

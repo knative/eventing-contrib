@@ -56,6 +56,10 @@ type KafkaSASLSpec struct {
 	// Password is the Kubernetes secret containing the SASL password.
 	// +optional
 	Password SecretValueFromSource `json:"password,omitempty"`
+
+	// Type of saslType, defaults to plain (vs SCRAM-SHA-512 or SCRAM-SHA-256)
+	// +optional
+	Type SecretValueFromSource `json:"type,omitempty"`
 }
 
 type KafkaTLSSpec struct {
