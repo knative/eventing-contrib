@@ -102,6 +102,11 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
 				},
+			}, corev1.EnvVar{
+				Name: "KAFKA_NET_SASL_TYPE",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: kfb.Spec.Net.SASL.Type.SecretKeyRef,
+				},
 			})
 		}
 		if kfb.Spec.Net.TLS.Enable {
@@ -147,6 +152,11 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
 				},
+			}, corev1.EnvVar{
+				Name: "KAFKA_NET_SASL_TYPE",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: kfb.Spec.Net.SASL.Type.SecretKeyRef,
+				},
 			})
 		}
 		if kfb.Spec.Net.TLS.Enable {
@@ -184,7 +194,7 @@ func (kfb *KafkaBinding) Undo(ctx context.Context, ps *duckv1.WithPod) {
 		for j, ev := range c.Env {
 			switch ev.Name {
 			case "KAFKA_NET_TLS_ENABLE", "KAFKA_NET_TLS_CERT", "KAFKA_NET_TLS_KEY", "KAFKA_NET_TLS_CA_CERT",
-				"KAFKA_NET_SASL_ENABLE", "KAFKA_NET_SASL_USER", "KAFKA_NET_SASL_PASSWORD",
+				"KAFKA_NET_SASL_ENABLE", "KAFKA_NET_SASL_USER", "KAFKA_NET_SASL_PASSWORD", "KAFKA_NET_SASL_TYPE",
 				"KAFKA_BOOTSTRAP_SERVERS":
 
 				continue
@@ -203,7 +213,7 @@ func (kfb *KafkaBinding) Undo(ctx context.Context, ps *duckv1.WithPod) {
 		for j, ev := range c.Env {
 			switch ev.Name {
 			case "KAFKA_NET_TLS_ENABLE", "KAFKA_NET_TLS_CERT", "KAFKA_NET_TLS_KEY", "KAFKA_NET_TLS_CA_CERT",
-				"KAFKA_NET_SASL_ENABLE", "KAFKA_NET_SASL_USER", "KAFKA_NET_SASL_PASSWORD",
+				"KAFKA_NET_SASL_ENABLE", "KAFKA_NET_SASL_USER", "KAFKA_NET_SASL_PASSWORD", "KAFKA_NET_SASL_TYPE",
 				"KAFKA_BOOTSTRAP_SERVERS":
 				continue
 			default:

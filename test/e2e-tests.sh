@@ -282,10 +282,10 @@ function test_channel_sasl() {
 
 initialize $@ --skip-istio-addon
 
-test_channel_plain || fail_test
 create_tls_secrets
-test_channel_tls || fail_test
 create_sasl_secrets
+test_channel_plain || fail_test
+test_channel_tls || fail_test
 test_channel_sasl || fail_test
 
 # If you wish to use this script just as test setup, *without* teardown, just uncomment this line and comment all go_test_e2e commands

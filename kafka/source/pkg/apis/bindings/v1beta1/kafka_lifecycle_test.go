@@ -144,6 +144,16 @@ func TestKafkaBindingUndo(t *testing.T) {
 										Key: corev1.BasicAuthPasswordKey,
 									},
 								},
+							}, {
+								Name: "KAFKA_NET_SASL_TYPE",
+								ValueFrom: &corev1.EnvVarSource{
+									SecretKeyRef: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: secretName,
+										},
+										Key: "saslType",
+									},
+								},
 							}},
 						}},
 					},
@@ -273,6 +283,14 @@ func TestKafkaBindingDoSASL(t *testing.T) {
 								Key: corev1.BasicAuthPasswordKey,
 							},
 						},
+						Type: SecretValueFromSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: secretName,
+								},
+								Key: "saslType",
+							},
+						},
 					},
 				},
 			},
@@ -318,6 +336,16 @@ func TestKafkaBindingDoSASL(t *testing.T) {
 										Key: corev1.BasicAuthPasswordKey,
 									},
 								},
+							}, {
+								Name: "KAFKA_NET_SASL_TYPE",
+								ValueFrom: &corev1.EnvVarSource{
+									SecretKeyRef: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: secretName,
+										},
+										Key: "saslType",
+									},
+								},
 							}},
 						}},
 					},
@@ -355,6 +383,16 @@ func TestKafkaBindingDoSASL(t *testing.T) {
 											Name: secretName,
 										},
 										Key: corev1.BasicAuthPasswordKey,
+									},
+								},
+							}, {
+								Name: "KAFKA_NET_SASL_TYPE",
+								ValueFrom: &corev1.EnvVarSource{
+									SecretKeyRef: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: secretName,
+										},
+										Key: "saslType",
 									},
 								},
 							}},
@@ -410,6 +448,16 @@ func TestKafkaBindingDoSASL(t *testing.T) {
 										Key: corev1.BasicAuthPasswordKey,
 									},
 								},
+							}, {
+								Name: "KAFKA_NET_SASL_TYPE",
+								ValueFrom: &corev1.EnvVarSource{
+									SecretKeyRef: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: secretName,
+										},
+										Key: "saslType",
+									},
+								},
 							}},
 						}},
 					},
@@ -436,6 +484,9 @@ func TestKafkaBindingDoSASL(t *testing.T) {
 								Value: "bad",
 							}, {
 								Name:  "KAFKA_NET_SASL_PASSWORD",
+								Value: "bad",
+							}, {
+								Name:  "KAFKA_NET_SASL_TYPE",
 								Value: "bad",
 							}},
 						}},
@@ -474,6 +525,16 @@ func TestKafkaBindingDoSASL(t *testing.T) {
 											Name: secretName,
 										},
 										Key: corev1.BasicAuthPasswordKey,
+									},
+								},
+							}, {
+								Name: "KAFKA_NET_SASL_TYPE",
+								ValueFrom: &corev1.EnvVarSource{
+									SecretKeyRef: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: secretName,
+										},
+										Key: "saslType",
 									},
 								},
 							}},

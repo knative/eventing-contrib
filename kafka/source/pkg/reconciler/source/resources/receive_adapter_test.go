@@ -59,6 +59,14 @@ func TestMakeReceiveAdapter(t *testing.T) {
 								Key: "password",
 							},
 						},
+						Type: bindingsv1beta1.SecretValueFromSource{
+							SecretKeyRef: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "the-sasltype-secret",
+								},
+								Key: "saslType",
+							},
+						},
 					},
 					TLS: bindingsv1beta1.KafkaTLSSpec{
 						Enable: true,
@@ -188,6 +196,17 @@ func TestMakeReceiveAdapter(t *testing.T) {
 												Name: "the-password-secret",
 											},
 											Key: "password",
+										},
+									},
+								},
+								{
+									Name: "KAFKA_NET_SASL_TYPE",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "the-saslType-secret",
+											},
+											Key: "saslType",
 										},
 									},
 								},
@@ -408,6 +427,17 @@ func TestMakeReceiveAdapterNoNet(t *testing.T) {
 								Name: "the-password-secret",
 							},
 							Key: "password",
+						},
+					},
+				},
+				{
+					Name: "KAFKA_NET_SASL_TYPE",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "the-saslType-secret",
+							},
+							Key: "saslType",
 						},
 					},
 				},
