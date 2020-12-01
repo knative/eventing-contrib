@@ -20,6 +20,10 @@ import (
 	"context"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
+
+	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -38,6 +42,7 @@ func NewKafkaChannel(name, namespace string, ncopt ...KafkaChannelOption) *v1bet
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			UID:       types.UID("abc-xyz"),
 		},
 		Spec: v1beta1.KafkaChannelSpec{},
 	}
@@ -131,5 +136,25 @@ func WithKafkaFinalizer(finalizerName string) KafkaChannelOption {
 		finalizers := sets.NewString(nc.Finalizers...)
 		finalizers.Insert(finalizerName)
 		nc.SetFinalizers(finalizers.List())
+	}
+}
+
+func WithKafkaChannelSubscribers(subs []v1.SubscriberSpec) KafkaChannelOption {
+	return func(nc *v1beta1.KafkaChannel) {
+		nc.Spec.Subscribers = subs
+	}
+}
+
+func WithKafkaChannelStatusSubscribers() KafkaChannelOption {
+	return func(nc *v1beta1.KafkaChannel) {
+		ss := make([]v1.SubscriberStatus, len(nc.Spec.Subscribers))
+		for _, s := range nc.Spec.Subscribers {
+			ss = append(ss, v1.SubscriberStatus{
+				UID:                s.UID,
+				ObservedGeneration: s.Generation,
+				Ready:              corev1.ConditionTrue,
+			})
+		}
+		nc.Status.Subscribers = ss
 	}
 }
