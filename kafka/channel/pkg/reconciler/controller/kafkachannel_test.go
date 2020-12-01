@@ -20,6 +20,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
+
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/apis"
 
 	"github.com/Shopify/sarama"
 
@@ -59,6 +63,8 @@ const (
 	channelServiceAddress = "test-kc-kn-channel.test-namespace.svc.cluster.local"
 	brokerName            = "test-broker"
 	finalizerName         = "kafkachannels.messaging.knative.dev"
+	sub1UID               = "2f9b5e8e-deb6-11e8-9f32-f2801f1b9fd1"
+	sub2UID               = "34c5aec8-deb6-11e8-9f32-f2801f1b9fd1"
 )
 
 var (
@@ -236,12 +242,14 @@ func TestAllCases(t *testing.T) {
 				makeService(),
 				makeReadyEndpoints(),
 				reconcilekafkatesting.NewKafkaChannel(kcName, testNS,
+					reconcilertesting.WithKafkaChannelSubscribers(subscribers()),
 					reconcilekafkatesting.WithKafkaFinalizer(finalizerName)),
 				makeChannelService(reconcilekafkatesting.NewKafkaChannel(kcName, testNS)),
 			},
 			WantErr: false,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 				Object: reconcilekafkatesting.NewKafkaChannel(kcName, testNS,
+					reconcilertesting.WithKafkaChannelSubscribers(subscribers()),
 					reconcilekafkatesting.WithInitKafkaChannelConditions,
 					reconcilekafkatesting.WithKafkaFinalizer(finalizerName),
 					reconcilekafkatesting.WithKafkaChannelConfigReady(),
@@ -327,7 +335,8 @@ func TestAllCases(t *testing.T) {
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
-			kafkachannelLister: listers.GetKafkaChannelLister(),
+			consumerGroupWatcher: NewConsumerGroupWatcher(ctx, &FakeClusterAdmin{}, 100*time.Millisecond),
+			kafkachannelLister:   listers.GetKafkaChannelLister(),
 			// TODO fix
 			kafkachannelInformer: nil,
 			deploymentLister:     listers.GetDeploymentLister(),
@@ -384,7 +393,8 @@ func TestTopicExists(t *testing.T) {
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
-			kafkachannelLister: listers.GetKafkaChannelLister(),
+			consumerGroupWatcher: NewConsumerGroupWatcher(ctx, &FakeClusterAdmin{}, 100*time.Millisecond),
+			kafkachannelLister:   listers.GetKafkaChannelLister(),
 			// TODO fix
 			kafkachannelInformer: nil,
 			deploymentLister:     listers.GetDeploymentLister(),
@@ -453,7 +463,8 @@ func TestDeploymentUpdatedOnImageChange(t *testing.T) {
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
-			kafkachannelLister: listers.GetKafkaChannelLister(),
+			consumerGroupWatcher: NewConsumerGroupWatcher(ctx, &FakeClusterAdmin{}, 100*time.Millisecond),
+			kafkachannelLister:   listers.GetKafkaChannelLister(),
 			// TODO fix
 			kafkachannelInformer: nil,
 			deploymentLister:     listers.GetDeploymentLister(),
@@ -522,7 +533,8 @@ func TestDeploymentZeroReplicas(t *testing.T) {
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
-			kafkachannelLister: listers.GetKafkaChannelLister(),
+			consumerGroupWatcher: NewConsumerGroupWatcher(ctx, &FakeClusterAdmin{}, 100*time.Millisecond),
+			kafkachannelLister:   listers.GetKafkaChannelLister(),
 			// TODO fix
 			kafkachannelInformer: nil,
 			deploymentLister:     listers.GetDeploymentLister(),
@@ -588,7 +600,8 @@ func TestDeploymentMoreThanOneReplicas(t *testing.T) {
 			kafkaConfig: &KafkaConfig{
 				Brokers: []string{brokerName},
 			},
-			kafkachannelLister: listers.GetKafkaChannelLister(),
+			consumerGroupWatcher: NewConsumerGroupWatcher(ctx, &FakeClusterAdmin{}, 100*time.Millisecond),
+			kafkachannelLister:   listers.GetKafkaChannelLister(),
 			// TODO fix
 			kafkachannelInformer: nil,
 			deploymentLister:     listers.GetDeploymentLister(),
@@ -683,7 +696,11 @@ func (ca *mockClusterAdmin) DeleteACL(filter sarama.AclFilter, validateOnly bool
 }
 
 func (ca *mockClusterAdmin) ListConsumerGroups() (map[string]string, error) {
-	return nil, nil
+	cgs := map[string]string{
+		fmt.Sprintf("kafka.%s.%s.%s", kcName, testNS, sub1UID): "consumer",
+		fmt.Sprintf("kafka.%s.%s.%s", kcName, testNS, sub2UID): "consumer",
+	}
+	return cgs, nil
 }
 
 func (ca *mockClusterAdmin) DescribeConsumerGroups(groups []string) ([]*sarama.GroupDescription, error) {
@@ -796,4 +813,19 @@ func patchFinalizers(namespace, name string) clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func subscribers() []eventingduckv1.SubscriberSpec {
+
+	return []eventingduckv1.SubscriberSpec{{
+		UID:           sub1UID,
+		Generation:    1,
+		SubscriberURI: apis.HTTP("call1"),
+		ReplyURI:      apis.HTTP("sink2"),
+	}, {
+		UID:           sub2UID,
+		Generation:    2,
+		SubscriberURI: apis.HTTP("call2"),
+		ReplyURI:      apis.HTTP("sink2"),
+	}}
 }

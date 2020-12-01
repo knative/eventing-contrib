@@ -21,13 +21,10 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/pkg/channel/fanout"
 	"knative.dev/eventing/pkg/kncloudevents"
@@ -117,7 +114,9 @@ func NewController(ctx context.Context, cmw configmap.Watcher) *controller.Impl 
 		kafkachannelLister:   kafkaChannelInformer.Lister(),
 		kafkachannelInformer: kafkaChannelInformer.Informer(),
 	}
-	r.impl = kafkachannelreconciler.NewImpl(ctx, r)
+	r.impl = kafkachannelreconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		return controller.Options{SkipStatusUpdates: true}
+	})
 
 	logger.Info("Setting up event handlers")
 
@@ -146,6 +145,16 @@ func filterWithAnnotation(namespaced bool) func(obj interface{}) bool {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel) pkgreconciler.Event {
+	logging.FromContext(ctx).Debugw("ReconcileKind for channel", zap.String("channel", kc.Name))
+	return r.syncDispatcher(ctx)
+}
+
+func (r *Reconciler) ObserveKind(ctx context.Context, kc *v1beta1.KafkaChannel) pkgreconciler.Event {
+	logging.FromContext(ctx).Debugw("ObserveKind for channel", zap.String("channel", kc.Name))
+	return r.syncDispatcher(ctx)
+}
+
+func (r *Reconciler) syncDispatcher(ctx context.Context) pkgreconciler.Event {
 	channels, err := r.kafkachannelLister.List(labels.Everything())
 	if err != nil {
 		logging.FromContext(ctx).Error("Error listing kafka channels")
@@ -172,34 +181,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, kc *v1beta1.KafkaChannel
 		logging.FromContext(ctx).Error("Error updating kafka consumers in dispatcher")
 		return err
 	}
-	kc.Status.SubscribableStatus = r.createSubscribableStatus(&kc.Spec.SubscribableSpec, failedSubscriptions)
 	if len(failedSubscriptions) > 0 {
 		logging.FromContext(ctx).Error("Some kafka subscriptions failed to subscribe")
 		return fmt.Errorf("Some kafka subscriptions failed to subscribe")
 	}
 	return nil
-}
-
-func (r *Reconciler) createSubscribableStatus(subscribable *eventingduckv1.SubscribableSpec, failedSubscriptions map[types.UID]error) eventingduckv1.SubscribableStatus {
-	if subscribable == nil {
-		return eventingduckv1.SubscribableStatus{}
-	}
-	subscriberStatus := make([]eventingduckv1.SubscriberStatus, 0)
-	for _, sub := range subscribable.Subscribers {
-		status := eventingduckv1.SubscriberStatus{
-			UID:                sub.UID,
-			ObservedGeneration: sub.Generation,
-			Ready:              corev1.ConditionTrue,
-		}
-		if err, ok := failedSubscriptions[sub.UID]; ok {
-			status.Ready = corev1.ConditionFalse
-			status.Message = err.Error()
-		}
-		subscriberStatus = append(subscriberStatus, status)
-	}
-	return eventingduckv1.SubscribableStatus{
-		Subscribers: subscriberStatus,
-	}
 }
 
 // newConfigFromKafkaChannels creates a new Config from the list of kafka channels.
