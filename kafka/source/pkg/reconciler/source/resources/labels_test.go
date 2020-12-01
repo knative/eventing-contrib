@@ -28,7 +28,7 @@ func TestGetLabels(t *testing.T) {
 
 	wantLabels := map[string]string{
 		"eventing.knative.dev/source":     "kafka-source-controller",
-		"eventing.knative.dev/SourceName": "testSourceName",
+		"eventing.knative.dev/sourceName": "testSourceName",
 	}
 
 	eq := cmp.Equal(testLabels, wantLabels)

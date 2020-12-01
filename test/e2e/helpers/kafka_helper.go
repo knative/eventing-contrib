@@ -268,7 +268,7 @@ func CheckKafkaSourceState(ctx context.Context, c *testlib.Client, name string, 
 //On timeout reports error
 func CheckRADeployment(ctx context.Context, c *testlib.Client, name string, inState func(deps *appsv1.DeploymentList) (bool, error)) error {
 	listOptions := metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", "eventing.knative.dev/SourceName", name),
+		LabelSelector: fmt.Sprintf("%s=%s", "eventing.knative.dev/sourceName", name),
 	}
 	kDeps := c.Kube.Kube.AppsV1().Deployments(c.Namespace)
 	var lastState *appsv1.DeploymentList
