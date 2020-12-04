@@ -13,12 +13,16 @@
 # limitations under the License.
 
 # This is a very simple Knative Eventing Source for consuming WebSocket (Secure) messages.
-apiVersion: sources.knative.dev/v1alpha2
+apiVersion: sources.knative.dev/v1
 kind: ContainerSource
 metadata:
-  name: websocket-source
+  name: huer-source
 spec:
-  image: ko://knative.dev/eventing-contrib/cmd/websocketsource
+  template:
+    spec:
+      containers:
+        - image: ko://knative.dev/eventing-contrib/cmd/websocketsource
+          name: hue
   sink:
     ref:
       apiVersion: serving.knative.dev/v1
