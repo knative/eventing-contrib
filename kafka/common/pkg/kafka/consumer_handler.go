@@ -19,7 +19,6 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -38,29 +37,28 @@ type SaramaConsumerHandler struct {
 	handler KafkaConsumerHandler
 
 	logger *zap.SugaredLogger
+
 	// Errors channel
-	closeErrors sync.Once
-	errors      chan error
+	errors chan error
 }
 
-func NewConsumerHandler(logger *zap.SugaredLogger, handler KafkaConsumerHandler) SaramaConsumerHandler {
+func NewConsumerHandler(logger *zap.SugaredLogger, handler KafkaConsumerHandler, errorsCh chan error) SaramaConsumerHandler {
 	return SaramaConsumerHandler{
 		logger:  logger,
 		handler: handler,
-		errors:  make(chan error, 10), // Some buffering to avoid blocking the message processing
+		errors:  errorsCh,
 	}
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
 func (consumer *SaramaConsumerHandler) Setup(sarama.ConsumerGroupSession) error {
+	consumer.logger.Info("setting up handler")
 	return nil
 }
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
 func (consumer *SaramaConsumerHandler) Cleanup(session sarama.ConsumerGroupSession) error {
-	consumer.closeErrors.Do(func() {
-		close(consumer.errors)
-	})
+	consumer.logger.Info("cleanup handler")
 	return nil
 }
 
@@ -85,6 +83,7 @@ func (consumer *SaramaConsumerHandler) ConsumeClaim(session sarama.ConsumerGroup
 			consumer.logger.Infow("Failure while handling a message", zap.String("topic", message.Topic), zap.Int32("partition", message.Partition), zap.Int64("offset", message.Offset), zap.Error(err))
 			consumer.errors <- err
 		}
+
 		if mustMark {
 			session.MarkMessage(message, "") // Mark kafka message as processed
 			if ce := consumer.logger.Desugar().Check(zap.DebugLevel, "debugging"); ce != nil {

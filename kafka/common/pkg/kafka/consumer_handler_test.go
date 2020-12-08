@@ -133,7 +133,8 @@ func Test(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("shouldErr: %v, shouldMark: %v", test.shouldErr, test.shouldMark), func(t *testing.T) {
-			cgh := NewConsumerHandler(zap.NewNop().Sugar(), test)
+			errorCh := make(chan error, 1)
+			cgh := NewConsumerHandler(zap.NewNop().Sugar(), test, errorCh)
 
 			session := mockConsumerGroupSession{}
 			claim := mockConsumerGroupClaim{msg: &mockMessage}
@@ -155,6 +156,7 @@ func Test(t *testing.T) {
 			}
 
 			_ = cgh.Cleanup(&session)
+			close(errorCh)
 
 		})
 	}
