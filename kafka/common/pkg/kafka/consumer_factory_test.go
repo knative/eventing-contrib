@@ -42,7 +42,7 @@ func (m *mockConsumerGroup) Consume(ctx context.Context, topics []string, handle
 			m.generateErrorOnce.Do(func() {
 				h := handler.(*SaramaConsumerHandler)
 				h.errors <- errors.New("cgh")
-				_ = h.Cleanup(nil)
+				close(h.errors)
 			})
 		}()
 	}

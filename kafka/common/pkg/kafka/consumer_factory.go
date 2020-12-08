@@ -48,6 +48,7 @@ func (c *customConsumerGroup) Errors() <-chan error {
 
 func (c *customConsumerGroup) Close() error {
 	c.cancel()
+	close(c.handlerErrorChannel)
 	return c.ConsumerGroup.Close()
 }
 
@@ -59,18 +60,20 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 		return nil, err
 	}
 
-	consumerHandler := NewConsumerHandler(logger, handler)
-
+	errorCh := make(chan error, 10)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		for {
+			consumerHandler := NewConsumerHandler(logger, handler, errorCh)
+
 			err := consumerGroup.Consume(context.Background(), topics, &consumerHandler)
+
 			if err == sarama.ErrClosedConsumerGroup {
 				return
 			}
 			if err != nil {
-				consumerHandler.errors <- err
+				errorCh <- err
 			}
 
 			select {
@@ -81,7 +84,7 @@ func (c kafkaConsumerGroupFactoryImpl) StartConsumerGroup(groupID string, topics
 		}
 	}()
 
-	return &customConsumerGroup{cancel, consumerHandler.errors, consumerGroup}, err
+	return &customConsumerGroup{cancel, errorCh, consumerGroup}, err
 }
 
 func NewConsumerGroupFactory(addrs []string, config *sarama.Config) KafkaConsumerGroupFactory {
