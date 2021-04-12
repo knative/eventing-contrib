@@ -1,41 +1,37 @@
 aliases:
-  toc:
+  technical-oversight-committee:
   - evankanderson
   - grantr
   - markusthoemmes
   - mattmoor
-  - tcnghia
+  - rhuss
 
-  # These aliases are for OWNERS of the various Source implementations. These
-  # Are in addition to the repo level OWNERS.
+  eventing-writers:
+  - akashrv
+  - aliok
+  - antoineco
+  - devguyio
+  - grantr
+  - lberk
+  - lionelvillard
+  - matzew
+  - n3wscott
+  - pierDipi
+  - slinkydeveloper
+  - vaikas
+  - zhongduo
 
-  camel-approvers:
-    - nicolaferraro
-    - matzew
-  camel-reviewers:
-    - nicolaferraro
-    - matzew
+  eventing-reviewers:
+  - aslom
+  - nlopezgi
+  - tayarani
+  - tommyreddad
 
-  kafka-approvers:
-    - lberk
-    - matzew
-  kafka-reviewers:
-    - lberk
-    - matzew
-
-  prometheus-approvers:
-    - syedriko
-    - matzew
-  prometheus-reviewers:
-    - syedriko
-    - matzew
-
-  productivity-approvers:
-  - chaodaiG
+  productivity-writers:
   - chizhg
+  - n3wscott
   productivity-reviewers:
-  - chaodaiG
   - coryrc
-  - chizhg
+  - evankanderson
   - steuhs
   - yt3liu
