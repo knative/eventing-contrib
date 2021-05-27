@@ -17,6 +17,7 @@ that:
 - Integrate with GitLab - new location: https://github.com/knative-sandbox/eventing-gitlab
 - Integrate with NATS Streaming - new location: https://github.com/knative-sandbox/eventing-natss
 - Integrate with Websockets
+- Sample code and tools - new location: https://github.com/knative/eventing
 - Expose an ingress
 
 For complete documentation about Knative Eventing, see the following repos:
