@@ -1,4 +1,4 @@
-# Knative Eventing Contrib
+# [EOL] Knative Eventing Contrib
 
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/knative/eventing-contrib)
 [![Go Report Card](https://goreportcard.com/badge/knative/eventing-contrib)](https://goreportcard.com/report/knative/eventing-contrib)
@@ -17,6 +17,7 @@ that:
 - Integrate with GitLab - new location: https://github.com/knative-sandbox/eventing-gitlab
 - Integrate with NATS Streaming - new location: https://github.com/knative-sandbox/eventing-natss
 - Integrate with Websockets
+- Sample code and tools - new location: https://github.com/knative/eventing
 - Expose an ingress
 
 For complete documentation about Knative Eventing, see the following repos:
